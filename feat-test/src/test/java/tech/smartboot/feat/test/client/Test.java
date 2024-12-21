@@ -3,7 +3,7 @@ package tech.smartboot.feat.test.client;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
-import tech.smartboot.feat.core.server.HttpBootstrap;
+import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServerHandler;
@@ -21,7 +21,7 @@ import java.util.concurrent.CountDownLatch;
 public class Test {
     @org.junit.Test
     public void testPipline() throws Exception {
-        HttpBootstrap bootstrap = new HttpBootstrap();
+        HttpServer bootstrap = new HttpServer();
         HttpRouteHandler route = new HttpRouteHandler();
         byte[] body = new byte[4096];
         route.route("/other/**", new HttpServerHandler() {

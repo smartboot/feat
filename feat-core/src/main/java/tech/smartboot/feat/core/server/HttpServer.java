@@ -18,7 +18,7 @@ import org.smartboot.socket.transport.AioQuickServer;
 
 import java.util.concurrent.CompletableFuture;
 
-public class HttpBootstrap {
+public class HttpServer {
 
     private static final String BANNER = "                               _       _      _    _          \n" +
             "                              ( )_    ( )    ( )_ ( )_        \n" +
@@ -43,11 +43,11 @@ public class HttpBootstrap {
     private int port = 8080;
     private boolean started = false;
 
-    public HttpBootstrap() {
+    public HttpServer() {
         this(new HttpMessageProcessor());
     }
 
-    public HttpBootstrap(HttpMessageProcessor processor) {
+    public HttpServer(HttpMessageProcessor processor) {
         this.processor = processor;
         this.processor.setConfiguration(configuration);
     }
@@ -55,7 +55,7 @@ public class HttpBootstrap {
     /**
      * Http服务端口号
      */
-    public HttpBootstrap setPort(int port) {
+    public HttpServer setPort(int port) {
         this.port = port;
         return this;
     }
@@ -66,7 +66,7 @@ public class HttpBootstrap {
      * @param httpHandler
      * @return
      */
-    public HttpBootstrap httpHandler(HttpServerHandler httpHandler) {
+    public HttpServer httpHandler(HttpServerHandler httpHandler) {
         processor.httpServerHandler(httpHandler);
         processor.http2ServerHandler(new Http2ServerHandler() {
 
@@ -89,7 +89,7 @@ public class HttpBootstrap {
      *
      * @return
      */
-    public HttpBootstrap webSocketHandler(WebSocketHandler webSocketHandler) {
+    public HttpServer webSocketHandler(WebSocketHandler webSocketHandler) {
         processor.setWebSocketHandler(webSocketHandler);
         return this;
     }

@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
 import tech.smartboot.feat.restful.RestfulBootstrap;
-import tech.smartboot.feat.core.server.HttpBootstrap;
+import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.test.BastTest;
 import tech.smartboot.feat.test.server.RequestUnit;
 import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
@@ -38,7 +38,7 @@ public class RestfulServer2Test extends BastTest {
     public static final String KEY_URL = "url";
     public static final String KEY_HEADERS = "headers";
     private static final Logger LOGGER = LoggerFactory.getLogger(RestfulServer2Test.class);
-    private HttpBootstrap bootstrap;
+    private HttpServer bootstrap;
     private RequestUnit requestUnit;
 
 

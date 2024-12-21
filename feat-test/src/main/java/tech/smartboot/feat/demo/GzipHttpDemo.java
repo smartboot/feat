@@ -10,7 +10,7 @@ package tech.smartboot.feat.demo;
 
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
-import tech.smartboot.feat.core.server.HttpBootstrap;
+import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServerHandler;
@@ -67,7 +67,7 @@ public class GzipHttpDemo {
                 response.write(data);
             }
         });
-        HttpBootstrap bootstrap = new HttpBootstrap();
+        HttpServer bootstrap = new HttpServer();
         bootstrap.httpHandler(routeHandle);
         bootstrap.configuration().writeBufferSize(1024 * 1024).debug(true);
         bootstrap.setPort(8080).start();

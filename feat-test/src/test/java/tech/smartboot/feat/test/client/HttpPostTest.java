@@ -17,7 +17,7 @@ import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
 import tech.smartboot.feat.core.common.utils.StringUtils;
-import tech.smartboot.feat.core.server.HttpBootstrap;
+import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServerHandler;
@@ -41,8 +41,8 @@ import java.util.concurrent.Future;
  */
 public class HttpPostTest {
 
-    private HttpBootstrap httpBootstrap;
-    private HttpBootstrap httpsBootstrap;
+    private HttpServer httpServer;
+    private HttpServer httpsBootstrap;
 
     @Before
     public void init() throws Exception {
@@ -137,13 +137,13 @@ public class HttpPostTest {
             }
         });
 
-        httpBootstrap = new HttpBootstrap();
-        httpBootstrap.httpHandler(routeHandle).setPort(8080).start();
+        httpServer = new HttpServer();
+        httpServer.httpHandler(routeHandle).setPort(8080).start();
 
         SslPlugin sslPlugin =
                 new SslPlugin(new ServerSSLContextFactory(HttpPostTest.class.getClassLoader().getResourceAsStream(
                         "server.keystore"), "123456", "123456"), ClientAuth.NONE);
-        httpsBootstrap = new HttpBootstrap();
+        httpsBootstrap = new HttpServer();
         httpsBootstrap.configuration().addPlugin(sslPlugin);
         httpsBootstrap.httpHandler(routeHandle).setPort(8888).start();
     }
@@ -309,7 +309,7 @@ public class HttpPostTest {
 
     @After
     public void destroy() {
-        httpBootstrap.shutdown();
+        httpServer.shutdown();
         httpsBootstrap.shutdown();
     }
 

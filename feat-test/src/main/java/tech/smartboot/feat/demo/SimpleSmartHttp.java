@@ -8,7 +8,7 @@
 
 package tech.smartboot.feat.demo;
 
-import tech.smartboot.feat.core.server.HttpBootstrap;
+import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServerHandler;
@@ -19,7 +19,7 @@ import java.io.InputStream;
 
 public class SimpleSmartHttp {
     public static void main(String[] args) {
-        HttpBootstrap bootstrap = new HttpBootstrap();
+        HttpServer bootstrap = new HttpServer();
         bootstrap.configuration().debug(true);
         bootstrap.httpHandler(new HttpServerHandler() {
             @Override

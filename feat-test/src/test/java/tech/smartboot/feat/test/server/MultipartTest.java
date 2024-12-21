@@ -8,7 +8,7 @@ import org.junit.Before;
 import org.junit.Test;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.common.multipart.Part;
-import tech.smartboot.feat.core.server.HttpBootstrap;
+import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServerHandler;
@@ -28,11 +28,11 @@ import java.util.concurrent.Future;
  **/
 public class MultipartTest {
 
-    private HttpBootstrap bootstrap;
+    private HttpServer bootstrap;
 
     @Before
     public void init() {
-        bootstrap = new HttpBootstrap();
+        bootstrap = new HttpServer();
         bootstrap.configuration().debug(true);
         HttpRouteHandler routeHandle = new HttpRouteHandler();
         routeHandle.route("/formdata", new HttpServerHandler() {

@@ -20,7 +20,7 @@ import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
 import tech.smartboot.feat.core.common.enums.HttpMethodEnum;
 import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
-import tech.smartboot.feat.core.server.HttpBootstrap;
+import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServerHandler;
@@ -42,11 +42,11 @@ public class HttpServer2Test extends BastTest {
     public static final String KEY_HEADERS = "headers";
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpServer2Test.class);
     HttpClient httpClient;
-    HttpBootstrap bootstrap;
+    HttpServer bootstrap;
 
     @Before
     public void init() {
-        bootstrap = new HttpBootstrap();
+        bootstrap = new HttpServer();
         bootstrap.configuration().debug(true);
         bootstrap.start();
         httpClient = getHttpClient();

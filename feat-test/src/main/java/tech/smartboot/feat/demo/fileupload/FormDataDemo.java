@@ -1,7 +1,7 @@
 package tech.smartboot.feat.demo.fileupload;
 
 import tech.smartboot.feat.core.common.multipart.Part;
-import tech.smartboot.feat.core.server.HttpBootstrap;
+import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServerHandler;
@@ -71,7 +71,7 @@ public class FormDataDemo {
                 });
 
 
-        HttpBootstrap bootstrap = new HttpBootstrap();
+        HttpServer bootstrap = new HttpServer();
         //配置HTTP消息处理管道
         bootstrap.httpHandler(routeHandler);
 

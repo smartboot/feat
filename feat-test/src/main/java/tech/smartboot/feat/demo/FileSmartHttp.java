@@ -8,7 +8,7 @@
 
 package tech.smartboot.feat.demo;
 
-import tech.smartboot.feat.core.server.HttpBootstrap;
+import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.handler.HttpStaticResourceHandler;
 
 /**
@@ -20,7 +20,7 @@ import tech.smartboot.feat.core.server.handler.HttpStaticResourceHandler;
 public class FileSmartHttp {
     public static void main(String[] args) {
         String webdir = System.getProperty("user.dir") + "/assembly/webapps";
-        HttpBootstrap bootstrap = new HttpBootstrap();
+        HttpServer bootstrap = new HttpServer();
         //配置HTTP消息处理管道
         bootstrap.httpHandler(new HttpStaticResourceHandler(webdir));
 

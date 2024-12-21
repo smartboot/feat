@@ -13,7 +13,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import tech.smartboot.feat.core.client.HttpClient;
-import tech.smartboot.feat.core.server.HttpBootstrap;
+import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServerHandler;
@@ -29,11 +29,11 @@ import java.nio.charset.StandardCharsets;
  */
 public class HttpURLTest {
 
-    private HttpBootstrap httpBootstrap;
+    private HttpServer httpServer;
 
     @Before
     public void init() {
-        httpBootstrap = new HttpBootstrap();
+        httpServer = new HttpServer();
         HttpRouteHandler routeHandle = new HttpRouteHandler();
         routeHandle.route("/post_param", new HttpServerHandler() {
             @Override
@@ -82,7 +82,7 @@ public class HttpURLTest {
             }
         });
 
-        httpBootstrap.httpHandler(routeHandle).setPort(8080).start();
+        httpServer.httpHandler(routeHandle).setPort(8080).start();
     }
 
     @Test
@@ -98,6 +98,6 @@ public class HttpURLTest {
 
     @After
     public void destroy() {
-        httpBootstrap.shutdown();
+        httpServer.shutdown();
     }
 }

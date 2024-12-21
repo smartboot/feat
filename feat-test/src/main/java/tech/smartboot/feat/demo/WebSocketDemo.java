@@ -9,7 +9,7 @@
 package tech.smartboot.feat.demo;
 
 import tech.smartboot.feat.core.common.codec.websocket.CloseReason;
-import tech.smartboot.feat.core.server.HttpBootstrap;
+import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.WebSocketRequest;
 import tech.smartboot.feat.core.server.WebSocketResponse;
 import tech.smartboot.feat.core.server.handler.WebSocketDefaultHandler;
@@ -41,7 +41,7 @@ public class WebSocketDemo {
         });
 
         // 3. 启动服务
-        HttpBootstrap bootstrap = new HttpBootstrap();
+        HttpServer bootstrap = new HttpServer();
         bootstrap.configuration().setWsIdleTimeout(5000);
         bootstrap.webSocketHandler(routeHandle);
         bootstrap.start();

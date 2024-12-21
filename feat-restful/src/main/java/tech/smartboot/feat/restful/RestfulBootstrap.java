@@ -2,7 +2,7 @@ package tech.smartboot.feat.restful;
 
 import tech.smartboot.feat.restful.context.ApplicationContext;
 import tech.smartboot.feat.restful.handler.RestfulHandler;
-import tech.smartboot.feat.core.server.HttpBootstrap;
+import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServerHandler;
@@ -18,7 +18,7 @@ import java.util.concurrent.ExecutorService;
  */
 public class RestfulBootstrap {
     private final ApplicationContext applicationContext = new ApplicationContext();
-    private final HttpBootstrap httpBootstrap = new HttpBootstrap() {
+    private final HttpServer httpServer = new HttpServer() {
         @Override
         public void start() {
             try {
@@ -59,7 +59,7 @@ public class RestfulBootstrap {
             throw new NullPointerException();
         }
         this.restfulHandler = new RestfulHandler(defaultHandler);
-        httpBootstrap.httpHandler(restfulHandler);
+        httpServer.httpHandler(restfulHandler);
     }
 
     public RestfulBootstrap addBean(String name, Object object) throws Exception {
@@ -100,7 +100,7 @@ public class RestfulBootstrap {
         restfulHandler.setAsyncExecutor(asyncExecutor);
     }
 
-    public HttpBootstrap bootstrap() {
-        return httpBootstrap;
+    public HttpServer bootstrap() {
+        return httpServer;
     }
 }

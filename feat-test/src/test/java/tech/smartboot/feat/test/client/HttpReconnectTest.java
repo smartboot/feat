@@ -15,7 +15,7 @@ import org.junit.Test;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
-import tech.smartboot.feat.core.server.HttpBootstrap;
+import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServerHandler;
@@ -31,12 +31,12 @@ import java.util.concurrent.Future;
  */
 public class HttpReconnectTest {
 
-    private HttpBootstrap httpBootstrap;
+    private HttpServer httpServer;
 
 
     @Before
     public void init() {
-        httpBootstrap = new HttpBootstrap();
+        httpServer = new HttpServer();
         HttpRouteHandler routeHandler = new HttpRouteHandler();
 
         routeHandler.route("/post", new HttpServerHandler() {
@@ -51,8 +51,8 @@ public class HttpReconnectTest {
                 response.close();
             }
         });
-        httpBootstrap.configuration().debug(true);
-        httpBootstrap.httpHandler(routeHandler).setPort(8080).start();
+        httpServer.configuration().debug(true);
+        httpServer.httpHandler(routeHandler).setPort(8080).start();
     }
 
     @Test
@@ -79,7 +79,7 @@ public class HttpReconnectTest {
 
     @After
     public void destroy() {
-        httpBootstrap.shutdown();
+        httpServer.shutdown();
     }
 
 }

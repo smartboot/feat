@@ -8,7 +8,7 @@
 
 package tech.smartboot.feat.demo;
 
-import tech.smartboot.feat.core.server.HttpBootstrap;
+import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServerHandler;
@@ -26,7 +26,7 @@ import java.util.concurrent.Executors;
 public class AsyncHttpDemo {
     public static void main(String[] args) {
         ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-        HttpBootstrap bootstrap = new HttpBootstrap();
+        HttpServer bootstrap = new HttpServer();
         bootstrap.httpHandler(new HttpServerHandler() {
 
             @Override

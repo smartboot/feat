@@ -1,6 +1,6 @@
 package tech.smartboot.feat.demo;
 
-import tech.smartboot.feat.core.server.HttpBootstrap;
+import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServerHandler;
@@ -11,7 +11,7 @@ import java.io.IOException;
 
 public class PostChunkedDemo {
     public static void main(String[] args) throws IOException {
-        HttpBootstrap bootstrap = new HttpBootstrap();
+        HttpServer bootstrap = new HttpServer();
         bootstrap.configuration().debug(true);
         bootstrap.httpHandler(new HttpServerHandler() {
             @Override

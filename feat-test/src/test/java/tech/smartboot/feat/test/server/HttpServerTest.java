@@ -22,7 +22,7 @@ import tech.smartboot.feat.core.client.HttpPost;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
 import tech.smartboot.feat.core.common.enums.HttpMethodEnum;
-import tech.smartboot.feat.core.server.HttpBootstrap;
+import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServerHandler;
@@ -49,12 +49,12 @@ public class HttpServerTest extends BastTest {
     public static final String KEY_URL = "url";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpServerTest.class);
-    private HttpBootstrap bootstrap;
+    private HttpServer bootstrap;
     private RequestUnit requestUnit;
 
     @Before
     public void init() {
-        bootstrap = new HttpBootstrap();
+        bootstrap = new HttpServer();
         bootstrap.httpHandler(new HttpServerHandler() {
             @Override
             public void handle(HttpRequest request, HttpResponse response) throws IOException {

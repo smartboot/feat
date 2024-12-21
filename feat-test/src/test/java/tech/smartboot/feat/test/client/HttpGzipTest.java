@@ -16,7 +16,7 @@ import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
 import tech.smartboot.feat.core.common.utils.NumberUtils;
-import tech.smartboot.feat.core.server.HttpBootstrap;
+import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServerHandler;
@@ -33,12 +33,12 @@ import java.util.zip.GZIPOutputStream;
  */
 public class HttpGzipTest {
 
-    private HttpBootstrap httpBootstrap;
+    private HttpServer httpServer;
     private final int chunk = 1024;
 
     @Before
     public void init() {
-        httpBootstrap = new HttpBootstrap();
+        httpServer = new HttpServer();
         HttpRouteHandler routeHandle = new HttpRouteHandler();
         routeHandle.route("/test", new HttpServerHandler() {
             @Override
@@ -66,7 +66,7 @@ public class HttpGzipTest {
             }
         });
 
-        httpBootstrap.httpHandler(routeHandle).setPort(8080).start();
+        httpServer.httpHandler(routeHandle).setPort(8080).start();
     }
 
     @Test
@@ -118,6 +118,6 @@ public class HttpGzipTest {
 
     @After
     public void destroy() {
-        httpBootstrap.shutdown();
+        httpServer.shutdown();
     }
 }

@@ -8,7 +8,7 @@
 
 package tech.smartboot.feat.demo;
 
-import tech.smartboot.feat.core.server.HttpBootstrap;
+import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServerHandler;
@@ -37,7 +37,7 @@ public class Bootstrap {
         BufferPagePool writeBufferPool = new BufferPagePool(cpuNum, true);
 
         // 定义服务器接受的消息类型以及各类消息对应的处理器
-        HttpBootstrap bootstrap = new HttpBootstrap();
+        HttpServer bootstrap = new HttpServer();
         bootstrap.configuration().threadNum(cpuNum).debug(false).headerLimiter(0).readBufferSize(1024 * 4).writeBufferSize(1024 * 4).setReadBufferPool(readBufferPool).setWriteBufferPool(writeBufferPool);
         bootstrap.httpHandler(routeHandle).setPort(8080).start();
     }
