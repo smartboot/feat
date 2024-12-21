@@ -1,6 +1,6 @@
 package tech.smartboot.feat.demo;
 
-import tech.smartboot.feat.client.HttpClient;
+import tech.smartboot.feat.core.client.HttpClient;
 
 import java.util.HashMap;
 import java.util.Map;

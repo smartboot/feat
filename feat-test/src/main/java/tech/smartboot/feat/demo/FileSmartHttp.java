@@ -8,8 +8,8 @@
 
 package tech.smartboot.feat.demo;
 
-import tech.smartboot.feat.server.HttpBootstrap;
-import tech.smartboot.feat.server.handler.HttpStaticResourceHandler;
+import tech.smartboot.feat.core.server.HttpBootstrap;
+import tech.smartboot.feat.core.server.handler.HttpStaticResourceHandler;
 
 /**
  * 打开浏览器请求：http://127.0.0.0:8080/

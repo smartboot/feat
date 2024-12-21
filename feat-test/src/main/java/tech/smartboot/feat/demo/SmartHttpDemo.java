@@ -8,18 +8,18 @@
 
 package tech.smartboot.feat.demo;
 
-import tech.smartboot.feat.common.logging.Logger;
-import tech.smartboot.feat.common.logging.LoggerFactory;
-import tech.smartboot.feat.server.HttpBootstrap;
-import tech.smartboot.feat.server.HttpRequest;
-import tech.smartboot.feat.server.HttpResponse;
-import tech.smartboot.feat.server.HttpServerHandler;
-import tech.smartboot.feat.server.WebSocketRequest;
-import tech.smartboot.feat.server.WebSocketResponse;
-import tech.smartboot.feat.server.handler.BasicAuthServerHandler;
-import tech.smartboot.feat.server.handler.HttpRouteHandler;
-import tech.smartboot.feat.server.handler.WebSocketDefaultHandler;
-import tech.smartboot.feat.server.handler.WebSocketRouteHandler;
+import tech.smartboot.feat.core.common.logging.Logger;
+import tech.smartboot.feat.core.common.logging.LoggerFactory;
+import tech.smartboot.feat.core.server.HttpBootstrap;
+import tech.smartboot.feat.core.server.HttpRequest;
+import tech.smartboot.feat.core.server.HttpResponse;
+import tech.smartboot.feat.core.server.HttpServerHandler;
+import tech.smartboot.feat.core.server.WebSocketRequest;
+import tech.smartboot.feat.core.server.WebSocketResponse;
+import tech.smartboot.feat.core.server.handler.BasicAuthServerHandler;
+import tech.smartboot.feat.core.server.handler.HttpRouteHandler;
+import tech.smartboot.feat.core.server.handler.WebSocketDefaultHandler;
+import tech.smartboot.feat.core.server.handler.WebSocketRouteHandler;
 
 import java.io.IOException;
 import java.io.InputStream;

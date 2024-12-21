@@ -1,7 +1,7 @@
 package tech.smartboot.feat.restful.intercept;
 
-import tech.smartboot.feat.server.HttpRequest;
-import tech.smartboot.feat.server.HttpResponse;
+import tech.smartboot.feat.core.server.HttpRequest;
+import tech.smartboot.feat.core.server.HttpResponse;
 
 import java.lang.reflect.Method;
 

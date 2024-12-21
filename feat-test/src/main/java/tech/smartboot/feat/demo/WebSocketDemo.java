@@ -8,12 +8,12 @@
 
 package tech.smartboot.feat.demo;
 
-import tech.smartboot.feat.common.codec.websocket.CloseReason;
-import tech.smartboot.feat.server.HttpBootstrap;
-import tech.smartboot.feat.server.WebSocketRequest;
-import tech.smartboot.feat.server.WebSocketResponse;
-import tech.smartboot.feat.server.handler.WebSocketDefaultHandler;
-import tech.smartboot.feat.server.handler.WebSocketRouteHandler;
+import tech.smartboot.feat.core.common.codec.websocket.CloseReason;
+import tech.smartboot.feat.core.server.HttpBootstrap;
+import tech.smartboot.feat.core.server.WebSocketRequest;
+import tech.smartboot.feat.core.server.WebSocketResponse;
+import tech.smartboot.feat.core.server.handler.WebSocketDefaultHandler;
+import tech.smartboot.feat.core.server.handler.WebSocketRouteHandler;
 
 /**
  * @author 三刀

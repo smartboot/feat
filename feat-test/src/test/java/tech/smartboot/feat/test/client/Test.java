@@ -1,13 +1,13 @@
 package tech.smartboot.feat.test.client;
 
-import tech.smartboot.feat.client.HttpClient;
-import tech.smartboot.feat.common.enums.HeaderNameEnum;
-import tech.smartboot.feat.common.enums.HeaderValueEnum;
-import tech.smartboot.feat.server.HttpBootstrap;
-import tech.smartboot.feat.server.HttpRequest;
-import tech.smartboot.feat.server.HttpResponse;
-import tech.smartboot.feat.server.HttpServerHandler;
-import tech.smartboot.feat.server.handler.HttpRouteHandler;
+import tech.smartboot.feat.core.client.HttpClient;
+import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
+import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
+import tech.smartboot.feat.core.server.HttpBootstrap;
+import tech.smartboot.feat.core.server.HttpRequest;
+import tech.smartboot.feat.core.server.HttpResponse;
+import tech.smartboot.feat.core.server.HttpServerHandler;
+import tech.smartboot.feat.core.server.handler.HttpRouteHandler;
 
 import java.io.IOException;
 import java.io.InputStream;

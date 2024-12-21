@@ -12,15 +12,15 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import tech.smartboot.feat.client.HttpClient;
-import tech.smartboot.feat.common.enums.HeaderNameEnum;
-import tech.smartboot.feat.common.enums.HeaderValueEnum;
-import tech.smartboot.feat.common.utils.NumberUtils;
-import tech.smartboot.feat.server.HttpBootstrap;
-import tech.smartboot.feat.server.HttpRequest;
-import tech.smartboot.feat.server.HttpResponse;
-import tech.smartboot.feat.server.HttpServerHandler;
-import tech.smartboot.feat.server.handler.HttpRouteHandler;
+import tech.smartboot.feat.core.client.HttpClient;
+import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
+import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
+import tech.smartboot.feat.core.common.utils.NumberUtils;
+import tech.smartboot.feat.core.server.HttpBootstrap;
+import tech.smartboot.feat.core.server.HttpRequest;
+import tech.smartboot.feat.core.server.HttpResponse;
+import tech.smartboot.feat.core.server.HttpServerHandler;
+import tech.smartboot.feat.core.server.handler.HttpRouteHandler;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
@@ -88,7 +88,7 @@ public class HttpGzipTest {
     public void testGzip4() throws InterruptedException, ExecutionException {
         HttpClient client = new HttpClient("127.0.0.1", 8080);
         client.configuration().debug(true);
-        Future<tech.smartboot.feat.client.HttpResponse> future = client.post("/html")
+        Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/html")
                 .header().keepalive(true).done()
                 .onSuccess(response -> {
                     System.out.println(response.body());
@@ -103,7 +103,7 @@ public class HttpGzipTest {
     private void extracted(int count) throws InterruptedException, ExecutionException {
         HttpClient client = new HttpClient("127.0.0.1", 8080);
         client.configuration().debug(true);
-        Future<tech.smartboot.feat.client.HttpResponse> future = client.post("/test?count=" + count)
+        Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/test?count=" + count)
                 .header().keepalive(true).done()
                 .onSuccess(response -> {
 //                    System.out.println(response.body());

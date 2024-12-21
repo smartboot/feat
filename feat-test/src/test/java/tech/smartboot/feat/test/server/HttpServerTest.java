@@ -16,16 +16,16 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import tech.smartboot.feat.client.HttpClient;
-import tech.smartboot.feat.client.HttpGet;
-import tech.smartboot.feat.client.HttpPost;
-import tech.smartboot.feat.common.enums.HeaderNameEnum;
-import tech.smartboot.feat.common.enums.HeaderValueEnum;
-import tech.smartboot.feat.common.enums.HttpMethodEnum;
-import tech.smartboot.feat.server.HttpBootstrap;
-import tech.smartboot.feat.server.HttpRequest;
-import tech.smartboot.feat.server.HttpResponse;
-import tech.smartboot.feat.server.HttpServerHandler;
+import tech.smartboot.feat.core.client.HttpClient;
+import tech.smartboot.feat.core.client.HttpGet;
+import tech.smartboot.feat.core.client.HttpPost;
+import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
+import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
+import tech.smartboot.feat.core.common.enums.HttpMethodEnum;
+import tech.smartboot.feat.core.server.HttpBootstrap;
+import tech.smartboot.feat.core.server.HttpRequest;
+import tech.smartboot.feat.core.server.HttpResponse;
+import tech.smartboot.feat.core.server.HttpServerHandler;
 import tech.smartboot.feat.test.BastTest;
 import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
 
@@ -129,7 +129,7 @@ public class HttpServerTest extends BastTest {
     @Test
     public void testGet2() throws ExecutionException, InterruptedException {
         HttpClient httpClient = getHttpClient();
-        tech.smartboot.feat.client.HttpResponse response = httpClient.get("/hello?").addQueryParam("author", "三刀").addQueryParam("abc", "123").done().get();
+        tech.smartboot.feat.core.client.HttpResponse response = httpClient.get("/hello?").addQueryParam("author", "三刀").addQueryParam("abc", "123").done().get();
 
         JSONObject jsonObject = JSON.parseObject(response.body());
         JSONObject parameters = jsonObject.getJSONObject(KEY_PARAMETERS);
@@ -141,7 +141,7 @@ public class HttpServerTest extends BastTest {
     @Test
     public void testGet3() throws ExecutionException, InterruptedException {
         HttpClient httpClient = getHttpClient();
-        tech.smartboot.feat.client.HttpResponse response = httpClient.get("/hello").addQueryParam("author", "三刀").addQueryParam("abc", "123").done().get();
+        tech.smartboot.feat.core.client.HttpResponse response = httpClient.get("/hello").addQueryParam("author", "三刀").addQueryParam("abc", "123").done().get();
 
         JSONObject jsonObject = JSON.parseObject(response.body());
         JSONObject parameters = jsonObject.getJSONObject(KEY_PARAMETERS);
@@ -153,7 +153,7 @@ public class HttpServerTest extends BastTest {
     @Test
     public void testGet4() throws ExecutionException, InterruptedException {
         HttpClient httpClient = getHttpClient();
-        tech.smartboot.feat.client.HttpResponse response = httpClient.get("/hello#").addQueryParam("author", "三刀").addQueryParam("abc", "123").done().get();
+        tech.smartboot.feat.core.client.HttpResponse response = httpClient.get("/hello#").addQueryParam("author", "三刀").addQueryParam("abc", "123").done().get();
 
         JSONObject jsonObject = JSON.parseObject(response.body());
         JSONObject parameters = jsonObject.getJSONObject(KEY_PARAMETERS);
@@ -165,7 +165,7 @@ public class HttpServerTest extends BastTest {
     @Test
     public void testGet5() throws ExecutionException, InterruptedException {
         HttpClient httpClient = getHttpClient();
-        tech.smartboot.feat.client.HttpResponse response = httpClient.get("/hello#abca=sdf").addQueryParam("author", "三刀").addQueryParam("abc", "123").done().get();
+        tech.smartboot.feat.core.client.HttpResponse response = httpClient.get("/hello#abca=sdf").addQueryParam("author", "三刀").addQueryParam("abc", "123").done().get();
 
         JSONObject jsonObject = JSON.parseObject(response.body());
         JSONObject parameters = jsonObject.getJSONObject(KEY_PARAMETERS);
@@ -177,7 +177,7 @@ public class HttpServerTest extends BastTest {
     @Test
     public void testGet6() throws ExecutionException, InterruptedException {
         HttpClient httpClient = getHttpClient();
-        tech.smartboot.feat.client.HttpResponse response = httpClient.get("/hello?a=b#abca=sdf").addQueryParam("author", "三刀").addQueryParam("abc", "123").done().get();
+        tech.smartboot.feat.core.client.HttpResponse response = httpClient.get("/hello?a=b#abca=sdf").addQueryParam("author", "三刀").addQueryParam("abc", "123").done().get();
 
         JSONObject jsonObject = JSON.parseObject(response.body());
         JSONObject parameters = jsonObject.getJSONObject(KEY_PARAMETERS);
@@ -190,7 +190,7 @@ public class HttpServerTest extends BastTest {
     @Test
     public void testGet7() throws ExecutionException, InterruptedException {
         HttpClient httpClient = getHttpClient();
-        tech.smartboot.feat.client.HttpResponse response = httpClient.get("/hello?#abca=sdf").addQueryParam("author", "三刀").addQueryParam("abc", "123").done().get();
+        tech.smartboot.feat.core.client.HttpResponse response = httpClient.get("/hello?#abca=sdf").addQueryParam("author", "三刀").addQueryParam("abc", "123").done().get();
 
         JSONObject jsonObject = JSON.parseObject(response.body());
         JSONObject parameters = jsonObject.getJSONObject(KEY_PARAMETERS);

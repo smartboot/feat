@@ -8,7 +8,7 @@
 
 package tech.smartboot.feat.demo;
 
-import tech.smartboot.feat.client.HttpClient;
+import tech.smartboot.feat.core.client.HttpClient;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;

@@ -14,8 +14,8 @@ import com.alibaba.fastjson.serializer.SerializerFeature;
 import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import tech.smartboot.feat.client.HttpClient;
-import tech.smartboot.feat.client.HttpResponse;
+import tech.smartboot.feat.core.client.HttpClient;
+import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.test.server.RequestUnit;
 
 import java.util.concurrent.ExecutionException;
@@ -37,7 +37,7 @@ public class BastTest {
         return new HttpClient("127.0.0.1", SERVER_PORT);
     }
 
-    protected JSONObject basicCheck(tech.smartboot.feat.client.HttpResponse response,
+    protected JSONObject basicCheck(HttpResponse response,
                                     RequestUnit requestUnit) {
         JSONObject jsonObject = JSON.parseObject(response.body());
         LOGGER.info(JSON.toJSONString(jsonObject, SerializerFeature.PrettyFormat, SerializerFeature.WriteMapNullValue,

@@ -2,14 +2,14 @@ package tech.smartboot.feat.restful;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import tech.smartboot.feat.common.enums.HeaderNameEnum;
-import tech.smartboot.feat.common.enums.HttpStatus;
-import tech.smartboot.feat.common.utils.DateUtils;
-import tech.smartboot.feat.common.utils.Mimetypes;
-import tech.smartboot.feat.common.utils.StringUtils;
-import tech.smartboot.feat.server.HttpRequest;
-import tech.smartboot.feat.server.HttpResponse;
-import tech.smartboot.feat.server.HttpServerHandler;
+import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
+import tech.smartboot.feat.core.common.enums.HttpStatus;
+import tech.smartboot.feat.core.common.utils.DateUtils;
+import tech.smartboot.feat.core.common.utils.Mimetypes;
+import tech.smartboot.feat.core.common.utils.StringUtils;
+import tech.smartboot.feat.core.server.HttpRequest;
+import tech.smartboot.feat.core.server.HttpResponse;
+import tech.smartboot.feat.core.server.HttpServerHandler;
 
 import java.io.IOException;
 import java.io.InputStream;

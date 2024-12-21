@@ -15,15 +15,15 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import tech.smartboot.feat.client.HttpClient;
-import tech.smartboot.feat.client.HttpPost;
-import tech.smartboot.feat.common.enums.HeaderNameEnum;
-import tech.smartboot.feat.common.enums.HeaderValueEnum;
-import tech.smartboot.feat.common.enums.HttpStatus;
-import tech.smartboot.feat.server.HttpBootstrap;
-import tech.smartboot.feat.server.HttpRequest;
-import tech.smartboot.feat.server.HttpResponse;
-import tech.smartboot.feat.server.HttpServerHandler;
+import tech.smartboot.feat.core.client.HttpClient;
+import tech.smartboot.feat.core.client.HttpPost;
+import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
+import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
+import tech.smartboot.feat.core.common.enums.HttpStatus;
+import tech.smartboot.feat.core.server.HttpBootstrap;
+import tech.smartboot.feat.core.server.HttpRequest;
+import tech.smartboot.feat.core.server.HttpResponse;
+import tech.smartboot.feat.core.server.HttpServerHandler;
 import tech.smartboot.feat.test.BastTest;
 import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
 
@@ -115,7 +115,7 @@ public class HttpServer4Test extends BastTest {
         requestUnit.getHeaders().forEach((name, value) -> httpPost.header().add(name, value));
         httpPost.header().add("overfLow", "1234567890abcdefghi");
 
-        tech.smartboot.feat.client.HttpResponse response = httpPost.done().get();
+        tech.smartboot.feat.core.client.HttpResponse response = httpPost.done().get();
         Assert.assertEquals(response.getStatus(), HttpStatus.REQUEST_HEADER_FIELDS_TOO_LARGE.value());
     }
 
@@ -131,7 +131,7 @@ public class HttpServer4Test extends BastTest {
         HttpPost httpPost = httpClient.post(requestUnit.getUri());
         httpPost.header().add("1234567890abcdefghi", "1234567890abcdefghi");
 
-        tech.smartboot.feat.client.HttpResponse response = httpPost.done().get();
+        tech.smartboot.feat.core.client.HttpResponse response = httpPost.done().get();
         Assert.assertEquals(response.getStatus(), HttpStatus.INTERNAL_SERVER_ERROR.value());
     }
 

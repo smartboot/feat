@@ -10,7 +10,7 @@ package tech.smartboot.feat.test;
 
 import org.junit.Assert;
 import org.junit.Test;
-import tech.smartboot.feat.common.utils.ByteTree;
+import tech.smartboot.feat.core.common.utils.ByteTree;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）

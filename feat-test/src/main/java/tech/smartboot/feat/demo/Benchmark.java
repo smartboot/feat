@@ -8,8 +8,8 @@
 
 package tech.smartboot.feat.demo;
 
-import tech.smartboot.feat.client.HttpClient;
-import tech.smartboot.feat.client.HttpResponse;
+import tech.smartboot.feat.core.client.HttpClient;
+import tech.smartboot.feat.core.client.HttpResponse;
 import org.smartboot.socket.buffer.BufferPagePool;
 
 import java.io.IOException;

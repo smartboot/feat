@@ -1,11 +1,11 @@
 package tech.smartboot.feat.demo.fileupload;
 
-import tech.smartboot.feat.common.multipart.Part;
-import tech.smartboot.feat.server.HttpBootstrap;
-import tech.smartboot.feat.server.HttpRequest;
-import tech.smartboot.feat.server.HttpResponse;
-import tech.smartboot.feat.server.HttpServerHandler;
-import tech.smartboot.feat.server.handler.HttpRouteHandler;
+import tech.smartboot.feat.core.common.multipart.Part;
+import tech.smartboot.feat.core.server.HttpBootstrap;
+import tech.smartboot.feat.core.server.HttpRequest;
+import tech.smartboot.feat.core.server.HttpResponse;
+import tech.smartboot.feat.core.server.HttpServerHandler;
+import tech.smartboot.feat.core.server.handler.HttpRouteHandler;
 
 import java.io.IOException;
 import java.io.InputStream;

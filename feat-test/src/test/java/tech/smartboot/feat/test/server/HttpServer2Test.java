@@ -14,16 +14,16 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import tech.smartboot.feat.client.HttpClient;
-import tech.smartboot.feat.common.enums.HeaderNameEnum;
-import tech.smartboot.feat.common.enums.HeaderValueEnum;
-import tech.smartboot.feat.common.enums.HttpMethodEnum;
-import tech.smartboot.feat.common.enums.HttpProtocolEnum;
-import tech.smartboot.feat.common.enums.HttpStatus;
-import tech.smartboot.feat.server.HttpBootstrap;
-import tech.smartboot.feat.server.HttpRequest;
-import tech.smartboot.feat.server.HttpResponse;
-import tech.smartboot.feat.server.HttpServerHandler;
+import tech.smartboot.feat.core.client.HttpClient;
+import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
+import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
+import tech.smartboot.feat.core.common.enums.HttpMethodEnum;
+import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
+import tech.smartboot.feat.core.common.enums.HttpStatus;
+import tech.smartboot.feat.core.server.HttpBootstrap;
+import tech.smartboot.feat.core.server.HttpRequest;
+import tech.smartboot.feat.core.server.HttpResponse;
+import tech.smartboot.feat.core.server.HttpServerHandler;
 import tech.smartboot.feat.test.BastTest;
 
 import java.io.IOException;
@@ -61,7 +61,7 @@ public class HttpServer2Test extends BastTest {
                 response.write("Hello World".getBytes(StandardCharsets.UTF_8));
             }
         }).setPort(SERVER_PORT);
-        tech.smartboot.feat.client.HttpResponse httpResponse = httpClient.get("/").done().get();
+        tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.get("/").done().get();
         Assert.assertEquals(httpResponse.getContentType(), "test");
         Assert.assertEquals(httpResponse.getHeader(HeaderNameEnum.TRANSFER_ENCODING.getName()), HeaderValueEnum.CHUNKED.getName());
     }
@@ -74,7 +74,7 @@ public class HttpServer2Test extends BastTest {
                 response.write("Hello World".getBytes(StandardCharsets.UTF_8));
             }
         }).setPort(SERVER_PORT);
-        tech.smartboot.feat.client.HttpResponse httpResponse = httpClient.get("/").done().get();
+        tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.get("/").done().get();
         Assert.assertEquals(httpResponse.getProtocol(), HttpProtocolEnum.HTTP_11.getProtocol());
         Assert.assertEquals(httpResponse.getHeader(HeaderNameEnum.TRANSFER_ENCODING.getName()), HeaderValueEnum.CHUNKED.getName());
     }
@@ -87,7 +87,7 @@ public class HttpServer2Test extends BastTest {
                 response.write("Hello World".getBytes(StandardCharsets.UTF_8));
             }
         }).setPort(SERVER_PORT);
-        tech.smartboot.feat.client.HttpResponse httpResponse = httpClient.rest("/").setMethod(HttpMethodEnum.PUT.getMethod()).done().get();
+        tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.rest("/").setMethod(HttpMethodEnum.PUT.getMethod()).done().get();
         Assert.assertEquals(httpResponse.getProtocol(), HttpProtocolEnum.HTTP_11.getProtocol());
         Assert.assertEquals(httpResponse.getStatus(), HttpStatus.OK.value());
     }
@@ -103,7 +103,7 @@ public class HttpServer2Test extends BastTest {
         }).setPort(SERVER_PORT);
         for (int i = 0; i < 10; i++) {
             String body = "hello" + i;
-            tech.smartboot.feat.client.HttpResponse httpResponse = httpClient.post("/").header().setContentLength(body.length()).done().body().write(body).done().done().get();
+            tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.post("/").header().setContentLength(body.length()).done().body().write(body).done().done().get();
             Assert.assertEquals(httpResponse.getProtocol(), HttpProtocolEnum.HTTP_11.getProtocol());
             Assert.assertEquals(httpResponse.getStatus(), HttpStatus.OK.value());
             Assert.assertEquals(httpResponse.body(), "Hello World");
@@ -124,7 +124,7 @@ public class HttpServer2Test extends BastTest {
         }).setPort(SERVER_PORT);
         for (int i = 0; i < 10; i++) {
             String body = "hello" + i;
-            tech.smartboot.feat.client.HttpResponse httpResponse = httpClient.post("/").header().keepalive(true).setContentLength(body.length()).done().body().write(body).done().done().get();
+            tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.post("/").header().keepalive(true).setContentLength(body.length()).done().body().write(body).done().done().get();
             Assert.assertEquals(httpResponse.getProtocol(), HttpProtocolEnum.HTTP_11.getProtocol());
             Assert.assertEquals(httpResponse.getStatus(), HttpStatus.OK.value());
             Assert.assertEquals(httpResponse.body(), body);

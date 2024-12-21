@@ -13,15 +13,15 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import tech.smartboot.feat.client.HttpClient;
-import tech.smartboot.feat.common.enums.HeaderNameEnum;
-import tech.smartboot.feat.common.enums.HeaderValueEnum;
-import tech.smartboot.feat.common.utils.StringUtils;
-import tech.smartboot.feat.server.HttpBootstrap;
-import tech.smartboot.feat.server.HttpRequest;
-import tech.smartboot.feat.server.HttpResponse;
-import tech.smartboot.feat.server.HttpServerHandler;
-import tech.smartboot.feat.server.handler.HttpRouteHandler;
+import tech.smartboot.feat.core.client.HttpClient;
+import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
+import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
+import tech.smartboot.feat.core.common.utils.StringUtils;
+import tech.smartboot.feat.core.server.HttpBootstrap;
+import tech.smartboot.feat.core.server.HttpRequest;
+import tech.smartboot.feat.core.server.HttpResponse;
+import tech.smartboot.feat.core.server.HttpServerHandler;
+import tech.smartboot.feat.core.server.handler.HttpRouteHandler;
 import org.smartboot.socket.extension.plugins.SslPlugin;
 import org.smartboot.socket.extension.ssl.ClientAuth;
 import org.smartboot.socket.extension.ssl.factory.ServerSSLContextFactory;
@@ -154,7 +154,7 @@ public class HttpPostTest {
         Consumer consumer = client -> {
             String body = "test a body string";
             client.configuration().debug(true);
-            Future<tech.smartboot.feat.client.HttpResponse> future = client.post("/chunk")
+            Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/chunk")
                     .header().keepalive(true).done()
                     .body()
                     .write(body.getBytes()).write(body.getBytes())
@@ -180,7 +180,7 @@ public class HttpPostTest {
         Consumer consumer = client -> {
             String body = "test a body string";
             client.configuration().debug(true);
-            Future<tech.smartboot.feat.client.HttpResponse> future = client.post("/header")
+            Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/header")
                     .header().keepalive(true).setContentLength(body.getBytes().length).done()
                     .body()
                     .write(body.getBytes())
@@ -206,7 +206,7 @@ public class HttpPostTest {
             String body = "test a body string";
             String body2 = "test a body2 string";
             client.configuration().debug(true);
-            Future<tech.smartboot.feat.client.HttpResponse> future1 = client.post("/other/abc")
+            Future<tech.smartboot.feat.core.client.HttpResponse> future1 = client.post("/other/abc")
                     .header().keepalive(true).setContentLength(body.getBytes().length).done()
                     .body()
                     .write(body.getBytes())
@@ -219,7 +219,7 @@ public class HttpPostTest {
                         System.out.println(t.getMessage());
                     }).done();
 
-            Future<tech.smartboot.feat.client.HttpResponse> future2 = client.post("/other/abc")
+            Future<tech.smartboot.feat.core.client.HttpResponse> future2 = client.post("/other/abc")
                     .header().keepalive(true).setContentLength(body2.getBytes().length).done()
                     .body()
                     .write(body2.getBytes())
@@ -299,7 +299,7 @@ public class HttpPostTest {
         Consumer consumer = httpClient -> {
             httpClient.configuration().debug(true);
             byte[] jsonBytes = "{\"a\":1,\"b\":\"123\"}".getBytes(StandardCharsets.UTF_8);
-            tech.smartboot.feat.client.HttpResponse resp = httpClient.post("/empty").header().setContentLength(jsonBytes.length).setContentType(
+            tech.smartboot.feat.core.client.HttpResponse resp = httpClient.post("/empty").header().setContentLength(jsonBytes.length).setContentType(
                     "application/json").done().body().write(jsonBytes).flush().done().done().get();
             Assert.assertEquals(0, resp.getContentLength());
         };

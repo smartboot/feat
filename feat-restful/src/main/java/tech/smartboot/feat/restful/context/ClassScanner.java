@@ -1,7 +1,7 @@
 package tech.smartboot.feat.restful.context;
 
-import tech.smartboot.feat.common.logging.Logger;
-import tech.smartboot.feat.common.logging.LoggerFactory;
+import tech.smartboot.feat.core.common.logging.Logger;
+import tech.smartboot.feat.core.common.logging.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;

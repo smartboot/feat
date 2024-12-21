@@ -8,7 +8,7 @@
 
 package tech.smartboot.feat.demo;
 
-import tech.smartboot.feat.client.HttpClient;
+import tech.smartboot.feat.core.client.HttpClient;
 
 public class HttpGetDemo {
     public static void main(String[] args) {

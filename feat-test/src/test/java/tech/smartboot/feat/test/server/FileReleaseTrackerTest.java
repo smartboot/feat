@@ -3,7 +3,7 @@ package tech.smartboot.feat.test.server;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import tech.smartboot.feat.common.utils.FileReleaseTracker;
+import tech.smartboot.feat.core.common.utils.FileReleaseTracker;
 import java.io.File;
 import java.io.IOException;
 
