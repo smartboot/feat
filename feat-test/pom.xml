@@ -16,7 +16,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <properties>
-        <smarthttp.version>2.5</smarthttp.version>
+        <feat.version>1.0</feat.version>
         <junit.version>4.13.1</junit.version>
         <json.version>1.2.83</json.version>
         <slf4j.version>1.7.30</slf4j.version>
@@ -35,12 +35,12 @@
         <dependency>
             <groupId>tech.smartboot.feat</groupId>
             <artifactId>feat-restful</artifactId>
-            <version>${smarthttp.version}</version>
+            <version>${feat.version}</version>
         </dependency>
         <dependency>
             <groupId>tech.smartboot.feat</groupId>
             <artifactId>feat-client</artifactId>
-            <version>${smarthttp.version}</version>
+            <version>${feat.version}</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

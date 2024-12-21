@@ -5,12 +5,12 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>tech.smartboot.feat</groupId>
     <artifactId>feat-parent</artifactId>
-    <version>2.5</version>
+    <version>1.0</version>
     <packaging>pom</packaging>
 
     <properties>
         <smartsocket.version>1.5.55</smartsocket.version>
-        <smarthttp.version>2.5</smarthttp.version>
+        <feat.version>1.0</feat.version>
     </properties>
 
     <dependencyManagement>
@@ -23,17 +23,17 @@
             <dependency>
                 <groupId>tech.smartboot.feat</groupId>
                 <artifactId>feat-core</artifactId>
-                <version>${smarthttp.version}</version>
+                <version>${feat.version}</version>
             </dependency>
             <dependency>
                 <groupId>tech.smartboot.feat</groupId>
                 <artifactId>feat-restful</artifactId>
-                <version>${smarthttp.version}</version>
+                <version>${feat.version}</version>
             </dependency>
             <dependency>
                 <groupId>tech.smartboot.feat</groupId>
                 <artifactId>feat-restful-mybatis</artifactId>
-                <version>${smarthttp.version}</version>
+                <version>${feat.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
