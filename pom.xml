@@ -1,0 +1,254 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <name>feat-parent</name>
+    <description>a lightweight http server</description>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>tech.smartboot.feat</groupId>
+    <artifactId>feat-parent</artifactId>
+    <version>2.5</version>
+    <packaging>pom</packaging>
+
+    <properties>
+        <smartsocket.version>1.5.55</smartsocket.version>
+        <smarthttp.version>2.5</smarthttp.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>io.github.smartboot.socket</groupId>
+                <artifactId>aio-pro</artifactId>
+                <version>${smartsocket.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>tech.smartboot.feat</groupId>
+                <artifactId>feat-server</artifactId>
+                <version>${smarthttp.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>tech.smartboot.feat</groupId>
+                <artifactId>feat-common</artifactId>
+                <version>${smarthttp.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>tech.smartboot.feat</groupId>
+                <artifactId>feat-client</artifactId>
+                <version>${smarthttp.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>tech.smartboot.feat</groupId>
+                <artifactId>feat-restful</artifactId>
+                <version>${smarthttp.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>tech.smartboot.feat</groupId>
+                <artifactId>feat-restful-mybatis</artifactId>
+                <version>${smarthttp.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+    <url>https://github.com/smartboot/feat</url>
+
+    <licenses>
+        <license>
+            <name>The Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <!-- 项目团队 -->
+    <developers>
+        <developer>
+            <id>Seer</id>
+            <name>三刀</name>
+            <email>zhengjunweimail@163.com</email>
+            <roles>
+                <role>smart-socket作者</role>
+            </roles>
+            <url>https://github.com/smthing/</url>
+            <timezone>GMT+8</timezone>
+            <properties>
+                <picUrl>https://git.oschina.net/uploads/75/351975_smartdms.jpg</picUrl>
+            </properties>
+            <organization>smartboot</organization>
+            <organizationUrl>https://github.com/smartboot</organizationUrl>
+        </developer>
+    </developers>
+
+    <scm>
+        <url>https://github.com/smartboot/feat</url>
+        <connection>scm:git:https://github.com/smartboot/feat.git</connection>
+        <developerConnection>scm:git:ssh://github.com:smartboot/feat.git</developerConnection>
+        <tag>master</tag>
+    </scm>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+                <version>0.4.0</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <publishingServerId>ossrh</publishingServerId>
+                    <tokenAuth>true</tokenAuth>
+                    <autoPublish>true</autoPublish>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-plugin-plugin</artifactId>
+                <configuration>
+                    <!-- Needed for Java 5 annotation based configuration, for some reason. -->
+                    <skipErrorNoDescriptorsFound>true</skipErrorNoDescriptorsFound>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <serverId>ossrh</serverId>
+                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <!--<links>https://docs.oracle.com/javase/7/docs/api/</links>-->
+                    <show>public</show>
+                    <failOnError>false</failOnError>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <!--                                                                        <phase>verify</phase>-->
+                        <phase>deploy</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                        <configuration>
+                            <!-- Prevent gpg from using pinentry programs -->
+                            <gpgArguments>
+                                <arg>--pinentry-mode</arg>
+                                <arg>loopback</arg>
+                            </gpgArguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-plugin-plugin</artifactId>
+                    <version>3.4</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.10.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.sonatype.plugins</groupId>
+                    <artifactId>nexus-staging-maven-plugin</artifactId>
+                    <version>1.6.7</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>2.2.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-gpg-plugin</artifactId>
+                    <version>1.5</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+    <repositories>
+        <!--        <repository>-->
+        <!--            <id>alimaven</id>-->
+        <!--            <name>aliyun maven</name>-->
+        <!--            <url>https://maven.aliyun.com/repository/public</url>-->
+        <!--        </repository>-->
+        <repository>
+            <id>sonatype-nexus-snapshots</id>
+            <name>Sonatype Nexus Snapshots</name>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </repository>
+    </repositories>
+    <pluginRepositories>
+        <!--        <pluginRepository>-->
+        <!--            <id>alimaven</id>-->
+        <!--            <name>aliyun maven</name>-->
+        <!--            <url>https://maven.aliyun.com/repository/public</url>-->
+        <!--        </pluginRepository>-->
+        <pluginRepository>
+            <id>sonatype-nexus-snapshots</id>
+            <name>Sonatype Nexus Snapshots</name>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </pluginRepository>
+    </pluginRepositories>
+    <modules>
+        <module>feat-server</module>
+        <module>feat-common</module>
+        <module>feat-client</module>
+        <module>feat-restful</module>
+        <module>feat-restful-mybatis</module>
+    </modules>
+</project>

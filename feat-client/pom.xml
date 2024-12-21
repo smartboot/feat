@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ~ Copyright (c) 2017-2021, org.smartboot. All rights reserved.
+  ~ project name: feat
+  ~ file name: pom.xml
+  ~ Date: 2021-02-07
+  ~ Author: sandao (zhengjunweimail@163.com)
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>feat-parent</artifactId>
+        <groupId>tech.smartboot.feat</groupId>
+        <version>2.5</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+    <description>feat客户端应用</description>
+    <name>feat-client</name>
+
+    <artifactId>feat-client</artifactId>
+
+    <dependencies>
+        <dependency>
+            <groupId>tech.smartboot.feat</groupId>
+            <artifactId>feat-common</artifactId>
+        </dependency>
+    </dependencies>
+</project>
