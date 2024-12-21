@@ -237,7 +237,6 @@ public class HttpMessageProcessor extends AbstractMessageProcessor<Request> {
             } else {
                 request.setRequestURI(StringUtils.substring(originalUri, uriIndex));
             }
-            request.setScheme(StringUtils.substring(originalUri, 0, schemeIndex));
         } else {
             request.setRequestURI(originalUri);
         }

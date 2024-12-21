@@ -8,6 +8,8 @@
 
 package tech.smartboot.feat.core.server.impl;
 
+import org.smartboot.socket.transport.AioSession;
+import org.smartboot.socket.util.Attachment;
 import tech.smartboot.feat.core.common.Cookie;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.Reset;
@@ -25,8 +27,6 @@ import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpServerConfiguration;
 import tech.smartboot.feat.core.server.ServerHandler;
 import tech.smartboot.feat.core.server.WebSocketHandler;
-import org.smartboot.socket.transport.AioSession;
-import org.smartboot.socket.util.Attachment;
 
 import javax.net.ssl.SSLEngine;
 import java.io.ByteArrayOutputStream;
@@ -85,10 +85,7 @@ public abstract class CommonRequest implements Reset {
      * 跟在URL后面的请求信息
      */
     protected String queryString;
-    /**
-     * 协议
-     */
-    protected String scheme;
+
     protected long contentLength = INIT_CONTENT_LENGTH;
     protected String remoteAddr;
     protected String remoteHost;
@@ -297,14 +294,7 @@ public abstract class CommonRequest implements Reset {
     }
 
     public final String getScheme() {
-        if (scheme == null) {
-            return configuration.isSecure() ? Constant.SCHEMA_HTTPS : Constant.SCHEMA_HTTP;
-        }
-        return scheme;
-    }
-
-    public final void setScheme(String scheme) {
-        this.scheme = scheme;
+        return configuration.isSecure() ? Constant.SCHEMA_HTTPS : Constant.SCHEMA_HTTP;
     }
 
     public final String getQueryString() {
@@ -510,7 +500,6 @@ public abstract class CommonRequest implements Reset {
         contentLength = INIT_CONTENT_LENGTH;
         cookies = null;
         type = null;
-        scheme = null;
         queryString = null;
         requestUri = null;
         multiplexing = true;
