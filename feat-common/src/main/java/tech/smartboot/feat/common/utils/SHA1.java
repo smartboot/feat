@@ -1,6 +1,6 @@
 /*******************************************************************************
- * Copyright (c) 2017-2020, org.smartboot. All rights reserved.
- * project name: smart-http
+ * Copyright (c) 2024, tech.smartboot. All rights reserved.
+ * project name: feat
  * file name: SHA1.java
  * Date: 2020-03-29
  * Author: sandao (zhengjunweimail@163.com)

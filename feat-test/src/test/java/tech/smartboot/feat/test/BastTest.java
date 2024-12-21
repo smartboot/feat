@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2021, org.smartboot. All rights reserved.
+ * Copyright (c) 2024, tech.smartboot. All rights reserved.
  * project name: smart-servlet
  * file name: BastTest.java
  * Date: 2021-05-14

@@ -1,6 +1,6 @@
 /*******************************************************************************
- * Copyright (c) 2017-2021, org.smartboot. All rights reserved.
- * project name: smart-http
+ * Copyright (c) 2024, tech.smartboot. All rights reserved.
+ * project name: feat
  * file name: HttpMessageProcessor.java
  * Date: 2021-02-07
  * Author: sandao (zhengjunweimail@163.com)
@@ -90,7 +90,7 @@ public class HttpMessageProcessor extends AbstractMessageProcessor<Request> {
             }
             response.setHttpStatus(httpStatus);
             OutputStream outputStream = response.getOutputStream();
-            outputStream.write(("<center><h1>" + httpStatus.value() + " " + httpStatus.getReasonPhrase() + "</h1>" + desc + "<hr/><a target='_blank' href='https://smartboot.tech/'>smart-http</a>/" + HttpServerConfiguration.VERSION + "&nbsp;|&nbsp; <a target='_blank' href='https://gitee.com/smartboot/smart-http'>Gitee</a></center>").getBytes());
+            outputStream.write(("<center><h1>" + httpStatus.value() + " " + httpStatus.getReasonPhrase() + "</h1>" + desc + "<hr/><a target='_blank' href='https://smartboot.tech/'>feat</a>/" + HttpServerConfiguration.VERSION + "&nbsp;|&nbsp; <a target='_blank' href='https://gitee.com/smartboot/feat'>Gitee</a></center>").getBytes());
         } catch (IOException e) {
             LOGGER.warn("HttpError response exception", e);
         } finally {

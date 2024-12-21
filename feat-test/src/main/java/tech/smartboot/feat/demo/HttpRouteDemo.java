@@ -1,6 +1,6 @@
 /*******************************************************************************
- * Copyright (c) 2017-2021, org.smartboot. All rights reserved.
- * project name: smart-http
+ * Copyright (c) 2024, tech.smartboot. All rights reserved.
+ * project name: feat
  * file name: HttpRouteDemo.java
  * Date: 2021-06-20
  * Author: sandao (zhengjunweimail@163.com)
@@ -31,7 +31,7 @@ public class HttpRouteDemo {
         routeHandle.route("/", new HttpServerHandler() {
             @Override
             public void handle(HttpRequest request, HttpResponse response) throws IOException {
-                response.write("smart-http".getBytes());
+                response.write("feat".getBytes());
             }
         }).route("/test1", new HttpServerHandler() {
             @Override

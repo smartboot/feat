@@ -1,6 +1,6 @@
 /*******************************************************************************
- * Copyright (c) 2017-2021, org.smartboot. All rights reserved.
- * project name: smart-http
+ * Copyright (c) 2024, tech.smartboot. All rights reserved.
+ * project name: feat
  * file name: HttpRest.java
  * Date: 2021-02-07
  * Author: sandao (zhengjunweimail@163.com)
@@ -35,7 +35,7 @@ import java.util.function.Consumer;
  * @version V1.0 , 2021/2/3
  */
 class HttpRestImpl implements HttpRest {
-    private final static String DEFAULT_USER_AGENT = "smart-http";
+    private final static String DEFAULT_USER_AGENT = "feat";
     private final HttpRequestImpl request;
     private final CompletableFuture<HttpResponseImpl> completableFuture = new CompletableFuture<>();
     private final AbstractQueue<AbstractResponse> queue;

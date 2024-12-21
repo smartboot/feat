@@ -100,7 +100,7 @@ public class PartImpl implements Part {
             if (StringUtils.isNotBlank(multipartConfig.getLocation())) {
                 target = Paths.get(multipartConfig.getLocation(), fileName);
             } else {
-                target = File.createTempFile("smart-http_" + this.hashCode(), fileName).toPath();
+                target = File.createTempFile("feat_" + this.hashCode(), fileName).toPath();
             }
         }
         Files.move(diskFile.toPath(), target, StandardCopyOption.REPLACE_EXISTING);
@@ -215,6 +215,6 @@ public class PartImpl implements Part {
                 return new File(location, this.hashCode() + "_" + fileName);
             }
         }
-        return File.createTempFile("smart-http_" + this.hashCode() + "_", fileName);
+        return File.createTempFile("feat_" + this.hashCode() + "_", fileName);
     }
 }

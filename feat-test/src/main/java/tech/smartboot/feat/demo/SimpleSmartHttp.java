@@ -1,6 +1,6 @@
 /*******************************************************************************
- * Copyright (c) 2017-2021, org.smartboot. All rights reserved.
- * project name: smart-http
+ * Copyright (c) 2024, tech.smartboot. All rights reserved.
+ * project name: feat
  * file name: SimpleSmartHttp.java
  * Date: 2021-06-08
  * Author: sandao (zhengjunweimail@163.com)
@@ -30,7 +30,7 @@ public class SimpleSmartHttp {
                 while ((i = in.read(b)) > 0) {
                     System.out.println(new String(b, 0, i));
                 }
-                response.write("hello smart-http<br/>".getBytes());
+                response.write("hello feat<br/>".getBytes());
             }
         }).setPort(8080).start();
     }

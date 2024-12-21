@@ -1,6 +1,6 @@
 /*******************************************************************************
- * Copyright (c) 2017-2021, org.smartboot. All rights reserved.
- * project name: smart-http
+ * Copyright (c) 2024, tech.smartboot. All rights reserved.
+ * project name: feat
  * file name: HttpServerConfiguration.java
  * Date: 2021-02-22
  * Author: sandao (zhengjunweimail@163.com)
@@ -81,7 +81,7 @@ public class HttpServerConfiguration {
     /**
      * 服务器名称
      */
-    private String serverName = "smart-http";
+    private String serverName = "feat";
 
     /**
      * 是否加密通信
@@ -100,7 +100,7 @@ public class HttpServerConfiguration {
     private HttpServerHandler httpServerHandler = new HttpServerHandler() {
         @Override
         public void handle(HttpRequest request, HttpResponse response) throws IOException {
-            response.write("Hello smart-http".getBytes(StandardCharsets.UTF_8));
+            response.write("Hello feat".getBytes(StandardCharsets.UTF_8));
         }
     };
     private WebSocketHandler webSocketHandler;
@@ -108,7 +108,7 @@ public class HttpServerConfiguration {
     private Http2ServerHandler http2ServerHandler = new Http2ServerHandler() {
         @Override
         public void handle(HttpRequest request, HttpResponse response) throws IOException {
-            response.write("Hello smart-http".getBytes(StandardCharsets.UTF_8));
+            response.write("Hello feat".getBytes(StandardCharsets.UTF_8));
         }
     };
 

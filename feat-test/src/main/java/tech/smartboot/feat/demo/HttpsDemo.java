@@ -1,6 +1,6 @@
 /*******************************************************************************
- * Copyright (c) 2017-2022, org.smartboot. All rights reserved.
- * project name: smart-http
+ * Copyright (c) 2024, tech.smartboot. All rights reserved.
+ * project name: feat
  * file name: HttpsDemo.java
  * Date: 2022-02-04
  * Author: sandao (zhengjunweimail@163.com)
@@ -33,14 +33,14 @@ public class HttpsDemo {
             @Override
             public void handle(HttpRequest request, HttpResponse response) throws IOException {
                 if (request.getRequestURI().equals("/aa.css")) {
-                    response.write("hello smart-http push<br/>".getBytes());
+                    response.write("hello feat push<br/>".getBytes());
                 } else {
                     PushBuilder pushBuilder = request.newPushBuilder();
                     if (pushBuilder != null) {
                         request.newPushBuilder().path("/aa.css").addHeader("aa", "bb").method("GET").push();
                     }
 
-                    response.write("<html><head></head><body>hello smart-http<br/></body></html>".getBytes());
+                    response.write("<html><head></head><body>hello feat<br/></body></html>".getBytes());
 
                 }
             }

@@ -1,6 +1,6 @@
 /*******************************************************************************
- * Copyright (c) 2017-2021, org.smartboot. All rights reserved.
- * project name: smart-http
+ * Copyright (c) 2024, tech.smartboot. All rights reserved.
+ * project name: feat
  * file name: HttpBootstrap.java
  * Date: 2021-02-07
  * Author: sandao (zhengjunweimail@163.com)
@@ -134,16 +134,16 @@ public class HttpBootstrap {
             }
 
             if (configuration.isBannerEnabled()) {
-                System.out.println(BANNER + "\r\n :: smart-http :: (" + HttpServerConfiguration.VERSION + ")");
+                System.out.println(BANNER + "\r\n :: feat :: (" + HttpServerConfiguration.VERSION + ")");
                 System.out.println("Technical Support:");
                 System.out.println(" - Document: https://smartboot.tech]");
-                System.out.println(" - Gitee: https://gitee.com/smartboot/smart-http");
-                System.out.println(" - Github: https://github.com/smartboot/smart-http");
-                System.out.println("\u001B[32m\uD83C\uDF89Congratulations, the smart-http startup is successful" +
+                System.out.println(" - Gitee: https://gitee.com/smartboot/feat");
+                System.out.println(" - Github: https://github.com/smartboot/feat");
+                System.out.println("\u001B[32m\uD83C\uDF89Congratulations, the feat startup is successful" +
                         ".\u001B[0m");
             }
         } catch (Throwable e) {
-            System.out.println("\u001B[31m❗smart-http has failed to start for some reason.\u001B[0m");
+            System.out.println("\u001B[31m❗feat has failed to start for some reason.\u001B[0m");
             throw new RuntimeException("server start error.", e);
         }
     }

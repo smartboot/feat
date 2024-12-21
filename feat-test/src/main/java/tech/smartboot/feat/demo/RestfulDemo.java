@@ -22,7 +22,7 @@ public class RestfulDemo {
     @RequestMapping("/")
     public String index() {
         return ("<html>" +
-                "<head><title>smart-http demo</title></head>" +
+                "<head><title>feat demo</title></head>" +
                 "<body>" +
                 "GET 表单提交<form action='/get' method='get'><input type='text' name='text'/><input type='submit'/></form></br>" +
                 "POST 表单提交<form action='/post' method='post'><input type='text' name='text'/><input type='submit'/></form></br>" +

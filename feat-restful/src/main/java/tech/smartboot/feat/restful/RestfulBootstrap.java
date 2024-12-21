@@ -46,7 +46,7 @@ public class RestfulBootstrap {
     private final RestfulHandler restfulHandler;
 
     private static final HttpServerHandler DEFAULT_HANDLER = new HttpServerHandler() {
-        private final byte[] BYTES = "hello smart-http-rest".getBytes();
+        private final byte[] BYTES = "hello feat-rest".getBytes();
 
         @Override
         public void handle(HttpRequest request, HttpResponse response) throws IOException {

@@ -1,6 +1,6 @@
 /*******************************************************************************
- * Copyright (c) 2017-2021, org.smartboot. All rights reserved.
- * project name: smart-http
+ * Copyright (c) 2024, tech.smartboot. All rights reserved.
+ * project name: feat
  * file name: SmartHttpDemo.java
  * Date: 2021-06-20
  * Author: sandao (zhengjunweimail@163.com)
@@ -46,7 +46,7 @@ public class SmartHttpDemo {
         }));
         routeHandle.route("/", new HttpServerHandler() {
                     byte[] body = ("<html>" +
-                            "<head><title>smart-http demo</title></head>" +
+                            "<head><title>feat demo</title></head>" +
                             "<body>" +
                             "GET 表单提交<form action='/get' method='get'><input type='text' name='text'/><input type='submit'/></form></br>" +
                             "POST 表单提交<form action='/post' method='post'><input type='text' name='text'/><input type='submit'/></form></br>" +

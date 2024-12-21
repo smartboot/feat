@@ -1,6 +1,6 @@
 /*******************************************************************************
- * Copyright (c) 2017-2022, org.smartboot. All rights reserved.
- * project name: smart-http
+ * Copyright (c) 2024, tech.smartboot. All rights reserved.
+ * project name: feat
  * file name: ByteTreeTest.java
  * Date: 2022-01-04
  * Author: sandao (zhengjunweimail@163.com)

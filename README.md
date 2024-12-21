@@ -1,5 +1,5 @@
-# smart-http
-smart-http 是一款可编程的 Http 应用微内核，方便用户根据自身需求进行 Server 或 Client 的应用开发。
+# feat
+feat 是一款可编程的 Http 应用微内核，方便用户根据自身需求进行 Server 或 Client 的应用开发。
 
 感兴趣的朋友请记得 Star一下该项目，并且非常欢迎有能力的朋友贡献你的想法和代码。
 ## 功能列表
@@ -13,11 +13,11 @@ smart-http 是一款可编程的 Http 应用微内核，方便用户根据自身
 
 ## 快速体验
 ### 服务端开发
-1. 在您的Maven工程中引入smart-http依赖。
+1. 在您的Maven工程中引入feat依赖。
     ```xml
     <dependency>
-        <groupId>io.github.smartboot.http</groupId>
-        <artifactId>smart-http-server</artifactId>
+        <groupId>tech.smartboot.feat</groupId>
+        <artifactId>feat-server</artifactId>
         <version>2.5</version>
     </dependency>
     ```
@@ -30,7 +30,7 @@ smart-http 是一款可编程的 Http 应用微内核，方便用户根据自身
            bootstrap.httpHandler(new HttpServerHandler() {
                @Override
                public void handle(HttpRequest request, HttpResponse response) throws IOException {
-                   response.write("hello smart-http<br/>".getBytes());
+                   response.write("hello feat<br/>".getBytes());
                }
            }).setPort(8080).start();
        }
@@ -39,11 +39,11 @@ smart-http 是一款可编程的 Http 应用微内核，方便用户根据自身
 3. 浏览器访问:`http://localhost:8080/`，亦或采用websocket请求`ws://127.0.0.1:8080/`
 
 ### 客户端开发
-1. 在您的Maven工程中引入smart-http依赖。
+1. 在您的Maven工程中引入feat依赖。
     ```xml
     <dependency>
-        <groupId>io.github.smartboot.http</groupId>
-        <artifactId>smart-http-client</artifactId>
+        <groupId>tech.smartboot.feat</groupId>
+        <artifactId>feat-client</artifactId>
         <version>2.5</version>
     </dependency>
     ```

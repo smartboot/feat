@@ -26,7 +26,7 @@ public class FormDataDemo {
         HttpRouteHandler routeHandler = new HttpRouteHandler();
         routeHandler.route("/", new HttpServerHandler() {
                     byte[] body = ("<html>" +
-                            "<head><title>smart-http demo</title></head>" +
+                            "<head><title>feat demo</title></head>" +
                             "<body>" +
                             "GET 表单提交<form action='/get' method='get'><input type='text' name='text'/><input type='submit'/></form></br>" +
                             "POST 表单提交<form action='/post' method='post'><input type='text' name='text'/><input type='submit'/></form></br>" +
@@ -51,7 +51,7 @@ public class FormDataDemo {
                                 if (item.getSubmittedFileName() != null) {
                                     System.out.println("filename = " + item.getSubmittedFileName());
                                     //保存到指定路径
-                                    Path filePath = Paths.get("smart-http-test", "src", "main", "resources").resolve(item.getSubmittedFileName());
+                                    Path filePath = Paths.get("feat-test", "src", "main", "resources").resolve(item.getSubmittedFileName());
                                     Files.createDirectories(filePath.getParent());
                                     Files.copy(inputStream, filePath);
                                     item.delete();

@@ -1,6 +1,6 @@
 /*******************************************************************************
- * Copyright (c) 2017-2021, org.smartboot. All rights reserved.
- * project name: smart-http
+ * Copyright (c) 2024, tech.smartboot. All rights reserved.
+ * project name: feat
  * file name: BasicAuthServerHandle.java
  * Date: 2021-02-23
  * Author: sandao (zhengjunweimail@163.com)
@@ -39,7 +39,7 @@ public final class BasicAuthServerHandler extends HttpServerHandler {
             httpServerHandler.onHeaderComplete(request);
         } else {
             HttpResponse response = request.newHttpRequest().getResponse();
-            response.setHeader(HeaderNameEnum.WWW_AUTHENTICATE.getName(), "Basic realm=\"smart-http\"");
+            response.setHeader(HeaderNameEnum.WWW_AUTHENTICATE.getName(), "Basic realm=\"feat\"");
             response.setHttpStatus(HttpStatus.UNAUTHORIZED);
             response.close();
         }
