@@ -22,17 +22,7 @@
             </dependency>
             <dependency>
                 <groupId>tech.smartboot.feat</groupId>
-                <artifactId>feat-server</artifactId>
-                <version>${smarthttp.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>tech.smartboot.feat</groupId>
-                <artifactId>feat-common</artifactId>
-                <version>${smarthttp.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>tech.smartboot.feat</groupId>
-                <artifactId>feat-client</artifactId>
+                <artifactId>feat-core</artifactId>
                 <version>${smarthttp.version}</version>
             </dependency>
             <dependency>
@@ -245,9 +235,7 @@
         </pluginRepository>
     </pluginRepositories>
     <modules>
-        <module>feat-server</module>
-        <module>feat-common</module>
-        <module>feat-client</module>
+        <module>feat-core</module>
         <module>feat-restful</module>
         <module>feat-restful-mybatis</module>
     </modules>

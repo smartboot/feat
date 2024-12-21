@@ -24,7 +24,7 @@
         </dependency>
         <dependency>
             <groupId>tech.smartboot.feat</groupId>
-            <artifactId>feat-server</artifactId>
+            <artifactId>feat-core</artifactId>
             <version>2.5</version>
             <scope>compile</scope>
         </dependency>

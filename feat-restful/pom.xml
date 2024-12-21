@@ -18,7 +18,7 @@
     <dependencies>
         <dependency>
             <groupId>tech.smartboot.feat</groupId>
-            <artifactId>feat-server</artifactId>
+            <artifactId>feat-core</artifactId>
         </dependency>
         <dependency>
             <groupId>com.alibaba.fastjson2</groupId>
