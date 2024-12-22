@@ -8,6 +8,8 @@
 
 package tech.smartboot.feat.core.common.utils;
 
+import java.nio.charset.StandardCharsets;
+
 /**
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/1/2
@@ -63,25 +65,25 @@ public class ByteTree<T> {
      */
     public ByteTree<T> search(byte[] bytes, int offset, int limit, EndMatcher endMatcher, boolean cache) {
         ByteTree<T> byteTree = this;
-        while (true) {
-            if (offset >= limit) {
-                return null;
-            }
+        for (; offset < limit; offset++) {
             if (endMatcher.match(bytes[offset])) {
                 return byteTree;
             }
 
             int i = bytes[offset] - byteTree.shift;
-            if (i >= byteTree.nodes.length || i < 0) {
+            if (i < 0 || i >= byteTree.nodes.length) {
                 break;
             }
+
             ByteTree<T> b = byteTree.nodes[i];
             if (b != null) {
                 byteTree = b;
-                offset++;
             } else {
                 break;
             }
+        }
+        if (offset == limit) {
+            return null;
         }
         if (cache && byteTree.depth < MAX_DEPTH) {
             //在当前节点上追加子节点
@@ -92,7 +94,7 @@ public class ByteTree<T> {
             for (int i = offset; i < limit; i++) {
                 if (endMatcher.match(bytes[i])) {
                     int length = i - offset + byteTree.depth;
-                    return new VirtualByteTree(new String(bytes, offset - byteTree.depth, length), length);
+                    return new VirtualByteTree(new String(bytes, offset - byteTree.depth, length, StandardCharsets.US_ASCII), length);
                 }
             }
             return null;

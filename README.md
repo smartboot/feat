@@ -61,5 +61,5 @@ Install my-project with maven
 
 ## Support
 
-For support, email zhengjunweimail@163.com or submit an issue.
+For support, email [zhengjunweimail@163.com](mailto:zhengjunweimail@163.com) or submit an issue.
 

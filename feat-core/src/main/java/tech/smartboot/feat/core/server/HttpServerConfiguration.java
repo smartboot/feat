@@ -100,7 +100,7 @@ public class HttpServerConfiguration {
     private HttpServerHandler httpServerHandler = new HttpServerHandler() {
         @Override
         public void handle(HttpRequest request, HttpResponse response) throws IOException {
-            response.write("Hello feat".getBytes(StandardCharsets.UTF_8));
+            response.write("Hello Feat".getBytes(StandardCharsets.UTF_8));
         }
     };
     private WebSocketHandler webSocketHandler;
@@ -108,7 +108,7 @@ public class HttpServerConfiguration {
     private Http2ServerHandler http2ServerHandler = new Http2ServerHandler() {
         @Override
         public void handle(HttpRequest request, HttpResponse response) throws IOException {
-            response.write("Hello feat".getBytes(StandardCharsets.UTF_8));
+            response.write("Hello Feat".getBytes(StandardCharsets.UTF_8));
         }
     };
 
