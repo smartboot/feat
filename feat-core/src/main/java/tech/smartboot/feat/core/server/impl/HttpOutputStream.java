@@ -79,7 +79,7 @@ final class HttpOutputStream extends AbstractOutputStream {
     public void write(byte[] b, int off, int len) throws IOException {
         super.write(b, off, len);
         if (configuration.getWsIdleTimeout() > 0 || configuration.getHttpIdleTimeout() > 0) {
-            request.setLatestIo(System.currentTimeMillis());
+            request.setLatestIo(TimerUtils.currentTimeMillis());
         }
     }
 

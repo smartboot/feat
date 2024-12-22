@@ -8,15 +8,14 @@
 
 package tech.smartboot.feat.core.server;
 
+import org.smartboot.socket.extension.plugins.Plugin;
+import org.smartboot.socket.extension.plugins.SslPlugin;
+import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.utils.ByteTree;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.impl.Request;
 import tech.smartboot.feat.core.server.waf.WafConfiguration;
-import org.smartboot.socket.buffer.BufferPagePool;
-import org.smartboot.socket.extension.plugins.Plugin;
-import org.smartboot.socket.extension.plugins.SslPlugin;
-import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
 
 import java.io.IOException;
 import java.nio.channels.AsynchronousChannelGroup;
@@ -93,8 +92,6 @@ public class HttpServerConfiguration {
     private long maxRequestSize = Integer.MAX_VALUE;
 
     private boolean lowMemory = false;
-    private BufferPagePool readBufferPool;
-    private BufferPagePool writeBufferPool;
     private AsynchronousChannelGroup group;
 
     private HttpServerHandler httpServerHandler = new HttpServerHandler() {
@@ -307,24 +304,6 @@ public class HttpServerConfiguration {
 
     boolean isLowMemory() {
         return lowMemory;
-    }
-
-    public BufferPagePool getReadBufferPool() {
-        return readBufferPool;
-    }
-
-    public HttpServerConfiguration setReadBufferPool(BufferPagePool readBufferPool) {
-        this.readBufferPool = readBufferPool;
-        return this;
-    }
-
-    public BufferPagePool getWriteBufferPool() {
-        return writeBufferPool;
-    }
-
-    public HttpServerConfiguration setWriteBufferPool(BufferPagePool writeBufferPool) {
-        this.writeBufferPool = writeBufferPool;
-        return this;
     }
 
     public HttpServerConfiguration setLowMemory(boolean lowMemory) {

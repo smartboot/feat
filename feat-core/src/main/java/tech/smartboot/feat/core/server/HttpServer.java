@@ -8,13 +8,14 @@
 
 package tech.smartboot.feat.core.server;
 
+import org.smartboot.socket.buffer.BufferPagePool;
+import org.smartboot.socket.transport.AioQuickServer;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
 import tech.smartboot.feat.core.common.enums.HttpMethodEnum;
 import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
 import tech.smartboot.feat.core.server.impl.HttpMessageProcessor;
 import tech.smartboot.feat.core.server.impl.HttpRequestProtocol;
-import org.smartboot.socket.transport.AioQuickServer;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -44,6 +45,7 @@ public class HttpServer {
      */
     private int port = 8080;
     private boolean started = false;
+    private BufferPagePool bufferPagePool;
 
     public HttpServer() {
         this(new HttpMessageProcessor());
@@ -73,8 +75,7 @@ public class HttpServer {
         processor.http2ServerHandler(new Http2ServerHandler() {
 
             @Override
-            public void handle(HttpRequest request, HttpResponse response,
-                               CompletableFuture<Object> completableFuture) throws Throwable {
+            public void handle(HttpRequest request, HttpResponse response, CompletableFuture<Object> completableFuture) throws Throwable {
                 httpHandler.handle(request, response, completableFuture);
             }
         });
@@ -115,16 +116,14 @@ public class HttpServer {
             throw new RuntimeException("server is running");
         }
         started = true;
+        bufferPagePool = new BufferPagePool(configuration.getThreadNum(), true);
         initByteCache();
 
         configuration.getPlugins().forEach(processor::addPlugin);
 
         server = new AioQuickServer(configuration.getHost(), port, protocol, processor);
-        server.setThreadNum(configuration.getThreadNum())
-                .setBannerEnabled(false)
-                .setReadBufferSize(configuration.getReadBufferSize())
-                .setBufferPagePool(configuration.getReadBufferPool(), configuration.getWriteBufferPool())
-                .setWriteBuffer(configuration.getWriteBufferSize(), 16);
+        server.setThreadNum(configuration.getThreadNum()).setBannerEnabled(false).setReadBufferSize(configuration.getReadBufferSize()).setBufferPagePool(BufferPagePool.DEFAULT_BUFFER_PAGE_POOL,
+                bufferPagePool).setWriteBuffer(configuration.getWriteBufferSize(), 16);
         if (!configuration.isLowMemory()) {
             server.disableLowMemory();
         }
@@ -141,8 +140,7 @@ public class HttpServer {
                 System.out.println(" - Document: https://smartboot.tech]");
 //                System.out.println(" - Gitee: https://gitee.com/smartboot/feat");
                 System.out.println(" - Github: https://github.com/smartboot/feat");
-                System.out.println("\u001B[32m\uD83C\uDF89Congratulations, the feat startup is successful" +
-                        ".\u001B[0m");
+                System.out.println("\u001B[32m\uD83C\uDF89Congratulations, the feat startup is successful" + ".\u001B[0m");
             }
         } catch (Throwable e) {
             System.out.println("\u001B[31m❗feat has failed to start for some reason.\u001B[0m");
@@ -172,6 +170,8 @@ public class HttpServer {
         if (server != null) {
             server.shutdown();
             server = null;
+            bufferPagePool.release();
+            bufferPagePool = null;
         }
     }
 }
