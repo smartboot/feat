@@ -19,15 +19,17 @@ import org.smartboot.socket.transport.AioQuickServer;
 import java.util.concurrent.CompletableFuture;
 
 public class HttpServer {
-
-    private static final String BANNER = "                               _       _      _    _          \n" +
-            "                              ( )_    ( )    ( )_ ( )_        \n" +
-            "  ___   ___ ___     _ _  _ __ | ,_)   | |__  | ,_)| ,_) _ _   \n" +
-            "/',__)/' _ ` _ `\\ /'_` )( '__)| |     |  _ `\\| |  | |  ( '_`\\ \n" +
-            "\\__, \\| ( ) ( ) |( (_| || |   | |_    | | | || |_ | |_ | (_) )\n" +
-            "(____/(_) (_) (_)`\\__,_)(_)   `\\__)   (_) (_)`\\__)`\\__)| ,__/'\n" +
-            "                                                       | |    \n" +
-            "                                                       (_)   ";
+    /**
+     * http://patorjk.com/software/taag/
+     * Font Name: Varsity
+     */
+    private static final String BANNER =
+            " ________   ________        _        _________  \n" +
+            "|_   __  | |_   __  |      / \\      |  _   _  | \n" +
+            "  | |_ \\_|   | |_ \\_|     / _ \\     |_/ | | \\_| \n" +
+            "  |  _|      |  _| _     / ___ \\        | |     \n" +
+            " _| |_      _| |__/ |  _/ /   \\ \\_     _| |_    \n" +
+            "|_____|    |________| |____| |____|   |_____|   \n";
 
 
     /**
@@ -134,10 +136,10 @@ public class HttpServer {
             }
 
             if (configuration.isBannerEnabled()) {
-                System.out.println(BANNER + "\r\n :: feat :: (" + HttpServerConfiguration.VERSION + ")");
+                System.out.println(BANNER + "\r\n :: Feat :: (" + HttpServerConfiguration.VERSION + ")");
                 System.out.println("Technical Support:");
                 System.out.println(" - Document: https://smartboot.tech]");
-                System.out.println(" - Gitee: https://gitee.com/smartboot/feat");
+//                System.out.println(" - Gitee: https://gitee.com/smartboot/feat");
                 System.out.println(" - Github: https://github.com/smartboot/feat");
                 System.out.println("\u001B[32m\uD83C\uDF89Congratulations, the feat startup is successful" +
                         ".\u001B[0m");
