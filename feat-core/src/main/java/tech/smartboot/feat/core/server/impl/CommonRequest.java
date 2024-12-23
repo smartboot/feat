@@ -89,21 +89,21 @@ public abstract class CommonRequest implements Reset {
     protected long contentLength = INIT_CONTENT_LENGTH;
     protected String remoteAddr;
     protected String remoteHost;
-    protected String hostHeader;
+    private String hostHeader;
     /**
      * 消息类型
      */
-    protected HttpTypeEnum type = null;
+    private HttpTypeEnum type = null;
 
-    protected Cookie[] cookies;
-    protected SSLEngine sslEngine;
+    private Cookie[] cookies;
+    private final SSLEngine sslEngine;
 
     /**
      * 附件对象
      */
-    protected Attachment attachment;
+    private Attachment attachment;
 
-    protected ServerHandler serverHandler;
+    private ServerHandler serverHandler;
     private boolean multiplexing = false;
 
 
@@ -111,6 +111,9 @@ public abstract class CommonRequest implements Reset {
         this.aioSession = aioSession;
         this.configuration = configuration;
         this.sslEngine = HttpRequest.SSL_ENGINE_THREAD_LOCAL.get();
+        if (sslEngine != null) {
+            HttpRequest.SSL_ENGINE_THREAD_LOCAL.remove();
+        }
     }
 
     public SSLEngine getSslEngine() {
@@ -216,7 +219,7 @@ public abstract class CommonRequest implements Reset {
         }
     }
 
-    public HttpTypeEnum getRequestType() {
+    public final HttpTypeEnum getRequestType() {
         if (type != null) {
             return type;
         }

@@ -8,6 +8,9 @@
 
 package tech.smartboot.feat.core.server.impl;
 
+import org.smartboot.socket.timer.HashedWheelTimer;
+import org.smartboot.socket.timer.TimerTask;
+import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.common.DecodeState;
 import tech.smartboot.feat.core.common.Reset;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
@@ -21,13 +24,8 @@ import tech.smartboot.feat.core.common.io.PostInputStream;
 import tech.smartboot.feat.core.common.io.ReadListener;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
-import tech.smartboot.feat.core.server.Http2ServerHandler;
 import tech.smartboot.feat.core.server.HttpServerConfiguration;
 import tech.smartboot.feat.core.server.ServerHandler;
-import tech.smartboot.feat.core.server.WebSocketHandler;
-import org.smartboot.socket.timer.HashedWheelTimer;
-import org.smartboot.socket.timer.TimerTask;
-import org.smartboot.socket.transport.AioSession;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -163,19 +161,6 @@ public final class Request extends CommonRequest implements Reset {
         }
     }
 
-    public HttpTypeEnum getRequestType() {
-        if (type != null) {
-            return type;
-        }
-        if (serverHandler instanceof WebSocketHandler) {
-            type = HttpTypeEnum.WEBSOCKET;
-        } else if (serverHandler instanceof Http2ServerHandler) {
-            type = HttpTypeEnum.HTTP_2;
-        } else {
-            type = HttpTypeEnum.HTTP;
-        }
-        return type;
-    }
 
     public void setType(HttpTypeEnum type) {
         this.type = type;
