@@ -8,6 +8,7 @@
 
 package tech.smartboot.feat.core.server;
 
+import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
 import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
@@ -17,7 +18,6 @@ import tech.smartboot.feat.core.server.impl.AbstractResponse;
 import tech.smartboot.feat.core.server.impl.HttpMessageProcessor;
 import tech.smartboot.feat.core.server.impl.HttpRequestImpl;
 import tech.smartboot.feat.core.server.impl.Request;
-import org.smartboot.socket.transport.AioSession;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -34,55 +34,18 @@ public abstract class HttpServerHandler implements ServerHandler<HttpRequest, Ht
     @Override
     public void onBodyStream(ByteBuffer buffer, Request request) {
         HttpRequestImpl httpRequest = request.newHttpRequest();
-        handleHttpRequest(httpRequest);
-//        if (HttpMethodEnum.GET.getMethod().equals(request.getMethod())) {
-//            handleHttpRequest(httpRequest);
-//            return;
-//        }
-//        long postLength = request.getContentLength();
-//        //表单提交自动解析
-//        if (HttpMethodEnum.POST.getMethod().equals(request.getMethod())
-//                && StringUtils.startsWith(request.getContentType(), HeaderValueEnum.X_WWW_FORM_URLENCODED.getName())
-//                && !HeaderValueEnum.UPGRADE.getName().equals(request.getConnection())) {
-//            if (postLength == 0) {
-//                handleHttpRequest(httpRequest);
-//                return;
-//            }
-//
-//            SmartDecoder smartDecoder = httpRequest.getBodyDecoder();
-//            if (smartDecoder == null) {
-//                if (postLength > 0) {
-//                    smartDecoder = new FixedLengthFrameDecoder((int) postLength);
-//                } else if (HeaderValueEnum.CHUNKED.getName().equals(request.getHeader(HeaderNameEnum.TRANSFER_ENCODING.getName()))) {
-//                    smartDecoder = new ChunkedFrameDecoder();
-//                } else {
-//                    throw new HttpException(HttpStatus.LENGTH_REQUIRED);
-//                }
-//                httpRequest.setBodyDecoder(smartDecoder);
-//            }
-//
-//            if (smartDecoder.decode(buffer)) {
-//                httpRequest.setBodyDecoder(null);
-//                httpRequest.setInputStream(new ByteArrayBodyInputStream(new ByteArrayInputStream(smartDecoder.getBuffer().array())));
-//                handleHttpRequest(httpRequest);
-//            }
-//        } else {
-//            handleHttpRequest(httpRequest);
-//        }
-    }
-
-    private void handleHttpRequest(HttpRequestImpl abstractRequest) {
-        AbstractResponse response = abstractRequest.getResponse();
+        AbstractResponse response = httpRequest.getResponse();
         CompletableFuture<Object> future = new CompletableFuture<>();
-        boolean keepAlive = isKeepAlive(abstractRequest, response);
-        abstractRequest.setKeepAlive(keepAlive);
+        boolean keepAlive = isKeepAlive(httpRequest, response);
+        httpRequest.setKeepAlive(keepAlive);
         try {
-            abstractRequest.request.getServerHandler().handle(abstractRequest, response, future);
-            finishHttpHandle(abstractRequest, future);
+            httpRequest.request.getServerHandler().handle(httpRequest, response, future);
+            finishHttpHandle(httpRequest, future);
         } catch (Throwable e) {
             HttpMessageProcessor.responseError(response, e);
         }
     }
+
 
     private void finishHttpHandle(HttpRequestImpl abstractRequest, CompletableFuture<Object> future) throws IOException {
         if (future.isDone()) {
@@ -153,10 +116,11 @@ public abstract class HttpServerHandler implements ServerHandler<HttpRequest, Ht
     }
 
     private boolean isKeepAlive(HttpRequestImpl abstractRequest, AbstractResponse response) {
-        boolean keepAlive = !HeaderValueEnum.CLOSE.getName().equals(abstractRequest.getRequest().getConnection());
+        String connection = abstractRequest.getRequest().getConnection();
+        boolean keepAlive = !HeaderValueEnum.CLOSE.getName().equals(connection);
         // http/1.0默认短连接，http/1.1默认长连接。此处用 == 性能更高
         if (keepAlive && HttpProtocolEnum.HTTP_10 == abstractRequest.getProtocol()) {
-            keepAlive = HeaderValueEnum.KEEPALIVE.getName().equalsIgnoreCase(abstractRequest.getHeader(HeaderNameEnum.CONNECTION));
+            keepAlive = HeaderValueEnum.KEEPALIVE.getName().equalsIgnoreCase(connection);
             if (keepAlive) {
                 response.setHeader(HeaderNameEnum.CONNECTION.getName(), HeaderValueEnum.KEEPALIVE.getName());
             }
