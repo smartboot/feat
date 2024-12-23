@@ -40,29 +40,10 @@ public interface Constant {
      */
     byte LF = 10;
 
-    /**
-     * Colon ':'
-     */
-    byte COLON = 58;
-
-    /**
-     * Dash '-'
-     */
-    byte DASH = 45;
-
-
-    /**
-     * Horizontal space
-     */
-    char SP_CHAR = (char) SP;
-
-    char COLON_CHAR = COLON;
-
     byte[] CRLF_BYTES = {Constant.CR, Constant.LF};
 
     byte[] CRLF_CRLF_BYTES = {Constant.CR, Constant.LF, Constant.CR, Constant.LF};
 
-    String CRLF = "\r\n";
 
     byte[] CHUNKED_END_BYTES = "0\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
 

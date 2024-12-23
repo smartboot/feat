@@ -45,7 +45,7 @@ final class HttpOutputStream extends AbstractOutputStream {
         this.configuration = request.getConfiguration();
         if (SERVER_LINE == null) {
             String serverLine =
-                    HeaderNameEnum.SERVER.getName() + Constant.COLON_CHAR + configuration.serverName() + Constant.CRLF;
+                    HeaderNameEnum.SERVER.getName() + ':' + configuration.serverName() + "\r\n";
             SERVER_LINE = serverLine.getBytes();
             HEAD_PART_BYTES = (HttpProtocolEnum.HTTP_11.getProtocol() + " 200 OK\r\n" + serverLine
                     + "Date:" + DateUtils.RFC1123_FORMAT).getBytes();
