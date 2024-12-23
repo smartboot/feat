@@ -14,14 +14,11 @@ import tech.smartboot.feat.core.common.enums.HttpMethodEnum;
 import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
 import tech.smartboot.feat.core.common.utils.Constant;
-import tech.smartboot.feat.core.common.utils.TimerUtils;
+import tech.smartboot.feat.core.common.utils.DateUtils;
 import tech.smartboot.feat.core.server.HttpServerConfiguration;
 
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Locale;
-import java.util.TimeZone;
 import java.util.concurrent.Semaphore;
 
 /**
@@ -29,8 +26,6 @@ import java.util.concurrent.Semaphore;
  * @version V1.0 , 2018/2/3
  */
 final class HttpOutputStream extends AbstractOutputStream {
-    private static final SimpleDateFormat sdf = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH);
-    private static final TimeZone GMT_ZONE = TimeZone.getTimeZone("GMT");
     private static final byte[] Content_Type_Bytes = "\r\nContent-Type:".getBytes();
     private static final byte[] Content_Length_Bytes = "\r\nContent-Length:".getBytes();
     private static final Date currentDate = new Date(0);
@@ -53,22 +48,20 @@ final class HttpOutputStream extends AbstractOutputStream {
                     HeaderNameEnum.SERVER.getName() + Constant.COLON_CHAR + configuration.serverName() + Constant.CRLF;
             SERVER_LINE = serverLine.getBytes();
             HEAD_PART_BYTES = (HttpProtocolEnum.HTTP_11.getProtocol() + " 200 OK\r\n" + serverLine
-                    + "Date:Sun, 24 Nov 2024 15:50:27 CST").getBytes();
-            TimeZone.setDefault(TimeZone.getTimeZone("GMT"));
+                    + "Date:" + DateUtils.RFC1123_FORMAT).getBytes();
             flushDate();
         }
     }
 
     private void flushDate() {
-        long currentTime = TimerUtils.currentTimeMillis();
+        long currentTime = DateUtils.currentTimeMillis();
         if (currentTime > expireTime && flushDateSemaphore.tryAcquire()) {
             try {
                 expireTime = currentTime + 1000;
                 currentDate.setTime(currentTime);
-                sdf.setTimeZone(GMT_ZONE);
-                String date = sdf.format(currentDate);
+                String date = DateUtils.formatRFC1123(currentDate);
                 byte[] bytes = date.getBytes();
-                System.arraycopy(bytes, 0, HEAD_PART_BYTES, HEAD_PART_BYTES.length - 29, bytes.length);
+                System.arraycopy(bytes, 0, HEAD_PART_BYTES, HEAD_PART_BYTES.length - bytes.length, bytes.length);
             } finally {
                 flushDateSemaphore.release();
             }
@@ -79,7 +72,7 @@ final class HttpOutputStream extends AbstractOutputStream {
     public void write(byte[] b, int off, int len) throws IOException {
         super.write(b, off, len);
         if (configuration.getWsIdleTimeout() > 0 || configuration.getHttpIdleTimeout() > 0) {
-            request.setLatestIo(TimerUtils.currentTimeMillis());
+            request.setLatestIo(DateUtils.currentTimeMillis());
         }
     }
 

@@ -80,7 +80,7 @@ public class HttpStaticResourceHandler extends HttpServerHandler {
         Date lastModifyDate = new Date(file.lastModified() / 1000 * 1000);
         try {
             String requestModified = request.getHeader(HeaderNameEnum.IF_MODIFIED_SINCE.getName());
-            if (StringUtils.isNotBlank(requestModified) && lastModifyDate.getTime() <= DateUtils.parseLastModified(requestModified).getTime()) {
+            if (StringUtils.isNotBlank(requestModified) && lastModifyDate.getTime() <= DateUtils.parseRFC1123(requestModified).getTime()) {
                 response.setHttpStatus(HttpStatus.NOT_MODIFIED);
                 completableFuture.complete(null);
                 return;
@@ -89,7 +89,7 @@ public class HttpStaticResourceHandler extends HttpServerHandler {
             LOGGER.error("exception", e);
         }
 
-        response.setHeader(HeaderNameEnum.LAST_MODIFIED.getName(), DateUtils.formatLastModified(lastModifyDate));
+        response.setHeader(HeaderNameEnum.LAST_MODIFIED.getName(), DateUtils.formatRFC1123(lastModifyDate));
         response.setHeader(HeaderNameEnum.CONTENT_TYPE.getName(), Mimetypes.getInstance().getMimetype(file) + "; charset=utf-8");
         //HEAD不输出内容
         if (HttpMethodEnum.HEAD.getMethod().equals(method)) {

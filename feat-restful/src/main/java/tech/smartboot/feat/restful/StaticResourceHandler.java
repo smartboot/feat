@@ -25,7 +25,7 @@ public class StaticResourceHandler extends HttpServerHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(StaticResourceHandler.class);
     private final Date lastModifyDate = new Date(System.currentTimeMillis() / 1000 * 1000);
 
-    private final String lastModifyDateFormat = DateUtils.formatLastModified(lastModifyDate);
+    private final String lastModifyDateFormat = DateUtils.formatRFC1123(lastModifyDate);
 
     private final ExecutorService asyncExecutor;
 
@@ -64,7 +64,7 @@ public class StaticResourceHandler extends HttpServerHandler {
         //304
         try {
             String requestModified = request.getHeader(HeaderNameEnum.IF_MODIFIED_SINCE.getName());
-            if (StringUtils.isNotBlank(requestModified) && lastModifyDate.getTime() <= DateUtils.parseLastModified(requestModified).getTime()) {
+            if (StringUtils.isNotBlank(requestModified) && lastModifyDate.getTime() <= DateUtils.parseRFC1123(requestModified).getTime()) {
                 response.setHttpStatus(HttpStatus.NOT_MODIFIED);
                 return;
             }
