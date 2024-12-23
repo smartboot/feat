@@ -8,12 +8,12 @@
 
 package tech.smartboot.feat.core.server.impl;
 
+import org.smartboot.socket.util.Attachment;
 import tech.smartboot.feat.core.common.Cookie;
 import tech.smartboot.feat.core.common.Reset;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
 import tech.smartboot.feat.core.server.HttpRequest;
-import org.smartboot.socket.util.Attachment;
 
 import javax.net.ssl.SSLEngine;
 import java.net.InetSocketAddress;
@@ -28,11 +28,12 @@ import java.util.Map;
  */
 abstract class AbstractRequest implements HttpRequest, Reset {
 
-    public Request request;
+    public final Request request;
 
-    protected void init(Request request) {
+    AbstractRequest(Request request) {
         this.request = request;
     }
+
 
     @Override
     public SSLEngine getSslEngine() {

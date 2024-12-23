@@ -38,7 +38,7 @@ public class HttpRequestImpl extends AbstractRequest {
     private final HttpResponseImpl response;
 
     HttpRequestImpl(Request request) {
-        init(request);
+        super(request);
         this.response = new HttpResponseImpl(this);
     }
 

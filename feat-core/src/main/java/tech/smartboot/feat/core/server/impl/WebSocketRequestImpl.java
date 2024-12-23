@@ -8,6 +8,7 @@
 
 package tech.smartboot.feat.core.server.impl;
 
+import org.smartboot.socket.util.Attachment;
 import tech.smartboot.feat.core.common.Reset;
 import tech.smartboot.feat.core.common.codec.websocket.WebSocket;
 import tech.smartboot.feat.core.common.io.BodyInputStream;
@@ -17,7 +18,6 @@ import tech.smartboot.feat.core.common.utils.SmartDecoder;
 import tech.smartboot.feat.core.common.utils.WebSocketUtil;
 import tech.smartboot.feat.core.server.PushBuilder;
 import tech.smartboot.feat.core.server.WebSocketRequest;
-import org.smartboot.socket.util.Attachment;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -44,7 +44,7 @@ public class WebSocketRequestImpl extends AbstractRequest implements WebSocketRe
     private byte[] maskingKey;
 
     public WebSocketRequestImpl(Request baseHttpRequest) {
-        init(baseHttpRequest);
+        super(baseHttpRequest);
         this.response = new WebSocketResponseImpl(this);
     }
 
