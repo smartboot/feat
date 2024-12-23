@@ -122,7 +122,7 @@ public class HttpServer {
         configuration.getPlugins().forEach(processor::addPlugin);
 
         server = new AioQuickServer(configuration.getHost(), port, protocol, processor);
-        server.setThreadNum(configuration.getThreadNum()).setBannerEnabled(false).setReadBufferSize(configuration.getReadBufferSize()).setBufferPagePool(BufferPagePool.DEFAULT_BUFFER_PAGE_POOL,
+        server.setThreadNum(configuration.getThreadNum()).setBannerEnabled(false).setReadBufferSize(configuration.getReadBufferSize()).setBufferPagePool(bufferPagePool,
                 bufferPagePool).setWriteBuffer(configuration.getWriteBufferSize(), 16);
         if (!configuration.isLowMemory()) {
             server.disableLowMemory();

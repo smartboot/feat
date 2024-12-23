@@ -8,6 +8,8 @@
 
 package tech.smartboot.feat.core.server.impl;
 
+import org.smartboot.socket.Protocol;
+import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.common.DecodeState;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
@@ -19,8 +21,6 @@ import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.HttpServerConfiguration;
 import tech.smartboot.feat.core.server.ServerHandler;
 import tech.smartboot.feat.core.server.waf.WAF;
-import org.smartboot.socket.Protocol;
-import org.smartboot.socket.transport.AioSession;
 
 import java.nio.ByteBuffer;
 
@@ -168,32 +168,25 @@ public class HttpRequestProtocol implements Protocol<Request> {
                 return decode(byteBuffer, request);
             }
             case DecodeState.STATE_HEADER_IGNORE: {
-                int position = byteBuffer.position() + byteBuffer.arrayOffset();
-                int limit = byteBuffer.limit() + byteBuffer.arrayOffset();
-                byte[] data = byteBuffer.array();
-
-                while (limit - position >= 4) {
-                    byte b = data[position + 3];
+                while (byteBuffer.remaining() >= 4) {
+                    int position = byteBuffer.position();
+                    byte b = byteBuffer.get(position + 3);
                     if (b == Constant.CR) {
-                        position++;
+                        byteBuffer.position(position + 1);
                         continue;
                     } else if (b != Constant.LF) {
-                        position += 7;
-                        if (position >= limit || (data[position] == Constant.CR || data[position] == Constant.LF)) {
-                            position -= 3;
-                        }
+                        byteBuffer.position(position + 3);
                         continue;
                     }
                     // header 结束符匹配，最后2字节已经是CR、LF,无需重复验证
-                    if (data[position] == Constant.CR && data[position + 1] == Constant.LF) {
-                        byteBuffer.position(position + 4 - byteBuffer.arrayOffset());
+                    if (byteBuffer.get(position) == Constant.CR && byteBuffer.get(position + 1) == Constant.LF) {
+                        byteBuffer.position(position + 4);
                         decodeState.setState(DecodeState.STATE_HEADER_CALLBACK);
                         return true;
                     } else {
-                        position += 2;
+                        byteBuffer.position(position + 2);
                     }
                 }
-                byteBuffer.position(position - byteBuffer.arrayOffset());
                 return false;
             }
             case DecodeState.STATE_BODY_READING_MONITOR:

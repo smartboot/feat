@@ -12,6 +12,8 @@ import org.junit.Assert;
 import org.junit.Test;
 import tech.smartboot.feat.core.common.utils.ByteTree;
 
+import java.nio.ByteBuffer;
+
 /**
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/1/4
@@ -25,15 +27,18 @@ public class ByteTreeTest {
         byteTree.addNode("Hello1");
         byteTree.addNode("Hello2");
         byte[] bytes = {'H', 'e', 'l', 'l', 'o', '1'};
-        ByteTree searchTree = byteTree.search(bytes, 0, bytes.length, endByte -> endByte == '1', false);
+        ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
+        ByteTree searchTree = byteTree.search(byteBuffer, endByte -> endByte == '1', false);
         Assert.assertEquals(searchTree.getStringValue(), "Hello");
         System.out.println(searchTree.getStringValue());
 
-        searchTree = byteTree.search(bytes, 0, bytes.length, endByte -> endByte == 'l', false);
+        byteBuffer.position(0);
+        searchTree = byteTree.search(byteBuffer, endByte -> endByte == 'l', false);
         Assert.assertEquals(searchTree.getStringValue(), "He");
         System.out.println(searchTree.getStringValue());
 
-        searchTree = byteTree.search(bytes, 0, bytes.length, endByte -> endByte == 'o', false);
+        byteBuffer.position(0);
+        searchTree = byteTree.search(byteBuffer, endByte -> endByte == 'o', false);
         System.out.println(searchTree.getStringValue());
         Assert.assertEquals(searchTree.getStringValue(), "Hell");
     }
@@ -42,11 +47,13 @@ public class ByteTreeTest {
     public void test2() {
         ByteTree byteTree = new ByteTree(null, Byte.MAX_VALUE);
         byte[] bytes = "Hello Worldaa".getBytes();
-        ByteTree searchTree = byteTree.search(bytes, 0, bytes.length, endByte -> endByte == 'a');
+        ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
+        ByteTree searchTree = byteTree.search(byteBuffer, endByte -> endByte == 'a', true);
         Assert.assertEquals(searchTree.getStringValue(), "Hello World");
         System.out.println(searchTree.getStringValue());
 
-        searchTree = byteTree.search(bytes, 0, bytes.length, endByte -> endByte == ' ');
+        byteBuffer.position(0);
+        searchTree = byteTree.search(byteBuffer, endByte -> endByte == ' ', true);
         System.out.println(searchTree.getStringValue());
         Assert.assertEquals(searchTree.getStringValue(), "Hello");
 

@@ -94,8 +94,7 @@ public class StringUtils {
         return regionMatches(cs1, false, 0, cs2, 0, Math.max(cs1.length(), cs2.length()));
     }
 
-    private static boolean regionMatches(final CharSequence cs, final boolean ignoreCase, final int thisStart,
-                                         final CharSequence substring, final int start, final int length) {
+    private static boolean regionMatches(final CharSequence cs, final boolean ignoreCase, final int thisStart, final CharSequence substring, final int start, final int length) {
         if (cs instanceof String && substring instanceof String) {
             return ((String) cs).regionMatches(ignoreCase, thisStart, (String) substring, start, length);
         } else {
@@ -210,8 +209,7 @@ public class StringUtils {
         return splitWorker(str, separatorChars, -1, true);
     }
 
-    private static String[] splitWorker(final String str, final String separatorChars, final int max,
-                                        final boolean preserveAllTokens) {
+    private static String[] splitWorker(final String str, final String separatorChars, final int max, final boolean preserveAllTokens) {
 
         if (str == null) {
             return null;
@@ -293,8 +291,7 @@ public class StringUtils {
         return list.toArray(new String[list.size()]);
     }
 
-    public static String[] tokenizeToStringArray(String str, String delimiters, boolean trimTokens,
-                                                 boolean ignoreEmptyTokens) {
+    public static String[] tokenizeToStringArray(String str, String delimiters, boolean trimTokens, boolean ignoreEmptyTokens) {
 
         if (str == null) {
             return null;
@@ -354,19 +351,14 @@ public class StringUtils {
     }
 
     public static <T> ByteTree<T> scanByteTree(ByteBuffer buffer, ByteTree.EndMatcher endMatcher, ByteTree<T> cache) {
-        int position = buffer.position() + buffer.arrayOffset();
-        int limit = buffer.limit() + buffer.arrayOffset();
-        byte[] data = buffer.array();
-        while (position < limit && data[position] == Constant.SP) {
-            position++;
-        }
-        ByteTree<T> byteTree = cache.search(data, position, limit, endMatcher, false);
-        if (byteTree == null) {
-            return null;
-        }
-        buffer.position(position + byteTree.getDepth() - buffer.arrayOffset() + 1);
-        return byteTree;
+        do {
+            buffer.mark();
+        } while (buffer.hasRemaining() && buffer.get() == Constant.SP);
+        buffer.reset();
+
+        return cache.search(buffer, endMatcher, true);
     }
+
 
     public static int scanUntilAndTrim(ByteBuffer buffer, byte split) {
         trimBuffer(buffer);

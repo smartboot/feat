@@ -8,6 +8,7 @@
 
 package tech.smartboot.feat.core.common.utils;
 
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -45,32 +46,18 @@ public class ByteTree<T> {
         }
     }
 
-    public int getDepth() {
-        return depth;
-    }
-
-    public ByteTree<T> search(byte[] bytes, int offset, int len, EndMatcher endMatcher) {
-        return search(bytes, offset, len, endMatcher, true);
-    }
-
-    /**
-     * 从给定的字节数组总匹配出特定结尾的区块
-     *
-     * @param bytes      待匹配的字节数组
-     * @param offset     起始位置
-     * @param limit      截止位置
-     * @param endMatcher 匹配接口
-     * @param cache      是否缓存新节点
-     * @return
-     */
-    public ByteTree<T> search(byte[] bytes, int offset, int limit, EndMatcher endMatcher, boolean cache) {
+    public ByteTree<T> search(ByteBuffer bytes, EndMatcher endMatcher, boolean cache) {
+        int p = bytes.position();
         ByteTree<T> byteTree = this;
-        for (; offset < limit; offset++) {
-            if (endMatcher.match(bytes[offset])) {
+        bytes.mark();
+        while (bytes.hasRemaining()) {
+            byte v = bytes.get();
+            if (endMatcher.match(v)) {
+                bytes.mark();
                 return byteTree;
             }
 
-            int i = bytes[offset] - byteTree.shift;
+            int i = v - byteTree.shift;
             if (i < 0 || i >= byteTree.nodes.length) {
                 break;
             }
@@ -82,21 +69,29 @@ public class ByteTree<T> {
                 break;
             }
         }
-        if (offset == limit) {
+        if (!bytes.hasRemaining()) {
+            bytes.reset();
             return null;
         }
         if (cache && byteTree.depth < MAX_DEPTH) {
             //在当前节点上追加子节点
-            byteTree.addNode(bytes, offset, limit, endMatcher);
-            return byteTree.search(bytes, offset, limit, endMatcher, cache);
+            bytes.reset();
+            this.addNode(bytes, endMatcher);
+            bytes.reset();
+            return search(bytes, endMatcher, cache);
         } else {
+            bytes.position(bytes.position() - 1);
             // 构建临时对象，用完由JVM回收
-            for (int i = offset; i < limit; i++) {
-                if (endMatcher.match(bytes[i])) {
-                    int length = i - offset + byteTree.depth;
-                    return new VirtualByteTree(new String(bytes, offset - byteTree.depth, length, StandardCharsets.US_ASCII), length);
+            while (bytes.hasRemaining()) {
+                if (endMatcher.match(bytes.get())) {
+                    int length = bytes.position() - p;
+                    byte[] data = new byte[length];
+                    bytes.position(bytes.position() - length);
+                    bytes.get(data, 0, length);
+                    return new VirtualByteTree(new String(data, 0, length - 1, StandardCharsets.US_ASCII));
                 }
             }
+            bytes.reset();
             return null;
         }
     }
@@ -147,9 +142,36 @@ public class ByteTree<T> {
         return nextTree.addNode(value, offset + 1, limit, endMatcher);
     }
 
+    private ByteTree<T> addNode(ByteBuffer value, EndMatcher endMatcher) {
+        if (!value.hasRemaining()) {
+            return this;
+        }
+        if (this.depth >= MAX_DEPTH) {
+            return this;
+        }
+
+        byte b = value.get();
+        if (endMatcher.match(b)) {
+            return this;
+        }
+        if (shift == -1) {
+            shift = b;
+        }
+        if (b - shift < 0) {
+            increase(b - shift);
+        } else {
+            increase(b + 1 - shift);
+        }
+
+        ByteTree<T> nextTree = nodes[b - shift];
+        if (nextTree == null) {
+            nextTree = nodes[b - shift] = new ByteTree<T>(this, b);
+        }
+        return nextTree.addNode(value, endMatcher);
+    }
+
     private void increase(int size) {
-        if (size == 0)
-            size = -1;
+        if (size == 0) size = -1;
         if (size < 0) {
             ByteTree<T>[] temp = new ByteTree[nodes.length - size];
             System.arraycopy(nodes, 0, temp, -size, nodes.length);
@@ -185,17 +207,10 @@ public class ByteTree<T> {
 
 
     private class VirtualByteTree extends ByteTree<T> {
-        private final int virtualDepth;
 
-        public VirtualByteTree(String value, int depth) {
+        public VirtualByteTree(String value) {
             super();
             this.stringValue = value;
-            this.virtualDepth = depth;
-        }
-
-        @Override
-        public int getDepth() {
-            return virtualDepth;
         }
     }
 }
