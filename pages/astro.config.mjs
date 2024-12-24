@@ -30,16 +30,26 @@ export default defineConfig({
                 github: 'https://github.com/smartboot/feat',
             },
             plugins: [starlightImageZoomPlugin()],
+            // 为此网站设置英语为默认语言。
+            defaultLocale: 'root',
+            locales: {
+                root: {
+                    label: '简体中文',
+                    lang: 'zh-CN',
+                },
+                // 英文文档在 `src/content/docs/en/` 中。
+                'en': {
+                    label: 'English',
+                    lang: 'en'
+                }
+            },
             sidebar: [
                 {
-                    label: 'Guides',
-                    items: [
-                        // Each item here is one entry in the navigation menu.
-                        {label: 'Example Guide', slug: 'guides/example'},
-                    ],
+                    label: '关于',
+                    autogenerate: {directory: 'guides'},
                 },
                 {
-                    label: 'Reference',
+                    label: '用户手册',
                     autogenerate: {directory: 'reference'},
                 },
             ],

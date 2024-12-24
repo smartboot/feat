@@ -1,36 +1,72 @@
 ---
-title: Welcome to Starlight
-description: Get started building your docs site with Starlight.
+title: Web 服务开发框架
+description: feat
 template: splash
 hero:
-  tagline: Congrats on setting up a new Starlight project!
+  tagline: 为了更 <span style="font-size:32px">高</span> 的<b style="color:#f5222d">性能</b>，以及更 <span style="font-size:15px">低</span> 的<b style="color:#52c41a">能耗</b>
   image:
     file: ../../assets/houston.webp
   actions:
-    - text: Example Guide
-      link: /guides/example/
+    - text: Feat 启程
+      link: ./guides/about/
       icon: right-arrow
-    - text: Read the Starlight docs
-      link: https://starlight.astro.build
-      icon: external
-      variant: minimal
 ---
 
-import { Card, CardGrid } from '@astrojs/starlight/components';
+import { Card, CardGrid,LinkCard,LinkButton } from '@astrojs/starlight/components';
 
-## Next steps
+## 产品特色
 
 <CardGrid stagger>
-	<Card title="Update content" icon="pencil">
-		Edit `src/content/docs/index.mdx` to see this page change.
+	<Card title="功能丰富" icon="seti:happenings">
+		支持 Http1.0/1.1/2.0、Websocket、SSE(Server-sent Events)、Http路由、文件上传、WAF(Web防火墙)、TLS/SSL 等。
 	</Card>
-	<Card title="Add new content" icon="add-document">
-		Add Markdown or MDX files to `src/content/docs` to create new pages.
+	<Card title="强劲性能" icon="rocket">
+		基线能力轻松应对海量并发，十万级、百万级 QPS 皆不在话下。
 	</Card>
-	<Card title="Configure your site" icon="setting">
-		Edit your `sidebar` and other config in `astro.config.mjs`.
+	<Card title="轻量灵活" icon="puzzle">
+		以少量的代码便可实现一套 Web 服务，低成本的集成与被集成能力。
 	</Card>
-	<Card title="Read the docs" icon="open-book">
-		Learn more in [the Starlight Docs](https://starlight.astro.build/).
+	<Card title="开源生态" icon="github">
+		商业不友好的 AGPLv3 开源协议。
+
+        开源促进繁荣社区生态 or 闭源回馈 Feat 团队，由我们的用户掌握选择权。
 	</Card>
 </CardGrid>
+
+
+## 生态项目
+<CardGrid>
+    <LinkCard title="smart-socket" description="Java AIO 实现的支持百万级长连接通信框架" href="https://smartboot.tech/smart-socket" />
+    <LinkCard title="smart-servlet" description="提供一个自主可控的轻量级 Tomcat/Undertow 可替代版本，基于 Feat 重新定义下一代 Servlet 容器!" href="https://smartboot.tech/smart-servlet" />
+</CardGrid>
+
+<hr/>
+
+<center>
+    <h2>联系我们</h2>
+
+    <p>
+        Hi~ 我是 **三刀**，Feat 的作者。
+
+        您可以跟我聊聊：如何进行 Feat 的最佳实践;
+
+        也可以向我了解：关于产品实现原理的细节;
+
+        也可以跟我讨论：双方如何合作......
+
+        期待您通过下面方式，与我取得联系。
+    </p>
+
+    <h4>微信</h4>
+    <img src="https://smartboot.tech/img/qrcode/personal_wx.png" width="25%"/>
+
+    <h4>邮件</h4>
+    <LinkButton
+        href="mailto:zhengjunweimail@163.com"
+        variant="secondary"
+        icon="email"
+        iconPlacement="start"
+    >
+        zhengjunweimail @163.com
+    </LinkButton>
+</center>
