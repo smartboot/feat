@@ -32,8 +32,9 @@
             </dependency>
             <dependency>
                 <groupId>tech.smartboot.feat</groupId>
-                <artifactId>feat-restful-mybatis</artifactId>
+                <artifactId>feat-test</artifactId>
                 <version>${feat.version}</version>
+                <scope>test</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -237,5 +238,6 @@
     <modules>
         <module>feat-core</module>
         <module>feat-restful</module>
+        <module>feat-test</module>
     </modules>
 </project>
