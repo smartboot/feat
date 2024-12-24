@@ -5,12 +5,12 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>tech.smartboot.feat</groupId>
     <artifactId>feat-parent</artifactId>
-    <version>1.0</version>
+    <version>0.1</version>
     <packaging>pom</packaging>
 
     <properties>
         <smartsocket.version>1.5.55</smartsocket.version>
-        <feat.version>1.0</feat.version>
+        <feat.version>0.1</feat.version>
     </properties>
 
     <dependencyManagement>
@@ -237,6 +237,5 @@
     <modules>
         <module>feat-core</module>
         <module>feat-restful</module>
-        <module>feat-restful-mybatis</module>
     </modules>
 </project>
