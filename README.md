@@ -20,16 +20,11 @@ An enterprise-grade HTTP service framework implemented in Java, designed for bui
 [//]: # ([Documentation]&#40;https://smartboot.tech/feat&#41;)
 
 
-[//]: # (## Features)
+## Features
+- Http Server & Client, support http/2
+- WebSocket
+- SSE
 
-[//]: # ()
-[//]: # (- Light/dark mode toggle)
-
-[//]: # (- Live previews)
-
-[//]: # (- Fullscreen mode)
-
-[//]: # (- Cross platform)
 
 
 ## Installation
