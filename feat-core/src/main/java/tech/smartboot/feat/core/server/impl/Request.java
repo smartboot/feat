@@ -16,12 +16,10 @@ import tech.smartboot.feat.core.common.Reset;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
-import tech.smartboot.feat.core.common.enums.HttpTypeEnum;
 import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.common.io.BodyInputStream;
 import tech.smartboot.feat.core.common.io.ChunkedInputStream;
 import tech.smartboot.feat.core.common.io.PostInputStream;
-import tech.smartboot.feat.core.common.io.ReadListener;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.server.HttpServerConfiguration;
@@ -44,13 +42,6 @@ public final class Request extends CommonRequest implements Reset {
 
 
     private final DecoderUnit decodeState = new DecoderUnit();
-    private ReadListener listener;
-
-    /**
-     * 消息类型
-     */
-    private HttpTypeEnum type = null;
-
     private HttpRequestImpl httpRequest;
     private Http2Session http2Request;
     private WebSocketRequestImpl webSocketRequest;
@@ -159,11 +150,6 @@ public final class Request extends CommonRequest implements Reset {
         if (remainingThreshold < 0) {
             throw new HttpException(HttpStatus.PAYLOAD_TOO_LARGE);
         }
-    }
-
-
-    public void setType(HttpTypeEnum type) {
-        this.type = type;
     }
 
     public ServerHandler getServerHandler() {
@@ -288,8 +274,6 @@ public final class Request extends CommonRequest implements Reset {
         super.reset();
         remainingThreshold = configuration.getMaxRequestSize();
         method = null;
-        httpRequest = null;
-        webSocketRequest = null;
         decodeState.setState(DecodeState.STATE_METHOD);
         trailerFields = null;
         if (inputStream != null) {

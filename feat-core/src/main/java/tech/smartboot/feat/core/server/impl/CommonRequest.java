@@ -233,7 +233,7 @@ public abstract class CommonRequest implements Reset {
         return type;
     }
 
-    public void setType(HttpTypeEnum type) {
+    public final void setType(HttpTypeEnum type) {
         this.type = type;
     }
 
