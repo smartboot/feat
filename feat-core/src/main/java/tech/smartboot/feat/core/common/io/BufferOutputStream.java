@@ -190,11 +190,6 @@ public abstract class BufferOutputStream extends OutputStream implements Reset {
     }
 
     protected void writeLongString(long value) throws IOException {
-        if (value == 0) {
-            writeBuffer.writeByte((byte) '0');
-            return;
-        }
-
         if (value < 0) {
             throw new IllegalArgumentException("");
         } else if (value < 10) {

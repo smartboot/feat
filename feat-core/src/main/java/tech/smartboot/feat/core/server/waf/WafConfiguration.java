@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 public class WafConfiguration {
+    private boolean enable = false;
     public static final String DESC = "Mysterious Power from the East Is Protecting This Area.";
     private Set<String> allowMethods = new HashSet<>();
     private Set<String> denyMethods = new HashSet<>();
@@ -19,6 +20,7 @@ public class WafConfiguration {
     }
 
     public void setAllowMethods(Set<String> allowMethods) {
+        enable = true;
         this.allowMethods = allowMethods;
     }
 
@@ -27,6 +29,7 @@ public class WafConfiguration {
     }
 
     public void setDenyMethods(Set<String> denyMethods) {
+        enable = true;
         this.denyMethods = denyMethods;
     }
 
@@ -35,6 +38,7 @@ public class WafConfiguration {
     }
 
     public void setAllowUriPrefixes(List<String> allowUriPrefixes) {
+        enable = true;
         this.allowUriPrefixes = allowUriPrefixes;
     }
 
@@ -43,6 +47,11 @@ public class WafConfiguration {
     }
 
     public void setAllowUriSuffixes(List<String> allowUriSuffixes) {
+        enable = true;
         this.allowUriSuffixes = allowUriSuffixes;
+    }
+
+    boolean isEnable() {
+        return enable;
     }
 }

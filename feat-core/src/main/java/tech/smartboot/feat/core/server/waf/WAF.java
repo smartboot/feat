@@ -8,6 +8,9 @@ import tech.smartboot.feat.core.server.impl.Request;
 public class WAF {
     public static void methodCheck(HttpServerConfiguration configuration, Request request) {
         WafConfiguration wafConfiguration = configuration.getWafConfiguration();
+        if (!wafConfiguration.isEnable()) {
+            return;
+        }
         if (!wafConfiguration.getAllowMethods().isEmpty() && !wafConfiguration.getAllowMethods().contains(request.getMethod())) {
             throw new WafException(HttpStatus.METHOD_NOT_ALLOWED, WafConfiguration.DESC);
         }
@@ -18,6 +21,9 @@ public class WAF {
 
     public static void checkUri(HttpServerConfiguration configuration, Request request) {
         WafConfiguration wafConfiguration = configuration.getWafConfiguration();
+        if (!wafConfiguration.isEnable()) {
+            return;
+        }
         if (request.getUri().equals("/") || CollectionUtils.isEmpty(wafConfiguration.getAllowUriPrefixes()) && CollectionUtils.isEmpty(wafConfiguration.getAllowUriSuffixes())) {
             return;
         }
