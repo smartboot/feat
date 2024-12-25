@@ -122,11 +122,11 @@ public class HttpRequestProtocol implements Protocol<Request> {
                     return true;
                 }
                 byteBuffer.reset();
-                if (request.getHeaderSize() > configuration.getHeaderLimiter()) {
+                if (request.getHeaderSize() < configuration.getHeaderLimiter()) {
+                    decodeState.setState(DecodeState.STATE_HEADER_NAME);
+                } else {
                     decodeState.setState(DecodeState.STATE_HEADER_IGNORE);
                     return decode(byteBuffer, request);
-                } else {
-                    decodeState.setState(DecodeState.STATE_HEADER_NAME);
                 }
             }
             // header name解析
@@ -169,22 +169,22 @@ public class HttpRequestProtocol implements Protocol<Request> {
             }
             case DecodeState.STATE_HEADER_IGNORE: {
                 while (byteBuffer.remaining() >= 4) {
-                    int position = byteBuffer.position();
-                    byte b = byteBuffer.get(position + 3);
+                    int position = byteBuffer.position() + 3;
+                    byte b = byteBuffer.get(position);
                     if (b == Constant.CR) {
-                        byteBuffer.position(position + 1);
+                        byteBuffer.position(position - 2);
                         continue;
                     } else if (b != Constant.LF) {
-                        byteBuffer.position(position + 3);
+                        byteBuffer.position(position);
                         continue;
                     }
                     // header 结束符匹配，最后2字节已经是CR、LF,无需重复验证
-                    if (byteBuffer.get(position) == Constant.CR && byteBuffer.get(position + 1) == Constant.LF) {
-                        byteBuffer.position(position + 4);
+                    if (byteBuffer.get(position - 3) == Constant.CR && byteBuffer.get(position - 2) == Constant.LF) {
+                        byteBuffer.position(position + 1);
                         decodeState.setState(DecodeState.STATE_HEADER_CALLBACK);
                         return true;
                     } else {
-                        byteBuffer.position(position + 2);
+                        byteBuffer.position(position - 1);
                     }
                 }
                 return false;

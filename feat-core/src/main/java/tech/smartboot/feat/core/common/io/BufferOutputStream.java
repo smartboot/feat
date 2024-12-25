@@ -8,9 +8,9 @@
 
 package tech.smartboot.feat.core.common.io;
 
+import org.smartboot.socket.transport.WriteBuffer;
 import tech.smartboot.feat.core.common.Reset;
 import tech.smartboot.feat.core.common.utils.Constant;
-import org.smartboot.socket.transport.WriteBuffer;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -189,7 +189,7 @@ public abstract class BufferOutputStream extends OutputStream implements Reset {
         this.trailerSupplier = supplier;
     }
 
-    protected void writeLongString(long value) {
+    protected void writeLongString(long value) throws IOException {
         if (value == 0) {
             writeBuffer.writeByte((byte) '0');
             return;
@@ -214,10 +214,7 @@ public abstract class BufferOutputStream extends OutputStream implements Reset {
             buffer[i] = (byte) ('0' + (value % 10));
             value /= 10;
         }
-
-        for (byte b : buffer) {
-            writeBuffer.writeByte(b);
-        }
+        writeBuffer.write(buffer);
     }
 
     protected void writeString(String string) {
