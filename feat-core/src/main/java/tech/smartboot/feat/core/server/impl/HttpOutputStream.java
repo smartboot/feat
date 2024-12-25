@@ -27,6 +27,8 @@ import java.util.concurrent.Semaphore;
  */
 final class HttpOutputStream extends AbstractOutputStream {
     private static final byte[] Content_Type_Bytes = "\r\nContent-Type:".getBytes();
+    private static final byte[] Content_Type_TEXT_Bytes = ("\r\nContent-Type:" + HeaderValueEnum.TEXT_PLAIN_CONTENT_TYPE.getName()).getBytes();
+    private static final byte[] Content_Type_JSON_Bytes = ("\r\nContent-Type:" + HeaderValueEnum.APPLICATION_JSON.getName()).getBytes();
     private static final byte[] Content_Length_Bytes = "\r\nContent-Length:".getBytes();
     private static final Date currentDate = new Date(0);
     private static final Semaphore flushDateSemaphore = new Semaphore(1);
@@ -44,11 +46,9 @@ final class HttpOutputStream extends AbstractOutputStream {
         this.request = httpRequest.request;
         this.configuration = request.getConfiguration();
         if (SERVER_LINE == null) {
-            String serverLine =
-                    HeaderNameEnum.SERVER.getName() + ':' + configuration.serverName() + "\r\n";
+            String serverLine = HeaderNameEnum.SERVER.getName() + ':' + configuration.serverName() + "\r\n";
             SERVER_LINE = serverLine.getBytes();
-            HEAD_PART_BYTES = (HttpProtocolEnum.HTTP_11.getProtocol() + " 200 OK\r\n" + serverLine
-                    + "Date:" + DateUtils.RFC1123_FORMAT).getBytes();
+            HEAD_PART_BYTES = (HttpProtocolEnum.HTTP_11.getProtocol() + " 200 OK\r\n" + serverLine + "Date:" + DateUtils.RFC1123_FORMAT).getBytes();
             flushDate();
         }
     }
@@ -106,8 +106,14 @@ final class HttpOutputStream extends AbstractOutputStream {
         }
 
         if (contentType != null) {
-            writeBuffer.write(Content_Type_Bytes);
-            writeString(contentType);
+            if (contentType.equals(HeaderValueEnum.TEXT_PLAIN_CONTENT_TYPE.getName())) {
+                writeBuffer.write(Content_Type_TEXT_Bytes);
+            } else if (contentType.equals(HeaderValueEnum.APPLICATION_JSON.getName())) {
+                writeBuffer.write(Content_Type_JSON_Bytes);
+            } else {
+                writeBuffer.write(Content_Type_Bytes);
+                writeString(contentType);
+            }
         }
 
         if (contentLength >= 0) {

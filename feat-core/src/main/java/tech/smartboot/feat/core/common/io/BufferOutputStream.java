@@ -195,26 +195,28 @@ public abstract class BufferOutputStream extends OutputStream implements Reset {
             return;
         }
 
-        boolean negative = value < 0;
-        if (negative) {
+        if (value < 0) {
             throw new IllegalArgumentException("");
-//            value = -value;
-//            writeBuffer.writeByte((byte) '-');
-        }
+        } else if (value < 10) {
+            writeBuffer.writeByte((byte) ('0' + value));
+        } else if (value < 100) {
+            writeBuffer.writeByte((byte) ('0' + value / 10));
+            writeBuffer.writeByte((byte) ('0' + value % 10));
+        } else {
+            long tempValue = value;
+            int numDigits = 0;
+            while (tempValue > 0) {
+                numDigits++;
+                tempValue /= 10;
+            }
 
-        long tempValue = value;
-        int numDigits = 0;
-        while (tempValue > 0) {
-            numDigits++;
-            tempValue /= 10;
+            byte[] buffer = new byte[numDigits];
+            for (int i = numDigits - 1; i >= 0; i--) {
+                buffer[i] = (byte) ('0' + (value % 10));
+                value /= 10;
+            }
+            writeBuffer.write(buffer);
         }
-
-        byte[] buffer = new byte[numDigits];
-        for (int i = numDigits - 1; i >= 0; i--) {
-            buffer[i] = (byte) ('0' + (value % 10));
-            value /= 10;
-        }
-        writeBuffer.write(buffer);
     }
 
     protected void writeString(String string) {
