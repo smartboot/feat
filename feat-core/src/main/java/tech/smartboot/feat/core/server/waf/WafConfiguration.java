@@ -8,7 +8,7 @@ import java.util.Set;
 public class WafConfiguration {
     private boolean enable = false;
     public static final String DESC = "Mysterious Power from the East Is Protecting This Area.";
-    private Set<String> allowMethods = new HashSet<>();
+    private final Set<String> allowMethods = new HashSet<>();
     private Set<String> denyMethods = new HashSet<>();
 
     private List<String> allowUriPrefixes = new ArrayList<>();

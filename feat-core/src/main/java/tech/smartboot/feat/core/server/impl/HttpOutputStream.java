@@ -26,7 +26,6 @@ import java.util.concurrent.Semaphore;
  * @version V1.0 , 2018/2/3
  */
 final class HttpOutputStream extends AbstractOutputStream {
-    private static final byte[] Content_Type_Bytes = "\r\nContent-Type:".getBytes();
     private static final byte[] Content_Type_TEXT_Bytes = ("\r\nContent-Type:" + HeaderValueEnum.TEXT_PLAIN_CONTENT_TYPE.getName()).getBytes();
     private static final byte[] Content_Type_JSON_Bytes = ("\r\nContent-Type:" + HeaderValueEnum.APPLICATION_JSON.getName()).getBytes();
     private static final byte[] Content_Length_Bytes = "\r\nContent-Length:".getBytes();
@@ -110,7 +109,7 @@ final class HttpOutputStream extends AbstractOutputStream {
             } else if (contentType.equals(HeaderValueEnum.APPLICATION_JSON.getName())) {
                 writeBuffer.write(Content_Type_JSON_Bytes);
             } else {
-                writeBuffer.write(Content_Type_Bytes);
+                writeBuffer.write(Content_Type_TEXT_Bytes, 0, 16);
                 writeString(contentType);
             }
         }
