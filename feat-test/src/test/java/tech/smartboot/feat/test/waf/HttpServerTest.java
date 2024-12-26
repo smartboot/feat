@@ -15,19 +15,19 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpGet;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
 import tech.smartboot.feat.core.common.enums.HttpMethodEnum;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
-import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
+import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.HttpServerHandler;
 import tech.smartboot.feat.test.BastTest;
 import tech.smartboot.feat.test.server.RequestUnit;
-import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -105,7 +105,7 @@ public class HttpServerTest extends BastTest {
     @Test
     public void testGet() throws ExecutionException, InterruptedException {
         bootstrap.configuration().getWafConfiguration()
-                .getAllowMethods().add(HttpMethodEnum.POST.getMethod());
+                .addAllowMethod(HttpMethodEnum.POST.getMethod());
         HttpClient httpClient = getHttpClient();
         StringBuilder uriStr = new StringBuilder(requestUnit.getUri()).append("?");
         requestUnit.getParameters().forEach((key, value) -> uriStr.append(key).append('=').append(value).append('&'));
@@ -118,7 +118,7 @@ public class HttpServerTest extends BastTest {
     @Test
     public void testGet1() throws ExecutionException, InterruptedException {
         bootstrap.configuration().getWafConfiguration()
-                .getAllowMethods().add(HttpMethodEnum.GET.getMethod());
+                .addAllowMethod(HttpMethodEnum.GET.getMethod());
         HttpClient httpClient = getHttpClient();
         StringBuilder uriStr = new StringBuilder(requestUnit.getUri()).append("?");
         requestUnit.getParameters().forEach((key, value) -> uriStr.append(key).append('=').append(value).append('&'));
@@ -139,7 +139,7 @@ public class HttpServerTest extends BastTest {
         Assert.assertEquals(HttpMethodEnum.GET.getMethod(), jsonObject.get(KEY_METHOD));
 
         bootstrap.configuration().getWafConfiguration()
-                .getAllowUriPrefixes().add("/aa");
+                .addAllowUriPrefix("/aa");
         HttpGet httpGet1 = httpClient.get(uriStr.toString());
         requestUnit.getHeaders().forEach((name, value) -> httpGet1.header().add(name, value));
         Assert.assertEquals(HttpStatus.BAD_REQUEST.value(), httpGet1.done().get().getStatus());

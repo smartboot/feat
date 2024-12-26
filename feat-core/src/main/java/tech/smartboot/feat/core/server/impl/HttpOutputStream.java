@@ -32,7 +32,6 @@ final class HttpOutputStream extends AbstractOutputStream {
     private static final byte[] Content_Length_Bytes = "\r\nContent-Length:".getBytes();
     private static final Date currentDate = new Date(0);
     private static final Semaphore flushDateSemaphore = new Semaphore(1);
-    private static final byte[] CHUNKED = "\r\nTransfer-Encoding: chunked\r\n".getBytes();
     private static final byte[] CHUNKED_2 = "\r\nTransfer-Encoding: chunked\r\n\r\n".getBytes();
     private static byte[] SERVER_LINE = null;
     private static long expireTime;
@@ -126,7 +125,7 @@ final class HttpOutputStream extends AbstractOutputStream {
             }
         } else if (chunkedSupport) {
             if (hasHeader) {
-                writeBuffer.write(CHUNKED);
+                writeBuffer.write(CHUNKED_2, 0, CHUNKED_2.length - 2);
             } else {
                 writeBuffer.write(CHUNKED_2);
             }

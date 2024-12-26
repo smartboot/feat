@@ -19,9 +19,16 @@ public class WafConfiguration {
         return allowMethods;
     }
 
-    public void setAllowMethods(Set<String> allowMethods) {
+    public WafConfiguration addAllowMethod(String method) {
         enable = true;
-        this.allowMethods = allowMethods;
+        allowMethods.add(method);
+        return this;
+    }
+
+    public WafConfiguration addAllowMethods(Set<String> allowMethods) {
+        enable = true;
+        this.allowMethods.addAll(allowMethods);
+        return this;
     }
 
     public Set<String> getDenyMethods() {
@@ -35,6 +42,12 @@ public class WafConfiguration {
 
     public List<String> getAllowUriPrefixes() {
         return allowUriPrefixes;
+    }
+
+    public WafConfiguration addAllowUriPrefix(String prefix) {
+        enable = true;
+        allowUriPrefixes.add(prefix);
+        return this;
     }
 
     public void setAllowUriPrefixes(List<String> allowUriPrefixes) {
