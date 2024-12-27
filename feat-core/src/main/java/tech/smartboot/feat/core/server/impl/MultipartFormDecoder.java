@@ -6,7 +6,7 @@
  * Author: sandao (zhengjunweimail@163.com)
  ******************************************************************************/
 
-package tech.smartboot.feat.core.server.decode;
+package tech.smartboot.feat.core.server.impl;
 
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
@@ -16,7 +16,6 @@ import tech.smartboot.feat.core.common.multipart.PartImpl;
 import tech.smartboot.feat.core.common.utils.ByteTree;
 import tech.smartboot.feat.core.common.utils.Constant;
 import tech.smartboot.feat.core.common.utils.StringUtils;
-import tech.smartboot.feat.core.server.impl.HttpRequestImpl;
 
 import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
@@ -29,7 +28,7 @@ import java.nio.ByteBuffer;
  * @author 三刀
  * @version V1.0 , 2017/10/20
  */
-public class MultipartFormDecoder {
+class MultipartFormDecoder {
     private final byte[] boundary;
 
     private int state;
