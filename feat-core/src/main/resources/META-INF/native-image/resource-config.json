@@ -1,0 +1,10 @@
+{
+  "resources": [
+    {
+      "pattern": "mime.types"
+    },
+    {
+      "pattern": "favicon.ico"
+    }
+  ]
+}
