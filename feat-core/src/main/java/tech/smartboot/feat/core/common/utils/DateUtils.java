@@ -42,14 +42,14 @@ public class DateUtils {
     /**
      * 当前时间
      */
-    private static long currentTimeMillis = System.currentTimeMillis();
+    private static final Date currentTime = new Date();
 
     static {
-        HashedWheelTimer.DEFAULT_TIMER.scheduleWithFixedDelay(() -> currentTimeMillis = System.currentTimeMillis(), 1, TimeUnit.SECONDS);
+        HashedWheelTimer.DEFAULT_TIMER.scheduleWithFixedDelay(() -> currentTime.setTime(System.currentTimeMillis()), 1, TimeUnit.SECONDS);
     }
 
-    public static long currentTimeMillis() {
-        return currentTimeMillis;
+    public static Date currentTime() {
+        return currentTime;
     }
 
     public static Date parseRFC1123(String date) throws ParseException {

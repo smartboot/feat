@@ -145,7 +145,7 @@ public class HttpStatus {
             writeBuffer.writeByte((byte) (value / 100 + '0'));
             writeBuffer.writeByte((byte) (value / 10 % 10 + '0'));
             writeBuffer.writeByte((byte) (value % 10 + '0'));
-            writeBuffer.writeByte((byte) ' ');
+            writeBuffer.writeByte(Constant.SP);
             writeBuffer.write(reasonPhrase.getBytes());
             writeBuffer.write(Constant.CRLF_BYTES);
         } else {

@@ -29,9 +29,8 @@ final class HttpOutputStream extends AbstractOutputStream {
     private static final byte[] Content_Type_TEXT_Bytes = ("\r\nContent-Type:" + HeaderValueEnum.TEXT_PLAIN_CONTENT_TYPE.getName()).getBytes();
     private static final byte[] Content_Type_JSON_Bytes = ("\r\nContent-Type:" + HeaderValueEnum.APPLICATION_JSON.getName()).getBytes();
     private static final byte[] Content_Length_Bytes = "\r\nContent-Length:".getBytes();
-    private static final Date currentDate = new Date(0);
+    private static final byte[] CHUNKED = "\r\nTransfer-Encoding: chunked\r\n\r\n".getBytes();
     private static final Semaphore flushDateSemaphore = new Semaphore(1);
-    private static final byte[] CHUNKED_2 = "\r\nTransfer-Encoding: chunked\r\n\r\n".getBytes();
     private static byte[] SERVER_LINE = null;
     private static long expireTime;
     private static byte[] HEAD_PART_BYTES;
@@ -52,12 +51,11 @@ final class HttpOutputStream extends AbstractOutputStream {
     }
 
     private void flushDate() {
-        long currentTime = DateUtils.currentTimeMillis();
-        if (currentTime > expireTime && flushDateSemaphore.tryAcquire()) {
+        Date currentTime = DateUtils.currentTime();
+        if (currentTime.getTime() > expireTime && flushDateSemaphore.tryAcquire()) {
             try {
-                expireTime = currentTime + 1000;
-                currentDate.setTime(currentTime);
-                String date = DateUtils.formatRFC1123(currentDate);
+                expireTime = currentTime.getTime() + 1000;
+                String date = DateUtils.formatRFC1123(currentTime);
                 byte[] bytes = date.getBytes();
                 System.arraycopy(bytes, 0, HEAD_PART_BYTES, HEAD_PART_BYTES.length - bytes.length, bytes.length);
             } finally {
@@ -70,7 +68,7 @@ final class HttpOutputStream extends AbstractOutputStream {
     public void write(byte[] b, int off, int len) throws IOException {
         super.write(b, off, len);
         if (configuration.getWsIdleTimeout() > 0 || configuration.getHttpIdleTimeout() > 0) {
-            request.setLatestIo(DateUtils.currentTimeMillis());
+            request.setLatestIo(DateUtils.currentTime().getTime());
         }
     }
 
@@ -94,7 +92,7 @@ final class HttpOutputStream extends AbstractOutputStream {
             writeBuffer.write(HEAD_PART_BYTES);
         } else {
             writeString(request.getProtocol().getProtocol());
-            writeBuffer.writeByte((byte) ' ');
+            writeBuffer.writeByte(Constant.SP);
             httpStatus.write(writeBuffer);
             if (configuration.serverName() != null && response.getHeader(HeaderNameEnum.SERVER.getName()) == null) {
                 writeBuffer.write(SERVER_LINE);
@@ -124,9 +122,9 @@ final class HttpOutputStream extends AbstractOutputStream {
             }
         } else if (chunkedSupport) {
             if (hasHeader) {
-                writeBuffer.write(CHUNKED_2, 0, CHUNKED_2.length - 2);
+                writeBuffer.write(CHUNKED, 0, CHUNKED.length - 2);
             } else {
-                writeBuffer.write(CHUNKED_2);
+                writeBuffer.write(CHUNKED);
             }
         } else if (hasHeader) {
             writeBuffer.write(Constant.CRLF_BYTES);

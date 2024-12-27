@@ -29,7 +29,7 @@ final class WebSocketOutputStream extends AbstractOutputStream {
     protected void writeHeadPart(boolean hasHeader) throws IOException {
         // HTTP/1.1
         writeString(request.getProtocol().getProtocol());
-        writeBuffer.writeByte((byte) ' ');
+        writeBuffer.writeByte(Constant.SP);
 
         // Status
         HttpStatus httpStatus = response.getHttpStatus();
