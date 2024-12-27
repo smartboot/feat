@@ -356,7 +356,7 @@ public class StringUtils {
         } while (buffer.hasRemaining() && buffer.get() == Constant.SP);
         buffer.reset();
 
-        return cache.search(buffer, endMatcher, true);
+        return cache.search(buffer, endMatcher, false);
     }
 
 
