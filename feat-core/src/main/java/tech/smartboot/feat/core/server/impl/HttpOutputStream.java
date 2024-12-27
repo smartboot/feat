@@ -107,7 +107,7 @@ final class HttpOutputStream extends AbstractOutputStream {
             } else if (contentType.equals(HeaderValueEnum.APPLICATION_JSON.getName())) {
                 writeBuffer.write(Content_Type_JSON_Bytes);
             } else {
-                writeBuffer.write(Content_Type_TEXT_Bytes, 0, 16);
+                writeBuffer.write(Content_Type_TEXT_Bytes, 0, 15);
                 writeString(contentType);
             }
         }
