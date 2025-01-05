@@ -9,6 +9,7 @@
 package tech.smartboot.feat.core.server;
 
 import org.smartboot.socket.extension.plugins.Plugin;
+import org.smartboot.socket.extension.plugins.ProxyProtocolPlugin;
 import org.smartboot.socket.extension.plugins.SslPlugin;
 import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
@@ -174,6 +175,11 @@ public class HttpServerConfiguration {
      */
     public HttpServerConfiguration headerLimiter(int headerLimiter) {
         this.headerLimiter = headerLimiter;
+        return this;
+    }
+
+    public HttpServerConfiguration proxyProtocolSupport() {
+        plugins.add(0, new ProxyProtocolPlugin());
         return this;
     }
 
