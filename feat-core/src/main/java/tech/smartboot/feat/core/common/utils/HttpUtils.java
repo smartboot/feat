@@ -46,7 +46,7 @@ public class HttpUtils {
                 continue;
             }
             try {
-                String key = StringUtils.substring(param, 0, index);
+                String key = URLDecoder.decode(StringUtils.substring(param, 0, index), "utf8");
                 String value = URLDecoder.decode(StringUtils.substring(param, index + 1), "utf8");
                 String[] values = paramMap.get(key);
                 if (values == null) {
