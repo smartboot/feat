@@ -12,6 +12,7 @@ import tech.smartboot.feat.core.common.codec.h2.codec.ContinuationFrame;
 import tech.smartboot.feat.core.common.codec.h2.codec.DataFrame;
 import tech.smartboot.feat.core.common.codec.h2.codec.HeadersFrame;
 import tech.smartboot.feat.core.common.codec.h2.codec.Http2Frame;
+import tech.smartboot.feat.core.common.utils.DateUtils;
 import tech.smartboot.feat.core.common.utils.HttpUtils;
 
 import java.io.IOException;
@@ -84,6 +85,7 @@ final class Http2OutputStream extends AbstractOutputStream {
         }
         DataFrame dataFrame = new DataFrame(streamId, 0, len);
         dataFrame.writeTo(writeBuffer, b, off, len);
+        request.setLatestIo(DateUtils.currentTime().getTime());
     }
 
 }

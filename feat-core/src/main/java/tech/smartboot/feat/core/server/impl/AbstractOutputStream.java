@@ -13,6 +13,7 @@ import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.io.BufferOutputStream;
 import tech.smartboot.feat.core.common.utils.Constant;
+import tech.smartboot.feat.core.common.utils.DateUtils;
 
 import java.io.IOException;
 import java.util.List;
@@ -51,6 +52,12 @@ abstract class AbstractOutputStream extends BufferOutputStream {
             writeHeaders();
         }
         committed = true;
+    }
+
+    @Override
+    public void write(byte[] b, int off, int len) throws IOException {
+        super.write(b, off, len);
+        request.setLatestIo(DateUtils.currentTime().getTime());
     }
 
     protected abstract void writeHeadPart(boolean hasHeader) throws IOException;

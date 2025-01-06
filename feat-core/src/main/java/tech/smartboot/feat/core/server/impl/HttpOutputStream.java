@@ -65,12 +65,6 @@ final class HttpOutputStream extends AbstractOutputStream {
     }
 
     @Override
-    public void write(byte[] b, int off, int len) throws IOException {
-        super.write(b, off, len);
-        if (configuration.getWsIdleTimeout() > 0 || configuration.getHttpIdleTimeout() > 0) {
-            request.setLatestIo(DateUtils.currentTime().getTime());
-        }
-    }
 
     protected void writeHeadPart(boolean hasHeader) throws IOException {
         checkChunked();

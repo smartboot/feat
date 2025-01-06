@@ -48,7 +48,7 @@ import java.util.Set;
  * @author 三刀
  * @version V1.0 , 2018/8/31
  */
-public abstract class CommonRequest implements Reset {
+abstract class CommonRequest implements Reset {
     private static final Locale defaultLocale = Locale.getDefault();
     private static final int INIT_CONTENT_LENGTH = -2;
     private static final int NONE_CONTENT_LENGTH = -1;
@@ -105,7 +105,10 @@ public abstract class CommonRequest implements Reset {
 
     private ServerHandler serverHandler;
     private boolean multiplexing = false;
-
+    /**
+     * 最近一次IO时间
+     */
+    protected long latestIo;
 
     CommonRequest(AioSession aioSession, HttpServerConfiguration configuration) {
         this.aioSession = aioSession;
@@ -490,6 +493,10 @@ public abstract class CommonRequest implements Reset {
 
     public boolean isMultiplexing() {
         return multiplexing;
+    }
+
+    public void setLatestIo(long latestIo) {
+        this.latestIo = latestIo;
     }
 
     @Override

@@ -20,14 +20,17 @@ import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
 import tech.smartboot.feat.core.common.enums.HttpMethodEnum;
 import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
-import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
+import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.HttpServerHandler;
 import tech.smartboot.feat.test.BastTest;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -130,6 +133,33 @@ public class HttpServer2Test extends BastTest {
             Assert.assertEquals(httpResponse.body(), body);
         }
 
+    }
+
+    @Test
+    public void testPost2() throws ExecutionException, InterruptedException {
+        Map<String, String> param = new HashMap<>();
+        param.put("p", "p");
+        param.put("p[", "p");
+        param.put("p]", "p");
+        param.put("p<]>", "p");
+
+        bootstrap.httpHandler(new HttpServerHandler() {
+            @Override
+            public void handle(HttpRequest request, HttpResponse response) throws IOException {
+                for (String key : request.getParameters().keySet()) {
+                    if (!Objects.equals(param.get(key), request.getParameter(key))) {
+                        response.write("fail");
+                        return;
+                    }
+                }
+                response.write("ok");
+            }
+        }).setPort(SERVER_PORT);
+
+        tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.post("/").header().keepalive(true).done().body().formUrlencoded(param).done().get();
+        Assert.assertEquals(httpResponse.getProtocol(), HttpProtocolEnum.HTTP_11.getProtocol());
+        Assert.assertEquals(httpResponse.getStatus(), HttpStatus.OK.value());
+        Assert.assertEquals("ok", httpResponse.body());
     }
 
     @After

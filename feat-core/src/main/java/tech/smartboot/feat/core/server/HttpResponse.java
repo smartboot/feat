@@ -110,6 +110,10 @@ public interface HttpResponse {
 
     String getContentType();
 
+    default void write(String data) throws IOException {
+        write(data.getBytes());
+    }
+
     void write(byte[] data) throws IOException;
 
     public void close();

@@ -52,10 +52,7 @@ public final class Request extends CommonRequest implements Reset {
      */
     private long remainingThreshold;
 
-    /**
-     * 最近一次IO时间
-     */
-    private long latestIo;
+
     private TimerTask httpIdleTask;
     private TimerTask wsIdleTask;
     private BodyInputStream inputStream;
@@ -260,11 +257,6 @@ public final class Request extends CommonRequest implements Reset {
     public Map<String, String> getTrailerFields() {
         return trailerFields;
     }
-
-    public void setLatestIo(long latestIo) {
-        this.latestIo = latestIo;
-    }
-
 
     public DecoderUnit getDecodeState() {
         return decodeState;
