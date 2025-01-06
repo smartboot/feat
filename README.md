@@ -1,5 +1,5 @@
 
-![Logo](logo.png)
+![Logo](logo.svg)
 
 
 [![AGPL License](https://img.shields.io/badge/license-AGPL-blue.svg)](http://www.gnu.org/licenses/agpl-3.0)
@@ -24,6 +24,7 @@ An enterprise-grade HTTP service framework implemented in Java, designed for bui
 - Http Server & Client, support http/2
 - WebSocket
 - SSE
+- Proxy Protocol
 
 
 
