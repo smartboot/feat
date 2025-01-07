@@ -90,12 +90,32 @@ public class HttpRequestProtocol implements Protocol<Request> {
                 decodeState.setState(DecodeState.STATE_PROTOCOL_DECODE);
             }
             case DecodeState.STATE_PROTOCOL_DECODE: {
-                ByteTree<?> protocol = StringUtils.scanByteTree(byteBuffer, ByteTree.CR_END_MATCHER, configuration.getByteCache());
-                if (protocol == null) {
+                // 跳过空格
+                do {
+                    byteBuffer.mark();
+                } while (byteBuffer.hasRemaining() && byteBuffer.get() == Constant.SP);
+                byteBuffer.reset();
+                if (byteBuffer.remaining() < 8) {
                     break;
                 }
-                HttpProtocolEnum protocolEnum = (HttpProtocolEnum) protocol.getAttach();
-                request.setProtocol(protocolEnum);
+                byte major = byteBuffer.get(byteBuffer.position() + 5);
+                if (major == '2') {
+                    request.setProtocol(HttpProtocolEnum.HTTP_2);
+                } else if (major != '1') {
+                    throw new HttpException(HttpStatus.BAD_REQUEST);
+                }
+                byte minor = byteBuffer.get(byteBuffer.position() + 7);
+                switch (minor) {
+                    case '0':
+                        request.setProtocol(HttpProtocolEnum.HTTP_10);
+                        break;
+                    case '1':
+                        request.setProtocol(HttpProtocolEnum.HTTP_11);
+                        break;
+                    default:
+                        throw new HttpException(HttpStatus.BAD_REQUEST);
+                }
+                byteBuffer.position(byteBuffer.position() + 9);
                 decodeState.setState(DecodeState.STATE_START_LINE_END);
             }
             case DecodeState.STATE_START_LINE_END: {
