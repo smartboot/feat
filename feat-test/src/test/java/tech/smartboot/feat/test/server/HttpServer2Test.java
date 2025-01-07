@@ -66,7 +66,7 @@ public class HttpServer2Test extends BastTest {
         }).setPort(SERVER_PORT);
         tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.get("/").done().get();
         Assert.assertEquals(httpResponse.getContentType(), "test");
-        Assert.assertEquals(httpResponse.getHeader(HeaderNameEnum.TRANSFER_ENCODING.getName()), HeaderValueEnum.CHUNKED.getName());
+        Assert.assertEquals(httpResponse.getHeader(HeaderNameEnum.TRANSFER_ENCODING.getName()), HeaderValueEnum.TransferEncoding.CHUNKED);
     }
 
     @Test
@@ -79,7 +79,7 @@ public class HttpServer2Test extends BastTest {
         }).setPort(SERVER_PORT);
         tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.get("/").done().get();
         Assert.assertEquals(httpResponse.getProtocol(), HttpProtocolEnum.HTTP_11.getProtocol());
-        Assert.assertEquals(httpResponse.getHeader(HeaderNameEnum.TRANSFER_ENCODING.getName()), HeaderValueEnum.CHUNKED.getName());
+        Assert.assertEquals(httpResponse.getHeader(HeaderNameEnum.TRANSFER_ENCODING.getName()), HeaderValueEnum.TransferEncoding.CHUNKED);
     }
 
     @Test

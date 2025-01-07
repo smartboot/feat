@@ -65,7 +65,7 @@ public class HttpRequestImpl extends AbstractRequest {
 
     @Override
     public boolean isTrailerFieldsReady() {
-        return !HeaderValueEnum.CHUNKED.getName().equals(getHeader(HeaderNameEnum.TRANSFER_ENCODING)) || request.getTrailerFields() != null;
+        return !HeaderValueEnum.TransferEncoding.CHUNKED.equals(getHeader(HeaderNameEnum.TRANSFER_ENCODING)) || request.getTrailerFields() != null;
     }
 
     public void reset() {

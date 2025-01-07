@@ -45,7 +45,7 @@ public class DefaultHttpResponseHandler extends ResponseHandler {
             return;
         }
         String transferEncoding = baseHttpResponse.getHeader(HeaderNameEnum.TRANSFER_ENCODING.getName());
-        if (StringUtils.equals(transferEncoding, HeaderValueEnum.CHUNKED.getName())) {
+        if (StringUtils.equals(transferEncoding, HeaderValueEnum.TransferEncoding.CHUNKED)) {
             responseHandler = new ChunkedHttpLifecycle();
         } else if (baseHttpResponse.getContentLength() > 0) {
             responseHandler = new ContentLengthHttpLifecycle();

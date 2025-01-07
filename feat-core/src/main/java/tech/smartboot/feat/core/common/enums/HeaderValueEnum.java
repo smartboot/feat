@@ -12,40 +12,32 @@ package tech.smartboot.feat.core.common.enums;
  * @author 三刀
  * @version V1.0 , 2018/12/6
  */
-public enum HeaderValueEnum {
-    CHUNKED("chunked"),
-    CONTINUE("100-continue"),
-    ;
+public interface HeaderValueEnum {
 
-    private final String name;
+    String CONTINUE = "100-continue";
 
-    HeaderValueEnum(String name) {
-        this.name = name;
+    interface TransferEncoding {
+        String CHUNKED = "chunked";
     }
 
-
-    public String getName() {
-        return name;
-    }
-
-    public interface Upgrade {
+    interface Upgrade {
         String WEBSOCKET = "websocket";
         String H2 = "h2";
         String H2C = "h2c";
     }
 
-    public interface ContentEncoding {
+    interface ContentEncoding {
         String GZIP = "gzip";
     }
 
-    public interface Connection {
+    interface Connection {
         String UPGRADE = "Upgrade";
         String KEEPALIVE = "Keep-Alive";
         String keepalive = "keep-alive";
         String CLOSE = "close";
     }
 
-    public interface ContentType {
+    interface ContentType {
         String MULTIPART_FORM_DATA = "multipart/form-data";
         String X_WWW_FORM_URLENCODED = "application/x-www-form-urlencoded";
         String APPLICATION_JSON = "application/json";

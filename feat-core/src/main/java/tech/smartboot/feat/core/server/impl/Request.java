@@ -123,7 +123,7 @@ public final class Request extends CommonRequest implements Reset {
             return inputStream;
         }
         //如果一个消息即存在传输译码（Transfer-Encoding）头域并且也 Content-Length 头域，后者会被忽略。
-        if (HeaderValueEnum.CHUNKED.getName().equalsIgnoreCase(getHeader(HeaderNameEnum.TRANSFER_ENCODING))) {
+        if (HeaderValueEnum.TransferEncoding.CHUNKED.equalsIgnoreCase(getHeader(HeaderNameEnum.TRANSFER_ENCODING))) {
             inputStream = new ChunkedInputStream(aioSession, remainingThreshold, stringStringMap -> this.trailerFields = stringStringMap);
         } else {
             long contentLength = getContentLength();

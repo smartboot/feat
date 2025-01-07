@@ -24,13 +24,8 @@ public class HttpServer {
      * http://patorjk.com/software/taag/
      * Font Name: Varsity
      */
-    private static final String BANNER =
-            " ________   ________        _        _________  \n" +
-            "|_   __  | |_   __  |      / \\      |  _   _  | \n" +
-            "  | |_ \\_|   | |_ \\_|     / _ \\     |_/ | | \\_| \n" +
-            "  |  _|      |  _| _     / ___ \\        | |     \n" +
-            " _| |_      _| |__/ |  _/ /   \\ \\_     _| |_    \n" +
-            "|_____|    |________| |____| |____|   |_____|   \n";
+    private static final String BANNER = " ________   ________        _        _________  \n" + "|_   __  | |_   __  |      / \\      |  _   _  | \n" + "  | |_ \\_|   | |_ \\_|     / _ \\     |_/ " +
+            "|" + " | \\_| \n" + "  |  _|      |  _| _     / ___ \\        | |     \n" + " _| |_      _| |__/ |  _/ /   \\ \\_     _| |_    \n" + "|_____|    |________| |____| |____|   |_____|   \n";
 
 
     /**
@@ -122,8 +117,7 @@ public class HttpServer {
         configuration.getPlugins().forEach(processor::addPlugin);
 
         server = new AioQuickServer(configuration.getHost(), port, protocol, processor);
-        server.setThreadNum(configuration.getThreadNum()).setBannerEnabled(false).setReadBufferSize(configuration.getReadBufferSize()).setBufferPagePool(bufferPagePool,
-                bufferPagePool).setWriteBuffer(configuration.getWriteBufferSize(), 16);
+        server.setThreadNum(configuration.getThreadNum()).setBannerEnabled(false).setReadBufferSize(configuration.getReadBufferSize()).setBufferPagePool(bufferPagePool, bufferPagePool).setWriteBuffer(configuration.getWriteBufferSize(), 16);
         if (!configuration.isLowMemory()) {
             server.disableLowMemory();
         }
@@ -158,9 +152,17 @@ public class HttpServer {
         for (HeaderNameEnum headerNameEnum : HeaderNameEnum.values()) {
             configuration.getHeaderNameByteTree().addNode(headerNameEnum.getName(), headerNameEnum);
         }
-        for (HeaderValueEnum headerValueEnum : HeaderValueEnum.values()) {
-            configuration.getByteCache().addNode(headerValueEnum.getName());
-        }
+        // 缓存一些常用字符串
+        configuration.getByteCache().addNode(HeaderValueEnum.TransferEncoding.CHUNKED);
+        configuration.getByteCache().addNode(HeaderValueEnum.ContentEncoding.GZIP);
+        configuration.getByteCache().addNode(HeaderValueEnum.Connection.UPGRADE);
+        configuration.getByteCache().addNode(HeaderValueEnum.Connection.KEEPALIVE);
+        configuration.getByteCache().addNode(HeaderValueEnum.ContentType.MULTIPART_FORM_DATA);
+        configuration.getByteCache().addNode(HeaderValueEnum.ContentType.APPLICATION_JSON);
+        configuration.getByteCache().addNode(HeaderValueEnum.ContentType.X_WWW_FORM_URLENCODED);
+        configuration.getByteCache().addNode(HeaderValueEnum.ContentType.APPLICATION_JSON_UTF8);
+        configuration.getByteCache().addNode(HeaderValueEnum.ContentType.TEXT_HTML_UTF8);
+        configuration.getByteCache().addNode(HeaderValueEnum.ContentType.TEXT_PLAIN_UTF8);
     }
 
     /**

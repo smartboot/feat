@@ -63,7 +63,7 @@ abstract class AbstractOutputStream extends BufferOutputStream {
             writeBuffer.write(getBytes(String.valueOf(request.getContentLength())));
             writeBuffer.write(Constant.CRLF_BYTES);
         } else if (chunkedSupport && source == HeaderWriteSource.WRITE) {
-            request.addHeader(HeaderNameEnum.TRANSFER_ENCODING.getName(), HeaderValueEnum.CHUNKED.getName());
+            request.addHeader(HeaderNameEnum.TRANSFER_ENCODING.getName(), HeaderValueEnum.TransferEncoding.CHUNKED);
         }
 
         //输出Header部分
