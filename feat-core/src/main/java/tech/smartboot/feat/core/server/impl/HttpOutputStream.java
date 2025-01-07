@@ -26,8 +26,8 @@ import java.util.concurrent.Semaphore;
  * @version V1.0 , 2018/2/3
  */
 final class HttpOutputStream extends AbstractOutputStream {
-    private static final byte[] Content_Type_TEXT_Bytes = ("\r\nContent-Type:" + HeaderValueEnum.TEXT_PLAIN_CONTENT_TYPE.getName()).getBytes();
-    private static final byte[] Content_Type_JSON_Bytes = ("\r\nContent-Type:" + HeaderValueEnum.APPLICATION_JSON.getName()).getBytes();
+    private static final byte[] Content_Type_TEXT_Bytes = ("\r\nContent-Type:" + HeaderValueEnum.ContentType.TEXT_PLAIN_UTF8).getBytes();
+    private static final byte[] Content_Type_JSON_Bytes = ("\r\nContent-Type:" + HeaderValueEnum.ContentType.APPLICATION_JSON).getBytes();
     private static final byte[] Content_Length_Bytes = "\r\nContent-Length:".getBytes();
     private static final byte[] CHUNKED = "\r\nTransfer-Encoding: chunked\r\n\r\n".getBytes();
     private static final Semaphore flushDateSemaphore = new Semaphore(1);
@@ -96,9 +96,9 @@ final class HttpOutputStream extends AbstractOutputStream {
         }
 
         if (contentType != null) {
-            if (contentType.equals(HeaderValueEnum.TEXT_PLAIN_CONTENT_TYPE.getName())) {
+            if (contentType.equals(HeaderValueEnum.ContentType.TEXT_PLAIN_UTF8)) {
                 writeBuffer.write(Content_Type_TEXT_Bytes);
-            } else if (contentType.equals(HeaderValueEnum.APPLICATION_JSON.getName())) {
+            } else if (contentType.equals(HeaderValueEnum.ContentType.APPLICATION_JSON)) {
                 writeBuffer.write(Content_Type_JSON_Bytes);
             } else {
                 writeBuffer.write(Content_Type_TEXT_Bytes, 0, 15);
@@ -139,7 +139,7 @@ final class HttpOutputStream extends AbstractOutputStream {
             disableChunked();
         } else if (HttpProtocolEnum.HTTP_11 != request.getProtocol()) {
             disableChunked();
-        } else if (response.getContentType().startsWith(HeaderValueEnum.CONTENT_TYPE_EVENT_STREAM.getName())) {
+        } else if (response.getContentType().startsWith(HeaderValueEnum.ContentType.EVENT_STREAM)) {
             disableChunked();
         }
     }

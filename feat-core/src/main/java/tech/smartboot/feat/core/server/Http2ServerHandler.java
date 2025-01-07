@@ -73,8 +73,8 @@ public abstract class Http2ServerHandler implements ServerHandler<HttpRequest, H
             AbstractResponse response = req.getResponse();
             response.setHttpStatus(HttpStatus.SWITCHING_PROTOCOLS);
             response.setContentType(null);
-            response.setHeader(HeaderNameEnum.UPGRADE.getName(), HeaderValueEnum.H2C.getName());
-            response.setHeader(HeaderNameEnum.CONNECTION.getName(), HeaderValueEnum.UPGRADE.getName());
+            response.setHeader(HeaderNameEnum.UPGRADE.getName(), HeaderValueEnum.Upgrade.H2C);
+            response.setHeader(HeaderNameEnum.CONNECTION.getName(), HeaderValueEnum.Connection.UPGRADE);
             OutputStream outputStream = response.getOutputStream();
             outputStream.flush();
 

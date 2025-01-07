@@ -10,9 +10,9 @@ package tech.smartboot.feat.demo;
 
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
-import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
+import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.HttpServerHandler;
 import tech.smartboot.feat.core.server.handler.HttpRouteHandler;
 
@@ -39,15 +39,16 @@ public class GzipHttpDemo {
         }).route("/b", new HttpServerHandler() {
             @Override
             public void handle(HttpRequest request, HttpResponse response) throws IOException {
-                response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValueEnum.GZIP.getName());
+                response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValueEnum.ContentEncoding.GZIP);
                 response.write(text.getBytes());
             }
         }).route("/c", new HttpServerHandler() {
             @Override
             public void handle(HttpRequest request, HttpResponse response) throws Throwable {
-                response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValueEnum.GZIP.getName());
+                response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValueEnum.ContentEncoding.GZIP);
                 GZIPOutputStream gzipOutputStream = new GZIPOutputStream(response.getOutputStream());
-                gzipOutputStream.write("<html><body>hello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello world".getBytes());
+                gzipOutputStream.write(("<html><body>hello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello " +
+                        "worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello world").getBytes());
                 gzipOutputStream.write("hello world111".getBytes());
                 gzipOutputStream.write("</body></html>".getBytes());
                 gzipOutputStream.close();
@@ -62,7 +63,7 @@ public class GzipHttpDemo {
                 gzipOutputStream.close();
 
                 byte[] data = outputStream.toByteArray();
-                response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValueEnum.GZIP.getName());
+                response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValueEnum.ContentEncoding.GZIP);
                 response.setContentLength(data.length);
                 response.write(data);
             }

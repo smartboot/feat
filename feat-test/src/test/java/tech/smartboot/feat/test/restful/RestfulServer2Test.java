@@ -15,13 +15,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
-import tech.smartboot.feat.restful.RestfulBootstrap;
 import tech.smartboot.feat.core.server.HttpServer;
+import tech.smartboot.feat.restful.RestfulBootstrap;
 import tech.smartboot.feat.test.BastTest;
 import tech.smartboot.feat.test.server.RequestUnit;
-import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -46,7 +46,8 @@ public class RestfulServer2Test extends BastTest {
     public void init() throws Exception {
         bootstrap = RestfulBootstrap.getInstance().scan("tech.smartboot.feat.test.restful").bootstrap();
         bootstrap.setPort(SERVER_PORT);
-        bootstrap.configuration().addPlugin(new StreamMonitorPlugin<>((asynchronousSocketChannel, bytes) -> System.out.println(new String(bytes)), (asynchronousSocketChannel, bytes) -> System.out.println(new String(bytes))));
+        bootstrap.configuration().addPlugin(new StreamMonitorPlugin<>((asynchronousSocketChannel, bytes) -> System.out.println(new String(bytes)),
+                (asynchronousSocketChannel, bytes) -> System.out.println(new String(bytes))));
         bootstrap.start();
     }
 
@@ -101,7 +102,7 @@ public class RestfulServer2Test extends BastTest {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("param1", "paramPost1");
         jsonObject.put("param2", "paramPost2");
-        Assert.assertEquals(httpClient.post("/demo2/param3").header().setContentType(HeaderValueEnum.APPLICATION_JSON.getName()).done().body().write(jsonObject.toJSONString().getBytes()).done().done().get().body(), "hello paramPost1 paramPost2");
+        Assert.assertEquals(httpClient.post("/demo2/param3").header().setContentType(HeaderValueEnum.ContentType.APPLICATION_JSON).done().body().write(jsonObject.toJSONString().getBytes()).done().done().get().body(), "hello paramPost1 paramPost2");
     }
 
     @Test
@@ -110,7 +111,7 @@ public class RestfulServer2Test extends BastTest {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("param1", "paramPost1");
         jsonObject.put("param2", "paramPost2");
-        Assert.assertEquals(httpClient.post("/demo2/param4").header().setContentType(HeaderValueEnum.APPLICATION_JSON.getName()).done().body().write(jsonObject.toJSONString().getBytes()).done().done().get().body(), "hello param is null");
+        Assert.assertEquals(httpClient.post("/demo2/param4").header().setContentType(HeaderValueEnum.ContentType.APPLICATION_JSON).done().body().write(jsonObject.toJSONString().getBytes()).done().done().get().body(), "hello param is null");
     }
 
     @Test
@@ -119,7 +120,7 @@ public class RestfulServer2Test extends BastTest {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("param1", "paramPost1");
         jsonObject.put("param2", "paramPost2");
-        Assert.assertEquals(httpClient.post("/demo2/param5").header().setContentType(HeaderValueEnum.APPLICATION_JSON.getName()).done().body().write(jsonObject.toJSONString().getBytes()).done().done().get().body(), "hello param is null");
+        Assert.assertEquals(httpClient.post("/demo2/param5").header().setContentType(HeaderValueEnum.ContentType.APPLICATION_JSON).done().body().write(jsonObject.toJSONString().getBytes()).done().done().get().body(), "hello param is null");
     }
 
     @After

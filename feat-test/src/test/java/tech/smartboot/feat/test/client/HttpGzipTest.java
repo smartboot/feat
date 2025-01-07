@@ -44,7 +44,7 @@ public class HttpGzipTest {
             @Override
             public void handle(HttpRequest request, HttpResponse response) throws IOException {
                 int count = NumberUtils.toInt(request.getParameter("count"), 1);
-                response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValueEnum.GZIP.getName());
+                response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValueEnum.ContentEncoding.GZIP);
                 GZIPOutputStream outputStream = new GZIPOutputStream(response.getOutputStream());
                 while (count-- > 0) {
                     outputStream.write(new byte[chunk]);
@@ -56,7 +56,7 @@ public class HttpGzipTest {
         routeHandle.route("/html", new HttpServerHandler() {
             @Override
             public void handle(HttpRequest request, HttpResponse response) throws IOException {
-                response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValueEnum.GZIP.getName());
+                response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValueEnum.ContentEncoding.GZIP);
                 GZIPOutputStream outputStream = new GZIPOutputStream(response.getOutputStream());
                 outputStream.write("<html>".getBytes());
                 outputStream.write("<body>".getBytes());
@@ -96,7 +96,7 @@ public class HttpGzipTest {
                 .onFailure(t -> {
                     System.out.println(t.getMessage());
                 }).done();
-        Assert.assertEquals(HeaderValueEnum.GZIP.getName(), future.get().getHeader(HeaderNameEnum.CONTENT_ENCODING.getName()));
+        Assert.assertEquals(HeaderValueEnum.ContentEncoding.GZIP, future.get().getHeader(HeaderNameEnum.CONTENT_ENCODING.getName()));
 //        Assert.assertEquals(count * chunk, future.get().body().length());
     }
 
@@ -111,7 +111,7 @@ public class HttpGzipTest {
                 .onFailure(t -> {
                     System.out.println(t.getMessage());
                 }).done();
-        Assert.assertEquals(HeaderValueEnum.GZIP.getName(), future.get().getHeader(HeaderNameEnum.CONTENT_ENCODING.getName()));
+        Assert.assertEquals(HeaderValueEnum.ContentEncoding.GZIP, future.get().getHeader(HeaderNameEnum.CONTENT_ENCODING.getName()));
         Assert.assertEquals(count * chunk, future.get().body().length());
     }
 

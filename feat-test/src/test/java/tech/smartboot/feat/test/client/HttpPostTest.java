@@ -13,18 +13,18 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.smartboot.socket.extension.plugins.SslPlugin;
+import org.smartboot.socket.extension.ssl.ClientAuth;
+import org.smartboot.socket.extension.ssl.factory.ServerSSLContextFactory;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
 import tech.smartboot.feat.core.common.utils.StringUtils;
-import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
+import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.HttpServerHandler;
 import tech.smartboot.feat.core.server.handler.HttpRouteHandler;
-import org.smartboot.socket.extension.plugins.SslPlugin;
-import org.smartboot.socket.extension.ssl.ClientAuth;
-import org.smartboot.socket.extension.ssl.factory.ServerSSLContextFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -245,7 +245,7 @@ public class HttpPostTest {
             Map<String, String> param = new HashMap<>();
             param.put("name", "zhouyu");
             param.put("age", "18");
-            httpClient.post("/post_param").header().setContentType(HeaderValueEnum.X_WWW_FORM_URLENCODED.getName()).done().onSuccess(response -> {
+            httpClient.post("/post_param").header().setContentType(HeaderValueEnum.ContentType.X_WWW_FORM_URLENCODED).done().onSuccess(response -> {
                 System.out.println(response.body());
                 JSONObject jsonObject = JSONObject.parseObject(response.body());
                 boolean suc = false;

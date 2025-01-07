@@ -55,7 +55,7 @@ public final class HttpPost extends HttpRestWrapper {
                     // 设置 Header
                     HttpRequestImpl request = rest.getRequest();
                     request.setContentLength(bytes.length);
-                    request.addHeader(HeaderNameEnum.CONTENT_TYPE.getName(), HeaderValueEnum.X_WWW_FORM_URLENCODED.getName());
+                    request.addHeader(HeaderNameEnum.CONTENT_TYPE.getName(), HeaderValueEnum.ContentType.X_WWW_FORM_URLENCODED);
                     //输出数据
                     request.write(bytes);
                     request.getOutputStream().flush();
@@ -77,7 +77,7 @@ public final class HttpPost extends HttpRestWrapper {
 
                     String boundary = "---" + System.currentTimeMillis();
 
-                    rest.getRequest().addHeader(HeaderNameEnum.CONTENT_TYPE.getName(), HeaderValueEnum.MULTIPART_FORM_DATA.getName() + "; boundary=" + boundary);
+                    rest.getRequest().addHeader(HeaderNameEnum.CONTENT_TYPE.getName(), HeaderValueEnum.ContentType.MULTIPART_FORM_DATA + "; boundary=" + boundary);
                     for (Multipart multipart : multiparts) {
                         write("--" + boundary + "\r\n");
                         multipart.write(this);

@@ -5,13 +5,13 @@ import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
+import tech.smartboot.feat.core.server.HttpRequest;
+import tech.smartboot.feat.core.server.HttpResponse;
+import tech.smartboot.feat.core.server.HttpServerHandler;
 import tech.smartboot.feat.restful.annotation.Param;
 import tech.smartboot.feat.restful.intercept.MethodInterceptor;
 import tech.smartboot.feat.restful.intercept.MethodInvocation;
 import tech.smartboot.feat.restful.intercept.MethodInvocationImpl;
-import tech.smartboot.feat.core.server.HttpRequest;
-import tech.smartboot.feat.core.server.HttpResponse;
-import tech.smartboot.feat.core.server.HttpServerHandler;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -81,7 +81,7 @@ class ControllerHandler extends HttpServerHandler {
             if (rsp instanceof String) {
                 bytes = ((String) rsp).getBytes();
             } else {
-                response.setHeader(HeaderNameEnum.CONTENT_TYPE.getName(), HeaderValueEnum.APPLICATION_JSON.getName());
+                response.setHeader(HeaderNameEnum.CONTENT_TYPE.getName(), HeaderValueEnum.ContentType.APPLICATION_JSON);
                 bytes = JSON.toJSONBytes(rsp);
             }
             //如果在controller中已经触发过write，此处的contentLength将不准，且不会生效

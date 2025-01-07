@@ -366,7 +366,7 @@ abstract class CommonRequest implements Reset {
         //application/x-www-form-urlencoded
         //application/x-www-form-urlencoded;charset=utf-8
         String contentTypeTmp = getContentType();
-        if (contentTypeTmp != null && contentTypeTmp.startsWith(HeaderValueEnum.X_WWW_FORM_URLENCODED.getName())) {
+        if (contentTypeTmp != null && contentTypeTmp.startsWith(HeaderValueEnum.ContentType.X_WWW_FORM_URLENCODED)) {
             try {
                 InputStream inputStream = getInputStream();
                 if (inputStream != BodyInputStream.EMPTY_INPUT_STREAM) {

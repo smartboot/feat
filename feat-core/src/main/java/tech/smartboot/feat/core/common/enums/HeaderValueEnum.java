@@ -14,21 +14,8 @@ package tech.smartboot.feat.core.common.enums;
  */
 public enum HeaderValueEnum {
     CHUNKED("chunked"),
-    MULTIPART_FORM_DATA("multipart/form-data"),
-    X_WWW_FORM_URLENCODED("application/x-www-form-urlencoded"),
-    APPLICATION_JSON("application/json"),
-    UPGRADE("Upgrade"),
-    WEBSOCKET("websocket"),
-    KEEPALIVE("Keep-Alive"),
-    keepalive("keep-alive"),
-    CLOSE("close"),
-    DEFAULT_CONTENT_TYPE("text/html; charset=utf-8"),
-    TEXT_PLAIN_CONTENT_TYPE("text/plain; charset=UTF-8"),
-    CONTENT_TYPE_EVENT_STREAM("text/event-stream"),
     CONTINUE("100-continue"),
-    GZIP("gzip"),
-    H2("h2"),
-    H2C("h2c");
+    ;
 
     private final String name;
 
@@ -39,5 +26,32 @@ public enum HeaderValueEnum {
 
     public String getName() {
         return name;
+    }
+
+    public interface Upgrade {
+        String WEBSOCKET = "websocket";
+        String H2 = "h2";
+        String H2C = "h2c";
+    }
+
+    public interface ContentEncoding {
+        String GZIP = "gzip";
+    }
+
+    public interface Connection {
+        String UPGRADE = "Upgrade";
+        String KEEPALIVE = "Keep-Alive";
+        String keepalive = "keep-alive";
+        String CLOSE = "close";
+    }
+
+    public interface ContentType {
+        String MULTIPART_FORM_DATA = "multipart/form-data";
+        String X_WWW_FORM_URLENCODED = "application/x-www-form-urlencoded";
+        String APPLICATION_JSON = "application/json";
+        String APPLICATION_JSON_UTF8 = "application/json; charset=utf-8";
+        String TEXT_HTML_UTF8 = "text/html; charset=utf-8";
+        String TEXT_PLAIN_UTF8 = "text/plain; charset=UTF-8";
+        String EVENT_STREAM = "text/event-stream";
     }
 }

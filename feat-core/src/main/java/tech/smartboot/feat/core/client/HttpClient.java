@@ -8,6 +8,12 @@
 
 package tech.smartboot.feat.core.client;
 
+import org.smartboot.socket.extension.plugins.Plugin;
+import org.smartboot.socket.extension.plugins.SslPlugin;
+import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
+import org.smartboot.socket.extension.ssl.factory.ClientSSLContextFactory;
+import org.smartboot.socket.transport.AioQuickClient;
+import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.client.impl.HttpRequestImpl;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
@@ -15,12 +21,6 @@ import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
 import tech.smartboot.feat.core.common.utils.Constant;
 import tech.smartboot.feat.core.common.utils.NumberUtils;
 import tech.smartboot.feat.core.common.utils.StringUtils;
-import org.smartboot.socket.extension.plugins.Plugin;
-import org.smartboot.socket.extension.plugins.SslPlugin;
-import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
-import org.smartboot.socket.extension.ssl.factory.ClientSSLContextFactory;
-import org.smartboot.socket.transport.AioQuickClient;
-import org.smartboot.socket.transport.AioSession;
 
 import java.nio.channels.AsynchronousChannelGroup;
 import java.util.Base64;
@@ -129,7 +129,7 @@ public final class HttpClient implements AutoCloseable {
                 try {
                     return super.done();
                 } finally {
-                    if (HeaderValueEnum.KEEPALIVE.getName().equals(getRequest().getHeader(HeaderNameEnum.CONNECTION.getName()))) {
+                    if (HeaderValueEnum.Connection.KEEPALIVE.equals(getRequest().getHeader(HeaderNameEnum.CONNECTION.getName()))) {
                         semaphore.release();
                     }
                 }
@@ -156,7 +156,8 @@ public final class HttpClient implements AutoCloseable {
     private void initRest(HttpRestImpl httpRestImpl, String uri) {
         HttpRequestImpl request = httpRestImpl.getRequest();
         if (configuration.getProxy() != null && StringUtils.isNotBlank(configuration.getProxy().getProxyUserName())) {
-            request.addHeader(HeaderNameEnum.PROXY_AUTHORIZATION.getName(), "Basic " + Base64.getEncoder().encodeToString((configuration.getProxy().getProxyUserName() + ":" + configuration.getProxy().getProxyPassword()).getBytes()));
+            request.addHeader(HeaderNameEnum.PROXY_AUTHORIZATION.getName(),
+                    "Basic " + Base64.getEncoder().encodeToString((configuration.getProxy().getProxyUserName() + ":" + configuration.getProxy().getProxyPassword()).getBytes()));
         }
         request.setUri(uri);
         request.addHeader(HeaderNameEnum.HOST.getName(), hostHeader);
@@ -171,7 +172,7 @@ public final class HttpClient implements AutoCloseable {
                 attachment.setResponse(queue.poll());
             }
             //request标注为keep-alive，response不包含该header,默认保持连接.
-            if (HeaderValueEnum.KEEPALIVE.getName().equalsIgnoreCase(request.getHeader(HeaderNameEnum.CONNECTION.getName())) && httpResponse.getHeader(HeaderNameEnum.CONNECTION.getName()) == null) {
+            if (HeaderValueEnum.Connection.KEEPALIVE.equalsIgnoreCase(request.getHeader(HeaderNameEnum.CONNECTION.getName())) && httpResponse.getHeader(HeaderNameEnum.CONNECTION.getName()) == null) {
                 return;
             }
             //存在链路复用情况
@@ -179,9 +180,9 @@ public final class HttpClient implements AutoCloseable {
                 return;
             }
             //非keep-alive,主动断开连接
-            if (!HeaderValueEnum.KEEPALIVE.getName().equalsIgnoreCase(httpResponse.getHeader(HeaderNameEnum.CONNECTION.getName()))) {
+            if (!HeaderValueEnum.Connection.KEEPALIVE.equalsIgnoreCase(httpResponse.getHeader(HeaderNameEnum.CONNECTION.getName()))) {
                 close();
-            } else if (!HeaderValueEnum.KEEPALIVE.getName().equalsIgnoreCase(request.getHeader(HeaderNameEnum.CONNECTION.getName()))) {
+            } else if (!HeaderValueEnum.Connection.KEEPALIVE.equalsIgnoreCase(request.getHeader(HeaderNameEnum.CONNECTION.getName()))) {
                 close();
             }
         });
@@ -230,7 +231,8 @@ public final class HttpClient implements AutoCloseable {
                 firstConnected = false;
             }
             connected = true;
-            client = configuration.getProxy() == null ? new AioQuickClient(configuration.getHost(), configuration.getPort(), processor, processor) : new AioQuickClient(configuration.getProxy().getProxyHost(), configuration.getProxy().getProxyPort(), processor, processor);
+            client = configuration.getProxy() == null ? new AioQuickClient(configuration.getHost(), configuration.getPort(), processor, processor) :
+                    new AioQuickClient(configuration.getProxy().getProxyHost(), configuration.getProxy().getProxyPort(), processor, processor);
             client.setBufferPagePool(configuration.getReadBufferPool(), configuration.getWriteBufferPool()).setWriteBuffer(configuration.getWriteBufferSize(), 2).setReadBufferSize(configuration.readBufferSize());
             if (configuration.getConnectTimeout() > 0) {
                 client.connectTimeout(configuration.getConnectTimeout());

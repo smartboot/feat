@@ -55,7 +55,7 @@ public interface Header<T> {
     Header<T> setContentLength(int contentLength);
 
     default Header<T> keepalive(boolean flag) {
-        return keepalive(flag ? HeaderValueEnum.KEEPALIVE.getName() : HeaderValueEnum.CLOSE.getName());
+        return keepalive(flag ? HeaderValueEnum.Connection.KEEPALIVE : HeaderValueEnum.Connection.CLOSE);
     }
 
     default Header<T> keepalive(String headerValue) {

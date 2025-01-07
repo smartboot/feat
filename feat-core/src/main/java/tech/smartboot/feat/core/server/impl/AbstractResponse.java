@@ -8,6 +8,7 @@
 
 package tech.smartboot.feat.core.server.impl;
 
+import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.common.Cookie;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.Reset;
@@ -16,7 +17,6 @@ import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
 import tech.smartboot.feat.core.common.io.BufferOutputStream;
 import tech.smartboot.feat.core.server.HttpResponse;
-import org.smartboot.socket.transport.AioSession;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -57,7 +57,7 @@ public class AbstractResponse implements HttpResponse, Reset {
     /**
      * 正文编码方式
      */
-    private String contentType = HeaderValueEnum.DEFAULT_CONTENT_TYPE.getName();
+    private String contentType = HeaderValueEnum.ContentType.TEXT_HTML_UTF8;
 
     private AioSession session;
 
@@ -78,7 +78,7 @@ public class AbstractResponse implements HttpResponse, Reset {
         outputStream.reset();
         headers.clear();
         setHttpStatus(HttpStatus.OK);
-        contentType = HeaderValueEnum.DEFAULT_CONTENT_TYPE.getName();
+        contentType = HeaderValueEnum.ContentType.TEXT_HTML_UTF8;
         contentLength = -1;
         cookies = Collections.emptyList();
         this.closed = false;

@@ -8,6 +8,9 @@
 
 package tech.smartboot.feat.core.server;
 
+import org.smartboot.socket.transport.AioSession;
+import org.smartboot.socket.util.AttachKey;
+import org.smartboot.socket.util.Attachment;
 import tech.smartboot.feat.core.common.codec.websocket.BasicFrameDecoder;
 import tech.smartboot.feat.core.common.codec.websocket.Decoder;
 import tech.smartboot.feat.core.common.codec.websocket.WebSocket;
@@ -19,9 +22,6 @@ import tech.smartboot.feat.core.server.impl.AbstractResponse;
 import tech.smartboot.feat.core.server.impl.Request;
 import tech.smartboot.feat.core.server.impl.WebSocketRequestImpl;
 import tech.smartboot.feat.core.server.impl.WebSocketResponseImpl;
-import org.smartboot.socket.transport.AioSession;
-import org.smartboot.socket.util.AttachKey;
-import org.smartboot.socket.util.Attachment;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -57,8 +57,8 @@ public abstract class WebSocketHandler implements ServerHandler<WebSocketRequest
         byte[] sha1 = SHA1.encode(acceptSeed);
         String accept = Base64.getEncoder().encodeToString(sha1);
         response.setHttpStatus(HttpStatus.SWITCHING_PROTOCOLS);
-        response.setHeader(HeaderNameEnum.UPGRADE.getName(), HeaderValueEnum.WEBSOCKET.getName());
-        response.setHeader(HeaderNameEnum.CONNECTION.getName(), HeaderValueEnum.UPGRADE.getName());
+        response.setHeader(HeaderNameEnum.UPGRADE.getName(), HeaderValueEnum.Upgrade.WEBSOCKET);
+        response.setHeader(HeaderNameEnum.CONNECTION.getName(), HeaderValueEnum.Connection.UPGRADE);
         response.setHeader(HeaderNameEnum.Sec_WebSocket_Accept.getName(), accept);
         OutputStream outputStream = response.getOutputStream();
         outputStream.flush();

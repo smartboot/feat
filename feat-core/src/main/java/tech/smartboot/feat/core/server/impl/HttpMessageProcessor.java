@@ -111,11 +111,11 @@ public class HttpMessageProcessor extends AbstractMessageProcessor<Request> {
         } else {
             String upgrade = request.getHeader(HeaderNameEnum.UPGRADE);
             // WebSocket
-            if (HeaderValueEnum.WEBSOCKET.getName().equalsIgnoreCase(upgrade)) {
+            if (HeaderValueEnum.Upgrade.WEBSOCKET.equalsIgnoreCase(upgrade)) {
                 request.setServerHandler(configuration.getWebSocketHandler());
             }
             // HTTP/2.0
-            else if (HeaderValueEnum.H2C.getName().equals(upgrade) || HeaderValueEnum.H2.getName().equals(upgrade)) {
+            else if (HeaderValueEnum.Upgrade.H2C.equals(upgrade) || HeaderValueEnum.Upgrade.H2.equals(upgrade)) {
                 request.setServerHandler(configuration.getHttp2ServerHandler());
             }
         }

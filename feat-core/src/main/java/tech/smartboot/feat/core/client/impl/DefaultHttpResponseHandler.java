@@ -123,7 +123,7 @@ public class DefaultHttpResponseHandler extends ResponseHandler {
         }
 
         public void finishDecode(HttpResponseImpl response) {
-            if (StringUtils.equals(HeaderValueEnum.GZIP.getName(), response.getHeader(HeaderNameEnum.CONTENT_ENCODING.getName()))) {
+            if (StringUtils.equals(HeaderValueEnum.ContentEncoding.GZIP, response.getHeader(HeaderNameEnum.CONTENT_ENCODING.getName()))) {
                 response.setBody(GzipUtils.uncompressToString(body.toByteArray()));
             } else {
                 response.setBody(body.toString());

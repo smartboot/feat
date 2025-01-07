@@ -61,7 +61,7 @@ public class HttpServerTest extends BastTest {
                 //随机启用GZIP
                 OutputStream outputStream;
                 if (System.currentTimeMillis() % 2 == 0) {
-                    response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValueEnum.GZIP.getName());
+                    response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValueEnum.ContentEncoding.GZIP);
                     outputStream = new GZIPOutputStream(response.getOutputStream());
                 } else {
                     outputStream = response.getOutputStream();

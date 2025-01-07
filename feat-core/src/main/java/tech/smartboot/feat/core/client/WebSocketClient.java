@@ -1,5 +1,11 @@
 package tech.smartboot.feat.core.client;
 
+import org.smartboot.socket.extension.plugins.Plugin;
+import org.smartboot.socket.extension.plugins.SslPlugin;
+import org.smartboot.socket.extension.ssl.factory.ClientSSLContextFactory;
+import org.smartboot.socket.transport.AioQuickClient;
+import org.smartboot.socket.transport.AioSession;
+import org.smartboot.socket.util.StringUtils;
 import tech.smartboot.feat.core.client.impl.WebSocketRequestImpl;
 import tech.smartboot.feat.core.client.impl.WebSocketResponseImpl;
 import tech.smartboot.feat.core.common.codec.websocket.CloseReason;
@@ -15,12 +21,6 @@ import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.utils.Constant;
 import tech.smartboot.feat.core.common.utils.NumberUtils;
 import tech.smartboot.feat.core.common.utils.WebSocketUtil;
-import org.smartboot.socket.extension.plugins.Plugin;
-import org.smartboot.socket.extension.plugins.SslPlugin;
-import org.smartboot.socket.extension.ssl.factory.ClientSSLContextFactory;
-import org.smartboot.socket.transport.AioQuickClient;
-import org.smartboot.socket.transport.AioSession;
-import org.smartboot.socket.util.StringUtils;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -161,7 +161,8 @@ public class WebSocketClient {
                 firstConnected = false;
             }
             connected = true;
-            client = configuration.getProxy() == null ? new AioQuickClient(configuration.getHost(), configuration.getPort(), processor, processor) : new AioQuickClient(configuration.getProxy().getProxyHost(), configuration.getProxy().getProxyPort(), processor, processor);
+            client = configuration.getProxy() == null ? new AioQuickClient(configuration.getHost(), configuration.getPort(), processor, processor) :
+                    new AioQuickClient(configuration.getProxy().getProxyHost(), configuration.getProxy().getProxyPort(), processor, processor);
             client.setBufferPagePool(configuration.getReadBufferPool(), configuration.getWriteBufferPool()).setReadBufferSize(configuration.readBufferSize());
             if (configuration.getConnectTimeout() > 0) {
                 client.connectTimeout(configuration.getConnectTimeout());
@@ -256,8 +257,8 @@ public class WebSocketClient {
         request.setMethod(HttpMethodEnum.GET.getMethod());
         request.setProtocol(HttpProtocolEnum.HTTP_11.getProtocol());
         request.addHeader(HeaderNameEnum.HOST.getName(), hostHeader);
-        request.addHeader(HeaderNameEnum.UPGRADE.getName(), HeaderValueEnum.WEBSOCKET.getName());
-        request.setHeader(HeaderNameEnum.CONNECTION.getName(), HeaderValueEnum.UPGRADE.getName());
+        request.addHeader(HeaderNameEnum.UPGRADE.getName(), HeaderValueEnum.Upgrade.WEBSOCKET);
+        request.setHeader(HeaderNameEnum.CONNECTION.getName(), HeaderValueEnum.Connection.UPGRADE);
         request.setHeader(HeaderNameEnum.Sec_WebSocket_Key.getName(), generateSecWebSocketKey());
         request.setHeader(HeaderNameEnum.Sec_WebSocket_Version.getName(), "13");
 //        request.setHeader(HeaderNameEnum.Sec_WebSocket_Protocol.getName(), HeaderValueEnum.PERMESSAGE_DEFLATE.getName());
