@@ -16,8 +16,12 @@ import tech.smartboot.feat.core.common.Reset;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
 import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
+import tech.smartboot.feat.core.common.enums.HttpStatus;
 import tech.smartboot.feat.core.common.enums.HttpTypeEnum;
+import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.common.io.BodyInputStream;
+import tech.smartboot.feat.core.common.logging.Logger;
+import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.utils.Constant;
 import tech.smartboot.feat.core.common.utils.HttpUtils;
 import tech.smartboot.feat.core.common.utils.NumberUtils;
@@ -49,6 +53,7 @@ import java.util.Set;
  * @version V1.0 , 2018/8/31
  */
 abstract class CommonRequest implements Reset {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CommonRequest.class);
     private static final Locale defaultLocale = Locale.getDefault();
     private static final int INIT_CONTENT_LENGTH = -2;
     private static final int NONE_CONTENT_LENGTH = -1;
@@ -374,7 +379,8 @@ abstract class CommonRequest implements Reset {
                     HttpUtils.decodeParamString(outputStream.toString(), parameters);
                 }
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                LOGGER.error("getParameterValues error", e);
+                throw new HttpException(HttpStatus.INTERNAL_SERVER_ERROR);
             }
         }
         return getParameterValues(name);

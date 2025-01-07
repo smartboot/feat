@@ -57,7 +57,6 @@ public class AntPathMatcher {
 
     private static final int CACHE_TURNOFF_THRESHOLD = 65536;
 
-    private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\{[^/]+?\\}");
     final Map<String, AntPathStringMatcher> stringMatcherCache = new ConcurrentHashMap<String, AntPathStringMatcher>(256);
     private final Map<String, String[]> tokenizedPatternCache = new ConcurrentHashMap<String, String[]>(256);
     private String pathSeparator;

@@ -37,8 +37,6 @@ import java.util.concurrent.TimeUnit;
  */
 public final class Request extends CommonRequest implements Reset {
     private static final Logger LOGGER = LoggerFactory.getLogger(Request.class);
-    private static final int INIT_CONTENT_LENGTH = -2;
-    private static final int NONE_CONTENT_LENGTH = -1;
 
 
     private final DecoderUnit decodeState = new DecoderUnit();

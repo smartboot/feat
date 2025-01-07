@@ -66,7 +66,7 @@ public class HttpUtils {
 
     public static List<Cookie> decodeCookies(String cookieStr) {
         List<Cookie> cookies = new ArrayList<>();
-        decode(cookies, cookieStr, 0, new HashMap<String, String>());
+        decode(cookies, cookieStr, 0, new HashMap<>());
         return cookies;
     }
 
