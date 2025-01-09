@@ -17,7 +17,6 @@ import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
 import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
-import tech.smartboot.feat.core.common.enums.HttpTypeEnum;
 import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.common.io.BodyInputStream;
 import tech.smartboot.feat.core.common.logging.Logger;
@@ -26,7 +25,6 @@ import tech.smartboot.feat.core.common.utils.Constant;
 import tech.smartboot.feat.core.common.utils.HttpUtils;
 import tech.smartboot.feat.core.common.utils.NumberUtils;
 import tech.smartboot.feat.core.common.utils.StringUtils;
-import tech.smartboot.feat.core.server.Http2ServerHandler;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpServerConfiguration;
 import tech.smartboot.feat.core.server.ServerHandler;
@@ -94,10 +92,6 @@ abstract class CommonRequest implements Reset {
     protected String remoteAddr;
     protected String remoteHost;
     private String hostHeader;
-    /**
-     * 消息类型
-     */
-    private HttpTypeEnum type = null;
 
     private Cookie[] cookies;
     private final SSLEngine sslEngine;
@@ -226,21 +220,6 @@ abstract class CommonRequest implements Reset {
         }
     }
 
-    public final HttpTypeEnum getRequestType() {
-        if (type != null) {
-            return type;
-        }
-        if (serverHandler instanceof Http2ServerHandler) {
-            type = HttpTypeEnum.HTTP_2;
-        } else {
-            type = HttpTypeEnum.HTTP;
-        }
-        return type;
-    }
-
-    public final void setType(HttpTypeEnum type) {
-        this.type = type;
-    }
 
     public ServerHandler getServerHandler() {
         return serverHandler;
@@ -512,7 +491,6 @@ abstract class CommonRequest implements Reset {
         contentType = null;
         contentLength = INIT_CONTENT_LENGTH;
         cookies = null;
-        type = null;
         queryString = null;
         requestUri = null;
         multiplexing = true;

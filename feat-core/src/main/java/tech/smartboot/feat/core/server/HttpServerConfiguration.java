@@ -102,13 +102,6 @@ public class HttpServerConfiguration {
         }
     };
 
-    private Http2ServerHandler http2ServerHandler = new Http2ServerHandler() {
-        @Override
-        public void handle(HttpRequest request, HttpResponse response) throws IOException {
-            response.write("Hello Feat".getBytes(StandardCharsets.UTF_8));
-        }
-    };
-
     private final WafConfiguration wafConfiguration = new WafConfiguration();
 
 
@@ -219,14 +212,6 @@ public class HttpServerConfiguration {
         this.httpServerHandler = httpServerHandler;
     }
 
-
-    public Http2ServerHandler getHttp2ServerHandler() {
-        return http2ServerHandler;
-    }
-
-    public void setHttp2ServerHandler(Http2ServerHandler http2ServerHandler) {
-        this.http2ServerHandler = http2ServerHandler;
-    }
 
     /**
      * 将字符串缓存至 ByteTree 中，在Http报文解析过程中将获得更好的性能表现。

@@ -1,12 +1,4 @@
-/*******************************************************************************
- * Copyright (c) 2024, tech.smartboot. All rights reserved.
- * project name: feat
- * file name: HttpServerHandle.java
- * Date: 2021-02-07
- * Author: sandao (zhengjunweimail@163.com)
- ******************************************************************************/
-
-package tech.smartboot.feat.core.server;
+package tech.smartboot.feat.core.server.upgrade;
 
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.codec.h2.codec.DataFrame;
@@ -22,12 +14,15 @@ import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
 import tech.smartboot.feat.core.common.enums.HttpMethodEnum;
 import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
-import tech.smartboot.feat.core.common.enums.HttpTypeEnum;
+import tech.smartboot.feat.core.server.HttpRequest;
+import tech.smartboot.feat.core.server.HttpResponse;
+import tech.smartboot.feat.core.server.ServerHandler;
 import tech.smartboot.feat.core.server.impl.AbstractResponse;
 import tech.smartboot.feat.core.server.impl.Http2RequestImpl;
 import tech.smartboot.feat.core.server.impl.Http2Session;
 import tech.smartboot.feat.core.server.impl.HttpMessageProcessor;
 import tech.smartboot.feat.core.server.impl.HttpRequestImpl;
+import tech.smartboot.feat.core.server.impl.HttpUpgradeHandler;
 import tech.smartboot.feat.core.server.impl.Request;
 
 import java.io.ByteArrayOutputStream;
@@ -38,19 +33,13 @@ import java.util.Base64;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
-/**
- * Http消息处理器
- *
- * @author 三刀
- * @version V1.0 , 2018/2/6
- */
-public abstract class Http2ServerHandler implements ServerHandler<HttpRequest, HttpResponse> {
+public class Http2UpgradeHandler extends HttpUpgradeHandler {
     private static final byte[] H2C_PREFACE = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n".getBytes();
     private static final int FRAME_HEADER_SIZE = 9;
     private ServerHandler<HttpRequest, HttpResponse> serverHandler;
 
     @Override
-    public final void onHeaderComplete(Request request) throws IOException {
+    public void init() throws IOException {
         if (HttpProtocolEnum.HTTP_2 == request.getProtocol()) {
             if (!"PRI".equals(request.getMethod()) || !"*".equals(request.getUri()) || request.getHeaderSize() > 0) {
                 throw new IllegalStateException();
@@ -86,13 +75,10 @@ public abstract class Http2ServerHandler implements ServerHandler<HttpRequest, H
     }
 
     @Override
-    public final void onBodyStream(ByteBuffer buffer, Request request) {
+    public void onBodyStream(ByteBuffer buffer) {
         Http2Session session = request.newHttp2Session();
         switch (session.getState()) {
             case Http2Session.STATE_FIRST_REQUEST: {
-                HttpRequestImpl httpRequest = request.newHttpRequest();
-                request.setType(HttpTypeEnum.HTTP_2);
-//                httpServerHandler.onBodyStream(buffer, request);
                 return;
             }
             case Http2Session.STATE_PREFACE_SM: {
@@ -106,7 +92,7 @@ public abstract class Http2ServerHandler implements ServerHandler<HttpRequest, H
                 }
                 session.setPrefaced(true);
                 session.setState(Http2Session.STATE_FRAME_HEAD);
-                onBodyStream(buffer, request);
+                onBodyStream(buffer);
                 return;
             }
             case Http2Session.STATE_PREFACE: {
@@ -144,7 +130,7 @@ public abstract class Http2ServerHandler implements ServerHandler<HttpRequest, H
                     e.printStackTrace();
                     throw new RuntimeException(e);
                 }
-                onBodyStream(buffer, request);
+                onBodyStream(buffer);
             }
         }
     }
@@ -285,7 +271,7 @@ public abstract class Http2ServerHandler implements ServerHandler<HttpRequest, H
         AbstractResponse response = abstractRequest.getResponse();
         CompletableFuture<Object> future = new CompletableFuture<>();
         try {
-            handle(abstractRequest, response, future);
+            request.getServerHandler().handle(abstractRequest, response, future);
             abstractRequest.getResponse().close();
         } catch (Throwable e) {
             HttpMessageProcessor.responseError(response, e);

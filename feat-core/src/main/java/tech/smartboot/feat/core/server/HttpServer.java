@@ -17,8 +17,6 @@ import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
 import tech.smartboot.feat.core.server.impl.HttpMessageProcessor;
 import tech.smartboot.feat.core.server.impl.HttpRequestProtocol;
 
-import java.util.concurrent.CompletableFuture;
-
 public class HttpServer {
     /**
      * http://patorjk.com/software/taag/
@@ -67,13 +65,6 @@ public class HttpServer {
      */
     public HttpServer httpHandler(HttpServerHandler httpHandler) {
         processor.httpServerHandler(httpHandler);
-        processor.http2ServerHandler(new Http2ServerHandler() {
-
-            @Override
-            public void handle(HttpRequest request, HttpResponse response, CompletableFuture<Object> completableFuture) throws Throwable {
-                httpHandler.handle(request, response, completableFuture);
-            }
-        });
         return this;
     }
 

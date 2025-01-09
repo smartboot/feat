@@ -8,6 +8,7 @@ import tech.smartboot.feat.core.common.enums.HttpMethodEnum;
 import tech.smartboot.feat.core.common.utils.HttpUtils;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.PushBuilder;
+import tech.smartboot.feat.core.server.upgrade.Http2UpgradeHandler;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -133,7 +134,7 @@ public class PushBuilderImpl implements PushBuilder {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        pushRequest.getSession().getRequest().getConfiguration().getHttp2ServerHandler().handleHttpRequest(pushRequest);
+        ((Http2UpgradeHandler) (pushRequest.getSession().getRequest().getUpgradeHandler())).handleHttpRequest(pushRequest);
         pushRequest.reset();
         this.path = null;
         this.queryString = null;

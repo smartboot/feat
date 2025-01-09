@@ -17,7 +17,6 @@ import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.utils.StringUtils;
-import tech.smartboot.feat.core.server.Http2ServerHandler;
 import tech.smartboot.feat.core.server.HttpServerConfiguration;
 import tech.smartboot.feat.core.server.HttpServerHandler;
 
@@ -142,22 +141,7 @@ public class HttpMessageProcessor extends AbstractMessageProcessor<Request> {
             case DECODE_EXCEPTION: {
                 LOGGER.warn("http decode exception,", throwable);
                 Request request = session.getAttachment();
-                AbstractResponse response;
-                switch (request.getRequestType()) {
-                    case WEBSOCKET:
-                        response = request.newWebsocketRequest().getResponse();
-                        break;
-                    case HTTP:
-                        response = request.newHttpRequest().getResponse();
-                        break;
-                    case HTTP_2:
-                        //todo
-//                        response = request.newHttp2Session().getResponse();
-//                        break;
-                    default:
-                        throw new IllegalStateException();
-                }
-                responseError(response, throwable);
+                responseError(request.newHttpRequest().getResponse(), throwable);
                 break;
             }
         }
@@ -165,10 +149,6 @@ public class HttpMessageProcessor extends AbstractMessageProcessor<Request> {
 
     public void httpServerHandler(HttpServerHandler httpServerHandler) {
         this.configuration.setHttpServerHandler(Objects.requireNonNull(httpServerHandler));
-    }
-
-    public void http2ServerHandler(Http2ServerHandler httpServerHandler) {
-        this.configuration.setHttp2ServerHandler(Objects.requireNonNull(httpServerHandler));
     }
 
 
