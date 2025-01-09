@@ -30,7 +30,6 @@ import tech.smartboot.feat.core.server.Http2ServerHandler;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpServerConfiguration;
 import tech.smartboot.feat.core.server.ServerHandler;
-import tech.smartboot.feat.core.server.WebSocketHandler;
 
 import javax.net.ssl.SSLEngine;
 import java.io.ByteArrayOutputStream;
@@ -231,9 +230,7 @@ abstract class CommonRequest implements Reset {
         if (type != null) {
             return type;
         }
-        if (serverHandler instanceof WebSocketHandler) {
-            type = HttpTypeEnum.WEBSOCKET;
-        } else if (serverHandler instanceof Http2ServerHandler) {
+        if (serverHandler instanceof Http2ServerHandler) {
             type = HttpTypeEnum.HTTP_2;
         } else {
             type = HttpTypeEnum.HTTP;

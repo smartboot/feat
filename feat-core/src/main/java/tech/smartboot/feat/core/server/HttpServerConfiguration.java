@@ -101,7 +101,6 @@ public class HttpServerConfiguration {
             response.write("Hello Feat".getBytes(StandardCharsets.UTF_8));
         }
     };
-    private WebSocketHandler webSocketHandler;
 
     private Http2ServerHandler http2ServerHandler = new Http2ServerHandler() {
         @Override
@@ -220,13 +219,6 @@ public class HttpServerConfiguration {
         this.httpServerHandler = httpServerHandler;
     }
 
-    public WebSocketHandler getWebSocketHandler() {
-        return webSocketHandler;
-    }
-
-    public void setWebSocketHandler(WebSocketHandler webSocketHandler) {
-        this.webSocketHandler = webSocketHandler;
-    }
 
     public Http2ServerHandler getHttp2ServerHandler() {
         return http2ServerHandler;

@@ -68,6 +68,13 @@ public class HttpRequestImpl extends AbstractRequest {
         return !HeaderValueEnum.TransferEncoding.CHUNKED.equals(getHeader(HeaderNameEnum.TRANSFER_ENCODING)) || request.getTrailerFields() != null;
     }
 
+    @Override
+    public void upgrade(HttpUpgradeHandler upgradeHandler) throws IOException {
+        request.setUpgradeHandler(upgradeHandler);
+        upgradeHandler.setRequest(request);
+        upgradeHandler.init();
+    }
+
     public void reset() {
         request.reset();
         response.reset();

@@ -8,12 +8,13 @@
 
 package tech.smartboot.feat.core.server;
 
+import org.smartboot.socket.util.Attachment;
 import tech.smartboot.feat.core.common.Cookie;
 import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
 import tech.smartboot.feat.core.common.io.BodyInputStream;
 import tech.smartboot.feat.core.common.multipart.MultipartConfig;
 import tech.smartboot.feat.core.common.multipart.Part;
-import org.smartboot.socket.util.Attachment;
+import tech.smartboot.feat.core.server.impl.HttpUpgradeHandler;
 
 import javax.net.ssl.SSLEngine;
 import java.io.IOException;
@@ -158,4 +159,6 @@ public interface HttpRequest {
     default PushBuilder newPushBuilder() {
         return null;
     }
+
+    void upgrade(HttpUpgradeHandler upgradeHandler) throws IOException;
 }

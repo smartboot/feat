@@ -136,4 +136,9 @@ public class Http2RequestImpl extends CommonRequest implements HttpRequest, Rese
         getHeaderNames().stream().filter(headerName -> !PushBuilderImpl.IGNORE_HEADERS.contains(headerName)).forEach(headerName -> getHeaders(headerName).forEach(headerValue -> builder.addHeader(headerName, headerValue)));
         return builder;
     }
+
+    @Override
+    public void upgrade(HttpUpgradeHandler upgradeHandler) throws IOException {
+        throw new UnsupportedOperationException();
+    }
 }

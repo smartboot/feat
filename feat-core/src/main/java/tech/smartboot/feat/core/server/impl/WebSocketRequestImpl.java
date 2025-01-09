@@ -136,6 +136,11 @@ public class WebSocketRequestImpl extends AbstractRequest implements WebSocketRe
         throw new UnsupportedOperationException();
     }
 
+    @Override
+    public void upgrade(HttpUpgradeHandler upgradeHandler) {
+        throw new UnsupportedOperationException();
+    }
+
 
     public long getPayloadLength() {
         return payloadLength;

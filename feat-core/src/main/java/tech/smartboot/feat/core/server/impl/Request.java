@@ -37,7 +37,13 @@ import java.util.concurrent.TimeUnit;
  */
 public final class Request extends CommonRequest implements Reset {
     private static final Logger LOGGER = LoggerFactory.getLogger(Request.class);
-
+    public static final int STATE_UPGRADE_CHECK_FLAG = 0x1100;
+    public static final int STATE_UPGRADE_INIT = 0x0000;
+    public static final int STATE_UPGRADE_DISABLE = 0x0100;
+    public static final int STATE_UPGRADE_ENABLE = 0x1000;
+    public static final int STATE_HTTP_10 = 0x01;
+    public static final int STATE_HTTP_11 = 0x11;
+    public static final int STATE_HTTP_20 = 0x10;
 
     private final DecoderUnit decodeState = new DecoderUnit();
     private HttpRequestImpl httpRequest;
@@ -49,12 +55,22 @@ public final class Request extends CommonRequest implements Reset {
      * 剩余可读字节数
      */
     private long remainingThreshold;
-
+    private HttpUpgradeHandler upgradeHandler;
 
     private TimerTask httpIdleTask;
     private TimerTask wsIdleTask;
     private BodyInputStream inputStream;
     private Map<String, String> trailerFields;
+    private int state;
+
+    public int getState() {
+        return state;
+    }
+
+
+    public void setState(int flag) {
+        this.state = this.state | flag;
+    }
 
     void cancelHttpIdleTask() {
         synchronized (this) {
@@ -258,6 +274,14 @@ public final class Request extends CommonRequest implements Reset {
 
     public DecoderUnit getDecodeState() {
         return decodeState;
+    }
+
+    public HttpUpgradeHandler getUpgradeHandler() {
+        return upgradeHandler;
+    }
+
+    public void setUpgradeHandler(HttpUpgradeHandler upgradeHandler) {
+        this.upgradeHandler = upgradeHandler;
     }
 
     public void reset() {

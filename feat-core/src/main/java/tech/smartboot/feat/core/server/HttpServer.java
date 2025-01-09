@@ -77,20 +77,6 @@ public class HttpServer {
         return this;
     }
 
-//    public HttpBootstrap http2Handler(Http2ServerHandler httpHandler) {
-//        processor.http2ServerHandler(httpHandler);
-//        return this;
-//    }
-
-    /**
-     * 获取websocket的处理器管道
-     *
-     * @return
-     */
-    public HttpServer webSocketHandler(WebSocketHandler webSocketHandler) {
-        processor.setWebSocketHandler(webSocketHandler);
-        return this;
-    }
 
     /**
      * 服务配置

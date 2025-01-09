@@ -40,7 +40,9 @@ public abstract class HttpServerHandler implements ServerHandler<HttpRequest, Ht
         httpRequest.setKeepAlive(keepAlive);
         try {
             httpRequest.request.getServerHandler().handle(httpRequest, response, future);
-            finishHttpHandle(httpRequest, future);
+            if (request.getUpgradeHandler() == null) {
+                finishHttpHandle(httpRequest, future);
+            }
         } catch (Throwable e) {
             HttpMessageProcessor.responseError(response, e);
         }

@@ -8,10 +8,10 @@
 
 package tech.smartboot.feat.core.server.impl;
 
+import org.smartboot.socket.StateMachineEnum;
+import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
+import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.common.DecodeState;
-import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
-import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
-import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
 import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.common.logging.Logger;
@@ -20,10 +20,6 @@ import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.Http2ServerHandler;
 import tech.smartboot.feat.core.server.HttpServerConfiguration;
 import tech.smartboot.feat.core.server.HttpServerHandler;
-import tech.smartboot.feat.core.server.WebSocketHandler;
-import org.smartboot.socket.StateMachineEnum;
-import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
-import org.smartboot.socket.transport.AioSession;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -52,16 +48,11 @@ public class HttpMessageProcessor extends AbstractMessageProcessor<Request> {
                 }
                 case DecodeState.STATE_BODY_READING_CALLBACK: {
                     decodeState.setState(DecodeState.STATE_BODY_READING_MONITOR);
-                    switch (request.getRequestType()) {
-                        case HTTP_2:
-                        case HTTP: {
-                            request.getServerHandler().onBodyStream(session.readBuffer(), request);
-                            break;
-                        }
-                        case WEBSOCKET: {
-                            configuration.getWebSocketHandler().onBodyStream(session.readBuffer(), request);
-                            break;
-                        }
+                    HttpUpgradeHandler httpUpgradeHandler = request.getUpgradeHandler();
+                    if (httpUpgradeHandler != null) {
+                        httpUpgradeHandler.onBodyStream(session.readBuffer());
+                    } else {
+                        request.getServerHandler().onBodyStream(session.readBuffer(), request);
                     }
                     break;
                 }
@@ -106,24 +97,27 @@ public class HttpMessageProcessor extends AbstractMessageProcessor<Request> {
             request.getServerHandler().onHeaderComplete(request);
             return;
         }
-        if (request.getProtocol() == HttpProtocolEnum.HTTP_2) {
-            request.setServerHandler(configuration.getHttp2ServerHandler());
-        } else {
-            String upgrade = request.getHeader(HeaderNameEnum.UPGRADE);
-            // WebSocket
-            if (HeaderValueEnum.Upgrade.WEBSOCKET.equalsIgnoreCase(upgrade)) {
-                request.setServerHandler(configuration.getWebSocketHandler());
-            }
-            // HTTP/2.0
-            else if (HeaderValueEnum.Upgrade.H2C.equals(upgrade) || HeaderValueEnum.Upgrade.H2.equals(upgrade)) {
-                request.setServerHandler(configuration.getHttp2ServerHandler());
-            }
-        }
+//        if (request.getProtocol() == HttpProtocolEnum.HTTP_2) {
+//            request.setServerHandler(configuration.getHttp2ServerHandler());
+//        } else {
+//            String upgrade = request.getHeader(HeaderNameEnum.UPGRADE);
+//            // WebSocket
+//            if (HeaderValueEnum.Upgrade.WEBSOCKET.equalsIgnoreCase(upgrade)) {
+//                request.setServerHandler(configuration.getWebSocketHandler());
+//            }
+//            // HTTP/2.0
+//            else if (HeaderValueEnum.Upgrade.H2C.equals(upgrade) || HeaderValueEnum.Upgrade.H2.equals(upgrade)) {
+//                request.setServerHandler(configuration.getHttp2ServerHandler());
+//            }
+//        }
         request.getServerHandler().onHeaderComplete(request);
     }
 
     @Override
     public void stateEvent0(AioSession session, StateMachineEnum stateMachineEnum, Throwable throwable) {
+        if (throwable != null) {
+            throwable.printStackTrace();
+        }
         switch (stateMachineEnum) {
             case NEW_SESSION: {
                 session.setAttachment(new Request(configuration, session));
@@ -177,9 +171,6 @@ public class HttpMessageProcessor extends AbstractMessageProcessor<Request> {
         this.configuration.setHttp2ServerHandler(Objects.requireNonNull(httpServerHandler));
     }
 
-    public void setWebSocketHandler(WebSocketHandler webSocketHandler) {
-        this.configuration.setWebSocketHandler(Objects.requireNonNull(webSocketHandler));
-    }
 
     /**
      * RFC2616 5.1.1 方法标记指明了在被 Request-URI 指定的资源上执行的方法。
