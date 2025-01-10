@@ -91,24 +91,6 @@ public class HttpMessageProcessor extends AbstractMessageProcessor<Request> {
     private void doHttpHeader(Request request) throws IOException {
         methodCheck(request);
         uriCheck(request);
-
-        if (request.isMultiplexing()) {
-            request.getServerHandler().onHeaderComplete(request);
-            return;
-        }
-//        if (request.getProtocol() == HttpProtocolEnum.HTTP_2) {
-//            request.setServerHandler(configuration.getHttp2ServerHandler());
-//        } else {
-//            String upgrade = request.getHeader(HeaderNameEnum.UPGRADE);
-//            // WebSocket
-//            if (HeaderValueEnum.Upgrade.WEBSOCKET.equalsIgnoreCase(upgrade)) {
-//                request.setServerHandler(configuration.getWebSocketHandler());
-//            }
-//            // HTTP/2.0
-//            else if (HeaderValueEnum.Upgrade.H2C.equals(upgrade) || HeaderValueEnum.Upgrade.H2.equals(upgrade)) {
-//                request.setServerHandler(configuration.getHttp2ServerHandler());
-//            }
-//        }
         request.getServerHandler().onHeaderComplete(request);
     }
 

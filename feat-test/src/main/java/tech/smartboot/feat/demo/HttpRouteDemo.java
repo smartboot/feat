@@ -12,9 +12,8 @@ import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.HttpServerHandler;
-import tech.smartboot.feat.core.server.WebSocketRequest;
-import tech.smartboot.feat.core.server.WebSocketResponse;
 import tech.smartboot.feat.core.server.handler.HttpRouteHandler;
+import tech.smartboot.feat.core.server.upgrade.Http2UpgradeHandler;
 import tech.smartboot.feat.core.server.upgrade.WebSocketUpgradeHandler;
 
 import java.io.IOException;
@@ -37,6 +36,17 @@ public class HttpRouteDemo {
                         response.write("feat".getBytes());
                     }
                 })
+                .route("/h2", new HttpServerHandler() {
+                    @Override
+                    public void handle(HttpRequest request, HttpResponse response) throws IOException {
+                        request.upgrade(new Http2UpgradeHandler() {
+                            @Override
+                            public void handle(HttpRequest request, HttpResponse response) throws Throwable {
+                                response.write("feat h2".getBytes());
+                            }
+                        });
+                    }
+                })
                 .route("/test1", new HttpServerHandler() {
                     @Override
                     public void handle(HttpRequest request, HttpResponse response) throws IOException {
@@ -52,7 +62,7 @@ public class HttpRouteDemo {
                 .route("/ws", new HttpServerHandler() {
                     @Override
                     public void handle(HttpRequest request, HttpResponse response) throws IOException {
-                        request.upgrade(new WebSocketUpgradeHandler(){
+                        request.upgrade(new WebSocketUpgradeHandler() {
 
                         });
                     }
@@ -60,6 +70,7 @@ public class HttpRouteDemo {
 
         // 3. 启动服务
         HttpServer bootstrap = new HttpServer();
+        bootstrap.configuration().setWsIdleTimeout(5000).debug(true);
         bootstrap.httpHandler(routeHandle);
         bootstrap.start();
     }

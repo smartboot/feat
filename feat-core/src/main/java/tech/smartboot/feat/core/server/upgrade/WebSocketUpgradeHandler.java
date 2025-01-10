@@ -47,12 +47,10 @@ public class WebSocketUpgradeHandler extends HttpUpgradeHandler {
         response.setHeader(HeaderNameEnum.Sec_WebSocket_Accept.getName(), accept);
         OutputStream outputStream = response.getOutputStream();
         outputStream.flush();
-
-        onBodyStream(request.getAioSession().readBuffer());
     }
 
     @Override
-    public void onBodyStream(ByteBuffer buffer) {
+    public final void onBodyStream(ByteBuffer buffer) {
         decoder = decoder.decode(buffer, request.newWebsocketRequest());
         if (decoder != WebSocket.PAYLOAD_FINISH) {
             return;

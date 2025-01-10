@@ -39,7 +39,7 @@ public class Http2UpgradeHandler extends HttpUpgradeHandler {
     private ServerHandler<HttpRequest, HttpResponse> serverHandler;
 
     @Override
-    public void init() throws IOException {
+    public final void init() throws IOException {
         if (HttpProtocolEnum.HTTP_2 == request.getProtocol()) {
             if (!"PRI".equals(request.getMethod()) || !"*".equals(request.getUri()) || request.getHeaderSize() > 0) {
                 throw new IllegalStateException();
@@ -75,7 +75,7 @@ public class Http2UpgradeHandler extends HttpUpgradeHandler {
     }
 
     @Override
-    public void onBodyStream(ByteBuffer buffer) {
+    public final void onBodyStream(ByteBuffer buffer) {
         Http2Session session = request.newHttp2Session();
         switch (session.getState()) {
             case Http2Session.STATE_FIRST_REQUEST: {
@@ -271,13 +271,23 @@ public class Http2UpgradeHandler extends HttpUpgradeHandler {
         AbstractResponse response = abstractRequest.getResponse();
         CompletableFuture<Object> future = new CompletableFuture<>();
         try {
-            request.getServerHandler().handle(abstractRequest, response, future);
+            handle(abstractRequest, response, future);
             abstractRequest.getResponse().close();
         } catch (Throwable e) {
             HttpMessageProcessor.responseError(response, e);
         }
     }
 
+    public void handle(HttpRequest request, HttpResponse response) throws Throwable {
+    }
+
+    public void handle(HttpRequest request, HttpResponse response, CompletableFuture<Object> completableFuture) throws Throwable {
+        try {
+            handle(request, response);
+        } finally {
+            completableFuture.complete(null);
+        }
+    }
 //    private void finishHttpHandle(Http2RequestImpl abstractRequest, CompletableFuture<Object> future) throws IOException {
 //        if (future.isDone()) {
 //           abstractRequest.getResponse().close();

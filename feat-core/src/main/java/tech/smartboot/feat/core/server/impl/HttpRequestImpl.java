@@ -73,6 +73,7 @@ public class HttpRequestImpl extends AbstractRequest {
         request.setUpgradeHandler(upgradeHandler);
         upgradeHandler.setRequest(request);
         upgradeHandler.init();
+        upgradeHandler.onBodyStream(request.getAioSession().readBuffer());
     }
 
     public void reset() {
