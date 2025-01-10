@@ -35,10 +35,16 @@ public abstract class HttpServerHandler implements ServerHandler<HttpRequest, Ht
     public void onBodyStream(ByteBuffer buffer, Request request) {
         HttpRequestImpl httpRequest = request.newHttpRequest();
         AbstractResponse response = httpRequest.getResponse();
-        CompletableFuture<Object> future = new CompletableFuture<>();
-        boolean keepAlive = isKeepAlive(httpRequest, response);
-        httpRequest.setKeepAlive(keepAlive);
         try {
+            if (httpRequest.getInputStream().getReadListener() != null) {
+                if (buffer.hasRemaining()) {
+                    httpRequest.getInputStream().getReadListener().onDataAvailable();
+                }
+                return;
+            }
+            CompletableFuture<Object> future = new CompletableFuture<>();
+            boolean keepAlive = isKeepAlive(httpRequest, response);
+            httpRequest.setKeepAlive(keepAlive);
             httpRequest.request.getServerHandler().handle(httpRequest, response, future);
             if (request.getUpgradeHandler() == null) {
                 finishHttpHandle(httpRequest, future);
