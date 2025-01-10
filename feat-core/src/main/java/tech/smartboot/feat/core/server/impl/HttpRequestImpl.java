@@ -71,6 +71,7 @@ public class HttpRequestImpl extends AbstractRequest {
     @Override
     public void upgrade(HttpUpgradeHandler upgradeHandler) throws IOException {
         request.setUpgradeHandler(upgradeHandler);
+        response.getOutputStream().disableChunked();
         upgradeHandler.setRequest(request);
         upgradeHandler.init();
         upgradeHandler.onBodyStream(request.getAioSession().readBuffer());
