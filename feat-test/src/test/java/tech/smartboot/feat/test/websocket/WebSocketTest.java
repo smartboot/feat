@@ -13,7 +13,7 @@ import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.HttpServerHandler;
 import tech.smartboot.feat.core.server.WebSocketRequest;
 import tech.smartboot.feat.core.server.WebSocketResponse;
-import tech.smartboot.feat.core.server.upgrade.WebSocketUpgradeHandler;
+import tech.smartboot.feat.core.server.upgrade.websocket.WebSocketUpgradeHandler;
 import tech.smartboot.feat.test.BastTest;
 
 import java.io.IOException;

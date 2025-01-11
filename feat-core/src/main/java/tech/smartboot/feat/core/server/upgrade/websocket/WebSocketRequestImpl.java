@@ -6,21 +6,19 @@
  * Author: sandao (zhengjunweimail@163.com)
  ******************************************************************************/
 
-package tech.smartboot.feat.core.server.impl;
+package tech.smartboot.feat.core.server.upgrade.websocket;
 
 import org.smartboot.socket.util.Attachment;
 import tech.smartboot.feat.core.common.Reset;
 import tech.smartboot.feat.core.common.codec.websocket.WebSocket;
-import tech.smartboot.feat.core.common.io.BodyInputStream;
-import tech.smartboot.feat.core.common.multipart.MultipartConfig;
-import tech.smartboot.feat.core.common.multipart.Part;
 import tech.smartboot.feat.core.common.utils.SmartDecoder;
 import tech.smartboot.feat.core.common.utils.WebSocketUtil;
-import tech.smartboot.feat.core.server.PushBuilder;
 import tech.smartboot.feat.core.server.WebSocketRequest;
+import tech.smartboot.feat.core.server.impl.Request;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Map;
 
@@ -28,7 +26,7 @@ import java.util.Map;
  * @author 三刀
  * @version V1.0 , 2018/8/31
  */
-public class WebSocketRequestImpl extends AbstractRequest implements WebSocketRequest, WebSocket, Reset {
+public class WebSocketRequestImpl implements WebSocketRequest, WebSocket, Reset {
     private SmartDecoder payloadDecoder;
     private final ByteArrayOutputStream payload = new ByteArrayOutputStream();
     private final WebSocketResponseImpl response;
@@ -42,18 +40,16 @@ public class WebSocketRequestImpl extends AbstractRequest implements WebSocketRe
     private long payloadLength;
 
     private byte[] maskingKey;
+    private final Request request;
 
     public WebSocketRequestImpl(Request baseHttpRequest) {
-        super(baseHttpRequest);
-        this.response = new WebSocketResponseImpl(this);
+//        super(baseHttpRequest);
+        this.request = baseHttpRequest;
+        this.response = new WebSocketResponseImpl(baseHttpRequest.getAioSession().writeBuffer());
     }
 
     public final WebSocketResponseImpl getResponse() {
         return response;
-    }
-
-    public BodyInputStream getInputStream() {
-        throw new UnsupportedOperationException();
     }
 
 
@@ -101,23 +97,38 @@ public class WebSocketRequestImpl extends AbstractRequest implements WebSocketRe
     }
 
     @Override
-    public Collection<Part> getParts() throws IOException {
-        throw new UnsupportedOperationException();
+    public String getRequestURL() {
+        return request.getRequestURL();
     }
 
     @Override
-    public Collection<Part> getParts(MultipartConfig configElement) throws IOException {
-        throw new UnsupportedOperationException();
+    public String getRequestURI() {
+        return request.getRequestURI();
     }
 
     @Override
-    public Map<String, String> getTrailerFields() {
-        throw new UnsupportedOperationException();
+    public String getQueryString() {
+        return request.getQueryString();
     }
 
     @Override
-    public boolean isTrailerFieldsReady() {
-        throw new UnsupportedOperationException();
+    public Map<String, String[]> getParameters() {
+        return request.getParameters();
+    }
+
+    @Override
+    public InetSocketAddress getRemoteAddress() {
+        return request.getRemoteAddress();
+    }
+
+    @Override
+    public InetSocketAddress getLocalAddress() {
+        return request.getLocalAddress();
+    }
+
+    @Override
+    public boolean isSecure() {
+        return request.isSecure();
     }
 
 
@@ -132,15 +143,19 @@ public class WebSocketRequestImpl extends AbstractRequest implements WebSocketRe
     }
 
     @Override
-    public PushBuilder newPushBuilder() {
-        throw new UnsupportedOperationException();
+    public String getHeader(String headName) {
+        return request.getHeader(headName);
     }
 
     @Override
-    public void upgrade(HttpUpgradeHandler upgradeHandler) {
-        throw new UnsupportedOperationException();
+    public Collection<String> getHeaders(String name) {
+        return request.getHeaders(name);
     }
 
+    @Override
+    public Collection<String> getHeaderNames() {
+        return request.getHeaderNames();
+    }
 
     public long getPayloadLength() {
         return payloadLength;

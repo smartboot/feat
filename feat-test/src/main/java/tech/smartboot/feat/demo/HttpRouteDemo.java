@@ -13,8 +13,8 @@ import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.HttpServerHandler;
 import tech.smartboot.feat.core.server.handler.HttpRouteHandler;
-import tech.smartboot.feat.core.server.upgrade.Http2UpgradeHandler;
-import tech.smartboot.feat.core.server.upgrade.WebSocketUpgradeHandler;
+import tech.smartboot.feat.core.server.upgrade.http2.Http2UpgradeHandler;
+import tech.smartboot.feat.core.server.upgrade.websocket.WebSocketUpgradeHandler;
 
 import java.io.IOException;
 

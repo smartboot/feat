@@ -1,4 +1,4 @@
-package tech.smartboot.feat.core.server.upgrade;
+package tech.smartboot.feat.core.server.upgrade.websocket;
 
 import org.smartboot.socket.timer.HashedWheelTimer;
 import org.smartboot.socket.timer.TimerTask;
@@ -18,10 +18,7 @@ import tech.smartboot.feat.core.common.utils.WebSocketUtil;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.WebSocketRequest;
 import tech.smartboot.feat.core.server.WebSocketResponse;
-import tech.smartboot.feat.core.server.impl.AbstractResponse;
 import tech.smartboot.feat.core.server.impl.HttpUpgradeHandler;
-import tech.smartboot.feat.core.server.impl.WebSocketRequestImpl;
-import tech.smartboot.feat.core.server.impl.WebSocketResponseImpl;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -159,11 +156,6 @@ public class WebSocketUpgradeHandler extends HttpUpgradeHandler {
     }
 
     private void finishResponse(WebSocketRequestImpl abstractRequest) throws IOException {
-        AbstractResponse response = abstractRequest.getResponse();
-        //关闭本次请求的输出流
-        if (!response.getOutputStream().isClosed()) {
-            response.getOutputStream().close();
-        }
         abstractRequest.reset();
     }
 

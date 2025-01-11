@@ -1,4 +1,4 @@
-package tech.smartboot.feat.core.server.upgrade;
+package tech.smartboot.feat.core.server.upgrade.http2;
 
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.codec.h2.codec.DataFrame;
