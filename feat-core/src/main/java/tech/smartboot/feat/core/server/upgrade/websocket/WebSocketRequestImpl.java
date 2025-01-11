@@ -14,7 +14,6 @@ import tech.smartboot.feat.core.common.codec.websocket.WebSocket;
 import tech.smartboot.feat.core.common.utils.SmartDecoder;
 import tech.smartboot.feat.core.common.utils.WebSocketUtil;
 import tech.smartboot.feat.core.server.HttpRequest;
-import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.WebSocketRequest;
 
 import java.io.ByteArrayOutputStream;
@@ -30,7 +29,6 @@ import java.util.Map;
 class WebSocketRequestImpl implements WebSocketRequest, WebSocket, Reset {
     private SmartDecoder payloadDecoder;
     private final ByteArrayOutputStream payload = new ByteArrayOutputStream();
-    private final WebSocketResponseImpl response;
     private boolean frameFinalFlag;
     private boolean frameMasked;
     private int frameRsv;
@@ -43,13 +41,8 @@ class WebSocketRequestImpl implements WebSocketRequest, WebSocket, Reset {
     private byte[] maskingKey;
     private final HttpRequest request;
 
-    public WebSocketRequestImpl(HttpRequest req, HttpResponse response) {
+    public WebSocketRequestImpl(HttpRequest req) {
         this.request = req;
-        this.response = new WebSocketResponseImpl(response.getOutputStream());
-    }
-
-    public final WebSocketResponseImpl getResponse() {
-        return response;
     }
 
 

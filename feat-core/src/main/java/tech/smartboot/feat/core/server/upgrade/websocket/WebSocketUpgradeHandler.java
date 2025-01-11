@@ -2,7 +2,6 @@ package tech.smartboot.feat.core.server.upgrade.websocket;
 
 import org.smartboot.socket.timer.HashedWheelTimer;
 import org.smartboot.socket.timer.TimerTask;
-import org.smartboot.socket.transport.AioSession;
 import org.smartboot.socket.util.StringUtils;
 import tech.smartboot.feat.core.common.codec.websocket.BasicFrameDecoder;
 import tech.smartboot.feat.core.common.codec.websocket.CloseReason;
@@ -35,13 +34,14 @@ public class WebSocketUpgradeHandler extends HttpUpgradeHandler {
     private static final Decoder basicFrameDecoder = new BasicFrameDecoder();
     private Decoder decoder = basicFrameDecoder;
     private WebSocketRequestImpl webSocketRequest;
+    private WebSocketResponseImpl webSocketResponse;
     private TimerTask wsIdleTask;
 
     @Override
     public final void init(HttpRequest req, HttpResponse response) throws IOException {
-        webSocketRequest = new WebSocketRequestImpl(req, response);
-        String key = request.getHeader(HeaderNameEnum.Sec_WebSocket_Key);
-        String acceptSeed = key + WEBSOCKET_13_ACCEPT_GUID;
+        webSocketRequest = new WebSocketRequestImpl(req);
+        webSocketResponse = new WebSocketResponseImpl(response);
+        String acceptSeed = request.getHeader(HeaderNameEnum.Sec_WebSocket_Key) + WEBSOCKET_13_ACCEPT_GUID;
         byte[] sha1 = SHA1.encode(acceptSeed);
         String accept = Base64.getEncoder().encodeToString(sha1);
         response.setHttpStatus(HttpStatus.SWITCHING_PROTOCOLS);
@@ -56,7 +56,7 @@ public class WebSocketUpgradeHandler extends HttpUpgradeHandler {
                 LOGGER.debug("check wsIdle monitor");
                 if (System.currentTimeMillis() - request.getLatestIo() > request.getConfiguration().getWsIdleTimeout() && webSocketRequest != null) {
                     LOGGER.debug("close ws connection by idle monitor");
-                    response.close();
+                    webSocketResponse.close();
                 }
             }, request.getConfiguration().getWsIdleTimeout(), TimeUnit.MILLISECONDS);
         }
@@ -70,36 +70,32 @@ public class WebSocketUpgradeHandler extends HttpUpgradeHandler {
         }
         decoder = basicFrameDecoder;
         try {
-            handleWebSocketRequest(webSocketRequest, request.getAioSession());
+            CompletableFuture<Object> future = new CompletableFuture<>();
+            handle(webSocketRequest, webSocketResponse, future);
+            if (future.isDone()) {
+                finishResponse(webSocketRequest);
+            } else {
+                Thread thread = Thread.currentThread();
+                request.getAioSession().awaitRead();
+                future.thenRun(() -> {
+                    try {
+                        finishResponse(webSocketRequest);
+                        if (thread != Thread.currentThread()) {
+                            request.getAioSession().writeBuffer().flush();
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        webSocketResponse.close();
+                    } finally {
+                        request.getAioSession().signalRead();
+                    }
+                });
+            }
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }
         if (buffer.hasRemaining()) {
             onBodyStream(buffer);
-        }
-    }
-
-    private void handleWebSocketRequest(WebSocketRequestImpl abstractRequest, AioSession session) throws Throwable {
-        CompletableFuture<Object> future = new CompletableFuture<>();
-        handle(abstractRequest, abstractRequest.getResponse(), future);
-        if (future.isDone()) {
-            finishResponse(abstractRequest);
-        } else {
-            Thread thread = Thread.currentThread();
-            session.awaitRead();
-            future.thenRun(() -> {
-                try {
-                    finishResponse(abstractRequest);
-                    if (thread != Thread.currentThread()) {
-                        session.writeBuffer().flush();
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    abstractRequest.getResponse().close();
-                } finally {
-                    session.signalRead();
-                }
-            });
         }
     }
 

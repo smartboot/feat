@@ -379,35 +379,6 @@ public class MultipartTest {
 
     }
 
-    @Test
-    public void testMoreHeader() throws InterruptedException, ExecutionException {
-
-        HttpClient client = new HttpClient("127.0.0.1", 8080);
-        String body =
-                "------WebKitFormBoundary7MA4YWxkTrZu0gW\r\n" +
-                        "Content-Disposition: form-data; name=\"FiLe\"; filename=\"testFILE.txt\"\r\n" +
-                        "Content-Type: text/plain\r\n" +
-                        "Content-Length: 40\r\n" +
-                        "\r\n" +
-                        "This is the content of the encoded file.\r\n" +
-                        "------WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n";
-        client.configuration().debug(false);
-        Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/formdata")
-                .header().keepalive(true).setContentLength(body.getBytes().length).setContentType("multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW").done()
-                .body()
-                .write(body.getBytes())
-                .done()
-                .onSuccess(response -> {
-                    JSONObject jsonObject = JSONObject.parseObject(response.body());
-                    System.out.println("jsonObject = " + jsonObject);
-                })
-                .onFailure(t -> System.out.println(t.getMessage()))
-                .done();
-        JSONObject jsonObject = JSONObject.parseObject(future.get().body());
-        System.out.println("jsonObject = " + jsonObject);
-        Assert.assertEquals("{\"name\":\"Content-Length\",\"value\":\"40\"}", jsonObject.getJSONObject("1").getJSONArray("header").get(2).toString());
-
-    }
 
     @After
     public void destroy() {

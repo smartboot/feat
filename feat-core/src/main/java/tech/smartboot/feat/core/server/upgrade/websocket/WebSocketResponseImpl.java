@@ -12,10 +12,10 @@ import tech.smartboot.feat.core.common.codec.websocket.CloseReason;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.utils.WebSocketUtil;
+import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.WebSocketResponse;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
@@ -26,10 +26,10 @@ import java.util.Arrays;
 class WebSocketResponseImpl implements WebSocketResponse {
     private static final Logger LOGGER = LoggerFactory.getLogger(WebSocketResponseImpl.class);
     private boolean closed;
-    private final OutputStream outputStream;
+    private final HttpResponse httpResponse;
 
-    public WebSocketResponseImpl(OutputStream outputStream) {
-        this.outputStream = outputStream;
+    public WebSocketResponseImpl(HttpResponse httpResponse) {
+        this.httpResponse = httpResponse;
     }
 
     @Override
@@ -37,7 +37,7 @@ class WebSocketResponseImpl implements WebSocketResponse {
         if (LOGGER.isInfoEnabled()) LOGGER.info("发送字符串消息: " + text);
         byte[] bytes = text.getBytes(StandardCharsets.UTF_8);
         try {
-            WebSocketUtil.send(outputStream, WebSocketUtil.OPCODE_TEXT, bytes, 0, bytes.length);
+            WebSocketUtil.send(httpResponse.getOutputStream(), WebSocketUtil.OPCODE_TEXT, bytes, 0, bytes.length);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -47,7 +47,7 @@ class WebSocketResponseImpl implements WebSocketResponse {
     public void sendBinaryMessage(byte[] bytes) {
         if (LOGGER.isInfoEnabled()) LOGGER.info("发送二进制消息: " + Arrays.toString(bytes));
         try {
-            WebSocketUtil.send(outputStream, WebSocketUtil.OPCODE_BINARY, bytes, 0, bytes.length);
+            WebSocketUtil.send(httpResponse.getOutputStream(), WebSocketUtil.OPCODE_BINARY, bytes, 0, bytes.length);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -56,7 +56,7 @@ class WebSocketResponseImpl implements WebSocketResponse {
     @Override
     public void sendBinaryMessage(byte[] bytes, int offset, int length) {
         try {
-            WebSocketUtil.send(outputStream, WebSocketUtil.OPCODE_BINARY, bytes, offset, length);
+            WebSocketUtil.send(httpResponse.getOutputStream(), WebSocketUtil.OPCODE_BINARY, bytes, offset, length);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -65,7 +65,7 @@ class WebSocketResponseImpl implements WebSocketResponse {
     @Override
     public void pong(byte[] bytes) {
         try {
-            WebSocketUtil.send(outputStream, WebSocketUtil.OPCODE_PONG, bytes, 0, bytes.length);
+            WebSocketUtil.send(httpResponse.getOutputStream(), WebSocketUtil.OPCODE_PONG, bytes, 0, bytes.length);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -83,22 +83,18 @@ class WebSocketResponseImpl implements WebSocketResponse {
         }
         closed = true;
         try {
-            WebSocketUtil.send(outputStream, WebSocketUtil.OPCODE_CLOSE, new CloseReason(code, reason).toBytes());
+            WebSocketUtil.send(httpResponse.getOutputStream(), WebSocketUtil.OPCODE_CLOSE, new CloseReason(code, reason).toBytes());
         } catch (IOException e) {
             throw new RuntimeException(e);
         } finally {
-            try {
-                outputStream.close();
-            } catch (IOException e) {
-                LOGGER.error("关闭输出流失败", e);
-            }
+            httpResponse.close();
         }
     }
 
     @Override
     public void ping(byte[] bytes) {
         try {
-            WebSocketUtil.send(outputStream, WebSocketUtil.OPCODE_PING, bytes);
+            WebSocketUtil.send(httpResponse.getOutputStream(), WebSocketUtil.OPCODE_PING, bytes);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -108,7 +104,7 @@ class WebSocketResponseImpl implements WebSocketResponse {
     @Override
     public void flush() {
         try {
-            outputStream.flush();
+            httpResponse.getOutputStream().flush();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
