@@ -464,7 +464,7 @@ abstract class CommonRequest implements Reset {
         this.attachment = attachment;
     }
 
-    public AioSession getAioSession() {
+    public final AioSession getAioSession() {
         return aioSession;
     }
 

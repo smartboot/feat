@@ -37,13 +37,6 @@ import java.util.concurrent.TimeUnit;
  */
 public final class Request extends CommonRequest implements Reset {
     private static final Logger LOGGER = LoggerFactory.getLogger(Request.class);
-    public static final int STATE_UPGRADE_CHECK_FLAG = 0x1100;
-    public static final int STATE_UPGRADE_INIT = 0x0000;
-    public static final int STATE_UPGRADE_DISABLE = 0x0100;
-    public static final int STATE_UPGRADE_ENABLE = 0x1000;
-    public static final int STATE_HTTP_10 = 0x01;
-    public static final int STATE_HTTP_11 = 0x11;
-    public static final int STATE_HTTP_20 = 0x10;
 
     private final DecoderUnit decodeState = new DecoderUnit();
     private HttpRequestImpl httpRequest;
@@ -127,9 +120,6 @@ public final class Request extends CommonRequest implements Reset {
         return inputStream;
     }
 
-    public AioSession getAioSession() {
-        return aioSession;
-    }
 
     void decodeSize(int size) {
         remainingThreshold -= size;
