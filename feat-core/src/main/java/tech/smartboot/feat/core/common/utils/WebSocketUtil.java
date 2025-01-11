@@ -97,7 +97,6 @@ public class WebSocketUtil {
                     writBytes[8 + i] = (byte) (bytes[i] ^ maskKey[i % 4]);
                 }
             } else {
-                System.out.println(Arrays.toString(maskKey));
                 System.arraycopy(maskKey, 0, writBytes, 2, maskKey.length);
                 // 对消息进行掩码处理
                 for (int i = 0; i < payloadLength; i++) {

@@ -306,6 +306,9 @@ public class WebSocketClient {
     }
 
     public void close() {
+        if (!connected) {
+            return;
+        }
         try {
             WebSocketUtil.sendMask(request.getOutputStream(), WebSocketUtil.OPCODE_CLOSE, new CloseReason(CloseReason.NORMAL_CLOSURE, "").toBytes());
         } catch (IOException e) {
