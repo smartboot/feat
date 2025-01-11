@@ -48,8 +48,6 @@ public final class Request extends CommonRequest implements Reset {
 
     private final DecoderUnit decodeState = new DecoderUnit();
     private HttpRequestImpl httpRequest;
-    private Http2Session http2Request;
-    private WebSocketRequestImpl webSocketRequest;
     private ServerHandler serverHandler;
 
     /**
@@ -59,7 +57,7 @@ public final class Request extends CommonRequest implements Reset {
     private HttpUpgradeHandler upgradeHandler;
 
     private TimerTask httpIdleTask;
-    private TimerTask wsIdleTask;
+
     private BodyInputStream inputStream;
     private Map<String, String> trailerFields;
     private int state;
@@ -85,45 +83,19 @@ public final class Request extends CommonRequest implements Reset {
         }
     }
 
-    void cancelWsIdleTask() {
-        synchronized (this) {
-            if (wsIdleTask != null) {
-                if (LOGGER.isInfoEnabled()) {
-                    LOGGER.info("cancel websocket idle monitor, request:{}", this);
-                }
-                wsIdleTask.cancel();
-                wsIdleTask = null;
-            }
-        }
-    }
-
     Request(HttpServerConfiguration configuration, AioSession aioSession) {
         super(aioSession, configuration);
         this.remainingThreshold = configuration.getMaxRequestSize();
-        if (configuration.getWsIdleTimeout() > 0) {
-            wsIdleTask = HashedWheelTimer.DEFAULT_TIMER.scheduleWithFixedDelay(() -> {
-                LOGGER.debug("check wsIdle monitor");
-                if (System.currentTimeMillis() - latestIo > configuration.getWsIdleTimeout() && webSocketRequest != null) {
-                    LOGGER.debug("close ws connection by idle monitor");
-                    try {
-                        aioSession.close();
-                    } finally {
-                        cancelWsIdleTask();
-                        cancelHttpIdleTask();
-                    }
-                }
-            }, configuration.getWsIdleTimeout(), TimeUnit.MILLISECONDS);
-        }
+
         if (configuration.getHttpIdleTimeout() > 0) {
             httpIdleTask = HashedWheelTimer.DEFAULT_TIMER.scheduleWithFixedDelay(() -> {
                 LOGGER.debug("check httpIdle monitor");
-                if (System.currentTimeMillis() - latestIo > configuration.getHttpIdleTimeout() && webSocketRequest == null) {
+                if (System.currentTimeMillis() - latestIo > configuration.getHttpIdleTimeout()) {
                     LOGGER.debug("close http connection by idle monitor");
                     try {
                         aioSession.close();
                     } finally {
                         cancelHttpIdleTask();
-                        cancelWsIdleTask();
                     }
                 }
             }, configuration.getHttpIdleTimeout(), TimeUnit.MILLISECONDS);
@@ -251,25 +223,8 @@ public final class Request extends CommonRequest implements Reset {
     public HttpRequestImpl newHttpRequest() {
         if (httpRequest == null) {
             httpRequest = new HttpRequestImpl(this);
-            cancelWsIdleTask();
         }
         return httpRequest;
-    }
-
-    public Http2Session newHttp2Session() {
-        if (http2Request == null) {
-            http2Request = new Http2Session(this);
-            cancelWsIdleTask();
-        }
-        return http2Request;
-    }
-
-    public WebSocketRequestImpl newWebsocketRequest() {
-        if (webSocketRequest == null) {
-            webSocketRequest = new WebSocketRequestImpl(this);
-            cancelHttpIdleTask();
-        }
-        return webSocketRequest;
     }
 
     public Map<String, String> getTrailerFields() {

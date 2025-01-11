@@ -114,8 +114,10 @@ public class HttpMessageProcessor extends AbstractMessageProcessor<Request> {
                     if (request.getServerHandler() != null) {
                         request.getServerHandler().onClose(request);
                     }
+                    if (request.getUpgradeHandler() != null) {
+                        request.getUpgradeHandler().destroy();
+                    }
                 } finally {
-                    request.cancelWsIdleTask();
                     request.cancelHttpIdleTask();
                 }
                 break;

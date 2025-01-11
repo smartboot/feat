@@ -102,7 +102,6 @@ abstract class CommonRequest implements Reset {
     private Attachment attachment;
 
     private ServerHandler serverHandler;
-    private boolean multiplexing = false;
     /**
      * 最近一次IO时间
      */
@@ -473,12 +472,13 @@ abstract class CommonRequest implements Reset {
         return configuration;
     }
 
-    public boolean isMultiplexing() {
-        return multiplexing;
-    }
 
     public void setLatestIo(long latestIo) {
         this.latestIo = latestIo;
+    }
+
+    public long getLatestIo() {
+        return latestIo;
     }
 
     @Override
@@ -493,6 +493,5 @@ abstract class CommonRequest implements Reset {
         cookies = null;
         queryString = null;
         requestUri = null;
-        multiplexing = true;
     }
 }

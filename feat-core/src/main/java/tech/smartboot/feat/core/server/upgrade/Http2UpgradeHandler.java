@@ -16,7 +16,6 @@ import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
-import tech.smartboot.feat.core.server.ServerHandler;
 import tech.smartboot.feat.core.server.impl.AbstractResponse;
 import tech.smartboot.feat.core.server.impl.Http2RequestImpl;
 import tech.smartboot.feat.core.server.impl.Http2Session;
@@ -36,15 +35,15 @@ import java.util.concurrent.CompletableFuture;
 public class Http2UpgradeHandler extends HttpUpgradeHandler {
     private static final byte[] H2C_PREFACE = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n".getBytes();
     private static final int FRAME_HEADER_SIZE = 9;
-    private ServerHandler<HttpRequest, HttpResponse> serverHandler;
+    private Http2Session session;
 
     @Override
     public final void init() throws IOException {
+        session = new Http2Session(request);
         if (HttpProtocolEnum.HTTP_2 == request.getProtocol()) {
             if (!"PRI".equals(request.getMethod()) || !"*".equals(request.getUri()) || request.getHeaderSize() > 0) {
                 throw new IllegalStateException();
             }
-            Http2Session session = request.newHttp2Session();
             session.setState(Http2Session.STATE_PREFACE_SM);
         } else {
             //解析 Header 中的 setting
@@ -53,7 +52,6 @@ public class Http2UpgradeHandler extends HttpUpgradeHandler {
             ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
             SettingsFrame settingsFrame = new SettingsFrame(0, 0, bytes.length);
             settingsFrame.decode(byteBuffer);
-            Http2Session session = request.newHttp2Session();
             session.setState(Http2Session.STATE_PREFACE);
             //更新服务端的 setting
             session.updateSettings(settingsFrame);
@@ -76,7 +74,6 @@ public class Http2UpgradeHandler extends HttpUpgradeHandler {
 
     @Override
     public final void onBodyStream(ByteBuffer buffer) {
-        Http2Session session = request.newHttp2Session();
         switch (session.getState()) {
             case Http2Session.STATE_FIRST_REQUEST: {
                 return;
@@ -136,7 +133,6 @@ public class Http2UpgradeHandler extends HttpUpgradeHandler {
     }
 
     private void doHandler(Http2Frame frame, Request req) throws IOException {
-        Http2Session session = req.newHttp2Session();
         switch (frame.type()) {
             case Http2Frame.FRAME_TYPE_SETTINGS: {
                 if (!session.isSettingEnabled()) {

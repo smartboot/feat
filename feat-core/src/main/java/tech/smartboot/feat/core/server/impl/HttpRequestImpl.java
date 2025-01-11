@@ -72,9 +72,12 @@ public class HttpRequestImpl extends AbstractRequest {
     public void upgrade(HttpUpgradeHandler upgradeHandler) throws IOException {
         request.setUpgradeHandler(upgradeHandler);
         response.getOutputStream().disableChunked();
+        //升级后取消http空闲监听
+        request.cancelHttpIdleTask();
         upgradeHandler.setRequest(request);
         upgradeHandler.init();
         upgradeHandler.onBodyStream(request.getAioSession().readBuffer());
+
     }
 
     public void reset() {

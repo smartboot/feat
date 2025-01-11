@@ -1,5 +1,7 @@
 package tech.smartboot.feat.core.server.upgrade;
 
+import org.smartboot.socket.timer.HashedWheelTimer;
+import org.smartboot.socket.timer.TimerTask;
 import org.smartboot.socket.transport.AioSession;
 import org.smartboot.socket.util.StringUtils;
 import tech.smartboot.feat.core.common.codec.websocket.BasicFrameDecoder;
@@ -26,16 +28,19 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 public class WebSocketUpgradeHandler extends HttpUpgradeHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(WebSocketUpgradeHandler.class);
     private static final String WEBSOCKET_13_ACCEPT_GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
     private static final Decoder basicFrameDecoder = new BasicFrameDecoder();
     private Decoder decoder = basicFrameDecoder;
+    private WebSocketRequestImpl webSocketRequest;
+    private TimerTask wsIdleTask;
 
     @Override
     public final void init() throws IOException {
-        WebSocketRequestImpl webSocketRequest = request.newWebsocketRequest();
+        webSocketRequest = new WebSocketRequestImpl(request);
         WebSocketResponseImpl response = webSocketRequest.getResponse();
         String key = request.getHeader(HeaderNameEnum.Sec_WebSocket_Key);
         String acceptSeed = key + WEBSOCKET_13_ACCEPT_GUID;
@@ -47,17 +52,27 @@ public class WebSocketUpgradeHandler extends HttpUpgradeHandler {
         response.setHeader(HeaderNameEnum.Sec_WebSocket_Accept.getName(), accept);
         OutputStream outputStream = response.getOutputStream();
         outputStream.flush();
+
+        if (request.getConfiguration().getWsIdleTimeout() > 0) {
+            wsIdleTask = HashedWheelTimer.DEFAULT_TIMER.scheduleWithFixedDelay(() -> {
+                LOGGER.debug("check wsIdle monitor");
+                if (System.currentTimeMillis() - request.getLatestIo() > request.getConfiguration().getWsIdleTimeout() && webSocketRequest != null) {
+                    LOGGER.debug("close ws connection by idle monitor");
+                    response.close();
+                }
+            }, request.getConfiguration().getWsIdleTimeout(), TimeUnit.MILLISECONDS);
+        }
     }
 
     @Override
     public final void onBodyStream(ByteBuffer buffer) {
-        decoder = decoder.decode(buffer, request.newWebsocketRequest());
+        decoder = decoder.decode(buffer, webSocketRequest);
         if (decoder != WebSocket.PAYLOAD_FINISH) {
             return;
         }
         decoder = basicFrameDecoder;
         try {
-            handleWebSocketRequest(request.newWebsocketRequest(), request.getAioSession());
+            handleWebSocketRequest(webSocketRequest, request.getAioSession());
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }
@@ -206,5 +221,16 @@ public class WebSocketUpgradeHandler extends HttpUpgradeHandler {
      */
     public void onError(WebSocketRequest request, Throwable throwable) {
         throwable.printStackTrace();
+    }
+
+    @Override
+    public void destroy() {
+        if (wsIdleTask != null) {
+            if (LOGGER.isInfoEnabled()) {
+                LOGGER.info("cancel websocket idle monitor, request:{}", this);
+            }
+            wsIdleTask.cancel();
+            wsIdleTask = null;
+        }
     }
 }
