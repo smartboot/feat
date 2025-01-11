@@ -15,6 +15,7 @@ import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.utils.SHA1;
 import tech.smartboot.feat.core.common.utils.WebSocketUtil;
+import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.WebSocketRequest;
 import tech.smartboot.feat.core.server.WebSocketResponse;
 import tech.smartboot.feat.core.server.impl.AbstractResponse;
@@ -41,11 +42,11 @@ public class WebSocketUpgradeHandler extends HttpUpgradeHandler {
     @Override
     public final void init() throws IOException {
         webSocketRequest = new WebSocketRequestImpl(request);
-        WebSocketResponseImpl response = webSocketRequest.getResponse();
         String key = request.getHeader(HeaderNameEnum.Sec_WebSocket_Key);
         String acceptSeed = key + WEBSOCKET_13_ACCEPT_GUID;
         byte[] sha1 = SHA1.encode(acceptSeed);
         String accept = Base64.getEncoder().encodeToString(sha1);
+        HttpResponse response = request.newHttpRequest().getResponse();
         response.setHttpStatus(HttpStatus.SWITCHING_PROTOCOLS);
         response.setHeader(HeaderNameEnum.UPGRADE.getName(), HeaderValueEnum.Upgrade.WEBSOCKET);
         response.setHeader(HeaderNameEnum.CONNECTION.getName(), HeaderValueEnum.Connection.UPGRADE);
@@ -75,6 +76,9 @@ public class WebSocketUpgradeHandler extends HttpUpgradeHandler {
             handleWebSocketRequest(webSocketRequest, request.getAioSession());
         } catch (Throwable e) {
             throw new RuntimeException(e);
+        }
+        if (buffer.hasRemaining()) {
+            onBodyStream(buffer);
         }
     }
 
