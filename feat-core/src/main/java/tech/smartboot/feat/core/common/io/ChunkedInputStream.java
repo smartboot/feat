@@ -1,9 +1,9 @@
 package tech.smartboot.feat.core.common.io;
 
+import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
 import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.common.utils.Constant;
-import org.smartboot.socket.transport.AioSession;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -17,6 +17,10 @@ import java.util.function.Consumer;
  * @version V1.0 , 2022/12/6
  */
 public class ChunkedInputStream extends BodyInputStream {
+    private static final int FLAG_CHUNKED_TRAILER = 1 << 4;
+    private static final int FLAG_EXPECT_CR_LF = 1 << 5;
+    //需要解析chunked长度
+    protected static final int FLAG_READ_CHUNKED_LENGTH = 1 << 6;
     private final ByteArrayOutputStream buffer = new ByteArrayOutputStream(8);
 
     private Map<String, String> trailerFields;
@@ -139,6 +143,7 @@ public class ChunkedInputStream extends BodyInputStream {
         }
 
         byteBuffer.reset();
+        //未注册readListener时，同步读取
         if (readListener == null) {
             int i = session.read();
             if (i == -1) {
@@ -148,7 +153,6 @@ public class ChunkedInputStream extends BodyInputStream {
             }
         }
     }
-
 
     private void parseTrailerFields() throws IOException {
         ByteBuffer byteBuffer = session.readBuffer();
@@ -189,6 +193,7 @@ public class ChunkedInputStream extends BodyInputStream {
         this.readListener = new ReadListener() {
             @Override
             public void onDataAvailable() throws IOException {
+                //异步情况下静默解析trailerFields
                 if (anyAreSet(state, FLAG_CHUNKED_TRAILER)) {
                     parseTrailerFields();
                 }
@@ -201,9 +206,9 @@ public class ChunkedInputStream extends BodyInputStream {
                     return;
                 }
                 if (chunkedRemaining > 0 && session.readBuffer().hasRemaining()) {
-                    setFlags(FLAG_READY);
+                    setFlags(FLAG_LISTENER_READY);
                     listener.onDataAvailable();
-                    clearFlags(FLAG_READY);
+                    clearFlags(FLAG_LISTENER_READY);
                 }
                 if (anyAreSet(state, FLAG_FINISHED)) {
                     listener.onAllDataRead();
@@ -213,7 +218,6 @@ public class ChunkedInputStream extends BodyInputStream {
             @Override
             public void onAllDataRead() throws IOException {
                 listener.onAllDataRead();
-
             }
 
             @Override

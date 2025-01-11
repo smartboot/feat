@@ -24,11 +24,6 @@ public abstract class BodyInputStream extends InputStream {
         }
 
         @Override
-        public void close() {
-
-        }
-
-        @Override
         public boolean isFinished() {
             return true;
         }
@@ -36,14 +31,11 @@ public abstract class BodyInputStream extends InputStream {
     protected final AioSession session;
     protected ReadListener readListener;
     protected volatile int state;
-    protected static final int FLAG_READY = 1;
+    protected static final int FLAG_LISTENER_READY = 1;
     protected static final int FLAG_FINISHED = 1 << 1;
     protected static final int FLAG_CLOSED = 1 << 2;
-    protected static final int FLAG_IS_READY_CALLED = 1 << 3;
-    protected static final int FLAG_CHUNKED_TRAILER = 1 << 4;
-    protected static final int FLAG_EXPECT_CR_LF = 1 << 5;
-    //需要解析chunked长度
-    protected static final int FLAG_READ_CHUNKED_LENGTH = 1 << 6;
+
+
     protected static final AtomicIntegerFieldUpdater<BodyInputStream> stateUpdater = AtomicIntegerFieldUpdater.newUpdater(BodyInputStream.class, "state");
 
     public BodyInputStream(AioSession session) {
@@ -52,7 +44,7 @@ public abstract class BodyInputStream extends InputStream {
 
 
     @Override
-    public void close() throws IOException {
+    public final void close() throws IOException {
         setFlags(FLAG_CLOSED | FLAG_FINISHED);
     }
 
@@ -73,7 +65,7 @@ public abstract class BodyInputStream extends InputStream {
      */
     public abstract void setReadListener(ReadListener listener);
 
-    public ReadListener getReadListener() {
+    public final ReadListener getReadListener() {
         return readListener;
     }
 
@@ -81,17 +73,18 @@ public abstract class BodyInputStream extends InputStream {
         return anyAreSet(state, FLAG_FINISHED);
     }
 
-    protected void checkState() throws IOException {
+    protected final void checkState() throws IOException {
         if (anyAreSet(state, FLAG_CLOSED)) {
             throw new IOException("stream closed");
         }
     }
 
-    public boolean isReady() {
+    public final boolean isReady() {
+        //如果没有设置listener，将采用同步阻塞IO
         if (readListener == null) {
             return true;
         }
-        return anyAreSet(state, FLAG_READY) && session.readBuffer().hasRemaining();
+        return anyAreSet(state, FLAG_LISTENER_READY) && session.readBuffer().hasRemaining();
     }
 
     @Override
@@ -104,21 +97,21 @@ public abstract class BodyInputStream extends InputStream {
         return (var & flags) != flags;
     }
 
-    protected void clearFlags(int flags) {
+    protected final void clearFlags(int flags) {
         int old;
         do {
             old = state;
         } while (!stateUpdater.compareAndSet(this, old, old & ~flags));
     }
 
-    protected void setFlags(int flags) {
+    protected final void setFlags(int flags) {
         int old;
         do {
             old = state;
         } while (!stateUpdater.compareAndSet(this, old, old | flags));
     }
 
-    protected boolean anyAreSet(int var, int flags) {
+    protected final boolean anyAreSet(int var, int flags) {
         return (var & flags) != 0;
     }
 }

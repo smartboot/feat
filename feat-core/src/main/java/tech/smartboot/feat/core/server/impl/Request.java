@@ -20,7 +20,6 @@ import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.common.io.BodyInputStream;
 import tech.smartboot.feat.core.common.io.ChunkedInputStream;
 import tech.smartboot.feat.core.common.io.PostInputStream;
-import tech.smartboot.feat.core.common.io.UpgradeBodyInputStream;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.server.HttpServerConfiguration;
@@ -112,7 +111,7 @@ public final class Request extends CommonRequest implements Reset {
             return inputStream;
         }
         if (getHeader(HeaderNameEnum.UPGRADE) != null) {
-            inputStream = new UpgradeBodyInputStream(aioSession);
+            inputStream = new PostInputStream(aioSession, Long.MAX_VALUE, Long.MAX_VALUE);
         }
         //如果一个消息即存在传输译码（Transfer-Encoding）头域并且也 Content-Length 头域，后者会被忽略。
         else if (HeaderValueEnum.TransferEncoding.CHUNKED.equalsIgnoreCase(getHeader(HeaderNameEnum.TRANSFER_ENCODING))) {

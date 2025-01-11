@@ -8,9 +8,9 @@
 
 package tech.smartboot.feat.core.common.io;
 
+import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
 import tech.smartboot.feat.core.common.exception.HttpException;
-import org.smartboot.socket.transport.AioSession;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -49,10 +49,9 @@ public class PostInputStream extends BodyInputStream {
         ByteBuffer byteBuffer = session.readBuffer();
 
         if (readListener != null) {
-            if (anyAreClear(state, FLAG_READY | FLAG_IS_READY_CALLED)) {
+            if (anyAreClear(state, FLAG_LISTENER_READY)) {
                 throw new IllegalStateException();
             }
-            clearFlags(FLAG_IS_READY_CALLED);
         } else if (remaining > 0 && !byteBuffer.hasRemaining()) {
             try {
                 session.read();
@@ -71,17 +70,13 @@ public class PostInputStream extends BodyInputStream {
         byteBuffer.get(data, off, readLength);
         remaining = remaining - readLength;
 
-        if (remaining > 0) {
-            if (readListener == null) {
-                return readLength + read(data, off + readLength, len - readLength);
-            } else {
-                if (!byteBuffer.hasRemaining()) {
-                    clearFlags(FLAG_READY);
-                }
-                return readLength;
-            }
-        } else {
+        if (remaining == 0) {
             setFlags(FLAG_FINISHED);
+            return readLength;
+        }
+        if (readListener == null) {
+            return readLength + read(data, off + readLength, len - readLength);
+        } else {
             return readLength;
         }
     }
@@ -96,9 +91,9 @@ public class PostInputStream extends BodyInputStream {
         this.readListener = new ReadListener() {
             @Override
             public void onDataAvailable() throws IOException {
-                setFlags(FLAG_READY);
+                setFlags(FLAG_LISTENER_READY);
                 listener.onDataAvailable();
-                clearFlags(FLAG_READY);
+                clearFlags(FLAG_LISTENER_READY);
                 if (remaining == 0) {
                     listener.onAllDataRead();
                 }

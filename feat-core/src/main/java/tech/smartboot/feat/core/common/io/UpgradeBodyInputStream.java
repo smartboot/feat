@@ -21,9 +21,9 @@ public class UpgradeBodyInputStream extends BodyInputStream {
         this.readListener = new ReadListener() {
             @Override
             public void onDataAvailable() throws IOException {
-                setFlags(FLAG_READY);
+                setFlags(FLAG_LISTENER_READY);
                 listener.onDataAvailable();
-                clearFlags(FLAG_READY);
+                clearFlags(FLAG_LISTENER_READY);
             }
 
             @Override
@@ -53,22 +53,15 @@ public class UpgradeBodyInputStream extends BodyInputStream {
 
         ByteBuffer byteBuffer = session.readBuffer();
 
-//        if (readListener != null) {
-//            if (anyAreClear(state, FLAG_READY)) {
-//                throw new IllegalStateException();
-//            }
-//            clearFlags(FLAG_IS_READY_CALLED);
-//        }
         int readLength = Math.min(len, byteBuffer.remaining());
 
         byteBuffer.get(data, off, readLength);
 
         if (readListener == null) {
-            return readLength + read(data, off + readLength, len - readLength);
+
+            throw new UnsupportedOperationException();
+//            return readLength + read(data, off + readLength, len - readLength);
         } else {
-            if (!byteBuffer.hasRemaining()) {
-                clearFlags(FLAG_READY);
-            }
             return readLength;
         }
     }

@@ -5,12 +5,12 @@ import java.util.EventListener;
 
 public interface ReadListener extends EventListener {
 
-    public void onDataAvailable()throws IOException;
+    void onDataAvailable() throws IOException;
 
 
-    public void onAllDataRead() throws IOException;
+    void onAllDataRead() throws IOException;
 
 
-    public void onError(Throwable t);
+    void onError(Throwable t);
 
 }
