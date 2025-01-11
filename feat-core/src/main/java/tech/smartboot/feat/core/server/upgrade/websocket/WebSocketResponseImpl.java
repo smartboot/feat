@@ -23,7 +23,7 @@ import java.util.Arrays;
  * @author 三刀
  * @version V1.0 , 2018/2/3
  */
-public class WebSocketResponseImpl implements WebSocketResponse {
+class WebSocketResponseImpl implements WebSocketResponse {
     private static final Logger LOGGER = LoggerFactory.getLogger(WebSocketResponseImpl.class);
     private boolean closed;
     private final OutputStream outputStream;
@@ -90,7 +90,7 @@ public class WebSocketResponseImpl implements WebSocketResponse {
             try {
                 outputStream.close();
             } catch (IOException e) {
-              LOGGER.error("关闭输出流失败", e);
+                LOGGER.error("关闭输出流失败", e);
             }
         }
     }

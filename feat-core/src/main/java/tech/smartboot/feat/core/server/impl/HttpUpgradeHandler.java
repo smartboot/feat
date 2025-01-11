@@ -1,5 +1,8 @@
 package tech.smartboot.feat.core.server.impl;
 
+import tech.smartboot.feat.core.server.HttpRequest;
+import tech.smartboot.feat.core.server.HttpResponse;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
@@ -10,7 +13,7 @@ public abstract class HttpUpgradeHandler {
         this.request = request;
     }
 
-    public abstract void init() throws IOException;
+    public abstract void init(HttpRequest request, HttpResponse response) throws IOException;
 
     public abstract void onBodyStream(ByteBuffer buffer);
 

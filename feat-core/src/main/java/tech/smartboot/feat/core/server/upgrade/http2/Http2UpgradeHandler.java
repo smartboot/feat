@@ -20,7 +20,6 @@ import tech.smartboot.feat.core.server.impl.AbstractResponse;
 import tech.smartboot.feat.core.server.impl.Http2RequestImpl;
 import tech.smartboot.feat.core.server.impl.Http2Session;
 import tech.smartboot.feat.core.server.impl.HttpMessageProcessor;
-import tech.smartboot.feat.core.server.impl.HttpRequestImpl;
 import tech.smartboot.feat.core.server.impl.HttpUpgradeHandler;
 import tech.smartboot.feat.core.server.impl.Request;
 
@@ -38,7 +37,7 @@ public class Http2UpgradeHandler extends HttpUpgradeHandler {
     private Http2Session session;
 
     @Override
-    public final void init() throws IOException {
+    public final void init(HttpRequest req, HttpResponse response) throws IOException {
         session = new Http2Session(request);
         if (HttpProtocolEnum.HTTP_2 == request.getProtocol()) {
             if (!"PRI".equals(request.getMethod()) || !"*".equals(request.getUri()) || request.getHeaderSize() > 0) {
@@ -56,8 +55,6 @@ public class Http2UpgradeHandler extends HttpUpgradeHandler {
             //更新服务端的 setting
             session.updateSettings(settingsFrame);
 
-            HttpRequestImpl req = request.newHttpRequest();
-            AbstractResponse response = req.getResponse();
             response.setHttpStatus(HttpStatus.SWITCHING_PROTOCOLS);
             response.setContentType(null);
             response.setHeader(HeaderNameEnum.UPGRADE.getName(), HeaderValueEnum.Upgrade.H2C);

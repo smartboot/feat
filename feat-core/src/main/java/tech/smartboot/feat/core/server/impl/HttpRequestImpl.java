@@ -75,7 +75,7 @@ public class HttpRequestImpl extends AbstractRequest {
         //升级后取消http空闲监听
         request.cancelHttpIdleTask();
         upgradeHandler.setRequest(request);
-        upgradeHandler.init();
+        upgradeHandler.init(this,response);
         upgradeHandler.onBodyStream(request.getAioSession().readBuffer());
 
     }

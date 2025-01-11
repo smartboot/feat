@@ -13,8 +13,9 @@ import tech.smartboot.feat.core.common.Reset;
 import tech.smartboot.feat.core.common.codec.websocket.WebSocket;
 import tech.smartboot.feat.core.common.utils.SmartDecoder;
 import tech.smartboot.feat.core.common.utils.WebSocketUtil;
+import tech.smartboot.feat.core.server.HttpRequest;
+import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.WebSocketRequest;
-import tech.smartboot.feat.core.server.impl.Request;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -26,7 +27,7 @@ import java.util.Map;
  * @author 三刀
  * @version V1.0 , 2018/8/31
  */
-public class WebSocketRequestImpl implements WebSocketRequest, WebSocket, Reset {
+class WebSocketRequestImpl implements WebSocketRequest, WebSocket, Reset {
     private SmartDecoder payloadDecoder;
     private final ByteArrayOutputStream payload = new ByteArrayOutputStream();
     private final WebSocketResponseImpl response;
@@ -40,12 +41,11 @@ public class WebSocketRequestImpl implements WebSocketRequest, WebSocket, Reset 
     private long payloadLength;
 
     private byte[] maskingKey;
-    private final Request request;
+    private final HttpRequest request;
 
-    public WebSocketRequestImpl(Request baseHttpRequest) {
-//        super(baseHttpRequest);
-        this.request = baseHttpRequest;
-        this.response = new WebSocketResponseImpl(baseHttpRequest.getAioSession().writeBuffer());
+    public WebSocketRequestImpl(HttpRequest req, HttpResponse response) {
+        this.request = req;
+        this.response = new WebSocketResponseImpl(response.getOutputStream());
     }
 
     public final WebSocketResponseImpl getResponse() {
