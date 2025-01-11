@@ -14,6 +14,7 @@ import tech.smartboot.feat.core.common.codec.h2.codec.HeadersFrame;
 import tech.smartboot.feat.core.common.codec.h2.codec.Http2Frame;
 import tech.smartboot.feat.core.common.utils.DateUtils;
 import tech.smartboot.feat.core.common.utils.HttpUtils;
+import tech.smartboot.feat.core.server.upgrade.http2.Http2Session;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;

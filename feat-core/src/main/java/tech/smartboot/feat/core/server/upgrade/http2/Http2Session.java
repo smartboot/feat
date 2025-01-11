@@ -1,4 +1,4 @@
-package tech.smartboot.feat.core.server.impl;
+package tech.smartboot.feat.core.server.upgrade.http2;
 
 import org.smartboot.socket.transport.WriteBuffer;
 import tech.smartboot.feat.core.common.codec.h2.codec.Http2Frame;
@@ -7,6 +7,8 @@ import tech.smartboot.feat.core.common.codec.h2.hpack.Decoder;
 import tech.smartboot.feat.core.common.codec.h2.hpack.Encoder;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
+import tech.smartboot.feat.core.server.impl.Http2RequestImpl;
+import tech.smartboot.feat.core.server.impl.Request;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;

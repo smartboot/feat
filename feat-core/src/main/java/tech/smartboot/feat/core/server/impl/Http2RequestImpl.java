@@ -10,6 +10,7 @@ import tech.smartboot.feat.core.common.multipart.MultipartConfig;
 import tech.smartboot.feat.core.common.multipart.Part;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.PushBuilder;
+import tech.smartboot.feat.core.server.upgrade.http2.Http2Session;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

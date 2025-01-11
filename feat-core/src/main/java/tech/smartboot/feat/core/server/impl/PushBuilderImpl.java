@@ -8,6 +8,7 @@ import tech.smartboot.feat.core.common.enums.HttpMethodEnum;
 import tech.smartboot.feat.core.common.utils.HttpUtils;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.PushBuilder;
+import tech.smartboot.feat.core.server.upgrade.http2.Http2Session;
 import tech.smartboot.feat.core.server.upgrade.http2.Http2UpgradeHandler;
 
 import java.io.IOException;

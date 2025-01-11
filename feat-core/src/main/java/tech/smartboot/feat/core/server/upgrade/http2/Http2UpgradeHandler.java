@@ -18,7 +18,6 @@ import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.impl.AbstractResponse;
 import tech.smartboot.feat.core.server.impl.Http2RequestImpl;
-import tech.smartboot.feat.core.server.impl.Http2Session;
 import tech.smartboot.feat.core.server.impl.HttpMessageProcessor;
 import tech.smartboot.feat.core.server.impl.HttpUpgradeHandler;
 import tech.smartboot.feat.core.server.impl.Request;
