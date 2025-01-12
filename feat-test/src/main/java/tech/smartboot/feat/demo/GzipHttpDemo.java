@@ -13,8 +13,8 @@ import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServer;
-import tech.smartboot.feat.core.server.HttpServerHandler;
-import tech.smartboot.feat.core.server.handler.HttpRouteHandler;
+import tech.smartboot.feat.core.server.handler.HttpServerHandler;
+import tech.smartboot.feat.core.server.handler.Router;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -27,7 +27,7 @@ import java.util.zip.GZIPOutputStream;
 public class GzipHttpDemo {
     public static void main(String[] args) {
         String text = "Hello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello World";
-        HttpRouteHandler routeHandle = new HttpRouteHandler();
+        Router routeHandle = new Router();
         routeHandle.route("/a", new HttpServerHandler() {
             @Override
             public void handle(HttpRequest request, HttpResponse response) throws IOException {

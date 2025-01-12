@@ -11,8 +11,8 @@ import tech.smartboot.feat.restful.intercept.MethodInterceptor;
 import tech.smartboot.feat.restful.intercept.MethodInvocation;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
-import tech.smartboot.feat.core.server.HttpServerHandler;
-import tech.smartboot.feat.core.server.handler.HttpRouteHandler;
+import tech.smartboot.feat.core.server.handler.HttpServerHandler;
+import tech.smartboot.feat.core.server.handler.Router;
 import tech.smartboot.feat.core.server.impl.Request;
 
 import java.io.IOException;
@@ -32,7 +32,7 @@ import java.util.concurrent.ExecutorService;
 public class RestfulHandler extends HttpServerHandler {
     private static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
     private static final Logger LOGGER = LoggerFactory.getLogger(RestfulHandler.class);
-    private final HttpRouteHandler httpRouteHandler;
+    private final Router router;
     private final MethodInterceptor interceptor = MethodInvocation::proceed;
 
     private final Map<Interceptor, InterceptorEntity> interceptors = new HashMap<>();
@@ -40,7 +40,7 @@ public class RestfulHandler extends HttpServerHandler {
     private ExecutorService asyncExecutor;
 
     public RestfulHandler(HttpServerHandler defaultHandler) {
-        this.httpRouteHandler = defaultHandler != null ? new HttpRouteHandler(defaultHandler) : new HttpRouteHandler();
+        this.router = defaultHandler != null ? new Router(defaultHandler) : new Router();
     }
 
     public void addInterceptor(Object object) {
@@ -110,7 +110,7 @@ public class RestfulHandler extends HttpServerHandler {
                 if (asyncExecutor == null) {
                     throw new NullPointerException("The async request must set the asyncExecutor.");
                 }
-                httpRouteHandler.route(mappingUrl, new ControllerHandler(method, object, interceptor0) {
+                router.route(mappingUrl, new ControllerHandler(method, object, interceptor0) {
                     @Override
                     public void handle(HttpRequest request, HttpResponse response, CompletableFuture<Object> completableFuture) throws Throwable {
                         ControllerHandler handler = this;
@@ -126,7 +126,7 @@ public class RestfulHandler extends HttpServerHandler {
                     }
                 });
             } else {
-                httpRouteHandler.route(mappingUrl, new ControllerHandler(method, object, interceptor0));
+                router.route(mappingUrl, new ControllerHandler(method, object, interceptor0));
             }
 
         }
@@ -162,7 +162,7 @@ public class RestfulHandler extends HttpServerHandler {
 
     @Override
     public void onHeaderComplete(Request request) throws IOException {
-        httpRouteHandler.onHeaderComplete(request);
+        router.onHeaderComplete(request);
     }
 
     public void setAsyncExecutor(ExecutorService asyncExecutor) {

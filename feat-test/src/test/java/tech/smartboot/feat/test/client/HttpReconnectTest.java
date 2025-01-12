@@ -18,8 +18,8 @@ import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServer;
-import tech.smartboot.feat.core.server.HttpServerHandler;
-import tech.smartboot.feat.core.server.handler.HttpRouteHandler;
+import tech.smartboot.feat.core.server.handler.HttpServerHandler;
+import tech.smartboot.feat.core.server.handler.Router;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
@@ -37,7 +37,7 @@ public class HttpReconnectTest {
     @Before
     public void init() {
         httpServer = new HttpServer();
-        HttpRouteHandler routeHandler = new HttpRouteHandler();
+        Router routeHandler = new Router();
 
         routeHandler.route("/post", new HttpServerHandler() {
             @Override

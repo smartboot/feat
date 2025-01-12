@@ -12,7 +12,7 @@ import tech.smartboot.feat.core.Feat;
 import tech.smartboot.feat.core.common.codec.websocket.CloseReason;
 import tech.smartboot.feat.core.server.WebSocketRequest;
 import tech.smartboot.feat.core.server.WebSocketResponse;
-import tech.smartboot.feat.core.server.handler.HttpRouteHandler;
+import tech.smartboot.feat.core.server.handler.Router;
 import tech.smartboot.feat.core.server.upgrade.websocket.WebSocketUpgradeHandler;
 
 /**
@@ -22,7 +22,7 @@ import tech.smartboot.feat.core.server.upgrade.websocket.WebSocketUpgradeHandler
 public class WebSocketDemo {
     public static void main(String[] args) {
         //1. 实例化路由Handle
-        HttpRouteHandler routeHandle = new HttpRouteHandler();
+        Router routeHandle = new Router();
 
         //2. 指定路由规则以及请求的处理实现
         routeHandle.route("/", (request, response) -> request.upgrade(new WebSocketUpgradeHandler() {

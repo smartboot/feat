@@ -18,7 +18,7 @@ import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.FeatOptions;
-import tech.smartboot.feat.core.server.HttpServerHandler;
+import tech.smartboot.feat.core.server.handler.HttpServerHandler;
 
 import java.io.IOException;
 import java.io.OutputStream;

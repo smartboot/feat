@@ -19,7 +19,7 @@ import tech.smartboot.feat.core.common.utils.ByteTree;
 import tech.smartboot.feat.core.common.utils.Constant;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.FeatOptions;
-import tech.smartboot.feat.core.server.HttpServerHandler;
+import tech.smartboot.feat.core.server.handler.HttpServerHandler;
 import tech.smartboot.feat.core.server.waf.WAF;
 
 import java.nio.ByteBuffer;

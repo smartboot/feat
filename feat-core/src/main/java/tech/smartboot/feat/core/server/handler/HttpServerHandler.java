@@ -6,7 +6,7 @@
  * Author: sandao (zhengjunweimail@163.com)
  ******************************************************************************/
 
-package tech.smartboot.feat.core.server;
+package tech.smartboot.feat.core.server.handler;
 
 import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
@@ -14,6 +14,8 @@ import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
 import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
 import tech.smartboot.feat.core.common.io.BufferOutputStream;
 import tech.smartboot.feat.core.common.io.ReadListener;
+import tech.smartboot.feat.core.server.HttpRequest;
+import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.impl.AbstractResponse;
 import tech.smartboot.feat.core.server.impl.HttpMessageProcessor;
 import tech.smartboot.feat.core.server.impl.HttpRequestImpl;
@@ -29,7 +31,7 @@ import java.util.concurrent.CompletableFuture;
  * @author 三刀
  * @version V1.0 , 2018/2/6
  */
-public abstract class HttpServerHandler implements Handler {
+public abstract class HttpServerHandler implements HttpHandler {
 
     public void onBodyStream(ByteBuffer buffer, Request request) {
         HttpRequestImpl httpRequest = request.newHttpRequest();

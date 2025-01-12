@@ -15,6 +15,8 @@ import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
 import tech.smartboot.feat.core.common.enums.HttpMethodEnum;
 import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
+import tech.smartboot.feat.core.server.handler.HttpHandler;
+import tech.smartboot.feat.core.server.handler.HttpServerHandler;
 import tech.smartboot.feat.core.server.impl.HttpMessageProcessor;
 import tech.smartboot.feat.core.server.impl.HttpRequestProtocol;
 
@@ -48,7 +50,7 @@ public class HttpServer {
         this.protocol = new HttpRequestProtocol(options);
     }
 
-    public HttpServer httpHandler(Handler handler) {
+    public HttpServer httpHandler(HttpHandler handler) {
         return httpHandler(new HttpServerHandler() {
             @Override
             public void handle(HttpRequest request, HttpResponse response) throws Throwable {

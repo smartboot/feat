@@ -11,7 +11,7 @@ package tech.smartboot.feat.demo;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServer;
-import tech.smartboot.feat.core.server.HttpServerHandler;
+import tech.smartboot.feat.core.server.handler.HttpServerHandler;
 
 import java.io.IOException;
 import java.util.Date;

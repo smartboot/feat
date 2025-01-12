@@ -13,10 +13,8 @@ import tech.smartboot.feat.core.common.enums.HttpStatus;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.utils.AntPathMatcher;
-import tech.smartboot.feat.core.server.Handler;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
-import tech.smartboot.feat.core.server.HttpServerHandler;
 import tech.smartboot.feat.core.server.impl.Request;
 
 import java.io.IOException;
@@ -28,8 +26,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author 三刀
  * @version V1.0 , 2018/3/24
  */
-public final class HttpRouteHandler extends HttpServerHandler {
-    private static final Logger LOGGER = LoggerFactory.getLogger(HttpRouteHandler.class);
+public final class Router extends HttpServerHandler {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Router.class);
     private static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
     /**
      * 默认404
@@ -37,7 +35,7 @@ public final class HttpRouteHandler extends HttpServerHandler {
     private final HttpServerHandler defaultHandler;
     private final Map<String, HttpServerHandler> handlerMap = new ConcurrentHashMap<>();
 
-    public HttpRouteHandler() {
+    public Router() {
         this(new HttpServerHandler() {
             @Override
             public void handle(HttpRequest request, HttpResponse response) throws IOException {
@@ -46,7 +44,7 @@ public final class HttpRouteHandler extends HttpServerHandler {
         });
     }
 
-    public HttpRouteHandler(HttpServerHandler defaultHandler) {
+    public Router(HttpServerHandler defaultHandler) {
         this.defaultHandler = defaultHandler;
     }
 
@@ -83,12 +81,12 @@ public final class HttpRouteHandler extends HttpServerHandler {
      * @param httpHandler 处理handler
      * @return
      */
-    public HttpRouteHandler route(String urlPattern, HttpServerHandler httpHandler) {
+    public Router route(String urlPattern, HttpServerHandler httpHandler) {
         handlerMap.put(urlPattern, httpHandler);
         return this;
     }
 
-    public HttpRouteHandler route(String urlPattern, Handler httpHandler) {
+    public Router route(String urlPattern, HttpHandler httpHandler) {
         handlerMap.put(urlPattern, new HttpServerHandler() {
             @Override
             public void handle(HttpRequest request, HttpResponse response) throws Throwable {

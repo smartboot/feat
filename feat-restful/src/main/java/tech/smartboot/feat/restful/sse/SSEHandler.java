@@ -2,7 +2,7 @@ package tech.smartboot.feat.restful.sse;
 
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
-import tech.smartboot.feat.core.server.HttpServerHandler;
+import tech.smartboot.feat.core.server.handler.HttpServerHandler;
 import tech.smartboot.feat.core.server.impl.Request;
 import org.smartboot.socket.util.AttachKey;
 import org.smartboot.socket.util.Attachment;

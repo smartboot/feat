@@ -15,10 +15,10 @@ import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServer;
-import tech.smartboot.feat.core.server.HttpServerHandler;
+import tech.smartboot.feat.core.server.handler.HttpServerHandler;
 import tech.smartboot.feat.core.server.WebSocketRequest;
 import tech.smartboot.feat.core.server.WebSocketResponse;
-import tech.smartboot.feat.core.server.handler.HttpRouteHandler;
+import tech.smartboot.feat.core.server.handler.Router;
 import tech.smartboot.feat.core.server.upgrade.websocket.WebSocketUpgradeHandler;
 
 import java.io.IOException;
@@ -34,7 +34,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class IMDemo {
     public static void main(String[] args) {
-        HttpRouteHandler routeHandle = new HttpRouteHandler();
+        Router routeHandle = new Router();
         routeHandle.route("/", new HttpServerHandler() {
             @Override
             public void handle(HttpRequest request, HttpResponse response) throws IOException {

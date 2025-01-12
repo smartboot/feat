@@ -3,7 +3,7 @@ package tech.smartboot.feat.restful;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServer;
-import tech.smartboot.feat.core.server.HttpServerHandler;
+import tech.smartboot.feat.core.server.handler.HttpServerHandler;
 import tech.smartboot.feat.restful.context.ApplicationContext;
 import tech.smartboot.feat.restful.handler.RestfulHandler;
 

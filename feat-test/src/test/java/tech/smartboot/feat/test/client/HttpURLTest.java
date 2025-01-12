@@ -16,8 +16,8 @@ import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
-import tech.smartboot.feat.core.server.HttpServerHandler;
-import tech.smartboot.feat.core.server.handler.HttpRouteHandler;
+import tech.smartboot.feat.core.server.handler.HttpServerHandler;
+import tech.smartboot.feat.core.server.handler.Router;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,7 +34,7 @@ public class HttpURLTest {
     @Before
     public void init() {
         httpServer = new HttpServer();
-        HttpRouteHandler routeHandle = new HttpRouteHandler();
+        Router routeHandle = new Router();
         routeHandle.route("/post_param", new HttpServerHandler() {
             @Override
             public void handle(HttpRequest request, HttpResponse response) throws IOException {

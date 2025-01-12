@@ -27,7 +27,7 @@ import tech.smartboot.feat.core.common.utils.NumberUtils;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.FeatOptions;
 import tech.smartboot.feat.core.server.HttpRequest;
-import tech.smartboot.feat.core.server.HttpServerHandler;
+import tech.smartboot.feat.core.server.handler.HttpServerHandler;
 
 import javax.net.ssl.SSLEngine;
 import java.io.ByteArrayOutputStream;

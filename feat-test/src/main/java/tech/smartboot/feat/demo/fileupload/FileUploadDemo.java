@@ -12,8 +12,8 @@ import tech.smartboot.feat.core.common.multipart.Part;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
-import tech.smartboot.feat.core.server.HttpServerHandler;
-import tech.smartboot.feat.core.server.handler.HttpRouteHandler;
+import tech.smartboot.feat.core.server.handler.HttpServerHandler;
+import tech.smartboot.feat.core.server.handler.Router;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,7 +25,7 @@ import java.io.InputStream;
 public class FileUploadDemo {
     public static void main(String[] args) {
 
-        HttpRouteHandler routeHandler = new HttpRouteHandler();
+        Router routeHandler = new Router();
         routeHandler.route("/", new HttpServerHandler() {
                     byte[] body = ("<html>" +
                             "<head><title>feat demo</title></head>" +
