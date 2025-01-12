@@ -8,30 +8,22 @@
 
 package tech.smartboot.feat.demo;
 
-import tech.smartboot.feat.core.server.HttpServer;
-import tech.smartboot.feat.core.server.HttpRequest;
-import tech.smartboot.feat.core.server.HttpResponse;
-import tech.smartboot.feat.core.server.HttpServerHandler;
+import tech.smartboot.feat.core.Feat;
 
-import java.io.IOException;
 import java.io.InputStream;
 
 
 public class SimpleSmartHttp {
     public static void main(String[] args) {
-        HttpServer bootstrap = new HttpServer();
-        bootstrap.options().debug(true);
-        bootstrap.httpHandler(new HttpServerHandler() {
-            @Override
-            public void handle(HttpRequest request, HttpResponse response) throws IOException {
-                InputStream in = request.getInputStream();
-                byte[] b = new byte[1024];
-                int i;
-                while ((i = in.read(b)) > 0) {
-                    System.out.println(new String(b, 0, i));
-                }
-                response.write("hello feat<br/>".getBytes());
-            }
-        }).listen(8080);
+        Feat.createHttpServer(options -> options.debug(true))
+                .httpHandler((request, response) -> {
+                    InputStream in = request.getInputStream();
+                    byte[] b = new byte[1024];
+                    int i;
+                    while ((i = in.read(b)) > 0) {
+                        System.out.println(new String(b, 0, i));
+                    }
+                    response.write("hello feat<br/>".getBytes());
+                }).listen(8080);
     }
 }

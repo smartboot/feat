@@ -48,14 +48,17 @@ public class HttpServer {
         this.protocol = new HttpRequestProtocol(options);
     }
 
-    /**
-     * 往 http 处理器管道中注册 Handle
-     *
-     * @param httpHandler
-     * @return
-     */
-    public HttpServer httpHandler(HttpServerHandler httpHandler) {
-        processor.httpServerHandler(httpHandler);
+    public HttpServer httpHandler(Handler handler) {
+        if (handler instanceof HttpServerHandler) {
+            processor.httpServerHandler((HttpServerHandler) handler);
+        } else {
+            processor.httpServerHandler(new HttpServerHandler() {
+                @Override
+                public void handle(HttpRequest request, HttpResponse response) throws Throwable {
+                    handler.handle(request, response);
+                }
+            });
+        }
         return this;
     }
 

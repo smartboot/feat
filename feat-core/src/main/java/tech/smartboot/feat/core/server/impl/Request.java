@@ -23,7 +23,7 @@ import tech.smartboot.feat.core.common.io.PostInputStream;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.server.FeatOptions;
-import tech.smartboot.feat.core.server.ServerHandler;
+import tech.smartboot.feat.core.server.HttpServerHandler;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -40,7 +40,7 @@ public final class Request extends CommonRequest implements Reset {
 
     private final DecoderUnit decodeState = new DecoderUnit();
     private HttpRequestImpl httpRequest;
-    private ServerHandler serverHandler;
+    private HttpServerHandler serverHandler;
 
     /**
      * 剩余可读字节数
@@ -128,11 +128,11 @@ public final class Request extends CommonRequest implements Reset {
         }
     }
 
-    public ServerHandler getServerHandler() {
+    public HttpServerHandler getServerHandler() {
         return serverHandler;
     }
 
-    public void setServerHandler(ServerHandler serverHandler) {
+    public void setServerHandler(HttpServerHandler serverHandler) {
         this.serverHandler = serverHandler;
     }
 

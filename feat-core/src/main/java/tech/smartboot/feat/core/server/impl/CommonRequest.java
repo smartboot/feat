@@ -25,9 +25,9 @@ import tech.smartboot.feat.core.common.utils.Constant;
 import tech.smartboot.feat.core.common.utils.HttpUtils;
 import tech.smartboot.feat.core.common.utils.NumberUtils;
 import tech.smartboot.feat.core.common.utils.StringUtils;
-import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.FeatOptions;
-import tech.smartboot.feat.core.server.ServerHandler;
+import tech.smartboot.feat.core.server.HttpRequest;
+import tech.smartboot.feat.core.server.HttpServerHandler;
 
 import javax.net.ssl.SSLEngine;
 import java.io.ByteArrayOutputStream;
@@ -101,7 +101,7 @@ abstract class CommonRequest implements Reset {
      */
     private Attachment attachment;
 
-    private ServerHandler serverHandler;
+    private HttpServerHandler serverHandler;
     /**
      * 最近一次IO时间
      */
@@ -220,11 +220,11 @@ abstract class CommonRequest implements Reset {
     }
 
 
-    public ServerHandler getServerHandler() {
+    public HttpServerHandler getServerHandler() {
         return serverHandler;
     }
 
-    public void setServerHandler(ServerHandler serverHandler) {
+    public void setServerHandler(HttpServerHandler serverHandler) {
         this.serverHandler = serverHandler;
     }
 

@@ -16,7 +16,6 @@ import tech.smartboot.feat.core.common.utils.AntPathMatcher;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServerHandler;
-import tech.smartboot.feat.core.server.ServerHandler;
 import tech.smartboot.feat.core.server.impl.Request;
 
 import java.io.IOException;
@@ -53,7 +52,7 @@ public final class HttpRouteHandler extends HttpServerHandler {
 
     @Override
     public void onHeaderComplete(Request request) throws IOException {
-        ServerHandler httpServerHandler = matchHandler(request.getRequestURI());
+        HttpServerHandler httpServerHandler = matchHandler(request.getRequestURI());
         //注册 URI 与 Handler 的映射关系
         request.getConfiguration().getUriByteTree().addNode(request.getUri(), httpServerHandler);
         //更新本次请求的实际 Handler
@@ -70,7 +69,7 @@ public final class HttpRouteHandler extends HttpServerHandler {
     @Override
     public void handle(HttpRequest request, HttpResponse response, CompletableFuture<Object> completableFuture) throws Throwable {
         if (request.getProtocol() == HttpProtocolEnum.HTTP_2) {
-            ServerHandler httpServerHandler = matchHandler(request.getRequestURI());
+            HttpServerHandler httpServerHandler = matchHandler(request.getRequestURI());
             httpServerHandler.handle(request, response, completableFuture);
         } else {
             throw new UnsupportedOperationException();

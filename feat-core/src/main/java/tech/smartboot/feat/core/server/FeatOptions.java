@@ -38,7 +38,7 @@ public class FeatOptions {
     /**
      * URI缓存
      */
-    private final ByteTree<ServerHandler<?, ?>> uriByteTree = new ByteTree<>();
+    private final ByteTree<HttpServerHandler> uriByteTree = new ByteTree<>();
 
     private final ByteTree<HeaderNameEnum> headerNameByteTree = new ByteTree<>();
 
@@ -190,7 +190,7 @@ public class FeatOptions {
         return this;
     }
 
-    public ByteTree<ServerHandler<?, ?>> getUriByteTree() {
+    public ByteTree<HttpServerHandler> getUriByteTree() {
         return uriByteTree;
     }
 

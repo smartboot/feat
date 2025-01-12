@@ -29,9 +29,8 @@ import java.util.concurrent.CompletableFuture;
  * @author 三刀
  * @version V1.0 , 2018/2/6
  */
-public abstract class HttpServerHandler implements ServerHandler<HttpRequest, HttpResponse> {
+public abstract class HttpServerHandler implements Handler {
 
-    @Override
     public void onBodyStream(ByteBuffer buffer, Request request) {
         HttpRequestImpl httpRequest = request.newHttpRequest();
         AbstractResponse response = httpRequest.getResponse();
@@ -54,6 +53,29 @@ public abstract class HttpServerHandler implements ServerHandler<HttpRequest, Ht
         }
     }
 
+    public void handle(HttpRequest request, HttpResponse response, CompletableFuture<Object> completableFuture) throws Throwable {
+        try {
+            handle(request, response);
+        } finally {
+            completableFuture.complete(null);
+        }
+    }
+
+    @Override
+    public void handle(HttpRequest request, HttpResponse response) throws Throwable {
+    }
+
+    /**
+     * Http header 完成解析
+     */
+    public void onHeaderComplete(Request request) throws IOException {
+    }
+
+    /**
+     * 断开 TCP 连接
+     */
+    public void onClose(Request request) {
+    }
 
     private void finishHttpHandle(HttpRequestImpl abstractRequest, CompletableFuture<Object> future) throws IOException {
         if (future.isDone()) {
