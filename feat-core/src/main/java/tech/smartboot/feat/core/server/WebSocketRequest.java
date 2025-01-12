@@ -54,14 +54,14 @@ public interface WebSocketRequest {
      *
      * @return 附件
      */
-    Attachment getAttachment();
+//    Attachment getAttachment();
 
     /**
      * 存放附件，支持任意类型
      *
      * @param attachment 附件对象
      */
-    void setAttachment(Attachment attachment);
+//    void setAttachment(Attachment attachment);
 
     /**
      * 获取指定名称的Http Header值

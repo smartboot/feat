@@ -125,15 +125,15 @@ class WebSocketRequestImpl implements WebSocketRequest, WebSocket, Reset {
     }
 
 
-    @Override
-    public Attachment getAttachment() {
-        return request.getAttachment();
-    }
-
-    @Override
-    public void setAttachment(Attachment attachment) {
-        request.setAttachment(attachment);
-    }
+//    @Override
+//    public Attachment getAttachment() {
+//        return request.getAttachment();
+//    }
+//
+//    @Override
+//    public void setAttachment(Attachment attachment) {
+//        request.setAttachment(attachment);
+//    }
 
     @Override
     public String getHeader(String headName) {
