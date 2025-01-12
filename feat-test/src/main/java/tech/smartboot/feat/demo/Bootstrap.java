@@ -8,6 +8,7 @@
 
 package tech.smartboot.feat.demo;
 
+import tech.smartboot.feat.core.Feat;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServer;
@@ -34,8 +35,7 @@ public class Bootstrap {
         int cpuNum = Runtime.getRuntime().availableProcessors();
 
         // 定义服务器接受的消息类型以及各类消息对应的处理器
-        HttpServer bootstrap = new HttpServer();
-        bootstrap.options().threadNum(cpuNum).debug(false).headerLimiter(0).readBufferSize(1024 * 4).writeBufferSize(1024 * 4);
+        HttpServer bootstrap = Feat.createHttpServer(opt -> opt.threadNum(cpuNum).debug(false).headerLimiter(0).readBufferSize(1024 * 4).writeBufferSize(1024 * 4));
         bootstrap.httpHandler(routeHandle).setPort(8080).start();
     }
 }
