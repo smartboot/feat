@@ -56,7 +56,7 @@ public class WebSocketUpgradeHandler extends HttpUpgradeHandler {
                 LOGGER.debug("check wsIdle monitor");
                 if (System.currentTimeMillis() - request.getLatestIo() > request.getConfiguration().getWsIdleTimeout() && webSocketRequest != null) {
                     LOGGER.debug("close ws connection by idle monitor");
-                    webSocketResponse.close();
+                    webSocketResponse.close(CloseReason.UNEXPECTED_ERROR, "ws idle timeout");
                 }
             }, request.getConfiguration().getWsIdleTimeout(), TimeUnit.MILLISECONDS);
         }
@@ -85,7 +85,7 @@ public class WebSocketUpgradeHandler extends HttpUpgradeHandler {
                         }
                     } catch (IOException e) {
                         e.printStackTrace();
-                        webSocketResponse.close();
+                        webSocketResponse.close(CloseReason.GOING_AWAY, "io exception");
                     } finally {
                         request.getAioSession().signalRead();
                     }
