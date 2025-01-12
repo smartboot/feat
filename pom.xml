@@ -9,7 +9,7 @@
     <packaging>pom</packaging>
 
     <properties>
-        <smartsocket.version>1.5.56</smartsocket.version>
+        <smartsocket.version>1.5.57</smartsocket.version>
         <feat.version>0.3</feat.version>
     </properties>
 
@@ -159,7 +159,7 @@
                 <executions>
                     <execution>
                         <id>sign-artifacts</id>
-                        <!--                                                                        <phase>verify</phase>-->
+<!--                                                                                                <phase>verify</phase>-->
                         <phase>deploy</phase>
                         <goals>
                             <goal>sign</goal>
