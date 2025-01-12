@@ -49,16 +49,16 @@ public class HttpServer {
     }
 
     public HttpServer httpHandler(Handler handler) {
-        if (handler instanceof HttpServerHandler) {
-            processor.httpServerHandler((HttpServerHandler) handler);
-        } else {
-            processor.httpServerHandler(new HttpServerHandler() {
-                @Override
-                public void handle(HttpRequest request, HttpResponse response) throws Throwable {
-                    handler.handle(request, response);
-                }
-            });
-        }
+        return httpHandler(new HttpServerHandler() {
+            @Override
+            public void handle(HttpRequest request, HttpResponse response) throws Throwable {
+                handler.handle(request, response);
+            }
+        });
+    }
+
+    public HttpServer httpHandler(HttpServerHandler handler) {
+        processor.httpServerHandler(handler);
         return this;
     }
 
