@@ -148,7 +148,7 @@ public class SmartHttpDemo {
         HttpServer bootstrap = new HttpServer();
         //配置HTTP消息处理管道
         bootstrap.httpHandler(routeHandle);
-        bootstrap.configuration().debug(true);
+        bootstrap.options().debug(true);
         //设定服务器配置并启动
         bootstrap.start();
     }

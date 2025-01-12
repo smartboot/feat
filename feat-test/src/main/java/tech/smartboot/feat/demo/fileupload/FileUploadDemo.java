@@ -66,7 +66,7 @@ public class FileUploadDemo {
 
 
         HttpServer bootstrap = new HttpServer();
-        bootstrap.configuration().readBufferSize(1024 * 1024).debug(true);
+        bootstrap.options().readBufferSize(1024 * 1024).debug(true);
         //配置HTTP消息处理管道
         bootstrap.httpHandler(routeHandler);
 

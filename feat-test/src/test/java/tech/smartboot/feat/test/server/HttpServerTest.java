@@ -84,7 +84,7 @@ public class HttpServerTest extends BastTest {
                 outputStream.close();
             }
         }).setPort(SERVER_PORT);
-        bootstrap.configuration().addPlugin(new StreamMonitorPlugin<>(StreamMonitorPlugin.BLUE_TEXT_INPUT_STREAM, StreamMonitorPlugin.RED_TEXT_OUTPUT_STREAM));
+        bootstrap.options().addPlugin(new StreamMonitorPlugin<>(StreamMonitorPlugin.BLUE_TEXT_INPUT_STREAM, StreamMonitorPlugin.RED_TEXT_OUTPUT_STREAM));
         bootstrap.start();
 
         requestUnit = new RequestUnit();
@@ -224,7 +224,7 @@ public class HttpServerTest extends BastTest {
 
     @Test
     public void testPost2() throws ExecutionException, InterruptedException {
-        bootstrap.configuration().readBufferSize(2 * 1024 * 1024);
+        bootstrap.options().readBufferSize(2 * 1024 * 1024);
         HttpClient httpClient = getHttpClient();
         HttpPost httpPost = httpClient.post(requestUnit.getUri());
         requestUnit.getHeaders().forEach((name, value) -> httpPost.header().add(name, value));

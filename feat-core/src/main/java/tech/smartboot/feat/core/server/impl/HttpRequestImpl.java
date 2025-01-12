@@ -8,25 +8,36 @@
 
 package tech.smartboot.feat.core.server.impl;
 
+import org.smartboot.socket.util.Attachment;
+import tech.smartboot.feat.core.common.Cookie;
+import tech.smartboot.feat.core.common.Reset;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
+import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
 import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.common.io.BodyInputStream;
 import tech.smartboot.feat.core.common.multipart.MultipartConfig;
 import tech.smartboot.feat.core.common.multipart.Part;
+import tech.smartboot.feat.core.server.HttpRequest;
 
+import javax.net.ssl.SSLEngine;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Enumeration;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
  * @author 三刀
  * @version V1.0 , 2018/8/31
  */
-public class HttpRequestImpl extends AbstractRequest {
+public class HttpRequestImpl implements HttpRequest, Reset {
+    public final Request request;
     /**
      * 释放维持长连接
      */
@@ -37,7 +48,7 @@ public class HttpRequestImpl extends AbstractRequest {
     private final HttpResponseImpl response;
 
     HttpRequestImpl(Request request) {
-        super(request);
+        this.request = request;
         this.response = new HttpResponseImpl(this);
     }
 
@@ -60,7 +71,7 @@ public class HttpRequestImpl extends AbstractRequest {
 
     @Override
     public Map<String, String> getTrailerFields() {
-        return request.getTrailerFields() == null ? super.getTrailerFields() : request.getTrailerFields();
+        return request.getTrailerFields() == null ? Collections.emptyMap() : request.getTrailerFields();
     }
 
     @Override
@@ -75,7 +86,7 @@ public class HttpRequestImpl extends AbstractRequest {
         //升级后取消http空闲监听
         request.cancelHttpIdleTask();
         upgradeHandler.setRequest(request);
-        upgradeHandler.init(this,response);
+        upgradeHandler.init(this, response);
         upgradeHandler.onBodyStream(request.getAioSession().readBuffer());
 
     }
@@ -132,4 +143,143 @@ public class HttpRequestImpl extends AbstractRequest {
         this.parts.add(part);
     }
 
+    @Override
+    public SSLEngine getSslEngine() {
+        return request.getSslEngine();
+    }
+
+    @Override
+    public final String getHeader(String headName) {
+        return request.getHeader(headName);
+    }
+
+    public final String getHeader(HeaderNameEnum headName) {
+        return request.getHeader(headName);
+    }
+
+    @Override
+    public final Collection<String> getHeaders(String name) {
+        return request.getHeaders(name);
+    }
+
+    @Override
+    public final Collection<String> getHeaderNames() {
+        return request.getHeaderNames();
+    }
+
+
+    @Override
+    public final String getRequestURI() {
+        return request.getRequestURI();
+    }
+
+    @Override
+    public final HttpProtocolEnum getProtocol() {
+        return request.getProtocol();
+    }
+
+    @Override
+    public final String getMethod() {
+        return request.getMethod();
+    }
+
+    @Override
+    public final String getScheme() {
+        return request.getScheme();
+    }
+
+    @Override
+    public final String getRequestURL() {
+        return request.getRequestURL();
+    }
+
+    @Override
+    public final String getQueryString() {
+        return request.getQueryString();
+    }
+
+    @Override
+    public final String getContentType() {
+        return request.getContentType();
+    }
+
+    @Override
+    public final long getContentLength() {
+        return request.getContentLength();
+    }
+
+    @Override
+    public final String getParameter(String name) {
+        return request.getParameter(name);
+    }
+
+    @Override
+    public final Map<String, String[]> getParameters() {
+        return request.getParameters();
+    }
+
+    @Override
+    public final String[] getParameterValues(String name) {
+        return request.getParameters().get(name);
+    }
+
+    @Override
+    public final String getRemoteAddr() {
+        return request.getRemoteAddr();
+    }
+
+    @Override
+    public final InetSocketAddress getRemoteAddress() {
+        return request.getRemoteAddress();
+    }
+
+    @Override
+    public final InetSocketAddress getLocalAddress() {
+        return request.getLocalAddress();
+    }
+
+    @Override
+    public final String getRemoteHost() {
+        return request.getRemoteHost();
+    }
+
+    @Override
+    public final Locale getLocale() {
+        return request.getLocale();
+    }
+
+    @Override
+    public final Enumeration<Locale> getLocales() {
+        return request.getLocales();
+    }
+
+    @Override
+    public final String getCharacterEncoding() {
+        return request.getCharacterEncoding();
+    }
+
+    public final Request getRequest() {
+        return request;
+    }
+
+    @Override
+    public Cookie[] getCookies() {
+        return request.getCookies();
+    }
+
+    @Override
+    public Attachment getAttachment() {
+        return request.getAttachment();
+    }
+
+    @Override
+    public void setAttachment(Attachment attachment) {
+        request.setAttachment(attachment);
+    }
+
+
+    @Override
+    public final boolean isSecure() {
+        return request.isSecure();
+    }
 }

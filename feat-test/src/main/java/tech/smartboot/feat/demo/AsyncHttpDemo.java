@@ -46,7 +46,7 @@ public class AsyncHttpDemo {
 
             }
         });
-        bootstrap.configuration().debug(true);
+        bootstrap.options().debug(true);
         bootstrap.setPort(8080).start();
     }
 }

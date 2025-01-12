@@ -55,7 +55,7 @@ public class HttpsDemo {
                 sslEngine.setSSLParameters(sslParameters);
             }
         });
-        bootstrap.configuration()
+        bootstrap.options()
                 .addPlugin(sslPlugin)
                 .addPlugin(new StreamMonitorPlugin<>())
                 .debug(true);

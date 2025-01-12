@@ -84,7 +84,7 @@ public class HttpServerTest extends BastTest {
                 outputStream.close();
             }
         }).setPort(SERVER_PORT);
-        bootstrap.configuration().addPlugin(new StreamMonitorPlugin<>(StreamMonitorPlugin.BLUE_TEXT_INPUT_STREAM, StreamMonitorPlugin.RED_TEXT_OUTPUT_STREAM));
+        bootstrap.options().addPlugin(new StreamMonitorPlugin<>(StreamMonitorPlugin.BLUE_TEXT_INPUT_STREAM, StreamMonitorPlugin.RED_TEXT_OUTPUT_STREAM));
         bootstrap.start();
 
         requestUnit = new RequestUnit();
@@ -104,7 +104,7 @@ public class HttpServerTest extends BastTest {
 
     @Test
     public void testGet() throws ExecutionException, InterruptedException {
-        bootstrap.configuration().getWafConfiguration()
+        bootstrap.options().getWafConfiguration()
                 .addAllowMethod(HttpMethodEnum.POST.getMethod());
         HttpClient httpClient = getHttpClient();
         StringBuilder uriStr = new StringBuilder(requestUnit.getUri()).append("?");
@@ -117,7 +117,7 @@ public class HttpServerTest extends BastTest {
 
     @Test
     public void testGet1() throws ExecutionException, InterruptedException {
-        bootstrap.configuration().getWafConfiguration()
+        bootstrap.options().getWafConfiguration()
                 .addAllowMethod(HttpMethodEnum.GET.getMethod());
         HttpClient httpClient = getHttpClient();
         StringBuilder uriStr = new StringBuilder(requestUnit.getUri()).append("?");
@@ -138,27 +138,27 @@ public class HttpServerTest extends BastTest {
         JSONObject jsonObject = basicCheck(httpGet.done().get(), requestUnit);
         Assert.assertEquals(HttpMethodEnum.GET.getMethod(), jsonObject.get(KEY_METHOD));
 
-        bootstrap.configuration().getWafConfiguration()
+        bootstrap.options().getWafConfiguration()
                 .addAllowUriPrefix("/aa");
         HttpGet httpGet1 = httpClient.get(uriStr.toString());
         requestUnit.getHeaders().forEach((name, value) -> httpGet1.header().add(name, value));
         Assert.assertEquals(HttpStatus.BAD_REQUEST.value(), httpGet1.done().get().getStatus());
 
-        bootstrap.configuration().getWafConfiguration()
+        bootstrap.options().getWafConfiguration()
                 .getAllowUriPrefixes().add("/hello");
         HttpGet httpGet2 = httpClient.get(uriStr.toString());
         requestUnit.getHeaders().forEach((name, value) -> httpGet2.header().add(name, value));
         jsonObject = basicCheck(httpGet2.done().get(), requestUnit);
         Assert.assertEquals(HttpMethodEnum.GET.getMethod(), jsonObject.get(KEY_METHOD));
 
-        bootstrap.configuration().getWafConfiguration()
+        bootstrap.options().getWafConfiguration()
                 .getAllowUriPrefixes().clear();
-        bootstrap.configuration().getWafConfiguration().getAllowUriSuffixes().add("/aa");
+        bootstrap.options().getWafConfiguration().getAllowUriSuffixes().add("/aa");
         HttpGet httpGet3 = httpClient.get(uriStr.toString());
         requestUnit.getHeaders().forEach((name, value) -> httpGet3.header().add(name, value));
         Assert.assertEquals(HttpStatus.BAD_REQUEST.value(), httpGet3.done().get().getStatus());
 
-        bootstrap.configuration().getWafConfiguration()
+        bootstrap.options().getWafConfiguration()
                 .getAllowUriSuffixes().add("llo");
         HttpGet httpGet4 = httpClient.get(uriStr.toString());
         requestUnit.getHeaders().forEach((name, value) -> httpGet4.header().add(name, value));

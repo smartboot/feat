@@ -76,7 +76,7 @@ public class HttpServer {
      *
      * @return
      */
-    public FeatOptions configuration() {
+    public FeatOptions options() {
         return options;
     }
 

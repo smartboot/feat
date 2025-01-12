@@ -33,7 +33,7 @@ public class MultipartTest {
     @Before
     public void init() {
         bootstrap = new HttpServer();
-        bootstrap.configuration().debug(true);
+        bootstrap.options().debug(true);
         HttpRouteHandler routeHandle = new HttpRouteHandler();
         routeHandle.route("/formdata", new HttpServerHandler() {
             @Override

@@ -33,7 +33,7 @@ public class SSEDemo {
                 }, 1, 1, TimeUnit.SECONDS);
             }
         });
-        bootstrap.bootstrap().configuration().debug(true);
+        bootstrap.bootstrap().options().debug(true);
         bootstrap.bootstrap().setPort(8080).start();
     }
 }

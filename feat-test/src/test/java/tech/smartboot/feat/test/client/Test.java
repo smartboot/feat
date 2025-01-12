@@ -45,7 +45,7 @@ public class Test {
         });
         bootstrap
                 .httpHandler(route)
-                .configuration()
+                .options()
                 .debug(true)
                 .bannerEnabled(true)
                 .serverName("fun-car");

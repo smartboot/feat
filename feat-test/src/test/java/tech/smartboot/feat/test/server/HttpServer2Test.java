@@ -50,7 +50,7 @@ public class HttpServer2Test extends BastTest {
     @Before
     public void init() {
         bootstrap = new HttpServer();
-        bootstrap.configuration().debug(true);
+        bootstrap.options().debug(true);
         bootstrap.start();
         httpClient = getHttpClient();
     }

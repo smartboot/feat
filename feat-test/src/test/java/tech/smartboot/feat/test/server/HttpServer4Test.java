@@ -82,8 +82,8 @@ public class HttpServer4Test extends BastTest {
                 outputStream.close();
             }
         }).setPort(SERVER_PORT);
-        bootstrap.configuration().readBufferSize(16);
-        bootstrap.configuration().addPlugin(new StreamMonitorPlugin<>(StreamMonitorPlugin.BLUE_TEXT_INPUT_STREAM, StreamMonitorPlugin.RED_TEXT_OUTPUT_STREAM));
+        bootstrap.options().readBufferSize(16);
+        bootstrap.options().addPlugin(new StreamMonitorPlugin<>(StreamMonitorPlugin.BLUE_TEXT_INPUT_STREAM, StreamMonitorPlugin.RED_TEXT_OUTPUT_STREAM));
         bootstrap.start();
 
         requestUnit = new RequestUnit();

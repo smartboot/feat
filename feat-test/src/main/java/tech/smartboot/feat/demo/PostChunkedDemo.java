@@ -12,7 +12,7 @@ import java.io.IOException;
 public class PostChunkedDemo {
     public static void main(String[] args) throws IOException {
         HttpServer bootstrap = new HttpServer();
-        bootstrap.configuration().debug(true);
+        bootstrap.options().debug(true);
         bootstrap.httpHandler(new HttpServerHandler() {
             @Override
             public void handle(HttpRequest request, HttpResponse response) throws Throwable {

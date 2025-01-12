@@ -44,7 +44,7 @@ public class RestfulDemo {
     public static void main(String[] args) throws Exception {
         RestfulBootstrap bootstrap = RestfulBootstrap.getInstance().controller(RestfulDemo.class);
         bootstrap.setAsyncExecutor(Executors.newCachedThreadPool());
-        bootstrap.bootstrap().configuration().debug(false);
+        bootstrap.bootstrap().options().debug(false);
         bootstrap.bootstrap().setPort(8080).start();
     }
 }

@@ -51,7 +51,7 @@ public class HttpReconnectTest {
                 response.close();
             }
         });
-        httpServer.configuration().debug(true);
+        httpServer.options().debug(true);
         httpServer.httpHandler(routeHandler).setPort(8080).start();
     }
 

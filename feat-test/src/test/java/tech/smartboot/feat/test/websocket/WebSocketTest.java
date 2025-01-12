@@ -40,7 +40,7 @@ public class WebSocketTest extends BastTest {
                 });
             }
         });
-        bootstrap.configuration().setWsIdleTimeout(idleTimeout).debug(true);
+        bootstrap.options().setWsIdleTimeout(idleTimeout).debug(true);
         bootstrap.setPort(port).start();
     }
 

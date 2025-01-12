@@ -70,7 +70,7 @@ public class GzipHttpDemo {
         });
         HttpServer bootstrap = new HttpServer();
         bootstrap.httpHandler(routeHandle);
-        bootstrap.configuration().writeBufferSize(1024 * 1024).debug(true);
+        bootstrap.options().writeBufferSize(1024 * 1024).debug(true);
         bootstrap.setPort(8080).start();
     }
 }
