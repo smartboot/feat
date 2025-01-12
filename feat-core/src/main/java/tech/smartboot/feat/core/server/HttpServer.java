@@ -10,6 +10,7 @@ package tech.smartboot.feat.core.server;
 
 import org.smartboot.socket.buffer.BufferPagePool;
 import org.smartboot.socket.transport.AioQuickServer;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
 import tech.smartboot.feat.core.common.enums.HttpMethodEnum;
@@ -22,9 +23,9 @@ public class HttpServer {
      * http://patorjk.com/software/taag/
      * Font Name: Varsity
      */
-    private static final String BANNER =
-            " ________   ________        _        _________  \n" + "|_   __  | |_   __  |      / \\      |  _   _  | \n" + "  | |_ \\_|   | |_ \\_|     / _ \\     |_/ " + "|" + " | \\_| \n" + "  | "
-                    + " _|      |  _| _     / ___ \\        | |     \n" + " _| |_      _| |__/ |  _/ /   \\ \\_     _| |_    \n" + "|_____|    |________| |____| |____|   |_____|   \n";
+//    private static final String BANNER =
+//            " ________   ________        _        _________  \n" + "|_   __  | |_   __  |      / \\      |  _   _  | \n" + "  | |_ \\_|   | |_ \\_|     / _ \\     |_/ " + "|" + " | \\_| \n" + "  | "
+//                    + " _|      |  _| _     / ___ \\        | |     \n" + " _| |_      _| |__/ |  _/ /   \\ \\_     _| |_    \n" + "|_____|    |________| |____| |____|   |_____|   \n";
 
 
     /**
@@ -64,22 +65,20 @@ public class HttpServer {
      *
      * @return
      */
-    public FeatOptions options() {
+    public final FeatOptions options() {
         return options;
     }
 
-    public void listen() {
+    public final void listen() {
         listen(8080);
     }
 
-    public void listen(int port) {
+    public final void listen(int port) {
         listen(null, port);
     }
 
     /**
      * 启动HTTP服务
-     *
-     * @throws RuntimeException
      */
     public synchronized void listen(String host, int port) {
         if (started) {
@@ -104,11 +103,8 @@ public class HttpServer {
             }
 
             if (options.isBannerEnabled()) {
-                System.out.println(BANNER + "\r\n :: Feat :: (" + FeatOptions.VERSION + ")");
-                System.out.println("Technical Support:");
-                System.out.println(" - Document: https://smartboot.tech]");
-//                System.out.println(" - Gitee: https://gitee.com/smartboot/feat");
-                System.out.println(" - Github: https://github.com/smartboot/feat");
+                System.out.println(FeatUtils.getResourceAsString("feat-banner.txt") + "\r\n :: Feat :: (" + FeatOptions.VERSION + ")");
+                System.out.println(FeatUtils.getResourceAsString("feat-support.txt"));
                 System.out.println("\u001B[32m\uD83C\uDF89Congratulations, the feat startup is successful" + ".\u001B[0m");
             }
         } catch (Throwable e) {

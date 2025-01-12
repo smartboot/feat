@@ -5,6 +5,12 @@
     },
     {
       "pattern": "favicon.ico"
+    },
+    {
+      "pattern": "feat-banner.txt"
+    },
+    {
+      "pattern": "feat-support.txt"
     }
   ]
 }
