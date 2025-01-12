@@ -28,7 +28,7 @@ import java.util.List;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2021/2/22
  */
-public class HttpServerConfiguration {
+public class FeatOptions {
     public static final String VERSION = "v0.3";
 
     /**
@@ -115,7 +115,7 @@ public class HttpServerConfiguration {
      * @param readBufferSize
      * @return
      */
-    public HttpServerConfiguration readBufferSize(int readBufferSize) {
+    public FeatOptions readBufferSize(int readBufferSize) {
         this.readBufferSize = readBufferSize;
         return this;
     }
@@ -124,7 +124,7 @@ public class HttpServerConfiguration {
         return threadNum;
     }
 
-    public HttpServerConfiguration threadNum(int threadNum) {
+    public FeatOptions threadNum(int threadNum) {
         this.threadNum = threadNum;
         return this;
     }
@@ -133,7 +133,7 @@ public class HttpServerConfiguration {
         return writeBufferSize;
     }
 
-    public HttpServerConfiguration writeBufferSize(int writeBufferSize) {
+    public FeatOptions writeBufferSize(int writeBufferSize) {
         this.writeBufferSize = writeBufferSize;
         return this;
     }
@@ -142,7 +142,7 @@ public class HttpServerConfiguration {
         return host;
     }
 
-    public HttpServerConfiguration host(String host) {
+    public FeatOptions host(String host) {
         this.host = host;
         return this;
     }
@@ -151,7 +151,7 @@ public class HttpServerConfiguration {
         return bannerEnabled;
     }
 
-    public HttpServerConfiguration bannerEnabled(boolean bannerEnabled) {
+    public FeatOptions bannerEnabled(boolean bannerEnabled) {
         this.bannerEnabled = bannerEnabled;
         return this;
     }
@@ -165,20 +165,20 @@ public class HttpServerConfiguration {
      *
      * @param headerLimiter
      */
-    public HttpServerConfiguration headerLimiter(int headerLimiter) {
+    public FeatOptions headerLimiter(int headerLimiter) {
         this.headerLimiter = headerLimiter;
         return this;
     }
 
-    public HttpServerConfiguration proxyProtocolSupport() {
-        plugins.add(0, new ProxyProtocolPlugin());
+    public FeatOptions proxyProtocolSupport() {
+        plugins.add(0, new ProxyProtocolPlugin<>());
         return this;
     }
 
     /**
      * 启用 debug 模式后会打印码流
      */
-    public HttpServerConfiguration debug(boolean debug) {
+    public FeatOptions debug(boolean debug) {
         plugins.removeIf(plugin -> plugin instanceof StreamMonitorPlugin);
         if (debug) {
             addPlugin(new StreamMonitorPlugin<>(StreamMonitorPlugin.BLUE_TEXT_INPUT_STREAM,
@@ -191,7 +191,7 @@ public class HttpServerConfiguration {
         return serverName;
     }
 
-    public HttpServerConfiguration serverName(String server) {
+    public FeatOptions serverName(String server) {
         if (server == null) {
             this.serverName = null;
         } else {
@@ -225,7 +225,7 @@ public class HttpServerConfiguration {
         return headerNameByteTree;
     }
 
-    public HttpServerConfiguration addPlugin(Plugin<Request> plugin) {
+    public FeatOptions addPlugin(Plugin<Request> plugin) {
         plugins.add(plugin);
         if (plugin instanceof SslPlugin) {
             secure = true;
@@ -245,7 +245,7 @@ public class HttpServerConfiguration {
         this.maxRequestSize = maxRequestSize;
     }
 
-    public HttpServerConfiguration addPlugin(List<Plugin<Request>> plugins) {
+    public FeatOptions addPlugin(List<Plugin<Request>> plugins) {
         this.plugins.addAll(plugins);
         return this;
     }
@@ -258,7 +258,7 @@ public class HttpServerConfiguration {
         return group;
     }
 
-    public HttpServerConfiguration group(AsynchronousChannelGroup group) {
+    public FeatOptions group(AsynchronousChannelGroup group) {
         this.group = group;
         return this;
     }
@@ -271,7 +271,7 @@ public class HttpServerConfiguration {
         return httpIdleTimeout;
     }
 
-    public HttpServerConfiguration setHttpIdleTimeout(long httpIdleTimeout) {
+    public FeatOptions setHttpIdleTimeout(long httpIdleTimeout) {
         this.httpIdleTimeout = httpIdleTimeout;
         return this;
     }
@@ -280,7 +280,7 @@ public class HttpServerConfiguration {
         return wsIdleTimeout;
     }
 
-    public HttpServerConfiguration setWsIdleTimeout(long wsIdleTimeout) {
+    public FeatOptions setWsIdleTimeout(long wsIdleTimeout) {
         this.wsIdleTimeout = wsIdleTimeout;
         return this;
     }
@@ -289,7 +289,7 @@ public class HttpServerConfiguration {
         return lowMemory;
     }
 
-    public HttpServerConfiguration setLowMemory(boolean lowMemory) {
+    public FeatOptions setLowMemory(boolean lowMemory) {
         this.lowMemory = lowMemory;
         return this;
     }

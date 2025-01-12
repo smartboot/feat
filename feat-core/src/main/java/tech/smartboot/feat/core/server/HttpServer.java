@@ -22,16 +22,17 @@ public class HttpServer {
      * http://patorjk.com/software/taag/
      * Font Name: Varsity
      */
-    private static final String BANNER = " ________   ________        _        _________  \n" + "|_   __  | |_   __  |      / \\      |  _   _  | \n" + "  | |_ \\_|   | |_ \\_|     / _ \\     |_/ " +
-            "|" + " | \\_| \n" + "  |  _|      |  _| _     / ___ \\        | |     \n" + " _| |_      _| |__/ |  _/ /   \\ \\_     _| |_    \n" + "|_____|    |________| |____| |____|   |_____|   \n";
+    private static final String BANNER =
+            " ________   ________        _        _________  \n" + "|_   __  | |_   __  |      / \\      |  _   _  | \n" + "  | |_ \\_|   | |_ \\_|     / _ \\     |_/ " + "|" + " | \\_| \n" + "  | "
+                    + " _|      |  _| _     / ___ \\        | |     \n" + " _| |_      _| |__/ |  _/ /   \\ \\_     _| |_    \n" + "|_____|    |________| |____| |____|   |_____|   \n";
 
 
     /**
      * http消息解码器
      */
     private final HttpMessageProcessor processor;
-    private final HttpServerConfiguration configuration = new HttpServerConfiguration();
-    private final HttpRequestProtocol protocol = new HttpRequestProtocol(configuration);
+    private final FeatOptions options;
+    private final HttpRequestProtocol protocol;
     private AioQuickServer server;
     /**
      * Http服务端口号
@@ -41,12 +42,13 @@ public class HttpServer {
     private BufferPagePool bufferPagePool;
 
     public HttpServer() {
-        this(new HttpMessageProcessor());
+        this(new FeatOptions());
     }
 
-    public HttpServer(HttpMessageProcessor processor) {
-        this.processor = processor;
-        this.processor.setConfiguration(configuration);
+    public HttpServer(FeatOptions options) {
+        this.options = options;
+        this.processor = new HttpMessageProcessor(options);
+        this.protocol = new HttpRequestProtocol(options);
     }
 
     /**
@@ -74,8 +76,8 @@ public class HttpServer {
      *
      * @return
      */
-    public HttpServerConfiguration configuration() {
-        return configuration;
+    public FeatOptions configuration() {
+        return options;
     }
 
     /**
@@ -88,25 +90,25 @@ public class HttpServer {
             throw new RuntimeException("server is running");
         }
         started = true;
-        bufferPagePool = new BufferPagePool(configuration.getThreadNum(), true);
+        bufferPagePool = new BufferPagePool(options.getThreadNum(), true);
         initByteCache();
 
-        configuration.getPlugins().forEach(processor::addPlugin);
+        options.getPlugins().forEach(processor::addPlugin);
 
-        server = new AioQuickServer(configuration.getHost(), port, protocol, processor);
-        server.setThreadNum(configuration.getThreadNum()).setBannerEnabled(false).setReadBufferSize(configuration.getReadBufferSize()).setBufferPagePool(bufferPagePool, bufferPagePool).setWriteBuffer(configuration.getWriteBufferSize(), 16);
-        if (!configuration.isLowMemory()) {
+        server = new AioQuickServer(options.getHost(), port, protocol, processor);
+        server.setThreadNum(options.getThreadNum()).setBannerEnabled(false).setReadBufferSize(options.getReadBufferSize()).setBufferPagePool(bufferPagePool, bufferPagePool).setWriteBuffer(options.getWriteBufferSize(), 16);
+        if (!options.isLowMemory()) {
             server.disableLowMemory();
         }
         try {
-            if (configuration.group() == null) {
+            if (options.group() == null) {
                 server.start();
             } else {
-                server.start(configuration.group());
+                server.start(options.group());
             }
 
-            if (configuration.isBannerEnabled()) {
-                System.out.println(BANNER + "\r\n :: Feat :: (" + HttpServerConfiguration.VERSION + ")");
+            if (options.isBannerEnabled()) {
+                System.out.println(BANNER + "\r\n :: Feat :: (" + FeatOptions.VERSION + ")");
                 System.out.println("Technical Support:");
                 System.out.println(" - Document: https://smartboot.tech]");
 //                System.out.println(" - Gitee: https://gitee.com/smartboot/feat");
@@ -121,25 +123,25 @@ public class HttpServer {
 
     private void initByteCache() {
         for (HttpMethodEnum httpMethodEnum : HttpMethodEnum.values()) {
-            configuration.getByteCache().addNode(httpMethodEnum.getMethod());
+            options.getByteCache().addNode(httpMethodEnum.getMethod());
         }
         for (HttpProtocolEnum httpProtocolEnum : HttpProtocolEnum.values()) {
-            configuration.getByteCache().addNode(httpProtocolEnum.getProtocol(), httpProtocolEnum);
+            options.getByteCache().addNode(httpProtocolEnum.getProtocol(), httpProtocolEnum);
         }
         for (HeaderNameEnum headerNameEnum : HeaderNameEnum.values()) {
-            configuration.getHeaderNameByteTree().addNode(headerNameEnum.getName(), headerNameEnum);
+            options.getHeaderNameByteTree().addNode(headerNameEnum.getName(), headerNameEnum);
         }
         // 缓存一些常用字符串
-        configuration.getByteCache().addNode(HeaderValueEnum.TransferEncoding.CHUNKED);
-        configuration.getByteCache().addNode(HeaderValueEnum.ContentEncoding.GZIP);
-        configuration.getByteCache().addNode(HeaderValueEnum.Connection.UPGRADE);
-        configuration.getByteCache().addNode(HeaderValueEnum.Connection.KEEPALIVE);
-        configuration.getByteCache().addNode(HeaderValueEnum.ContentType.MULTIPART_FORM_DATA);
-        configuration.getByteCache().addNode(HeaderValueEnum.ContentType.APPLICATION_JSON);
-        configuration.getByteCache().addNode(HeaderValueEnum.ContentType.X_WWW_FORM_URLENCODED);
-        configuration.getByteCache().addNode(HeaderValueEnum.ContentType.APPLICATION_JSON_UTF8);
-        configuration.getByteCache().addNode(HeaderValueEnum.ContentType.TEXT_HTML_UTF8);
-        configuration.getByteCache().addNode(HeaderValueEnum.ContentType.TEXT_PLAIN_UTF8);
+        options.getByteCache().addNode(HeaderValueEnum.TransferEncoding.CHUNKED);
+        options.getByteCache().addNode(HeaderValueEnum.ContentEncoding.GZIP);
+        options.getByteCache().addNode(HeaderValueEnum.Connection.UPGRADE);
+        options.getByteCache().addNode(HeaderValueEnum.Connection.KEEPALIVE);
+        options.getByteCache().addNode(HeaderValueEnum.ContentType.MULTIPART_FORM_DATA);
+        options.getByteCache().addNode(HeaderValueEnum.ContentType.APPLICATION_JSON);
+        options.getByteCache().addNode(HeaderValueEnum.ContentType.X_WWW_FORM_URLENCODED);
+        options.getByteCache().addNode(HeaderValueEnum.ContentType.APPLICATION_JSON_UTF8);
+        options.getByteCache().addNode(HeaderValueEnum.ContentType.TEXT_HTML_UTF8);
+        options.getByteCache().addNode(HeaderValueEnum.ContentType.TEXT_PLAIN_UTF8);
     }
 
     /**

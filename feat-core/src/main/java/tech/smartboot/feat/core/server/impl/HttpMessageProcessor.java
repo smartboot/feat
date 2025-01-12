@@ -17,7 +17,7 @@ import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.utils.StringUtils;
-import tech.smartboot.feat.core.server.HttpServerConfiguration;
+import tech.smartboot.feat.core.server.FeatOptions;
 import tech.smartboot.feat.core.server.HttpServerHandler;
 
 import java.io.IOException;
@@ -30,11 +30,14 @@ import java.util.Objects;
  * @author 三刀
  * @version V1.0 , 2018/6/10
  */
-public class HttpMessageProcessor extends AbstractMessageProcessor<Request> {
+public final class HttpMessageProcessor extends AbstractMessageProcessor<Request> {
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpMessageProcessor.class);
     private static final int MAX_LENGTH = 255 * 1024;
-    private HttpServerConfiguration configuration;
+    private final FeatOptions options;
 
+    public HttpMessageProcessor(FeatOptions options) {
+        this.options = options;
+    }
 
     @Override
     public void process0(AioSession session, Request request) {
@@ -80,7 +83,7 @@ public class HttpMessageProcessor extends AbstractMessageProcessor<Request> {
             }
             response.setHttpStatus(httpStatus);
             OutputStream outputStream = response.getOutputStream();
-            outputStream.write(("<center><h1>" + httpStatus.value() + " " + httpStatus.getReasonPhrase() + "</h1>" + desc + "<hr/><a target='_blank' href='https://smartboot.tech/'>feat</a>/" + HttpServerConfiguration.VERSION + "&nbsp;|&nbsp; <a target='_blank' href='https://gitee.com/smartboot/feat'>Gitee</a></center>").getBytes());
+            outputStream.write(("<center><h1>" + httpStatus.value() + " " + httpStatus.getReasonPhrase() + "</h1>" + desc + "<hr/><a target='_blank' href='https://smartboot.tech/'>feat</a>/" + FeatOptions.VERSION + "&nbsp;|&nbsp; <a target='_blank' href='https://gitee.com/smartboot/feat'>Gitee</a></center>").getBytes());
         } catch (IOException e) {
             LOGGER.warn("HttpError response exception", e);
         } finally {
@@ -101,7 +104,7 @@ public class HttpMessageProcessor extends AbstractMessageProcessor<Request> {
         }
         switch (stateMachineEnum) {
             case NEW_SESSION: {
-                session.setAttachment(new Request(configuration, session));
+                session.setAttachment(new Request(options, session));
                 break;
             }
             case PROCESS_EXCEPTION:
@@ -132,7 +135,7 @@ public class HttpMessageProcessor extends AbstractMessageProcessor<Request> {
     }
 
     public void httpServerHandler(HttpServerHandler httpServerHandler) {
-        this.configuration.setHttpServerHandler(Objects.requireNonNull(httpServerHandler));
+        this.options.setHttpServerHandler(Objects.requireNonNull(httpServerHandler));
     }
 
 
@@ -196,9 +199,4 @@ public class HttpMessageProcessor extends AbstractMessageProcessor<Request> {
             request.setRequestURI(originalUri);
         }
     }
-
-    public void setConfiguration(HttpServerConfiguration configuration) {
-        this.configuration = configuration;
-    }
-
 }

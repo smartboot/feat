@@ -26,7 +26,7 @@ import tech.smartboot.feat.core.common.utils.HttpUtils;
 import tech.smartboot.feat.core.common.utils.NumberUtils;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.HttpRequest;
-import tech.smartboot.feat.core.server.HttpServerConfiguration;
+import tech.smartboot.feat.core.server.FeatOptions;
 import tech.smartboot.feat.core.server.ServerHandler;
 
 import javax.net.ssl.SSLEngine;
@@ -61,7 +61,7 @@ abstract class CommonRequest implements Reset {
      * Http请求头
      */
     protected final Map<String, HeaderValue> headers = new HashMap<>();
-    protected final HttpServerConfiguration configuration;
+    protected final FeatOptions configuration;
     /**
      * 请求参数
      */
@@ -107,7 +107,7 @@ abstract class CommonRequest implements Reset {
      */
     protected long latestIo;
 
-    CommonRequest(AioSession aioSession, HttpServerConfiguration configuration) {
+    CommonRequest(AioSession aioSession, FeatOptions configuration) {
         this.aioSession = aioSession;
         this.configuration = configuration;
         this.sslEngine = HttpRequest.SSL_ENGINE_THREAD_LOCAL.get();
@@ -468,7 +468,7 @@ abstract class CommonRequest implements Reset {
         return aioSession;
     }
 
-    public final HttpServerConfiguration getConfiguration() {
+    public final FeatOptions getConfiguration() {
         return configuration;
     }
 
