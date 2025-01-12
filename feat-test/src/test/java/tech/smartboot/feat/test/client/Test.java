@@ -50,8 +50,8 @@ public class Test {
                 .bannerEnabled(true)
                 .serverName("fun-car");
         bootstrap
-                .setPort(8098)
-                .start();
+
+                .listen(8098);
 
 
         HttpClient client = new HttpClient("127.0.0.1", 8098);

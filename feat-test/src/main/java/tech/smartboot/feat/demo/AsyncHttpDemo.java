@@ -8,9 +8,9 @@
 
 package tech.smartboot.feat.demo;
 
-import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
+import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.HttpServerHandler;
 
 import java.io.IOException;
@@ -47,6 +47,6 @@ public class AsyncHttpDemo {
             }
         });
         bootstrap.options().debug(true);
-        bootstrap.setPort(8080).start();
+        bootstrap.listen(8080);
     }
 }

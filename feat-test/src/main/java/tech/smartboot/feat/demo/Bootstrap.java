@@ -36,6 +36,6 @@ public class Bootstrap {
 
         // 定义服务器接受的消息类型以及各类消息对应的处理器
         HttpServer bootstrap = Feat.createHttpServer(opt -> opt.threadNum(cpuNum).debug(false).headerLimiter(0).readBufferSize(1024 * 4).writeBufferSize(1024 * 4));
-        bootstrap.httpHandler(routeHandle).setPort(8080).start();
+        bootstrap.httpHandler(routeHandle).listen(8080);
     }
 }

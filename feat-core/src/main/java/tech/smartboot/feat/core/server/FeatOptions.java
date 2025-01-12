@@ -63,7 +63,6 @@ public class FeatOptions {
      * 服务线程数
      */
     private int threadNum = Math.max(Runtime.getRuntime().availableProcessors(), 2);
-    private String host;
     /**
      * 解析的header数量上限
      */
@@ -135,15 +134,6 @@ public class FeatOptions {
 
     public FeatOptions writeBufferSize(int writeBufferSize) {
         this.writeBufferSize = writeBufferSize;
-        return this;
-    }
-
-    String getHost() {
-        return host;
-    }
-
-    public FeatOptions host(String host) {
-        this.host = host;
         return this;
     }
 

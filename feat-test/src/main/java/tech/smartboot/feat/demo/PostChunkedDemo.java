@@ -22,7 +22,7 @@ public class PostChunkedDemo {
                 }
             }
         });
-        bootstrap.start();
+        bootstrap.listen();
 
         AioQuickClient client = new AioQuickClient("localhost", 8080, (readBuffer, session) -> null,
                 (session, msg) -> {

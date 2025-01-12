@@ -59,6 +59,6 @@ public class HttpsDemo {
                 .addPlugin(sslPlugin)
                 .addPlugin(new StreamMonitorPlugin<>())
                 .debug(true);
-        bootstrap.setPort(8080).start();
+        bootstrap.listen(8080);
     }
 }

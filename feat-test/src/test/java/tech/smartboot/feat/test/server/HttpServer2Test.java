@@ -51,7 +51,7 @@ public class HttpServer2Test extends BastTest {
     public void init() {
         bootstrap = new HttpServer();
         bootstrap.options().debug(true);
-        bootstrap.start();
+        bootstrap.listen(SERVER_PORT);
         httpClient = getHttpClient();
     }
 
@@ -63,7 +63,7 @@ public class HttpServer2Test extends BastTest {
                 response.setContentType("test");
                 response.write("Hello World".getBytes(StandardCharsets.UTF_8));
             }
-        }).setPort(SERVER_PORT);
+        });
         tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.get("/").done().get();
         Assert.assertEquals(httpResponse.getContentType(), "test");
         Assert.assertEquals(httpResponse.getHeader(HeaderNameEnum.TRANSFER_ENCODING.getName()), HeaderValueEnum.TransferEncoding.CHUNKED);
@@ -76,7 +76,7 @@ public class HttpServer2Test extends BastTest {
             public void handle(HttpRequest request, HttpResponse response) throws IOException {
                 response.write("Hello World".getBytes(StandardCharsets.UTF_8));
             }
-        }).setPort(SERVER_PORT);
+        });
         tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.get("/").done().get();
         Assert.assertEquals(httpResponse.getProtocol(), HttpProtocolEnum.HTTP_11.getProtocol());
         Assert.assertEquals(httpResponse.getHeader(HeaderNameEnum.TRANSFER_ENCODING.getName()), HeaderValueEnum.TransferEncoding.CHUNKED);
@@ -89,7 +89,7 @@ public class HttpServer2Test extends BastTest {
             public void handle(HttpRequest request, HttpResponse response) throws IOException {
                 response.write("Hello World".getBytes(StandardCharsets.UTF_8));
             }
-        }).setPort(SERVER_PORT);
+        });
         tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.rest("/").setMethod(HttpMethodEnum.PUT.getMethod()).done().get();
         Assert.assertEquals(httpResponse.getProtocol(), HttpProtocolEnum.HTTP_11.getProtocol());
         Assert.assertEquals(httpResponse.getStatus(), HttpStatus.OK.value());
@@ -103,7 +103,7 @@ public class HttpServer2Test extends BastTest {
                 request.getInputStream().close();
                 response.write("Hello World".getBytes(StandardCharsets.UTF_8));
             }
-        }).setPort(SERVER_PORT);
+        });
         for (int i = 0; i < 10; i++) {
             String body = "hello" + i;
             tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.post("/").header().setContentLength(body.length()).done().body().write(body).done().done().get();
@@ -124,7 +124,7 @@ public class HttpServer2Test extends BastTest {
 //                request.getInputStream().close();
                 response.write(buffer);
             }
-        }).setPort(SERVER_PORT);
+        });
         for (int i = 0; i < 10; i++) {
             String body = "hello" + i;
             tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.post("/").header().keepalive(true).setContentLength(body.length()).done().body().write(body).done().done().get();
@@ -154,7 +154,7 @@ public class HttpServer2Test extends BastTest {
                 }
                 response.write("ok");
             }
-        }).setPort(SERVER_PORT);
+        });
 
         tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.post("/").header().keepalive(true).done().body().formUrlencoded(param).done().get();
         Assert.assertEquals(httpResponse.getProtocol(), HttpProtocolEnum.HTTP_11.getProtocol());

@@ -71,6 +71,6 @@ public class GzipHttpDemo {
         HttpServer bootstrap = new HttpServer();
         bootstrap.httpHandler(routeHandle);
         bootstrap.options().writeBufferSize(1024 * 1024).debug(true);
-        bootstrap.setPort(8080).start();
+        bootstrap.listen(8080);
     }
 }

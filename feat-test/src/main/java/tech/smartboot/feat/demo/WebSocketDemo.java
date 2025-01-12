@@ -52,6 +52,6 @@ public class WebSocketDemo {
         HttpServer bootstrap = new HttpServer();
         bootstrap.options().setWsIdleTimeout(5000).debug(true);
         bootstrap.httpHandler(routeHandle);
-        bootstrap.start();
+        bootstrap.listen();
     }
 }

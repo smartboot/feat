@@ -41,7 +41,7 @@ public class WebSocketTest extends BastTest {
             }
         });
         bootstrap.options().setWsIdleTimeout(idleTimeout).debug(true);
-        bootstrap.setPort(port).start();
+        bootstrap.listen(port);
     }
 
     @Test

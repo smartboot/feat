@@ -81,10 +81,10 @@ public class HttpServer4Test extends BastTest {
                 outputStream.write(jsonObject.toJSONString().getBytes(StandardCharsets.UTF_8));
                 outputStream.close();
             }
-        }).setPort(SERVER_PORT);
+        });
         bootstrap.options().readBufferSize(16);
         bootstrap.options().addPlugin(new StreamMonitorPlugin<>(StreamMonitorPlugin.BLUE_TEXT_INPUT_STREAM, StreamMonitorPlugin.RED_TEXT_OUTPUT_STREAM));
-        bootstrap.start();
+        bootstrap.listen(SERVER_PORT);
 
         requestUnit = new RequestUnit();
         requestUnit.setUri("/hello");

@@ -34,6 +34,6 @@ public class SSEDemo {
             }
         });
         bootstrap.bootstrap().options().debug(true);
-        bootstrap.bootstrap().setPort(8080).start();
+        bootstrap.bootstrap().listen(8080);
     }
 }

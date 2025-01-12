@@ -138,14 +138,14 @@ public class HttpPostTest {
         });
 
         httpServer = new HttpServer();
-        httpServer.httpHandler(routeHandle).setPort(8080).start();
+        httpServer.httpHandler(routeHandle).listen(8080);
 
         SslPlugin sslPlugin =
                 new SslPlugin(new ServerSSLContextFactory(HttpPostTest.class.getClassLoader().getResourceAsStream(
                         "server.keystore"), "123456", "123456"), ClientAuth.NONE);
         httpsBootstrap = new HttpServer();
         httpsBootstrap.options().addPlugin(sslPlugin);
-        httpsBootstrap.httpHandler(routeHandle).setPort(8888).start();
+        httpsBootstrap.httpHandler(routeHandle).listen(8888);
     }
 
     @Test

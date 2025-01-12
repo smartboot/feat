@@ -25,6 +25,6 @@ public class FileSmartHttp {
         bootstrap.httpHandler(new HttpStaticResourceHandler(webdir));
 
         //设定服务器配置并启动
-        bootstrap.start();
+        bootstrap.listen();
     }
 }

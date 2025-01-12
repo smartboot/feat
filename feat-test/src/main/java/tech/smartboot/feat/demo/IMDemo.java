@@ -85,6 +85,6 @@ public class IMDemo {
         bootstrap.httpHandler(routeHandle);
 
         //设定服务器配置并启动
-        bootstrap.start();
+        bootstrap.listen();
     }
 }

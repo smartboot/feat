@@ -45,10 +45,9 @@ public class RestfulServer2Test extends BastTest {
     @Before
     public void init() throws Exception {
         bootstrap = RestfulBootstrap.getInstance().scan("tech.smartboot.feat.test.restful").bootstrap();
-        bootstrap.setPort(SERVER_PORT);
         bootstrap.options().addPlugin(new StreamMonitorPlugin<>((asynchronousSocketChannel, bytes) -> System.out.println(new String(bytes)),
                 (asynchronousSocketChannel, bytes) -> System.out.println(new String(bytes))));
-        bootstrap.start();
+        bootstrap.listen(SERVER_PORT);
     }
 
     @Test

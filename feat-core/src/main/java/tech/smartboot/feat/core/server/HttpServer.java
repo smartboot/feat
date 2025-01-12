@@ -34,10 +34,6 @@ public class HttpServer {
     private final FeatOptions options;
     private final HttpRequestProtocol protocol;
     private AioQuickServer server;
-    /**
-     * Http服务端口号
-     */
-    private int port = 8080;
     private boolean started = false;
     private BufferPagePool bufferPagePool;
 
@@ -49,14 +45,6 @@ public class HttpServer {
         this.options = options;
         this.processor = new HttpMessageProcessor(options);
         this.protocol = new HttpRequestProtocol(options);
-    }
-
-    /**
-     * Http服务端口号
-     */
-    public HttpServer setPort(int port) {
-        this.port = port;
-        return this;
     }
 
     /**
@@ -80,12 +68,20 @@ public class HttpServer {
         return options;
     }
 
+    public void listen() {
+        listen(8080);
+    }
+
+    public void listen(int port) {
+        listen(null, port);
+    }
+
     /**
      * 启动HTTP服务
      *
      * @throws RuntimeException
      */
-    public synchronized void start() {
+    public synchronized void listen(String host, int port) {
         if (started) {
             throw new RuntimeException("server is running");
         }
@@ -95,7 +91,7 @@ public class HttpServer {
 
         options.getPlugins().forEach(processor::addPlugin);
 
-        server = new AioQuickServer(options.getHost(), port, protocol, processor);
+        server = new AioQuickServer(host, port, protocol, processor);
         server.setThreadNum(options.getThreadNum()).setBannerEnabled(false).setReadBufferSize(options.getReadBufferSize()).setBufferPagePool(bufferPagePool, bufferPagePool).setWriteBuffer(options.getWriteBufferSize(), 16);
         if (!options.isLowMemory()) {
             server.disableLowMemory();

@@ -82,7 +82,7 @@ public class HttpURLTest {
             }
         });
 
-        httpServer.httpHandler(routeHandle).setPort(8080).start();
+        httpServer.httpHandler(routeHandle).listen(8080);
     }
 
     @Test

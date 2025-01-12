@@ -86,7 +86,7 @@ public class MultipartTest {
                 }
             }
         });
-        bootstrap.httpHandler(routeHandle).setPort(8080).start();
+        bootstrap.httpHandler(routeHandle).listen(8080);
     }
 
     @Test

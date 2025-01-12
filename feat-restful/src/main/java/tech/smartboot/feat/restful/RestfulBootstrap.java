@@ -1,11 +1,11 @@
 package tech.smartboot.feat.restful;
 
-import tech.smartboot.feat.restful.context.ApplicationContext;
-import tech.smartboot.feat.restful.handler.RestfulHandler;
-import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
+import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.HttpServerHandler;
+import tech.smartboot.feat.restful.context.ApplicationContext;
+import tech.smartboot.feat.restful.handler.RestfulHandler;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -20,7 +20,7 @@ public class RestfulBootstrap {
     private final ApplicationContext applicationContext = new ApplicationContext();
     private final HttpServer httpServer = new HttpServer() {
         @Override
-        public void start() {
+        public void listen(String host, int port) {
             try {
                 applicationContext.start();
                 applicationContext.getControllers().forEach(restfulHandler::addInterceptor);
@@ -29,7 +29,7 @@ public class RestfulBootstrap {
                 throw new IllegalStateException("start application exception", e);
             }
 
-            super.start();
+            super.listen(host, port);
         }
 
         @Override

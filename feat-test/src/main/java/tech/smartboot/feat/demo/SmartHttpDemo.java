@@ -150,6 +150,6 @@ public class SmartHttpDemo {
         bootstrap.httpHandler(routeHandle);
         bootstrap.options().debug(true);
         //设定服务器配置并启动
-        bootstrap.start();
+        bootstrap.listen();
     }
 }

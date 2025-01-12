@@ -45,6 +45,6 @@ public class RestfulDemo {
         RestfulBootstrap bootstrap = RestfulBootstrap.getInstance().controller(RestfulDemo.class);
         bootstrap.setAsyncExecutor(Executors.newCachedThreadPool());
         bootstrap.bootstrap().options().debug(false);
-        bootstrap.bootstrap().setPort(8080).start();
+        bootstrap.bootstrap().listen(8080);
     }
 }

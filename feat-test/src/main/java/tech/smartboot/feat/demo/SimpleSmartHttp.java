@@ -32,6 +32,6 @@ public class SimpleSmartHttp {
                 }
                 response.write("hello feat<br/>".getBytes());
             }
-        }).setPort(8080).start();
+        }).listen(8080);
     }
 }
