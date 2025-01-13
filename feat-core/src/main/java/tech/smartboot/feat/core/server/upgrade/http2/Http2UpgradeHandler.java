@@ -17,7 +17,6 @@ import tech.smartboot.feat.core.common.enums.HttpStatus;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.impl.AbstractResponse;
-import tech.smartboot.feat.core.server.impl.Http2Endpoint;
 import tech.smartboot.feat.core.server.impl.HttpMessageProcessor;
 import tech.smartboot.feat.core.server.impl.HttpUpgradeHandler;
 import tech.smartboot.feat.core.server.impl.HttpEndpoint;

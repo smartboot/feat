@@ -6,9 +6,10 @@
  * Author: sandao (zhengjunweimail@163.com)
  ******************************************************************************/
 
-package tech.smartboot.feat.core.server.impl;
+package tech.smartboot.feat.core.server.upgrade.http2;
 
 import tech.smartboot.feat.core.common.Cookie;
+import tech.smartboot.feat.core.server.impl.AbstractResponse;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -19,7 +20,7 @@ import java.util.List;
  * @author 三刀
  * @version V1.0 , 2018/2/3
  */
-class Http2ResponseImpl extends AbstractResponse {
+public class Http2ResponseImpl extends AbstractResponse {
     private List<Cookie> cookies = Collections.emptyList();
 
     public Http2ResponseImpl(int streamId, Http2Endpoint httpRequest, boolean push) {

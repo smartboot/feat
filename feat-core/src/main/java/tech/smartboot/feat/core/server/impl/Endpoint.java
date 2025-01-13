@@ -25,8 +25,8 @@ import tech.smartboot.feat.core.common.utils.Constant;
 import tech.smartboot.feat.core.common.utils.HttpUtils;
 import tech.smartboot.feat.core.common.utils.NumberUtils;
 import tech.smartboot.feat.core.common.utils.StringUtils;
-import tech.smartboot.feat.core.server.ServerOptions;
 import tech.smartboot.feat.core.server.HttpRequest;
+import tech.smartboot.feat.core.server.ServerOptions;
 import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 
 import javax.net.ssl.SSLEngine;
@@ -49,7 +49,7 @@ import java.util.Set;
  * @author 三刀
  * @version V1.0 , 2018/8/31
  */
-abstract class Endpoint implements Reset {
+public abstract class Endpoint implements Reset {
     private static final Logger LOGGER = LoggerFactory.getLogger(Endpoint.class);
     private static final Locale defaultLocale = Locale.getDefault();
     private static final int INIT_CONTENT_LENGTH = -2;
@@ -107,7 +107,7 @@ abstract class Endpoint implements Reset {
      */
     protected long latestIo;
 
-    Endpoint(AioSession aioSession, ServerOptions configuration) {
+    protected Endpoint(AioSession aioSession, ServerOptions configuration) {
         this.aioSession = aioSession;
         this.configuration = configuration;
         this.sslEngine = HttpRequest.SSL_ENGINE_THREAD_LOCAL.get();
@@ -206,7 +206,7 @@ abstract class Endpoint implements Reset {
         setHeader(headerName.toLowerCase(), headerName, value);
     }
 
-    final void addHeader(String lowCaseHeader, String headerName, String value) {
+    public final void addHeader(String lowCaseHeader, String headerName, String value) {
         HeaderValue oldValue = headers.get(lowCaseHeader);
         if (oldValue != null) {
             while (oldValue.getNextValue() != null) {

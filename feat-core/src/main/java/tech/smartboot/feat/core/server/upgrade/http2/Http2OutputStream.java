@@ -6,7 +6,7 @@
  * Author: sandao (zhengjunweimail@163.com)
  ******************************************************************************/
 
-package tech.smartboot.feat.core.server.impl;
+package tech.smartboot.feat.core.server.upgrade.http2;
 
 import tech.smartboot.feat.core.common.codec.h2.codec.ContinuationFrame;
 import tech.smartboot.feat.core.common.codec.h2.codec.DataFrame;
@@ -15,7 +15,7 @@ import tech.smartboot.feat.core.common.codec.h2.codec.Http2Frame;
 import tech.smartboot.feat.core.common.io.FeatOutputStream;
 import tech.smartboot.feat.core.common.utils.DateUtils;
 import tech.smartboot.feat.core.common.utils.HttpUtils;
-import tech.smartboot.feat.core.server.upgrade.http2.Http2Session;
+import tech.smartboot.feat.core.server.impl.AbstractResponse;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -25,7 +25,7 @@ import java.util.List;
  * @author 三刀
  * @version V1.0 , 2018/2/3
  */
-final class Http2OutputStream extends FeatOutputStream {
+public final class Http2OutputStream extends FeatOutputStream {
     private final int streamId;
     private final Http2Session http2Session;
     private final AbstractResponse response;

@@ -1,4 +1,4 @@
-package tech.smartboot.feat.core.server.impl;
+package tech.smartboot.feat.core.server.upgrade.http2;
 
 import tech.smartboot.feat.core.common.codec.h2.codec.ContinuationFrame;
 import tech.smartboot.feat.core.common.codec.h2.codec.Http2Frame;
@@ -8,8 +8,6 @@ import tech.smartboot.feat.core.common.enums.HttpMethodEnum;
 import tech.smartboot.feat.core.common.utils.HttpUtils;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.PushBuilder;
-import tech.smartboot.feat.core.server.upgrade.http2.Http2Session;
-import tech.smartboot.feat.core.server.upgrade.http2.Http2UpgradeHandler;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -121,16 +119,16 @@ public class PushBuilderImpl implements PushBuilder {
             if (!buffers.isEmpty()) {
                 frame.setFragment(buffers.get(0));
             }
-            frame.writeTo(pushRequest.getSession().getRequest().aioSession.writeBuffer());
+            frame.writeTo(pushRequest.getSession().getRequest().getAioSession().writeBuffer());
             for (int i = 1; i < buffers.size() - 1; i++) {
                 ContinuationFrame continuationFrame = new ContinuationFrame(streamId, 0, 0);
                 continuationFrame.setFragment(buffers.get(i));
-                continuationFrame.writeTo(pushRequest.getSession().getRequest().aioSession.writeBuffer());
+                continuationFrame.writeTo(pushRequest.getSession().getRequest().getAioSession().writeBuffer());
             }
             if (buffers.size() > 1) {
                 ContinuationFrame continuationFrame = new ContinuationFrame(streamId, Http2Frame.FLAG_END_HEADERS, 0);
                 continuationFrame.setFragment(buffers.get(buffers.size() - 1));
-                continuationFrame.writeTo(pushRequest.getSession().getRequest().aioSession.writeBuffer());
+                continuationFrame.writeTo(pushRequest.getSession().getRequest().getAioSession().writeBuffer());
             }
         } catch (IOException e) {
             throw new RuntimeException(e);

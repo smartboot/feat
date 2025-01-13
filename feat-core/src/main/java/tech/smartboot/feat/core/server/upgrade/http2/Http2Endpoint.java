@@ -1,4 +1,4 @@
-package tech.smartboot.feat.core.server.impl;
+package tech.smartboot.feat.core.server.upgrade.http2;
 
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.Reset;
@@ -10,7 +10,9 @@ import tech.smartboot.feat.core.common.multipart.MultipartConfig;
 import tech.smartboot.feat.core.common.multipart.Part;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.PushBuilder;
-import tech.smartboot.feat.core.server.upgrade.http2.Http2Session;
+import tech.smartboot.feat.core.server.impl.AbstractResponse;
+import tech.smartboot.feat.core.server.impl.Endpoint;
+import tech.smartboot.feat.core.server.impl.HttpUpgradeHandler;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -33,7 +35,7 @@ public class Http2Endpoint extends Endpoint implements HttpRequest, Reset {
     private final Http2Session session;
 
     public Http2Endpoint(int streamId, Http2Session session, boolean push) {
-        super(session.getRequest().aioSession, session.getRequest().getConfiguration());
+        super(session.getRequest().getAioSession(), session.getRequest().getConfiguration());
         this.streamId = streamId;
         this.session = session;
         response = new Http2ResponseImpl(streamId, this, push);
