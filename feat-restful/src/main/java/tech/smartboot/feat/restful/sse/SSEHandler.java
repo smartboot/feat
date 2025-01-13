@@ -4,13 +4,13 @@ import org.smartboot.socket.util.AttachKey;
 import org.smartboot.socket.util.Attachment;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
-import tech.smartboot.feat.core.server.handler.HttpServerHandler;
+import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 import tech.smartboot.feat.core.server.impl.Request;
 
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 
-public abstract class SSEHandler extends HttpServerHandler {
+public abstract class SSEHandler extends BaseHttpHandler {
     private static final AttachKey<SseEmitter> SSE_EMITTER = AttachKey.valueOf("SSE_EMITTER");
 
     @Override

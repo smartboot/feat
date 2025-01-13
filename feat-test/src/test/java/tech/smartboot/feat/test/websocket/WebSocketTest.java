@@ -8,9 +8,8 @@ import tech.smartboot.feat.core.client.WebSocketClient;
 import tech.smartboot.feat.core.client.WebSocketListener;
 import tech.smartboot.feat.core.common.codec.websocket.CloseReason;
 import tech.smartboot.feat.core.server.HttpRequest;
-import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServer;
-import tech.smartboot.feat.core.server.handler.HttpServerHandler;
+import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 import tech.smartboot.feat.core.server.WebSocketRequest;
 import tech.smartboot.feat.core.server.WebSocketResponse;
 import tech.smartboot.feat.core.server.upgrade.websocket.WebSocketUpgradeHandler;
@@ -28,7 +27,7 @@ public class WebSocketTest extends BastTest {
     @Before
     public void init() {
         bootstrap = new HttpServer();
-        bootstrap.httpHandler(new HttpServerHandler() {
+        bootstrap.httpHandler(new BaseHttpHandler() {
             @Override
             public void handle(HttpRequest request) throws Throwable {
                 request.upgrade(new WebSocketUpgradeHandler() {

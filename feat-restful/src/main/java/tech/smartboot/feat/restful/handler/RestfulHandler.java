@@ -6,7 +6,7 @@ import tech.smartboot.feat.core.common.utils.AntPathMatcher;
 import tech.smartboot.feat.core.common.utils.CollectionUtils;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
-import tech.smartboot.feat.core.server.handler.HttpServerHandler;
+import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 import tech.smartboot.feat.core.server.handler.Router;
 import tech.smartboot.feat.core.server.impl.Request;
 import tech.smartboot.feat.restful.annotation.Controller;
@@ -29,7 +29,7 @@ import java.util.concurrent.ExecutorService;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/7/2
  */
-public class RestfulHandler extends HttpServerHandler {
+public class RestfulHandler extends BaseHttpHandler {
     private static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
     private static final Logger LOGGER = LoggerFactory.getLogger(RestfulHandler.class);
     private final Router router;
@@ -39,7 +39,7 @@ public class RestfulHandler extends HttpServerHandler {
 
     private ExecutorService asyncExecutor;
 
-    public RestfulHandler(HttpServerHandler defaultHandler) {
+    public RestfulHandler(BaseHttpHandler defaultHandler) {
         this.router = defaultHandler != null ? new Router(defaultHandler) : new Router();
     }
 

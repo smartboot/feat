@@ -2,7 +2,7 @@ package tech.smartboot.feat.restful;
 
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpServer;
-import tech.smartboot.feat.core.server.handler.HttpServerHandler;
+import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 import tech.smartboot.feat.restful.context.ApplicationContext;
 import tech.smartboot.feat.restful.handler.RestfulHandler;
 
@@ -44,7 +44,7 @@ public class RestfulBootstrap {
     };
     private final RestfulHandler restfulHandler;
 
-    private static final HttpServerHandler DEFAULT_HANDLER = new HttpServerHandler() {
+    private static final BaseHttpHandler DEFAULT_HANDLER = new BaseHttpHandler() {
         private final byte[] BYTES = "hello feat-rest".getBytes();
 
         @Override
@@ -53,7 +53,7 @@ public class RestfulBootstrap {
         }
     };
 
-    private RestfulBootstrap(HttpServerHandler defaultHandler) {
+    private RestfulBootstrap(BaseHttpHandler defaultHandler) {
         if (defaultHandler == null) {
             throw new NullPointerException();
         }
@@ -91,7 +91,7 @@ public class RestfulBootstrap {
         return getInstance(DEFAULT_HANDLER);
     }
 
-    public static RestfulBootstrap getInstance(HttpServerHandler defaultHandler) throws Exception {
+    public static RestfulBootstrap getInstance(BaseHttpHandler defaultHandler) throws Exception {
         return new RestfulBootstrap(defaultHandler);
     }
 

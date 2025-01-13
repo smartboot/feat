@@ -11,7 +11,7 @@ package tech.smartboot.feat.demo;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
-import tech.smartboot.feat.core.server.handler.HttpServerHandler;
+import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 import tech.smartboot.feat.core.server.PushBuilder;
 import org.smartboot.socket.extension.plugins.SslPlugin;
 import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
@@ -29,7 +29,7 @@ import java.util.function.Consumer;
 public class HttpsDemo {
     public static void main(String[] args) throws Exception {
         HttpServer bootstrap = new HttpServer();
-        bootstrap.httpHandler(new HttpServerHandler() {
+        bootstrap.httpHandler(new BaseHttpHandler() {
             @Override
             public void handle(HttpRequest request) throws IOException {
                 HttpResponse response=request.getResponse();

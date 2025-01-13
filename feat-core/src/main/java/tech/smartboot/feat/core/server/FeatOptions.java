@@ -15,7 +15,7 @@ import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.utils.ByteTree;
 import tech.smartboot.feat.core.common.utils.StringUtils;
-import tech.smartboot.feat.core.server.handler.HttpServerHandler;
+import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 import tech.smartboot.feat.core.server.impl.Request;
 import tech.smartboot.feat.core.server.waf.WafConfiguration;
 
@@ -39,7 +39,7 @@ public class FeatOptions {
     /**
      * URI缓存
      */
-    private final ByteTree<HttpServerHandler> uriByteTree = new ByteTree<>();
+    private final ByteTree<BaseHttpHandler> uriByteTree = new ByteTree<>();
 
     private final ByteTree<HeaderNameEnum> headerNameByteTree = new ByteTree<>();
 
@@ -95,7 +95,7 @@ public class FeatOptions {
     private boolean lowMemory = false;
     private AsynchronousChannelGroup group;
 
-    private HttpServerHandler httpServerHandler = new HttpServerHandler() {
+    private BaseHttpHandler httpServerHandler = new BaseHttpHandler() {
         @Override
         public void handle(HttpRequest request) throws IOException {
             request.getResponse().write("Hello Feat".getBytes(StandardCharsets.UTF_8));
@@ -191,15 +191,15 @@ public class FeatOptions {
         return this;
     }
 
-    public ByteTree<HttpServerHandler> getUriByteTree() {
+    public ByteTree<BaseHttpHandler> getUriByteTree() {
         return uriByteTree;
     }
 
-    public HttpServerHandler getHttpServerHandler() {
+    public BaseHttpHandler getHttpServerHandler() {
         return httpServerHandler;
     }
 
-    public void setHttpServerHandler(HttpServerHandler httpServerHandler) {
+    public void setHttpServerHandler(BaseHttpHandler httpServerHandler) {
         this.httpServerHandler = httpServerHandler;
     }
 

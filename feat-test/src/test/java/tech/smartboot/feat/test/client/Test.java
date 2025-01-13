@@ -6,7 +6,7 @@ import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServer;
-import tech.smartboot.feat.core.server.handler.HttpServerHandler;
+import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 import tech.smartboot.feat.core.server.handler.Router;
 
 import java.io.IOException;
@@ -24,7 +24,7 @@ public class Test {
         HttpServer bootstrap = new HttpServer();
         Router route = new Router();
         byte[] body = new byte[4096];
-        route.route("/other/**", new HttpServerHandler() {
+        route.route("/other/**", new BaseHttpHandler() {
             @Override
             public void handle(HttpRequest request) throws IOException {
                 HttpResponse response=request.getResponse();

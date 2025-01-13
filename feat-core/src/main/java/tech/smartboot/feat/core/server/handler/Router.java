@@ -13,6 +13,7 @@ import tech.smartboot.feat.core.common.enums.HttpStatus;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.utils.AntPathMatcher;
+import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.impl.Request;
 
@@ -25,17 +26,17 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author 三刀
  * @version V1.0 , 2018/3/24
  */
-public final class Router extends HttpServerHandler {
+public final class Router extends BaseHttpHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(Router.class);
     private static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
     /**
      * 默认404
      */
-    private final HttpServerHandler defaultHandler;
-    private final Map<String, HttpServerHandler> handlerMap = new ConcurrentHashMap<>();
+    private final BaseHttpHandler defaultHandler;
+    private final Map<String, BaseHttpHandler> handlerMap = new ConcurrentHashMap<>();
 
     public Router() {
-        this(new HttpServerHandler() {
+        this(new BaseHttpHandler() {
             @Override
             public void handle(HttpRequest request) throws IOException {
                 request.getResponse().setHttpStatus(HttpStatus.NOT_FOUND);
@@ -43,13 +44,13 @@ public final class Router extends HttpServerHandler {
         });
     }
 
-    public Router(HttpServerHandler defaultHandler) {
+    public Router(BaseHttpHandler defaultHandler) {
         this.defaultHandler = defaultHandler;
     }
 
     @Override
     public void onHeaderComplete(Request request) throws IOException {
-        HttpServerHandler httpServerHandler = matchHandler(request.getRequestURI());
+        BaseHttpHandler httpServerHandler = matchHandler(request.getRequestURI());
         //注册 URI 与 Handler 的映射关系
         request.getConfiguration().getUriByteTree().addNode(request.getUri(), httpServerHandler);
         //更新本次请求的实际 Handler
@@ -66,7 +67,7 @@ public final class Router extends HttpServerHandler {
     @Override
     public void handle(HttpRequest request, CompletableFuture<Object> completableFuture) throws Throwable {
         if (request.getProtocol() == HttpProtocolEnum.HTTP_2) {
-            HttpServerHandler httpServerHandler = matchHandler(request.getRequestURI());
+            BaseHttpHandler httpServerHandler = matchHandler(request.getRequestURI());
             httpServerHandler.handle(request, completableFuture);
         } else {
             throw new UnsupportedOperationException();
@@ -80,13 +81,13 @@ public final class Router extends HttpServerHandler {
      * @param httpHandler 处理handler
      * @return
      */
-    public Router route(String urlPattern, HttpServerHandler httpHandler) {
+    public Router route(String urlPattern, BaseHttpHandler httpHandler) {
         handlerMap.put(urlPattern, httpHandler);
         return this;
     }
 
     public Router route(String urlPattern, HttpHandler httpHandler) {
-        handlerMap.put(urlPattern, new HttpServerHandler() {
+        handlerMap.put(urlPattern, new BaseHttpHandler() {
             @Override
             public void handle(HttpRequest request) throws Throwable {
                 httpHandler.handle(request);
@@ -95,13 +96,13 @@ public final class Router extends HttpServerHandler {
         return this;
     }
 
-    private HttpServerHandler matchHandler(String uri) {
+    private BaseHttpHandler matchHandler(String uri) {
         if (uri == null) {
             return defaultHandler;
         }
-        HttpServerHandler httpHandler = handlerMap.get(uri);
+        BaseHttpHandler httpHandler = handlerMap.get(uri);
         if (httpHandler == null) {
-            for (Map.Entry<String, HttpServerHandler> entity : handlerMap.entrySet()) {
+            for (Map.Entry<String, BaseHttpHandler> entity : handlerMap.entrySet()) {
                 if (PATH_MATCHER.match(entity.getKey(), uri)) {
                     httpHandler = entity.getValue();
                     break;

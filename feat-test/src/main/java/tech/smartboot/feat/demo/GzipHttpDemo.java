@@ -13,7 +13,7 @@ import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServer;
-import tech.smartboot.feat.core.server.handler.HttpServerHandler;
+import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 import tech.smartboot.feat.core.server.handler.Router;
 
 import java.io.ByteArrayOutputStream;
@@ -28,7 +28,7 @@ public class GzipHttpDemo {
     public static void main(String[] args) {
         String text = "Hello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello World";
         Router routeHandle = new Router();
-        routeHandle.route("/a", new HttpServerHandler() {
+        routeHandle.route("/a", new BaseHttpHandler() {
             @Override
             public void handle(HttpRequest request) throws IOException {
                 HttpResponse response=request.getResponse();
@@ -37,14 +37,14 @@ public class GzipHttpDemo {
 //                response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValueEnum.GZIP.getName());
                 response.write(data);
             }
-        }).route("/b", new HttpServerHandler() {
+        }).route("/b", new BaseHttpHandler() {
             @Override
             public void handle(HttpRequest request) throws IOException {
                 HttpResponse response=request.getResponse();
                 response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValueEnum.ContentEncoding.GZIP);
                 response.write(text.getBytes());
             }
-        }).route("/c", new HttpServerHandler() {
+        }).route("/c", new BaseHttpHandler() {
             @Override
             public void handle(HttpRequest request) throws Throwable {
                 HttpResponse response=request.getResponse();
@@ -56,7 +56,7 @@ public class GzipHttpDemo {
                 gzipOutputStream.write("</body></html>".getBytes());
                 gzipOutputStream.close();
             }
-        }).route("/d", new HttpServerHandler() {
+        }).route("/d", new BaseHttpHandler() {
             @Override
             public void handle(HttpRequest request) throws Throwable {
                 HttpResponse response=request.getResponse();

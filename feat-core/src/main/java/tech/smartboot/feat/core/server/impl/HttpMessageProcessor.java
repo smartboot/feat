@@ -18,7 +18,7 @@ import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.FeatOptions;
-import tech.smartboot.feat.core.server.handler.HttpServerHandler;
+import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -134,7 +134,7 @@ public final class HttpMessageProcessor extends AbstractMessageProcessor<Request
         }
     }
 
-    public void httpServerHandler(HttpServerHandler httpServerHandler) {
+    public void httpServerHandler(BaseHttpHandler httpServerHandler) {
         this.options.setHttpServerHandler(Objects.requireNonNull(httpServerHandler));
     }
 

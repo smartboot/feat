@@ -7,7 +7,7 @@ import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
-import tech.smartboot.feat.core.server.handler.HttpServerHandler;
+import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 import tech.smartboot.feat.restful.annotation.Param;
 import tech.smartboot.feat.restful.intercept.MethodInterceptor;
 import tech.smartboot.feat.restful.intercept.MethodInvocation;
@@ -21,7 +21,7 @@ import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
 import java.util.Collection;
 
-class ControllerHandler extends HttpServerHandler {
+class ControllerHandler extends BaseHttpHandler {
     private final Method method;
     private final Object controller;
     private final MethodInterceptor interceptor;

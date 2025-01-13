@@ -10,7 +10,7 @@ import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.common.multipart.Part;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpServer;
-import tech.smartboot.feat.core.server.handler.HttpServerHandler;
+import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 import tech.smartboot.feat.core.server.handler.Router;
 
 import java.io.ByteArrayOutputStream;
@@ -34,7 +34,7 @@ public class MultipartTest {
         bootstrap = new HttpServer();
         bootstrap.options().debug(true);
         Router routeHandle = new Router();
-        routeHandle.route("/formdata", new HttpServerHandler() {
+        routeHandle.route("/formdata", new BaseHttpHandler() {
             @Override
             public void handle(HttpRequest request) throws IOException {
                 try {

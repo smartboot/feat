@@ -19,7 +19,7 @@ import tech.smartboot.feat.core.common.utils.ByteTree;
 import tech.smartboot.feat.core.common.utils.Constant;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.FeatOptions;
-import tech.smartboot.feat.core.server.handler.HttpServerHandler;
+import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 import tech.smartboot.feat.core.server.waf.WAF;
 
 import java.nio.ByteBuffer;
@@ -58,7 +58,7 @@ public class HttpRequestProtocol implements Protocol<Request> {
                 WAF.methodCheck(configuration, request);
             }
             case DecodeState.STATE_URI: {
-                ByteTree<HttpServerHandler> uriTreeNode = StringUtils.scanByteTree(byteBuffer, URI_END_MATCHER, configuration.getUriByteTree());
+                ByteTree<BaseHttpHandler> uriTreeNode = StringUtils.scanByteTree(byteBuffer, URI_END_MATCHER, configuration.getUriByteTree());
                 if (uriTreeNode == null) {
                     break;
                 }

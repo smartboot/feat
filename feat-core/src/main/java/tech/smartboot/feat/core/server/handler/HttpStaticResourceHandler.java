@@ -40,7 +40,7 @@ import java.util.function.Consumer;
  * @author 三刀
  * @version V1.0 , 2018/2/7
  */
-public class HttpStaticResourceHandler extends HttpServerHandler {
+public class HttpStaticResourceHandler extends BaseHttpHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpStaticResourceHandler.class);
 
     private final File baseDir;

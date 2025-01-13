@@ -16,7 +16,7 @@ import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.WebSocketRequest;
 import tech.smartboot.feat.core.server.WebSocketResponse;
 import tech.smartboot.feat.core.server.handler.BasicAuthServerHandler;
-import tech.smartboot.feat.core.server.handler.HttpServerHandler;
+import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 import tech.smartboot.feat.core.server.handler.Router;
 import tech.smartboot.feat.core.server.upgrade.websocket.WebSocketUpgradeHandler;
 
@@ -37,13 +37,13 @@ public class SmartHttpDemo {
         System.setProperty("smartHttp.server.alias", "SANDAO base on ");
 
         Router routeHandle = new Router();
-        routeHandle.route("/basic", new BasicAuthServerHandler("admin", "admin1", new HttpServerHandler() {
+        routeHandle.route("/basic", new BasicAuthServerHandler("admin", "admin1", new BaseHttpHandler() {
             @Override
             public void handle(HttpRequest request) throws IOException {
                 request.getResponse().write("success".getBytes());
             }
         }));
-        routeHandle.route("/", new HttpServerHandler() {
+        routeHandle.route("/", new BaseHttpHandler() {
                     byte[] body = ("<html>" +
                             "<head><title>feat demo</title></head>" +
                             "<body>" +
@@ -59,17 +59,17 @@ public class SmartHttpDemo {
                         response.getOutputStream().write(body);
                     }
                 })
-                .route("/get", new HttpServerHandler() {
+                .route("/get", new BaseHttpHandler() {
                     @Override
                     public void handle(HttpRequest request) throws IOException {
                         request.getResponse().write(("收到Get参数text=" + request.getParameter("text")).getBytes());
                     }
-                }).route("/post", new HttpServerHandler() {
+                }).route("/post", new BaseHttpHandler() {
                     @Override
                     public void handle(HttpRequest request) throws IOException {
                         request.getResponse().write(("收到Post参数text=" + request.getParameter("text")).getBytes());
                     }
-                }).route("/upload", new HttpServerHandler() {
+                }).route("/upload", new BaseHttpHandler() {
                     @Override
                     public void handle(HttpRequest request) throws IOException {
                         InputStream in = request.getInputStream();
@@ -80,7 +80,7 @@ public class SmartHttpDemo {
                         }
                         in.close();
                     }
-                }).route("/post_json", new HttpServerHandler() {
+                }).route("/post_json", new BaseHttpHandler() {
                     @Override
                     public void handle(HttpRequest request) throws IOException {
                         InputStream in = request.getInputStream();
@@ -92,7 +92,7 @@ public class SmartHttpDemo {
                         }
                         in.close();
                     }
-                }).route("/plaintext", new HttpServerHandler() {
+                }).route("/plaintext", new BaseHttpHandler() {
                     byte[] body = "Hello World!".getBytes();
 
                     @Override
@@ -103,7 +103,7 @@ public class SmartHttpDemo {
                         response.write(body);
 //                LOGGER.info("hello world");
                     }
-                }).route("/head", new HttpServerHandler() {
+                }).route("/head", new BaseHttpHandler() {
                     @Override
                     public void handle(HttpRequest request) throws IOException {
                         HttpResponse response = request.getResponse();
@@ -114,7 +114,7 @@ public class SmartHttpDemo {
                             response.write((headerName + ": " + request.getHeaders(headerName) + "</br>").getBytes());
                         }
                     }
-                }).route("/post_param", new HttpServerHandler() {
+                }).route("/post_param", new BaseHttpHandler() {
                     @Override
                     public void handle(HttpRequest request) throws IOException {
                         //curl -X POST -H "Transfer-Encoding: chunked" -H "Content-Type: application/x-www-form-urlencoded" --data "field1=value1&field2=value2" http://localhost:8080/post_param
@@ -122,7 +122,7 @@ public class SmartHttpDemo {
                             request.getResponse().write((parameter + ": " + request.getParameter(parameter) + "</br>").getBytes());
                         }
                     }
-                }).route("/ws", new HttpServerHandler() {
+                }).route("/ws", new BaseHttpHandler() {
                     @Override
                     public void handle(HttpRequest request) throws Throwable {
                         request.upgrade(new WebSocketUpgradeHandler() {

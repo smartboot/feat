@@ -10,7 +10,7 @@ package tech.smartboot.feat.demo;
 
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpServer;
-import tech.smartboot.feat.core.server.handler.HttpServerHandler;
+import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 
 import java.io.IOException;
 import java.util.Date;
@@ -26,7 +26,7 @@ public class AsyncHttpDemo {
     public static void main(String[] args) {
         ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
         HttpServer bootstrap = new HttpServer();
-        bootstrap.httpHandler(new HttpServerHandler() {
+        bootstrap.httpHandler(new BaseHttpHandler() {
 
             @Override
             public void handle(HttpRequest request, CompletableFuture<Object> future) throws IOException {

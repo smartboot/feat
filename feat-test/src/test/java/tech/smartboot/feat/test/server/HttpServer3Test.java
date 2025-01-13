@@ -23,7 +23,7 @@ import tech.smartboot.feat.core.common.enums.HttpMethodEnum;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
-import tech.smartboot.feat.core.server.handler.HttpServerHandler;
+import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 import tech.smartboot.feat.test.BastTest;
 import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
 
@@ -53,7 +53,7 @@ public class HttpServer3Test extends BastTest {
     @Before
     public void init() {
         bootstrap = new HttpServer();
-        bootstrap.httpHandler(new HttpServerHandler() {
+        bootstrap.httpHandler(new BaseHttpHandler() {
             @Override
             public void handle(HttpRequest request) throws IOException {
                 HttpResponse response=request.getResponse();

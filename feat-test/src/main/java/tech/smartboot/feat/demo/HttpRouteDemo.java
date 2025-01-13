@@ -11,7 +11,7 @@ package tech.smartboot.feat.demo;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServer;
-import tech.smartboot.feat.core.server.handler.HttpServerHandler;
+import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 import tech.smartboot.feat.core.server.handler.Router;
 import tech.smartboot.feat.core.server.upgrade.http2.Http2UpgradeHandler;
 import tech.smartboot.feat.core.server.upgrade.websocket.WebSocketUpgradeHandler;
@@ -30,13 +30,13 @@ public class HttpRouteDemo {
         Router routeHandle = new Router();
 
         //2. 指定路由规则以及请求的处理实现
-        routeHandle.route("/", new HttpServerHandler() {
+        routeHandle.route("/", new BaseHttpHandler() {
                     @Override
                     public void handle(HttpRequest request) throws IOException {
                         request.getResponse().write("feat".getBytes());
                     }
                 })
-                .route("/h2", new HttpServerHandler() {
+                .route("/h2", new BaseHttpHandler() {
                     @Override
                     public void handle(HttpRequest request) throws IOException {
                         request.upgrade(new Http2UpgradeHandler() {
@@ -47,19 +47,19 @@ public class HttpRouteDemo {
                         });
                     }
                 })
-                .route("/test1", new HttpServerHandler() {
+                .route("/test1", new BaseHttpHandler() {
                     @Override
                     public void handle(HttpRequest request) throws IOException {
                         request.getResponse().write(("test1").getBytes());
                     }
                 })
-                .route("/test2", new HttpServerHandler() {
+                .route("/test2", new BaseHttpHandler() {
                     @Override
                     public void handle(HttpRequest request) throws IOException {
                         request.getResponse().write(("test2").getBytes());
                     }
                 })
-                .route("/ws", new HttpServerHandler() {
+                .route("/ws", new BaseHttpHandler() {
                     @Override
                     public void handle(HttpRequest request) throws IOException {
                         request.upgrade(new WebSocketUpgradeHandler() {

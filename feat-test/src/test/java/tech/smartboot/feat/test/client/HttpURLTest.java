@@ -15,8 +15,7 @@ import org.junit.Test;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.HttpRequest;
-import tech.smartboot.feat.core.server.HttpResponse;
-import tech.smartboot.feat.core.server.handler.HttpServerHandler;
+import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 import tech.smartboot.feat.core.server.handler.Router;
 
 import java.io.IOException;
@@ -35,7 +34,7 @@ public class HttpURLTest {
     public void init() {
         httpServer = new HttpServer();
         Router routeHandle = new Router();
-        routeHandle.route("/post_param", new HttpServerHandler() {
+        routeHandle.route("/post_param", new BaseHttpHandler() {
             @Override
             public void handle(HttpRequest request) throws IOException {
                 JSONObject jsonObject = new JSONObject();
@@ -45,7 +44,7 @@ public class HttpURLTest {
                 request.getResponse().write(jsonObject.toString().getBytes());
             }
         });
-        routeHandle.route("/json", new HttpServerHandler() {
+        routeHandle.route("/json", new BaseHttpHandler() {
 
             @Override
             public void handle(HttpRequest request) throws IOException {
@@ -58,7 +57,7 @@ public class HttpURLTest {
                 }
             }
         });
-        routeHandle.route("/header", new HttpServerHandler() {
+        routeHandle.route("/header", new BaseHttpHandler() {
             @Override
             public void handle(HttpRequest request) throws IOException {
                 JSONObject jsonObject = new JSONObject();
@@ -69,7 +68,7 @@ public class HttpURLTest {
             }
         });
 
-        routeHandle.route("/other/abc", new HttpServerHandler() {
+        routeHandle.route("/other/abc", new BaseHttpHandler() {
             @Override
             public void handle(HttpRequest request) throws IOException {
                 System.out.println("--");

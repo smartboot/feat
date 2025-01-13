@@ -23,7 +23,7 @@ import tech.smartboot.feat.core.common.enums.HttpStatus;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServer;
-import tech.smartboot.feat.core.server.handler.HttpServerHandler;
+import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 import tech.smartboot.feat.test.BastTest;
 
 import java.io.IOException;
@@ -57,7 +57,7 @@ public class HttpServer2Test extends BastTest {
 
     @Test
     public void test1() throws ExecutionException, InterruptedException {
-        bootstrap.httpHandler(new HttpServerHandler() {
+        bootstrap.httpHandler(new BaseHttpHandler() {
             @Override
             public void handle(HttpRequest request) throws IOException {
                 HttpResponse response = request.getResponse();
@@ -72,7 +72,7 @@ public class HttpServer2Test extends BastTest {
 
     @Test
     public void test2() throws ExecutionException, InterruptedException {
-        bootstrap.httpHandler(new HttpServerHandler() {
+        bootstrap.httpHandler(new BaseHttpHandler() {
             @Override
             public void handle(HttpRequest request) throws IOException {
                 request.getResponse().write("Hello World".getBytes(StandardCharsets.UTF_8));
@@ -85,7 +85,7 @@ public class HttpServer2Test extends BastTest {
 
     @Test
     public void testPut() throws ExecutionException, InterruptedException {
-        bootstrap.httpHandler(new HttpServerHandler() {
+        bootstrap.httpHandler(new BaseHttpHandler() {
             @Override
             public void handle(HttpRequest request) throws IOException {
                 request.getResponse().write("Hello World".getBytes(StandardCharsets.UTF_8));
@@ -98,7 +98,7 @@ public class HttpServer2Test extends BastTest {
 
     @Test
     public void testPost() throws ExecutionException, InterruptedException {
-        bootstrap.httpHandler(new HttpServerHandler() {
+        bootstrap.httpHandler(new BaseHttpHandler() {
             @Override
             public void handle(HttpRequest request) throws IOException {
                 request.getInputStream().close();
@@ -117,7 +117,7 @@ public class HttpServer2Test extends BastTest {
 
     @Test
     public void testPost1() throws ExecutionException, InterruptedException {
-        bootstrap.httpHandler(new HttpServerHandler() {
+        bootstrap.httpHandler(new BaseHttpHandler() {
             @Override
             public void handle(HttpRequest request) throws IOException {
                 byte[] buffer = new byte[(int) request.getContentLength()];
@@ -144,7 +144,7 @@ public class HttpServer2Test extends BastTest {
         param.put("p]", "p");
         param.put("p<]>", "p");
 
-        bootstrap.httpHandler(new HttpServerHandler() {
+        bootstrap.httpHandler(new BaseHttpHandler() {
             @Override
             public void handle(HttpRequest request) throws IOException {
                 HttpResponse response=request.getResponse();

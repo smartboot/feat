@@ -16,7 +16,7 @@ import java.io.InputStream;
 public class SimpleSmartHttp {
     public static void main(String[] args) {
         Feat.createHttpServer(options -> options.debug(true))
-                .httpHandler((request) -> {
+                .httpHandler(request -> {
                     InputStream in = request.getInputStream();
                     byte[] b = new byte[1024];
                     int i;

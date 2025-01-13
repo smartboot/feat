@@ -12,7 +12,7 @@ import tech.smartboot.feat.core.Feat;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServer;
-import tech.smartboot.feat.core.server.handler.HttpServerHandler;
+import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 import tech.smartboot.feat.core.server.handler.Router;
 
 import java.io.IOException;
@@ -22,7 +22,7 @@ public class Bootstrap {
 
     public static void main(String[] args) {
         Router routeHandle = new Router();
-        routeHandle.route("/plaintext", new HttpServerHandler() {
+        routeHandle.route("/plaintext", new BaseHttpHandler() {
 
 
             @Override

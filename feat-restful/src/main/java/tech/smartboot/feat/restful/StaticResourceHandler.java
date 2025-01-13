@@ -9,7 +9,7 @@ import tech.smartboot.feat.core.common.utils.Mimetypes;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
-import tech.smartboot.feat.core.server.handler.HttpServerHandler;
+import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,7 +21,7 @@ import java.util.concurrent.ExecutorService;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2023/1/26
  */
-public class StaticResourceHandler extends HttpServerHandler {
+public class StaticResourceHandler extends BaseHttpHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(StaticResourceHandler.class);
     private final Date lastModifyDate = new Date(System.currentTimeMillis() / 1000 * 1000);
 

@@ -22,11 +22,11 @@ import java.util.Base64;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2021/2/23
  */
-public final class BasicAuthServerHandler extends HttpServerHandler {
-    private final HttpServerHandler httpServerHandler;
+public final class BasicAuthServerHandler extends BaseHttpHandler {
+    private final BaseHttpHandler httpServerHandler;
     private final String basic;
 
-    public BasicAuthServerHandler(String username, String password, HttpServerHandler httpServerHandler) {
+    public BasicAuthServerHandler(String username, String password, BaseHttpHandler httpServerHandler) {
         this.httpServerHandler = httpServerHandler;
         basic = "Basic " + Base64.getEncoder().encodeToString((username + ":" + password).getBytes());
     }

@@ -19,7 +19,7 @@ import tech.smartboot.feat.core.common.utils.NumberUtils;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
-import tech.smartboot.feat.core.server.handler.HttpServerHandler;
+import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 import tech.smartboot.feat.core.server.handler.Router;
 
 import java.io.IOException;
@@ -40,7 +40,7 @@ public class HttpGzipTest {
     public void init() {
         httpServer = new HttpServer();
         Router routeHandle = new Router();
-        routeHandle.route("/test", new HttpServerHandler() {
+        routeHandle.route("/test", new BaseHttpHandler() {
             @Override
             public void handle(HttpRequest request) throws IOException {
                 HttpResponse response=request.getResponse();
@@ -54,7 +54,7 @@ public class HttpGzipTest {
             }
         });
 
-        routeHandle.route("/html", new HttpServerHandler() {
+        routeHandle.route("/html", new BaseHttpHandler() {
             @Override
             public void handle(HttpRequest request) throws IOException {
                 HttpResponse response=request.getResponse();
