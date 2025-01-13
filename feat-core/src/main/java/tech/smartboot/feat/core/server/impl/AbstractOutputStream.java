@@ -8,15 +8,12 @@
 
 package tech.smartboot.feat.core.server.impl;
 
-import tech.smartboot.feat.core.common.Cookie;
 import tech.smartboot.feat.core.common.HeaderValue;
-import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.io.FeatOutputStream;
 import tech.smartboot.feat.core.common.utils.Constant;
 import tech.smartboot.feat.core.common.utils.DateUtils;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -41,9 +38,6 @@ abstract class AbstractOutputStream extends FeatOutputStream {
             return;
         }
 
-        //转换Cookie
-        convertCookieToHeader();
-
         boolean hasHeader = hasHeader();
         //输出http状态行、contentType,contentLength、Transfer-Encoding、server等信息
         writeHeadPart(hasHeader);
@@ -61,13 +55,6 @@ abstract class AbstractOutputStream extends FeatOutputStream {
     }
 
     protected abstract void writeHeadPart(boolean hasHeader) throws IOException;
-
-    protected void convertCookieToHeader() {
-        List<Cookie> cookies = response.getCookies();
-        if (cookies.size() > 0) {
-            cookies.forEach(cookie -> response.addHeader(HeaderNameEnum.SET_COOKIE.getName(), cookie.toString()));
-        }
-    }
 
     private boolean hasHeader() {
         return response.getHeaders().size() > 0;

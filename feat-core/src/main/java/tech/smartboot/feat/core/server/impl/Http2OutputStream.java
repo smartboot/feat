@@ -46,8 +46,6 @@ final class Http2OutputStream extends AbstractOutputStream {
             }
             return;
         }
-        //转换Cookie
-        convertCookieToHeader();
         // Create HEADERS frame
         response.setHeader(":status", String.valueOf(response.getHttpStatus().value()));
 

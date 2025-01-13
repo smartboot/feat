@@ -18,11 +18,9 @@ import tech.smartboot.feat.core.common.io.FeatOutputStream;
 import tech.smartboot.feat.core.server.HttpResponse;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Vector;
@@ -63,8 +61,6 @@ public abstract class AbstractResponse implements HttpResponse, Reset {
      */
     protected boolean closed = false;
 
-    private List<Cookie> cookies = Collections.emptyList();
-
 
     public final void reset() {
         outputStream.reset();
@@ -72,7 +68,6 @@ public abstract class AbstractResponse implements HttpResponse, Reset {
         setHttpStatus(HttpStatus.OK);
         contentType = HeaderValueEnum.ContentType.TEXT_HTML_UTF8;
         contentLength = -1;
-        cookies = Collections.emptyList();
         this.closed = false;
     }
 
@@ -163,6 +158,11 @@ public abstract class AbstractResponse implements HttpResponse, Reset {
     }
 
     @Override
+    public void addCookie(Cookie cookie) {
+        addHeader(HeaderNameEnum.SET_COOKIE.getName(), cookie.toString());
+    }
+
+    @Override
     public final String getHeader(String name) {
         HeaderValue headerValue = headers.get(name);
         return headerValue == null ? null : headerValue.getValue();
@@ -185,7 +185,7 @@ public abstract class AbstractResponse implements HttpResponse, Reset {
 
     @Override
     public final Collection<String> getHeaderNames() {
-        return new ArrayList<>(headers.keySet());
+        return headers.keySet();
     }
 
 
@@ -195,19 +195,6 @@ public abstract class AbstractResponse implements HttpResponse, Reset {
 
     @Override
     public abstract void close();
-
-    public List<Cookie> getCookies() {
-        return cookies;
-    }
-
-    @Override
-    public void addCookie(Cookie cookie) {
-        List<Cookie> emptyList = Collections.emptyList();
-        if (cookies == emptyList) {
-            cookies = new ArrayList<>();
-        }
-        cookies.add(cookie);
-    }
 
     @Override
     public long getContentLength() {

@@ -8,6 +8,8 @@
 
 package tech.smartboot.feat.core.server.impl;
 
+import tech.smartboot.feat.core.common.Cookie;
+import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
 
 import java.io.IOException;
@@ -22,7 +24,7 @@ class HttpResponseImpl extends AbstractResponse {
     private final HttpEndpoint request;
 
     public HttpResponseImpl(HttpEndpoint request) {
-        this.outputStream=new HttpOutputStream(request,this);
+        this.outputStream = new HttpOutputStream(request, this);
         this.request = request;
     }
 
@@ -54,4 +56,5 @@ class HttpResponseImpl extends AbstractResponse {
         }
         closed = true;
     }
+
 }
