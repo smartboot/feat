@@ -17,7 +17,7 @@ import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.utils.StringUtils;
-import tech.smartboot.feat.core.server.FeatOptions;
+import tech.smartboot.feat.core.server.FeatServerOptions;
 import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 
 import java.io.IOException;
@@ -33,9 +33,9 @@ import java.util.Objects;
 public final class HttpMessageProcessor extends AbstractMessageProcessor<Request> {
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpMessageProcessor.class);
     private static final int MAX_LENGTH = 255 * 1024;
-    private final FeatOptions options;
+    private final FeatServerOptions options;
 
-    public HttpMessageProcessor(FeatOptions options) {
+    public HttpMessageProcessor(FeatServerOptions options) {
         this.options = options;
     }
 
@@ -83,7 +83,7 @@ public final class HttpMessageProcessor extends AbstractMessageProcessor<Request
             }
             response.setHttpStatus(httpStatus);
             OutputStream outputStream = response.getOutputStream();
-            outputStream.write(("<center><h1>" + httpStatus.value() + " " + httpStatus.getReasonPhrase() + "</h1>" + desc + "<hr/><a target='_blank' href='https://smartboot.tech/'>feat</a>/" + FeatOptions.VERSION + "&nbsp;|&nbsp; <a target='_blank' href='https://gitee.com/smartboot/feat'>Gitee</a></center>").getBytes());
+            outputStream.write(("<center><h1>" + httpStatus.value() + " " + httpStatus.getReasonPhrase() + "</h1>" + desc + "<hr/><a target='_blank' href='https://smartboot.tech/'>feat</a>/" + FeatServerOptions.VERSION + "&nbsp;|&nbsp; <a target='_blank' href='https://gitee.com/smartboot/feat'>Gitee</a></center>").getBytes());
         } catch (IOException e) {
             LOGGER.warn("HttpError response exception", e);
         } finally {

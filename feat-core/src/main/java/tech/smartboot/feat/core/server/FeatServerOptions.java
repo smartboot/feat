@@ -29,7 +29,7 @@ import java.util.List;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2021/2/22
  */
-public class FeatOptions {
+public class FeatServerOptions {
     public static final String VERSION = "v0.3";
 
     /**
@@ -115,7 +115,7 @@ public class FeatOptions {
      * @param readBufferSize
      * @return
      */
-    public FeatOptions readBufferSize(int readBufferSize) {
+    public FeatServerOptions readBufferSize(int readBufferSize) {
         this.readBufferSize = readBufferSize;
         return this;
     }
@@ -124,7 +124,7 @@ public class FeatOptions {
         return threadNum;
     }
 
-    public FeatOptions threadNum(int threadNum) {
+    public FeatServerOptions threadNum(int threadNum) {
         this.threadNum = threadNum;
         return this;
     }
@@ -133,7 +133,7 @@ public class FeatOptions {
         return writeBufferSize;
     }
 
-    public FeatOptions writeBufferSize(int writeBufferSize) {
+    public FeatServerOptions writeBufferSize(int writeBufferSize) {
         this.writeBufferSize = writeBufferSize;
         return this;
     }
@@ -142,7 +142,7 @@ public class FeatOptions {
         return bannerEnabled;
     }
 
-    public FeatOptions bannerEnabled(boolean bannerEnabled) {
+    public FeatServerOptions bannerEnabled(boolean bannerEnabled) {
         this.bannerEnabled = bannerEnabled;
         return this;
     }
@@ -156,12 +156,12 @@ public class FeatOptions {
      *
      * @param headerLimiter
      */
-    public FeatOptions headerLimiter(int headerLimiter) {
+    public FeatServerOptions headerLimiter(int headerLimiter) {
         this.headerLimiter = headerLimiter;
         return this;
     }
 
-    public FeatOptions proxyProtocolSupport() {
+    public FeatServerOptions proxyProtocolSupport() {
         plugins.add(0, new ProxyProtocolPlugin<>());
         return this;
     }
@@ -169,7 +169,7 @@ public class FeatOptions {
     /**
      * 启用 debug 模式后会打印码流
      */
-    public FeatOptions debug(boolean debug) {
+    public FeatServerOptions debug(boolean debug) {
         plugins.removeIf(plugin -> plugin instanceof StreamMonitorPlugin);
         if (debug) {
             addPlugin(new StreamMonitorPlugin<>(StreamMonitorPlugin.BLUE_TEXT_INPUT_STREAM,
@@ -182,7 +182,7 @@ public class FeatOptions {
         return serverName;
     }
 
-    public FeatOptions serverName(String server) {
+    public FeatServerOptions serverName(String server) {
         if (server == null) {
             this.serverName = null;
         } else {
@@ -216,7 +216,7 @@ public class FeatOptions {
         return headerNameByteTree;
     }
 
-    public FeatOptions addPlugin(Plugin<Request> plugin) {
+    public FeatServerOptions addPlugin(Plugin<Request> plugin) {
         plugins.add(plugin);
         if (plugin instanceof SslPlugin) {
             secure = true;
@@ -236,7 +236,7 @@ public class FeatOptions {
         this.maxRequestSize = maxRequestSize;
     }
 
-    public FeatOptions addPlugin(List<Plugin<Request>> plugins) {
+    public FeatServerOptions addPlugin(List<Plugin<Request>> plugins) {
         this.plugins.addAll(plugins);
         return this;
     }
@@ -249,7 +249,7 @@ public class FeatOptions {
         return group;
     }
 
-    public FeatOptions group(AsynchronousChannelGroup group) {
+    public FeatServerOptions group(AsynchronousChannelGroup group) {
         this.group = group;
         return this;
     }
@@ -262,7 +262,7 @@ public class FeatOptions {
         return httpIdleTimeout;
     }
 
-    public FeatOptions setHttpIdleTimeout(long httpIdleTimeout) {
+    public FeatServerOptions setHttpIdleTimeout(long httpIdleTimeout) {
         this.httpIdleTimeout = httpIdleTimeout;
         return this;
     }
@@ -271,7 +271,7 @@ public class FeatOptions {
         return wsIdleTimeout;
     }
 
-    public FeatOptions setWsIdleTimeout(long wsIdleTimeout) {
+    public FeatServerOptions setWsIdleTimeout(long wsIdleTimeout) {
         this.wsIdleTimeout = wsIdleTimeout;
         return this;
     }
@@ -280,7 +280,7 @@ public class FeatOptions {
         return lowMemory;
     }
 
-    public FeatOptions setLowMemory(boolean lowMemory) {
+    public FeatServerOptions setLowMemory(boolean lowMemory) {
         this.lowMemory = lowMemory;
         return this;
     }

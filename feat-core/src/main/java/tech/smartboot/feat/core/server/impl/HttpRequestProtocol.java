@@ -18,7 +18,7 @@ import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.common.utils.ByteTree;
 import tech.smartboot.feat.core.common.utils.Constant;
 import tech.smartboot.feat.core.common.utils.StringUtils;
-import tech.smartboot.feat.core.server.FeatOptions;
+import tech.smartboot.feat.core.server.FeatServerOptions;
 import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 import tech.smartboot.feat.core.server.waf.WAF;
 
@@ -29,10 +29,10 @@ import java.nio.ByteBuffer;
  * @version V1.0 , 2018/8/31
  */
 public class HttpRequestProtocol implements Protocol<Request> {
-    private final FeatOptions configuration;
+    private final FeatServerOptions configuration;
     private static final ByteTree.EndMatcher URI_END_MATCHER = endByte -> (endByte == ' ' || endByte == '?');
 
-    public HttpRequestProtocol(FeatOptions configuration) {
+    public HttpRequestProtocol(FeatServerOptions configuration) {
         this.configuration = configuration;
     }
 
