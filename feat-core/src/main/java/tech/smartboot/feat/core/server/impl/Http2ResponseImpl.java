@@ -46,7 +46,7 @@ class Http2ResponseImpl extends AbstractResponse {
             return;
         }
         try {
-            getOutputStream().close();
+            outputStream.close();
         } catch (IOException e) {
             throw new RuntimeException(e);
         } finally {

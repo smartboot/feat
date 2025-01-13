@@ -12,6 +12,7 @@ import tech.smartboot.feat.core.common.codec.h2.codec.ContinuationFrame;
 import tech.smartboot.feat.core.common.codec.h2.codec.DataFrame;
 import tech.smartboot.feat.core.common.codec.h2.codec.HeadersFrame;
 import tech.smartboot.feat.core.common.codec.h2.codec.Http2Frame;
+import tech.smartboot.feat.core.common.io.FeatOutputStream;
 import tech.smartboot.feat.core.common.utils.DateUtils;
 import tech.smartboot.feat.core.common.utils.HttpUtils;
 import tech.smartboot.feat.core.server.upgrade.http2.Http2Session;
@@ -24,12 +25,16 @@ import java.util.List;
  * @author 三刀
  * @version V1.0 , 2018/2/3
  */
-final class Http2OutputStream extends AbstractOutputStream {
+final class Http2OutputStream extends FeatOutputStream {
     private final int streamId;
     private final Http2Session http2Session;
+    private final AbstractResponse response;
+    private final Http2Endpoint httpRequest;
 
     public Http2OutputStream(int streamId, Http2Endpoint httpRequest, AbstractResponse response, boolean push) {
-        super(httpRequest, response);
+        super(httpRequest.getAioSession().writeBuffer());
+        this.httpRequest = httpRequest;
+        this.response = response;
         disableChunked();
         this.http2Session = httpRequest.getSession();
         this.streamId = streamId;
@@ -71,11 +76,6 @@ final class Http2OutputStream extends AbstractOutputStream {
         committed = true;
     }
 
-    protected void writeHeadPart(boolean hasHeader) {
-        //编码成http2
-        throw new UnsupportedOperationException();
-    }
-
     @Override
     public void write(byte[] b, int off, int len) throws IOException {
         writeHeader(HeaderWriteSource.WRITE);
@@ -84,7 +84,7 @@ final class Http2OutputStream extends AbstractOutputStream {
         }
         DataFrame dataFrame = new DataFrame(streamId, 0, len);
         dataFrame.writeTo(writeBuffer, b, off, len);
-        request.setLatestIo(DateUtils.currentTime().getTime());
+        httpRequest.setLatestIo(DateUtils.currentTime().getTime());
     }
 
 }

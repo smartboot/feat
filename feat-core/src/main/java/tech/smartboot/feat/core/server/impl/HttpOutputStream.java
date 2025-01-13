@@ -8,24 +8,27 @@
 
 package tech.smartboot.feat.core.server.impl;
 
+import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
 import tech.smartboot.feat.core.common.enums.HttpMethodEnum;
 import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
+import tech.smartboot.feat.core.common.io.FeatOutputStream;
 import tech.smartboot.feat.core.common.utils.Constant;
 import tech.smartboot.feat.core.common.utils.DateUtils;
 import tech.smartboot.feat.core.server.ServerOptions;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.Map;
 import java.util.concurrent.Semaphore;
 
 /**
  * @author 三刀
  * @version V1.0 , 2018/2/3
  */
-final class HttpOutputStream extends AbstractOutputStream {
+final class HttpOutputStream extends FeatOutputStream {
     private static final byte[] Content_Type_TEXT_Bytes = ("\r\nContent-Type:" + HeaderValueEnum.ContentType.TEXT_PLAIN_UTF8).getBytes();
     private static final byte[] Content_Type_JSON_Bytes = ("\r\nContent-Type:" + HeaderValueEnum.ContentType.APPLICATION_JSON).getBytes();
     private static final byte[] Content_Length_Bytes = "\r\nContent-Length:".getBytes();
@@ -36,11 +39,12 @@ final class HttpOutputStream extends AbstractOutputStream {
     private static byte[] HEAD_PART_BYTES;
     private final HttpEndpoint request;
     private final ServerOptions configuration;
-
+    private final AbstractResponse response;
 
     public HttpOutputStream(HttpEndpoint httpRequest, AbstractResponse response) {
-        super(httpRequest, response);
+        super(httpRequest.getAioSession().writeBuffer());
         this.request = httpRequest;
+        this.response = response;
         this.configuration = request.getConfiguration();
         if (SERVER_LINE == null) {
             String serverLine = HeaderNameEnum.SERVER.getName() + ':' + configuration.serverName() + "\r\n";
@@ -65,8 +69,48 @@ final class HttpOutputStream extends AbstractOutputStream {
     }
 
     @Override
+    public void write(byte[] b, int off, int len) throws IOException {
+        super.write(b, off, len);
+        request.setLatestIo(DateUtils.currentTime().getTime());
+    }
 
-    protected void writeHeadPart(boolean hasHeader) throws IOException {
+    /**
+     * 输出Http消息头
+     */
+    protected void writeHeader(HeaderWriteSource source) throws IOException {
+        if (committed) {
+            return;
+        }
+
+        boolean hasHeader = hasHeader();
+        //输出http状态行、contentType,contentLength、Transfer-Encoding、server等信息
+        writeHeadPart(hasHeader);
+        if (hasHeader) {
+            //输出Header部分
+            writeHeaders();
+        }
+        committed = true;
+    }
+
+    private boolean hasHeader() {
+        return response.getHeaders().size() > 0;
+    }
+
+    private void writeHeaders() throws IOException {
+        for (Map.Entry<String, HeaderValue> entry : response.getHeaders().entrySet()) {
+            HeaderValue headerValue = entry.getValue();
+            while (headerValue != null) {
+                writeString(entry.getKey());
+                writeBuffer.writeByte((byte) ':');
+                writeString(headerValue.getValue());
+                writeBuffer.write(Constant.CRLF_BYTES);
+                headerValue = headerValue.getNextValue();
+            }
+        }
+        writeBuffer.write(Constant.CRLF_BYTES);
+    }
+
+    private void writeHeadPart(boolean hasHeader) throws IOException {
         checkChunked();
 
         long contentLength = response.getContentLength();

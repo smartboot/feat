@@ -8,8 +8,6 @@
 
 package tech.smartboot.feat.core.server.impl;
 
-import tech.smartboot.feat.core.common.Cookie;
-import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
 
 import java.io.IOException;
@@ -30,15 +28,15 @@ class HttpResponseImpl extends AbstractResponse {
 
     @Override
     public void setTrailerFields(Supplier<Map<String, String>> supplier) {
-        if (getOutputStream().isCommitted()) {
+        if (outputStream.isCommitted()) {
             throw new IllegalStateException();
         }
         if (request.getProtocol() == HttpProtocolEnum.HTTP_10) {
             throw new IllegalStateException("HTTP/1.0 request");
-        } else if (request.getProtocol() == HttpProtocolEnum.HTTP_11 && !getOutputStream().isChunkedSupport()) {
+        } else if (request.getProtocol() == HttpProtocolEnum.HTTP_11 && !outputStream.isChunkedSupport()) {
             throw new IllegalStateException("unSupport trailer");
         }
-        getOutputStream().setTrailerFields(supplier);
+        outputStream.setTrailerFields(supplier);
     }
 
     @Override
@@ -47,8 +45,8 @@ class HttpResponseImpl extends AbstractResponse {
             return;
         }
         try {
-            if (getOutputStream() != null && !getOutputStream().isClosed()) {
-                getOutputStream().close();
+            if (outputStream != null && !outputStream.isClosed()) {
+                outputStream.close();
             }
         } catch (IOException ignored) {
         } finally {

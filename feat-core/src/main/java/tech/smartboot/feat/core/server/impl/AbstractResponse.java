@@ -34,7 +34,7 @@ public abstract class AbstractResponse implements HttpResponse, Reset {
     /**
      * 输入流
      */
-    protected AbstractOutputStream outputStream;
+    protected FeatOutputStream outputStream;
 
     /**
      * 响应消息头
