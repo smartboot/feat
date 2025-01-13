@@ -18,7 +18,7 @@ import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.common.utils.ByteTree;
 import tech.smartboot.feat.core.common.utils.Constant;
 import tech.smartboot.feat.core.common.utils.StringUtils;
-import tech.smartboot.feat.core.server.FeatServerOptions;
+import tech.smartboot.feat.core.server.ServerOptions;
 import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 import tech.smartboot.feat.core.server.waf.WAF;
 
@@ -29,10 +29,10 @@ import java.nio.ByteBuffer;
  * @version V1.0 , 2018/8/31
  */
 public class HttpRequestProtocol implements Protocol<Request> {
-    private final FeatServerOptions configuration;
+    private final ServerOptions configuration;
     private static final ByteTree.EndMatcher URI_END_MATCHER = endByte -> (endByte == ' ' || endByte == '?');
 
-    public HttpRequestProtocol(FeatServerOptions configuration) {
+    public HttpRequestProtocol(ServerOptions configuration) {
         this.configuration = configuration;
     }
 
@@ -63,9 +63,7 @@ public class HttpRequestProtocol implements Protocol<Request> {
                     break;
                 }
                 request.setUri(uriTreeNode.getStringValue());
-                if (uriTreeNode.getAttach() == null) {
-                    request.setServerHandler(request.getConfiguration().getHttpServerHandler());
-                } else {
+                if (uriTreeNode.getAttach() != null) {
                     request.setServerHandler(uriTreeNode.getAttach());
                 }
                 WAF.checkUri(configuration, request);

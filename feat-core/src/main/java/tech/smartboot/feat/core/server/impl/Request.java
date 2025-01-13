@@ -22,7 +22,7 @@ import tech.smartboot.feat.core.common.io.ChunkedInputStream;
 import tech.smartboot.feat.core.common.io.PostInputStream;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
-import tech.smartboot.feat.core.server.FeatServerOptions;
+import tech.smartboot.feat.core.server.ServerOptions;
 import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 
 import java.io.IOException;
@@ -75,7 +75,7 @@ public final class Request extends CommonRequest implements Reset {
         }
     }
 
-    Request(FeatServerOptions configuration, AioSession aioSession) {
+    Request(ServerOptions configuration, AioSession aioSession) {
         super(aioSession, configuration);
         this.remainingThreshold = configuration.getMaxRequestSize();
 

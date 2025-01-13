@@ -19,9 +19,7 @@ import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 import tech.smartboot.feat.core.server.impl.Request;
 import tech.smartboot.feat.core.server.waf.WafConfiguration;
 
-import java.io.IOException;
 import java.nio.channels.AsynchronousChannelGroup;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,7 +27,7 @@ import java.util.List;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2021/2/22
  */
-public class FeatServerOptions {
+public class ServerOptions {
     public static final String VERSION = "v0.3";
 
     /**
@@ -95,13 +93,6 @@ public class FeatServerOptions {
     private boolean lowMemory = false;
     private AsynchronousChannelGroup group;
 
-    private BaseHttpHandler httpServerHandler = new BaseHttpHandler() {
-        @Override
-        public void handle(HttpRequest request) throws IOException {
-            request.getResponse().write("Hello Feat".getBytes(StandardCharsets.UTF_8));
-        }
-    };
-
     private final WafConfiguration wafConfiguration = new WafConfiguration();
 
 
@@ -115,7 +106,7 @@ public class FeatServerOptions {
      * @param readBufferSize
      * @return
      */
-    public FeatServerOptions readBufferSize(int readBufferSize) {
+    public ServerOptions readBufferSize(int readBufferSize) {
         this.readBufferSize = readBufferSize;
         return this;
     }
@@ -124,7 +115,7 @@ public class FeatServerOptions {
         return threadNum;
     }
 
-    public FeatServerOptions threadNum(int threadNum) {
+    public ServerOptions threadNum(int threadNum) {
         this.threadNum = threadNum;
         return this;
     }
@@ -133,7 +124,7 @@ public class FeatServerOptions {
         return writeBufferSize;
     }
 
-    public FeatServerOptions writeBufferSize(int writeBufferSize) {
+    public ServerOptions writeBufferSize(int writeBufferSize) {
         this.writeBufferSize = writeBufferSize;
         return this;
     }
@@ -142,7 +133,7 @@ public class FeatServerOptions {
         return bannerEnabled;
     }
 
-    public FeatServerOptions bannerEnabled(boolean bannerEnabled) {
+    public ServerOptions bannerEnabled(boolean bannerEnabled) {
         this.bannerEnabled = bannerEnabled;
         return this;
     }
@@ -156,12 +147,12 @@ public class FeatServerOptions {
      *
      * @param headerLimiter
      */
-    public FeatServerOptions headerLimiter(int headerLimiter) {
+    public ServerOptions headerLimiter(int headerLimiter) {
         this.headerLimiter = headerLimiter;
         return this;
     }
 
-    public FeatServerOptions proxyProtocolSupport() {
+    public ServerOptions proxyProtocolSupport() {
         plugins.add(0, new ProxyProtocolPlugin<>());
         return this;
     }
@@ -169,7 +160,7 @@ public class FeatServerOptions {
     /**
      * 启用 debug 模式后会打印码流
      */
-    public FeatServerOptions debug(boolean debug) {
+    public ServerOptions debug(boolean debug) {
         plugins.removeIf(plugin -> plugin instanceof StreamMonitorPlugin);
         if (debug) {
             addPlugin(new StreamMonitorPlugin<>(StreamMonitorPlugin.BLUE_TEXT_INPUT_STREAM,
@@ -182,7 +173,7 @@ public class FeatServerOptions {
         return serverName;
     }
 
-    public FeatServerOptions serverName(String server) {
+    public ServerOptions serverName(String server) {
         if (server == null) {
             this.serverName = null;
         } else {
@@ -194,15 +185,6 @@ public class FeatServerOptions {
     public ByteTree<BaseHttpHandler> getUriByteTree() {
         return uriByteTree;
     }
-
-    public BaseHttpHandler getHttpServerHandler() {
-        return httpServerHandler;
-    }
-
-    public void setHttpServerHandler(BaseHttpHandler httpServerHandler) {
-        this.httpServerHandler = httpServerHandler;
-    }
-
 
     /**
      * 将字符串缓存至 ByteTree 中，在Http报文解析过程中将获得更好的性能表现。
@@ -216,7 +198,7 @@ public class FeatServerOptions {
         return headerNameByteTree;
     }
 
-    public FeatServerOptions addPlugin(Plugin<Request> plugin) {
+    public ServerOptions addPlugin(Plugin<Request> plugin) {
         plugins.add(plugin);
         if (plugin instanceof SslPlugin) {
             secure = true;
@@ -236,7 +218,7 @@ public class FeatServerOptions {
         this.maxRequestSize = maxRequestSize;
     }
 
-    public FeatServerOptions addPlugin(List<Plugin<Request>> plugins) {
+    public ServerOptions addPlugin(List<Plugin<Request>> plugins) {
         this.plugins.addAll(plugins);
         return this;
     }
@@ -249,7 +231,7 @@ public class FeatServerOptions {
         return group;
     }
 
-    public FeatServerOptions group(AsynchronousChannelGroup group) {
+    public ServerOptions group(AsynchronousChannelGroup group) {
         this.group = group;
         return this;
     }
@@ -262,7 +244,7 @@ public class FeatServerOptions {
         return httpIdleTimeout;
     }
 
-    public FeatServerOptions setHttpIdleTimeout(long httpIdleTimeout) {
+    public ServerOptions setHttpIdleTimeout(long httpIdleTimeout) {
         this.httpIdleTimeout = httpIdleTimeout;
         return this;
     }
@@ -271,7 +253,7 @@ public class FeatServerOptions {
         return wsIdleTimeout;
     }
 
-    public FeatServerOptions setWsIdleTimeout(long wsIdleTimeout) {
+    public ServerOptions setWsIdleTimeout(long wsIdleTimeout) {
         this.wsIdleTimeout = wsIdleTimeout;
         return this;
     }
@@ -280,7 +262,7 @@ public class FeatServerOptions {
         return lowMemory;
     }
 
-    public FeatServerOptions setLowMemory(boolean lowMemory) {
+    public ServerOptions setLowMemory(boolean lowMemory) {
         this.lowMemory = lowMemory;
         return this;
     }

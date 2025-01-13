@@ -15,7 +15,7 @@ import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
 import tech.smartboot.feat.core.common.utils.Constant;
 import tech.smartboot.feat.core.common.utils.DateUtils;
-import tech.smartboot.feat.core.server.FeatServerOptions;
+import tech.smartboot.feat.core.server.ServerOptions;
 
 import java.io.IOException;
 import java.util.Date;
@@ -35,7 +35,7 @@ final class HttpOutputStream extends AbstractOutputStream {
     private static long expireTime;
     private static byte[] HEAD_PART_BYTES;
     private final Request request;
-    private final FeatServerOptions configuration;
+    private final ServerOptions configuration;
 
 
     public HttpOutputStream(HttpRequestImpl httpRequest, HttpResponseImpl response) {

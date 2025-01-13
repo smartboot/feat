@@ -1,21 +1,21 @@
 package tech.smartboot.feat.core;
 
-import tech.smartboot.feat.core.server.FeatServerOptions;
+import tech.smartboot.feat.core.server.ServerOptions;
 import tech.smartboot.feat.core.server.HttpServer;
 
 import java.util.function.Consumer;
 
 public class Feat {
     public static HttpServer createHttpServer() {
-        return createHttpServer(new FeatServerOptions());
+        return createHttpServer(new ServerOptions());
     }
 
-    public static HttpServer createHttpServer(FeatServerOptions options) {
+    public static HttpServer createHttpServer(ServerOptions options) {
         return new HttpServer(options);
     }
 
-    public static HttpServer createHttpServer(Consumer<FeatServerOptions> options) {
-        FeatServerOptions opt = new FeatServerOptions();
+    public static HttpServer createHttpServer(Consumer<ServerOptions> options) {
+        ServerOptions opt = new ServerOptions();
         options.accept(opt);
         return createHttpServer(opt);
     }

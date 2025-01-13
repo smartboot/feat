@@ -33,17 +33,17 @@ public class HttpServer {
      * http消息解码器
      */
     private final HttpMessageProcessor processor;
-    private final FeatServerOptions options;
+    private final ServerOptions options;
     private final HttpRequestProtocol protocol;
     private AioQuickServer server;
     private boolean started = false;
     private BufferPagePool bufferPagePool;
 
     public HttpServer() {
-        this(new FeatServerOptions());
+        this(new ServerOptions());
     }
 
-    public HttpServer(FeatServerOptions options) {
+    public HttpServer(ServerOptions options) {
         this.options = options;
         this.processor = new HttpMessageProcessor(options);
         this.protocol = new HttpRequestProtocol(options);
@@ -69,7 +69,7 @@ public class HttpServer {
      *
      * @return
      */
-    public final FeatServerOptions options() {
+    public final ServerOptions options() {
         return options;
     }
 
@@ -107,7 +107,7 @@ public class HttpServer {
             }
 
             if (options.isBannerEnabled()) {
-                System.out.println(FeatUtils.getResourceAsString("feat-banner.txt") + "\r\n :: Feat :: (" + FeatServerOptions.VERSION + ")");
+                System.out.println(FeatUtils.getResourceAsString("feat-banner.txt") + "\r\n :: Feat :: (" + ServerOptions.VERSION + ")");
                 System.out.println(FeatUtils.getResourceAsString("feat-support.txt"));
                 System.out.println("\u001B[32m\uD83C\uDF89Congratulations, the feat startup is successful" + ".\u001B[0m");
             }

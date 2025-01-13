@@ -17,11 +17,13 @@ import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.utils.StringUtils;
-import tech.smartboot.feat.core.server.FeatServerOptions;
+import tech.smartboot.feat.core.server.ServerOptions;
+import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 /**
@@ -33,15 +35,26 @@ import java.util.Objects;
 public final class HttpMessageProcessor extends AbstractMessageProcessor<Request> {
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpMessageProcessor.class);
     private static final int MAX_LENGTH = 255 * 1024;
-    private final FeatServerOptions options;
+    private static final BaseHttpHandler BASE_HTTP_HANDLER = new BaseHttpHandler() {
+        @Override
+        public void handle(HttpRequest request) throws IOException {
+            request.getResponse().write("Hello Feat".getBytes(StandardCharsets.UTF_8));
+        }
+    };
+    private final ServerOptions options;
+    private BaseHttpHandler httpServerHandler;
 
-    public HttpMessageProcessor(FeatServerOptions options) {
+    public HttpMessageProcessor(ServerOptions options) {
         this.options = options;
     }
 
     @Override
     public void process0(AioSession session, Request request) {
         DecodeState decodeState = request.getDecodeState();
+        BaseHttpHandler httpHandler = request.getServerHandler();
+        if (httpHandler == null) {
+            request.setServerHandler(httpServerHandler == null ? BASE_HTTP_HANDLER : httpServerHandler);
+        }
         try {
             switch (decodeState.getState()) {
                 case DecodeState.STATE_HEADER_CALLBACK: {
@@ -83,7 +96,7 @@ public final class HttpMessageProcessor extends AbstractMessageProcessor<Request
             }
             response.setHttpStatus(httpStatus);
             OutputStream outputStream = response.getOutputStream();
-            outputStream.write(("<center><h1>" + httpStatus.value() + " " + httpStatus.getReasonPhrase() + "</h1>" + desc + "<hr/><a target='_blank' href='https://smartboot.tech/'>feat</a>/" + FeatServerOptions.VERSION + "&nbsp;|&nbsp; <a target='_blank' href='https://gitee.com/smartboot/feat'>Gitee</a></center>").getBytes());
+            outputStream.write(("<center><h1>" + httpStatus.value() + " " + httpStatus.getReasonPhrase() + "</h1>" + desc + "<hr/><a target='_blank' href='https://smartboot.tech/'>feat</a>/" + ServerOptions.VERSION + "&nbsp;|&nbsp; <a target='_blank' href='https://gitee.com/smartboot/feat'>Gitee</a></center>").getBytes());
         } catch (IOException e) {
             LOGGER.warn("HttpError response exception", e);
         } finally {
@@ -135,7 +148,11 @@ public final class HttpMessageProcessor extends AbstractMessageProcessor<Request
     }
 
     public void httpServerHandler(BaseHttpHandler httpServerHandler) {
-        this.options.setHttpServerHandler(Objects.requireNonNull(httpServerHandler));
+        Objects.requireNonNull(httpServerHandler, "httpServerHandler");
+        if (this.httpServerHandler != null) {
+            throw new IllegalStateException("httpServerHandler has been set");
+        }
+        this.httpServerHandler = httpServerHandler;
     }
 
 
