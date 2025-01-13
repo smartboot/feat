@@ -8,14 +8,13 @@
 
 package tech.smartboot.feat.core.server.impl;
 
-import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.common.Cookie;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.Reset;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
-import tech.smartboot.feat.core.common.io.BufferOutputStream;
+import tech.smartboot.feat.core.common.io.FeatOutputStream;
 import tech.smartboot.feat.core.server.HttpResponse;
 
 import java.io.IOException;
@@ -33,7 +32,7 @@ import java.util.function.Supplier;
  * @author 三刀
  * @version V1.0 , 2018/2/3
  */
-public class AbstractResponse implements HttpResponse, Reset {
+public abstract class AbstractResponse implements HttpResponse, Reset {
     /**
      * 输入流
      */
@@ -59,19 +58,12 @@ public class AbstractResponse implements HttpResponse, Reset {
      */
     private String contentType = HeaderValueEnum.ContentType.TEXT_HTML_UTF8;
 
-    private AioSession session;
-
     /**
      * 是否关闭Socket连接通道
      */
     protected boolean closed = false;
 
     private List<Cookie> cookies = Collections.emptyList();
-
-    protected void init(AioSession session, AbstractOutputStream outputStream) {
-        this.session = session;
-        this.outputStream = outputStream;
-    }
 
 
     public final void reset() {
@@ -85,7 +77,7 @@ public class AbstractResponse implements HttpResponse, Reset {
     }
 
 
-    public final BufferOutputStream getOutputStream() {
+    public final FeatOutputStream getOutputStream() {
         return outputStream;
     }
 
@@ -202,20 +194,7 @@ public class AbstractResponse implements HttpResponse, Reset {
     }
 
     @Override
-    public void close() {
-        if (closed) {
-            return;
-        }
-        try {
-            if (outputStream != null && !outputStream.isClosed()) {
-                outputStream.close();
-            }
-        } catch (IOException ignored) {
-        } finally {
-            session.close(false);
-        }
-        closed = true;
-    }
+    public abstract void close();
 
     public List<Cookie> getCookies() {
         return cookies;

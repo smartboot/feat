@@ -10,6 +10,7 @@ package tech.smartboot.feat.core.server.impl;
 
 import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -18,23 +19,39 @@ import java.util.function.Supplier;
  * @version V1.0 , 2018/2/3
  */
 class HttpResponseImpl extends AbstractResponse {
-    private final HttpRequestImpl request;
+    private final HttpEndpoint request;
 
-    public HttpResponseImpl(HttpRequestImpl request) {
-        init(request.request.getAioSession(), new HttpOutputStream(request, this));
+    public HttpResponseImpl(HttpEndpoint request) {
+        this.outputStream=new HttpOutputStream(request,this);
         this.request = request;
     }
 
     @Override
     public void setTrailerFields(Supplier<Map<String, String>> supplier) {
-        if (outputStream.isCommitted()) {
+        if (getOutputStream().isCommitted()) {
             throw new IllegalStateException();
         }
         if (request.getProtocol() == HttpProtocolEnum.HTTP_10) {
             throw new IllegalStateException("HTTP/1.0 request");
-        } else if (request.getProtocol() == HttpProtocolEnum.HTTP_11 && !outputStream.isChunkedSupport()) {
+        } else if (request.getProtocol() == HttpProtocolEnum.HTTP_11 && !getOutputStream().isChunkedSupport()) {
             throw new IllegalStateException("unSupport trailer");
         }
-        outputStream.setTrailerFields(supplier);
+        getOutputStream().setTrailerFields(supplier);
+    }
+
+    @Override
+    public void close() {
+        if (closed) {
+            return;
+        }
+        try {
+            if (getOutputStream() != null && !getOutputStream().isClosed()) {
+                getOutputStream().close();
+            }
+        } catch (IOException ignored) {
+        } finally {
+            request.getAioSession().close(false);
+        }
+        closed = true;
     }
 }

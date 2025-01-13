@@ -12,14 +12,13 @@ import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
 import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
-import tech.smartboot.feat.core.common.io.BufferOutputStream;
+import tech.smartboot.feat.core.common.io.FeatOutputStream;
 import tech.smartboot.feat.core.common.io.ReadListener;
 import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.impl.AbstractResponse;
-import tech.smartboot.feat.core.server.impl.HttpMessageProcessor;
-import tech.smartboot.feat.core.server.impl.HttpRequestImpl;
 import tech.smartboot.feat.core.server.impl.HttpEndpoint;
+import tech.smartboot.feat.core.server.impl.HttpMessageProcessor;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -34,21 +33,20 @@ import java.util.concurrent.CompletableFuture;
 public abstract class BaseHttpHandler implements HttpHandler {
 
     public void onBodyStream(ByteBuffer buffer, HttpEndpoint request) {
-        HttpRequestImpl httpRequest = request.newHttpRequest();
-        AbstractResponse response = httpRequest.getResponse();
+        AbstractResponse response = request.getResponse();
         try {
-            if (httpRequest.getInputStream().getReadListener() != null) {
+            if (request.getInputStream().getReadListener() != null) {
                 if (buffer.hasRemaining()) {
-                    httpRequest.getInputStream().getReadListener().onDataAvailable();
+                    request.getInputStream().getReadListener().onDataAvailable();
                 }
                 return;
             }
             CompletableFuture<Object> future = new CompletableFuture<>();
-            boolean keepAlive = isKeepAlive(httpRequest, response);
-            httpRequest.setKeepAlive(keepAlive);
-            httpRequest.request.getServerHandler().handle(httpRequest, future);
+            boolean keepAlive = isKeepAlive(request, response);
+            request.setKeepAlive(keepAlive);
+            request.getServerHandler().handle(request, future);
             if (request.getUpgradeHandler() == null) {
-                finishHttpHandle(httpRequest, future);
+                finishHttpHandle(request, future);
             }
         } catch (Throwable e) {
             HttpMessageProcessor.responseError(response, e);
@@ -79,7 +77,7 @@ public abstract class BaseHttpHandler implements HttpHandler {
     public void onClose(HttpEndpoint request) {
     }
 
-    private void finishHttpHandle(HttpRequestImpl abstractRequest, CompletableFuture<Object> future) throws IOException {
+    private void finishHttpHandle(HttpEndpoint abstractRequest, CompletableFuture<Object> future) throws IOException {
         if (future.isDone()) {
             if (keepConnection(abstractRequest)) {
                 finishResponse(abstractRequest);
@@ -87,7 +85,7 @@ public abstract class BaseHttpHandler implements HttpHandler {
             return;
         }
 
-        AioSession session = abstractRequest.request.getAioSession();
+        AioSession session = abstractRequest.getAioSession();
         ReadListener readListener = abstractRequest.getInputStream().getReadListener();
         if (readListener == null) {
             session.awaitRead();
@@ -125,17 +123,17 @@ public abstract class BaseHttpHandler implements HttpHandler {
         });
     }
 
-    private void finishResponse(HttpRequestImpl abstractRequest) throws IOException {
+    private void finishResponse(HttpEndpoint abstractRequest) throws IOException {
         AbstractResponse response = abstractRequest.getResponse();
         //关闭本次请求的输出流
-        BufferOutputStream bufferOutputStream = response.getOutputStream();
+        FeatOutputStream bufferOutputStream = response.getOutputStream();
         if (!bufferOutputStream.isClosed()) {
             bufferOutputStream.close();
         }
         abstractRequest.reset();
     }
 
-    private boolean keepConnection(HttpRequestImpl request) throws IOException {
+    private boolean keepConnection(HttpEndpoint request) throws IOException {
         if (request.getResponse().isClosed()) {
             return false;
         }
@@ -147,8 +145,8 @@ public abstract class BaseHttpHandler implements HttpHandler {
         return true;
     }
 
-    private boolean isKeepAlive(HttpRequestImpl abstractRequest, AbstractResponse response) {
-        String connection = abstractRequest.getRequest().getConnection();
+    private boolean isKeepAlive(HttpEndpoint abstractRequest, AbstractResponse response) {
+        String connection = abstractRequest.getConnection();
         boolean keepAlive = !HeaderValueEnum.Connection.CLOSE.equals(connection);
         // http/1.0默认短连接，http/1.1默认长连接。此处用 == 性能更高
         if (keepAlive && HttpProtocolEnum.HTTP_10 == abstractRequest.getProtocol()) {

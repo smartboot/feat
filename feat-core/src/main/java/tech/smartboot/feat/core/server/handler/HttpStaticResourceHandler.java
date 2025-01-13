@@ -12,7 +12,7 @@ import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.enums.HttpMethodEnum;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
 import tech.smartboot.feat.core.common.exception.HttpException;
-import tech.smartboot.feat.core.common.io.BufferOutputStream;
+import tech.smartboot.feat.core.common.io.FeatOutputStream;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.utils.DateUtils;
@@ -120,9 +120,9 @@ public class HttpStaticResourceHandler extends BaseHttpHandler {
             response.getOutputStream().transferFrom(buffer, bufferOutputStream -> completableFuture.complete(null));
 
         } else {
-            response.getOutputStream().transferFrom(buffer, new Consumer<BufferOutputStream>() {
+            response.getOutputStream().transferFrom(buffer, new Consumer<FeatOutputStream>() {
                 @Override
-                public void accept(BufferOutputStream result) {
+                public void accept(FeatOutputStream result) {
                     try {
                         buffer.compact();
                         int len = fileChannel.read(buffer);

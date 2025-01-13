@@ -9,7 +9,7 @@
 package tech.smartboot.feat.core.client.impl;
 
 import tech.smartboot.feat.core.client.HttpRequest;
-import tech.smartboot.feat.core.common.io.BufferOutputStream;
+import tech.smartboot.feat.core.common.io.FeatOutputStream;
 import tech.smartboot.feat.core.common.Cookie;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
@@ -63,7 +63,7 @@ class AbstractRequest implements HttpRequest {
     }
 
 
-    public final BufferOutputStream getOutputStream() {
+    public final FeatOutputStream getOutputStream() {
         return outputStream;
     }
 

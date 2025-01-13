@@ -17,8 +17,8 @@ import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.utils.StringUtils;
-import tech.smartboot.feat.core.server.ServerOptions;
 import tech.smartboot.feat.core.server.HttpRequest;
+import tech.smartboot.feat.core.server.ServerOptions;
 import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 
 import java.io.IOException;
@@ -91,7 +91,7 @@ public final class HttpMessageProcessor extends AbstractMessageProcessor<HttpEnd
 
     private static void responseError(AbstractResponse response, HttpStatus httpStatus, String desc) {
         try {
-            if (response.outputStream.request.getAioSession().isInvalid()) {
+            if (response.isClosed()) {
                 return;
             }
             response.setHttpStatus(httpStatus);
@@ -141,7 +141,7 @@ public final class HttpMessageProcessor extends AbstractMessageProcessor<HttpEnd
             case DECODE_EXCEPTION: {
                 LOGGER.warn("http decode exception,", throwable);
                 HttpEndpoint request = session.getAttachment();
-                responseError(request.newHttpRequest().getResponse(), throwable);
+                responseError(request.getResponse(), throwable);
                 break;
             }
         }

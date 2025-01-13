@@ -38,9 +38,9 @@ final class HttpOutputStream extends AbstractOutputStream {
     private final ServerOptions configuration;
 
 
-    public HttpOutputStream(HttpRequestImpl httpRequest, HttpResponseImpl response) {
-        super(httpRequest.request, response);
-        this.request = httpRequest.request;
+    public HttpOutputStream(HttpEndpoint httpRequest, AbstractResponse response) {
+        super(httpRequest, response);
+        this.request = httpRequest;
         this.configuration = request.getConfiguration();
         if (SERVER_LINE == null) {
             String serverLine = HeaderNameEnum.SERVER.getName() + ':' + configuration.serverName() + "\r\n";

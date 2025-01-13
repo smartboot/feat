@@ -37,7 +37,7 @@ public final class BasicAuthServerHandler extends BaseHttpHandler {
         if (StringUtils.equals(clientBasic, this.basic)) {
             httpServerHandler.onHeaderComplete(request);
         } else {
-            HttpResponse response = request.newHttpRequest().getResponse();
+            HttpResponse response = request.getResponse();
             response.setHeader(HeaderNameEnum.WWW_AUTHENTICATE.getName(), "Basic realm=\"feat\"");
             response.setHttpStatus(HttpStatus.UNAUTHORIZED);
             response.close();

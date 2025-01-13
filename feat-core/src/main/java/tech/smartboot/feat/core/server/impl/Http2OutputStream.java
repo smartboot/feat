@@ -28,7 +28,7 @@ final class Http2OutputStream extends AbstractOutputStream {
     private final int streamId;
     private final Http2Session http2Session;
 
-    public Http2OutputStream(int streamId, Http2Endpoint httpRequest, Http2ResponseImpl response, boolean push) {
+    public Http2OutputStream(int streamId, Http2Endpoint httpRequest, AbstractResponse response, boolean push) {
         super(httpRequest, response);
         disableChunked();
         this.http2Session = httpRequest.getSession();

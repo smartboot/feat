@@ -24,7 +24,7 @@ import java.util.function.Supplier;
  * @author 三刀
  * @version V1.0 , 2020/12/7
  */
-public abstract class BufferOutputStream extends OutputStream implements Reset {
+public abstract class FeatOutputStream extends OutputStream implements Reset {
     protected final WriteBuffer writeBuffer;
     protected boolean committed = false;
     protected boolean chunkedSupport = true;
@@ -36,7 +36,7 @@ public abstract class BufferOutputStream extends OutputStream implements Reset {
     private Supplier<Map<String, String>> trailerSupplier;
     private WriteListener writeListener;
 
-    public BufferOutputStream(WriteBuffer writeBuffer) {
+    public FeatOutputStream(WriteBuffer writeBuffer) {
         this.writeBuffer = writeBuffer;
     }
 
@@ -84,22 +84,22 @@ public abstract class BufferOutputStream extends OutputStream implements Reset {
         }
     }
 
-    public final void write(byte[] b, int off, int len, Consumer<BufferOutputStream> consumer) throws IOException {
+    public final void write(byte[] b, int off, int len, Consumer<FeatOutputStream> consumer) throws IOException {
         writeHeader(HeaderWriteSource.WRITE);
         if (chunkedSupport) {
             byte[] start = (Integer.toHexString(len) + "\r\n").getBytes();
             writeBuffer.write(start);
             writeBuffer.write(b, off, len);
-            writeBuffer.write(Constant.CRLF_BYTES, 0, 2, writeBuffer -> consumer.accept(BufferOutputStream.this));
+            writeBuffer.write(Constant.CRLF_BYTES, 0, 2, writeBuffer -> consumer.accept(FeatOutputStream.this));
         } else {
-            writeBuffer.write(b, off, len, writeBuffer -> consumer.accept(BufferOutputStream.this));
+            writeBuffer.write(b, off, len, writeBuffer -> consumer.accept(FeatOutputStream.this));
         }
     }
 
-    public final void transferFrom(ByteBuffer buffer, Consumer<BufferOutputStream> consumer) throws IOException {
+    public final void transferFrom(ByteBuffer buffer, Consumer<FeatOutputStream> consumer) throws IOException {
         writeHeader(HeaderWriteSource.WRITE);
         if (!chunkedSupport) {
-            writeBuffer.transferFrom(buffer, writeBuffer -> consumer.accept(BufferOutputStream.this));
+            writeBuffer.transferFrom(buffer, writeBuffer -> consumer.accept(FeatOutputStream.this));
             return;
         }
         byte[] start = (Integer.toHexString(buffer.remaining()) + "\r\n").getBytes();
@@ -112,11 +112,11 @@ public abstract class BufferOutputStream extends OutputStream implements Reset {
         if (buffer.capacity() - buffer.limit() >= Constant.CRLF_BYTES.length) {
             buffer.put(Constant.CRLF_BYTES, buffer.limit(), Constant.CRLF_BYTES.length);
             buffer.limit(buffer.limit() + Constant.CRLF_BYTES.length);
-            writeBuffer.transferFrom(buffer, writeBuffer -> consumer.accept(BufferOutputStream.this));
+            writeBuffer.transferFrom(buffer, writeBuffer -> consumer.accept(FeatOutputStream.this));
         } else {
             writeBuffer.transferFrom(buffer, writeBuffer -> {
                 try {
-                    writeBuffer.write(Constant.CRLF_BYTES, 0, 2, buffer1 -> consumer.accept(BufferOutputStream.this));
+                    writeBuffer.write(Constant.CRLF_BYTES, 0, 2, buffer1 -> consumer.accept(FeatOutputStream.this));
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }

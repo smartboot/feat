@@ -12,7 +12,7 @@ import tech.smartboot.feat.core.common.Cookie;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
-import tech.smartboot.feat.core.common.io.BufferOutputStream;
+import tech.smartboot.feat.core.common.io.FeatOutputStream;
 import tech.smartboot.feat.core.common.utils.Constant;
 import org.smartboot.socket.transport.AioSession;
 
@@ -24,7 +24,7 @@ import java.util.Map;
  * @author 三刀
  * @version V1.0 , 2018/2/3
  */
-abstract class AbstractOutputStream extends BufferOutputStream {
+abstract class AbstractOutputStream extends FeatOutputStream {
 
     protected final AbstractRequest request;
 

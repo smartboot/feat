@@ -10,7 +10,7 @@ package tech.smartboot.feat.core.server;
 
 import tech.smartboot.feat.core.common.Cookie;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
-import tech.smartboot.feat.core.common.io.BufferOutputStream;
+import tech.smartboot.feat.core.common.io.FeatOutputStream;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -30,7 +30,7 @@ public interface HttpResponse {
      *
      * @return
      */
-    BufferOutputStream getOutputStream();
+    FeatOutputStream getOutputStream();
 
     /**
      * 获取Http响应状态

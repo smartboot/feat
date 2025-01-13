@@ -11,7 +11,7 @@ package tech.smartboot.feat.core.server.impl;
 import tech.smartboot.feat.core.common.Cookie;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
-import tech.smartboot.feat.core.common.io.BufferOutputStream;
+import tech.smartboot.feat.core.common.io.FeatOutputStream;
 import tech.smartboot.feat.core.common.utils.Constant;
 import tech.smartboot.feat.core.common.utils.DateUtils;
 
@@ -23,7 +23,7 @@ import java.util.Map;
  * @author 三刀
  * @version V1.0 , 2018/2/3
  */
-abstract class AbstractOutputStream extends BufferOutputStream {
+abstract class AbstractOutputStream extends FeatOutputStream {
     protected final AbstractResponse response;
     protected final Endpoint request;
 
@@ -69,7 +69,7 @@ abstract class AbstractOutputStream extends BufferOutputStream {
         }
     }
 
-    protected boolean hasHeader() {
+    private boolean hasHeader() {
         return response.getHeaders().size() > 0;
     }
 

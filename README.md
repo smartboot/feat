@@ -21,7 +21,8 @@ An enterprise-grade HTTP service framework implemented in Java, designed for bui
 
 
 ## Features
-- Http Server & Client, support http/2
+- Http Server & Client
+- HTTP/1.0, HTTP/1.1, HTTP/2.0 
 - WebSocket
 - SSE
 - Proxy Protocol

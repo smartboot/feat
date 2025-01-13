@@ -22,12 +22,19 @@ import tech.smartboot.feat.core.common.io.ChunkedInputStream;
 import tech.smartboot.feat.core.common.io.PostInputStream;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
+import tech.smartboot.feat.core.common.multipart.MultipartConfig;
+import tech.smartboot.feat.core.common.multipart.Part;
+import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.ServerOptions;
 import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -35,13 +42,19 @@ import java.util.concurrent.TimeUnit;
  * @author 三刀
  * @version V1.0 , 2018/8/31
  */
-public final class HttpEndpoint extends Endpoint implements Reset {
+public final class HttpEndpoint extends Endpoint implements HttpRequest, Reset {
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpEndpoint.class);
 
     private final DecoderUnit decodeState = new DecoderUnit();
-    private HttpRequestImpl httpRequest;
     private BaseHttpHandler serverHandler;
+    /**
+     * 释放维持长连接
+     */
+    private boolean keepAlive;
+    private List<Part> parts;
+    private boolean multipartParsed;
 
+    private final HttpResponseImpl response;
     /**
      * 剩余可读字节数
      */
@@ -78,7 +91,7 @@ public final class HttpEndpoint extends Endpoint implements Reset {
     HttpEndpoint(ServerOptions configuration, AioSession aioSession) {
         super(aioSession, configuration);
         this.remainingThreshold = configuration.getMaxRequestSize();
-
+        this.response = new HttpResponseImpl(this);
         if (configuration.getHttpIdleTimeout() > 0) {
             httpIdleTask = HashedWheelTimer.DEFAULT_TIMER.scheduleWithFixedDelay(() -> {
                 LOGGER.debug("check httpIdle monitor");
@@ -97,6 +110,11 @@ public final class HttpEndpoint extends Endpoint implements Reset {
     public void setInputStream(BodyInputStream inputStream) {
         this.inputStream = inputStream;
     }
+
+    public AbstractResponse getResponse() {
+        return response;
+    }
+
 
     @Override
     public BodyInputStream getInputStream() {
@@ -209,16 +227,24 @@ public final class HttpEndpoint extends Endpoint implements Reset {
         return remoteHost;
     }
 
-    public HttpRequestImpl newHttpRequest() {
-        if (httpRequest == null) {
-            httpRequest = new HttpRequestImpl(this);
-        }
-        return httpRequest;
+    public boolean isKeepAlive() {
+        return keepAlive;
     }
 
-    public Map<String, String> getTrailerFields() {
-        return trailerFields;
+    public void setKeepAlive(boolean keepAlive) {
+        this.keepAlive = keepAlive;
     }
+
+    @Override
+    public Map<String, String> getTrailerFields() {
+        return trailerFields == null ? Collections.emptyMap() : trailerFields;
+    }
+
+    @Override
+    public boolean isTrailerFieldsReady() {
+        return !HeaderValueEnum.TransferEncoding.CHUNKED.equals(getHeader(HeaderNameEnum.TRANSFER_ENCODING)) || trailerFields != null;
+    }
+
 
     public DecoderUnit getDecodeState() {
         return decodeState;
@@ -230,6 +256,54 @@ public final class HttpEndpoint extends Endpoint implements Reset {
 
     public void setUpgradeHandler(HttpUpgradeHandler upgradeHandler) {
         this.upgradeHandler = upgradeHandler;
+    }
+
+    @Override
+    public void upgrade(HttpUpgradeHandler upgradeHandler) throws IOException {
+        setUpgradeHandler(upgradeHandler);
+        response.getOutputStream().disableChunked();
+        //升级后取消http空闲监听
+        cancelHttpIdleTask();
+        upgradeHandler.setRequest(this);
+        upgradeHandler.init(this, response);
+        upgradeHandler.onBodyStream(this.getAioSession().readBuffer());
+
+    }
+
+    public Collection<Part> getParts(MultipartConfig configElement) throws IOException {
+        if (!multipartParsed) {
+            MultipartFormDecoder multipartFormDecoder = new MultipartFormDecoder(this, configElement);
+            long remaining = getContentLength();
+            if (configElement.getMaxRequestSize() > 0 && configElement.getMaxRequestSize() < remaining) {
+                throw new HttpException(HttpStatus.PAYLOAD_TOO_LARGE);
+            }
+            int p = aioSession.readBuffer().position();
+            while (!multipartFormDecoder.decode(aioSession.readBuffer(), this)) {
+                remaining -= aioSession.readBuffer().position() - p;
+                int readSize = aioSession.read();
+                p = aioSession.readBuffer().position();
+                if (readSize == -1) {
+                    break;
+                }
+            }
+            multipartParsed = true;
+            setInputStream(BodyInputStream.EMPTY_INPUT_STREAM);
+            remaining -= aioSession.readBuffer().position() - p;
+            if (remaining != 0) {
+                throw new HttpException(HttpStatus.BAD_REQUEST);
+            }
+        }
+        if (parts == null) {
+            parts = new ArrayList<>();
+        }
+        return parts;
+    }
+
+    public void setPart(Part part) {
+        if (parts == null) {
+            parts = new ArrayList<>();
+        }
+        this.parts.add(part);
     }
 
     public void reset() {
@@ -246,5 +320,17 @@ public final class HttpEndpoint extends Endpoint implements Reset {
             }
             inputStream = null;
         }
+        response.reset();
+
+        if (parts != null) {
+            for (Part part : parts) {
+                try {
+                    part.delete();
+                } catch (IOException ignore) {
+                }
+            }
+            parts = null;
+        }
+        multipartParsed = false;
     }
 }

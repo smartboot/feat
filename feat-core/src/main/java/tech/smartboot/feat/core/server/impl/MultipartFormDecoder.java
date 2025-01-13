@@ -47,12 +47,12 @@ class MultipartFormDecoder {
     private final MultipartConfig multipartConfig;
     private long writeFileSize;
 
-    public MultipartFormDecoder(HttpRequestImpl request, MultipartConfig configElement) {
+    public MultipartFormDecoder(HttpEndpoint request, MultipartConfig configElement) {
         this.boundary = ("--" + request.getContentType().substring(request.getContentType().indexOf("boundary=") + 9)).getBytes();
         this.multipartConfig = configElement;
     }
 
-    public boolean decode(ByteBuffer byteBuffer, HttpRequestImpl request) {
+    public boolean decode(ByteBuffer byteBuffer, HttpEndpoint request) {
         switch (state) {
             case STATE_END_CHECK: {
                 if (byteBuffer.remaining() < boundary.length + 2) {
@@ -105,7 +105,7 @@ class MultipartFormDecoder {
                 }
                 byteBuffer.reset();
                 //Header name解码
-                ByteTree<HeaderNameEnum> name = StringUtils.scanByteTree(byteBuffer, ByteTree.COLON_END_MATCHER, request.getRequest().getConfiguration().getHeaderNameByteTree());
+                ByteTree<HeaderNameEnum> name = StringUtils.scanByteTree(byteBuffer, ByteTree.COLON_END_MATCHER, request.getConfiguration().getHeaderNameByteTree());
                 if (name == null) {
                     return false;
                 }
@@ -119,7 +119,7 @@ class MultipartFormDecoder {
                 return decode(byteBuffer, request);
             }
             case STATE_PART_HEADER_VALUE: {
-                ByteTree<?> value = StringUtils.scanByteTree(byteBuffer, ByteTree.CR_END_MATCHER, request.getRequest().getConfiguration().getByteCache());
+                ByteTree<?> value = StringUtils.scanByteTree(byteBuffer, ByteTree.CR_END_MATCHER, request.getConfiguration().getByteCache());
                 if (value == null) {
                     if (byteBuffer.remaining() == byteBuffer.capacity()) {
                         throw new HttpException(HttpStatus.REQUEST_HEADER_FIELDS_TOO_LARGE);
@@ -131,7 +131,7 @@ class MultipartFormDecoder {
                 return decode(byteBuffer, request);
             }
             case STATE_CONTENT_DISPOSITION_DECODER: {
-                ByteTree<?> value = StringUtils.scanByteTree(byteBuffer, ByteTree.CR_END_MATCHER, request.getRequest().getConfiguration().getByteCache());
+                ByteTree<?> value = StringUtils.scanByteTree(byteBuffer, ByteTree.CR_END_MATCHER, request.getConfiguration().getByteCache());
                 if (value == null) {
                     if (byteBuffer.remaining() == byteBuffer.capacity()) {
                         throw new HttpException(HttpStatus.REQUEST_HEADER_FIELDS_TOO_LARGE);

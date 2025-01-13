@@ -17,7 +17,7 @@ import java.io.IOException;
 class Http2ResponseImpl extends AbstractResponse {
 
     public Http2ResponseImpl(int streamId, Http2Endpoint httpRequest, boolean push) {
-        init(httpRequest.getAioSession(), new Http2OutputStream(streamId, httpRequest, this,push));
+        outputStream = new Http2OutputStream(streamId, httpRequest,this, push);
     }
 
     @Override
@@ -26,7 +26,7 @@ class Http2ResponseImpl extends AbstractResponse {
             return;
         }
         try {
-            outputStream.close();
+            getOutputStream().close();
         } catch (IOException e) {
             throw new RuntimeException(e);
         } finally {
