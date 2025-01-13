@@ -4,16 +4,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tech.smartboot.feat.core.common.utils.AntPathMatcher;
 import tech.smartboot.feat.core.common.utils.CollectionUtils;
-import tech.smartboot.feat.restful.annotation.Controller;
-import tech.smartboot.feat.restful.annotation.Interceptor;
-import tech.smartboot.feat.restful.annotation.RequestMapping;
-import tech.smartboot.feat.restful.intercept.MethodInterceptor;
-import tech.smartboot.feat.restful.intercept.MethodInvocation;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.handler.HttpServerHandler;
 import tech.smartboot.feat.core.server.handler.Router;
 import tech.smartboot.feat.core.server.impl.Request;
+import tech.smartboot.feat.restful.annotation.Controller;
+import tech.smartboot.feat.restful.annotation.Interceptor;
+import tech.smartboot.feat.restful.annotation.RequestMapping;
+import tech.smartboot.feat.restful.intercept.MethodInterceptor;
+import tech.smartboot.feat.restful.intercept.MethodInvocation;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -112,11 +112,11 @@ public class RestfulHandler extends HttpServerHandler {
                 }
                 router.route(mappingUrl, new ControllerHandler(method, object, interceptor0) {
                     @Override
-                    public void handle(HttpRequest request, HttpResponse response, CompletableFuture<Object> completableFuture) throws Throwable {
+                    public void handle(HttpRequest request, CompletableFuture<Object> completableFuture) throws Throwable {
                         ControllerHandler handler = this;
                         asyncExecutor.execute(() -> {
                             try {
-                                handler.handle(request, response);
+                                handler.handle(request);
                                 completableFuture.complete(null);
                             } catch (Throwable e) {
                                 completableFuture.completeExceptionally(e);

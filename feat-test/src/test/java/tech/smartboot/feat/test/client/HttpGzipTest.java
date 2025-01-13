@@ -42,7 +42,8 @@ public class HttpGzipTest {
         Router routeHandle = new Router();
         routeHandle.route("/test", new HttpServerHandler() {
             @Override
-            public void handle(HttpRequest request, HttpResponse response) throws IOException {
+            public void handle(HttpRequest request) throws IOException {
+                HttpResponse response=request.getResponse();
                 int count = NumberUtils.toInt(request.getParameter("count"), 1);
                 response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValueEnum.ContentEncoding.GZIP);
                 GZIPOutputStream outputStream = new GZIPOutputStream(response.getOutputStream());
@@ -55,7 +56,8 @@ public class HttpGzipTest {
 
         routeHandle.route("/html", new HttpServerHandler() {
             @Override
-            public void handle(HttpRequest request, HttpResponse response) throws IOException {
+            public void handle(HttpRequest request) throws IOException {
+                HttpResponse response=request.getResponse();
                 response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValueEnum.ContentEncoding.GZIP);
                 GZIPOutputStream outputStream = new GZIPOutputStream(response.getOutputStream());
                 outputStream.write("<html>".getBytes());

@@ -30,7 +30,7 @@ public class WebSocketTest extends BastTest {
         bootstrap = new HttpServer();
         bootstrap.httpHandler(new HttpServerHandler() {
             @Override
-            public void handle(HttpRequest request, HttpResponse response) throws Throwable {
+            public void handle(HttpRequest request) throws Throwable {
                 request.upgrade(new WebSocketUpgradeHandler() {
                     @Override
                     public void handleTextMessage(WebSocketRequest request, WebSocketResponse response, String data) {

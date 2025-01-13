@@ -25,7 +25,7 @@ public class WebSocketDemo {
         Router routeHandle = new Router();
 
         //2. 指定路由规则以及请求的处理实现
-        routeHandle.route("/", (request, response) -> request.upgrade(new WebSocketUpgradeHandler() {
+        routeHandle.route("/", (request) -> request.upgrade(new WebSocketUpgradeHandler() {
             @Override
             public void handleTextMessage(WebSocketRequest request, WebSocketResponse response, String data) {
                 response.ping("hello".getBytes());

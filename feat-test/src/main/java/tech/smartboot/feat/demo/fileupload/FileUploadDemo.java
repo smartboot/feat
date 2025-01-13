@@ -36,15 +36,15 @@ public class FileUploadDemo {
                             "</body></html>").getBytes();
 
                     @Override
-                    public void handle(HttpRequest request, HttpResponse response) throws IOException {
-
+                    public void handle(HttpRequest request) throws IOException {
+                        HttpResponse response=request.getResponse();
                         response.setContentLength(body.length);
                         response.getOutputStream().write(body);
                     }
                 })
                 .route("/upload", new HttpServerHandler() {
                     @Override
-                    public void handle(HttpRequest request, HttpResponse response) throws IOException {
+                    public void handle(HttpRequest request) throws IOException {
                         try {
                             for (Part part : request.getParts()) {
                                 String name = part.getName();

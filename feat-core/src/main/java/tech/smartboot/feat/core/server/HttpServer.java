@@ -53,8 +53,8 @@ public class HttpServer {
     public HttpServer httpHandler(HttpHandler handler) {
         return httpHandler(new HttpServerHandler() {
             @Override
-            public void handle(HttpRequest request, HttpResponse response) throws Throwable {
-                handler.handle(request, response);
+            public void handle(HttpRequest request) throws Throwable {
+                handler.handle(request);
             }
         });
     }

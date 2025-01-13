@@ -50,18 +50,18 @@ public class HttpPostTest {
         Router routeHandle = new Router();
         routeHandle.route("/post_param", new HttpServerHandler() {
             @Override
-            public void handle(HttpRequest request, HttpResponse response) throws IOException {
+            public void handle(HttpRequest request) throws IOException {
                 JSONObject jsonObject = new JSONObject();
                 for (String key : request.getParameters().keySet()) {
                     jsonObject.put(key, request.getParameter(key));
                 }
-                response.write(jsonObject.toString().getBytes());
+                request.getResponse().write(jsonObject.toString().getBytes());
             }
         });
         routeHandle.route("/json", new HttpServerHandler() {
 
             @Override
-            public void handle(HttpRequest request, HttpResponse response) throws IOException {
+            public void handle(HttpRequest request) throws IOException {
                 System.out.println(request.getParameters());
                 ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
                 byteArrayOutputStream.write(String.valueOf(request.getContentLength()).getBytes());
@@ -71,42 +71,42 @@ public class HttpPostTest {
                 while ((size = inputStream.read(bytes)) != -1) {
                     byteArrayOutputStream.write(bytes, 0, size);
                 }
-                response.write(byteArrayOutputStream.toByteArray());
+                request.getResponse().write(byteArrayOutputStream.toByteArray());
             }
         });
         routeHandle.route("/header", new HttpServerHandler() {
             @Override
-            public void handle(HttpRequest request, HttpResponse response) throws IOException {
+            public void handle(HttpRequest request) throws IOException {
                 JSONObject jsonObject = new JSONObject();
                 for (String header : request.getHeaderNames()) {
                     jsonObject.put(header, request.getHeader(header));
                 }
-                response.write(jsonObject.toJSONString().getBytes());
+                request.getResponse().write(jsonObject.toJSONString().getBytes());
             }
         });
 
         routeHandle.route("/other/abc", new HttpServerHandler() {
             @Override
-            public void handle(HttpRequest request, HttpResponse response) throws IOException {
+            public void handle(HttpRequest request) throws IOException {
                 System.out.println("--");
                 InputStream inputStream = request.getInputStream();
                 byte[] bytes = new byte[1024];
                 int size;
                 while ((size = inputStream.read(bytes)) != -1) {
-                    response.getOutputStream().write(bytes, 0, size);
+                    request.getResponse().getOutputStream().write(bytes, 0, size);
                 }
             }
         });
 
         routeHandle.route("/chunk", new HttpServerHandler() {
             @Override
-            public void handle(HttpRequest request, HttpResponse response) throws Throwable {
+            public void handle(HttpRequest request) throws Throwable {
                 ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
                 InputStream inputStream = request.getInputStream();
                 int b;
                 while ((b = inputStream.read()) != -1) {
                     byteArrayOutputStream.write(b);
-                    response.write(new byte[]{(byte) b});
+                    request.getResponse().write(new byte[]{(byte) b});
                 }
 
                 System.out.println(byteArrayOutputStream.toString());
@@ -115,7 +115,7 @@ public class HttpPostTest {
 
         routeHandle.route("/body", new HttpServerHandler() {
             @Override
-            public void handle(HttpRequest request, HttpResponse response) throws Throwable {
+            public void handle(HttpRequest request) throws Throwable {
                 System.out.println(request.getParameters());
                 ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
                 byteArrayOutputStream.write(String.valueOf(request.getContentLength()).getBytes());
@@ -125,15 +125,15 @@ public class HttpPostTest {
                 while ((size = inputStream.read(bytes)) != -1) {
                     byteArrayOutputStream.write(bytes, 0, size);
                 }
-                response.write(byteArrayOutputStream.toByteArray());
+                request.getResponse().write(byteArrayOutputStream.toByteArray());
             }
         });
 
         routeHandle.route("/empty", new HttpServerHandler() {
             @Override
-            public void handle(HttpRequest request, HttpResponse response) throws Throwable {
+            public void handle(HttpRequest request) throws Throwable {
                 System.out.println(request.getParameters());
-                response.setContentLength(0);
+                request.getResponse().setContentLength(0);
             }
         });
 

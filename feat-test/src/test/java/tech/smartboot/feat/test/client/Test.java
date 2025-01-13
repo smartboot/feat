@@ -26,8 +26,8 @@ public class Test {
         byte[] body = new byte[4096];
         route.route("/other/**", new HttpServerHandler() {
             @Override
-            public void handle(HttpRequest request, HttpResponse response) throws IOException {
-
+            public void handle(HttpRequest request) throws IOException {
+                HttpResponse response=request.getResponse();
                 System.out.println("=====");
                 System.out.println(request.getMethod());
                 System.out.println("=====");

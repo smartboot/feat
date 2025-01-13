@@ -31,7 +31,8 @@ public class HttpsDemo {
         HttpServer bootstrap = new HttpServer();
         bootstrap.httpHandler(new HttpServerHandler() {
             @Override
-            public void handle(HttpRequest request, HttpResponse response) throws IOException {
+            public void handle(HttpRequest request) throws IOException {
+                HttpResponse response=request.getResponse();
                 if (request.getRequestURI().equals("/aa.css")) {
                     response.write("hello feat push<br/>".getBytes());
                 } else {

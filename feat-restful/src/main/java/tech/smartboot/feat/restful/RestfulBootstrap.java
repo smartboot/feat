@@ -1,7 +1,6 @@
 package tech.smartboot.feat.restful;
 
 import tech.smartboot.feat.core.server.HttpRequest;
-import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.handler.HttpServerHandler;
 import tech.smartboot.feat.restful.context.ApplicationContext;
@@ -49,8 +48,8 @@ public class RestfulBootstrap {
         private final byte[] BYTES = "hello feat-rest".getBytes();
 
         @Override
-        public void handle(HttpRequest request, HttpResponse response) throws IOException {
-            response.getOutputStream().write(BYTES);
+        public void handle(HttpRequest request) throws IOException {
+            request.getResponse().getOutputStream().write(BYTES);
         }
     };
 

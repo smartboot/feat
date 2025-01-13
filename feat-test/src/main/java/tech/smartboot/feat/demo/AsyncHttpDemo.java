@@ -9,7 +9,6 @@
 package tech.smartboot.feat.demo;
 
 import tech.smartboot.feat.core.server.HttpRequest;
-import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.handler.HttpServerHandler;
 
@@ -30,14 +29,14 @@ public class AsyncHttpDemo {
         bootstrap.httpHandler(new HttpServerHandler() {
 
             @Override
-            public void handle(HttpRequest request, HttpResponse response, CompletableFuture<Object> future) throws IOException {
+            public void handle(HttpRequest request, CompletableFuture<Object> future) throws IOException {
 //                response.write((new Date() + " currentThread:" + Thread.currentThread()).getBytes());
 //                response.getOutputStream().flush();
                 executorService.execute(() -> {
                     try {
                         //sleep 3秒模拟阻塞
                         Thread.sleep(1000);
-                        response.write(("<br/>" + new Date() + " currentThread:" + Thread.currentThread()).getBytes());
+                        request.getResponse().write(("<br/>" + new Date() + " currentThread:" + Thread.currentThread()).getBytes());
                     } catch (Exception e) {
                         e.printStackTrace();
                     }

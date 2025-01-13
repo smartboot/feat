@@ -97,8 +97,8 @@ public class FeatOptions {
 
     private HttpServerHandler httpServerHandler = new HttpServerHandler() {
         @Override
-        public void handle(HttpRequest request, HttpResponse response) throws IOException {
-            response.write("Hello Feat".getBytes(StandardCharsets.UTF_8));
+        public void handle(HttpRequest request) throws IOException {
+            request.getResponse().write("Hello Feat".getBytes(StandardCharsets.UTF_8));
         }
     };
 

@@ -32,13 +32,13 @@ public class HttpRouteDemo {
         //2. 指定路由规则以及请求的处理实现
         routeHandle.route("/", new HttpServerHandler() {
                     @Override
-                    public void handle(HttpRequest request, HttpResponse response) throws IOException {
-                        response.write("feat".getBytes());
+                    public void handle(HttpRequest request) throws IOException {
+                        request.getResponse().write("feat".getBytes());
                     }
                 })
                 .route("/h2", new HttpServerHandler() {
                     @Override
-                    public void handle(HttpRequest request, HttpResponse response) throws IOException {
+                    public void handle(HttpRequest request) throws IOException {
                         request.upgrade(new Http2UpgradeHandler() {
                             @Override
                             public void handle(HttpRequest request, HttpResponse response) throws Throwable {
@@ -49,19 +49,19 @@ public class HttpRouteDemo {
                 })
                 .route("/test1", new HttpServerHandler() {
                     @Override
-                    public void handle(HttpRequest request, HttpResponse response) throws IOException {
-                        response.write(("test1").getBytes());
+                    public void handle(HttpRequest request) throws IOException {
+                        request.getResponse().write(("test1").getBytes());
                     }
                 })
                 .route("/test2", new HttpServerHandler() {
                     @Override
-                    public void handle(HttpRequest request, HttpResponse response) throws IOException {
-                        response.write(("test2").getBytes());
+                    public void handle(HttpRequest request) throws IOException {
+                        request.getResponse().write(("test2").getBytes());
                     }
                 })
                 .route("/ws", new HttpServerHandler() {
                     @Override
-                    public void handle(HttpRequest request, HttpResponse response) throws IOException {
+                    public void handle(HttpRequest request) throws IOException {
                         request.upgrade(new WebSocketUpgradeHandler() {
 
                         });

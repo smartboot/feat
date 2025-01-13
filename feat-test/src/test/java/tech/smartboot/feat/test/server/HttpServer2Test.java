@@ -59,7 +59,8 @@ public class HttpServer2Test extends BastTest {
     public void test1() throws ExecutionException, InterruptedException {
         bootstrap.httpHandler(new HttpServerHandler() {
             @Override
-            public void handle(HttpRequest request, HttpResponse response) throws IOException {
+            public void handle(HttpRequest request) throws IOException {
+                HttpResponse response = request.getResponse();
                 response.setContentType("test");
                 response.write("Hello World".getBytes(StandardCharsets.UTF_8));
             }
@@ -73,8 +74,8 @@ public class HttpServer2Test extends BastTest {
     public void test2() throws ExecutionException, InterruptedException {
         bootstrap.httpHandler(new HttpServerHandler() {
             @Override
-            public void handle(HttpRequest request, HttpResponse response) throws IOException {
-                response.write("Hello World".getBytes(StandardCharsets.UTF_8));
+            public void handle(HttpRequest request) throws IOException {
+                request.getResponse().write("Hello World".getBytes(StandardCharsets.UTF_8));
             }
         });
         tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.get("/").done().get();
@@ -86,8 +87,8 @@ public class HttpServer2Test extends BastTest {
     public void testPut() throws ExecutionException, InterruptedException {
         bootstrap.httpHandler(new HttpServerHandler() {
             @Override
-            public void handle(HttpRequest request, HttpResponse response) throws IOException {
-                response.write("Hello World".getBytes(StandardCharsets.UTF_8));
+            public void handle(HttpRequest request) throws IOException {
+                request.getResponse().write("Hello World".getBytes(StandardCharsets.UTF_8));
             }
         });
         tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.rest("/").setMethod(HttpMethodEnum.PUT.getMethod()).done().get();
@@ -99,9 +100,9 @@ public class HttpServer2Test extends BastTest {
     public void testPost() throws ExecutionException, InterruptedException {
         bootstrap.httpHandler(new HttpServerHandler() {
             @Override
-            public void handle(HttpRequest request, HttpResponse response) throws IOException {
+            public void handle(HttpRequest request) throws IOException {
                 request.getInputStream().close();
-                response.write("Hello World".getBytes(StandardCharsets.UTF_8));
+                request.getResponse().write("Hello World".getBytes(StandardCharsets.UTF_8));
             }
         });
         for (int i = 0; i < 10; i++) {
@@ -118,11 +119,11 @@ public class HttpServer2Test extends BastTest {
     public void testPost1() throws ExecutionException, InterruptedException {
         bootstrap.httpHandler(new HttpServerHandler() {
             @Override
-            public void handle(HttpRequest request, HttpResponse response) throws IOException {
+            public void handle(HttpRequest request) throws IOException {
                 byte[] buffer = new byte[(int) request.getContentLength()];
                 request.getInputStream().read(buffer);
 //                request.getInputStream().close();
-                response.write(buffer);
+                request.getResponse().write(buffer);
             }
         });
         for (int i = 0; i < 10; i++) {
@@ -145,7 +146,8 @@ public class HttpServer2Test extends BastTest {
 
         bootstrap.httpHandler(new HttpServerHandler() {
             @Override
-            public void handle(HttpRequest request, HttpResponse response) throws IOException {
+            public void handle(HttpRequest request) throws IOException {
+                HttpResponse response=request.getResponse();
                 for (String key : request.getParameters().keySet()) {
                     if (!Objects.equals(param.get(key), request.getParameter(key))) {
                         response.write("fail");

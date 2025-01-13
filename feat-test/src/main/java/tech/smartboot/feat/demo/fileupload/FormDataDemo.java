@@ -34,15 +34,15 @@ public class FormDataDemo {
                             "</body></html>").getBytes();
 
                     @Override
-                    public void handle(HttpRequest request, HttpResponse response) throws IOException {
-
+                    public void handle(HttpRequest request) throws IOException {
+                        HttpResponse response=request.getResponse();
                         response.setContentLength(body.length);
                         response.getOutputStream().write(body);
                     }
                 })
                 .route("/upload", new HttpServerHandler() {
                     @Override
-                    public void handle(HttpRequest request, HttpResponse response) {
+                    public void handle(HttpRequest request) {
                         try {
                             for (Part item : request.getParts()) {
                                 String name = item.getName();

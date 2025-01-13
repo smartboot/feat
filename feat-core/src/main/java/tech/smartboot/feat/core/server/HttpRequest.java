@@ -35,6 +35,13 @@ public interface HttpRequest {
     ThreadLocal<SSLEngine> SSL_ENGINE_THREAD_LOCAL = ThreadLocal.withInitial(() -> null);
 
     /**
+     * 获取Http Response
+     *
+     * @return
+     */
+    HttpResponse getResponse();
+
+    /**
      * 获取指定名称的Http Header值
      *
      * @param headName

@@ -16,14 +16,14 @@ import java.io.InputStream;
 public class SimpleSmartHttp {
     public static void main(String[] args) {
         Feat.createHttpServer(options -> options.debug(true))
-                .httpHandler((request, response) -> {
+                .httpHandler((request) -> {
                     InputStream in = request.getInputStream();
                     byte[] b = new byte[1024];
                     int i;
                     while ((i = in.read(b)) > 0) {
                         System.out.println(new String(b, 0, i));
                     }
-                    response.write("hello feat<br/>".getBytes());
+                    request.getResponse().write("hello feat<br/>".getBytes());
                 }).listen(8080);
     }
 }

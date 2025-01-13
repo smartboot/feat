@@ -8,9 +8,8 @@ import org.junit.Before;
 import org.junit.Test;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.common.multipart.Part;
-import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.HttpRequest;
-import tech.smartboot.feat.core.server.HttpResponse;
+import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.handler.HttpServerHandler;
 import tech.smartboot.feat.core.server.handler.Router;
 
@@ -37,7 +36,7 @@ public class MultipartTest {
         Router routeHandle = new Router();
         routeHandle.route("/formdata", new HttpServerHandler() {
             @Override
-            public void handle(HttpRequest request, HttpResponse response) throws IOException {
+            public void handle(HttpRequest request) throws IOException {
                 try {
                     JSONObject jsonObject = new JSONObject();
                     int i = 0;
@@ -79,7 +78,7 @@ public class MultipartTest {
                         jsonObject.put(++i + "", jsonObject2);
                     }
 
-                    response.write(jsonObject.toJSONString().getBytes());
+                    request.getResponse().write(jsonObject.toJSONString().getBytes());
                 } catch (Exception e) {
                     e.printStackTrace();
                     throw new RuntimeException(e);

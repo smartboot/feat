@@ -50,8 +50,8 @@ public final class BasicAuthServerHandler extends HttpServerHandler {
     }
 
     @Override
-    public void handle(HttpRequest request, HttpResponse response) throws Throwable {
-        httpServerHandler.handle(request, response);
+    public void handle(HttpRequest request) throws Throwable {
+        httpServerHandler.handle(request);
     }
 
 }

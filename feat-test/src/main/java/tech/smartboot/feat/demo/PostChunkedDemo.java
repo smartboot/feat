@@ -1,11 +1,10 @@
 package tech.smartboot.feat.demo;
 
-import tech.smartboot.feat.core.server.HttpServer;
-import tech.smartboot.feat.core.server.HttpRequest;
-import tech.smartboot.feat.core.server.HttpResponse;
-import tech.smartboot.feat.core.server.handler.HttpServerHandler;
 import org.smartboot.socket.transport.AioQuickClient;
 import org.smartboot.socket.transport.AioSession;
+import tech.smartboot.feat.core.server.HttpRequest;
+import tech.smartboot.feat.core.server.HttpServer;
+import tech.smartboot.feat.core.server.handler.HttpServerHandler;
 
 import java.io.IOException;
 
@@ -15,7 +14,7 @@ public class PostChunkedDemo {
         bootstrap.options().debug(true);
         bootstrap.httpHandler(new HttpServerHandler() {
             @Override
-            public void handle(HttpRequest request, HttpResponse response) throws Throwable {
+            public void handle(HttpRequest request) throws Throwable {
                 System.out.println("http request...");
                 for (String s : request.getParameters().keySet()) {
                     System.out.println(s + " :" + request.getParameter(s));
@@ -35,7 +34,9 @@ public class PostChunkedDemo {
                 "sec-ch-ua-mobile: ?0\r\n" +
                 "Sec-Fetch-Dest: empty\r\n" +
                 "name: l4qiang\r\n" +
-                "Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJkZXB0TmFtZSI6IueUqOaIt-acuuaehCIsIm9yZ05hbWUiOiLnlKjmiLfmnLrmnoQiLCJyb2xlcyI6W3siaWQiOiI2IiwibmFtZSI6bnVsbH0seyJpZCI6IjYiLCJuYW1lIjpudWxsfV0sImRlcHRJZCI6IjIiLCJ1c2VyTmFtZSI6Imw0cWlhbmciLCJvcmdVaWQiOiI5MzgwYzlmYzk5NTQ0ZjM0ODdkMDc3MTcxYjIyMGE3ZiIsInVzZXJJZCI6IjQ4NWRjZmUzY2VhMDQwMTU5OGRlNzRmODRhNmJkYmM2IiwicG9zdHMiOltdLCJvcmdJZCI6ImFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhIiwidWlkIjoiZWNhMmM5MDE1MmE5NDBlMTkyMWMxNjZiNmZkNjc2N2YiLCJjbGllbnRUeXBlIjoicGMiLCJuYW1lIjoibDRxaWFuZyIsInVzZXJUeXBlIjoiMCIsImRhdGFMZXZlbCI6IjEiLCJqdGkiOiJlY2EyYzkwMTUyYTk0MGUxOTIxYzE2NmI2ZmQ2NzY3ZiIsImlhdCI6MTcyMjIwNDExNSwiaXNzIjoiVG9wQ2xvdWQifQ.0WtDMfVsPCqMwjNQHoaAG6UfTokjZL854_P485I0Uro\r\n" +
+                "Authorization: Bearer eyJhbGciOiJIUzI1NiJ9" +
+                ".eyJkZXB0TmFtZSI6IueUqOaIt" +
+                "-acuuaehCIsIm9yZ05hbWUiOiLnlKjmiLfmnLrmnoQiLCJyb2xlcyI6W3siaWQiOiI2IiwibmFtZSI6bnVsbH0seyJpZCI6IjYiLCJuYW1lIjpudWxsfV0sImRlcHRJZCI6IjIiLCJ1c2VyTmFtZSI6Imw0cWlhbmciLCJvcmdVaWQiOiI5MzgwYzlmYzk5NTQ0ZjM0ODdkMDc3MTcxYjIyMGE3ZiIsInVzZXJJZCI6IjQ4NWRjZmUzY2VhMDQwMTU5OGRlNzRmODRhNmJkYmM2IiwicG9zdHMiOltdLCJvcmdJZCI6ImFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhIiwidWlkIjoiZWNhMmM5MDE1MmE5NDBlMTkyMWMxNjZiNmZkNjc2N2YiLCJjbGllbnRUeXBlIjoicGMiLCJuYW1lIjoibDRxaWFuZyIsInVzZXJUeXBlIjoiMCIsImRhdGFMZXZlbCI6IjEiLCJqdGkiOiJlY2EyYzkwMTUyYTk0MGUxOTIxYzE2NmI2ZmQ2NzY3ZiIsImlhdCI6MTcyMjIwNDExNSwiaXNzIjoiVG9wQ2xvdWQifQ.0WtDMfVsPCqMwjNQHoaAG6UfTokjZL854_P485I0Uro\r\n" +
                 "Host: 127.0.0.1:1010\r\n" +
                 "Accept-Encoding: gzip, deflate, br, zstd\r\n" +
                 "Sec-Fetch-Site: none\r\n" +
@@ -59,8 +60,8 @@ public class PostChunkedDemo {
                 "user-agent: ReactorNetty/0.8.3.RELEASE\r\n" +
                 "transfer-encoding: chunked\r\n" +
                 "\r\n" +
-                "8\r\n"+
-                "test=111\r\n"+
+                "8\r\n" +
+                "test=111\r\n" +
                 "0\r\n\r\n").getBytes());
         session.writeBuffer().flush();
     }

@@ -26,7 +26,8 @@ public class Bootstrap {
 
 
             @Override
-            public void handle(HttpRequest request, HttpResponse response) throws IOException {
+            public void handle(HttpRequest request) throws IOException {
+                HttpResponse response=request.getResponse();
                 response.setContentLength(body.length);
                 response.setContentType("text/plain; charset=UTF-8");
                 response.write(body);

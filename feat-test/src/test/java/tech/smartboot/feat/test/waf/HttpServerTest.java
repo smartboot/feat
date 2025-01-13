@@ -57,7 +57,8 @@ public class HttpServerTest extends BastTest {
         bootstrap = new HttpServer();
         bootstrap.httpHandler(new HttpServerHandler() {
             @Override
-            public void handle(HttpRequest request, HttpResponse response) throws IOException {
+            public void handle(HttpRequest request) throws IOException {
+                HttpResponse response=request.getResponse();
                 //随机启用GZIP
                 OutputStream outputStream;
                 if (System.currentTimeMillis() % 2 == 0) {

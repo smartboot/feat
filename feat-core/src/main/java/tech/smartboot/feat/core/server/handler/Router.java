@@ -14,7 +14,6 @@ import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.utils.AntPathMatcher;
 import tech.smartboot.feat.core.server.HttpRequest;
-import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.impl.Request;
 
 import java.io.IOException;
@@ -38,8 +37,8 @@ public final class Router extends HttpServerHandler {
     public Router() {
         this(new HttpServerHandler() {
             @Override
-            public void handle(HttpRequest request, HttpResponse response) throws IOException {
-                response.setHttpStatus(HttpStatus.NOT_FOUND);
+            public void handle(HttpRequest request) throws IOException {
+                request.getResponse().setHttpStatus(HttpStatus.NOT_FOUND);
             }
         });
     }
@@ -65,10 +64,10 @@ public final class Router extends HttpServerHandler {
     }
 
     @Override
-    public void handle(HttpRequest request, HttpResponse response, CompletableFuture<Object> completableFuture) throws Throwable {
+    public void handle(HttpRequest request, CompletableFuture<Object> completableFuture) throws Throwable {
         if (request.getProtocol() == HttpProtocolEnum.HTTP_2) {
             HttpServerHandler httpServerHandler = matchHandler(request.getRequestURI());
-            httpServerHandler.handle(request, response, completableFuture);
+            httpServerHandler.handle(request, completableFuture);
         } else {
             throw new UnsupportedOperationException();
         }
@@ -89,8 +88,8 @@ public final class Router extends HttpServerHandler {
     public Router route(String urlPattern, HttpHandler httpHandler) {
         handlerMap.put(urlPattern, new HttpServerHandler() {
             @Override
-            public void handle(HttpRequest request, HttpResponse response) throws Throwable {
-                httpHandler.handle(request, response);
+            public void handle(HttpRequest request) throws Throwable {
+                httpHandler.handle(request);
             }
         });
         return this;

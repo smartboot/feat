@@ -44,7 +44,8 @@ public class HttpRestTest {
         Router routeHandler = new Router();
         routeHandler.route("/post", new HttpServerHandler() {
             @Override
-            public void handle(HttpRequest request, HttpResponse response) throws IOException {
+            public void handle(HttpRequest request) throws IOException {
+                HttpResponse response=request.getResponse();
                 response.setHeader(HeaderNameEnum.CONNECTION.getName(), HeaderValueEnum.Connection.keepalive);
                 JSONObject jsonObject = new JSONObject();
                 for (String key : request.getParameters().keySet()) {

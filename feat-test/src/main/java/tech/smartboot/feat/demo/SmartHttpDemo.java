@@ -13,10 +13,10 @@ import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServer;
-import tech.smartboot.feat.core.server.handler.HttpServerHandler;
 import tech.smartboot.feat.core.server.WebSocketRequest;
 import tech.smartboot.feat.core.server.WebSocketResponse;
 import tech.smartboot.feat.core.server.handler.BasicAuthServerHandler;
+import tech.smartboot.feat.core.server.handler.HttpServerHandler;
 import tech.smartboot.feat.core.server.handler.Router;
 import tech.smartboot.feat.core.server.upgrade.websocket.WebSocketUpgradeHandler;
 
@@ -39,8 +39,8 @@ public class SmartHttpDemo {
         Router routeHandle = new Router();
         routeHandle.route("/basic", new BasicAuthServerHandler("admin", "admin1", new HttpServerHandler() {
             @Override
-            public void handle(HttpRequest request, HttpResponse response) throws IOException {
-                response.write("success".getBytes());
+            public void handle(HttpRequest request) throws IOException {
+                request.getResponse().write("success".getBytes());
             }
         }));
         routeHandle.route("/", new HttpServerHandler() {
@@ -53,42 +53,42 @@ public class SmartHttpDemo {
                             "</body></html>").getBytes();
 
                     @Override
-                    public void handle(HttpRequest request, HttpResponse response) throws IOException {
-
+                    public void handle(HttpRequest request) throws IOException {
+                        HttpResponse response = request.getResponse();
                         response.setContentLength(body.length);
                         response.getOutputStream().write(body);
                     }
                 })
                 .route("/get", new HttpServerHandler() {
                     @Override
-                    public void handle(HttpRequest request, HttpResponse response) throws IOException {
-                        response.write(("收到Get参数text=" + request.getParameter("text")).getBytes());
+                    public void handle(HttpRequest request) throws IOException {
+                        request.getResponse().write(("收到Get参数text=" + request.getParameter("text")).getBytes());
                     }
                 }).route("/post", new HttpServerHandler() {
                     @Override
-                    public void handle(HttpRequest request, HttpResponse response) throws IOException {
-                        response.write(("收到Post参数text=" + request.getParameter("text")).getBytes());
+                    public void handle(HttpRequest request) throws IOException {
+                        request.getResponse().write(("收到Post参数text=" + request.getParameter("text")).getBytes());
                     }
                 }).route("/upload", new HttpServerHandler() {
                     @Override
-                    public void handle(HttpRequest request, HttpResponse response) throws IOException {
+                    public void handle(HttpRequest request) throws IOException {
                         InputStream in = request.getInputStream();
                         byte[] buffer = new byte[1024];
                         int len = 0;
                         while ((len = in.read(buffer)) != -1) {
-                            response.getOutputStream().write(buffer, 0, len);
+                            request.getResponse().getOutputStream().write(buffer, 0, len);
                         }
                         in.close();
                     }
                 }).route("/post_json", new HttpServerHandler() {
                     @Override
-                    public void handle(HttpRequest request, HttpResponse response) throws IOException {
+                    public void handle(HttpRequest request) throws IOException {
                         InputStream in = request.getInputStream();
                         byte[] buffer = new byte[1024];
                         int len = 0;
                         System.out.println(request.getContentType());
                         while ((len = in.read(buffer)) != -1) {
-                            response.getOutputStream().write(buffer, 0, len);
+                            request.getResponse().getOutputStream().write(buffer, 0, len);
                         }
                         in.close();
                     }
@@ -96,7 +96,8 @@ public class SmartHttpDemo {
                     byte[] body = "Hello World!".getBytes();
 
                     @Override
-                    public void handle(HttpRequest request, HttpResponse response) throws IOException {
+                    public void handle(HttpRequest request) throws IOException {
+                        HttpResponse response = request.getResponse();
                         response.setContentLength(body.length);
                         response.setContentType("text/plain; charset=UTF-8");
                         response.write(body);
@@ -104,7 +105,8 @@ public class SmartHttpDemo {
                     }
                 }).route("/head", new HttpServerHandler() {
                     @Override
-                    public void handle(HttpRequest request, HttpResponse response) throws IOException {
+                    public void handle(HttpRequest request) throws IOException {
+                        HttpResponse response = request.getResponse();
                         response.addHeader("a", "b");
                         response.addHeader("a", "c");
                         Collection<String> headNames = request.getHeaderNames();
@@ -114,15 +116,15 @@ public class SmartHttpDemo {
                     }
                 }).route("/post_param", new HttpServerHandler() {
                     @Override
-                    public void handle(HttpRequest request, HttpResponse response) throws IOException {
+                    public void handle(HttpRequest request) throws IOException {
                         //curl -X POST -H "Transfer-Encoding: chunked" -H "Content-Type: application/x-www-form-urlencoded" --data "field1=value1&field2=value2" http://localhost:8080/post_param
                         for (String parameter : request.getParameters().keySet()) {
-                            response.write((parameter + ": " + request.getParameter(parameter) + "</br>").getBytes());
+                            request.getResponse().write((parameter + ": " + request.getParameter(parameter) + "</br>").getBytes());
                         }
                     }
                 }).route("/ws", new HttpServerHandler() {
                     @Override
-                    public void handle(HttpRequest request, HttpResponse response) throws Throwable {
+                    public void handle(HttpRequest request) throws Throwable {
                         request.upgrade(new WebSocketUpgradeHandler() {
                             @Override
                             public void onHandShake(WebSocketRequest request, WebSocketResponse webSocketResponse) {

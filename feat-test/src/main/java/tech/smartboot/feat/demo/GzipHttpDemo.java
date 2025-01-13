@@ -30,7 +30,8 @@ public class GzipHttpDemo {
         Router routeHandle = new Router();
         routeHandle.route("/a", new HttpServerHandler() {
             @Override
-            public void handle(HttpRequest request, HttpResponse response) throws IOException {
+            public void handle(HttpRequest request) throws IOException {
+                HttpResponse response=request.getResponse();
                 byte[] data = text.getBytes();
                 response.setContentLength(data.length);
 //                response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValueEnum.GZIP.getName());
@@ -38,13 +39,15 @@ public class GzipHttpDemo {
             }
         }).route("/b", new HttpServerHandler() {
             @Override
-            public void handle(HttpRequest request, HttpResponse response) throws IOException {
+            public void handle(HttpRequest request) throws IOException {
+                HttpResponse response=request.getResponse();
                 response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValueEnum.ContentEncoding.GZIP);
                 response.write(text.getBytes());
             }
         }).route("/c", new HttpServerHandler() {
             @Override
-            public void handle(HttpRequest request, HttpResponse response) throws Throwable {
+            public void handle(HttpRequest request) throws Throwable {
+                HttpResponse response=request.getResponse();
                 response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValueEnum.ContentEncoding.GZIP);
                 GZIPOutputStream gzipOutputStream = new GZIPOutputStream(response.getOutputStream());
                 gzipOutputStream.write(("<html><body>hello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello " +
@@ -55,7 +58,8 @@ public class GzipHttpDemo {
             }
         }).route("/d", new HttpServerHandler() {
             @Override
-            public void handle(HttpRequest request, HttpResponse response) throws Throwable {
+            public void handle(HttpRequest request) throws Throwable {
+                HttpResponse response=request.getResponse();
                 String content = "Hello world";
                 ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
                 GZIPOutputStream gzipOutputStream = new GZIPOutputStream(outputStream);

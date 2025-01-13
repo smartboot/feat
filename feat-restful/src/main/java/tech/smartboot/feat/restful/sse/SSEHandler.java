@@ -1,11 +1,11 @@
 package tech.smartboot.feat.restful.sse;
 
+import org.smartboot.socket.util.AttachKey;
+import org.smartboot.socket.util.Attachment;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.handler.HttpServerHandler;
 import tech.smartboot.feat.core.server.impl.Request;
-import org.smartboot.socket.util.AttachKey;
-import org.smartboot.socket.util.Attachment;
 
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
@@ -14,7 +14,8 @@ public abstract class SSEHandler extends HttpServerHandler {
     private static final AttachKey<SseEmitter> SSE_EMITTER = AttachKey.valueOf("SSE_EMITTER");
 
     @Override
-    public final void handle(HttpRequest request, HttpResponse response, CompletableFuture<Object> completableFuture) throws IOException {
+    public final void handle(HttpRequest request, CompletableFuture<Object> completableFuture) throws IOException {
+        HttpResponse response = request.getResponse();
         response.setHeader("Content-Type", "text/event-stream");
         response.setHeader("Cache-Control", "no-cache");
         response.setHeader("Connection", "keep-alive");

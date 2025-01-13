@@ -70,7 +70,8 @@ class ControllerHandler extends HttpServerHandler {
     }
 
     @Override
-    public void handle(HttpRequest request, HttpResponse response) throws Throwable {
+    public void handle(HttpRequest request) throws Throwable {
+        HttpResponse response = request.getResponse();
         Object[] params = getParams(request, response);
         method.setAccessible(true);
         MethodInvocation invocation = new MethodInvocationImpl(method, params, controller, request, response);

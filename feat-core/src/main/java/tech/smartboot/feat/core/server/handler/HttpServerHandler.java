@@ -15,7 +15,6 @@ import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
 import tech.smartboot.feat.core.common.io.BufferOutputStream;
 import tech.smartboot.feat.core.common.io.ReadListener;
 import tech.smartboot.feat.core.server.HttpRequest;
-import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.impl.AbstractResponse;
 import tech.smartboot.feat.core.server.impl.HttpMessageProcessor;
 import tech.smartboot.feat.core.server.impl.HttpRequestImpl;
@@ -46,7 +45,7 @@ public abstract class HttpServerHandler implements HttpHandler {
             CompletableFuture<Object> future = new CompletableFuture<>();
             boolean keepAlive = isKeepAlive(httpRequest, response);
             httpRequest.setKeepAlive(keepAlive);
-            httpRequest.request.getServerHandler().handle(httpRequest, response, future);
+            httpRequest.request.getServerHandler().handle(httpRequest, future);
             if (request.getUpgradeHandler() == null) {
                 finishHttpHandle(httpRequest, future);
             }
@@ -55,16 +54,16 @@ public abstract class HttpServerHandler implements HttpHandler {
         }
     }
 
-    public void handle(HttpRequest request, HttpResponse response, CompletableFuture<Object> completableFuture) throws Throwable {
+    public void handle(HttpRequest request, CompletableFuture<Object> completableFuture) throws Throwable {
         try {
-            handle(request, response);
+            handle(request);
         } finally {
             completableFuture.complete(null);
         }
     }
 
     @Override
-    public void handle(HttpRequest request, HttpResponse response) throws Throwable {
+    public void handle(HttpRequest request) throws Throwable {
     }
 
     /**

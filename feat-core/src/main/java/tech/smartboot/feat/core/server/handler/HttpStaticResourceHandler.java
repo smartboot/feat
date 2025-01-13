@@ -8,11 +8,11 @@
 
 package tech.smartboot.feat.core.server.handler;
 
-import tech.smartboot.feat.core.common.io.BufferOutputStream;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.enums.HttpMethodEnum;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
 import tech.smartboot.feat.core.common.exception.HttpException;
+import tech.smartboot.feat.core.common.io.BufferOutputStream;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.utils.DateUtils;
@@ -56,7 +56,8 @@ public class HttpStaticResourceHandler extends HttpServerHandler {
     }
 
     @Override
-    public void handle(HttpRequest request, HttpResponse response, CompletableFuture<Object> completableFuture) throws IOException {
+    public void handle(HttpRequest request, CompletableFuture<Object> completableFuture) throws IOException {
+        HttpResponse response = request.getResponse();
         String fileName = request.getRequestURI();
         String method = request.getMethod();
         if (StringUtils.endsWith(fileName, "/")) {

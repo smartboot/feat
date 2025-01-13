@@ -38,13 +38,13 @@ public class StaticResourceHandler extends HttpServerHandler {
     }
 
     @Override
-    public void handle(HttpRequest request, HttpResponse response, CompletableFuture<Object> completableFuture) throws Throwable {
+    public void handle(HttpRequest request, CompletableFuture<Object> completableFuture) throws Throwable {
         if (asyncExecutor == null) {
-            super.handle(request, response, completableFuture);
+            super.handle(request, completableFuture);
         } else {
             asyncExecutor.execute(() -> {
                 try {
-                    handle(request, response);
+                    handle(request);
                     completableFuture.complete(null);
                 } catch (IOException e) {
                     completableFuture.completeExceptionally(e);
@@ -54,7 +54,8 @@ public class StaticResourceHandler extends HttpServerHandler {
     }
 
     @Override
-    public void handle(HttpRequest request, HttpResponse response) throws IOException {
+    public void handle(HttpRequest request) throws IOException {
+        HttpResponse response=request.getResponse();
         String fileName = request.getRequestURI();
 
         if (StringUtils.endsWith(fileName, "/")) {
