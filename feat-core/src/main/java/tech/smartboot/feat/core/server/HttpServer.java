@@ -50,16 +50,16 @@ public class HttpServer {
     }
 
     public HttpServer httpHandler(HttpHandler handler) {
-        return httpHandler(new BaseHttpHandler() {
-            @Override
-            public void handle(HttpRequest request) throws Throwable {
-                handler.handle(request);
-            }
-        });
-    }
-
-    public HttpServer httpHandler(BaseHttpHandler handler) {
-        processor.httpServerHandler(handler);
+        if (handler instanceof BaseHttpHandler) {
+            processor.httpServerHandler((BaseHttpHandler) handler);
+        } else {
+            processor.httpServerHandler(new BaseHttpHandler() {
+                @Override
+                public void handle(HttpRequest request) throws Throwable {
+                    handler.handle(request);
+                }
+            });
+        }
         return this;
     }
 
