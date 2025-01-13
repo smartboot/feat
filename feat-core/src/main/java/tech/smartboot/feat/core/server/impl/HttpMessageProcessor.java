@@ -32,7 +32,7 @@ import java.util.Objects;
  * @author 三刀
  * @version V1.0 , 2018/6/10
  */
-public final class HttpMessageProcessor extends AbstractMessageProcessor<Request> {
+public final class HttpMessageProcessor extends AbstractMessageProcessor<HttpEndpoint> {
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpMessageProcessor.class);
     private static final int MAX_LENGTH = 255 * 1024;
     private static final BaseHttpHandler BASE_HTTP_HANDLER = new BaseHttpHandler() {
@@ -49,7 +49,7 @@ public final class HttpMessageProcessor extends AbstractMessageProcessor<Request
     }
 
     @Override
-    public void process0(AioSession session, Request request) {
+    public void process0(AioSession session, HttpEndpoint request) {
         DecodeState decodeState = request.getDecodeState();
         BaseHttpHandler httpHandler = request.getServerHandler();
         if (httpHandler == null) {
@@ -104,7 +104,7 @@ public final class HttpMessageProcessor extends AbstractMessageProcessor<Request
         }
     }
 
-    private void doHttpHeader(Request request) throws IOException {
+    private void doHttpHeader(HttpEndpoint request) throws IOException {
         methodCheck(request);
         uriCheck(request);
         request.getServerHandler().onHeaderComplete(request);
@@ -117,7 +117,7 @@ public final class HttpMessageProcessor extends AbstractMessageProcessor<Request
         }
         switch (stateMachineEnum) {
             case NEW_SESSION: {
-                session.setAttachment(new Request(options, session));
+                session.setAttachment(new HttpEndpoint(options, session));
                 break;
             }
             case PROCESS_EXCEPTION:
@@ -125,7 +125,7 @@ public final class HttpMessageProcessor extends AbstractMessageProcessor<Request
                 session.close();
                 break;
             case SESSION_CLOSED: {
-                Request request = session.getAttachment();
+                HttpEndpoint request = session.getAttachment();
                 try {
                     if (request.getServerHandler() != null) {
                         request.getServerHandler().onClose(request);
@@ -140,7 +140,7 @@ public final class HttpMessageProcessor extends AbstractMessageProcessor<Request
             }
             case DECODE_EXCEPTION: {
                 LOGGER.warn("http decode exception,", throwable);
-                Request request = session.getAttachment();
+                HttpEndpoint request = session.getAttachment();
                 responseError(request.newHttpRequest().getResponse(), throwable);
                 break;
             }
@@ -166,7 +166,7 @@ public final class HttpMessageProcessor extends AbstractMessageProcessor<Request
      * 方法 GET 和 HEAD 必须被所有一般的服务器支持。 所有其它的方法是可选的;
      * 然而，如果上面的方法都被实现， 这些方法遵循的语意必须和第 9 章指定的相同
      */
-    private void methodCheck(Request request) {
+    private void methodCheck(HttpEndpoint request) {
         if (request.getMethod() == null) {
             throw new HttpException(HttpStatus.NOT_IMPLEMENTED);
         }
@@ -177,7 +177,7 @@ public final class HttpMessageProcessor extends AbstractMessageProcessor<Request
      * 2、发送 HTTP/1.1 请求的客户端必须发送 Host 头域。
      * 3、如果 HTTP/1.1 请求不包括 Host 请求头域，服务器必须报告错误 400(Bad Request)。 --服务器必须接受绝对 URIs(absolute URIs)。
      */
-    private void hostCheck(Request request) {
+    private void hostCheck(HttpEndpoint request) {
         if (request.getHost() == null) {
             throw new HttpException(HttpStatus.BAD_REQUEST);
         }
@@ -189,7 +189,7 @@ public final class HttpMessageProcessor extends AbstractMessageProcessor<Request
      * HTTP 协议不对 URI 的长度作事先的限制，服务器必须能够处理任何他们提供资源的 URI，并 且应该能够处理无限长度的 URIs，这种无效长度的 URL 可能会在客户端以基于 GET 方式的 请求时产生。如果服务器不能处理太长的 URI 的时候，服务器应该返回 414 状态码(此状态码 代表 Request-URI 太长)。
      * 注:服务器在依赖大于 255 字节的 URI 时应谨慎，因为一些旧的客户或代理实现可能不支持这 些长度。
      */
-    private void uriCheck(Request request) {
+    private void uriCheck(HttpEndpoint request) {
         String originalUri = request.getUri();
         if (StringUtils.length(originalUri) > MAX_LENGTH) {
             throw new HttpException(HttpStatus.URI_TOO_LONG);

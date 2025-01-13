@@ -16,7 +16,7 @@ import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.utils.ByteTree;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
-import tech.smartboot.feat.core.server.impl.Request;
+import tech.smartboot.feat.core.server.impl.HttpEndpoint;
 import tech.smartboot.feat.core.server.waf.WafConfiguration;
 
 import java.nio.channels.AsynchronousChannelGroup;
@@ -44,7 +44,7 @@ public class ServerOptions {
     /**
      * smart-socket 插件
      */
-    private final List<Plugin<Request>> plugins = new ArrayList<>();
+    private final List<Plugin<HttpEndpoint>> plugins = new ArrayList<>();
 
     /**
      * 是否启用控制台banner
@@ -198,7 +198,7 @@ public class ServerOptions {
         return headerNameByteTree;
     }
 
-    public ServerOptions addPlugin(Plugin<Request> plugin) {
+    public ServerOptions addPlugin(Plugin<HttpEndpoint> plugin) {
         plugins.add(plugin);
         if (plugin instanceof SslPlugin) {
             secure = true;
@@ -218,12 +218,12 @@ public class ServerOptions {
         this.maxRequestSize = maxRequestSize;
     }
 
-    public ServerOptions addPlugin(List<Plugin<Request>> plugins) {
+    public ServerOptions addPlugin(List<Plugin<HttpEndpoint>> plugins) {
         this.plugins.addAll(plugins);
         return this;
     }
 
-    public List<Plugin<Request>> getPlugins() {
+    public List<Plugin<HttpEndpoint>> getPlugins() {
         return plugins;
     }
 

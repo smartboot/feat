@@ -34,7 +34,7 @@ final class HttpOutputStream extends AbstractOutputStream {
     private static byte[] SERVER_LINE = null;
     private static long expireTime;
     private static byte[] HEAD_PART_BYTES;
-    private final Request request;
+    private final HttpEndpoint request;
     private final ServerOptions configuration;
 
 

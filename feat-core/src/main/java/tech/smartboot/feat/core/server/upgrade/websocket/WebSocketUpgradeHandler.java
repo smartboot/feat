@@ -39,7 +39,7 @@ public class WebSocketUpgradeHandler extends HttpUpgradeHandler {
 
     @Override
     public final void init(HttpRequest req, HttpResponse response) throws IOException {
-        webSocketRequest = new WebSocketRequestImpl(req);
+        webSocketRequest = new WebSocketRequestImpl();
         webSocketResponse = new WebSocketResponseImpl(response);
         String acceptSeed = request.getHeader(HeaderNameEnum.Sec_WebSocket_Key) + WEBSOCKET_13_ACCEPT_GUID;
         byte[] sha1 = SHA1.encode(acceptSeed);

@@ -37,7 +37,7 @@ import java.util.Map;
  * @version V1.0 , 2018/8/31
  */
 public class HttpRequestImpl implements HttpRequest, Reset {
-    public final Request request;
+    public final HttpEndpoint request;
     /**
      * 释放维持长连接
      */
@@ -47,7 +47,7 @@ public class HttpRequestImpl implements HttpRequest, Reset {
 
     private final HttpResponseImpl response;
 
-    HttpRequestImpl(Request request) {
+    HttpRequestImpl(HttpEndpoint request) {
         this.request = request;
         this.response = new HttpResponseImpl(this);
     }
@@ -258,7 +258,7 @@ public class HttpRequestImpl implements HttpRequest, Reset {
         return request.getCharacterEncoding();
     }
 
-    public final Request getRequest() {
+    public final HttpEndpoint getRequest() {
         return request;
     }
 

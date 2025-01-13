@@ -15,7 +15,7 @@ import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.utils.AntPathMatcher;
 import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpRequest;
-import tech.smartboot.feat.core.server.impl.Request;
+import tech.smartboot.feat.core.server.impl.HttpEndpoint;
 
 import java.io.IOException;
 import java.util.Map;
@@ -49,7 +49,7 @@ public final class Router extends BaseHttpHandler {
     }
 
     @Override
-    public void onHeaderComplete(Request request) throws IOException {
+    public void onHeaderComplete(HttpEndpoint request) throws IOException {
         BaseHttpHandler httpServerHandler = matchHandler(request.getRequestURI());
         //注册 URI 与 Handler 的映射关系
         request.getConfiguration().getUriByteTree().addNode(request.getUri(), httpServerHandler);
@@ -59,7 +59,7 @@ public final class Router extends BaseHttpHandler {
     }
 
     @Override
-    public void onClose(Request request) {
+    public void onClose(HttpEndpoint request) {
         LOGGER.warn("connection is closed before route match.");
         defaultHandler.onClose(request);
     }

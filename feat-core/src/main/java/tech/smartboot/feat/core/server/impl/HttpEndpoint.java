@@ -35,8 +35,8 @@ import java.util.concurrent.TimeUnit;
  * @author 三刀
  * @version V1.0 , 2018/8/31
  */
-public final class Request extends CommonRequest implements Reset {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Request.class);
+public final class HttpEndpoint extends Endpoint implements Reset {
+    private static final Logger LOGGER = LoggerFactory.getLogger(HttpEndpoint.class);
 
     private final DecoderUnit decodeState = new DecoderUnit();
     private HttpRequestImpl httpRequest;
@@ -75,7 +75,7 @@ public final class Request extends CommonRequest implements Reset {
         }
     }
 
-    Request(ServerOptions configuration, AioSession aioSession) {
+    HttpEndpoint(ServerOptions configuration, AioSession aioSession) {
         super(aioSession, configuration);
         this.remainingThreshold = configuration.getMaxRequestSize();
 

@@ -19,7 +19,7 @@ import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.impl.AbstractResponse;
 import tech.smartboot.feat.core.server.impl.HttpMessageProcessor;
 import tech.smartboot.feat.core.server.impl.HttpRequestImpl;
-import tech.smartboot.feat.core.server.impl.Request;
+import tech.smartboot.feat.core.server.impl.HttpEndpoint;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -33,7 +33,7 @@ import java.util.concurrent.CompletableFuture;
  */
 public abstract class BaseHttpHandler implements HttpHandler {
 
-    public void onBodyStream(ByteBuffer buffer, Request request) {
+    public void onBodyStream(ByteBuffer buffer, HttpEndpoint request) {
         HttpRequestImpl httpRequest = request.newHttpRequest();
         AbstractResponse response = httpRequest.getResponse();
         try {
@@ -70,13 +70,13 @@ public abstract class BaseHttpHandler implements HttpHandler {
     /**
      * Http header 完成解析
      */
-    public void onHeaderComplete(Request request) throws IOException {
+    public void onHeaderComplete(HttpEndpoint request) throws IOException {
     }
 
     /**
      * 断开 TCP 连接
      */
-    public void onClose(Request request) {
+    public void onClose(HttpEndpoint request) {
     }
 
     private void finishHttpHandle(HttpRequestImpl abstractRequest, CompletableFuture<Object> future) throws IOException {

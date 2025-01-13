@@ -7,9 +7,9 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 public abstract class HttpUpgradeHandler {
-    protected Request request;
+    protected HttpEndpoint request;
 
-    void setRequest(Request request) {
+    void setRequest(HttpEndpoint request) {
         this.request = request;
     }
 

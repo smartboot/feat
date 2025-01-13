@@ -8,7 +8,7 @@ import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 import tech.smartboot.feat.core.server.handler.Router;
-import tech.smartboot.feat.core.server.impl.Request;
+import tech.smartboot.feat.core.server.impl.HttpEndpoint;
 import tech.smartboot.feat.restful.annotation.Controller;
 import tech.smartboot.feat.restful.annotation.Interceptor;
 import tech.smartboot.feat.restful.annotation.RequestMapping;
@@ -161,7 +161,7 @@ public class RestfulHandler extends BaseHttpHandler {
     }
 
     @Override
-    public void onHeaderComplete(Request request) throws IOException {
+    public void onHeaderComplete(HttpEndpoint request) throws IOException {
         router.onHeaderComplete(request);
     }
 

@@ -49,8 +49,8 @@ import java.util.Set;
  * @author 三刀
  * @version V1.0 , 2018/8/31
  */
-abstract class CommonRequest implements Reset {
-    private static final Logger LOGGER = LoggerFactory.getLogger(CommonRequest.class);
+abstract class Endpoint implements Reset {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Endpoint.class);
     private static final Locale defaultLocale = Locale.getDefault();
     private static final int INIT_CONTENT_LENGTH = -2;
     private static final int NONE_CONTENT_LENGTH = -1;
@@ -107,7 +107,7 @@ abstract class CommonRequest implements Reset {
      */
     protected long latestIo;
 
-    CommonRequest(AioSession aioSession, ServerOptions configuration) {
+    Endpoint(AioSession aioSession, ServerOptions configuration) {
         this.aioSession = aioSession;
         this.configuration = configuration;
         this.sslEngine = HttpRequest.SSL_ENGINE_THREAD_LOCAL.get();

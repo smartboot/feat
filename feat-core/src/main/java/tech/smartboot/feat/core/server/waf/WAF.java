@@ -3,10 +3,10 @@ package tech.smartboot.feat.core.server.waf;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
 import tech.smartboot.feat.core.common.utils.CollectionUtils;
 import tech.smartboot.feat.core.server.ServerOptions;
-import tech.smartboot.feat.core.server.impl.Request;
+import tech.smartboot.feat.core.server.impl.HttpEndpoint;
 
 public class WAF {
-    public static void methodCheck(ServerOptions configuration, Request request) {
+    public static void methodCheck(ServerOptions configuration, HttpEndpoint request) {
         WafConfiguration wafConfiguration = configuration.getWafConfiguration();
         if (!wafConfiguration.isEnable()) {
             return;
@@ -19,7 +19,7 @@ public class WAF {
         }
     }
 
-    public static void checkUri(ServerOptions configuration, Request request) {
+    public static void checkUri(ServerOptions configuration, HttpEndpoint request) {
         WafConfiguration wafConfiguration = configuration.getWafConfiguration();
         if (!wafConfiguration.isEnable()) {
             return;

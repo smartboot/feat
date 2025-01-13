@@ -7,8 +7,8 @@ import tech.smartboot.feat.core.common.codec.h2.hpack.Decoder;
 import tech.smartboot.feat.core.common.codec.h2.hpack.Encoder;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
-import tech.smartboot.feat.core.server.impl.Http2RequestImpl;
-import tech.smartboot.feat.core.server.impl.Request;
+import tech.smartboot.feat.core.server.impl.Http2Endpoint;
+import tech.smartboot.feat.core.server.impl.HttpEndpoint;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -22,7 +22,7 @@ public class Http2Session {
     public static final int STATE_PREFACE_SM = 1 << 1;
     public static final int STATE_FRAME_HEAD = 1 << 2;
     public static final int STATE_FRAME_PAYLOAD = 1 << 3;
-    private final ConcurrentHashMap<Integer, Http2RequestImpl> streams = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Integer, Http2Endpoint> streams = new ConcurrentHashMap<>();
     private final Decoder hpackDecoder = new Decoder(65536);
     private final Encoder hpackEncoder = new Encoder(65536);
     private final AtomicInteger pushStreamId = new AtomicInteger(0);
@@ -44,15 +44,15 @@ public class Http2Session {
     //    private final Http2ResponseImpl response;
     private Http2Frame currentFrame;
     private int state;
-    private final Request request;
+    private final HttpEndpoint request;
 
-    public Http2Session(Request request) {
+    public Http2Session(HttpEndpoint request) {
         this.request = request;
 //        this.response = new Http2ResponseImpl(this);
     }
 
-    public Http2RequestImpl getStream(int streamId) {
-        return streams.computeIfAbsent(streamId, k -> new Http2RequestImpl(streamId, this, false));
+    public Http2Endpoint getStream(int streamId) {
+        return streams.computeIfAbsent(streamId, k -> new Http2Endpoint(streamId, this, false));
     }
 
 
@@ -89,7 +89,7 @@ public class Http2Session {
         return hpackEncoder;
     }
 
-    public Request getRequest() {
+    public HttpEndpoint getRequest() {
         return request;
     }
 

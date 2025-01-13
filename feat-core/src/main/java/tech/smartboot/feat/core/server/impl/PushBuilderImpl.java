@@ -24,7 +24,7 @@ public class PushBuilderImpl implements PushBuilder {
             , "max-forwards", "proxy-authenticate", "proxy-authorization", "age", "cache-control", "clear-site-data");
     private static final Set<String> UNSUPPORTED_METHODS = new HashSet<>(Arrays.asList("", "POST", "PUT", "DELETE",
             "CONNECT", "OPTIONS", "TRACE"));
-    private final Http2RequestImpl pushRequest;
+    private final Http2Endpoint pushRequest;
     private final int streamId;
     private String path;
     private String queryString;
@@ -32,7 +32,7 @@ public class PushBuilderImpl implements PushBuilder {
 
     public PushBuilderImpl(int streamId, Http2ResponseImpl response, Http2Session session) {
         this.streamId = streamId;
-        this.pushRequest = new Http2RequestImpl(session.getPushStreamId().addAndGet(2), session, true);
+        this.pushRequest = new Http2Endpoint(session.getPushStreamId().addAndGet(2), session, true);
         response.getCookies().forEach(cookie -> pushRequest.addHeader(HeaderNameEnum.COOKIE.getLowCaseName(),
                 HeaderNameEnum.COOKIE.getName(), cookie.getName() + "=" + cookie.getValue()));
 

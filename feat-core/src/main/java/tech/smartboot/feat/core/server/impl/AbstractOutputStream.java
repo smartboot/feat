@@ -25,9 +25,9 @@ import java.util.Map;
  */
 abstract class AbstractOutputStream extends BufferOutputStream {
     protected final AbstractResponse response;
-    protected final CommonRequest request;
+    protected final Endpoint request;
 
-    public AbstractOutputStream(CommonRequest request, AbstractResponse response) {
+    public AbstractOutputStream(Endpoint request, AbstractResponse response) {
         super(request.getAioSession().writeBuffer());
         this.response = response;
         this.request = request;

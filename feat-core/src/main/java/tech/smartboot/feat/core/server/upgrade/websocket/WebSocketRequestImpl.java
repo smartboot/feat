@@ -8,19 +8,14 @@
 
 package tech.smartboot.feat.core.server.upgrade.websocket;
 
-import org.smartboot.socket.util.Attachment;
 import tech.smartboot.feat.core.common.Reset;
 import tech.smartboot.feat.core.common.codec.websocket.WebSocket;
 import tech.smartboot.feat.core.common.utils.SmartDecoder;
 import tech.smartboot.feat.core.common.utils.WebSocketUtil;
-import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.WebSocketRequest;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.util.Collection;
-import java.util.Map;
 
 /**
  * @author 三刀
@@ -39,12 +34,6 @@ class WebSocketRequestImpl implements WebSocketRequest, WebSocket, Reset {
     private long payloadLength;
 
     private byte[] maskingKey;
-    private final HttpRequest request;
-
-    public WebSocketRequestImpl(HttpRequest req) {
-        this.request = req;
-    }
-
 
     @Override
     public void reset() {
@@ -89,40 +78,40 @@ class WebSocketRequestImpl implements WebSocketRequest, WebSocket, Reset {
         return payload.toByteArray();
     }
 
-    @Override
-    public String getRequestURL() {
-        return request.getRequestURL();
-    }
-
-    @Override
-    public String getRequestURI() {
-        return request.getRequestURI();
-    }
-
-    @Override
-    public String getQueryString() {
-        return request.getQueryString();
-    }
-
-    @Override
-    public Map<String, String[]> getParameters() {
-        return request.getParameters();
-    }
-
-    @Override
-    public InetSocketAddress getRemoteAddress() {
-        return request.getRemoteAddress();
-    }
-
-    @Override
-    public InetSocketAddress getLocalAddress() {
-        return request.getLocalAddress();
-    }
-
-    @Override
-    public boolean isSecure() {
-        return request.isSecure();
-    }
+//    @Override
+//    public String getRequestURL() {
+//        return request.getRequestURL();
+//    }
+//
+//    @Override
+//    public String getRequestURI() {
+//        return request.getRequestURI();
+//    }
+//
+//    @Override
+//    public String getQueryString() {
+//        return request.getQueryString();
+//    }
+//
+//    @Override
+//    public Map<String, String[]> getParameters() {
+//        return request.getParameters();
+//    }
+//
+//    @Override
+//    public InetSocketAddress getRemoteAddress() {
+//        return request.getRemoteAddress();
+//    }
+//
+//    @Override
+//    public InetSocketAddress getLocalAddress() {
+//        return request.getLocalAddress();
+//    }
+//
+//    @Override
+//    public boolean isSecure() {
+//        return request.isSecure();
+//    }
 
 
 //    @Override
@@ -135,20 +124,20 @@ class WebSocketRequestImpl implements WebSocketRequest, WebSocket, Reset {
 //        request.setAttachment(attachment);
 //    }
 
-    @Override
-    public String getHeader(String headName) {
-        return request.getHeader(headName);
-    }
-
-    @Override
-    public Collection<String> getHeaders(String name) {
-        return request.getHeaders(name);
-    }
-
-    @Override
-    public Collection<String> getHeaderNames() {
-        return request.getHeaderNames();
-    }
+//    @Override
+//    public String getHeader(String headName) {
+//        return request.getHeader(headName);
+//    }
+//
+//    @Override
+//    public Collection<String> getHeaders(String name) {
+//        return request.getHeaders(name);
+//    }
+//
+//    @Override
+//    public Collection<String> getHeaderNames() {
+//        return request.getHeaderNames();
+//    }
 
     public long getPayloadLength() {
         return payloadLength;

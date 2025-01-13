@@ -19,7 +19,7 @@ import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Map;
 
-public class Http2RequestImpl extends CommonRequest implements HttpRequest, Reset {
+public class Http2Endpoint extends Endpoint implements HttpRequest, Reset {
     private static final int INIT_CONTENT_LENGTH = -2;
     private static final int NONE_CONTENT_LENGTH = -1;
     public static final int STATE_HEADER_FRAME = 0;
@@ -32,7 +32,7 @@ public class Http2RequestImpl extends CommonRequest implements HttpRequest, Rese
     private final Http2ResponseImpl response;
     private final Http2Session session;
 
-    public Http2RequestImpl(int streamId, Http2Session session, boolean push) {
+    public Http2Endpoint(int streamId, Http2Session session, boolean push) {
         super(session.getRequest().aioSession, session.getRequest().getConfiguration());
         this.streamId = streamId;
         this.session = session;

@@ -13,7 +13,7 @@ import tech.smartboot.feat.core.common.enums.HttpStatus;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
-import tech.smartboot.feat.core.server.impl.Request;
+import tech.smartboot.feat.core.server.impl.HttpEndpoint;
 
 import java.io.IOException;
 import java.util.Base64;
@@ -32,7 +32,7 @@ public final class BasicAuthServerHandler extends BaseHttpHandler {
     }
 
     @Override
-    public void onHeaderComplete(Request request) throws IOException {
+    public void onHeaderComplete(HttpEndpoint request) throws IOException {
         String clientBasic = request.getHeader(HeaderNameEnum.AUTHORIZATION.getName());
         if (StringUtils.equals(clientBasic, this.basic)) {
             httpServerHandler.onHeaderComplete(request);
@@ -45,7 +45,7 @@ public final class BasicAuthServerHandler extends BaseHttpHandler {
     }
 
     @Override
-    public void onClose(Request request) {
+    public void onClose(HttpEndpoint request) {
         httpServerHandler.onClose(request);
     }
 

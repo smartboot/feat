@@ -5,7 +5,7 @@ import org.smartboot.socket.util.Attachment;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
-import tech.smartboot.feat.core.server.impl.Request;
+import tech.smartboot.feat.core.server.impl.HttpEndpoint;
 
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
@@ -27,7 +27,7 @@ public abstract class SSEHandler extends BaseHttpHandler {
 
 
     @Override
-    public final void onHeaderComplete(Request request) throws IOException {
+    public final void onHeaderComplete(HttpEndpoint request) throws IOException {
         Attachment attachment = request.getAttachment();
         if (attachment == null) {
             attachment = new Attachment();
@@ -39,7 +39,7 @@ public abstract class SSEHandler extends BaseHttpHandler {
     }
 
     @Override
-    public final void onClose(Request request) {
+    public final void onClose(HttpEndpoint request) {
         Attachment attachment = request.getAttachment();
         SseEmitter sseEmitter = attachment.get(SSE_EMITTER);
         sseEmitter.complete();

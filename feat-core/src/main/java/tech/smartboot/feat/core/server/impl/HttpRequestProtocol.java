@@ -28,7 +28,7 @@ import java.nio.ByteBuffer;
  * @author 三刀
  * @version V1.0 , 2018/8/31
  */
-public class HttpRequestProtocol implements Protocol<Request> {
+public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
     private final ServerOptions configuration;
     private static final ByteTree.EndMatcher URI_END_MATCHER = endByte -> (endByte == ' ' || endByte == '?');
 
@@ -37,15 +37,15 @@ public class HttpRequestProtocol implements Protocol<Request> {
     }
 
     @Override
-    public Request decode(ByteBuffer byteBuffer, AioSession session) {
-        Request request = session.getAttachment();
+    public HttpEndpoint decode(ByteBuffer byteBuffer, AioSession session) {
+        HttpEndpoint request = session.getAttachment();
         int p = byteBuffer.position();
         boolean flag = decode(byteBuffer, request);
         request.decodeSize(byteBuffer.position() - p);
         return flag ? request : null;
     }
 
-    private boolean decode(ByteBuffer byteBuffer, Request request) {
+    private boolean decode(ByteBuffer byteBuffer, HttpEndpoint request) {
         DecoderUnit decodeState = request.getDecodeState();
         switch (decodeState.getState()) {
             case DecodeState.STATE_METHOD: {

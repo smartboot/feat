@@ -17,10 +17,10 @@ import tech.smartboot.feat.core.common.enums.HttpStatus;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.impl.AbstractResponse;
-import tech.smartboot.feat.core.server.impl.Http2RequestImpl;
+import tech.smartboot.feat.core.server.impl.Http2Endpoint;
 import tech.smartboot.feat.core.server.impl.HttpMessageProcessor;
 import tech.smartboot.feat.core.server.impl.HttpUpgradeHandler;
-import tech.smartboot.feat.core.server.impl.Request;
+import tech.smartboot.feat.core.server.impl.HttpEndpoint;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -61,7 +61,7 @@ public class Http2UpgradeHandler extends HttpUpgradeHandler {
             OutputStream outputStream = response.getOutputStream();
             outputStream.flush();
 
-            Http2RequestImpl http2Request = session.getStream(1);
+            Http2Endpoint http2Request = session.getStream(1);
             http2Request.setRequestURI(request.getUri());
             http2Request.setMethod(request.getMethod());
             req.getHeaderNames().forEach(name -> http2Request.setHeader(name.toLowerCase(), request.getHeader(name)));
@@ -128,7 +128,7 @@ public class Http2UpgradeHandler extends HttpUpgradeHandler {
         }
     }
 
-    private void doHandler(Http2Frame frame, Request req) throws IOException {
+    private void doHandler(Http2Frame frame, HttpEndpoint req) throws IOException {
         switch (frame.type()) {
             case Http2Frame.FRAME_TYPE_SETTINGS: {
                 if (!session.isSettingEnabled()) {
@@ -160,8 +160,8 @@ public class Http2UpgradeHandler extends HttpUpgradeHandler {
                 session.settingDisable();
                 HeadersFrame headersFrame = (HeadersFrame) frame;
                 System.out.println("headerFrame Stream:" + headersFrame.streamId());
-                Http2RequestImpl request = session.getStream(headersFrame.streamId());
-                request.checkState(Http2RequestImpl.STATE_HEADER_FRAME);
+                Http2Endpoint request = session.getStream(headersFrame.streamId());
+                request.checkState(Http2Endpoint.STATE_HEADER_FRAME);
                 Map<String, HeaderValue> headers = request.getHeaders();
                 session.getHpackDecoder().decode(headersFrame.getFragment(), headersFrame.getFlag(Http2Frame.FLAG_END_HEADERS), new DecodingCallback() {
                     @Override
@@ -190,7 +190,7 @@ public class Http2UpgradeHandler extends HttpUpgradeHandler {
                     System.out.println("hasRemaining");
                 }
                 if (headersFrame.getFlag(Http2Frame.FLAG_END_HEADERS)) {
-                    request.setState(Http2RequestImpl.STATE_DATA_FRAME);
+                    request.setState(Http2Endpoint.STATE_DATA_FRAME);
                     onHeaderComplete(request);
                     if (HttpMethodEnum.GET.getMethod().equals(request.getMethod())) {
                         handleHttpRequest(request);
@@ -205,8 +205,8 @@ public class Http2UpgradeHandler extends HttpUpgradeHandler {
             case Http2Frame.FRAME_TYPE_DATA: {
                 session.settingDisable();
                 DataFrame dataFrame = (DataFrame) frame;
-                Http2RequestImpl request = session.getStream(dataFrame.streamId());
-                request.checkState(Http2RequestImpl.STATE_DATA_FRAME);
+                Http2Endpoint request = session.getStream(dataFrame.streamId());
+                request.checkState(Http2Endpoint.STATE_DATA_FRAME);
                 request.getBody().write(dataFrame.getData());
                 if (dataFrame.getFlag(DataFrame.FLAG_END_STREAM)) {
                     request.bodyDone();
@@ -255,11 +255,11 @@ public class Http2UpgradeHandler extends HttpUpgradeHandler {
         throw new IllegalStateException("invalid type :" + type);
     }
 
-    protected void onHeaderComplete(Http2RequestImpl request) throws IOException {
+    protected void onHeaderComplete(Http2Endpoint request) throws IOException {
 
     }
 
-    public final void handleHttpRequest(Http2RequestImpl abstractRequest) {
+    public final void handleHttpRequest(Http2Endpoint abstractRequest) {
         AbstractResponse response = abstractRequest.getResponse();
         CompletableFuture<Object> future = new CompletableFuture<>();
         try {
