@@ -1,7 +1,7 @@
 name: 企业技术支持
-description: 当你中发现了一个 Bug，看起来似乎是 Feat 的问题，又或者无法判断原因需要寻求技术支持。
+description: 如果你是 Feat 的合作企业或客户，使用过程中发现了一个 Bug，或者需要寻求技术支持，请使用此模板。
 title:
-labels: ["bug"]
+labels: ["support","bug"]
 body:
   - type: dropdown
     id: version
@@ -29,17 +29,12 @@ body:
         - JDK 23
     validations:
       required: true
-  - type: dropdown
-    id: project_type
+  - type: checkboxes
     attributes:
-      label: 项目类型
-      description: 请选择目标项目类型？
+      label: 信息确认
       options:
-        - 企业项目
-        - 开源项目
-        - 私有项目
-    validations:
-      required: true
+        - label: 我已经同 Feat 作者完成了案例反馈。
+          required: true
   - type: dropdown
     id: os_type
     attributes:
@@ -105,8 +100,6 @@ body:
   - type: input
     id: demo
     attributes:
-      label: Demo 地址（Git/网盘/SVN）| 未提供则视为无效 `Issue`
+      label: Demo 地址 | 未提供可能影响问题定位效率
       description: 请提供复现错误的 Demo 下载
       placeholder: https://gitee.com/your_id/your_test_project.git
-    validations:
-      required: true

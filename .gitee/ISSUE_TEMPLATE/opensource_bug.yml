@@ -1,5 +1,5 @@
 name: 开源生态支持
-description: 如果你的开源项目是在遵循 Feat 开源规范前提下使用的，我们将非常乐意为你提供技术支持。
+description: 如果你的开源项目承诺遵循 Feat 开源规范，使用过程中发现了一个 Bug，或者需要寻求技术支持，请使用此模板。
 title:
 labels: ["bug"]
 body:
@@ -29,7 +29,7 @@ body:
         - JDK 23
     validations:
       required: true
-  - type: textarea
+  - type: input
     attributes:
       label: 开源项目地址
     validations:
@@ -77,8 +77,6 @@ body:
   - type: input
     id: demo
     attributes:
-      label: Demo 地址（Git/网盘/SVN）| 未提供则视为无效 `Issue`
+      label: Demo 地址 | 未提供可能影响问题定位效率
       description: 请提供复现错误的 Demo 下载
       placeholder: https://gitee.com/your_id/your_test_project.git
-    validations:
-      required: true
