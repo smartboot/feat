@@ -1,0 +1,88 @@
+---
+title: ServerOptions 配置说明
+description: A reference page in my new Starlight docs site.
+---
+
+## debug
+**类型:** `boolean`
+
+**默认值:** `false`
+
+是否开启调试模式。
+
+```java "debug(true)"
+Feat.createHttpServer(options -> options.debug(true))
+        .listen();
+```
+开启 debug 模式后，会在控制台输出 HTTP 请求/响应的详细信息。
+适用于调试和排查问题，建议生产环境下关闭。
+
+
+## bannerEnabled
+**类型:** `boolean`
+**默认值:** `true`
+是否开启 banner。
+```java "bannerEnabled(false)"
+Feat.createHttpServer(options -> options.bannerEnabled(false))
+       .listen();
+```
+开启 banner 后，启动时会在控制台输出 Feat HTTP 服务器的版本信息。
+
+
+## setMaxRequestSize
+**类型:** `long`
+
+**默认值:** `Integer.MAX_VALUE`
+
+设置最大请求大小。
+```java "setMaxRequestSize(1024 * 1024 * 1024)"
+Feat.createHttpServer(options -> options.setMaxRequestSize(1024 * 1024 * 1024))
+       .listen();
+```
+HTTP 请求报文的大小不能超过这个值，否则会返回 **413(Payload Too Large)** 错误。
+
+## readBufferSize
+**类型:** `int`
+
+**默认值:** `1024`
+
+设置单个 TCP 连接的读取缓冲区大小。
+```java "readBufferSize(16 * 1024)"
+Feat.createHttpServer(options -> options.readBufferSize(16 * 1024))
+      .listen();
+```
+合理设置这个值，可以提高性能和减少内存占用。
+
+## writeBufferSize
+**类型:** `int`
+
+**默认值:** `1024`
+
+设置单个 TCP 连接的写入缓冲区大小。
+```java "writeBufferSize(16 * 1024)"
+Feat.createHttpServer(options -> options.writeBufferSize(16 * 1024))
+     .listen();
+```
+
+## threadNum
+**类型:** `int`
+
+**默认值:** `CPU 核数`,至少为 2。
+
+设置 HTTP 服务器的线程数。
+```java "threadNum(4)"
+Feat.createHttpServer(options -> options.threadNum(4))
+    .listen();
+```
+
+## 🛡 headerLimiter
+**类型:** `int`
+**默认值:** `100`
+设置 HTTP 请求头的限制。
+```java "headerLimiter(10)"
+Feat.createHttpServer(options -> options.headerLimiter(10))
+    .listen();
+```
+若解析出的 HTTP 请求头数量超过这个值，会忽略后续的请求头。
+
+我们认为通常情况下 HTTP 请求头数量应该限定在某个具体的数值范围内，若超过这个值，可能是存在恶意请求。

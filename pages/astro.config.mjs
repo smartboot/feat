@@ -54,11 +54,15 @@ export default defineConfig({
                 },
                 {
                     label: '2. Feat Server开发',
-                    autogenerate: {directory: 'reference'},
+                    autogenerate: {directory: 'server'},
                 },
                 {
                     label: '3. Feat Client开发',
-                    autogenerate: {directory: 'reference'},
+                    autogenerate: {directory: 'client'},
+                },
+                {
+                    label: '4. 附录',
+                    autogenerate: {directory: 'appendix'},
                 },
             ],
         }),
