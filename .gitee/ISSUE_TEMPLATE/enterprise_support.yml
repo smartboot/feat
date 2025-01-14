@@ -33,7 +33,7 @@ body:
     attributes:
       label: 信息确认
       options:
-        - label: 我已经同 Feat 作者完成了案例反馈。
+        - label: 我已经向 Feat 作者完成了案例反馈。
           required: true
   - type: dropdown
     id: os_type
