@@ -11,6 +11,10 @@ export default defineConfig({
     integrations: [
         starlight({
             title: 'FEAT',
+            customCss: [
+                // 你的自定义 CSS 文件的相对路径
+                './src/styles/custom.css',
+            ],
             head: [
                 {
                     tag: 'meta',
@@ -45,11 +49,15 @@ export default defineConfig({
             },
             sidebar: [
                 {
-                    label: '关于',
+                    label: '1. 关于',
                     autogenerate: {directory: 'guides'},
                 },
                 {
-                    label: '用户手册',
+                    label: '2. Feat Server开发',
+                    autogenerate: {directory: 'reference'},
+                },
+                {
+                    label: '3. Feat Client开发',
                     autogenerate: {directory: 'reference'},
                 },
             ],

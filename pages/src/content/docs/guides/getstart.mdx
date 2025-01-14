@@ -1,0 +1,120 @@
+---
+title: 1.2 入门指南
+description: 一款企业级 Web 服务开发框架
+sidebar:
+    order: 2
+---
+
+
+import {Aside, TabItem, Tabs} from '@astrojs/starlight/components';
+import helloFeat from './img/1_2_hello_feat.png';
+import helloWorld from './img/1_2_hello_world.png';
+
+在本章节中，您将学习如何开始使用 Feat 快速开发一个 Web 项目。
+
+开始之前，请确保已完成以下几项前置准备工作：
+
+- JDK 1.8 或更高版本
+- Maven 3.0 或更高版本
+- IDE（本教程示例基于 IntelliJ IDEA）
+- [curl](https://curl.se/) 或者 **浏览器** 用于 HTTP 请求测试。
+
+## 1.2.1 引入 Feat
+在您的 Maven 工程 pom.xml 文件中添加以下配置，即可完成 Feat 的引入：
+
+```xml title="pom.xml"
+<dependency>
+    <groupId>tech.smartboot.feat</groupId>
+    <artifactId>feat-core</artifactId>
+    <version>${feat.version}</version>
+</dependency>
+```
+<Aside>
+    `${feat.version}` 需根据实际情况设置，建议使用[最新版本](https://central.sonatype.com/artifact/tech.smartboot.feat/feat-core)。
+</Aside>
+
+## 1.2.2 快速启动
+下面通过一个简单的示例，以检验 Feat 是否成功引入，并演示如何快速启动一个 Web 服务。
+```java title="HelloFeat.java" {3}
+public class HelloFeat {
+    public static void main(String[] args) {
+        Feat.createHttpServer().listen();
+    }
+}
+```
+
+启动上面的程序后，运行效果：
+<Tabs>
+    <TabItem value="浏览器" label="浏览器">
+        <img src={helloFeat.src} alt="hello world" width="60%" className="shadow"/>
+    </TabItem>
+    <TabItem value="curl" label="curl">
+        如果您使用的是 **curl** 命令行工具，可以执行以下命令进行测试：
+        ```shell {1}
+        curl -v http://localhost:8080
+        *   Trying 127.0.0.1:8080...
+        * Connected to localhost (127.0.0.1) port 8080 (#0)
+        > GET / HTTP/1.1
+        > Host: localhost:8080
+        > User-Agent: curl/7.77.0
+        > Accept: */*
+        >
+        * Mark bundle as not supporting multiuse
+        < HTTP/1.1 200 OK
+        < Server:feat
+        < Date:Tue, 14 Jan 2025 00:00:00 GMT
+        < Content-Type:text/html; charset=utf-8
+        < Transfer-Encoding: chunked
+        <
+        * Connection #0 to host localhost left intact
+        Hello Feat%
+        ```
+    </TabItem>
+</Tabs>
+
+🎉 **好了，我们的第一个 Web 服务就完成了。**
+
+
+
+## 1.2.3 编写自定义响应
+现在我们再来写一个自定义的响应的服务，并指定服务端端口为 8081。
+```java title="HelloWorld.java" {3,4,5}
+public class HelloWorld {
+    public static void main(String[] args) {
+        Feat.createHttpServer()
+                .httpHandler(request -> request.getResponse().write("Hello World"))
+                .listen(8081);
+    }
+}
+```
+运行效果：
+<Tabs>
+    <TabItem value="浏览器" label="浏览器">
+        <img src={helloWorld.src} alt="hello world" width="60%" className="shadow"/>
+    </TabItem>
+    <TabItem value="curl" label="curl">
+        ```shell {1}
+        curl -v http://localhost:8081
+        *   Trying 127.0.0.1:8081...
+        * Connected to localhost (127.0.0.1) port 8081 (#0)
+        > GET / HTTP/1.1
+        > Host: localhost:8081
+        > User-Agent: curl/7.77.0
+        > Accept: */*
+        >
+        * Mark bundle as not supporting multiuse
+        < HTTP/1.1 200 OK
+        < Server:feat
+        < Date:Tue, 14 Jan 2025 00:00:00 GMT
+        < Content-Type:text/html; charset=utf-8
+        < Transfer-Encoding: chunked
+        <
+        * Connection #0 to host localhost left intact
+        Hello World%
+        ```
+    </TabItem>
+</Tabs>
+
+## 1.2.4 建议&反馈
+希望这篇教程能够帮助您对 Feat 有一个初步的了解。
+如果您在使用过程中遇到任何问题，欢迎随时与我们交流。
