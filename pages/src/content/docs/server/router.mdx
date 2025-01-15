@@ -1,0 +1,26 @@
+---
+title: Router 路由组件
+description: Feat Router
+sidebar:
+    order: 2
+---
+
+Router 组件是 Feat 中最核心的组件之一，它负责管理整个 Web 应用的请求路由。
+
+基本用法：
+```java "Router router = new Router();" "router.route" ".route" "router"
+public class RouterDemo1 {
+    public static void main(String[] args) {
+        Router router = new Router();
+        router.route("/", (request) -> {
+            request.getResponse().write("root: " + request.getRequestURI());
+        });
+        router.route("/route1", (request) -> {
+            request.getResponse().write("route1: " + request.getRequestURI());
+        }).route("/route2", (request) -> {
+            request.getResponse().write("route2: " + request.getRequestURI());
+        });
+        Feat.createHttpServer().httpHandler(router).listen();
+    }
+}
+```
