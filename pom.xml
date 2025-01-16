@@ -5,12 +5,12 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>tech.smartboot.feat</groupId>
     <artifactId>feat-parent</artifactId>
-    <version>0.3</version>
+    <version>0.4</version>
     <packaging>pom</packaging>
 
     <properties>
         <smartsocket.version>1.5.57</smartsocket.version>
-        <feat.version>0.3</feat.version>
+        <feat.version>0.4</feat.version>
     </properties>
 
     <dependencyManagement>
@@ -42,8 +42,8 @@
 
     <licenses>
         <license>
-            <name>The Apache License, Version 2.0</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <name>GNU Affero General Public License version 3.0</name>
+            <url>https://www.gnu.org/licenses/agpl-3.0.html</url>
         </license>
     </licenses>
 

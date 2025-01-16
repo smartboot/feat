@@ -28,7 +28,7 @@ import java.util.List;
  * @version V1.0 , 2021/2/22
  */
 public class ServerOptions {
-    public static final String VERSION = "v0.3";
+    public static final String VERSION = "v0.4";
 
     /**
      * 缓存
