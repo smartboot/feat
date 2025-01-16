@@ -48,6 +48,9 @@ public abstract class BaseHttpHandler implements HttpHandler {
             if (request.getUpgradeHandler() == null) {
                 finishHttpHandle(request, future);
             }
+            if (request.getInputStream().getReadListener() != null && buffer.hasRemaining()) {
+                request.getInputStream().getReadListener().onDataAvailable();
+            }
         } catch (Throwable e) {
             HttpMessageProcessor.responseError(response, e);
         }
