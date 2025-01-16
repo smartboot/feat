@@ -48,9 +48,6 @@ public abstract class BaseHttpHandler implements HttpHandler {
             if (request.getUpgradeHandler() == null) {
                 finishHttpHandle(request, future);
             }
-            if (request.getInputStream().getReadListener() != null && buffer.hasRemaining()) {
-                request.getInputStream().getReadListener().onDataAvailable();
-            }
         } catch (Throwable e) {
             HttpMessageProcessor.responseError(response, e);
         }
@@ -92,9 +89,8 @@ public abstract class BaseHttpHandler implements HttpHandler {
         ReadListener readListener = abstractRequest.getInputStream().getReadListener();
         if (readListener == null) {
             session.awaitRead();
-        } else {
-            //todo
-//            abstractRequest.request.setDecoder(session.readBuffer().hasRemaining() ? HttpRequestProtocol.BODY_READY_DECODER : HttpRequestProtocol.BODY_CONTINUE_DECODER);
+        } else if (abstractRequest.getAioSession().readBuffer().hasRemaining()) {
+            abstractRequest.getInputStream().getReadListener().onDataAvailable();
         }
 
         Thread thread = Thread.currentThread();
