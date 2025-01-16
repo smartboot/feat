@@ -112,9 +112,9 @@ public final class HttpMessageProcessor extends AbstractMessageProcessor<HttpEnd
 
     @Override
     public void stateEvent0(AioSession session, StateMachineEnum stateMachineEnum, Throwable throwable) {
-        if (throwable != null) {
-            throwable.printStackTrace();
-        }
+//        if (throwable != null) {
+//            throwable.printStackTrace();
+//        }
         switch (stateMachineEnum) {
             case NEW_SESSION: {
                 session.setAttachment(new HttpEndpoint(options, session));
