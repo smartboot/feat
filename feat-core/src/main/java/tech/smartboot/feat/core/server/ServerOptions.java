@@ -33,13 +33,13 @@ public class ServerOptions {
     /**
      * 缓存
      */
-    private final ByteTree<Object> byteCache = new ByteTree<>();
+    private final ByteTree<Object> byteCache = new ByteTree<>(16 * 1024);
     /**
      * URI缓存
      */
-    private final ByteTree<BaseHttpHandler> uriByteTree = new ByteTree<>();
+    private final ByteTree<BaseHttpHandler> uriByteTree = new ByteTree<>(16 * 1024);
 
-    private final ByteTree<HeaderNameEnum> headerNameByteTree = new ByteTree<>();
+    private final ByteTree<HeaderNameEnum> headerNameByteTree = new ByteTree<>(16 * 1024);
 
     /**
      * smart-socket 插件
