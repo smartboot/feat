@@ -309,7 +309,7 @@ public class ByteTree<T> {
     private class VirtualByteTree extends ByteTree<T> {
 
         public VirtualByteTree(String value) {
-            super(0);
+            super();
             this.stringValue = value;
         }
     }
