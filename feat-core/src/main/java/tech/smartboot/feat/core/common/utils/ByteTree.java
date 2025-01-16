@@ -28,13 +28,31 @@ public class ByteTree<T> {
     protected String stringValue;
     private int shift = -1;
     private ByteTree<T>[] nodes = new ByteTree[1];
+    private int nodeCount;
+    /**
+     * 有效节点总数
+     */
+    private int totalCount;
+    /**
+     * 节点数总容量
+     */
+    private int capacity;
+    /**
+     * 总容量上限
+     */
+    private int limit = 1000;
     /**
      * 捆绑附件对象
      */
     private T attach;
 
     public ByteTree() {
+        this(1024);
+    }
+
+    public ByteTree(int limit) {
         this(null, Byte.MIN_VALUE);
+        this.limit = limit;
     }
 
     public ByteTree(ByteTree<T> parent, byte value) {
@@ -96,6 +114,61 @@ public class ByteTree<T> {
         }
     }
 
+    public static <T> void reduceCapacity(ByteTree<T> byteTree, int releaseCount) {
+        if (releaseCount <= 0) {
+            return;
+        }
+        int index = -1;
+        for (int i = 0; i < byteTree.nodes.length; i++) {
+            ByteTree<?> child = byteTree.nodes[i];
+            if (child == null) {
+                continue;
+            }
+            if (index == -1 || child.capacity == 0 || byteTree.nodes[index].capacity == 0) {
+                index = i;
+            } else if ((child.totalCount / child.capacity) < (byteTree.nodes[index].totalCount / byteTree.nodes[index].capacity)) {
+                index = i;
+            }
+        }
+        if (index == -1) {
+            if (byteTree.parent != null) {
+                reduceCapacity(byteTree.parent, releaseCount);
+            }
+            return;
+        }
+        ByteTree<?> removed = byteTree.nodes[index];
+        if (removed.capacity < releaseCount) {
+            releaseCount -= removed.capacity;
+            byteTree.nodes[index] = null;
+            byteTree.nodeCount--;
+            if (index == 0) {
+                while (index < byteTree.nodes.length && byteTree.nodes[index] == null) {
+                    index++;
+                }
+                ByteTree[] newNodes = new ByteTree[byteTree.nodes.length - index];
+                System.arraycopy(byteTree.nodes, index, newNodes, 0, newNodes.length);
+                byteTree.nodes = newNodes;
+                byteTree.shift++;
+            } else if (index == byteTree.nodes.length - 1) {
+                while (index > 0 && byteTree.nodes[byteTree.nodes.length - index] == null) {
+                    index--;
+                }
+                ByteTree[] newNodes = new ByteTree[index];
+                System.arraycopy(byteTree.nodes, 0, newNodes, 0, newNodes.length);
+                byteTree.nodes = newNodes;
+            }
+            System.out.println("remove node " + removed);
+            updateCounter(byteTree);
+            if (releaseCount > 0) {
+                reduceCapacity(byteTree, releaseCount);
+            }
+        } else {
+            System.out.println("continue node " + removed);
+            reduceCapacity(removed, releaseCount);
+        }
+
+    }
+
     public void addNode(String value, T attach) {
         byte[] bytes = value.getBytes();
         ByteTree<T> tree = this;
@@ -126,6 +199,7 @@ public class ByteTree<T> {
         if (endMatcher.match(b)) {
             return this;
         }
+//        System.out.println("add Node");
         if (shift == -1) {
             shift = b;
         }
@@ -138,6 +212,8 @@ public class ByteTree<T> {
         ByteTree<T> nextTree = nodes[b - shift];
         if (nextTree == null) {
             nextTree = nodes[b - shift] = new ByteTree<T>(this, b);
+            nodeCount++;
+            updateCounter(this);
         }
         return nextTree.addNode(value, offset + 1, limit, endMatcher);
     }
@@ -154,6 +230,7 @@ public class ByteTree<T> {
         if (endMatcher.match(b)) {
             return this;
         }
+//        System.out.println("add Node");
         if (shift == -1) {
             shift = b;
         }
@@ -166,8 +243,24 @@ public class ByteTree<T> {
         ByteTree<T> nextTree = nodes[b - shift];
         if (nextTree == null) {
             nextTree = nodes[b - shift] = new ByteTree<T>(this, b);
+            nodeCount++;
+            updateCounter(this);
         }
         return nextTree.addNode(value, endMatcher);
+    }
+
+    private static <T> void updateCounter(ByteTree<T> node) {
+        node.totalCount = node.nodeCount;
+        node.capacity = node.nodes.length;
+        for (ByteTree<T> child : node.nodes) {
+            if (child != null) {
+                node.capacity += child.capacity;
+                node.totalCount += child.totalCount;
+            }
+        }
+        if (node.parent != null) {
+            updateCounter(node.parent);
+        }
     }
 
     private void increase(int size) {
@@ -205,11 +298,18 @@ public class ByteTree<T> {
         boolean match(byte endByte);
     }
 
+    public int getLimit() {
+        return limit;
+    }
+
+    public int getCapacity() {
+        return capacity;
+    }
 
     private class VirtualByteTree extends ByteTree<T> {
 
         public VirtualByteTree(String value) {
-            super();
+            super(0);
             this.stringValue = value;
         }
     }

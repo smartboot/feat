@@ -356,7 +356,11 @@ public class StringUtils {
         } while (buffer.hasRemaining() && buffer.get() == Constant.SP);
         buffer.reset();
 
-        return cache.search(buffer, endMatcher, false);
+        int remaining = cache.getLimit() - cache.getCapacity();
+        if (remaining < 0) {
+            ByteTree.reduceCapacity(cache,-remaining);
+        }
+        return cache.search(buffer, endMatcher, true);
     }
 
 
