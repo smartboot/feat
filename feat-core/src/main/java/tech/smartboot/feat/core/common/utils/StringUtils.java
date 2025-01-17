@@ -351,14 +351,9 @@ public class StringUtils {
     }
 
     public static <T> ByteTree<T> scanByteTree(ByteBuffer buffer, ByteTree.EndMatcher endMatcher, ByteTree<T> cache) {
-        do {
-            buffer.mark();
-        } while (buffer.hasRemaining() && buffer.get() == Constant.SP);
-        buffer.reset();
-
         int remaining = cache.getLimit() - cache.getCapacity();
         if (remaining < 0) {
-            ByteTree.reduceCapacity(cache,-remaining);
+            ByteTree.reduceCapacity(cache, -remaining);
         }
         return cache.search(buffer, endMatcher, true);
     }

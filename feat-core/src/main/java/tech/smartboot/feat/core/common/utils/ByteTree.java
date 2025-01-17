@@ -64,14 +64,22 @@ public class ByteTree<T> {
         }
     }
 
-    public ByteTree<T> search(ByteBuffer bytes, EndMatcher endMatcher, boolean cache) {
-        int p = bytes.position();
+    public ByteTree<T> search(ByteBuffer buffer, EndMatcher endMatcher, boolean cache) {
+        boolean trimSate = true;
+        int markPosition = buffer.position();
         ByteTree<T> byteTree = this;
-        bytes.mark();
-        while (bytes.hasRemaining()) {
-            byte v = bytes.get();
+        while (buffer.hasRemaining()) {
+            byte v = buffer.get();
+            if (trimSate) {
+                if (v == Constant.SP) {
+                    continue;
+                } else {
+                    trimSate = false;
+                    markPosition = buffer.position() - 1;
+                }
+            }
+
             if (endMatcher.match(v)) {
-                bytes.mark();
                 return byteTree;
             }
 
@@ -87,29 +95,31 @@ public class ByteTree<T> {
                 break;
             }
         }
-        if (!bytes.hasRemaining()) {
-            bytes.reset();
+        //buffer已读完，未匹配到，重置position
+        if (!buffer.hasRemaining()) {
+            buffer.position(markPosition);
             return null;
         }
+        //ByteTree已遍历结束
         if (cache && byteTree.depth < MAX_DEPTH) {
             //在当前节点上追加子节点
-            bytes.reset();
-            this.addNode(bytes, endMatcher);
-            bytes.reset();
-            return search(bytes, endMatcher, cache);
+            buffer.position(markPosition);
+            this.addNode(buffer, endMatcher);
+            buffer.position(markPosition);
+            return search(buffer, endMatcher, cache);
         } else {
-            bytes.position(bytes.position() - 1);
+            buffer.position(buffer.position() - 1);
             // 构建临时对象，用完由JVM回收
-            while (bytes.hasRemaining()) {
-                if (endMatcher.match(bytes.get())) {
-                    int length = bytes.position() - p;
+            while (buffer.hasRemaining()) {
+                if (endMatcher.match(buffer.get())) {
+                    int length = buffer.position() - markPosition;
                     byte[] data = new byte[length];
-                    bytes.position(bytes.position() - length);
-                    bytes.get(data, 0, length);
+                    buffer.position(buffer.position() - length);
+                    buffer.get(data, 0, length);
                     return new VirtualByteTree(new String(data, 0, length - 1, StandardCharsets.US_ASCII));
                 }
             }
-            bytes.reset();
+            buffer.position(markPosition);
             return null;
         }
     }
