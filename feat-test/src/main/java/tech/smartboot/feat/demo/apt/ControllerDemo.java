@@ -1,6 +1,8 @@
 package tech.smartboot.feat.demo.apt;
 
 import tech.smartboot.feat.core.apt.annotation.Controller;
+import tech.smartboot.feat.core.apt.annotation.PostConstruct;
+import tech.smartboot.feat.core.apt.annotation.PreDestroy;
 import tech.smartboot.feat.core.apt.annotation.RequestMapping;
 import tech.smartboot.feat.core.apt.annotation.RequestMethod;
 import tech.smartboot.feat.core.server.HttpRequest;
@@ -27,5 +29,15 @@ public class ControllerDemo {
     public List<String> hello2(HttpRequest request, HttpResponse response) {
         System.out.println("aaa");
         return Collections.emptyList();
+    }
+
+    @PostConstruct
+    public void init() {
+
+    }
+
+    @PreDestroy
+    public void destroy() {
+
     }
 }

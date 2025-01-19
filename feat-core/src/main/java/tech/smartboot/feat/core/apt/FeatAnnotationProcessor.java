@@ -5,6 +5,8 @@ import tech.smartboot.feat.core.apt.annotation.Autowired;
 import tech.smartboot.feat.core.apt.annotation.Bean;
 import tech.smartboot.feat.core.apt.annotation.Controller;
 import tech.smartboot.feat.core.apt.annotation.Param;
+import tech.smartboot.feat.core.apt.annotation.PostConstruct;
+import tech.smartboot.feat.core.apt.annotation.PreDestroy;
 import tech.smartboot.feat.core.apt.annotation.RequestMapping;
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.utils.StringUtils;
@@ -149,8 +151,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             for (Element field : autowiredFields) {
                 String name = field.getSimpleName().toString();
                 name = name.substring(0, 1).toUpperCase() + name.substring(1);
-                writer.write("    bean.set" + name + "(applicationContext.getBean(\"" + field.getSimpleName() + "\"))" +
-                        ";\n");
+                writer.write("    bean.set" + name + "(applicationContext.getBean(\"" + field.getSimpleName() + "\"))" + ";\n");
             }
             writer.write("          \n");
             writer.write("    }\n");
@@ -162,7 +163,6 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                 //遍历所有方法,获得RequestMapping注解
 
                 for (Element se : element.getEnclosedElements()) {
-//                    processingEnv.getElementUtils().getAllAnnotationMirrors(se).stream()
                     for (AnnotationMirror mirror : se.getAnnotationMirrors()) {
                         if (RequestMapping.class.getName().equals(mirror.getAnnotationType().toString())) {
                             String requestURL = "";
@@ -207,7 +207,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                                     }
                                     if (paramAnnotation != null) {
                                         newParams.append(param.asType().toString()).append(" param").append(i).append("=jsonObject.getObject(\"").append(paramAnnotation.value()).append("\",").append(param.asType().toString()).append(".class);\n");
-                                    }else{
+                                    } else {
                                         newParams.append(param.asType().toString()).append(" param").append(i).append("=jsonObject.to(").append(param.asType().toString()).append(".class);\n");
                                     }
 //                                    newParams.append(param.asType().toString()).append(" param").append(i).append("=jsonObject.getObject(").append(param.asType().toString()).append(".class);\n");
@@ -265,17 +265,26 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                             writer.write("    });\n");
                         }
                     }
-//                    se.getAnnotationsByType(RequestMapping.class);
-//                    RequestMapping requestMapping = se.getAnnotation(RequestMapping.class);
-//                    if (requestMapping == null) {
-//                        continue;
-//                    }
-//                    writer.write("    router.addRouter(\"" + controller.value() + "\", bean);\n");
                 }
             }
             writer.write("}\n");
             writer.write("    public void destroy() {\n");
-            writer.write("          \n");
+            for (Element se : element.getEnclosedElements()) {
+                for (AnnotationMirror mirror : se.getAnnotationMirrors()) {
+                    if (PreDestroy.class.getName().equals(mirror.getAnnotationType().toString())) {
+                        writer.write("    bean." + se.getSimpleName() + "();\n");
+                    }
+                }
+            }
+            writer.write("    }\n");
+            writer.write("    public void postConstruct(ApplicationContext applicationContext) {\n");
+            for (Element se : element.getEnclosedElements()) {
+                for (AnnotationMirror mirror : se.getAnnotationMirrors()) {
+                    if (PostConstruct.class.getName().equals(mirror.getAnnotationType().toString())) {
+                        writer.write("    bean." + se.getSimpleName() + "();\n");
+                    }
+                }
+            }
             writer.write("    }\n");
             writer.write("}");
             writer.close();

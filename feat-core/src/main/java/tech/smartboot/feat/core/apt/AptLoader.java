@@ -7,6 +7,8 @@ public interface AptLoader {
 
     public void autowired(ApplicationContext applicationContext);
 
+    void postConstruct(ApplicationContext applicationContext);
+
     void destroy();
 
     void router(Router router);

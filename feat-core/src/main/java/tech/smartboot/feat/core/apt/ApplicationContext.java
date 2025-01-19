@@ -7,6 +7,8 @@ import tech.smartboot.feat.core.server.handler.Router;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,13 +26,25 @@ public class ApplicationContext {
 
     private final ServiceLoader<AptLoader> serviceLoader = ServiceLoader.load(AptLoader.class);
 
+    private Collection<String> packages;
 
-    public void start(Router router) throws Exception {
+    public ApplicationContext() {
+        this(Collections.emptyList());
+    }
+
+    public ApplicationContext(Collection<String> packages) {
+        this.packages = packages;
+    }
+
+    public void start(Router router) {
         for (AptLoader aptLoader : serviceLoader) {
             aptLoader.loadBean(this);
         }
         for (AptLoader aptLoader : serviceLoader) {
             aptLoader.autowired(this);
+        }
+        for (AptLoader aptLoader : serviceLoader) {
+            aptLoader.postConstruct(this);
         }
         for (AptLoader aptLoader : serviceLoader) {
             aptLoader.router(router);
