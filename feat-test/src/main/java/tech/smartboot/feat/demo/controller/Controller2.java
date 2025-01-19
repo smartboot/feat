@@ -1,7 +1,8 @@
 package tech.smartboot.feat.demo.controller;
 
-import tech.smartboot.feat.restful.annotation.Controller;
-import tech.smartboot.feat.restful.annotation.RequestMapping;
+
+import tech.smartboot.feat.core.apt.annotation.Controller;
+import tech.smartboot.feat.core.apt.annotation.RequestMapping;
 
 @Controller("controller2")
 public class Controller2 {

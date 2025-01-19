@@ -1,12 +1,13 @@
 package tech.smartboot.feat.test.restful;
 
-import tech.smartboot.feat.restful.annotation.Controller;
-import tech.smartboot.feat.restful.annotation.Param;
-import tech.smartboot.feat.restful.annotation.RequestMapping;
+
+import tech.smartboot.feat.core.apt.annotation.Controller;
+import tech.smartboot.feat.core.apt.annotation.Param;
+import tech.smartboot.feat.core.apt.annotation.RequestMapping;
 
 @Controller("demo2")
 class Demo2Controller {
-    @RequestMapping
+    @RequestMapping("/hello")
     public String test1() {
         return "hello world";
     }

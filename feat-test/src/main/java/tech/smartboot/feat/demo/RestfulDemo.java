@@ -2,11 +2,11 @@ package tech.smartboot.feat.demo;
 
 import tech.smartboot.feat.core.Feat;
 import tech.smartboot.feat.core.apt.ApplicationContext;
+import tech.smartboot.feat.core.apt.annotation.Controller;
+import tech.smartboot.feat.core.apt.annotation.RequestMapping;
+import tech.smartboot.feat.core.apt.annotation.RequestMethod;
 import tech.smartboot.feat.core.server.handler.Router;
 import tech.smartboot.feat.restful.RestfulBootstrap;
-import tech.smartboot.feat.restful.annotation.Controller;
-import tech.smartboot.feat.restful.annotation.RequestMapping;
-import tech.smartboot.feat.restful.annotation.RequestMethod;
 
 import java.util.concurrent.Executors;
 

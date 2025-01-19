@@ -4,6 +4,8 @@ import tech.smartboot.feat.core.apt.annotation.Autowired;
 import tech.smartboot.feat.core.apt.annotation.Bean;
 import tech.smartboot.feat.core.apt.annotation.Controller;
 import tech.smartboot.feat.core.apt.annotation.RequestMapping;
+import tech.smartboot.feat.core.common.exception.FeatException;
+import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.handler.Router;
@@ -172,7 +174,9 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
 //                                    writer.write(v.getValue().toString());
                                 }
                             }
-
+                            if (StringUtils.isBlank(requestURL)) {
+                                throw new FeatException("the value of RequestMapping on " + element.getSimpleName() + "@" + se.getSimpleName()+" is not allowed to be empty.");
+                            }
                             writer.write("    router.route(" + requestURL + ", req->{\n");
 
                             TypeMirror returnType = ((ExecutableElement) se).getReturnType();
