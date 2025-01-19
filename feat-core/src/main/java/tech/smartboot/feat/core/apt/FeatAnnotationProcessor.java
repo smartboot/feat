@@ -11,6 +11,7 @@ import tech.smartboot.feat.core.server.handler.Router;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
+import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
@@ -19,6 +20,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.TypeMirror;
 import javax.tools.FileObject;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
@@ -26,22 +28,24 @@ import java.io.IOException;
 import java.io.Writer;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 // 该注解表示该处理器支持的 Java 源代码版本
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
+@SupportedAnnotationTypes({"tech.smartboot.feat.core.apt.annotation.Bean", "tech.smartboot.feat.core.apt.annotation.Controller"})
 public class FeatAnnotationProcessor extends AbstractProcessor {
-
-    @Override
-    public Set<String> getSupportedAnnotationTypes() {
-        Set<String> types = new HashSet<>();
-        types.add(Bean.class.getCanonicalName());
-        types.add(Autowired.class.getCanonicalName());
-        return types;
-    }
+    private static final int RETURN_TYPE_VOID = 0;
+    private static final int RETURN_TYPE_STRING = 1;
+    private static final int RETURN_TYPE_OBJECT = 2;
+//    @Override
+//    public Set<String> getSupportedAnnotationTypes() {
+//        Set<String> types = new HashSet<>();
+//        types.add(Bean.class.getCanonicalName());
+//        types.add(Autowired.class.getCanonicalName());
+//        return types;
+//    }
 
     FileObject serviceFile;
     Writer serviceWrite;
@@ -78,7 +82,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             throw new RuntimeException(e);
         }
 
-        return true;
+        return false;
     }
 
     private <T extends Annotation> void createAptLoader(Element element, T annotation, List<String> services) {
@@ -126,6 +130,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             writer.write("import " + AptLoader.class.getName() + ";\n");
             writer.write("import " + Router.class.getName() + ";\n");
             writer.write("import " + ApplicationContext.class.getName() + ";\n");
+            writer.write("import com.alibaba.fastjson2.JSON;\n");
             writer.write("public class " + loaderName + "  implements  " + AptLoader.class.getSimpleName() + "{\n");
             writer.write("    private " + element.getSimpleName() + " bean;\n");
             writer.write("    public void loadBean(ApplicationContext applicationContext) {\n");
@@ -167,8 +172,32 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
 //                                    writer.write(v.getValue().toString());
                                 }
                             }
+
                             writer.write("    router.route(" + requestURL + ", req->{\n");
-                            writer.write("        bean." + se.getSimpleName() + "(");
+
+                            TypeMirror returnType = ((ExecutableElement) se).getReturnType();
+                            int returnTypeInt = -1;
+                            if (returnType.toString().equals("void")) {
+                                returnTypeInt = RETURN_TYPE_VOID;
+                            } else if (String.class.getName().equals(returnType.toString())) {
+                                returnTypeInt = RETURN_TYPE_STRING;
+                            } else {
+                                returnTypeInt = RETURN_TYPE_OBJECT;
+                            }
+                            switch (returnTypeInt) {
+                                case RETURN_TYPE_VOID:
+                                    writer.write("        bean." + se.getSimpleName() + "(");
+                                    break;
+                                case RETURN_TYPE_STRING:
+                                    writer.write("      String rst = bean." + se.getSimpleName() + "(");
+                                    break;
+                                case RETURN_TYPE_OBJECT:
+                                    writer.write("      Object rst = bean." + se.getSimpleName() + "(");
+                                    break;
+                                default:
+                                    throw new RuntimeException("不支持的返回类型");
+                            }
+
                             boolean first = true;
                             for (VariableElement param : ((ExecutableElement) se).getParameters()) {
                                 if (first) {
@@ -183,7 +212,25 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                                 }
 //                                writer.write("req.getParam(\"" + param.getSimpleName() + "\")");
                             }
-                            writer.write("   );\n });\n");
+                            writer.write("   );\n");
+
+                            switch (returnTypeInt) {
+                                case RETURN_TYPE_VOID:
+                                    break;
+                                case RETURN_TYPE_STRING:
+                                    writer.write("       byte[] bytes=rst.getBytes(\"UTF-8\");\n ");
+                                    writer.write("        req.getResponse().setContentLength(bytes.length);\n");
+                                    writer.write("        req.getResponse().write(bytes);\n");
+                                    break;
+                                case RETURN_TYPE_OBJECT:
+                                    writer.write("        byte[] bytes=JSON.toJSONBytes(rst);\n ");
+                                    writer.write("        req.getResponse().setContentLength(bytes.length);\n");
+                                    writer.write("        req.getResponse().write(bytes);\n");
+                                    break;
+                                default:
+                                    throw new RuntimeException("不支持的返回类型");
+                            }
+                            writer.write("    });\n");
                         }
                     }
 //                    se.getAnnotationsByType(RequestMapping.class);

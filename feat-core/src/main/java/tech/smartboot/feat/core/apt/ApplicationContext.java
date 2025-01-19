@@ -2,6 +2,7 @@ package tech.smartboot.feat.core.apt;
 
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
+import tech.smartboot.feat.core.server.handler.Router;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -24,7 +25,7 @@ public class ApplicationContext {
     private final ServiceLoader<AptLoader> serviceLoader = ServiceLoader.load(AptLoader.class);
 
 
-    public void start() throws Exception {
+    public void start(Router router) throws Exception {
         for (AptLoader aptLoader : serviceLoader) {
             aptLoader.loadBean(this);
         }
@@ -32,7 +33,7 @@ public class ApplicationContext {
             aptLoader.autowired(this);
         }
         for (AptLoader aptLoader : serviceLoader) {
-            aptLoader.router(null);
+            aptLoader.router(router);
         }
     }
 

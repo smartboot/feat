@@ -15,10 +15,6 @@ import java.nio.file.Paths;
 import java.util.Scanner;
 
 /**
- * @Description: TODO
- * @Author MiSinG
- * @Date 2024/5/29
- * @Version V1.0
  **/
 public class FormDataDemo {
     public static void main(String[] args) {

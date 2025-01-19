@@ -1,5 +1,8 @@
 package tech.smartboot.feat.demo;
 
+import tech.smartboot.feat.core.Feat;
+import tech.smartboot.feat.core.apt.ApplicationContext;
+import tech.smartboot.feat.core.server.handler.Router;
 import tech.smartboot.feat.restful.RestfulBootstrap;
 import tech.smartboot.feat.restful.annotation.Controller;
 import tech.smartboot.feat.restful.annotation.RequestMapping;
@@ -42,9 +45,9 @@ public class RestfulDemo {
 //    }
 
     public static void main(String[] args) throws Exception {
-        RestfulBootstrap bootstrap = RestfulBootstrap.getInstance().controller(RestfulDemo.class);
-        bootstrap.setAsyncExecutor(Executors.newCachedThreadPool());
-        bootstrap.bootstrap().options().debug(false);
-        bootstrap.bootstrap().listen(8080);
+        Router router = new Router();
+        ApplicationContext context = new ApplicationContext();
+        context.start(router);
+        Feat.createHttpServer().httpHandler(router).listen(8080);
     }
 }
