@@ -1,8 +1,10 @@
 package tech.smartboot.feat.core.apt;
 
+import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.core.apt.annotation.Autowired;
 import tech.smartboot.feat.core.apt.annotation.Bean;
 import tech.smartboot.feat.core.apt.annotation.Controller;
+import tech.smartboot.feat.core.apt.annotation.Param;
 import tech.smartboot.feat.core.apt.annotation.RequestMapping;
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.utils.StringUtils;
@@ -132,8 +134,10 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             writer.write("import " + AptLoader.class.getName() + ";\n");
             writer.write("import " + Router.class.getName() + ";\n");
             writer.write("import " + ApplicationContext.class.getName() + ";\n");
+            writer.write("import " + JSONObject.class.getName() + ";\n");
+            writer.write("import " + AbstractAptLoader.class.getName() + ";\n");
             writer.write("import com.alibaba.fastjson2.JSON;\n");
-            writer.write("public class " + loaderName + "  implements  " + AptLoader.class.getSimpleName() + "{\n");
+            writer.write("public class " + loaderName + "  extends  " + AbstractAptLoader.class.getSimpleName() + "{\n");
             writer.write("    private " + element.getSimpleName() + " bean;\n");
             writer.write("    public void loadBean(ApplicationContext applicationContext) {\n");
             writer.write("         bean=new " + element.getSimpleName() + "(); \n");
@@ -175,9 +179,46 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                                 }
                             }
                             if (StringUtils.isBlank(requestURL)) {
-                                throw new FeatException("the value of RequestMapping on " + element.getSimpleName() + "@" + se.getSimpleName()+" is not allowed to be empty.");
+                                throw new FeatException("the value of RequestMapping on " + element.getSimpleName() + "@" + se.getSimpleName() + " is not allowed to be empty.");
                             }
                             writer.write("    router.route(" + requestURL + ", req->{\n");
+
+                            boolean first = true;
+                            StringBuilder newParams = new StringBuilder();
+                            StringBuilder params = new StringBuilder();
+                            int i = 0;
+                            for (VariableElement param : ((ExecutableElement) se).getParameters()) {
+                                if (first) {
+                                    first = false;
+                                } else {
+                                    params.append(",");
+                                }
+                                if (param.asType().toString().equals(HttpRequest.class.getName())) {
+                                    params.append("req");
+                                } else if (param.asType().toString().equals(HttpResponse.class.getName())) {
+                                    params.append("req.getResponse()");
+                                } else {
+                                    if (i == 0) {
+                                        newParams.append("JSONObject jsonObject=getParams(req);\n");
+                                    }
+                                    Param paramAnnotation = param.getAnnotation(Param.class);
+                                    if (paramAnnotation == null && param.asType().toString().startsWith("java")) {
+                                        throw new FeatException("the param of " + element.getSimpleName() + "@" + se.getSimpleName() + " is not allowed to be empty.");
+                                    }
+                                    if (paramAnnotation != null) {
+                                        newParams.append(param.asType().toString()).append(" param").append(i).append("=jsonObject.getObject(\"").append(paramAnnotation.value()).append("\",").append(param.asType().toString()).append(".class);\n");
+                                    }else{
+                                        newParams.append(param.asType().toString()).append(" param").append(i).append("=jsonObject.to(").append(param.asType().toString()).append(".class);\n");
+                                    }
+//                                    newParams.append(param.asType().toString()).append(" param").append(i).append("=jsonObject.getObject(").append(param.asType().toString()).append(".class);\n");
+                                    params.append("param").append(i);
+                                    i++;
+                                }
+//                                writer.write("req.getParam(\"" + param.getSimpleName() + "\")");
+                            }
+                            if (newParams.length() > 0) {
+                                writer.write(newParams.toString());
+                            }
 
                             TypeMirror returnType = ((ExecutableElement) se).getReturnType();
                             int returnTypeInt = -1;
@@ -201,28 +242,15 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                                 default:
                                     throw new RuntimeException("不支持的返回类型");
                             }
+                            writer.write(params.toString());
 
-                            boolean first = true;
-                            for (VariableElement param : ((ExecutableElement) se).getParameters()) {
-                                if (first) {
-                                    first = false;
-                                } else {
-                                    writer.write(",");
-                                }
-                                if (param.asType().toString().equals(HttpRequest.class.getName())) {
-                                    writer.write("req");
-                                } else if (param.asType().toString().equals(HttpResponse.class.getName())) {
-                                    writer.write("req.getResponse()");
-                                }
-//                                writer.write("req.getParam(\"" + param.getSimpleName() + "\")");
-                            }
-                            writer.write("   );\n");
+                            writer.write(");\n");
 
                             switch (returnTypeInt) {
                                 case RETURN_TYPE_VOID:
                                     break;
                                 case RETURN_TYPE_STRING:
-                                    writer.write("       byte[] bytes=rst.getBytes(\"UTF-8\");\n ");
+                                    writer.write("        byte[] bytes=rst.getBytes(\"UTF-8\");\n ");
                                     writer.write("        req.getResponse().setContentLength(bytes.length);\n");
                                     writer.write("        req.getResponse().write(bytes);\n");
                                     break;

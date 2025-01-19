@@ -82,11 +82,13 @@ public final class Router extends BaseHttpHandler {
      * @return
      */
     public Router route(String urlPattern, BaseHttpHandler httpHandler) {
+        LOGGER.info("route: " + urlPattern);
         handlerMap.put(urlPattern, httpHandler);
         return this;
     }
 
     public Router route(String urlPattern, HttpHandler httpHandler) {
+        LOGGER.info("route: " + urlPattern);
         handlerMap.put(urlPattern, new BaseHttpHandler() {
             @Override
             public void handle(HttpRequest request) throws Throwable {
