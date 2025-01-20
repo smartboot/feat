@@ -4,11 +4,8 @@ import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.server.handler.Router;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,31 +23,54 @@ public class ApplicationContext {
 
     private final ServiceLoader<AptLoader> serviceLoader = ServiceLoader.load(AptLoader.class);
 
-    private Collection<String> packages;
+    private String[] packages;
 
     public ApplicationContext() {
-        this(Collections.emptyList());
+        this(new String[0]);
     }
 
-    public ApplicationContext(Collection<String> packages) {
+    public ApplicationContext(String[] packages) {
         this.packages = packages;
     }
 
     public void start(Router router) {
         for (AptLoader aptLoader : serviceLoader) {
+            if (skip(aptLoader)) {
+                continue;
+            }
             aptLoader.loadBean(this);
         }
         for (AptLoader aptLoader : serviceLoader) {
+            if (skip(aptLoader)) {
+                continue;
+            }
             aptLoader.autowired(this);
         }
         for (AptLoader aptLoader : serviceLoader) {
+            if (skip(aptLoader)) {
+                continue;
+            }
             aptLoader.postConstruct(this);
         }
         for (AptLoader aptLoader : serviceLoader) {
+            if (skip(aptLoader)) {
+                continue;
+            }
             aptLoader.router(router);
         }
     }
 
+    private boolean skip(AptLoader aptLoader) {
+        if (packages != null && packages.length > 0) {
+            for (String pkg : packages) {
+                if (aptLoader.getClass().getName().startsWith(pkg)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
 
     public void addBean(String name, Object object) {
         if (namedBeans.containsKey(name)) {
@@ -62,27 +82,11 @@ public class ApplicationContext {
         namedBeans.put(name, object);
     }
 
-
-    public void addController(Class<?> clazz) throws Exception {
-        Constructor<?>[] constructors = clazz.getDeclaredConstructors();
-        boolean suc = false;
-        for (Constructor<?> constructor : constructors) {
-            if (constructor.getParameters().length != 0) {
-                continue;
-            }
-            constructor.setAccessible(true);
-            Object object = constructor.newInstance();
-            addBean(clazz.getName(), object);
-            controllers.add(object);
-            suc = true;
-        }
-        if (!suc) {
-            LOGGER.warn("no public no-args constructor found for controllerClass: {}", clazz.getName());
-        }
-    }
-
     public void destroy() throws InvocationTargetException, IllegalAccessException {
         for (AptLoader aptLoader : serviceLoader) {
+            if (skip(aptLoader)) {
+                continue;
+            }
             aptLoader.destroy();
         }
     }

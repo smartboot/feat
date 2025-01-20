@@ -1,14 +1,9 @@
 package tech.smartboot.feat.demo;
 
-import tech.smartboot.feat.core.Feat;
-import tech.smartboot.feat.core.apt.ApplicationContext;
 import tech.smartboot.feat.core.apt.annotation.Controller;
 import tech.smartboot.feat.core.apt.annotation.RequestMapping;
 import tech.smartboot.feat.core.apt.annotation.RequestMethod;
-import tech.smartboot.feat.core.server.handler.Router;
-import tech.smartboot.feat.restful.RestfulBootstrap;
-
-import java.util.concurrent.Executors;
+import tech.smartboot.feat.restful.RestFeat;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
@@ -45,9 +40,6 @@ public class RestfulDemo {
 //    }
 
     public static void main(String[] args) throws Exception {
-        Router router = new Router();
-        ApplicationContext context = new ApplicationContext();
-        context.start(router);
-        Feat.createHttpServer().httpHandler(router).listen(8080);
+        RestFeat.createServer("tech.smartboot.feat.demo.RestfulDemo").listen();
     }
 }
