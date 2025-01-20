@@ -3,7 +3,7 @@ package tech.smartboot.feat.core.apt;
 import tech.smartboot.feat.core.server.handler.Router;
 
 public interface AptLoader {
-    public void loadBean(ApplicationContext applicationContext);
+    public void loadBean(ApplicationContext applicationContext) throws Throwable;
 
     public void autowired(ApplicationContext applicationContext);
 

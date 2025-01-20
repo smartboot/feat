@@ -33,7 +33,11 @@ public class ApplicationContext {
             if (skip(aptLoader)) {
                 continue;
             }
-            aptLoader.loadBean(this);
+            try {
+                aptLoader.loadBean(this);
+            } catch (Throwable e) {
+                throw new RuntimeException(e);
+            }
         }
         for (AptLoader aptLoader : serviceLoader) {
             if (skip(aptLoader)) {

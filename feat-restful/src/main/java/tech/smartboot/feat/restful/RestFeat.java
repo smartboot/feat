@@ -20,6 +20,7 @@ public class RestFeat {
         } else {
             server.options().shutdownHook(application::destroy);
         }
+        application.getRouter().route("/", new StaticResourceHandler());
         server.httpHandler(application.getRouter());
         return server;
     }

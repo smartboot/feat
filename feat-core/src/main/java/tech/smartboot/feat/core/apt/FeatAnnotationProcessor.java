@@ -143,14 +143,22 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             if (annotation instanceof Mapper) {
                 writer.write("    private org.apache.ibatis.session.SqlSessionFactory factory;\n");
             }
-            writer.write("    public void loadBean(ApplicationContext applicationContext) {\n");
+            writer.write("    public void loadBean(ApplicationContext applicationContext) throws Throwable{\n");
             if (annotation instanceof Mapper) {
                 createMapperBean(element, (Mapper) annotation, writer);
             } else {
                 writer.write("         bean=new " + element.getSimpleName() + "(); \n");
             }
 
-            writer.write("    applicationContext.addBean(\"" + element.getSimpleName() + "\", bean);\n");
+            String beanName = element.getSimpleName().toString().substring(0, 1).toLowerCase() + element.getSimpleName().toString().substring(1);
+            writer.write("    applicationContext.addBean(\"" + beanName + "\", bean);\n");
+            for (Element se : element.getEnclosedElements()) {
+                for (AnnotationMirror mirror : se.getAnnotationMirrors()) {
+                    if (Bean.class.getName().equals(mirror.getAnnotationType().toString())) {
+                        writer.write("    applicationContext.addBean(\"" + se.getSimpleName() + "\", bean." + se.getSimpleName() + "());\n");
+                    }
+                }
+            }
             writer.write("          \n");
             writer.write("    }\n");
 

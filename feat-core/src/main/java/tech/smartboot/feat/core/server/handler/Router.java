@@ -83,6 +83,7 @@ public final class Router extends BaseHttpHandler {
      */
     public Router route(String urlPattern, BaseHttpHandler httpHandler) {
         LOGGER.info("route: " + urlPattern);
+        System.out.println("route: " + urlPattern);
         if ("/".equals(urlPattern)) {
             defaultHandler = httpHandler;
         } else {
