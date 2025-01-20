@@ -9,6 +9,7 @@ import tech.smartboot.feat.core.server.handler.Router;
 import java.util.function.Consumer;
 
 public class RestFeat {
+
     public static HttpServer createServer() {
         return createServer(serverOptions -> {
         });
@@ -19,6 +20,15 @@ public class RestFeat {
         ApplicationContext application = new ApplicationContext(packages);
         Router router = new Router();
         application.start(router);
+        Runnable shutdownHook = server.options().shutdownHook();
+        if (shutdownHook != null) {
+            server.options().shutdownHook(() -> {
+                application.destroy();
+                shutdownHook.run();
+            });
+        } else {
+            server.options().shutdownHook(application::destroy);
+        }
         server.httpHandler(router);
         return server;
     }

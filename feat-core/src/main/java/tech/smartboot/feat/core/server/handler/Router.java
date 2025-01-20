@@ -32,7 +32,7 @@ public final class Router extends BaseHttpHandler {
     /**
      * 默认404
      */
-    private final BaseHttpHandler defaultHandler;
+    private BaseHttpHandler defaultHandler;
     private final Map<String, BaseHttpHandler> handlerMap = new ConcurrentHashMap<>();
 
     public Router() {
@@ -83,19 +83,21 @@ public final class Router extends BaseHttpHandler {
      */
     public Router route(String urlPattern, BaseHttpHandler httpHandler) {
         LOGGER.info("route: " + urlPattern);
-        handlerMap.put(urlPattern, httpHandler);
+        if ("/".equals(urlPattern)) {
+            defaultHandler = httpHandler;
+        } else {
+            handlerMap.put(urlPattern, httpHandler);
+        }
         return this;
     }
 
     public Router route(String urlPattern, HttpHandler httpHandler) {
-        LOGGER.info("route: " + urlPattern);
-        handlerMap.put(urlPattern, new BaseHttpHandler() {
+        return route(urlPattern, new BaseHttpHandler() {
             @Override
             public void handle(HttpRequest request) throws Throwable {
                 httpHandler.handle(request);
             }
         });
-        return this;
     }
 
     private BaseHttpHandler matchHandler(String uri) {

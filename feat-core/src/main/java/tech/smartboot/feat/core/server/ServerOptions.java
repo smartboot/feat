@@ -95,6 +95,8 @@ public class ServerOptions {
 
     private final WafConfiguration wafConfiguration = new WafConfiguration();
 
+    private Runnable shutdownHook;
+
 
     int getReadBufferSize() {
         return readBufferSize;
@@ -264,6 +266,15 @@ public class ServerOptions {
 
     public ServerOptions setLowMemory(boolean lowMemory) {
         this.lowMemory = lowMemory;
+        return this;
+    }
+
+    public Runnable shutdownHook() {
+        return shutdownHook;
+    }
+
+    public ServerOptions shutdownHook(Runnable shutdownHook) {
+        this.shutdownHook = shutdownHook;
         return this;
     }
 }

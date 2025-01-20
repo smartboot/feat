@@ -9,7 +9,7 @@ public interface AptLoader {
 
     void postConstruct(ApplicationContext applicationContext);
 
-    void destroy();
+    void destroy() throws Throwable;
 
     void router(Router router);
 }

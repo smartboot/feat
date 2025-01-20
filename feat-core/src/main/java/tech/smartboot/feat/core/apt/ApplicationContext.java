@@ -4,7 +4,6 @@ import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.server.handler.Router;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -82,12 +81,16 @@ public class ApplicationContext {
         namedBeans.put(name, object);
     }
 
-    public void destroy() throws InvocationTargetException, IllegalAccessException {
+    public void destroy() {
         for (AptLoader aptLoader : serviceLoader) {
             if (skip(aptLoader)) {
                 continue;
             }
-            aptLoader.destroy();
+            try {
+                aptLoader.destroy();
+            } catch (Throwable e) {
+                LOGGER.error("error destroying apt loader", e);
+            }
         }
     }
 

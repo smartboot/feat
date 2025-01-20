@@ -120,15 +120,6 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             }
 
 
-//                Writer origwriter = origFileObject.openWriter();
-            char[] bytes = new char[1024];
-            int length;
-            StringBuilder sb = new StringBuilder();
-//                while ((length = reader.read(bytes)) != -1) {
-//                    sb.append(new String(bytes, 0, length));
-//                }
-            System.out.println(sb.toString());
-
             String loaderName = element.getSimpleName() + "BeanAptLoader";
             JavaFileObject javaFileObject = processingEnv.getFiler().createSourceFile(loaderName);
             Writer writer = javaFileObject.openWriter();
@@ -161,6 +152,13 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             if (annotation instanceof Controller) {
                 Controller controller = (Controller) annotation;
                 //遍历所有方法,获得RequestMapping注解
+                String basePath = controller.value();
+                if (!StringUtils.startsWith(basePath, "/")) {
+                    basePath = "/" + basePath;
+                }
+                if (!StringUtils.endsWith(basePath, "/")) {
+                    basePath = basePath + "/";
+                }
 
                 for (Element se : element.getEnclosedElements()) {
                     for (AnnotationMirror mirror : se.getAnnotationMirrors()) {
@@ -171,8 +169,12 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                                 ExecutableElement k = entry.getKey();
                                 AnnotationValue v = entry.getValue();
                                 if ("value".equals(k.getSimpleName().toString())) {
-                                    requestURL = v.toString();
-
+                                    requestURL = v.getValue().toString();
+                                    if (StringUtils.startsWith(requestURL, "/")) {
+                                        requestURL = basePath + requestURL.substring(1);
+                                    } else {
+                                        requestURL = basePath + requestURL;
+                                    }
                                 } else if ("method".equals(k.getSimpleName().toString())) {
                                     System.out.println(v.getValue());
 //                                    writer.write(v.getValue().toString());
@@ -181,7 +183,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                             if (StringUtils.isBlank(requestURL)) {
                                 throw new FeatException("the value of RequestMapping on " + element.getSimpleName() + "@" + se.getSimpleName() + " is not allowed to be empty.");
                             }
-                            writer.write("    router.route(" + requestURL + ", req->{\n");
+                            writer.write("    router.route(\"" + requestURL + "\", req->{\n");
 
                             boolean first = true;
                             StringBuilder newParams = new StringBuilder();
@@ -268,7 +270,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                 }
             }
             writer.write("}\n");
-            writer.write("    public void destroy() {\n");
+            writer.write("    public void destroy() throws Throwable{\n");
             for (Element se : element.getEnclosedElements()) {
                 for (AnnotationMirror mirror : se.getAnnotationMirrors()) {
                     if (PreDestroy.class.getName().equals(mirror.getAnnotationType().toString())) {

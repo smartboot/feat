@@ -34,12 +34,10 @@ public class RestfulDemo {
         Thread.sleep(sleep);
         return "sleep: " + sleep + "ms";
     }
-//    @RequestMapping("/upload")
-//    public String upload(@Param("text") MultipartFile file, @Param("name") String name) {
-//        return "aa";
-//    }
+
 
     public static void main(String[] args) throws Exception {
+        //扫描指定路径下的Controller、Bean
         RestFeat.createServer("tech.smartboot.feat.demo.RestfulDemo").listen();
     }
 }
