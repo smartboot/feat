@@ -109,23 +109,22 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                     autowiredFields.add(field);
                 }
             }
-            //element增加setter方法
-            if (!autowiredFields.isEmpty()) {
-                FileObject origFileObject = processingEnv.getFiler().getResource(StandardLocation.SOURCE_PATH, element.getEnclosingElement().toString(), element.getSimpleName() + ".java");
-                String origContent = origFileObject.getCharContent(false).toString();
-                int lastIndex = origContent.lastIndexOf("}");
-//                    JavaFileObject javaFileObject = processingEnv.getFiler().createSourceFile(element.getSimpleName(), element);
-                StringBuilder writer = new StringBuilder();
-                writer.append(origContent.substring(0, lastIndex));
-                for (Element field : autowiredFields) {
-                    writer.append("    public void set" + field.getSimpleName() + "(" + field.asType() + " " + field.getSimpleName() + ") {\n");
-                    writer.append("        this." + field.getSimpleName() + " = " + field.getSimpleName() + ";\n");
-                    writer.append("    }\n");
-                }
-                writer.append("}");
-                writer.append("}");
-
-            }
+//            //element增加setter方法
+//            if (!autowiredFields.isEmpty()) {
+//                FileObject origFileObject = processingEnv.getFiler().getResource(StandardLocation.SOURCE_PATH, element.getEnclosingElement().toString(), element.getSimpleName() + ".java");
+//                String origContent = origFileObject.getCharContent(false).toString();
+//                int lastIndex = origContent.lastIndexOf("}");
+//                StringBuilder writer = new StringBuilder();
+//                writer.append(origContent.substring(0, lastIndex));
+//                for (Element field : autowiredFields) {
+//                    writer.append("    public void set" + field.getSimpleName() + "(" + field.asType() + " " + field.getSimpleName() + ") {\n");
+//                    writer.append("        this." + field.getSimpleName() + " = " + field.getSimpleName() + ";\n");
+//                    writer.append("    }\n");
+//                }
+//                writer.append("}");
+//                writer.append("}");
+//
+//            }
 
 
             String loaderName = element.getSimpleName() + "BeanAptLoader";
