@@ -7,7 +7,7 @@ public interface AptLoader {
 
     public void autowired(ApplicationContext applicationContext);
 
-    void postConstruct(ApplicationContext applicationContext);
+    void postConstruct(ApplicationContext applicationContext) throws Throwable;
 
     void destroy() throws Throwable;
 

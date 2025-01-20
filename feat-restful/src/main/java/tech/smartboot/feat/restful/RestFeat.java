@@ -4,22 +4,13 @@ import tech.smartboot.feat.core.Feat;
 import tech.smartboot.feat.core.apt.ApplicationContext;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.ServerOptions;
-import tech.smartboot.feat.core.server.handler.Router;
 
 import java.util.function.Consumer;
 
 public class RestFeat {
 
-    public static HttpServer createServer() {
-        return createServer(serverOptions -> {
-        });
-    }
-
-    public static HttpServer createServer(Consumer<ServerOptions> options, String... packages) {
+    public static HttpServer createServer(ApplicationContext application, Consumer<ServerOptions> options, String... packages) {
         HttpServer server = Feat.createHttpServer(options);
-        ApplicationContext application = new ApplicationContext(packages);
-        Router router = new Router();
-        application.start(router);
         Runnable shutdownHook = server.options().shutdownHook();
         if (shutdownHook != null) {
             server.options().shutdownHook(() -> {
@@ -29,8 +20,14 @@ public class RestFeat {
         } else {
             server.options().shutdownHook(application::destroy);
         }
-        server.httpHandler(router);
+        server.httpHandler(application.getRouter());
         return server;
+    }
+
+
+    public static HttpServer createServer(Consumer<ServerOptions> options, String... packages) {
+        ApplicationContext application = new ApplicationContext(packages);
+        return createServer(application, options, packages);
     }
 
     public static HttpServer createServer(String... packages) {

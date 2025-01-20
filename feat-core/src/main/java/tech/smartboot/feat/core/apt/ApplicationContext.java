@@ -4,9 +4,7 @@ import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.server.handler.Router;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
 
@@ -18,11 +16,9 @@ public class ApplicationContext {
     private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationContext.class);
     private final Map<String, Object> namedBeans = new HashMap<>();
 
-    private final List<Object> controllers = new ArrayList<>();
-
     private final ServiceLoader<AptLoader> serviceLoader = ServiceLoader.load(AptLoader.class);
-
-    private String[] packages;
+    private final Router router = new Router();
+    private final String[] packages;
 
     public ApplicationContext() {
         this(new String[0]);
@@ -32,7 +28,7 @@ public class ApplicationContext {
         this.packages = packages;
     }
 
-    public void start(Router router) {
+    public void start() {
         for (AptLoader aptLoader : serviceLoader) {
             if (skip(aptLoader)) {
                 continue;
@@ -49,7 +45,11 @@ public class ApplicationContext {
             if (skip(aptLoader)) {
                 continue;
             }
-            aptLoader.postConstruct(this);
+            try {
+                aptLoader.postConstruct(this);
+            } catch (Throwable e) {
+                throw new RuntimeException(e);
+            }
         }
         for (AptLoader aptLoader : serviceLoader) {
             if (skip(aptLoader)) {
@@ -92,6 +92,10 @@ public class ApplicationContext {
                 LOGGER.error("error destroying apt loader", e);
             }
         }
+    }
+
+    public Router getRouter() {
+        return router;
     }
 
     public <T> T getBean(String name) {
