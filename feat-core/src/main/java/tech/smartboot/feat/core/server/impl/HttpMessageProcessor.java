@@ -85,6 +85,7 @@ public final class HttpMessageProcessor extends AbstractMessageProcessor<HttpEnd
         } else if (throwable.getCause() != null) {
             responseError(response, throwable.getCause());
         } else {
+            LOGGER.error("HttpError response exception", throwable);
             responseError(response, HttpStatus.INTERNAL_SERVER_ERROR, throwable.fillInStackTrace().toString());
         }
     }

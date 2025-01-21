@@ -17,7 +17,7 @@ public class ApplicationContext {
     private final Map<String, Object> namedBeans = new HashMap<>();
 
     private final ServiceLoader<AptLoader> serviceLoader = ServiceLoader.load(AptLoader.class);
-    private final Router router = new Router();
+    private final Router router = new Router(new StaticResourceHandler());
     private final String[] packages;
 
     public ApplicationContext() {

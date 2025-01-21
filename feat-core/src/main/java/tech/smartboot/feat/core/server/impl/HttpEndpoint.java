@@ -308,6 +308,7 @@ public final class HttpEndpoint extends Endpoint implements HttpRequest, Reset {
 
     public void reset() {
         super.reset();
+        serverHandler = null;
         remainingThreshold = configuration.getMaxRequestSize();
         method = null;
         decodeState.setState(DecodeState.STATE_METHOD);
