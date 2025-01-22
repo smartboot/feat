@@ -17,10 +17,7 @@ import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.impl.HttpEndpoint;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
@@ -34,7 +31,6 @@ public final class Router extends BaseHttpHandler {
      * 默认404
      */
     private final BaseHttpHandler defaultHandler;
-    private final List<InterceptorInfo> interceptors = new ArrayList<>();
     private final NodePath rootPath = new NodePath("/");
 
     public Router() {
@@ -106,31 +102,6 @@ public final class Router extends BaseHttpHandler {
             httpHandler = defaultHandler;
         }
         return httpHandler;
-    }
-
-    public void addInterceptor(String[] patterns, String[] excludes, Interceptor interceptor) {
-        addInterceptor(Arrays.asList(patterns), Arrays.asList(excludes), interceptor);
-    }
-
-    public void addInterceptor(List<String> patterns, List<String> excludes, Interceptor interceptor) {
-        this.interceptors.add(new InterceptorInfo(patterns, excludes, interceptor));
-    }
-
-    public interface Interceptor {
-        Object apply(HttpRequest request);
-    }
-
-
-    public static class InterceptorInfo {
-        private final List<String> patterns;
-        private final List<String> excludes;
-        private final Interceptor interceptor;
-
-        public InterceptorInfo(List<String> patterns, List<String> excludes, Interceptor interceptor) {
-            this.patterns = patterns;
-            this.excludes = excludes;
-            this.interceptor = interceptor;
-        }
     }
 
     public static class NodePath {
