@@ -19,7 +19,7 @@ import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
 import tech.smartboot.feat.core.server.HttpServer;
-import tech.smartboot.feat.restful.RestfulBootstrap;
+import tech.smartboot.feat.restful.RestFeat;
 import tech.smartboot.feat.test.BastTest;
 import tech.smartboot.feat.test.server.RequestUnit;
 
@@ -44,9 +44,10 @@ public class RestfulServer2Test extends BastTest {
 
     @Before
     public void init() throws Exception {
-        bootstrap = RestfulBootstrap.getInstance().scan("tech.smartboot.feat.test.restful").bootstrap();
-        bootstrap.options().addPlugin(new StreamMonitorPlugin<>((asynchronousSocketChannel, bytes) -> System.out.println(new String(bytes)),
-                (asynchronousSocketChannel, bytes) -> System.out.println(new String(bytes))));
+        bootstrap = RestFeat.createServer(opts -> {
+            opts.addPlugin(new StreamMonitorPlugin<>((asynchronousSocketChannel, bytes) -> System.out.println(new String(bytes)),
+                    (asynchronousSocketChannel, bytes) -> System.out.println(new String(bytes))));
+        }, "tech.smartboot.feat.test.restful");
         bootstrap.listen(SERVER_PORT);
     }
 

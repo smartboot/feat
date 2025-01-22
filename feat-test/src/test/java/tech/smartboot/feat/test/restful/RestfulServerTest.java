@@ -14,12 +14,12 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
 import tech.smartboot.feat.core.client.HttpClient;
-import tech.smartboot.feat.restful.RestfulBootstrap;
 import tech.smartboot.feat.core.server.HttpServer;
+import tech.smartboot.feat.restful.RestFeat;
 import tech.smartboot.feat.test.BastTest;
 import tech.smartboot.feat.test.server.RequestUnit;
-import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
 
 import java.util.concurrent.ExecutionException;
 
@@ -40,8 +40,10 @@ public class RestfulServerTest extends BastTest {
 
     @Before
     public void init() throws Exception {
-        bootstrap = RestfulBootstrap.getInstance().controller(Demo1Controller.class, Demo2Controller.class).bootstrap();
-        bootstrap.options().addPlugin(new StreamMonitorPlugin<>((asynchronousSocketChannel, bytes) -> System.out.println(new String(bytes)), (asynchronousSocketChannel, bytes) -> System.out.println(new String(bytes))));
+        bootstrap = RestFeat.createServer(opts -> {
+            opts.addPlugin(new StreamMonitorPlugin<>((asynchronousSocketChannel, bytes) -> System.out.println(new String(bytes)),
+                    (asynchronousSocketChannel, bytes) -> System.out.println(new String(bytes))));
+        }, Demo1Controller.class.getName(), Demo2Controller.class.getName());
         bootstrap.listen(SERVER_PORT);
     }
 

@@ -27,6 +27,7 @@ public class RestFeat {
 
     public static HttpServer createServer(Consumer<ServerOptions> options, String... packages) {
         ApplicationContext application = new ApplicationContext(packages);
+        application.start();
         return createServer(application, options, packages);
     }
 

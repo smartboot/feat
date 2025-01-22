@@ -14,7 +14,7 @@ class Demo1Controller {
         System.out.println("init");
     }
 
-    @RequestMapping("/test1")
+    @RequestMapping
     public String test1() {
         return "hello";
     }

@@ -217,24 +217,23 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         if (!StringUtils.startsWith(basePath, "/")) {
             basePath = "/" + basePath;
         }
-        if (!StringUtils.endsWith(basePath, "/")) {
-            basePath = basePath + "/";
-        }
 
         for (Element se : element.getEnclosedElements()) {
             for (AnnotationMirror mirror : se.getAnnotationMirrors()) {
                 if (RequestMapping.class.getName().equals(mirror.getAnnotationType().toString())) {
-                    String requestURL = "";
+                    String requestURL = basePath;
 
                     for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry : mirror.getElementValues().entrySet()) {
                         ExecutableElement k = entry.getKey();
                         AnnotationValue v = entry.getValue();
                         if ("value".equals(k.getSimpleName().toString())) {
                             requestURL = v.getValue().toString();
-                            if (StringUtils.startsWith(requestURL, "/")) {
+                            if (basePath.endsWith("/") && requestURL.startsWith("/")) {
                                 requestURL = basePath + requestURL.substring(1);
-                            } else {
+                            } else if (basePath.endsWith("/") && !requestURL.startsWith("/") || !basePath.endsWith("/") && requestURL.startsWith("/") || requestURL.isEmpty()) {
                                 requestURL = basePath + requestURL;
+                            } else {
+                                requestURL = basePath + "/" + requestURL;
                             }
                         } else if ("method".equals(k.getSimpleName().toString())) {
                             System.out.println(v.getValue());
@@ -270,8 +269,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                             }
                             if (paramAnnotation != null) {
                                 if (param.asType().toString().startsWith(List.class.getName())) {
-                                    newParams.append(param.asType().toString()).append(" param").append(i).append("=jsonObject.getObject(\"")
-                                            .append(paramAnnotation.value()).append("\",java.util.List.class);\n");
+                                    newParams.append(param.asType().toString()).append(" param").append(i).append("=jsonObject.getObject(\"").append(paramAnnotation.value()).append("\",java.util" + ".List.class);\n");
                                 } else {
                                     newParams.append(param.asType().toString()).append(" param").append(i).append("=jsonObject.getObject(\"").append(paramAnnotation.value()).append("\",").append(param.asType().toString()).append(".class);\n");
                                 }
@@ -378,8 +376,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                             }
                             if (paramAnnotation != null) {
                                 if (param.asType().toString().startsWith(List.class.getName())) {
-                                    newParams.append(param.asType().toString()).append(" param").append(i).append("=jsonObject.getObject(\"")
-                                            .append(paramAnnotation.value()).append("\",java.util.List.class);\n");
+                                    newParams.append(param.asType().toString()).append(" param").append(i).append("=jsonObject.getObject(\"").append(paramAnnotation.value()).append("\",java.util" + ".List.class);\n");
                                 } else {
                                     newParams.append(param.asType().toString()).append(" param").append(i).append("=jsonObject.getObject(\"").append(paramAnnotation.value()).append("\",").append(param.asType().toString()).append(".class);\n");
                                 }

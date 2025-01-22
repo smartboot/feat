@@ -1,6 +1,6 @@
 package tech.smartboot.feat.demo;
 
-import tech.smartboot.feat.restful.RestfulBootstrap;
+import tech.smartboot.feat.core.Feat;
 import tech.smartboot.feat.restful.sse.SSEHandler;
 import tech.smartboot.feat.restful.sse.SseEmitter;
 
@@ -10,8 +10,7 @@ import java.util.concurrent.TimeUnit;
 
 public class SSEDemo {
     public static void main(String[] args) throws Exception {
-        RestfulBootstrap bootstrap = RestfulBootstrap.getInstance();
-        bootstrap.bootstrap().httpHandler(new SSEHandler() {
+        Feat.createHttpServer(serverOptions -> serverOptions.debug(true)).httpHandler(new SSEHandler() {
             @Override
             public void onOpen(SseEmitter sseEmitter) {
                 SSEHandler handler = this;
@@ -32,8 +31,6 @@ public class SSEDemo {
                     }
                 }, 1, 1, TimeUnit.SECONDS);
             }
-        });
-        bootstrap.bootstrap().options().debug(true);
-        bootstrap.bootstrap().listen(8080);
+        }).listen(8080);
     }
 }

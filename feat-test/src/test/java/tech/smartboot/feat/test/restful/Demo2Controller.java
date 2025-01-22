@@ -7,7 +7,7 @@ import tech.smartboot.feat.core.apt.annotation.RequestMapping;
 
 @Controller("demo2")
 class Demo2Controller {
-    @RequestMapping("/hello")
+    @RequestMapping("")
     public String test1() {
         return "hello world";
     }
