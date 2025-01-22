@@ -1,7 +1,6 @@
 package tech.smartboot.feat.demo.apt;
 
 import tech.smartboot.feat.core.apt.annotation.Controller;
-import tech.smartboot.feat.core.apt.annotation.Interceptor;
 import tech.smartboot.feat.core.apt.annotation.PostConstruct;
 import tech.smartboot.feat.core.apt.annotation.PreDestroy;
 import tech.smartboot.feat.core.apt.annotation.RequestMapping;
@@ -32,11 +31,6 @@ public class ControllerDemo {
         return Collections.emptyList();
     }
 
-    @Interceptor(patterns = {"aaa", "bbb"})
-    public String hello3(HttpRequest request, HttpResponse response) {
-        System.out.println("aaa");
-        return "hello";
-    }
 
     @PostConstruct
     public void init() {

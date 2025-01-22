@@ -9,8 +9,7 @@ import java.lang.annotation.Target;
 @Target({ElementType.METHOD})
 @Retention(RetentionPolicy.SOURCE)
 @Documented
-public @interface Interceptor {
-    String[] patterns();
-
-    String[] exclude() default {};
+public @interface CrossOrigin {
+    String[] origins() default {};
+    String[] allowedHeaders() default {};
 }

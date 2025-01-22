@@ -93,7 +93,7 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
                     byteBuffer.mark();
                 } while (byteBuffer.hasRemaining() && byteBuffer.get() == Constant.SP);
                 byteBuffer.reset();
-                if (byteBuffer.remaining() < 8) {
+                if (byteBuffer.remaining() < 9) {
                     break;
                 }
                 byte major = byteBuffer.get(byteBuffer.position() + 5);

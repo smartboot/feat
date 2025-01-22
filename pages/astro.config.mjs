@@ -69,11 +69,15 @@ export default defineConfig({
                     autogenerate: {directory: 'server'},
                 },
                 {
-                    label: '3. Feat Client开发',
+                    label: '3. Feat Restful开发',
+                    autogenerate: {directory: 'restful'},
+                },
+                {
+                    label: '4. Feat Client开发',
                     autogenerate: {directory: 'client'},
                 },
                 {
-                    label: '4. 附录',
+                    label: '5. 附录',
                     autogenerate: {directory: 'appendix'},
                 },
             ],
