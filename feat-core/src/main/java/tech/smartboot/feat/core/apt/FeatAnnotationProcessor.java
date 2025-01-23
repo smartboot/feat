@@ -26,8 +26,12 @@ import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.ArrayType;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.FileObject;
 import javax.tools.JavaFileObject;
@@ -36,6 +40,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -303,7 +308,8 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                             writer.write("      String rst = bean." + se.getSimpleName() + "(");
                             break;
                         case RETURN_TYPE_OBJECT:
-                            writer.write("      Object rst = bean." + se.getSimpleName() + "(");
+                            writer.write("req.getResponse().setContentType(\"application/json\");");
+                            writer.write("      " + returnType + " rst = bean." + se.getSimpleName() + "(");
                             break;
                         default:
                             throw new RuntimeException("不支持的返回类型");
@@ -321,10 +327,22 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                             writer.write("        req.getResponse().write(bytes);\n");
                             break;
                         case RETURN_TYPE_OBJECT:
-                            writer.write("        byte[] bytes=JSON.toJSONBytes(rst);\n ");
+                            writer.write("StringBuilder sb = new StringBuilder();");
+                            writeJsonObject(writer, returnType, "rst", 0);
+                            writer.write("        byte[] bytes=sb.toString().getBytes(\"UTF-8\");\n ");
                             writer.write("        req.getResponse().setContentLength(bytes.length);\n");
                             writer.write("        req.getResponse().write(bytes);\n");
+//                            System.out.println("typeMirror:" + stringBuilder);
+//                            writer.write("        byte[] bytes=JSON.toJSONBytes(rst);\n ");
+//                            writer.write("        req.getResponse().setContentLength(bytes.length);\n");
+//                            writer.write("        req.getResponse().write(bytes);\n");
                             break;
+//                        case RETURN_TYPE_OBJECT:
+//                            writeJsonObject(writer,returnType);
+//                            writer.write("        byte[] bytes=JSON.toJSONBytes(rst);\n ");
+//                            writer.write("        req.getResponse().setContentLength(bytes.length);\n");
+//                            writer.write("        req.getResponse().write(bytes);\n");
+//                            break;
                         default:
                             throw new RuntimeException("不支持的返回类型");
                     }
@@ -332,6 +350,77 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                 }
             }
         }
+    }
+
+    public static void writeJsonObject(Writer writer, TypeMirror typeMirror, String obj, int i) throws IOException {
+        if (typeMirror instanceof ArrayType) {
+            writer.append("sb.append('[');\n");
+            writer.append("for(" + typeMirror + ")");
+            writer.append("sb.append(']');\n");
+            return;
+        } else if (typeMirror.toString().startsWith("java.util.List")) {
+            writer.append("sb.append('[');\n");
+            TypeMirror type = ((DeclaredType) typeMirror).getTypeArguments().get(0);
+            writer.append("boolean first=true;\n");
+            writer.append("for(" + type + " p" + i + " : " + obj + " ){\n");
+            writer.append("if(first){\n");
+            writer.append("first=false;\n");
+            writer.append("}\n");
+            writer.append("else{\n");
+            writer.append("sb.append(',');\n");
+            writer.append("}\n");
+            if (String.class.getName().equals(type.toString())) {
+                writer.append("sb.append('\"')");
+                writer.append(".append(p" + i + ")");
+                writer.append(".append('\"');\n");
+            } else {
+                writeJsonObject(writer, type, "p" + i, i + 1);
+            }
+
+            writer.append("}\n");
+            writer.append("sb.append(']');\n");
+            return;
+        }
+
+        writer.append("sb.append('{');\n");
+        boolean first = true;
+        for (Element se : ((DeclaredType) typeMirror).asElement().getEnclosedElements()) {
+            if (se.getKind() != ElementKind.FIELD) {
+                continue;
+            }
+            if (se.getModifiers().contains(Modifier.STATIC)) {
+                continue;
+            }
+            if (first) {
+                first = false;
+            } else {
+                writer.append("sb.append(',');\n");
+            }
+            writer.append("sb.append(\"\\\"").append(se.getSimpleName());
+            TypeMirror type = se.asType();
+            if (se.asType().getKind() == TypeKind.TYPEVAR) {
+                type = ((DeclaredType) typeMirror).getTypeArguments().get(0);
+            }
+            if (type.toString().equals(boolean.class.getName())) {
+                writer.append("\\\":\").append(").append(obj).append(".is").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).append("());");
+            } else if (Arrays.asList("int", "short", "byte", "long", "float", "double").contains(type.toString())) {
+                writer.append("\\\":\").append(").append(obj).append(".get").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).append("());");
+            } else if (String.class.getName().equals(type.toString())) {
+                writer.append("\\\":\");");
+                writer.append("if(").append(obj).append(".get").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).append("()" +
+                        "!=null){\n");
+                writer.append("sb.append(").append("'\"').append(").append(obj).append(".get").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).append(
+                        "()).append('\"');");
+                writer.append("}else{\n");
+                writer.append("sb.append(\"null\");");
+                writer.append("}\n");
+            } else {
+                writer.append("\\\":\");");
+                writeJsonObject(writer, type, obj + ".get" + se.getSimpleName().toString().substring(0, 1).toUpperCase() + se.getSimpleName().toString().substring(1) + "()", i + 1);
+            }
+        }
+        writer.append(";\n");
+        writer.append("sb.append('}');\n");
     }
 
     private static <T extends Annotation> void addInterceptor(Element element, Writer writer) throws IOException {
