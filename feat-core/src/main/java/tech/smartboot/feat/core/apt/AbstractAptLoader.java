@@ -31,15 +31,4 @@ public abstract class AbstractAptLoader implements AptLoader {
             throw new FeatException(e);
         }
     }
-
-    protected class Param {
-        String name;
-        Object value;
-        Class<?> type;
-
-        public Param(String name, Class<?> type) {
-            this.name = name;
-            this.type = type;
-        }
-    }
 }
