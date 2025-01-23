@@ -353,18 +353,22 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
     }
 
     public static void writeJsonObject(Writer writer, TypeMirror typeMirror, String obj, int i) throws IOException {
+        if (i > 10) {
+            throw new FeatException("请不要定义复杂层级结构或者循环引用的class");
+        }
         if (typeMirror instanceof ArrayType) {
             writer.append("os.write('[');\n");
             writer.append("for(" + typeMirror + ")");
             writer.append("os.write(']');\n");
             return;
         } else if (typeMirror.toString().startsWith("java.util.List")) {
+            writer.append(" if(" + obj + "!=null){\n");
             writer.append("os.write('[');\n");
             TypeMirror type = ((DeclaredType) typeMirror).getTypeArguments().get(0);
-            writer.append("boolean first=true;\n");
+            writer.append("boolean first" + i + "=true;\n");
             writer.append("for(" + type + " p" + i + " : " + obj + " ){\n");
-            writer.append("if(first){\n");
-            writer.append("first=false;\n");
+            writer.append("if(first" + i + "){\n");
+            writer.append("first" + i + "=false;\n");
             writer.append("}\n");
             writer.append("else{\n");
             writer.append("os.write(',');\n");
@@ -379,6 +383,10 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
 
             writer.append("}\n");
             writer.append("os.write(']');\n");
+            writer.write("}else{\n");
+            writer.write("byte[] bnull={'n','u','l','l'};\n");
+            writer.append("os.write(bnull);");
+            writer.write("}\n");
             return;
         }
 
@@ -413,8 +421,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                 String s = toBytesStr("\"" + se.getSimpleName().toString() + "\":");
                 writer.write("byte[] b" + j + "=" + s + ";\n");
                 writer.write("os.write(b" + j + ");\n");
-                writer.append("os.write(String.valueOf(").append(obj).append(".get").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).append(
-                        "()).getBytes());");
+                writer.append("os.write(String.valueOf(").append(obj).append(".get").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).append("()).getBytes());");
             } else if (String.class.getName().equals(type.toString())) {
                 String s = toBytesStr("\"" + se.getSimpleName().toString() + "\":");
                 writer.write("byte[] b" + j + "=" + s + ";\n");

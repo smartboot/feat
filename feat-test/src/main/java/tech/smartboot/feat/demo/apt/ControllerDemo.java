@@ -57,7 +57,31 @@ public class ControllerDemo {
             Dto dto = new Dto();
             dto.setName("aaa" + i);
             dto.setAge(18);
-            dto.setAddress("bbb" + i);
+            dto.setAddress("aa" + i);
+            dto.setList(new ArrayList<>());
+            for (int j = 0; j < 3; j++) {
+                Dto1 dto1 = new Dto1();
+                dto.getList().add(dto1);
+                dto1.setName("bb" + j);
+                dto1.setAge(18);
+                dto1.setAddress("bbb" + j);
+                dto1.setList(new ArrayList<>());
+                for (int k = 0; k < 3; k++) {
+                    Dto2 dto2 = new Dto2();
+                    dto1.getList().add(dto2);
+                    dto2.setName("cc" + k);
+                    dto2.setAge(18);
+                    dto2.setAddress("cc" + k);
+                    dto2.setList(new ArrayList<>());
+                    for (int l = 0; l < 3; l++) {
+                        Dto3 dto3 = new Dto3();
+                        dto2.getList().add(dto3);
+                        dto3.setName("ddd" + l);
+                        dto3.setAge(18);
+                        dto3.setAddress("ddd" + l);
+                    }
+                }
+            }
             list.add(dto);
         }
         return RestResult.ok(list);

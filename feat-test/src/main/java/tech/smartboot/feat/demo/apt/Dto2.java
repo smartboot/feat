@@ -2,11 +2,11 @@ package tech.smartboot.feat.demo.apt;
 
 import java.util.List;
 
-public class Dto {
+public class Dto2 {
     private String name;
     private int age;
     private String address;
-    private List<Dto1> list;
+    private List<Dto3> list;
 
     public String getName() {
         return name;
@@ -32,11 +32,11 @@ public class Dto {
         this.address = address;
     }
 
-    public List<Dto1> getList() {
+    public List<Dto3> getList() {
         return list;
     }
 
-    public void setList(List<Dto1> list) {
+    public void setList(List<Dto3> list) {
         this.list = list;
     }
 }
