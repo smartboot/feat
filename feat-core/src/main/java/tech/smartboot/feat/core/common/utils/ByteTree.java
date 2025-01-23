@@ -46,7 +46,7 @@ public class ByteTree<T> {
      */
     private T attach;
 
-    public ByteTree() {
+    ByteTree() {
         this(1024);
     }
 

@@ -9,9 +9,7 @@ package tech.smartboot.feat.core.common.utils;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.StringTokenizer;
 
 public class StringUtils {
 
@@ -291,31 +289,6 @@ public class StringUtils {
         return list.toArray(new String[list.size()]);
     }
 
-    public static String[] tokenizeToStringArray(String str, String delimiters, boolean trimTokens, boolean ignoreEmptyTokens) {
-
-        if (str == null) {
-            return null;
-        }
-        StringTokenizer st = new StringTokenizer(str, delimiters);
-        List<String> tokens = new ArrayList<String>();
-        while (st.hasMoreTokens()) {
-            String token = st.nextToken();
-            if (trimTokens) {
-                token = token.trim();
-            }
-            if (!ignoreEmptyTokens || token.length() > 0) {
-                tokens.add(token);
-            }
-        }
-        return toStringArray(tokens);
-    }
-
-    public static String[] toStringArray(Collection<String> collection) {
-        if (collection == null) {
-            return null;
-        }
-        return collection.toArray(new String[collection.size()]);
-    }
 
     public static int length(final CharSequence cs) {
         return cs == null ? 0 : cs.length();
