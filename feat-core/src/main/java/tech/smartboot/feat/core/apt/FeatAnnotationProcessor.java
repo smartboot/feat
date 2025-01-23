@@ -327,9 +327,9 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                             writer.write("        req.getResponse().write(bytes);\n");
                             break;
                         case RETURN_TYPE_OBJECT:
-                            writer.write("StringBuilder sb = new StringBuilder();");
+                            writer.write("java.io.ByteArrayOutputStream os=new java.io.ByteArrayOutputStream();");
                             writeJsonObject(writer, returnType, "rst", 0);
-                            writer.write("        byte[] bytes=sb.toString().getBytes(\"UTF-8\");\n ");
+                            writer.write("        byte[] bytes=os.toByteArray();\n ");
                             writer.write("        req.getResponse().setContentLength(bytes.length);\n");
                             writer.write("        req.getResponse().write(bytes);\n");
 //                            System.out.println("typeMirror:" + stringBuilder);
@@ -354,12 +354,12 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
 
     public static void writeJsonObject(Writer writer, TypeMirror typeMirror, String obj, int i) throws IOException {
         if (typeMirror instanceof ArrayType) {
-            writer.append("sb.append('[');\n");
+            writer.append("os.write('[');\n");
             writer.append("for(" + typeMirror + ")");
-            writer.append("sb.append(']');\n");
+            writer.append("os.write(']');\n");
             return;
         } else if (typeMirror.toString().startsWith("java.util.List")) {
-            writer.append("sb.append('[');\n");
+            writer.append("os.write('[');\n");
             TypeMirror type = ((DeclaredType) typeMirror).getTypeArguments().get(0);
             writer.append("boolean first=true;\n");
             writer.append("for(" + type + " p" + i + " : " + obj + " ){\n");
@@ -367,23 +367,23 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             writer.append("first=false;\n");
             writer.append("}\n");
             writer.append("else{\n");
-            writer.append("sb.append(',');\n");
+            writer.append("os.write(',');\n");
             writer.append("}\n");
             if (String.class.getName().equals(type.toString())) {
-                writer.append("sb.append('\"')");
-                writer.append(".append(p" + i + ")");
-                writer.append(".append('\"');\n");
+                writer.append("os.write('\"');");
+                writer.append("os.write(p" + i + ".getBytes());");
+                writer.append("os.write('\"');\n");
             } else {
                 writeJsonObject(writer, type, "p" + i, i + 1);
             }
 
             writer.append("}\n");
-            writer.append("sb.append(']');\n");
+            writer.append("os.write(']');\n");
             return;
         }
 
-        writer.append("sb.append('{');\n");
-        boolean first = true;
+        writer.append("os.write('{');\n");
+        int j = i * 10;
         for (Element se : ((DeclaredType) typeMirror).asElement().getEnclosedElements()) {
             if (se.getKind() != ElementKind.FIELD) {
                 continue;
@@ -391,36 +391,76 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             if (se.getModifiers().contains(Modifier.STATIC)) {
                 continue;
             }
-            if (first) {
-                first = false;
-            } else {
-                writer.append("sb.append(',');\n");
+            if (j++ > i * 10) {
+                writer.append("os.write(',');\n");
             }
-            writer.append("sb.append(\"\\\"").append(se.getSimpleName());
+
             TypeMirror type = se.asType();
             if (se.asType().getKind() == TypeKind.TYPEVAR) {
                 type = ((DeclaredType) typeMirror).getTypeArguments().get(0);
             }
             if (type.toString().equals(boolean.class.getName())) {
-                writer.append("\\\":\").append(").append(obj).append(".is").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).append("());");
+                writer.append("if(" + obj + ".is").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).append("()){\n");
+                String s = toBytesStr("\"" + se.getSimpleName().toString() + "\":true");
+                writer.write("byte[] b" + j + "=" + s + ";\n");
+                writer.write("os.write(b" + j + ");\n");
+                writer.write("}else{\n");
+                String s1 = toBytesStr("\"" + se.getSimpleName().toString() + "\":false");
+                writer.write("byte[] b" + j + "=" + s1 + ";\n");
+                writer.write("os.write(b" + j + ");\n");
+                writer.write("}\n");
             } else if (Arrays.asList("int", "short", "byte", "long", "float", "double").contains(type.toString())) {
-                writer.append("\\\":\").append(").append(obj).append(".get").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).append("());");
+                String s = toBytesStr("\"" + se.getSimpleName().toString() + "\":");
+                writer.write("byte[] b" + j + "=" + s + ";\n");
+                writer.write("os.write(b" + j + ");\n");
+                writer.append("os.write(String.valueOf(").append(obj).append(".get").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).append(
+                        "()).getBytes());");
             } else if (String.class.getName().equals(type.toString())) {
-                writer.append("\\\":\");");
+                String s = toBytesStr("\"" + se.getSimpleName().toString() + "\":");
+                writer.write("byte[] b" + j + "=" + s + ";\n");
+                writer.write("os.write(b" + j + ");\n");
                 writer.append("if(").append(obj).append(".get").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).append("()" +
                         "!=null){\n");
-                writer.append("sb.append(").append("'\"').append(").append(obj).append(".get").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).append(
-                        "()).append('\"');");
+                writer.append("os.write('\"');\n");
+                writer.write("String s=" + obj + ".get" + se.getSimpleName().toString().substring(0, 1).toUpperCase() + se.getSimpleName().toString().substring(1) + "();\n");
+                writer.write("int i=0;\n");
+                writer.write("while(true){\n");
+                writer.write("int j=s.indexOf(\"\\\"\",i);\n");
+                writer.write("if (j == -1) {\n");
+                writer.write("os.write(s.substring(i).getBytes());\n");
+                writer.write("break;\n");
+                writer.write("}else{\n");
+                writer.write("os.write(s.substring(i,j).getBytes());\n");
+                writer.write("os.write('\\\\');\n");
+                writer.write("os.write('\\\"');\n");
+                writer.write("}\n");
+                writer.write("}\n");
+                writer.append("os.write('\"');\n");
                 writer.append("}else{\n");
-                writer.append("sb.append(\"null\");");
+                writer.write("byte[] bnull={'n','u','l','l'};\n");
+                writer.append("os.write(bnull);");
                 writer.append("}\n");
             } else {
-                writer.append("\\\":\");");
+                String s = toBytesStr("\"" + se.getSimpleName().toString() + "\":");
+                writer.write("byte[] b" + j + "=" + s + ";\n");
+                writer.write("os.write(b" + j + ");\n");
                 writeJsonObject(writer, type, obj + ".get" + se.getSimpleName().toString().substring(0, 1).toUpperCase() + se.getSimpleName().toString().substring(1) + "()", i + 1);
             }
         }
         writer.append(";\n");
-        writer.append("sb.append('}');\n");
+        writer.append("os.write('}');\n");
+    }
+
+    private static String toBytesStr(String str) {
+        StringBuilder s = new StringBuilder("{");
+
+        for (int i = 0; i < str.length(); i++) {
+            if (i > 0) {
+                s.append(",");
+            }
+            s.append('\'').append(str.charAt(i)).append('\'');
+        }
+        return s + "}";
     }
 
     private static <T extends Annotation> void addInterceptor(Element element, Writer writer) throws IOException {
