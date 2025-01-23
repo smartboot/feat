@@ -22,7 +22,7 @@ public class ByteTreeTest {
 
     @Test
     public void test1() {
-        ByteTree byteTree = new ByteTree(null, Byte.MAX_VALUE);
+        ByteTree byteTree = new ByteTree( Byte.MAX_VALUE);
         byteTree.addNode("Hello");
         byteTree.addNode("Hello1");
         byteTree.addNode("Hello2");
@@ -45,7 +45,7 @@ public class ByteTreeTest {
 
     @Test
     public void test2() {
-        ByteTree byteTree = new ByteTree(null, Byte.MAX_VALUE);
+        ByteTree byteTree = new ByteTree( Byte.MAX_VALUE);
         byte[] bytes = "Hello Worldaa".getBytes();
         ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
         ByteTree searchTree = byteTree.search(byteBuffer, endByte -> endByte == 'a', true);

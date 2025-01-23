@@ -81,7 +81,6 @@ public final class Router extends BaseHttpHandler {
      * @return
      */
     public Router route(String urlPattern, BaseHttpHandler httpHandler) {
-        LOGGER.info("route: " + urlPattern);
         rootPath.add(urlPattern, httpHandler);
         return this;
     }
@@ -98,7 +97,6 @@ public final class Router extends BaseHttpHandler {
     private BaseHttpHandler matchHandler(String uri) {
         BaseHttpHandler httpHandler = rootPath.match(uri);
         if (httpHandler == null) {
-            System.out.println("request: " + uri + " ,match: default    ");
             httpHandler = defaultHandler;
         }
         return httpHandler;

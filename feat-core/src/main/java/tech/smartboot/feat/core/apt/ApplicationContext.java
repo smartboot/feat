@@ -55,6 +55,7 @@ public class ApplicationContext {
                 throw new RuntimeException(e);
             }
         }
+        System.out.println("\u001B[32mFeat Router:\u001B[0m");
         for (AptLoader aptLoader : serviceLoader) {
             if (skip(aptLoader)) {
                 continue;

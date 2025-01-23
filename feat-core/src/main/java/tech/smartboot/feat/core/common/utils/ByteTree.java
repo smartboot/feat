@@ -40,14 +40,14 @@ public class ByteTree<T> {
     /**
      * 总容量上限
      */
-    private int limit = 1000;
+    private int limit;
     /**
      * 捆绑附件对象
      */
     private T attach;
 
     ByteTree() {
-        this(1024);
+        this(16 * 1024);
     }
 
     public ByteTree(int limit) {
@@ -55,7 +55,7 @@ public class ByteTree<T> {
         this.limit = limit;
     }
 
-    public ByteTree(ByteTree<T> parent, byte value) {
+    ByteTree(ByteTree<T> parent, byte value) {
         this.parent = parent;
         this.value = value;
         this.depth = parent == null ? 0 : parent.depth + 1;
