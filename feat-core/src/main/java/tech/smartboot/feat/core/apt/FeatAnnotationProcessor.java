@@ -353,8 +353,15 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
     }
 
     public static void writeJsonObject(Writer writer, TypeMirror typeMirror, String obj, int i) throws IOException {
-        if (i > 10) {
-            throw new FeatException("请不要定义复杂层级结构或者循环引用的class");
+        //深层级采用JSON框架序列化，防止循环引用
+        if (i > 4) {
+            writer.write("if(" + obj + "!=null){\n");
+            writer.write("os.write(JSON.toJSONBytes(" + obj + "));\n");
+            writer.write("}else{\n");
+            writer.write("byte[] bnull={'n','u','l','l'};\n");
+            writer.append("os.write(bnull);");
+            writer.write("}\n");
+            return;
         }
         if (typeMirror instanceof ArrayType) {
             writer.append("os.write('[');\n");
