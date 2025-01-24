@@ -52,6 +52,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
     private static final int RETURN_TYPE_VOID = 0;
     private static final int RETURN_TYPE_STRING = 1;
     private static final int RETURN_TYPE_OBJECT = 2;
+    private static final int RETURN_TYPE_BYTE_ARRAY = 3;
 //    @Override
 //    public Set<String> getSupportedAnnotationTypes() {
 //        Set<String> types = new HashSet<>();
@@ -297,6 +298,8 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                         returnTypeInt = RETURN_TYPE_VOID;
                     } else if (String.class.getName().equals(returnType.toString())) {
                         returnTypeInt = RETURN_TYPE_STRING;
+                    } else if ("byte[]".equals(returnType.toString())) {
+                        returnTypeInt = RETURN_TYPE_BYTE_ARRAY;
                     } else {
                         returnTypeInt = RETURN_TYPE_OBJECT;
                     }
@@ -306,6 +309,9 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                             break;
                         case RETURN_TYPE_STRING:
                             writer.write("      String rst = bean." + se.getSimpleName() + "(");
+                            break;
+                        case RETURN_TYPE_BYTE_ARRAY:
+                            writer.write("      byte[] bytes = bean." + se.getSimpleName() + "(");
                             break;
                         case RETURN_TYPE_OBJECT:
                             writer.write("req.getResponse().setContentType(\"application/json\");");
@@ -323,6 +329,10 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                             break;
                         case RETURN_TYPE_STRING:
                             writer.write("        byte[] bytes=rst.getBytes(\"UTF-8\");\n ");
+                            writer.write("        req.getResponse().setContentLength(bytes.length);\n");
+                            writer.write("        req.getResponse().write(bytes);\n");
+                            break;
+                        case RETURN_TYPE_BYTE_ARRAY:
                             writer.write("        req.getResponse().setContentLength(bytes.length);\n");
                             writer.write("        req.getResponse().write(bytes);\n");
                             break;
