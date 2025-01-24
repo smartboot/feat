@@ -30,6 +30,15 @@ export default defineConfig({
                     }
                 },
                 {
+                    tag:'script',
+                    attrs: {
+                        src: 'https://smartboot.tech/js/gitee.js'
+                    }
+                },{
+                    tag:'script',
+                    // content: 'if(!location.pathname.endsWith("feat/")){checkStar("smartboot","feat");}'
+                },
+                {
                     tag: 'script',
                     content: `
                 var _hmt = _hmt || [];

@@ -59,7 +59,11 @@ public final class HttpMessageProcessor extends AbstractMessageProcessor<HttpEnd
             switch (decodeState.getState()) {
                 case DecodeState.STATE_HEADER_CALLBACK: {
                     doHttpHeader(request);
-                    decodeState.setState(DecodeState.STATE_BODY_READING_CALLBACK);
+                    if (request.getResponse().isClosed()) {
+                        break;
+                    } else {
+                        decodeState.setState(DecodeState.STATE_BODY_READING_CALLBACK);
+                    }
                 }
                 case DecodeState.STATE_BODY_READING_CALLBACK: {
                     decodeState.setState(DecodeState.STATE_BODY_READING_MONITOR);
