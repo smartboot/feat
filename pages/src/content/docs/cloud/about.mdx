@@ -1,0 +1,57 @@
+---
+title: 3.1 关于
+description: 一款企业级 Web 服务开发框架
+sidebar:
+    order: 1
+---
+
+import idea_setting from './img/idea_setting.png';
+import demo from './img/demo.png';
+import {Aside} from "@astrojs/starlight/components";
+
+Feat Cloud 提供了一种面向企业级应用开发的解决方案，它的定位有点像 SpringBoot。
+
+设计方面，Feat Cloud 尽最大可能保留了 SpringBoot 的使用习惯，以此降低开发者的学习成本。
+
+技术方面，Feat Cloud 在编译期对代码进行静态分析，最大化提升服务运行性能，降低资源消耗。
+
+## 3.1.1 准备工作
+
+### 3.1.1.2 引入 Maven 依赖
+创建一个 Maven 项目，在 `pom.xml` 文件中添加以下依赖：
+```xml title=pom.xml
+<dependency>
+    <groupId>tech.smartboot.feat</groupId>
+    <artifactId>feat-cloud-starter</artifactId>
+    <version>${feat.version}</version>
+</dependency>
+```
+<Aside>
+    **$\{feat.version}** 需根据实际情况设置，建议使用[最新版本](https://central.sonatype.com/artifact/tech.smartboot.feat/feat-cloud-starter)。
+</Aside>
+
+### 3.1.1.3 配置 IDEA
+调整 IDEA 编译配置，以启用 Feat Cloud 的静态优化功能，**否则请求将无法正常路由**。
+
+设置路径为：`Preferences -> Build, Execution, Deployment -> Build Tools -> Maven -> Runner`，
+勾选`Delegate IDE build/run actions to Maven` 并点击 `OK` 保存配置。
+
+<img src={idea_setting.src} alt="hello world" width="60%" className="shadow"/>
+
+## 3.1.2 快速启动
+在 Maven 工程中创建一个 `FeatCloudDemo.java` 文件，添加以下代码：
+``` java title=FeatCloudDemo.java
+@Controller
+public class FeatCloudDemo {
+    @RequestMapping("/cloud")
+    public String helloWorld() {
+        return "hello Feat Cloud";
+    }
+
+    public static void main(String[] args) {
+        Feat.cloudServer().listen();
+    }
+}
+```
+启动程序，打开浏览器访问 `http://localhost:8080/cloud`。
+<img src={demo.src} alt="hello world" width="60%" className="shadow"/>

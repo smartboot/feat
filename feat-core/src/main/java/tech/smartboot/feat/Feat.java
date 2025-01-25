@@ -30,10 +30,13 @@ public class Feat {
         return createHttpServer(opt).httpHandler(new HttpStaticResourceHandler(opt));
     }
 
-
+    public static HttpServer cloudServer() {
+        return cloudServer(opts -> {});
+    }
     public static HttpServer cloudServer(Consumer<CloudOptions> options) {
         CloudOptions opt = new CloudOptions();
         options.accept(opt);
+        opt.serverName("feat-cloud");
         ApplicationContext application = new ApplicationContext(opt);
         application.start();
 
