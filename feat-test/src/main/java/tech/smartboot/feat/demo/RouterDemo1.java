@@ -1,7 +1,7 @@
 package tech.smartboot.feat.demo;
 
 import tech.smartboot.feat.Feat;
-import tech.smartboot.feat.core.server.handler.Router;
+import tech.smartboot.feat.router.Router;
 
 public class RouterDemo1 {
     public static void main(String[] args) {

@@ -2,7 +2,7 @@ package tech.smartboot.feat.core.apt;
 
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
-import tech.smartboot.feat.core.server.handler.Router;
+import tech.smartboot.feat.router.Router;
 
 import java.util.HashMap;
 import java.util.Map;

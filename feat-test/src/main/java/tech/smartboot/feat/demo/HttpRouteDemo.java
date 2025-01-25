@@ -9,12 +9,9 @@
 package tech.smartboot.feat.demo;
 
 import tech.smartboot.feat.core.server.HttpRequest;
-import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
-import tech.smartboot.feat.core.server.handler.Router;
-import tech.smartboot.feat.core.server.upgrade.http2.Http2UpgradeHandler;
-import tech.smartboot.feat.core.server.upgrade.websocket.WebSocketUpgradeHandler;
+import tech.smartboot.feat.router.Router;
 
 import java.io.IOException;
 

@@ -1,6 +1,7 @@
 package tech.smartboot.feat.core.apt;
 
-import tech.smartboot.feat.core.server.handler.Router;
+
+import tech.smartboot.feat.router.Router;
 
 public interface AptLoader {
     public void loadBean(ApplicationContext applicationContext) throws Throwable;

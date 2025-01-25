@@ -17,8 +17,8 @@ import tech.smartboot.feat.core.server.WebSocketRequest;
 import tech.smartboot.feat.core.server.WebSocketResponse;
 import tech.smartboot.feat.core.server.handler.BasicAuthServerHandler;
 import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
-import tech.smartboot.feat.core.server.handler.Router;
 import tech.smartboot.feat.core.server.upgrade.websocket.WebSocketUpgradeHandler;
+import tech.smartboot.feat.router.Router;
 
 import java.io.IOException;
 import java.io.InputStream;
