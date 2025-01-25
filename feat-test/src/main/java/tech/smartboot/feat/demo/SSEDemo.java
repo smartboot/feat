@@ -1,6 +1,6 @@
 package tech.smartboot.feat.demo;
 
-import tech.smartboot.feat.core.Feat;
+import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.restful.sse.SSEHandler;
 import tech.smartboot.feat.restful.sse.SseEmitter;
 

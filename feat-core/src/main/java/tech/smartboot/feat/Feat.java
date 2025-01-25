@@ -1,7 +1,9 @@
-package tech.smartboot.feat.core;
+package tech.smartboot.feat;
 
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.ServerOptions;
+import tech.smartboot.feat.fileserver.FileServerOptions;
+import tech.smartboot.feat.fileserver.HttpStaticResourceHandler;
 
 import java.util.function.Consumer;
 
@@ -18,6 +20,12 @@ public class Feat {
         ServerOptions opt = new ServerOptions();
         options.accept(opt);
         return createHttpServer(opt);
+    }
+
+    public static HttpServer fileServer(Consumer<FileServerOptions> options) {
+        FileServerOptions opt = new FileServerOptions();
+        options.accept(opt);
+        return createHttpServer(opt).httpHandler(new HttpStaticResourceHandler(opt));
     }
 
 }

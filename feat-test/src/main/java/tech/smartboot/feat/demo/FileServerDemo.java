@@ -8,8 +8,7 @@
 
 package tech.smartboot.feat.demo;
 
-import tech.smartboot.feat.core.server.HttpServer;
-import tech.smartboot.feat.core.server.handler.HttpStaticResourceHandler;
+import tech.smartboot.feat.Feat;
 
 /**
  * 打开浏览器请求：http://127.0.0.0:8080/
@@ -17,14 +16,8 @@ import tech.smartboot.feat.core.server.handler.HttpStaticResourceHandler;
  * @author 三刀
  * @version V1.0 , 2019/11/3
  */
-public class FileSmartHttp {
+public class FileServerDemo {
     public static void main(String[] args) {
-        String webdir = System.getProperty("user.dir") + "/";
-        HttpServer bootstrap = new HttpServer();
-        //配置HTTP消息处理管道
-        bootstrap.httpHandler(new HttpStaticResourceHandler(webdir));
-
-        //设定服务器配置并启动
-        bootstrap.listen();
+        Feat.fileServer(opts -> opts.autoIndex(true)).listen();
     }
 }

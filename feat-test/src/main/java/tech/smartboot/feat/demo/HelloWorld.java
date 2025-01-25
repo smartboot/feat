@@ -1,6 +1,6 @@
 package tech.smartboot.feat.demo;
 
-import tech.smartboot.feat.core.Feat;
+import tech.smartboot.feat.Feat;
 
 public class HelloWorld {
     public static void main(String[] args) {

@@ -1,0 +1,81 @@
+---
+title: 静态服务
+description: Feat Static Service
+sidebar:
+    order: 4
+---
+import file_server_1 from './img/file_server_1.png';
+import file_server_2 from './img/file_server_2.png';
+import {Steps} from "@astrojs/starlight/components";
+
+Feat 内置了一个静态文件服务，你可以通过以下方式启用：
+
+基本用法：
+```java "baseDir(\"./\")" "fileServer"
+public class FileServerDemo {
+    public static void main(String[] args) {
+        Feat.fileServer(opts -> opts.baseDir("./")).listen();
+    }
+}
+```
+
+## 参数说明
+
+### baseDir
+**类型:** `String`
+
+**默认值:** `./`
+
+静态资源文件的存放目录，该参数为 **必填项**。
+
+示例：
+<Steps>
+    1. 在任意目录下创建一个 html 文件，
+        假设：
+        - Linux：/root/static/
+        - Windows: C:/static/
+        - Mac: /Users/xxx/static/
+        ```html title="index.html"
+        <html lang="">
+            <head>
+                <title>Feat</title>
+            </head>
+            <body>
+                <h1>Hello Feat</h1>
+                <p>File Server</p>
+            </body>
+        </html>
+        ```
+    2. 以 Linux 环境为例，实现代码如下：
+
+        ```java "baseDir"
+        public class FileServerDemo {
+            public static void main(String[] args) {
+                Feat.fileServer(opts -> opts.baseDir("/root/static/")).listen();
+            }
+        }
+        ```
+    3. 运行程序并打开浏览器，访问：`http://localhost:8080`，效果如下：
+        <img src={file_server_1.src} alt="hello world" width="60%" className="shadow"/>
+</Steps>
+
+### autoIndex
+**类型:** `boolean`
+
+**默认值:** `false`
+
+若设置为：true，则允许以目录列表的形式展现。
+
+示例：
+<Steps>
+    1. 运行以下程序：
+        ```java "autoIndex(true)"
+        public class FileServerDemo {
+            public static void main(String[] args) {
+                Feat.fileServer(opts -> opts.autoIndex(true)).listen();
+            }
+        }
+        ```
+    2. 打开浏览器，访问：`http://localhost:8080`，效果如下：
+        <img src={file_server_2.src} alt="hello world" width="40%" className="shadow"/>
+</Steps>

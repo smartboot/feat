@@ -8,7 +8,7 @@
 
 package tech.smartboot.feat.demo;
 
-import tech.smartboot.feat.core.Feat;
+import tech.smartboot.feat.Feat;
 
 import java.io.InputStream;
 

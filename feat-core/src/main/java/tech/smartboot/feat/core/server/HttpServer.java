@@ -24,9 +24,6 @@ public class HttpServer {
      * http://patorjk.com/software/taag/
      * Font Name: Varsity
      */
-//    private static final String BANNER =
-//            " ________   ________        _        _________  \n" + "|_   __  | |_   __  |      / \\      |  _   _  | \n" + "  | |_ \\_|   | |_ \\_|     / _ \\     |_/ " + "|" + " | \\_| \n" + "  | "
-//                    + " _|      |  _| _     / ___ \\        | |     \n" + " _| |_      _| |__/ |  _/ /   \\ \\_     _| |_    \n" + "|_____|    |________| |____| |____|   |_____|   \n";
 
 
     /**

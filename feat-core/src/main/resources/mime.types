@@ -1694,6 +1694,7 @@ text/n3						n3
 # text/parameters
 # text/parityfec
 text/plain					txt text conf def list log in md
+text/yaml                   yaml yml
 # text/provenance-notation
 # text/prs.fallenstein.rst
 text/prs.lines.tag				dsc

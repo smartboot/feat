@@ -1,6 +1,6 @@
 package tech.smartboot.feat.restful;
 
-import tech.smartboot.feat.core.Feat;
+import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.core.apt.ApplicationContext;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.ServerOptions;

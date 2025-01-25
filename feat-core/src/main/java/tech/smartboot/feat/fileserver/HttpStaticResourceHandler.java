@@ -6,11 +6,12 @@
  * Author: sandao (zhengjunweimail@163.com)
  ******************************************************************************/
 
-package tech.smartboot.feat.core.server.handler;
+package tech.smartboot.feat.fileserver;
 
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.enums.HttpMethodEnum;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
+import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.common.io.FeatOutputStream;
 import tech.smartboot.feat.core.common.logging.Logger;
@@ -20,6 +21,7 @@ import tech.smartboot.feat.core.common.utils.Mimetypes;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
+import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -30,6 +32,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
@@ -44,9 +47,19 @@ public class HttpStaticResourceHandler extends BaseHttpHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpStaticResourceHandler.class);
 
     private final File baseDir;
+    private final FileServerOptions options;
 
-    public HttpStaticResourceHandler(String baseDir) {
-        this.baseDir = new File(new File(baseDir).getAbsolutePath());
+    public HttpStaticResourceHandler() {
+        this(new FileServerOptions().baseDir("./"));
+    }
+
+    public HttpStaticResourceHandler(FileServerOptions options) {
+        try {
+            this.options = options;
+            this.baseDir = new File(options.baseDir()).getCanonicalFile();
+        } catch (IOException e) {
+            throw new FeatException(e);
+        }
         if (!this.baseDir.isDirectory()) {
             throw new RuntimeException(baseDir + " is not a directory");
         }
@@ -59,20 +72,42 @@ public class HttpStaticResourceHandler extends BaseHttpHandler {
     public void handle(HttpRequest request, CompletableFuture<Object> completableFuture) throws IOException {
         HttpResponse response = request.getResponse();
         String fileName = request.getRequestURI();
-        String method = request.getMethod();
-        if (StringUtils.endsWith(fileName, "/")) {
-            fileName += "index.html";
-        }
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info("请求URL: " + fileName);
-        }
         File file = new File(baseDir, URLDecoder.decode(fileName, StandardCharsets.UTF_8.name()));
-        if (file.isDirectory()) {
-            file = new File(file, "index.html");
-        }
+
         //404
+        if (file.isDirectory()) {
+            if (options.autoIndex()) {
+                String path = file.getParentFile().getAbsolutePath().substring(baseDir.getAbsolutePath().length());
+                if (StringUtils.length(path) <= 1) {
+                    path = "/";
+                }
+                response.write("返回上一级：<a href='" + path + "'>&gt;" + path + "</a>");
+                response.write("<ul>");
+                for (File f : Objects.requireNonNull(file.listFiles(File::isDirectory))) {
+                    if (request.getRequestURI().endsWith("/")) {
+                        request.getResponse().write("<li><a href='" + request.getRequestURI() + f.getName() + "'>&gt;\uD83D\uDCC1 &nbsp;" + f.getName() + "</a></li>");
+                    } else {
+                        request.getResponse().write("<li><a href='" + request.getRequestURI() + "/" + f.getName() + "'>&gt;\uD83D\uDCC1 &nbsp;" + f.getName() + "</a></li>");
+                    }
+
+                }
+                for (File f : Objects.requireNonNull(file.listFiles(File::isFile))) {
+                    if (request.getRequestURI().endsWith("/")) {
+                        request.getResponse().write("<li><a href='" + request.getRequestURI() + f.getName() + "'>" + f.getName() + "</a></li>");
+                    } else {
+                        request.getResponse().write("<li><a href='" + request.getRequestURI() + "/" + f.getName() + "'>" + f.getName() + "</a></li>");
+                    }
+
+                }
+                response.write("</ul>");
+                completableFuture.complete(null);
+                return;
+            } else {
+                file = new File(file, "index.html");
+            }
+        }
         if (!file.isFile()) {
-            fileNotFound(request, response, completableFuture, method);
+            fileNotFound(request, response);
             completableFuture.complete(null);
             return;
         }
@@ -92,7 +127,7 @@ public class HttpStaticResourceHandler extends BaseHttpHandler {
         response.setHeader(HeaderNameEnum.LAST_MODIFIED.getName(), DateUtils.formatRFC1123(lastModifyDate));
         response.setHeader(HeaderNameEnum.CONTENT_TYPE.getName(), Mimetypes.getInstance().getMimetype(file) + "; charset=utf-8");
         //HEAD不输出内容
-        if (HttpMethodEnum.HEAD.getMethod().equals(method)) {
+        if (HttpMethodEnum.HEAD.getMethod().equals(request.getMethod())) {
             completableFuture.complete(null);
             return;
         }
@@ -143,7 +178,7 @@ public class HttpStaticResourceHandler extends BaseHttpHandler {
         }
     }
 
-    private void fileNotFound(HttpRequest request, HttpResponse response, CompletableFuture<Object> completableFuture, String method) throws IOException {
+    private void fileNotFound(HttpRequest request, HttpResponse response) throws IOException {
         if (request.getRequestURI().equals("/favicon.ico")) {
             try (InputStream inputStream = HttpStaticResourceHandler.class.getClassLoader().getResourceAsStream("favicon.ico")) {
                 if (inputStream == null) {
@@ -164,7 +199,7 @@ public class HttpStaticResourceHandler extends BaseHttpHandler {
         response.setHttpStatus(HttpStatus.NOT_FOUND);
         response.setHeader(HeaderNameEnum.CONTENT_TYPE.getName(), "text/html; charset=utf-8");
 
-        if (!HttpMethodEnum.HEAD.getMethod().equals(method)) {
+        if (!HttpMethodEnum.HEAD.getMethod().equals(request.getMethod())) {
             throw new HttpException(HttpStatus.NOT_FOUND);
         }
     }
