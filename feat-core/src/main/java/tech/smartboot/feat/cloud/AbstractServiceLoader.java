@@ -1,4 +1,4 @@
-package tech.smartboot.feat.core.apt;
+package tech.smartboot.feat.cloud;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
@@ -8,7 +8,7 @@ import tech.smartboot.feat.core.server.HttpRequest;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 
-public abstract class AbstractAptLoader implements AptLoader {
+public abstract class AbstractServiceLoader implements ServiceLoader {
     protected JSONObject getParams(HttpRequest request) {
         try {
             if (request.getContentType() != null && request.getContentType().startsWith("application/json")) {

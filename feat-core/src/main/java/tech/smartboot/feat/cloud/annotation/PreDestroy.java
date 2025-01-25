@@ -1,4 +1,4 @@
-package tech.smartboot.feat.core.apt.annotation;
+package tech.smartboot.feat.cloud.annotation;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
@@ -10,5 +10,5 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Documented
 @Retention(RUNTIME)
 @Target(METHOD)
-public @interface PostConstruct {
+public @interface PreDestroy {
 }

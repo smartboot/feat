@@ -1,4 +1,4 @@
-package tech.smartboot.feat.core.apt;
+package tech.smartboot.feat.cloud;
 
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
@@ -6,7 +6,6 @@ import tech.smartboot.feat.router.Router;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.ServiceLoader;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
@@ -16,7 +15,7 @@ public class ApplicationContext {
     private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationContext.class);
     private final Map<String, Object> namedBeans = new HashMap<>();
 
-    private final ServiceLoader<AptLoader> serviceLoader = ServiceLoader.load(AptLoader.class);
+    private final java.util.ServiceLoader<ServiceLoader> serviceLoader = java.util.ServiceLoader.load(ServiceLoader.class);
     private final Router router = new Router(new StaticResourceHandler());
     private final String[] packages;
 
@@ -29,7 +28,7 @@ public class ApplicationContext {
     }
 
     public void start() {
-        for (AptLoader aptLoader : serviceLoader) {
+        for (ServiceLoader aptLoader : serviceLoader) {
             if (skip(aptLoader)) {
                 continue;
             }
@@ -39,13 +38,13 @@ public class ApplicationContext {
                 throw new RuntimeException(e);
             }
         }
-        for (AptLoader aptLoader : serviceLoader) {
+        for (ServiceLoader aptLoader : serviceLoader) {
             if (skip(aptLoader)) {
                 continue;
             }
             aptLoader.autowired(this);
         }
-        for (AptLoader aptLoader : serviceLoader) {
+        for (ServiceLoader aptLoader : serviceLoader) {
             if (skip(aptLoader)) {
                 continue;
             }
@@ -56,7 +55,7 @@ public class ApplicationContext {
             }
         }
         System.out.println("\u001B[32mFeat Router:\u001B[0m");
-        for (AptLoader aptLoader : serviceLoader) {
+        for (ServiceLoader aptLoader : serviceLoader) {
             if (skip(aptLoader)) {
                 continue;
             }
@@ -64,7 +63,7 @@ public class ApplicationContext {
         }
     }
 
-    private boolean skip(AptLoader aptLoader) {
+    private boolean skip(ServiceLoader aptLoader) {
         if (packages != null && packages.length > 0) {
             for (String pkg : packages) {
                 if (aptLoader.getClass().getName().startsWith(pkg)) {
@@ -87,7 +86,7 @@ public class ApplicationContext {
     }
 
     public void destroy() {
-        for (AptLoader aptLoader : serviceLoader) {
+        for (ServiceLoader aptLoader : serviceLoader) {
             if (skip(aptLoader)) {
                 continue;
             }

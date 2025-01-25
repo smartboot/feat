@@ -1,9 +1,9 @@
 package tech.smartboot.feat.demo;
 
-import tech.smartboot.feat.core.apt.annotation.Controller;
-import tech.smartboot.feat.core.apt.annotation.RequestMapping;
-import tech.smartboot.feat.core.apt.annotation.RequestMethod;
-import tech.smartboot.feat.restful.RestFeat;
+import tech.smartboot.feat.Feat;
+import tech.smartboot.feat.cloud.annotation.Controller;
+import tech.smartboot.feat.cloud.annotation.RequestMapping;
+import tech.smartboot.feat.cloud.annotation.RequestMethod;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
@@ -38,6 +38,6 @@ public class RestfulDemo {
 
     public static void main(String[] args) throws Exception {
         //扫描指定路径下的Controller、Bean
-        RestFeat.createServer("tech.smartboot.feat.demo.apt").listen();
+        Feat.cloudServer("tech.smartboot.feat.demo.apt").listen();
     }
 }

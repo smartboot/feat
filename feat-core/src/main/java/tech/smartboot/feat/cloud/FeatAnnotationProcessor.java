@@ -1,14 +1,8 @@
-package tech.smartboot.feat.core.apt;
+package tech.smartboot.feat.cloud;
 
 import com.alibaba.fastjson2.JSONObject;
 import org.apache.ibatis.annotations.Mapper;
-import tech.smartboot.feat.core.apt.annotation.Autowired;
-import tech.smartboot.feat.core.apt.annotation.Bean;
-import tech.smartboot.feat.core.apt.annotation.Controller;
-import tech.smartboot.feat.core.apt.annotation.Param;
-import tech.smartboot.feat.core.apt.annotation.PostConstruct;
-import tech.smartboot.feat.core.apt.annotation.PreDestroy;
-import tech.smartboot.feat.core.apt.annotation.RequestMapping;
+import tech.smartboot.feat.cloud.annotation.*;
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.HttpRequest;
@@ -18,17 +12,9 @@ import tech.smartboot.feat.router.Router;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
-import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
-import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.AnnotationValue;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.Modifier;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
+import javax.lang.model.element.*;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
@@ -39,27 +25,26 @@ import javax.tools.StandardLocation;
 import java.io.IOException;
 import java.io.Writer;
 import java.lang.annotation.Annotation;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 // 该注解表示该处理器支持的 Java 源代码版本
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
-@SupportedAnnotationTypes({"tech.smartboot.feat.core.apt.annotation.Bean", "tech.smartboot.feat.core.apt.annotation.Controller", "org.apache.ibatis.annotations.Mapper"})
+//@SupportedAnnotationTypes({"tech.smartboot.feat.core.apt.annotation.Bean", "tech.smartboot.feat.core.apt.annotation.Controller", "org.apache.ibatis.annotations.Mapper"})
 public class FeatAnnotationProcessor extends AbstractProcessor {
     private static final int RETURN_TYPE_VOID = 0;
     private static final int RETURN_TYPE_STRING = 1;
     private static final int RETURN_TYPE_OBJECT = 2;
     private static final int RETURN_TYPE_BYTE_ARRAY = 3;
-//    @Override
-//    public Set<String> getSupportedAnnotationTypes() {
-//        Set<String> types = new HashSet<>();
-//        types.add(Bean.class.getCanonicalName());
-//        types.add(Autowired.class.getCanonicalName());
-//        return types;
-//    }
+
+    @Override
+    public Set<String> getSupportedAnnotationTypes() {
+        Set<String> types = new HashSet<>();
+        types.add(Bean.class.getCanonicalName());
+        types.add(Autowired.class.getCanonicalName());
+        types.add(Controller.class.getCanonicalName());
+        types.add(Mapper.class.getCanonicalName());
+        return types;
+    }
 
     FileObject serviceFile;
     Writer serviceWrite;
@@ -68,7 +53,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
     public synchronized void init(ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
         try {
-            serviceFile = processingEnv.getFiler().createResource(StandardLocation.CLASS_OUTPUT, "", "META-INF/services/" + AptLoader.class.getName());
+            serviceFile = processingEnv.getFiler().createResource(StandardLocation.CLASS_OUTPUT, "", "META-INF/services/" + ServiceLoader.class.getName());
             serviceWrite = serviceFile.openWriter();
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -137,13 +122,13 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             JavaFileObject javaFileObject = processingEnv.getFiler().createSourceFile(loaderName);
             Writer writer = javaFileObject.openWriter();
             writer.write("package " + element.getEnclosingElement().toString() + ";\n");
-            writer.write("import " + AptLoader.class.getName() + ";\n");
+            writer.write("import " + ServiceLoader.class.getName() + ";\n");
             writer.write("import " + Router.class.getName() + ";\n");
             writer.write("import " + ApplicationContext.class.getName() + ";\n");
             writer.write("import " + JSONObject.class.getName() + ";\n");
-            writer.write("import " + AbstractAptLoader.class.getName() + ";\n");
+            writer.write("import " + AbstractServiceLoader.class.getName() + ";\n");
             writer.write("import com.alibaba.fastjson2.JSON;\n");
-            writer.write("public class " + loaderName + "  extends  " + AbstractAptLoader.class.getSimpleName() + "{\n");
+            writer.write("public class " + loaderName + "  extends  " + AbstractServiceLoader.class.getSimpleName() + "{\n");
             writer.write("    private " + element.getSimpleName() + " bean;\n");
             if (annotation instanceof Mapper) {
                 writer.write("    private org.apache.ibatis.session.SqlSessionFactory factory;\n");

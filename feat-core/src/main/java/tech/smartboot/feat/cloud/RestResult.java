@@ -1,4 +1,4 @@
-package tech.smartboot.feat.restful;
+package tech.smartboot.feat.cloud;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）

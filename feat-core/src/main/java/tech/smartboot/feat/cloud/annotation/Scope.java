@@ -1,4 +1,4 @@
-package tech.smartboot.feat.core.apt.annotation;
+package tech.smartboot.feat.cloud.annotation;
 
 /**
  * @author qinluo

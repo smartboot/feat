@@ -1,10 +1,10 @@
 package tech.smartboot.feat.demo.controller;
 
 
-import tech.smartboot.feat.core.apt.annotation.Controller;
-import tech.smartboot.feat.core.apt.annotation.PostConstruct;
-import tech.smartboot.feat.core.apt.annotation.PreDestroy;
-import tech.smartboot.feat.core.apt.annotation.RequestMapping;
+import tech.smartboot.feat.cloud.annotation.Controller;
+import tech.smartboot.feat.cloud.annotation.PostConstruct;
+import tech.smartboot.feat.cloud.annotation.PreDestroy;
+import tech.smartboot.feat.cloud.annotation.RequestMapping;
 
 @Controller
 class Demo1Controller {

@@ -1,9 +1,9 @@
-package tech.smartboot.feat.core.apt;
+package tech.smartboot.feat.cloud;
 
 
 import tech.smartboot.feat.router.Router;
 
-public interface AptLoader {
+public interface ServiceLoader {
     public void loadBean(ApplicationContext applicationContext) throws Throwable;
 
     public void autowired(ApplicationContext applicationContext);
