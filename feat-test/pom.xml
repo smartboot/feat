@@ -26,7 +26,7 @@
     <dependencies>
         <dependency>
             <groupId>tech.smartboot.feat</groupId>
-            <artifactId>feat-restful</artifactId>
+            <artifactId>feat-cloud-starter</artifactId>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

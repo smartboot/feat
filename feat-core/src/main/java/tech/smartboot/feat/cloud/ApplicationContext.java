@@ -17,14 +17,11 @@ public class ApplicationContext {
 
     private final java.util.ServiceLoader<ServiceLoader> serviceLoader = java.util.ServiceLoader.load(ServiceLoader.class);
     private final Router router = new Router(new StaticResourceHandler());
-    private final String[] packages;
+    private final CloudOptions options;
 
-    public ApplicationContext() {
-        this(new String[0]);
-    }
 
-    public ApplicationContext(String[] packages) {
-        this.packages = packages;
+    public ApplicationContext(CloudOptions options) {
+        this.options = options;
     }
 
     public void start() {
@@ -64,8 +61,8 @@ public class ApplicationContext {
     }
 
     private boolean skip(ServiceLoader aptLoader) {
-        if (packages != null && packages.length > 0) {
-            for (String pkg : packages) {
+        if (options.getPackages() != null && options.getPackages().length > 0) {
+            for (String pkg : options.getPackages()) {
                 if (aptLoader.getClass().getName().startsWith(pkg)) {
                     return false;
                 }

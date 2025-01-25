@@ -41,9 +41,8 @@ public class RestfulServerTest extends BastTest {
     @Before
     public void init() throws Exception {
         bootstrap = Feat.cloudServer(opts -> {
-            opts.addPlugin(new StreamMonitorPlugin<>((asynchronousSocketChannel, bytes) -> System.out.println(new String(bytes)),
-                    (asynchronousSocketChannel, bytes) -> System.out.println(new String(bytes))));
-        }, Demo1Controller.class.getName(), Demo2Controller.class.getName());
+            opts.setPackages(Demo1Controller.class.getName(), Demo2Controller.class.getName()).addPlugin(new StreamMonitorPlugin<>((asynchronousSocketChannel, bytes) -> System.out.println(new String(bytes)), (asynchronousSocketChannel, bytes) -> System.out.println(new String(bytes))));
+        });
         bootstrap.listen(SERVER_PORT);
     }
 

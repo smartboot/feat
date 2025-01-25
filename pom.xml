@@ -27,7 +27,7 @@
             </dependency>
             <dependency>
                 <groupId>tech.smartboot.feat</groupId>
-                <artifactId>feat-restful</artifactId>
+                <artifactId>feat-cloud-starter</artifactId>
                 <version>${feat.version}</version>
             </dependency>
             <dependency>
@@ -238,7 +238,7 @@
     </pluginRepositories>
     <modules>
         <module>feat-core</module>
-        <module>feat-restful</module>
+        <module>feat-cloud-starter</module>
         <module>feat-test</module>
     </modules>
 </project>

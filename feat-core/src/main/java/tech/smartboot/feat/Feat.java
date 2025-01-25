@@ -1,6 +1,7 @@
 package tech.smartboot.feat;
 
 import tech.smartboot.feat.cloud.ApplicationContext;
+import tech.smartboot.feat.cloud.CloudOptions;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.ServerOptions;
 import tech.smartboot.feat.fileserver.FileServerOptions;
@@ -29,8 +30,14 @@ public class Feat {
         return createHttpServer(opt).httpHandler(new HttpStaticResourceHandler(opt));
     }
 
-    public static HttpServer cloudServer(ApplicationContext application, Consumer<ServerOptions> options, String... packages) {
-        HttpServer server = Feat.createHttpServer(options);
+
+    public static HttpServer cloudServer(Consumer<CloudOptions> options) {
+        CloudOptions opt = new CloudOptions();
+        options.accept(opt);
+        ApplicationContext application = new ApplicationContext(opt);
+        application.start();
+
+        HttpServer server = Feat.createHttpServer(opt);
         Runnable shutdownHook = server.options().shutdownHook();
         if (shutdownHook != null) {
             server.options().shutdownHook(() -> {
@@ -42,17 +49,5 @@ public class Feat {
         }
         server.httpHandler(application.getRouter());
         return server;
-    }
-
-
-    public static HttpServer cloudServer(Consumer<ServerOptions> options, String... packages) {
-        ApplicationContext application = new ApplicationContext(packages);
-        application.start();
-        return cloudServer(application, options, packages);
-    }
-
-    public static HttpServer cloudServer(String... packages) {
-        return cloudServer(serverOptions -> {
-        }, packages);
     }
 }

@@ -38,6 +38,6 @@ public class RestfulDemo {
 
     public static void main(String[] args) throws Exception {
         //扫描指定路径下的Controller、Bean
-        Feat.cloudServer("tech.smartboot.feat.demo.apt").listen();
+        Feat.cloudServer(opts -> opts.setPackages("tech.smartboot.feat.demo.apt")).listen();
     }
 }

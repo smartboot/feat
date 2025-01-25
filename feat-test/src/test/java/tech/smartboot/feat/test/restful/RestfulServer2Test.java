@@ -45,9 +45,9 @@ public class RestfulServer2Test extends BastTest {
     @Before
     public void init() throws Exception {
         bootstrap = Feat.cloudServer(opts -> {
-            opts.addPlugin(new StreamMonitorPlugin<>((asynchronousSocketChannel, bytes) -> System.out.println(new String(bytes)),
+            opts.setPackages("tech.smartboot.feat.test.restful").addPlugin(new StreamMonitorPlugin<>((asynchronousSocketChannel, bytes) -> System.out.println(new String(bytes)),
                     (asynchronousSocketChannel, bytes) -> System.out.println(new String(bytes))));
-        }, "tech.smartboot.feat.test.restful");
+        });
         bootstrap.listen(SERVER_PORT);
     }
 

@@ -21,7 +21,7 @@ import java.util.concurrent.ExecutorService;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2023/1/26
  */
-public class StaticResourceHandler extends BaseHttpHandler {
+class StaticResourceHandler extends BaseHttpHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(StaticResourceHandler.class);
     private final Date lastModifyDate = new Date(System.currentTimeMillis() / 1000 * 1000);
 
@@ -55,7 +55,7 @@ public class StaticResourceHandler extends BaseHttpHandler {
 
     @Override
     public void handle(HttpRequest request) throws IOException {
-        HttpResponse response=request.getResponse();
+        HttpResponse response = request.getResponse();
         String fileName = request.getRequestURI();
 
         if (StringUtils.endsWith(fileName, "/")) {
