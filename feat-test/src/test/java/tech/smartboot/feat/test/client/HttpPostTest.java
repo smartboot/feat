@@ -23,7 +23,7 @@ import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
-import tech.smartboot.feat.core.server.handler.Router;
+import tech.smartboot.feat.router.Router;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

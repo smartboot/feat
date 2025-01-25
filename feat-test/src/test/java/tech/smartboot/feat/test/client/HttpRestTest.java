@@ -20,7 +20,7 @@ import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
-import tech.smartboot.feat.core.server.handler.Router;
+import tech.smartboot.feat.router.Router;
 
 import java.io.IOException;
 import java.util.HashMap;
