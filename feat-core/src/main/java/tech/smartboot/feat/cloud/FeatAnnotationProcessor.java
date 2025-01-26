@@ -385,7 +385,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             writer.append("for(" + typeMirror + ")");
             writer.append("os.write(']');\n");
             return;
-        } else if (typeMirror.toString().startsWith("java.util.List")) {
+        } else if (typeMirror.toString().startsWith("java.util.List") || typeMirror.toString().startsWith("java.util.Collection")) {
             writer.append(" if(" + obj + "!=null){\n");
             writer.append("os.write('[');\n");
             TypeMirror type = ((DeclaredType) typeMirror).getTypeArguments().get(0);
@@ -415,10 +415,19 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             writer.append("os.write(bnull);");
             writer.write("}\n");
             return;
+        } else if (typeMirror.toString().endsWith(".JSONObject")) {
+            writer.write("if(" + obj + "!=null){\n");
+            writer.write("os.write(" + obj + ".toString().getBytes());\n");
+            writer.write("}else{\n");
+            writer.write("byte[] bnull={'n','u','l','l'};\n");
+            writer.append("os.write(bnull);");
+            writer.write("}\n");
+            return;
         }
 
         writer.append("os.write('{');\n");
 
+        //获取泛型参数
         List<? extends TypeMirror> typeKey = ((DeclaredType) (((DeclaredType) typeMirror).asElement().asType())).getTypeArguments();
         List<? extends TypeMirror> typeArgs = ((DeclaredType) typeMirror).getTypeArguments();
         Map<TypeMirror, TypeMirror> typeMap = new HashMap<>();
