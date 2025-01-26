@@ -1,12 +1,11 @@
 ---
-title: 3.2 生命周期详解
+title: 3.2 生命周期
 description: 一款企业级 Web 服务开发框架
 sidebar:
     order: 2
 ---
-import {Steps,Tabs,TabItem} from "@astrojs/starlight/components";
 
-在 Feat Cloud 中对于 Bean 的生命周期管理可分为：**创建** -> **属性填充** -> **初始化** -> **使用** -> **销毁** 几个核心阶段。
+在 Feat Cloud 中对于托管的实例的生命周期管理可分为：**创建** -> **属性填充** -> **初始化** -> **使用** -> **销毁** 几个核心阶段。
 
 ## 3.2.1 创建实例
 Feat Cloud 通过 **@Bean** 和 **@Controller** 注解来定义实例对象。

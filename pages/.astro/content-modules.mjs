@@ -11,5 +11,9 @@ export default new Map([
 ["src/content/docs/server/serveroptions.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fserver%2Fserveroptions.mdx&astroContentModuleFlag=true")],
 ["src/content/docs/cloud/annotations.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fcloud%2Fannotations.mdx&astroContentModuleFlag=true")],
 ["src/content/docs/cloud/db.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fcloud%2Fdb.mdx&astroContentModuleFlag=true")],
-["src/content/docs/cloud/bean.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fcloud%2Fbean.mdx&astroContentModuleFlag=true")]]);
+["src/content/docs/cloud/bean.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fcloud%2Fbean.mdx&astroContentModuleFlag=true")],
+["src/content/docs/cloud/life_cycle.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fcloud%2Flife_cycle.mdx&astroContentModuleFlag=true")],
+["src/content/docs/cloud/controller.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fcloud%2Fcontroller.mdx&astroContentModuleFlag=true")],
+["src/content/docs/cloud/cloudoptions.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fcloud%2Fcloudoptions.mdx&astroContentModuleFlag=true")],
+["src/content/docs/cloud/options.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fcloud%2Foptions.mdx&astroContentModuleFlag=true")]]);
 		
