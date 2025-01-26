@@ -2,7 +2,13 @@ package tech.smartboot.feat.cloud;
 
 import com.alibaba.fastjson2.JSONObject;
 import org.apache.ibatis.annotations.Mapper;
-import tech.smartboot.feat.cloud.annotation.*;
+import tech.smartboot.feat.cloud.annotation.Autowired;
+import tech.smartboot.feat.cloud.annotation.Bean;
+import tech.smartboot.feat.cloud.annotation.Controller;
+import tech.smartboot.feat.cloud.annotation.Param;
+import tech.smartboot.feat.cloud.annotation.PostConstruct;
+import tech.smartboot.feat.cloud.annotation.PreDestroy;
+import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.HttpRequest;
@@ -14,7 +20,14 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
-import javax.lang.model.element.*;
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
@@ -25,7 +38,14 @@ import javax.tools.StandardLocation;
 import java.io.IOException;
 import java.io.Writer;
 import java.lang.annotation.Annotation;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 // 该注解表示该处理器支持的 Java 源代码版本
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
@@ -323,7 +343,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                             break;
                         case RETURN_TYPE_OBJECT:
                             writer.write("java.io.ByteArrayOutputStream os=new java.io.ByteArrayOutputStream();");
-                            writeJsonObject(writer, returnType, "rst", 0);
+                            writeJsonObject(writer, returnType, "rst", 0, new HashMap<>());
                             writer.write("        byte[] bytes=os.toByteArray();\n ");
                             writer.write("        req.getResponse().setContentLength(bytes.length);\n");
                             writer.write("        req.getResponse().write(bytes);\n");
@@ -347,7 +367,9 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         }
     }
 
-    public static void writeJsonObject(Writer writer, TypeMirror typeMirror, String obj, int i) throws IOException {
+    int paramIndex = 0;
+
+    public static void writeJsonObject(Writer writer, TypeMirror typeMirror, String obj, int i, Map<TypeMirror, TypeMirror> typeMap0) throws IOException {
         //深层级采用JSON框架序列化，防止循环引用
         if (i > 4) {
             writer.write("if(" + obj + "!=null){\n");
@@ -367,6 +389,9 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             writer.append(" if(" + obj + "!=null){\n");
             writer.append("os.write('[');\n");
             TypeMirror type = ((DeclaredType) typeMirror).getTypeArguments().get(0);
+            if (typeMap0.containsKey(type)) {
+                type = typeMap0.get(type);
+            }
             writer.append("boolean first" + i + "=true;\n");
             writer.append("for(" + type + " p" + i + " : " + obj + " ){\n");
             writer.append("if(first" + i + "){\n");
@@ -380,7 +405,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                 writer.append("os.write(p" + i + ".getBytes());");
                 writer.append("os.write('\"');\n");
             } else {
-                writeJsonObject(writer, type, "p" + i, i + 1);
+                writeJsonObject(writer, type, "p" + i, i + 1, typeMap0);
             }
 
             writer.append("}\n");
@@ -393,6 +418,13 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         }
 
         writer.append("os.write('{');\n");
+
+        List<? extends TypeMirror> typeKey = ((DeclaredType) (((DeclaredType) typeMirror).asElement().asType())).getTypeArguments();
+        List<? extends TypeMirror> typeArgs = ((DeclaredType) typeMirror).getTypeArguments();
+        Map<TypeMirror, TypeMirror> typeMap = new HashMap<>();
+        for (int z = 0; z < typeArgs.size(); z++) {
+            typeMap.put(typeKey.get(z), typeArgs.get(z));
+        }
         int j = i * 10;
         for (Element se : ((DeclaredType) typeMirror).asElement().getEnclosedElements()) {
             if (se.getKind() != ElementKind.FIELD) {
@@ -449,11 +481,24 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                 writer.write("byte[] bnull={'n','u','l','l'};\n");
                 writer.append("os.write(bnull);");
                 writer.append("}\n");
+            } else if (Date.class.getName().equals(type.toString())) {
+                String s = toBytesStr("\"" + se.getSimpleName().toString() + "\":");
+                writer.write("byte[] b" + j + "=" + s + ";\n");
+                writer.write("os.write(b" + j + ");\n");
+                writer.append("java.util.Date date=").append(obj).append(".get").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).append("();");
+                writer.append("if(date!=null){\n");
+//                writer.append("os.write('\"');\n");
+                writer.append("os.write(String.valueOf(date.getTime()).getBytes());\n");
+//                writer.append("os.write('\"');\n");
+                writer.append("}else{\n");
+                writer.write("byte[] bnull={'n','u','l','l'};\n");
+                writer.append("os.write(bnull);");
+                writer.append("}\n");
             } else {
                 String s = toBytesStr("\"" + se.getSimpleName().toString() + "\":");
                 writer.write("byte[] b" + j + "=" + s + ";\n");
                 writer.write("os.write(b" + j + ");\n");
-                writeJsonObject(writer, type, obj + ".get" + se.getSimpleName().toString().substring(0, 1).toUpperCase() + se.getSimpleName().toString().substring(1) + "()", i + 1);
+                writeJsonObject(writer, type, obj + ".get" + se.getSimpleName().toString().substring(0, 1).toUpperCase() + se.getSimpleName().toString().substring(1) + "()", i + 1, typeMap);
             }
         }
         writer.append(";\n");

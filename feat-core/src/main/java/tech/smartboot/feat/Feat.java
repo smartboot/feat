@@ -31,13 +31,16 @@ public class Feat {
     }
 
     public static HttpServer cloudServer() {
-        return cloudServer(opts -> {});
+        return cloudServer(opts -> {
+        });
     }
+
     public static HttpServer cloudServer(Consumer<CloudOptions> options) {
         CloudOptions opt = new CloudOptions();
         options.accept(opt);
         opt.serverName("feat-cloud");
         ApplicationContext application = new ApplicationContext(opt);
+        opt.getExternalBeans().forEach(application::addBean);
         application.start();
 
         HttpServer server = Feat.createHttpServer(opt);

@@ -1,0 +1,93 @@
+---
+title: 3.2 Bean 生命周期详解
+description: 一款企业级 Web 服务开发框架
+sidebar:
+    order: 2
+---
+import {Steps,Tabs,TabItem} from "@astrojs/starlight/components";
+
+在 Feat Cloud 中对于 Bean 的生命周期管理可分为：**创建** -> **属性填充** -> **初始化** -> **使用** -> **销毁** 几个核心阶段。
+<Steps>
+    1. 创建 Bean
+        Feat 提供了 3 中创建 Bean 的方式
+        <Tabs>
+            <TabItem label="方式1">
+               在某个 class 上添加注解 `@Bean`。
+                ```
+                @Bean
+                public class BeanDemo{
+
+                }
+                ```
+            </TabItem>
+            <TabItem label="方式2">
+                ```
+                @Bean
+                public class BeanDemo{
+                    @Bean
+                    public BeanDemo beanDemo2(){
+                        return new BeanDemo();
+                    }
+                }
+                ```
+            </TabItem>
+        </Tabs>
+
+    2. @Autowired：属性填充
+    3. @PostConstruct：初始化
+    4. 使用 Bean
+    5. @PreDestroy：销毁
+</Steps>
+## 3.2.1 Bean
+```java title="Bean.java"
+@Target({ElementType.TYPE, ElementType.METHOD})
+@Retention(RetentionPolicy.SOURCE)
+@Documented
+public @interface Bean {
+    String value() default "";
+}
+```
+### 3.2.1.1 PostConstruct
+```java title="PostConstruct.java"
+@Documented
+@Retention(RUNTIME)
+@Target(METHOD)
+public @interface PostConstruct {
+}
+```
+
+### 3.2.1.2 PreDestroy
+```java title="PreDestroy.java"
+@Documented
+@Retention(RUNTIME)
+@Target(METHOD)
+public @interface PreDestroy {
+}
+```
+
+## 3.2.2 Autowired
+
+```java title="Autowired.java"
+@Target({ElementType.FIELD})
+@Retention(RetentionPolicy.SOURCE)
+@Documented
+public @interface Autowired {
+}
+```
+
+### 3.2.3.1 RequestMapping
+
+```java title="RequestMapping.java"
+@Target({ElementType.METHOD, ElementType.TYPE})
+@Retention(RetentionPolicy.SOURCE)
+@Documented
+public @interface RequestMapping {
+    String value() default "";
+
+    RequestMethod[] method() default {};
+
+    boolean async() default false;
+}
+```
+
+

@@ -1,6 +1,7 @@
 package tech.smartboot.feat.demo.controller;
 
 
+import tech.smartboot.feat.cloud.RestResult;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.Param;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
@@ -35,5 +36,10 @@ class Demo2Controller {
     @RequestMapping("/param5")
     public String test6(@Param("param1") TestParam param) {
         return "hello param is " + param.getParam1();
+    }
+
+    @RequestMapping("/param5")
+    public RestResult<TestParam0<String,TestParam>> test61(@Param("param1") TestParam param) {
+        return RestResult.ok(new TestParam0<String,TestParam>());
     }
 }
