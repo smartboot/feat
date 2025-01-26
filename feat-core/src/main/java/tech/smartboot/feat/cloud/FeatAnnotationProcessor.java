@@ -73,7 +73,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
     public synchronized void init(ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
         try {
-            serviceFile = processingEnv.getFiler().createResource(StandardLocation.CLASS_OUTPUT, "", "META-INF/services/" + ServiceLoader.class.getName());
+            serviceFile = processingEnv.getFiler().createResource(StandardLocation.CLASS_OUTPUT, "", "META-INF/services/" + CloudService.class.getName());
             serviceWrite = serviceFile.openWriter();
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -142,7 +142,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             JavaFileObject javaFileObject = processingEnv.getFiler().createSourceFile(loaderName);
             Writer writer = javaFileObject.openWriter();
             writer.write("package " + element.getEnclosingElement().toString() + ";\n");
-            writer.write("import " + ServiceLoader.class.getName() + ";\n");
+            writer.write("import " + CloudService.class.getName() + ";\n");
             writer.write("import " + Router.class.getName() + ";\n");
             writer.write("import " + ApplicationContext.class.getName() + ";\n");
             writer.write("import " + JSONObject.class.getName() + ";\n");

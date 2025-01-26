@@ -15,7 +15,7 @@ public class ApplicationContext {
     private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationContext.class);
     private final Map<String, Object> namedBeans = new HashMap<>();
 
-    private final java.util.ServiceLoader<ServiceLoader> serviceLoader = java.util.ServiceLoader.load(ServiceLoader.class);
+    private final java.util.ServiceLoader<CloudService> serviceLoader = java.util.ServiceLoader.load(CloudService.class);
     private final Router router = new Router(new StaticResourceHandler());
     private final CloudOptions options;
 
@@ -25,7 +25,7 @@ public class ApplicationContext {
     }
 
     public void start() {
-        for (ServiceLoader aptLoader : serviceLoader) {
+        for (CloudService aptLoader : serviceLoader) {
             if (skip(aptLoader)) {
                 continue;
             }
@@ -35,13 +35,13 @@ public class ApplicationContext {
                 throw new RuntimeException(e);
             }
         }
-        for (ServiceLoader aptLoader : serviceLoader) {
+        for (CloudService aptLoader : serviceLoader) {
             if (skip(aptLoader)) {
                 continue;
             }
             aptLoader.autowired(this);
         }
-        for (ServiceLoader aptLoader : serviceLoader) {
+        for (CloudService aptLoader : serviceLoader) {
             if (skip(aptLoader)) {
                 continue;
             }
@@ -52,7 +52,7 @@ public class ApplicationContext {
             }
         }
         System.out.println("\u001B[32mFeat Router:\u001B[0m");
-        for (ServiceLoader aptLoader : serviceLoader) {
+        for (CloudService aptLoader : serviceLoader) {
             if (skip(aptLoader)) {
                 continue;
             }
@@ -60,7 +60,7 @@ public class ApplicationContext {
         }
     }
 
-    private boolean skip(ServiceLoader aptLoader) {
+    private boolean skip(CloudService aptLoader) {
         if (options.getPackages() != null && options.getPackages().length > 0) {
             for (String pkg : options.getPackages()) {
                 if (aptLoader.getClass().getName().startsWith(pkg)) {
@@ -83,7 +83,7 @@ public class ApplicationContext {
     }
 
     public void destroy() {
-        for (ServiceLoader aptLoader : serviceLoader) {
+        for (CloudService aptLoader : serviceLoader) {
             if (skip(aptLoader)) {
                 continue;
             }

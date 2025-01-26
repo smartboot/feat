@@ -8,7 +8,7 @@ import tech.smartboot.feat.core.server.HttpRequest;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 
-public abstract class AbstractServiceLoader implements ServiceLoader {
+public abstract class AbstractServiceLoader implements CloudService {
     protected JSONObject getParams(HttpRequest request) {
         try {
             if (request.getContentType() != null && request.getContentType().startsWith("application/json")) {
