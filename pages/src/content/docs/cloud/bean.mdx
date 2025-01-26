@@ -1,5 +1,5 @@
 ---
-title: 3.2 Bean 生命周期详解
+title: 3.2 生命周期详解
 description: 一款企业级 Web 服务开发框架
 sidebar:
     order: 2
@@ -7,87 +7,105 @@ sidebar:
 import {Steps,Tabs,TabItem} from "@astrojs/starlight/components";
 
 在 Feat Cloud 中对于 Bean 的生命周期管理可分为：**创建** -> **属性填充** -> **初始化** -> **使用** -> **销毁** 几个核心阶段。
-<Steps>
-    1. 创建 Bean
-        Feat 提供了 3 中创建 Bean 的方式
-        <Tabs>
-            <TabItem label="方式1">
-               在某个 class 上添加注解 `@Bean`。
-                ```
-                @Bean
-                public class BeanDemo{
 
-                }
-                ```
-            </TabItem>
-            <TabItem label="方式2">
-                ```
-                @Bean
-                public class BeanDemo{
-                    @Bean
-                    public BeanDemo beanDemo2(){
-                        return new BeanDemo();
-                    }
-                }
-                ```
-            </TabItem>
-        </Tabs>
+## 3.2.1 创建实例
+Feat Cloud 通过 **@Bean** 和 **@Controller** 注解来定义实例对象。
+### 3.2.1.1 方式1
+在某个 class 上添加注解 `@Bean`。Feat Cloud 启动时会自动创建该 Bean，bean 的名称默认为类名首字母小写。
+```java {1}
+@Bean
+public class BeanDemo{
 
-    2. @Autowired：属性填充
-    3. @PostConstruct：初始化
-    4. 使用 Bean
-    5. @PreDestroy：销毁
-</Steps>
-## 3.2.1 Bean
-```java title="Bean.java"
-@Target({ElementType.TYPE, ElementType.METHOD})
-@Retention(RetentionPolicy.SOURCE)
-@Documented
-public @interface Bean {
-    String value() default "";
 }
 ```
-### 3.2.1.1 PostConstruct
-```java title="PostConstruct.java"
-@Documented
-@Retention(RUNTIME)
-@Target(METHOD)
-public @interface PostConstruct {
+如果需要自定义 bean 的名称，可以通过 `value` 属性来指定。例如：@Bean("beanDemo2")
+
+```java {1}
+@Bean("beanDemo2")
+public class BeanDemo{
+
 }
 ```
 
-### 3.2.1.2 PreDestroy
-```java title="PreDestroy.java"
-@Documented
-@Retention(RUNTIME)
-@Target(METHOD)
-public @interface PreDestroy {
+@Controller 是一种特殊的 Bean，它没有 bean 名称的概念。
+我们认为一个 Controller 的核心功能就是提供 HTTP 服务，而不是成一个可被外部依赖的 bean 对象。
+```java {1}
+@Controller
+public class ControllerDemo{
+
 }
 ```
 
-## 3.2.2 Autowired
-
-```java title="Autowired.java"
-@Target({ElementType.FIELD})
-@Retention(RetentionPolicy.SOURCE)
-@Documented
-public @interface Autowired {
+### 3.2.1.2 方式2
+在 Bean/Controller 的中通过 `@Bean` 注解定义 Bean 方法。
+若未在 @Bean 中指定 bean 的名称，则默认为方法名。
+```java {3}
+@Bean
+public class BeanDemo{
+    @Bean
+    public BeanDemo beanDemo2(){
+        return new BeanDemo();
+    }
 }
 ```
+### 3.2.1.3 方式3
+服务启动时通过`addExternalBean`方法添加外部 Bean。
+```java "addExternalBean"
+public class FeatCloudDemo {
 
-### 3.2.3.1 RequestMapping
-
-```java title="RequestMapping.java"
-@Target({ElementType.METHOD, ElementType.TYPE})
-@Retention(RetentionPolicy.SOURCE)
-@Documented
-public @interface RequestMapping {
-    String value() default "";
-
-    RequestMethod[] method() default {};
-
-    boolean async() default false;
+    public static void main(String[] args) {
+        Feat.cloudServer(opts -> opts.addExternalBean("beanDemo", new BeanDemo()))
+            .listen();
+    }
 }
 ```
+**注意：@Autowired、@PostConstruct、@PreDestroy 等注解的相关特性不在此类 Bean 中生效。**
+
+## 3.2.2 @Autowired：属性填充
+
+该注解用于填充 Bean 或者 Controller 的属性，类似于 Spring 中的 `@Autowired`。
+
+**注意：因为技术方面的原因，现阶段需要显示提供属性的 setter 方法。**
+```java "@Autowired" "setHello"
+@Bean
+public class FeatBeanDemo {
+    @Autowired
+    private String hello;
+
+    public static void main(String[] args) {
+        Feat.cloudServer(opts -> opts.addExternalBean("hello", "你好~")).listen();
+    }
+
+    public void setHello(String hello) {
+        this.hello = hello;
+    }
+}
+```
+## 3.2.3 @PostConstruct：初始化
+
+同 Spring 中的 `@PostConstruct` 注解，在 Bean 完成实例化和属性填充后被调用。
+```java "@PostConstruct"
+@Bean
+public class FeatBeanDemo {
+    @Autowired
+    private String hello;
+
+    @PostConstruct
+    public void init() {
+        System.out.println(hello);
+    }
+
+    public static void main(String[] args) {
+        Feat.cloudServer(opts -> opts.addExternalBean("hello", "你好~")).listen();
+    }
+
+    public void setHello(String hello) {
+        this.hello = hello;
+    }
+}
+```
+## 3.2.4 使用 Bean
 
 
+## 3.2.5 @PreDestroy：销毁
+@PreDestroy 作用于 Bean 或者 Controller 内部 public 方法上，类似于 Spring 中的 `@PreDestroy`。

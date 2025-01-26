@@ -161,6 +161,9 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             }
 
             String beanName = element.getSimpleName().toString().substring(0, 1).toLowerCase() + element.getSimpleName().toString().substring(1);
+            if (annotation instanceof Bean && !((Bean) annotation).value().isEmpty()) {
+                beanName = ((Bean) annotation).value();
+            }
             writer.write("    applicationContext.addBean(\"" + beanName + "\", bean);\n");
             for (Element se : element.getEnclosedElements()) {
                 for (AnnotationMirror mirror : se.getAnnotationMirrors()) {
@@ -469,8 +472,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                 String s = toBytesStr("\"" + se.getSimpleName().toString() + "\":");
                 writer.write("byte[] b" + j + "=" + s + ";\n");
                 writer.write("os.write(b" + j + ");\n");
-                writer.append("if(").append(obj).append(".get").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).append("()" +
-                        "!=null){\n");
+                writer.append("if(").append(obj).append(".get").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).append("()" + "!=null){\n");
                 writer.append("os.write('\"');\n");
                 writer.write("String s=" + obj + ".get" + se.getSimpleName().toString().substring(0, 1).toUpperCase() + se.getSimpleName().toString().substring(1) + "();\n");
                 writer.write("int i=0;\n");

@@ -38,7 +38,7 @@ class Demo2Controller {
         return "hello param is " + param.getParam1();
     }
 
-    @RequestMapping("/param5")
+    @RequestMapping("/test61")
     public RestResult<TestParam0<String,TestParam>> test61(@Param("param1") TestParam param) {
         return RestResult.ok(new TestParam0<String,TestParam>());
     }
