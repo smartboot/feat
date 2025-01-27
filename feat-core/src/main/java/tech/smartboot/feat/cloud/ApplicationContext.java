@@ -4,8 +4,11 @@ import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.router.Router;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.ServiceLoader;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
@@ -15,52 +18,39 @@ public class ApplicationContext {
     private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationContext.class);
     private final Map<String, Object> namedBeans = new HashMap<>();
 
-    private final java.util.ServiceLoader<CloudService> serviceLoader = java.util.ServiceLoader.load(CloudService.class);
     private final Router router = new Router(new StaticResourceHandler());
     private final CloudOptions options;
 
+    private final List<CloudService> services = new ArrayList<>();
 
     public ApplicationContext(CloudOptions options) {
         this.options = options;
     }
 
-    public void start() {
-        for (CloudService aptLoader : serviceLoader) {
-            if (skip(aptLoader)) {
+    public void start() throws Throwable {
+        for (CloudService service : ServiceLoader.load(CloudService.class)) {
+            if (isIgnore(service)) {
                 continue;
             }
-            try {
-                aptLoader.loadBean(this);
-            } catch (Throwable e) {
-                throw new RuntimeException(e);
-            }
+            services.add(service);
         }
-        for (CloudService aptLoader : serviceLoader) {
-            if (skip(aptLoader)) {
-                continue;
-            }
-            aptLoader.autowired(this);
+        for (CloudService service : services) {
+            service.loadBean(this);
         }
-        for (CloudService aptLoader : serviceLoader) {
-            if (skip(aptLoader)) {
-                continue;
-            }
-            try {
-                aptLoader.postConstruct(this);
-            } catch (Throwable e) {
-                throw new RuntimeException(e);
-            }
+
+        for (CloudService service : services) {
+            service.autowired(this);
+        }
+        for (CloudService service : services) {
+            service.postConstruct(this);
         }
         System.out.println("\u001B[32mFeat Router:\u001B[0m");
-        for (CloudService aptLoader : serviceLoader) {
-            if (skip(aptLoader)) {
-                continue;
-            }
-            aptLoader.router(router);
+        for (CloudService service : services) {
+            service.router(router);
         }
     }
 
-    private boolean skip(CloudService aptLoader) {
+    private boolean isIgnore(CloudService aptLoader) {
         if (options.getPackages() != null && options.getPackages().length > 0) {
             for (String pkg : options.getPackages()) {
                 if (aptLoader.getClass().getName().startsWith(pkg)) {
@@ -83,10 +73,7 @@ public class ApplicationContext {
     }
 
     public void destroy() {
-        for (CloudService aptLoader : serviceLoader) {
-            if (skip(aptLoader)) {
-                continue;
-            }
+        for (CloudService aptLoader : services) {
             try {
                 aptLoader.destroy();
             } catch (Throwable e) {

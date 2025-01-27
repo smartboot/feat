@@ -2,7 +2,7 @@
 title: 3.1 关于
 description: 一款企业级 Web 服务开发框架
 sidebar:
-order: 1
+    order: 1
 ---
 
 
@@ -67,6 +67,7 @@ public class FeatCloudDemo {
 其核心原理是**运用了 APT（Annotation Processing Tool）技术，并结合 ServiceLoader 实现了 0 反射的服务加载机制**。
 
 
+### 3.1.3.1 静态转码
 以 FeatCloudDemo 为例，开发人员编写的源代码在编译时经过一次静态转码，生成了一个新的 java 文件 `FeatCloudDemoBeanAptLoader.java`。
 <Tabs>
     <TabItem label="源代码">
@@ -124,16 +125,86 @@ public class FeatCloudDemo {
 
 因此，**Feat Cloud 可以在提供优雅的开发体验的同时，也极大地保留了 Feat Server 框架的性能优势。**
 
-```java title=CloudService.java
-public interface CloudService {
-    void loadBean(ApplicationContext context) throws Throwable;
+### 3.1.3.2 服务载入
+Controller 在编译时完成转码后，下一步便是需要在程序启动后能够被正确加载，此处需要用到的技术便是 `java.util.ServiceLoader`。
 
-    void autowired(ApplicationContext context);
+Controller 静态转码所生成的类文件默认实现了 `tech.smartboot.feat.cloud.service.CloudService` 接口，同时会自动生成一个 service 文件：
 
-    void postConstruct(ApplicationContext context) throws Throwable;
+**`META-INF/services/tech.smartboot.feat.cloud.service.CloudService`**
 
-    void destroy() throws Throwable;
+当调用 ApplicationContext@start 方法时：
+1. 首先通过 **ServiceLoader.load(CloudService.class)** 加载所有实现了 **CloudService** 接口的类。并根据 `isIgnore` 规则过滤出有效的服务。
+2. 遍历所有服务，调用其 `loadBean` 方法，完成 bean 的实例化。
+3. 遍历所有服务，调用其 `autowired` 方法，完成各实例的依赖注入。
+4. 遍历所有服务，调用其 `postConstruct` 方法，完成各实例的初始化。
+5. 遍历所有服务，调用其 `router` 方法，完成 Controller 路由的配置。
 
-    void router(Router router);
+<Tabs>
+    <TabItem label="ApplicationContext.java">
+
+        ```java title=ApplicationContext.java "ServiceLoader.load" "isIgnore(service)" "service.loadBean" "service.autowired" "service.postConstruct" "service.router"
+        public class ApplicationContext {
+
+            ...
+
+            public void start() throws Throwable {
+                for (CloudService service : ServiceLoader.load(CloudService.class)) {
+                    if (isIgnore(service)) {
+                        continue;
+                    }
+                    services.add(service);
+                }
+                for (CloudService service : services) {
+                    service.loadBean(this);
+                }
+
+                for (CloudService service : services) {
+                    service.autowired(this);
+                }
+                for (CloudService service : services) {
+                    service.postConstruct(this);
+                }
+                for (CloudService service : services) {
+                    service.router(router);
+                }
+            }
+
+            ...
+        }
+        ```
+    </TabItem>
+    <TabItem label="CloudService.java">
+        ```java title=CloudService.java
+        public interface CloudService {
+            void loadBean(ApplicationContext context) throws Throwable;
+
+            void autowired(ApplicationContext context);
+
+            void postConstruct(ApplicationContext context) throws Throwable;
+
+            void destroy() throws Throwable;
+
+            void router(Router router);
+        }
+        ```
+    </TabItem>
+</Tabs>
+
+### 3.1.3.3 启动服务
+在这个步骤中，由于 `ApplicationContext@start` 中已经完成了所有服务的实例化、依赖注入、初始化、路由配置等工作，因此，最后一步便是将 Router 实例设置到 HttpServer 中，启动服务。
+
+```java title=Feat.java "application.start();" "application.destroy();" "application::destroy" "application.getRouter()"
+public static HttpServer cloudServer(Consumer<CloudOptions> options) {
+    CloudOptions opt = new CloudOptions();
+    options.accept(opt);
+    opt.serverName("feat-cloud");
+    ApplicationContext application = new ApplicationContext(opt);
+    opt.getExternalBeans().forEach(application::addBean);
+    application.start();
+
+    HttpServer server = Feat.createHttpServer(opt);
+    ...
+    server.httpHandler(application.getRouter());
+    return server;
 }
 ```
