@@ -8,4 +8,8 @@ public class FeatException extends RuntimeException {
     public FeatException(Throwable cause) {
         super(cause);
     }
+
+    public FeatException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

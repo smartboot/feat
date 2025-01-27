@@ -2,6 +2,7 @@ package tech.smartboot.feat;
 
 import tech.smartboot.feat.cloud.ApplicationContext;
 import tech.smartboot.feat.cloud.CloudOptions;
+import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.ServerOptions;
 import tech.smartboot.feat.fileserver.FileServerOptions;
@@ -41,7 +42,11 @@ public class Feat {
         opt.serverName("feat-cloud");
         ApplicationContext application = new ApplicationContext(opt);
         opt.getExternalBeans().forEach(application::addBean);
-        application.start();
+        try {
+            application.start();
+        } catch (Throwable e) {
+            throw new FeatException("application start exception", e);
+        }
 
         HttpServer server = Feat.createHttpServer(opt);
         Runnable shutdownHook = server.options().shutdownHook();
