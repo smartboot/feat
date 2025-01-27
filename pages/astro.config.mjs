@@ -29,15 +29,15 @@ export default defineConfig({
                         content: 'Feat是一款基于Java语言开发的轻量级、高性能Web服务器',
                     }
                 },
-                // {
-                //     tag:'script',
-                //     attrs: {
-                //         src: 'https://smartboot.tech/js/gitee.js'
-                //     }
-                // },{
-                //     tag:'script',
-                //     content: 'if(!location.pathname.endsWith("feat/")){checkStar("smartboot","feat");}'
-                // },
+                {
+                    tag:'script',
+                    attrs: {
+                        src: 'https://smartboot.tech/js/gitee.js'
+                    }
+                },{
+                    tag:'script',
+                    content: 'if(!location.pathname.endsWith("feat/")){checkStar("smartboot","feat");}'
+                },
                 {
                     tag: 'script',
                     content: `
