@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Bean;
 import tech.smartboot.feat.cloud.annotation.Controller;
+import tech.smartboot.feat.cloud.annotation.JSONField;
 import tech.smartboot.feat.cloud.annotation.Param;
 import tech.smartboot.feat.cloud.annotation.PostConstruct;
 import tech.smartboot.feat.cloud.annotation.PreDestroy;
@@ -445,6 +446,10 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             if (se.getModifiers().contains(Modifier.STATIC)) {
                 continue;
             }
+            JSONField jsonField = se.getAnnotation(JSONField.class);
+            if (jsonField != null && !jsonField.serialize()) {
+                continue;
+            }
             if (j++ > i * 10) {
                 writer.append("os.write(',');\n");
             }
@@ -453,23 +458,27 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             if (se.asType().getKind() == TypeKind.TYPEVAR) {
                 type = ((DeclaredType) typeMirror).getTypeArguments().get(0);
             }
+            String fieldName = se.getSimpleName().toString();
+            if (jsonField != null && StringUtils.isNotBlank(jsonField.name())) {
+                fieldName = jsonField.name();
+            }
             if (type.toString().equals(boolean.class.getName())) {
                 writer.append("if(" + obj + ".is").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).append("()){\n");
-                String s = toBytesStr("\"" + se.getSimpleName().toString() + "\":true");
+                String s = toBytesStr("\"" + fieldName + "\":true");
                 writer.write("byte[] b" + j + "=" + s + ";\n");
                 writer.write("os.write(b" + j + ");\n");
                 writer.write("}else{\n");
-                String s1 = toBytesStr("\"" + se.getSimpleName().toString() + "\":false");
+                String s1 = toBytesStr("\"" + fieldName + "\":false");
                 writer.write("byte[] b" + j + "=" + s1 + ";\n");
                 writer.write("os.write(b" + j + ");\n");
                 writer.write("}\n");
             } else if (Arrays.asList("int", "short", "byte", "long", "float", "double").contains(type.toString())) {
-                String s = toBytesStr("\"" + se.getSimpleName().toString() + "\":");
+                String s = toBytesStr("\"" + fieldName + "\":");
                 writer.write("byte[] b" + j + "=" + s + ";\n");
                 writer.write("os.write(b" + j + ");\n");
                 writer.append("os.write(String.valueOf(").append(obj).append(".get").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).append("()).getBytes());");
             } else if (String.class.getName().equals(type.toString())) {
-                String s = toBytesStr("\"" + se.getSimpleName().toString() + "\":");
+                String s = toBytesStr("\"" + fieldName + "\":");
                 writer.write("byte[] b" + j + "=" + s + ";\n");
                 writer.write("os.write(b" + j + ");\n");
                 writer.append("if(").append(obj).append(".get").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).append("()" + "!=null){\n");
@@ -493,20 +502,28 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                 writer.append("os.write(bnull);");
                 writer.append("}\n");
             } else if (Date.class.getName().equals(type.toString())) {
-                String s = toBytesStr("\"" + se.getSimpleName().toString() + "\":");
+                String s = toBytesStr("\"" + fieldName + "\":");
                 writer.write("byte[] b" + j + "=" + s + ";\n");
                 writer.write("os.write(b" + j + ");\n");
                 writer.append("java.util.Date date=").append(obj).append(".get").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).append("();");
                 writer.append("if(date!=null){\n");
 //                writer.append("os.write('\"');\n");
-                writer.append("os.write(String.valueOf(date.getTime()).getBytes());\n");
+                if (jsonField != null && StringUtils.isNotBlank(jsonField.format())) {
+                    writer.append("java.text.SimpleDateFormat sdf=new java.text.SimpleDateFormat(\"" + jsonField.format() + "\");\n");
+                    writer.append("os.write('\"');\n");
+                    writer.append("os.write(sdf.format(date).getBytes());\n");
+                    writer.append("os.write('\"');\n");
+                } else {
+                    writer.append("os.write(String.valueOf(date.getTime()).getBytes());\n");
+                }
+
 //                writer.append("os.write('\"');\n");
                 writer.append("}else{\n");
                 writer.write("byte[] bnull={'n','u','l','l'};\n");
                 writer.append("os.write(bnull);");
                 writer.append("}\n");
             } else {
-                String s = toBytesStr("\"" + se.getSimpleName().toString() + "\":");
+                String s = toBytesStr("\"" + fieldName + "\":");
                 writer.write("byte[] b" + j + "=" + s + ";\n");
                 writer.write("os.write(b" + j + ");\n");
                 writeJsonObject(writer, type, obj + ".get" + se.getSimpleName().toString().substring(0, 1).toUpperCase() + se.getSimpleName().toString().substring(1) + "()", i + 1, typeMap);
