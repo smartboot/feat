@@ -4,5 +4,123 @@ description: 一款企业级 Web 服务开发框架
 sidebar:
     order: 5
 ---
+import {TabItem, Tabs,Aside} from "@astrojs/starlight/components";
 
-## Mapper
+Feat Cloud 已同 Mybatis 做了一定程度的集成，你可以直接使用 Mybatis 提供的 Mapper 接口来进行数据库的操作。
+
+## 3.5.1 配置 mybatis-config.xml
+在 `src/main/resources` 目录下创建 `mybatis-config.xml`， 文件内容如下：
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <plugins>
+       ...
+    </plugins>
+    <environments default="mysql">
+        <environment id="mysql">
+            <transactionManager type="JDBC"/>
+            <dataSource type="POOLED">
+                <property name="driver" value="com.mysql.cj.jdbc.Driver"/>
+                <property name="url" value="jdbc:mysql://localhost:3306/test?characterEncoding=utf-8"/>
+                <property name="username" value="root"/>
+                <property name="password" value="root"/>
+            </dataSource>
+        </environment>
+    </environments>
+    <mappers>
+        <!-- 扫描mapper接口 -->
+        <package name="org.smartboot.feat.demo.dao.mapper"/>
+    </mappers>
+</configuration>
+```
+该文件可以可以放置在任意子目录下，例如 `src/main/resources/mybatis/mybatis-config.xml`。
+
+## 3.5.2 实例化 SqlSessionFactory
+有两种方式可以实例化 SqlSessionFactory，第一种是在 Bean 或者 Controller 实例中定义一个方法，该方法返回 SqlSessionFactory 对象。
+
+<Tabs>
+    <TabItem label="@Bean">
+    ```
+    @Bean
+    public class MybatisSessionFactory {
+
+        @Bean("sessionFactory")
+        public SqlSessionFactory sessionFactory() throws IOException {
+            return new SqlSessionFactoryBuilder().build(Resources.getResourceAsStream("mybatis/mybatis-config.xml"));
+        }
+    }
+    ```
+    </TabItem>
+
+    <TabItem label="@Controller">
+    ```
+    @Controller
+    public class ControllerDemo {
+
+        @Bean("sessionFactory")
+        public SqlSessionFactory sessionFactory() throws IOException {
+            return new SqlSessionFactoryBuilder().build(Resources.getResourceAsStream("mybatis/mybatis-config.xml"));
+        }
+    }
+    ```
+    </TabItem>
+</Tabs>
+
+<Aside>
+   生成的 SqlSessionFactory 对象 bean 名称必须为 **sessionFactory**。
+</Aside>
+
+## 3.5.3 定义@Mapper接口
+@Mapper 的使用方式同 Spring 基本一致，例如：
+```java title="UserMapper.java"
+@Mapper
+public interface UserMapper {
+
+    @Select({"<script>",
+            "select * from user_info ",
+            "WHERE 1=1",
+            "order by username",
+            "</script>"})
+    @ResultType(UserDO.class)
+    List<UserDO> getUserList(UserQuery query);
+
+    @Select("select * from user_info where username=#{username} and password=#{password}")
+    @ResultType(UserDO.class)
+    UserDO getUser(@Param("username") String username, @Param("password") String password);
+
+    /**
+     * 新增订阅记录
+     */
+    @Insert("insert into user_info(username,password,role,`desc`) values(#{username},#{password},#{role},#{desc})")
+    void insert(UserDO userDO);
+
+    @Delete("<script>delete from user_info where username in" +
+            "   <foreach collection='users' item='username' index='index'" +
+            "          open='(' close=')' separator=','>" +
+            "      #{username}" +
+            "   </foreach> " +
+            "</script>")
+    int deleteUsers(@Param("users") List<String> usernames);
+}
+```
+
+## 3.5.4 使用 @Mapper
+Mapper 接口的使用方式同普通 Bean 一致，通过 `@Autowired` 注解注入即可。
+```java title="ControllerDemo.java"
+@Controller
+public class ControllerDemo {
+
+    @Autowired
+    private UserMapper userMapper;
+
+    @RequestMapping("/user")
+    public String user() {
+        UserDO userDO = userMapper.getUser("admin", "123456");
+        System.out.println(userDO);
+        return "success";
+    }
+}
+```
