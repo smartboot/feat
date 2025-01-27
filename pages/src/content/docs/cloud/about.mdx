@@ -100,8 +100,7 @@ public class FeatCloudDemo {
             }
 
             public void router(Router router) {
-                System.out.println(" \u001B[32m|->\u001B[0m /cloud ==> FeatCloudDemo@helloWorld");
-                    router.route("/cloud", req -> {
+                router.route("/cloud", req -> {
                     String rst = bean.helloWorld();
                     byte[] bytes = rst.getBytes("UTF-8");
                     req.getResponse().setContentLength(bytes.length);
