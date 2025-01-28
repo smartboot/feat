@@ -4,6 +4,6 @@ import tech.smartboot.feat.Feat;
 
 public class HelloFeat {
     public static void main(String[] args) {
-        Feat.createHttpServer().listen();
+        Feat.httpServer().listen();
     }
 }

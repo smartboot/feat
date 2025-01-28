@@ -4,7 +4,7 @@ import tech.smartboot.feat.Feat;
 
 public class HelloWorld {
     public static void main(String[] args) {
-        Feat.createHttpServer()
+        Feat.httpServer()
                 .httpHandler(request -> request.getResponse().write("Hello World"))
                 .listen(8081);
     }

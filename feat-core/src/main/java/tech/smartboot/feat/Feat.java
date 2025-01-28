@@ -11,24 +11,24 @@ import tech.smartboot.feat.fileserver.HttpStaticResourceHandler;
 import java.util.function.Consumer;
 
 public class Feat {
-    public static HttpServer createHttpServer() {
-        return createHttpServer(new ServerOptions());
+    public static HttpServer httpServer() {
+        return httpServer(new ServerOptions());
     }
 
-    public static HttpServer createHttpServer(ServerOptions options) {
+    public static HttpServer httpServer(ServerOptions options) {
         return new HttpServer(options);
     }
 
-    public static HttpServer createHttpServer(Consumer<ServerOptions> options) {
+    public static HttpServer httpServer(Consumer<ServerOptions> options) {
         ServerOptions opt = new ServerOptions();
         options.accept(opt);
-        return createHttpServer(opt);
+        return httpServer(opt);
     }
 
     public static HttpServer fileServer(Consumer<FileServerOptions> options) {
         FileServerOptions opt = new FileServerOptions();
         options.accept(opt);
-        return createHttpServer(opt).httpHandler(new HttpStaticResourceHandler(opt));
+        return httpServer(opt).httpHandler(new HttpStaticResourceHandler(opt));
     }
 
     public static HttpServer cloudServer() {
@@ -48,7 +48,7 @@ public class Feat {
             throw new FeatException("application start exception", e);
         }
 
-        HttpServer server = Feat.createHttpServer(opt);
+        HttpServer server = Feat.httpServer(opt);
         Runnable shutdownHook = server.options().shutdownHook();
         if (shutdownHook != null) {
             server.options().shutdownHook(() -> {

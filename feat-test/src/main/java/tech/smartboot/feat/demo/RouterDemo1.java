@@ -14,6 +14,6 @@ public class RouterDemo1 {
         }).route("/route2", (request) -> {
             request.getResponse().write("route2: " + request.getRequestURI());
         });
-        Feat.createHttpServer().httpHandler(router).listen();
+        Feat.httpServer().httpHandler(router).listen();
     }
 }

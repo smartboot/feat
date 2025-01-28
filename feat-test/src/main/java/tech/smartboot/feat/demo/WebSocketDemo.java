@@ -41,6 +41,6 @@ public class WebSocketDemo {
         }));
 
         // 3. 启动服务
-        Feat.createHttpServer(options -> options.debug(true).setWsIdleTimeout(5000)).httpHandler(routeHandle).listen();
+        Feat.httpServer(options -> options.debug(true).setWsIdleTimeout(5000)).httpHandler(routeHandle).listen();
     }
 }

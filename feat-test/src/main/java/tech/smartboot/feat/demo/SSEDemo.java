@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 
 public class SSEDemo {
     public static void main(String[] args) throws Exception {
-        Feat.createHttpServer(serverOptions -> serverOptions.debug(true)).httpHandler(req -> {
+        Feat.httpServer(serverOptions -> serverOptions.debug(true)).httpHandler(req -> {
             req.upgrade(new SSEHandler() {
                 public void onOpen(SseEmitter sseEmitter) {
                     SSEHandler handler = this;
