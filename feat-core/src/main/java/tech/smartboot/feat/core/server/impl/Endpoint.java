@@ -96,10 +96,10 @@ public abstract class Endpoint implements Reset {
     private Cookie[] cookies;
     private final SSLEngine sslEngine;
 
-    /**
-     * 附件对象
-     */
-    private Attachment attachment;
+//    /**
+//     * 附件对象
+//     */
+//    private Attachment attachment;
 
     private BaseHttpHandler serverHandler;
     /**
@@ -446,23 +446,23 @@ public abstract class Endpoint implements Reset {
         return cookies;
     }
 
-    /**
-     * 获取附件对象
-     *
-     * @return 附件
-     */
-    public final Attachment getAttachment() {
-        return attachment;
-    }
-
-    /**
-     * 存放附件，支持任意类型
-     *
-     * @param attachment 附件对象
-     */
-    public final void setAttachment(Attachment attachment) {
-        this.attachment = attachment;
-    }
+//    /**
+//     * 获取附件对象
+//     *
+//     * @return 附件
+//     */
+//    public final Attachment getAttachment() {
+//        return attachment;
+//    }
+//
+//    /**
+//     * 存放附件，支持任意类型
+//     *
+//     * @param attachment 附件对象
+//     */
+//    public final void setAttachment(Attachment attachment) {
+//        this.attachment = attachment;
+//    }
 
     public final AioSession getAioSession() {
         return aioSession;

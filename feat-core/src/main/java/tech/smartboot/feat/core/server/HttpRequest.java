@@ -147,20 +147,6 @@ public interface HttpRequest {
     Cookie[] getCookies();
 
 
-    /**
-     * 获取附件对象
-     *
-     * @return 附件
-     */
-    Attachment getAttachment();
-
-    /**
-     * 存放附件，支持任意类型
-     *
-     * @param attachment 附件对象
-     */
-    void setAttachment(Attachment attachment);
-
     SSLEngine getSslEngine();
 
     default PushBuilder newPushBuilder() {

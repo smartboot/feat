@@ -1,4 +1,4 @@
-package tech.smartboot.feat.restful.sse;
+package tech.smartboot.feat.core.server.upgrade.sse;
 
 public interface SseEventBuilder {
 
