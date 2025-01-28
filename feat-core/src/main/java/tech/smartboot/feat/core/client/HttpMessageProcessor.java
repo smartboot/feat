@@ -192,7 +192,7 @@ final class HttpMessageProcessor extends AbstractMessageProcessor<AbstractRespon
             case SESSION_CLOSED:
 //                ResponseAttachment attachment = session.getAttachment();
 //                attachment.getResponse().getFuture().is
-                System.out.println("closed");
+//                System.out.println("closed");
                 break;
         }
     }
