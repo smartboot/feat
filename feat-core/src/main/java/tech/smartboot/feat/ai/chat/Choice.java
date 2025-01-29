@@ -4,7 +4,7 @@ import com.alibaba.fastjson2.annotation.JSONField;
 
 public class Choice {
     private int index;
-    private Message message;
+    private ResponseMessage message;
     private String logprobs;
     @JSONField(name = "finish_reason")
     private String finishReason;
@@ -19,11 +19,11 @@ public class Choice {
         this.index = index;
     }
 
-    public Message getMessage() {
+    public ResponseMessage getMessage() {
         return message;
     }
 
-    public void setMessage(Message message) {
+    public void setMessage(ResponseMessage message) {
         this.message = message;
     }
 

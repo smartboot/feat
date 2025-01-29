@@ -1,8 +1,11 @@
 package tech.smartboot.feat.ai.chat;
 
+import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.annotation.JSONField;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 public class ChatResponse {
     private String id;
@@ -68,5 +71,18 @@ public class ChatResponse {
 
     public void setPromptLogprobs(String promptLogprobs) {
         this.promptLogprobs = promptLogprobs;
+    }
+
+    public <T> boolean ifMatchTool(String functionName, Class<T> clazz, Consumer<T> consumer) {
+        List<T> result = new ArrayList<>();
+        choices.forEach(choice -> choice.getMessage().getToolCalls().stream()
+                .filter(functionCall -> functionCall.getFunction().get("name").equals(functionName))
+                .forEach(toolCall -> {
+                    String args = toolCall.getFunction().get("arguments");
+                    T t = JSON.parseObject(args, clazz);
+                    result.add(t);
+                }));
+        result.forEach(consumer);
+        return !result.isEmpty();
     }
 }
