@@ -17,9 +17,9 @@ import tech.smartboot.feat.core.common.enums.HttpStatus;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.impl.AbstractResponse;
+import tech.smartboot.feat.core.server.impl.HttpEndpoint;
 import tech.smartboot.feat.core.server.impl.HttpMessageProcessor;
 import tech.smartboot.feat.core.server.impl.Upgrade;
-import tech.smartboot.feat.core.server.impl.HttpEndpoint;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -262,19 +262,19 @@ public class Http2Upgrade extends Upgrade {
         AbstractResponse response = abstractRequest.getResponse();
         CompletableFuture<Object> future = new CompletableFuture<>();
         try {
-            handle(abstractRequest, response, future);
+            handle(abstractRequest, future);
             abstractRequest.getResponse().close();
         } catch (Throwable e) {
             HttpMessageProcessor.responseError(response, e);
         }
     }
 
-    public void handle(HttpRequest request, HttpResponse response) throws Throwable {
+    public void handle(HttpRequest request) throws Throwable {
     }
 
-    public void handle(HttpRequest request, HttpResponse response, CompletableFuture<Object> completableFuture) throws Throwable {
+    public void handle(HttpRequest request, CompletableFuture<Object> completableFuture) throws Throwable {
         try {
-            handle(request, response);
+            handle(request);
         } finally {
             completableFuture.complete(null);
         }

@@ -9,7 +9,6 @@
 package tech.smartboot.feat.core.server.impl;
 
 import org.smartboot.socket.transport.AioSession;
-import org.smartboot.socket.util.Attachment;
 import tech.smartboot.feat.core.common.Cookie;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.Reset;
@@ -445,24 +444,6 @@ public abstract class Endpoint implements Reset {
         parsedCookies.toArray(cookies);
         return cookies;
     }
-
-//    /**
-//     * 获取附件对象
-//     *
-//     * @return 附件
-//     */
-//    public final Attachment getAttachment() {
-//        return attachment;
-//    }
-//
-//    /**
-//     * 存放附件，支持任意类型
-//     *
-//     * @param attachment 附件对象
-//     */
-//    public final void setAttachment(Attachment attachment) {
-//        this.attachment = attachment;
-//    }
 
     public final AioSession getAioSession() {
         return aioSession;
