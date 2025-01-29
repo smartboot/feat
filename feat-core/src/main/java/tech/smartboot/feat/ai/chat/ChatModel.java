@@ -4,13 +4,15 @@ import com.alibaba.fastjson2.JSON;
 import tech.smartboot.feat.ai.Options;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
+import tech.smartboot.feat.core.common.utils.StringUtils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
 public class ChatModel {
-    private Options options;
+    private final Options options;
     private final List<Message> history = new ArrayList<>();
     private ChatResponse chatResponse;
 
@@ -19,6 +21,12 @@ public class ChatModel {
             options.baseUrl(options.baseUrl().substring(0, options.baseUrl().length() - 1));
         }
         this.options = options;
+        if (StringUtils.isNotBlank(options.getSystem())) {
+            Message message = new Message();
+            message.setRole(Message.ROLE_SYSTEM);
+            message.setContent(options.getSystem());
+            history.add(message);
+        }
     }
 
     public ChatResponse getChatResponse() {
@@ -33,7 +41,7 @@ public class ChatModel {
         return history;
     }
 
-    public void chat(String content, Consumer<ChatModel> consumer) {
+    public void chat(String content, List<String> tools, Consumer<ChatModel> consumer) {
         System.out.println("我：" + content);
         ChatRequest request = new ChatRequest();
         request.setModel(options.getModel());
@@ -44,8 +52,21 @@ public class ChatModel {
         history.add(message);
         request.setMessages(history);
 
+        List<Tool> toolList = new ArrayList<>();
+        for (String tool : tools) {
+            if (!options.functions().containsKey(tool)) {
+                throw new RuntimeException("工具 " + tool + " 不存在");
+            }
+            Tool t = new Tool();
+            t.setType("function");
+            t.setFunction(options.functions().get(tool));
+            toolList.add(t);
+        }
+        request.setTools(toolList);
+
+
         HttpClient httpClient = new HttpClient(options.baseUrl() + "/chat/completions");
-        httpClient.configuration().debug(false);
+        httpClient.configuration().debug(true);
         httpClient.post().header().setContentType("application/json")
                 .add(HeaderNameEnum.AUTHORIZATION.getName(), "Bearer " + options.getApiKey())
                 .done()
@@ -59,5 +80,12 @@ public class ChatModel {
                 }).onFailure(throwable -> throwable.printStackTrace()).done();
     }
 
+    public void chat(String content, String tool, Consumer<ChatModel> consumer) {
+        chat(content, Collections.singletonList(tool), consumer);
+    }
+
+    public void chat(String content, Consumer<ChatModel> consumer) {
+        chat(content, Collections.emptyList(), consumer);
+    }
 
 }
