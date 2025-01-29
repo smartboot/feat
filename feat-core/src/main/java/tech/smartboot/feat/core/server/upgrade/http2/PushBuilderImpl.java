@@ -133,7 +133,7 @@ public class PushBuilderImpl implements PushBuilder {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        ((Http2UpgradeHandler) (pushRequest.getSession().getRequest().getUpgradeHandler())).handleHttpRequest(pushRequest);
+        ((Http2Upgrade) (pushRequest.getSession().getRequest().getUpgradeHandler())).handleHttpRequest(pushRequest);
         pushRequest.reset();
         this.path = null;
         this.queryString = null;

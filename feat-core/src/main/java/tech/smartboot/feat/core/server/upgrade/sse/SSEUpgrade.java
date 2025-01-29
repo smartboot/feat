@@ -2,12 +2,12 @@ package tech.smartboot.feat.core.server.upgrade.sse;
 
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
-import tech.smartboot.feat.core.server.impl.HttpUpgradeHandler;
+import tech.smartboot.feat.core.server.impl.Upgrade;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-public abstract class SSEHandler extends HttpUpgradeHandler {
+public abstract class SSEUpgrade extends Upgrade {
     SseEmitter sseEmitter;
 
     @Override

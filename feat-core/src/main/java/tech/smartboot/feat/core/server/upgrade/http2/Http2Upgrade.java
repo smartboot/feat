@@ -18,7 +18,7 @@ import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.impl.AbstractResponse;
 import tech.smartboot.feat.core.server.impl.HttpMessageProcessor;
-import tech.smartboot.feat.core.server.impl.HttpUpgradeHandler;
+import tech.smartboot.feat.core.server.impl.Upgrade;
 import tech.smartboot.feat.core.server.impl.HttpEndpoint;
 
 import java.io.ByteArrayOutputStream;
@@ -29,7 +29,7 @@ import java.util.Base64;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
-public class Http2UpgradeHandler extends HttpUpgradeHandler {
+public class Http2Upgrade extends Upgrade {
     private static final byte[] H2C_PREFACE = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n".getBytes();
     private static final int FRAME_HEADER_SIZE = 9;
     private Http2Session session;

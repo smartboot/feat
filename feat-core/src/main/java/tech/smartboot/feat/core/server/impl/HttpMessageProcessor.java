@@ -67,7 +67,7 @@ public final class HttpMessageProcessor extends AbstractMessageProcessor<HttpEnd
                 }
                 case DecodeState.STATE_BODY_READING_CALLBACK: {
                     decodeState.setState(DecodeState.STATE_BODY_READING_MONITOR);
-                    HttpUpgradeHandler httpUpgradeHandler = request.getUpgradeHandler();
+                    Upgrade httpUpgradeHandler = request.getUpgradeHandler();
                     if (httpUpgradeHandler != null) {
                         httpUpgradeHandler.onBodyStream(session.readBuffer());
                     } else {

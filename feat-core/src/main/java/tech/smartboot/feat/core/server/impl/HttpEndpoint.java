@@ -59,7 +59,7 @@ public final class HttpEndpoint extends Endpoint implements HttpRequest, Reset {
      * 剩余可读字节数
      */
     private long remainingThreshold;
-    private HttpUpgradeHandler upgradeHandler;
+    private Upgrade upgradeHandler;
 
     private TimerTask httpIdleTask;
 
@@ -250,23 +250,23 @@ public final class HttpEndpoint extends Endpoint implements HttpRequest, Reset {
         return decodeState;
     }
 
-    public HttpUpgradeHandler getUpgradeHandler() {
+    public Upgrade getUpgradeHandler() {
         return upgradeHandler;
     }
 
-    public void setUpgradeHandler(HttpUpgradeHandler upgradeHandler) {
+    public void setUpgradeHandler(Upgrade upgradeHandler) {
         this.upgradeHandler = upgradeHandler;
     }
 
     @Override
-    public void upgrade(HttpUpgradeHandler upgradeHandler) throws IOException {
-        setUpgradeHandler(upgradeHandler);
+    public void upgrade(Upgrade upgrade) throws IOException {
+        setUpgradeHandler(upgrade);
         response.getOutputStream().disableChunked();
         //升级后取消http空闲监听
         cancelHttpIdleTask();
-        upgradeHandler.setRequest(this);
-        upgradeHandler.init(this, response);
-        upgradeHandler.onBodyStream(this.getAioSession().readBuffer());
+        upgrade.setRequest(this);
+        upgrade.init(this, response);
+        upgrade.onBodyStream(this.getAioSession().readBuffer());
 
     }
 

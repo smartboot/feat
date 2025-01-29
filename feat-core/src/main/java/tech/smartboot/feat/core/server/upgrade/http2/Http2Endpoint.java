@@ -12,7 +12,7 @@ import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.PushBuilder;
 import tech.smartboot.feat.core.server.impl.AbstractResponse;
 import tech.smartboot.feat.core.server.impl.Endpoint;
-import tech.smartboot.feat.core.server.impl.HttpUpgradeHandler;
+import tech.smartboot.feat.core.server.impl.Upgrade;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -141,7 +141,7 @@ public class Http2Endpoint extends Endpoint implements HttpRequest, Reset {
     }
 
     @Override
-    public void upgrade(HttpUpgradeHandler upgradeHandler) throws IOException {
+    public void upgrade(Upgrade upgrade) throws IOException {
         throw new UnsupportedOperationException();
     }
 }

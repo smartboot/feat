@@ -1,7 +1,7 @@
 package tech.smartboot.feat.demo;
 
 import tech.smartboot.feat.Feat;
-import tech.smartboot.feat.core.server.upgrade.sse.SSEHandler;
+import tech.smartboot.feat.core.server.upgrade.sse.SSEUpgrade;
 import tech.smartboot.feat.core.server.upgrade.sse.SseEmitter;
 
 import java.io.IOException;
@@ -11,9 +11,9 @@ import java.util.concurrent.TimeUnit;
 public class SSEDemo {
     public static void main(String[] args) throws Exception {
         Feat.httpServer(serverOptions -> serverOptions.debug(true)).httpHandler(req -> {
-            req.upgrade(new SSEHandler() {
+            req.upgrade(new SSEUpgrade() {
                 public void onOpen(SseEmitter sseEmitter) {
-                    SSEHandler handler = this;
+                    SSEUpgrade handler = this;
 //                System.out.println("receive...:" + uid);
                     Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(new Runnable() {
                         int i = 0;

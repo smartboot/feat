@@ -12,7 +12,7 @@ import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.core.common.codec.websocket.CloseReason;
 import tech.smartboot.feat.core.server.WebSocketRequest;
 import tech.smartboot.feat.core.server.WebSocketResponse;
-import tech.smartboot.feat.core.server.upgrade.websocket.WebSocketUpgradeHandler;
+import tech.smartboot.feat.core.server.upgrade.websocket.WebSocketUpgrade;
 import tech.smartboot.feat.router.Router;
 
 /**
@@ -25,7 +25,7 @@ public class WebSocketDemo {
         Router routeHandle = new Router();
 
         //2. 指定路由规则以及请求的处理实现
-        routeHandle.route("/", (request) -> request.upgrade(new WebSocketUpgradeHandler() {
+        routeHandle.route("/", (request) -> request.upgrade(new WebSocketUpgrade() {
             @Override
             public void handleTextMessage(WebSocketRequest request, WebSocketResponse response, String data) {
                 response.ping("hello".getBytes());

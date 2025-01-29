@@ -15,9 +15,9 @@ import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.WebSocketRequest;
 import tech.smartboot.feat.core.server.WebSocketResponse;
-import tech.smartboot.feat.core.server.handler.BasicAuthServerHandler;
 import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
-import tech.smartboot.feat.core.server.upgrade.websocket.WebSocketUpgradeHandler;
+import tech.smartboot.feat.core.server.handler.BasicAuthServerHandler;
+import tech.smartboot.feat.core.server.upgrade.websocket.WebSocketUpgrade;
 import tech.smartboot.feat.router.Router;
 
 import java.io.IOException;
@@ -122,29 +122,24 @@ public class SmartHttpDemo {
                             request.getResponse().write((parameter + ": " + request.getParameter(parameter) + "</br>").getBytes());
                         }
                     }
-                }).route("/ws", new BaseHttpHandler() {
+                }).route("/ws", request -> request.upgrade(new WebSocketUpgrade() {
                     @Override
-                    public void handle(HttpRequest request) throws Throwable {
-                        request.upgrade(new WebSocketUpgradeHandler() {
-                            @Override
-                            public void onHandShake(WebSocketRequest request, WebSocketResponse webSocketResponse) {
-                                System.out.println("收到握手消息");
-                            }
-
-                            @Override
-                            public void handleTextMessage(WebSocketRequest request, WebSocketResponse response, String data) {
-                                System.out.println("收到请求消息:" + data);
-                                response.sendTextMessage("服务端收到响应:" + data);
-                            }
-
-
-                            @Override
-                            public void handleBinaryMessage(WebSocketRequest request, WebSocketResponse response, byte[] data) {
-                                response.sendBinaryMessage(data);
-                            }
-                        });
+                    public void onHandShake(WebSocketRequest request, WebSocketResponse webSocketResponse) {
+                        System.out.println("收到握手消息");
                     }
-                });
+
+                    @Override
+                    public void handleTextMessage(WebSocketRequest request, WebSocketResponse response, String data) {
+                        System.out.println("收到请求消息:" + data);
+                        response.sendTextMessage("服务端收到响应:" + data);
+                    }
+
+
+                    @Override
+                    public void handleBinaryMessage(WebSocketRequest request, WebSocketResponse response, byte[] data) {
+                        response.sendBinaryMessage(data);
+                    }
+                }));
 
 
         HttpServer bootstrap = new HttpServer();

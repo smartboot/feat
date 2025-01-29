@@ -6,7 +6,7 @@ import tech.smartboot.feat.core.server.HttpResponse;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-public abstract class HttpUpgradeHandler {
+public abstract class Upgrade {
     protected HttpEndpoint request;
 
     void setRequest(HttpEndpoint request) {

@@ -12,7 +12,7 @@ import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 import tech.smartboot.feat.core.server.WebSocketRequest;
 import tech.smartboot.feat.core.server.WebSocketResponse;
-import tech.smartboot.feat.core.server.upgrade.websocket.WebSocketUpgradeHandler;
+import tech.smartboot.feat.core.server.upgrade.websocket.WebSocketUpgrade;
 import tech.smartboot.feat.test.BastTest;
 
 import java.io.IOException;
@@ -30,7 +30,7 @@ public class WebSocketTest extends BastTest {
         bootstrap.httpHandler(new BaseHttpHandler() {
             @Override
             public void handle(HttpRequest request) throws Throwable {
-                request.upgrade(new WebSocketUpgradeHandler() {
+                request.upgrade(new WebSocketUpgrade() {
                     @Override
                     public void handleTextMessage(WebSocketRequest request, WebSocketResponse response, String data) {
                         System.out.println(data);

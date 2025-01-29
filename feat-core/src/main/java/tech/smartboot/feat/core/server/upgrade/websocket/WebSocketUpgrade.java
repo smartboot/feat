@@ -18,7 +18,7 @@ import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.WebSocketRequest;
 import tech.smartboot.feat.core.server.WebSocketResponse;
-import tech.smartboot.feat.core.server.impl.HttpUpgradeHandler;
+import tech.smartboot.feat.core.server.impl.Upgrade;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -28,8 +28,8 @@ import java.util.Base64;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-public class WebSocketUpgradeHandler extends HttpUpgradeHandler {
-    private static final Logger LOGGER = LoggerFactory.getLogger(WebSocketUpgradeHandler.class);
+public class WebSocketUpgrade extends Upgrade {
+    private static final Logger LOGGER = LoggerFactory.getLogger(WebSocketUpgrade.class);
     private static final String WEBSOCKET_13_ACCEPT_GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
     private static final Decoder basicFrameDecoder = new BasicFrameDecoder();
     private Decoder decoder = basicFrameDecoder;

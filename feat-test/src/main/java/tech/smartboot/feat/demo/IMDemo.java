@@ -17,7 +17,7 @@ import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.WebSocketRequest;
 import tech.smartboot.feat.core.server.WebSocketResponse;
 import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
-import tech.smartboot.feat.core.server.upgrade.websocket.WebSocketUpgradeHandler;
+import tech.smartboot.feat.core.server.upgrade.websocket.WebSocketUpgrade;
 import tech.smartboot.feat.router.Router;
 
 import java.io.IOException;
@@ -38,7 +38,7 @@ public class IMDemo {
             @Override
             public void handle(HttpRequest request) throws IOException {
                 if (request.getHeader(HeaderNameEnum.UPGRADE.getName()).equalsIgnoreCase("websocket")) {
-                    request.upgrade(new WebSocketUpgradeHandler() {
+                    request.upgrade(new WebSocketUpgrade() {
                         private Map<WebSocketRequest, WebSocketResponse> sessionMap = new ConcurrentHashMap<>();
 
                         @Override
