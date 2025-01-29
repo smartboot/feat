@@ -200,10 +200,10 @@ public class WebSocketUpgrade extends Upgrade {
      *
      * @param request
      * @param response
-     * @param data
+     * @param message
      */
-    public void handleTextMessage(WebSocketRequest request, WebSocketResponse response, String data) {
-        System.out.println(data);
+    public void handleTextMessage(WebSocketRequest request, WebSocketResponse response, String message) {
+        System.out.println(message);
     }
 
     /**

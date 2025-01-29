@@ -9,11 +9,9 @@
 package tech.smartboot.feat.demo;
 
 import tech.smartboot.feat.Feat;
-import tech.smartboot.feat.core.common.codec.websocket.CloseReason;
 import tech.smartboot.feat.core.server.WebSocketRequest;
 import tech.smartboot.feat.core.server.WebSocketResponse;
 import tech.smartboot.feat.core.server.upgrade.websocket.WebSocketUpgrade;
-import tech.smartboot.feat.router.Router;
 
 /**
  * @author 三刀
@@ -21,26 +19,13 @@ import tech.smartboot.feat.router.Router;
  */
 public class WebSocketDemo {
     public static void main(String[] args) {
-        //1. 实例化路由Handle
-        Router routeHandle = new Router();
-
-        //2. 指定路由规则以及请求的处理实现
-        routeHandle.route("/", (request) -> request.upgrade(new WebSocketUpgrade(5000) {
-            @Override
-            public void handleTextMessage(WebSocketRequest request, WebSocketResponse response, String data) {
-                response.ping("hello".getBytes());
-                response.sendTextMessage("接受到客户端消息：" + data);
-            }
-
-            @Override
-            public void onClose(WebSocketRequest request, WebSocketResponse response, CloseReason closeReason) {
-                System.out.println("客户端关闭连接，状态码：" + closeReason.getCode());
-                System.out.println("客户端关闭连接，原因：" + closeReason.getReason());
-                super.onClose(request, response, closeReason);
-            }
-        }));
-
-        // 3. 启动服务
-        Feat.httpServer(options -> options.debug(true)).httpHandler(routeHandle).listen();
+        Feat.httpServer().httpHandler(request -> {
+            request.upgrade(new WebSocketUpgrade() {
+                @Override
+                public void handleTextMessage(WebSocketRequest request, WebSocketResponse response, String message) {
+                    response.sendTextMessage("接受到客户端消息：" + message);
+                }
+            });
+        }).listen();
     }
 }

@@ -4,6 +4,26 @@ description: Feat WebSocket
 sidebar:
     order: 6
 ---
+import upgrade_ws_1 from './img/upgrade_ws_1.png';
 
 Feat 支持通过通过 **HttpRequest.upgrade** 方法将 HTTP 请求升级为 WebSocket。
 
+操作示例如下：
+```java title=WebSocketDemo.java "upgrade"
+public class WebSocketDemo {
+    public static void main(String[] args) {
+        Feat.httpServer().httpHandler(request -> {
+            request.upgrade(new WebSocketUpgrade() {
+                @Override
+                public void handleTextMessage(WebSocketRequest request, WebSocketResponse response, String message) {
+                    response.sendTextMessage("接受到客户端消息：" + message);
+                }
+            });
+        }).listen();
+    }
+}
+```
+
+启动程序后，可访问：<a target="_blank" href="http://www.websocket-test.com/">WebSocket 在线测试</a> 验证运行效果。
+
+<img src={upgrade_ws_1.src} alt="hello world" width="80%" className="shadow"/>
