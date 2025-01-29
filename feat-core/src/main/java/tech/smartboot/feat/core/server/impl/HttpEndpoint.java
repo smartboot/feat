@@ -59,7 +59,7 @@ public final class HttpEndpoint extends Endpoint implements HttpRequest, Reset {
      * 剩余可读字节数
      */
     private long remainingThreshold;
-    private Upgrade upgradeHandler;
+    private Upgrade upgrade;
 
     private TimerTask httpIdleTask;
 
@@ -250,17 +250,17 @@ public final class HttpEndpoint extends Endpoint implements HttpRequest, Reset {
         return decodeState;
     }
 
-    public Upgrade getUpgradeHandler() {
-        return upgradeHandler;
+    public Upgrade getUpgrade() {
+        return upgrade;
     }
 
-    public void setUpgradeHandler(Upgrade upgradeHandler) {
-        this.upgradeHandler = upgradeHandler;
+    public void setUpgrade(Upgrade upgrade) {
+        this.upgrade = upgrade;
     }
 
     @Override
     public void upgrade(Upgrade upgrade) throws IOException {
-        setUpgradeHandler(upgrade);
+        setUpgrade(upgrade);
         response.getOutputStream().disableChunked();
         //升级后取消http空闲监听
         cancelHttpIdleTask();

@@ -67,9 +67,9 @@ public final class HttpMessageProcessor extends AbstractMessageProcessor<HttpEnd
                 }
                 case DecodeState.STATE_BODY_READING_CALLBACK: {
                     decodeState.setState(DecodeState.STATE_BODY_READING_MONITOR);
-                    Upgrade httpUpgradeHandler = request.getUpgradeHandler();
-                    if (httpUpgradeHandler != null) {
-                        httpUpgradeHandler.onBodyStream(session.readBuffer());
+                    Upgrade upgrade = request.getUpgrade();
+                    if (upgrade != null) {
+                        upgrade.onBodyStream(session.readBuffer());
                     } else {
                         request.getServerHandler().onBodyStream(session.readBuffer(), request);
                     }
@@ -135,8 +135,8 @@ public final class HttpMessageProcessor extends AbstractMessageProcessor<HttpEnd
                     if (request.getServerHandler() != null) {
                         request.getServerHandler().onClose(request);
                     }
-                    if (request.getUpgradeHandler() != null) {
-                        request.getUpgradeHandler().destroy();
+                    if (request.getUpgrade() != null) {
+                        request.getUpgrade().destroy();
                     }
                 } finally {
                     request.cancelHttpIdleTask();

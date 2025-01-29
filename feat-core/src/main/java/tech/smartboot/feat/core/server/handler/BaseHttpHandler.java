@@ -45,7 +45,7 @@ public abstract class BaseHttpHandler implements HttpHandler {
             boolean keepAlive = isKeepAlive(request, response);
             request.setKeepAlive(keepAlive);
             request.getServerHandler().handle(request, future);
-            if (request.getUpgradeHandler() == null) {
+            if (request.getUpgrade() == null) {
                 finishHttpHandle(request, future);
             }
         } catch (Throwable e) {
