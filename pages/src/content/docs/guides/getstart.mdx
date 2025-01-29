@@ -38,7 +38,7 @@ import helloWorld from './img/1_2_hello_world.png';
 ```java title="HelloFeat.java" {3}
 public class HelloFeat {
     public static void main(String[] args) {
-        Feat.createHttpServer().listen();
+        Feat.httpServer().listen();
     }
 }
 ```
@@ -81,7 +81,7 @@ public class HelloFeat {
 ```java title="HelloWorld.java" {3,4,5}
 public class HelloWorld {
     public static void main(String[] args) {
-        Feat.createHttpServer()
+        Feat.httpServer()
                 .httpHandler(request -> request.getResponse().write("Hello World"))
                 .listen(8081);
     }

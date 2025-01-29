@@ -48,7 +48,7 @@ public class Feat {
             throw new FeatException("application start exception", e);
         }
 
-        HttpServer server = Feat.httpServer(opt);
+        HttpServer server = httpServer(opt);
         Runnable shutdownHook = server.options().shutdownHook();
         if (shutdownHook != null) {
             server.options().shutdownHook(() -> {

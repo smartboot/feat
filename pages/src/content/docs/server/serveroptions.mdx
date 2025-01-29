@@ -13,7 +13,7 @@ sidebar:
 是否开启调试模式。
 
 ```java "debug(true)"
-Feat.createHttpServer(options -> options.debug(true))
+Feat.httpServer(options -> options.debug(true))
         .listen();
 ```
 开启 debug 模式后，会在控制台输出 HTTP 请求/响应的详细信息。
@@ -25,7 +25,7 @@ Feat.createHttpServer(options -> options.debug(true))
 **默认值:** `true`
 是否开启 banner。
 ```java "bannerEnabled(false)"
-Feat.createHttpServer(options -> options.bannerEnabled(false))
+Feat.httpServer(options -> options.bannerEnabled(false))
        .listen();
 ```
 开启 banner 后，启动时会在控制台输出 Feat HTTP 服务器的版本信息。
@@ -38,7 +38,7 @@ Feat.createHttpServer(options -> options.bannerEnabled(false))
 
 设置最大请求大小。
 ```java "setMaxRequestSize(1024 * 1024 * 1024)"
-Feat.createHttpServer(options -> options.setMaxRequestSize(1024 * 1024 * 1024))
+Feat.httpServer(options -> options.setMaxRequestSize(1024 * 1024 * 1024))
        .listen();
 ```
 HTTP 请求报文的大小不能超过这个值，否则会返回 **413(Payload Too Large)** 错误。
@@ -50,7 +50,7 @@ HTTP 请求报文的大小不能超过这个值，否则会返回 **413(Payload 
 
 设置单个 TCP 连接的读取缓冲区大小。
 ```java "readBufferSize(16 * 1024)"
-Feat.createHttpServer(options -> options.readBufferSize(16 * 1024))
+Feat.httpServer(options -> options.readBufferSize(16 * 1024))
       .listen();
 ```
 合理设置这个值，可以提高性能和减少内存占用。
@@ -62,7 +62,7 @@ Feat.createHttpServer(options -> options.readBufferSize(16 * 1024))
 
 设置单个 TCP 连接的写入缓冲区大小。
 ```java "writeBufferSize(16 * 1024)"
-Feat.createHttpServer(options -> options.writeBufferSize(16 * 1024))
+Feat.httpServer(options -> options.writeBufferSize(16 * 1024))
      .listen();
 ```
 
@@ -73,7 +73,7 @@ Feat.createHttpServer(options -> options.writeBufferSize(16 * 1024))
 
 设置 HTTP 服务器的线程数。
 ```java "threadNum(4)"
-Feat.createHttpServer(options -> options.threadNum(4))
+Feat.httpServer(options -> options.threadNum(4))
     .listen();
 ```
 
@@ -82,7 +82,7 @@ Feat.createHttpServer(options -> options.threadNum(4))
 **默认值:** `100`
 设置 HTTP 请求头的限制。
 ```java "headerLimiter(10)"
-Feat.createHttpServer(options -> options.headerLimiter(10))
+Feat.httpServer(options -> options.headerLimiter(10))
     .listen();
 ```
 若解析出的 HTTP 请求头数量超过这个值，会忽略后续的请求头。

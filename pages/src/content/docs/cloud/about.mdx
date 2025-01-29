@@ -201,7 +201,7 @@ public static HttpServer cloudServer(Consumer<CloudOptions> options) {
     opt.getExternalBeans().forEach(application::addBean);
     application.start();
 
-    HttpServer server = Feat.createHttpServer(opt);
+    HttpServer server = Feat.httpServer(opt);
     ...
     server.httpHandler(application.getRouter());
     return server;
