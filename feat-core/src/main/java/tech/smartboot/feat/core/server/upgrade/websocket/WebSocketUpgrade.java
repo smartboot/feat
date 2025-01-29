@@ -144,14 +144,13 @@ public class WebSocketUpgrade extends Upgrade {
                     handlePong(request, response);
                     break;
                 case WebSocketUtil.OPCODE_CONTINUE:
-                    LOGGER.warn("unSupport OPCODE_CONTINUE now,ignore payload: {}", StringUtils.toHexString(request.getPayload()));
+                    handleContinueMessage(request, response, request.getPayload());
                     break;
                 default:
                     throw new UnsupportedOperationException();
             }
         } catch (Throwable throwable) {
             onError(request, throwable);
-            throw throwable;
         }
     }
 
@@ -217,14 +216,18 @@ public class WebSocketUpgrade extends Upgrade {
         System.out.println(data);
     }
 
+    public void handleContinueMessage(WebSocketRequest request, WebSocketResponse response, byte[] data) {
+        LOGGER.warn("unSupport OPCODE_CONTINUE now,ignore payload: {}", StringUtils.toHexString(request.getPayload()));
+    }
+
     /**
      * 连接异常
      *
      * @param request
      * @param throwable
      */
-    public void onError(WebSocketRequest request, Throwable throwable) {
-        throwable.printStackTrace();
+    public void onError(WebSocketRequest request, Throwable throwable) throws Throwable {
+        throw throwable;
     }
 
     @Override
