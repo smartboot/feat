@@ -36,6 +36,18 @@ public class WebSocketUpgrade extends Upgrade {
     private WebSocketRequestImpl webSocketRequest;
     private WebSocketResponseImpl webSocketResponse;
     private TimerTask wsIdleTask;
+    /**
+     * 闲置超时时间，单位：毫秒，默认：2分钟
+     */
+    private final long idleTimeout;
+
+    public WebSocketUpgrade() {
+        this(120000);
+    }
+
+    public WebSocketUpgrade(long idleTimeout) {
+        this.idleTimeout = idleTimeout;
+    }
 
     @Override
     public final void init(HttpRequest req, HttpResponse response) throws IOException {
@@ -51,14 +63,14 @@ public class WebSocketUpgrade extends Upgrade {
         OutputStream outputStream = response.getOutputStream();
         outputStream.flush();
 
-        if (request.getConfiguration().getWsIdleTimeout() > 0) {
+        if (idleTimeout > 0) {
             wsIdleTask = HashedWheelTimer.DEFAULT_TIMER.scheduleWithFixedDelay(() -> {
                 LOGGER.debug("check wsIdle monitor");
-                if (System.currentTimeMillis() - request.getLatestIo() > request.getConfiguration().getWsIdleTimeout() && webSocketRequest != null) {
+                if (System.currentTimeMillis() - request.getLatestIo() > idleTimeout && webSocketRequest != null) {
                     LOGGER.debug("close ws connection by idle monitor");
                     webSocketResponse.close(CloseReason.UNEXPECTED_ERROR, "ws idle timeout");
                 }
-            }, request.getConfiguration().getWsIdleTimeout(), TimeUnit.MILLISECONDS);
+            }, idleTimeout, TimeUnit.MILLISECONDS);
         }
     }
 

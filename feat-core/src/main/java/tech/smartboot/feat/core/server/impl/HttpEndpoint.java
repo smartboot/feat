@@ -88,14 +88,14 @@ public final class HttpEndpoint extends Endpoint implements HttpRequest, Reset {
         }
     }
 
-    HttpEndpoint(ServerOptions configuration, AioSession aioSession) {
-        super(aioSession, configuration);
-        this.remainingThreshold = configuration.getMaxRequestSize();
+    HttpEndpoint(ServerOptions options, AioSession aioSession) {
+        super(aioSession, options);
+        this.remainingThreshold = options.getMaxRequestSize();
         this.response = new HttpResponseImpl(this);
-        if (configuration.getHttpIdleTimeout() > 0) {
+        if (options.getIdleTimeout() > 0) {
             httpIdleTask = HashedWheelTimer.DEFAULT_TIMER.scheduleWithFixedDelay(() -> {
                 LOGGER.debug("check httpIdle monitor");
-                if (System.currentTimeMillis() - latestIo > configuration.getHttpIdleTimeout()) {
+                if (System.currentTimeMillis() - latestIo > options.getIdleTimeout()) {
                     LOGGER.debug("close http connection by idle monitor");
                     try {
                         aioSession.close();
@@ -103,7 +103,7 @@ public final class HttpEndpoint extends Endpoint implements HttpRequest, Reset {
                         cancelHttpIdleTask();
                     }
                 }
-            }, configuration.getHttpIdleTimeout(), TimeUnit.MILLISECONDS);
+            }, options.getIdleTimeout(), TimeUnit.MILLISECONDS);
         }
     }
 

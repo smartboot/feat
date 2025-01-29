@@ -86,7 +86,7 @@ public class HttpRouteDemo {
 
         // 3. 启动服务
         HttpServer bootstrap = new HttpServer();
-        bootstrap.options().setWsIdleTimeout(5000).debug(true);
+        bootstrap.options().debug(true);
         bootstrap.httpHandler(routeHandle);
         bootstrap.listen();
     }

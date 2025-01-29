@@ -25,7 +25,7 @@ public class WebSocketDemo {
         Router routeHandle = new Router();
 
         //2. 指定路由规则以及请求的处理实现
-        routeHandle.route("/", (request) -> request.upgrade(new WebSocketUpgrade() {
+        routeHandle.route("/", (request) -> request.upgrade(new WebSocketUpgrade(5000) {
             @Override
             public void handleTextMessage(WebSocketRequest request, WebSocketResponse response, String data) {
                 response.ping("hello".getBytes());
@@ -41,6 +41,6 @@ public class WebSocketDemo {
         }));
 
         // 3. 启动服务
-        Feat.httpServer(options -> options.debug(true).setWsIdleTimeout(5000)).httpHandler(routeHandle).listen();
+        Feat.httpServer(options -> options.debug(true)).httpHandler(routeHandle).listen();
     }
 }

@@ -70,12 +70,9 @@ public class ServerOptions {
     /**
      * 闲置超时时间，默认：1分钟
      */
-    private long httpIdleTimeout = 60000;
+    private long idleTimeout = 60000;
 
-    /**
-     * 闲置超时时间，默认：1分钟
-     */
-    private long wsIdleTimeout = 120000;
+
     /**
      * 服务器名称
      */
@@ -242,21 +239,12 @@ public class ServerOptions {
         return wafConfiguration;
     }
 
-    public long getHttpIdleTimeout() {
-        return httpIdleTimeout;
+    public long getIdleTimeout() {
+        return idleTimeout;
     }
 
-    public ServerOptions setHttpIdleTimeout(long httpIdleTimeout) {
-        this.httpIdleTimeout = httpIdleTimeout;
-        return this;
-    }
-
-    public long getWsIdleTimeout() {
-        return wsIdleTimeout;
-    }
-
-    public ServerOptions setWsIdleTimeout(long wsIdleTimeout) {
-        this.wsIdleTimeout = wsIdleTimeout;
+    public ServerOptions setIdleTimeout(long idleTimeout) {
+        this.idleTimeout = idleTimeout;
         return this;
     }
 

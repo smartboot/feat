@@ -9,9 +9,9 @@ import tech.smartboot.feat.core.client.WebSocketListener;
 import tech.smartboot.feat.core.common.codec.websocket.CloseReason;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpServer;
-import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 import tech.smartboot.feat.core.server.WebSocketRequest;
 import tech.smartboot.feat.core.server.WebSocketResponse;
+import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 import tech.smartboot.feat.core.server.upgrade.websocket.WebSocketUpgrade;
 import tech.smartboot.feat.test.BastTest;
 
@@ -30,7 +30,7 @@ public class WebSocketTest extends BastTest {
         bootstrap.httpHandler(new BaseHttpHandler() {
             @Override
             public void handle(HttpRequest request) throws Throwable {
-                request.upgrade(new WebSocketUpgrade() {
+                request.upgrade(new WebSocketUpgrade(idleTimeout) {
                     @Override
                     public void handleTextMessage(WebSocketRequest request, WebSocketResponse response, String data) {
                         System.out.println(data);
@@ -39,7 +39,7 @@ public class WebSocketTest extends BastTest {
                 });
             }
         });
-        bootstrap.options().setWsIdleTimeout(idleTimeout).debug(true);
+        bootstrap.options().debug(true);
         bootstrap.listen(port);
     }
 
