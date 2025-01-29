@@ -101,18 +101,20 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
                     request.setProtocol(HttpProtocolEnum.HTTP_2);
                 } else if (major != '1') {
                     throw new HttpException(HttpStatus.BAD_REQUEST);
+                } else {
+                    byte minor = byteBuffer.get(byteBuffer.position() + 7);
+                    switch (minor) {
+                        case '0':
+                            request.setProtocol(HttpProtocolEnum.HTTP_10);
+                            break;
+                        case '1':
+                            request.setProtocol(HttpProtocolEnum.HTTP_11);
+                            break;
+                        default:
+                            throw new HttpException(HttpStatus.BAD_REQUEST);
+                    }
                 }
-                byte minor = byteBuffer.get(byteBuffer.position() + 7);
-                switch (minor) {
-                    case '0':
-                        request.setProtocol(HttpProtocolEnum.HTTP_10);
-                        break;
-                    case '1':
-                        request.setProtocol(HttpProtocolEnum.HTTP_11);
-                        break;
-                    default:
-                        throw new HttpException(HttpStatus.BAD_REQUEST);
-                }
+
                 byteBuffer.position(byteBuffer.position() + 9);
                 decodeState.setState(DecodeState.STATE_START_LINE_END);
             }
