@@ -17,7 +17,7 @@ import tech.smartboot.feat.core.common.utils.ByteTree;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 import tech.smartboot.feat.core.server.impl.HttpEndpoint;
-import tech.smartboot.feat.core.server.waf.WafConfiguration;
+import tech.smartboot.feat.core.server.waf.WafOptions;
 
 import java.nio.channels.AsynchronousChannelGroup;
 import java.util.ArrayList;
@@ -90,7 +90,7 @@ public class ServerOptions {
     private boolean lowMemory = false;
     private AsynchronousChannelGroup group;
 
-    private final WafConfiguration wafConfiguration = new WafConfiguration();
+    private final WafOptions wafOptions = new WafOptions();
 
     private Runnable shutdownHook;
 
@@ -162,8 +162,7 @@ public class ServerOptions {
     public ServerOptions debug(boolean debug) {
         plugins.removeIf(plugin -> plugin instanceof StreamMonitorPlugin);
         if (debug) {
-            addPlugin(new StreamMonitorPlugin<>(StreamMonitorPlugin.BLUE_TEXT_INPUT_STREAM,
-                    StreamMonitorPlugin.RED_TEXT_OUTPUT_STREAM));
+            addPlugin(new StreamMonitorPlugin<>(StreamMonitorPlugin.BLUE_TEXT_INPUT_STREAM, StreamMonitorPlugin.RED_TEXT_OUTPUT_STREAM));
         }
         return this;
     }
@@ -235,8 +234,8 @@ public class ServerOptions {
         return this;
     }
 
-    public WafConfiguration getWafConfiguration() {
-        return wafConfiguration;
+    public WafOptions getWafConfiguration() {
+        return wafOptions;
     }
 
     public long getIdleTimeout() {

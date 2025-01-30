@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class WafConfiguration {
+public class WafOptions {
     private boolean enable = false;
     public static final String DESC = "Mysterious Power from the East Is Protecting This Area.";
     private final Set<String> allowMethods = new HashSet<>();
@@ -19,13 +19,13 @@ public class WafConfiguration {
         return allowMethods;
     }
 
-    public WafConfiguration addAllowMethod(String method) {
+    public WafOptions addAllowMethod(String method) {
         enable = true;
         allowMethods.add(method);
         return this;
     }
 
-    public WafConfiguration addAllowMethods(Set<String> allowMethods) {
+    public WafOptions addAllowMethods(Set<String> allowMethods) {
         enable = true;
         this.allowMethods.addAll(allowMethods);
         return this;
@@ -44,7 +44,7 @@ public class WafConfiguration {
         return allowUriPrefixes;
     }
 
-    public WafConfiguration addAllowUriPrefix(String prefix) {
+    public WafOptions addAllowUriPrefix(String prefix) {
         enable = true;
         allowUriPrefixes.add(prefix);
         return this;

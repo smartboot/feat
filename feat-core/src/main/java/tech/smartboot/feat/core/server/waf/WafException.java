@@ -5,7 +5,7 @@ import tech.smartboot.feat.core.common.exception.HttpException;
 
 public class WafException extends HttpException {
     public WafException(HttpStatus httpStatus) {
-        super(httpStatus.value(), WafConfiguration.DESC);
+        super(httpStatus.value(), WafOptions.DESC);
     }
 
     public WafException(HttpStatus httpStatus, String desc) {
