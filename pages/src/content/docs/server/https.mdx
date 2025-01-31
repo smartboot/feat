@@ -1,11 +1,13 @@
 ---
-title: 2.4 Https 服务
+title: 2.4 Https 服务 🔐
 description: Feat Https
 sidebar:
     order: 4
 ---
 import https_1 from './img/https_1.png';
+import CheckAuthorize from '../../../components/CheckAuthorize.astro'
 
+<CheckAuthorize/>
 出于安全服务需要，生产环境通常使用 Https 协议，Feat 也提供了相应的能力。
 
 下文演示所使用的证书是通过 [mkcert](https://github.com/FiloSottile/mkcert) 生成的自签名证书。
