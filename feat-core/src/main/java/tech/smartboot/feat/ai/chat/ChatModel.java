@@ -66,7 +66,7 @@ public class ChatModel {
 
 
         HttpClient httpClient = new HttpClient(options.baseUrl() + "/chat/completions");
-        httpClient.configuration().debug(true);
+        httpClient.options().debug(true);
         httpClient.post().header().setContentType("application/json")
                 .add(HeaderNameEnum.AUTHORIZATION.getName(), "Bearer " + options.getApiKey())
                 .done()

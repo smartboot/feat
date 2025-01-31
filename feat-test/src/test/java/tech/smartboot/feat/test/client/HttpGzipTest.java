@@ -89,7 +89,7 @@ public class HttpGzipTest {
     @Test
     public void testGzip4() throws InterruptedException, ExecutionException {
         HttpClient client = new HttpClient("127.0.0.1", 8080);
-        client.configuration().debug(true);
+        client.options().debug(true);
         Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/html")
                 .header().keepalive(true).done()
                 .onSuccess(response -> {
@@ -104,7 +104,7 @@ public class HttpGzipTest {
 
     private void extracted(int count) throws InterruptedException, ExecutionException {
         HttpClient client = new HttpClient("127.0.0.1", 8080);
-        client.configuration().debug(true);
+        client.options().debug(true);
         Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/test?count=" + count)
                 .header().keepalive(true).done()
                 .onSuccess(response -> {

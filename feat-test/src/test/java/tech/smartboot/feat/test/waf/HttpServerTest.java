@@ -105,7 +105,7 @@ public class HttpServerTest extends BastTest {
 
     @Test
     public void testGet() throws ExecutionException, InterruptedException {
-        bootstrap.options().getWafConfiguration()
+        bootstrap.options().getWafOptions()
                 .addAllowMethod(HttpMethodEnum.POST.getMethod());
         HttpClient httpClient = getHttpClient();
         StringBuilder uriStr = new StringBuilder(requestUnit.getUri()).append("?");
@@ -118,7 +118,7 @@ public class HttpServerTest extends BastTest {
 
     @Test
     public void testGet1() throws ExecutionException, InterruptedException {
-        bootstrap.options().getWafConfiguration()
+        bootstrap.options().getWafOptions()
                 .addAllowMethod(HttpMethodEnum.GET.getMethod());
         HttpClient httpClient = getHttpClient();
         StringBuilder uriStr = new StringBuilder(requestUnit.getUri()).append("?");
@@ -139,27 +139,27 @@ public class HttpServerTest extends BastTest {
         JSONObject jsonObject = basicCheck(httpGet.done().get(), requestUnit);
         Assert.assertEquals(HttpMethodEnum.GET.getMethod(), jsonObject.get(KEY_METHOD));
 
-        bootstrap.options().getWafConfiguration()
+        bootstrap.options().getWafOptions()
                 .addAllowUriPrefix("/aa");
         HttpGet httpGet1 = httpClient.get(uriStr.toString());
         requestUnit.getHeaders().forEach((name, value) -> httpGet1.header().add(name, value));
         Assert.assertEquals(HttpStatus.BAD_REQUEST.value(), httpGet1.done().get().getStatus());
 
-        bootstrap.options().getWafConfiguration()
+        bootstrap.options().getWafOptions()
                 .getAllowUriPrefixes().add("/hello");
         HttpGet httpGet2 = httpClient.get(uriStr.toString());
         requestUnit.getHeaders().forEach((name, value) -> httpGet2.header().add(name, value));
         jsonObject = basicCheck(httpGet2.done().get(), requestUnit);
         Assert.assertEquals(HttpMethodEnum.GET.getMethod(), jsonObject.get(KEY_METHOD));
 
-        bootstrap.options().getWafConfiguration()
+        bootstrap.options().getWafOptions()
                 .getAllowUriPrefixes().clear();
-        bootstrap.options().getWafConfiguration().getAllowUriSuffixes().add("/aa");
+        bootstrap.options().getWafOptions().getAllowUriSuffixes().add("/aa");
         HttpGet httpGet3 = httpClient.get(uriStr.toString());
         requestUnit.getHeaders().forEach((name, value) -> httpGet3.header().add(name, value));
         Assert.assertEquals(HttpStatus.BAD_REQUEST.value(), httpGet3.done().get().getStatus());
 
-        bootstrap.options().getWafConfiguration()
+        bootstrap.options().getWafOptions()
                 .getAllowUriSuffixes().add("llo");
         HttpGet httpGet4 = httpClient.get(uriStr.toString());
         requestUnit.getHeaders().forEach((name, value) -> httpGet4.header().add(name, value));

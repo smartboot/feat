@@ -36,7 +36,7 @@ import java.util.function.Consumer;
 public class WebSocketClient {
     private static final Logger LOGGER = LoggerFactory.getLogger(WebSocketClient.class);
 
-    private final WebSocketOptions configuration;
+    private final WebSocketOptions options;
 
     /**
      * Header: Host
@@ -67,7 +67,7 @@ public class WebSocketClient {
 
     public static void main(String[] args) throws IOException {
         WebSocketClient client = new WebSocketClient("ws://localhost:8080");
-        client.configuration().debug(true);
+        client.options().debug(true);
         client.connect(new WebSocketListener() {
             @Override
             public void onOpen(WebSocketClient client, WebSocketResponse session) {
@@ -124,15 +124,15 @@ public class WebSocketClient {
         if (port == -1) {
             throw new IllegalArgumentException("invalid url:" + url);
         }
-        this.configuration = new WebSocketOptions(host, port);
-        configuration.setWss(wss);
-        hostHeader = configuration.getHost() + ":" + configuration.getPort();
+        this.options = new WebSocketOptions(host, port);
+        options.setWss(wss);
+        hostHeader = options.getHost() + ":" + options.getPort();
         this.uri = uriIndex > 0 ? url.substring(uriIndex) : "/";
 
     }
 
-    public WebSocketOptions configuration() {
-        return configuration;
+    public WebSocketOptions options() {
+        return options;
     }
 
     public void connect(WebSocketListener listener) throws IOException {
@@ -148,24 +148,24 @@ public class WebSocketClient {
         try {
             if (firstConnected) {
                 boolean noneSslPlugin = true;
-                for (Plugin responsePlugin : configuration.getPlugins()) {
+                for (Plugin responsePlugin : options.getPlugins()) {
                     processor.addPlugin(responsePlugin);
                     if (responsePlugin instanceof SslPlugin) {
                         noneSslPlugin = false;
                     }
                 }
-                if (noneSslPlugin && configuration.isWss()) {
+                if (noneSslPlugin && options.isWss()) {
                     processor.addPlugin(new SslPlugin<>(new ClientSSLContextFactory()));
                 }
 
                 firstConnected = false;
             }
             connected = true;
-            client = configuration.getProxy() == null ? new AioQuickClient(configuration.getHost(), configuration.getPort(), processor, processor) :
-                    new AioQuickClient(configuration.getProxy().getProxyHost(), configuration.getProxy().getProxyPort(), processor, processor);
-            client.setBufferPagePool(configuration.getReadBufferPool(), configuration.getWriteBufferPool()).setReadBufferSize(configuration.readBufferSize());
-            if (configuration.getConnectTimeout() > 0) {
-                client.connectTimeout(configuration.getConnectTimeout());
+            client = options.getProxy() == null ? new AioQuickClient(options.getHost(), options.getPort(), processor, processor) :
+                    new AioQuickClient(options.getProxy().getProxyHost(), options.getProxy().getProxyPort(), processor, processor);
+            client.setBufferPagePool(options.getReadBufferPool(), options.getWriteBufferPool()).setReadBufferSize(options.readBufferSize());
+            if (options.getConnectTimeout() > 0) {
+                client.connectTimeout(options.getConnectTimeout());
             }
             if (asynchronousChannelGroup == null) {
                 client.start();
@@ -301,7 +301,7 @@ public class WebSocketClient {
     }
 
 
-    public void setAsynchronousChannelGroup(AsynchronousChannelGroup asynchronousChannelGroup) {
+    public void group(AsynchronousChannelGroup asynchronousChannelGroup) {
         this.asynchronousChannelGroup = asynchronousChannelGroup;
     }
 

@@ -152,7 +152,7 @@ public class HttpPostTest {
 
         Consumer consumer = client -> {
             String body = "test a body string";
-            client.configuration().debug(true);
+            client.options().debug(true);
             Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/chunk")
                     .header().keepalive(true).done()
                     .body()
@@ -178,7 +178,7 @@ public class HttpPostTest {
     public void testCheckHeader() throws Throwable {
         Consumer consumer = client -> {
             String body = "test a body string";
-            client.configuration().debug(true);
+            client.options().debug(true);
             Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/header")
                     .header().keepalive(true).setContentLength(body.getBytes().length).done()
                     .body()
@@ -204,7 +204,7 @@ public class HttpPostTest {
         Consumer consumer = client -> {
             String body = "test a body string";
             String body2 = "test a body2 string";
-            client.configuration().debug(true);
+            client.options().debug(true);
             Future<tech.smartboot.feat.core.client.HttpResponse> future1 = client.post("/other/abc")
                     .header().keepalive(true).setContentLength(body.getBytes().length).done()
                     .body()
@@ -240,7 +240,7 @@ public class HttpPostTest {
     public void testPost() throws Throwable {
         Consumer consumer = httpClient -> {
             CompletableFuture<Boolean> future = new CompletableFuture<>();
-            httpClient.configuration().debug(true);
+            httpClient.options().debug(true);
             Map<String, String> param = new HashMap<>();
             param.put("name", "zhouyu");
             param.put("age", "18");
@@ -271,7 +271,7 @@ public class HttpPostTest {
     @Test
     public void testJson() throws Throwable {
         Consumer consumer = httpClient -> {
-            httpClient.configuration().debug(true);
+            httpClient.options().debug(true);
             byte[] jsonBytes = "{\"a\":1,\"b\":\"123\"}".getBytes(StandardCharsets.UTF_8);
             httpClient.post("/json").header().setContentLength(jsonBytes.length).setContentType("application/json").done().body().write(jsonBytes).flush().done();
             Thread.sleep(100);
@@ -283,7 +283,7 @@ public class HttpPostTest {
     @Test
     public void testBody() throws Throwable {
         Consumer consumer = httpClient -> {
-            httpClient.configuration().debug(true);
+            httpClient.options().debug(true);
             byte[] jsonBytes = "{\"a\":1,\"b\":\"123\"}".getBytes(StandardCharsets.UTF_8);
             String resp = httpClient.post("/body").header().setContentLength(jsonBytes.length).setContentType(
                     "application/json").done().body().write(jsonBytes).flush().done().done().get().body();
@@ -296,7 +296,7 @@ public class HttpPostTest {
     @Test
     public void testEmpty() throws Throwable {
         Consumer consumer = httpClient -> {
-            httpClient.configuration().debug(true);
+            httpClient.options().debug(true);
             byte[] jsonBytes = "{\"a\":1,\"b\":\"123\"}".getBytes(StandardCharsets.UTF_8);
             tech.smartboot.feat.core.client.HttpResponse resp = httpClient.post("/empty").header().setContentLength(jsonBytes.length).setContentType(
                     "application/json").done().body().write(jsonBytes).flush().done().done().get();

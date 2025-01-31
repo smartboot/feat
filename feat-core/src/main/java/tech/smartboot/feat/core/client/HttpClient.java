@@ -34,7 +34,7 @@ import java.util.concurrent.Semaphore;
  */
 public final class HttpClient implements AutoCloseable {
 
-    private final HttpClientOptions configuration;
+    private final HttpClientOptions options;
 
     /**
      * Header: Host
@@ -91,15 +91,15 @@ public final class HttpClient implements AutoCloseable {
         if (port == -1) {
             throw new IllegalArgumentException("invalid url:" + url);
         }
-        this.configuration = new HttpClientOptions(host, port);
-        configuration.setHttps(https);
-        hostHeader = configuration.getHost() + ":" + configuration.getPort();
+        this.options = new HttpClientOptions(host, port);
+        options.setHttps(https);
+        hostHeader = options.getHost() + ":" + options.getPort();
         this.uri = uriIndex > 0 ? url.substring(uriIndex) : "/";
     }
 
     public HttpClient(String host, int port) {
-        this.configuration = new HttpClientOptions(host, port);
-        hostHeader = configuration.getHost() + ":" + configuration.getPort();
+        this.options = new HttpClientOptions(host, port);
+        hostHeader = options.getHost() + ":" + options.getPort();
         this.uri = null;
     }
 
@@ -155,9 +155,9 @@ public final class HttpClient implements AutoCloseable {
 
     private void initRest(HttpRestImpl httpRestImpl, String uri) {
         HttpRequestImpl request = httpRestImpl.getRequest();
-        if (configuration.getProxy() != null && StringUtils.isNotBlank(configuration.getProxy().getProxyUserName())) {
+        if (options.getProxy() != null && StringUtils.isNotBlank(options.getProxy().getProxyUserName())) {
             request.addHeader(HeaderNameEnum.PROXY_AUTHORIZATION.getName(),
-                    "Basic " + Base64.getEncoder().encodeToString((configuration.getProxy().getProxyUserName() + ":" + configuration.getProxy().getProxyPassword()).getBytes()));
+                    "Basic " + Base64.getEncoder().encodeToString((options.getProxy().getProxyUserName() + ":" + options.getProxy().getProxyPassword()).getBytes()));
         }
         request.setUri(uri);
         request.addHeader(HeaderNameEnum.HOST.getName(), hostHeader);
@@ -193,8 +193,8 @@ public final class HttpClient implements AutoCloseable {
     }
 
 
-    public HttpClientOptions configuration() {
-        return configuration;
+    public HttpClientOptions options() {
+        return options;
     }
 
     private void connect() {
@@ -215,27 +215,27 @@ public final class HttpClient implements AutoCloseable {
         try {
             if (firstConnected) {
                 boolean noneSslPlugin = true;
-                for (Plugin responsePlugin : configuration.getPlugins()) {
+                for (Plugin responsePlugin : options.getPlugins()) {
                     processor.addPlugin(responsePlugin);
                     if (responsePlugin instanceof SslPlugin) {
                         noneSslPlugin = false;
                     }
                 }
-                if (noneSslPlugin && configuration.isHttps()) {
+                if (noneSslPlugin && options.isHttps()) {
                     processor.addPlugin(new SslPlugin<>(new ClientSSLContextFactory()));
                 }
-                if (configuration.isDebug()) {
+                if (options.isDebug()) {
                     processor.addPlugin(new StreamMonitorPlugin<>(StreamMonitorPlugin.BLUE_TEXT_INPUT_STREAM, StreamMonitorPlugin.RED_TEXT_OUTPUT_STREAM));
                 }
 
                 firstConnected = false;
             }
             connected = true;
-            client = configuration.getProxy() == null ? new AioQuickClient(configuration.getHost(), configuration.getPort(), processor, processor) :
-                    new AioQuickClient(configuration.getProxy().getProxyHost(), configuration.getProxy().getProxyPort(), processor, processor);
-            client.setBufferPagePool(configuration.getReadBufferPool(), configuration.getWriteBufferPool()).setWriteBuffer(configuration.getWriteBufferSize(), 2).setReadBufferSize(configuration.readBufferSize());
-            if (configuration.getConnectTimeout() > 0) {
-                client.connectTimeout(configuration.getConnectTimeout());
+            client = options.getProxy() == null ? new AioQuickClient(options.getHost(), options.getPort(), processor, processor) :
+                    new AioQuickClient(options.getProxy().getProxyHost(), options.getProxy().getProxyPort(), processor, processor);
+            client.setBufferPagePool(options.getReadBufferPool(), options.getWriteBufferPool()).setWriteBuffer(options.getWriteBufferSize(), 2).setReadBufferSize(options.readBufferSize());
+            if (options.getConnectTimeout() > 0) {
+                client.connectTimeout(options.getConnectTimeout());
             }
             if (asynchronousChannelGroup == null) {
                 client.start();
@@ -248,7 +248,7 @@ public final class HttpClient implements AutoCloseable {
     }
 
 
-    public void setAsynchronousChannelGroup(AsynchronousChannelGroup asynchronousChannelGroup) {
+    public void group(AsynchronousChannelGroup asynchronousChannelGroup) {
         this.asynchronousChannelGroup = asynchronousChannelGroup;
     }
 

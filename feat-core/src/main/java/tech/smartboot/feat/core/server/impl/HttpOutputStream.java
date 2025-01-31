@@ -38,16 +38,16 @@ final class HttpOutputStream extends FeatOutputStream {
     private static long expireTime;
     private static byte[] HEAD_PART_BYTES;
     private final HttpEndpoint request;
-    private final ServerOptions configuration;
+    private final ServerOptions options;
     private final AbstractResponse response;
 
     public HttpOutputStream(HttpEndpoint httpRequest, AbstractResponse response) {
         super(httpRequest.getAioSession().writeBuffer());
         this.request = httpRequest;
         this.response = response;
-        this.configuration = request.getOptions();
+        this.options = request.getOptions();
         if (SERVER_LINE == null) {
-            String serverLine = HeaderNameEnum.SERVER.getName() + ':' + configuration.serverName() + "\r\n";
+            String serverLine = HeaderNameEnum.SERVER.getName() + ':' + options.serverName() + "\r\n";
             SERVER_LINE = serverLine.getBytes();
             HEAD_PART_BYTES = (HttpProtocolEnum.HTTP_11.getProtocol() + " 200 OK\r\n" + serverLine + "Date:" + DateUtils.RFC1123_FORMAT).getBytes();
             flushDate();
@@ -124,7 +124,7 @@ final class HttpOutputStream extends FeatOutputStream {
 
         HttpStatus httpStatus = response.getHttpStatus();
         boolean fastWrite =
-                request.getProtocol() == HttpProtocolEnum.HTTP_11 && httpStatus == HttpStatus.OK && configuration.serverName() != null && response.getHeader(HeaderNameEnum.SERVER.getName()) == null;
+                request.getProtocol() == HttpProtocolEnum.HTTP_11 && httpStatus == HttpStatus.OK && options.serverName() != null && response.getHeader(HeaderNameEnum.SERVER.getName()) == null;
         // HTTP/1.1
         if (fastWrite) {
             writeBuffer.write(HEAD_PART_BYTES);
@@ -132,7 +132,7 @@ final class HttpOutputStream extends FeatOutputStream {
             writeString(request.getProtocol().getProtocol());
             writeBuffer.writeByte(Constant.SP);
             httpStatus.write(writeBuffer);
-            if (configuration.serverName() != null && response.getHeader(HeaderNameEnum.SERVER.getName()) == null) {
+            if (options.serverName() != null && response.getHeader(HeaderNameEnum.SERVER.getName()) == null) {
                 writeBuffer.write(SERVER_LINE);
             }
             // Date

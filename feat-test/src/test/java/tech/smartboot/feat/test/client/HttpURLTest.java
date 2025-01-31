@@ -87,7 +87,7 @@ public class HttpURLTest {
     @Test
     public void testJson1() throws InterruptedException {
         HttpClient httpClient = new HttpClient("http://localhost:8080/json");
-        httpClient.configuration().debug(true);
+        httpClient.options().debug(true);
         byte[] jsonBytes = "{\"a\":1,\"b\":\"123\"}".getBytes(StandardCharsets.UTF_8);
         httpClient.post().header().setContentLength(jsonBytes.length).setContentType("application/json").done().body().write(jsonBytes).flush().done();
         httpClient.post().header().setContentLength(jsonBytes.length).setContentType("application/json").done().body().write(jsonBytes).flush().done();

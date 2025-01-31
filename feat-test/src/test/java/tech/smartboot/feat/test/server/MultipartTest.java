@@ -102,7 +102,7 @@ public class MultipartTest {
                         "\r\n" +
                         "This is the content of the file.\r\n" +
                         "------WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n";
-        client.configuration().debug(true);
+        client.options().debug(true);
         Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/formdata")
                 .header().keepalive(true).setContentLength(body.getBytes().length).setContentType("multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW").done()
                 .body()
@@ -139,7 +139,7 @@ public class MultipartTest {
                         "------WebKitFormBoundary7MA4YWxkTr11111--\r\n" +
                         "------WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n";
 
-        client.configuration().debug(true);
+        client.options().debug(true);
         Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/formdata")
                 .header().keepalive(true).setContentLength(body.getBytes().length).setContentType("multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW").done()
                 .body()
@@ -163,7 +163,7 @@ public class MultipartTest {
     public void testEmptyFormData() throws InterruptedException, ExecutionException {
         HttpClient client = new HttpClient("127.0.0.1", 8080);
         String body = "------WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n";
-        client.configuration().debug(true);
+        client.options().debug(true);
         Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/formdata")
                 .header().keepalive(true).setContentLength(body.getBytes().length).setContentType("multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW").done()
                 .body()
@@ -196,7 +196,7 @@ public class MultipartTest {
                         "\r\n" +
                         largeContent + "\r\n" +
                         "------WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n";
-        client.configuration().debug(false);
+        client.options().debug(false);
         Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/formdata")
                 .header().keepalive(true).setContentLength(body.getBytes().length).setContentType("multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW").done()
                 .body()
@@ -227,7 +227,7 @@ public class MultipartTest {
                         "\r\n" +
                         "This is the content of the encoded file.\r\n" +
                         "------WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n";
-        client.configuration().debug(false);
+        client.options().debug(false);
         Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/formdata")
                 .header().keepalive(true).setContentLength(body.getBytes().length).setContentType("multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW").done()
                 .body()
@@ -256,7 +256,7 @@ public class MultipartTest {
                         "\r\n" +
                         "\r\n" +
                         "------WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n";
-        client.configuration().debug(false);
+        client.options().debug(false);
         Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/formdata")
                 .header().keepalive(true).setContentLength(body.getBytes().length).setContentType("multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW").done()
                 .body()
@@ -299,7 +299,7 @@ public class MultipartTest {
                         "\r\n" +
                         "multiValue2\r\n" +
                         "------WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n";
-        client.configuration().debug(false);
+        client.options().debug(false);
         Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/formdata")
                 .header().keepalive(true).setContentLength(body.getBytes().length).setContentType("multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW").done()
                 .body()
@@ -334,7 +334,7 @@ public class MultipartTest {
                         "\r\n" +
                         "This is the content of the encoded file.\r\n" +
                         "------WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n";
-        client.configuration().debug(true);
+        client.options().debug(true);
         Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/formdata")
                 .header().keepalive(true).setContentLength(body.getBytes().length).setContentType("multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW").done()
                 .body()
@@ -361,7 +361,7 @@ public class MultipartTest {
                         "\r\n" +
                         "This is the content.\r\n\r\n" +
                         "------WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n";
-        client.configuration().debug(true);
+        client.options().debug(true);
         Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/formdata")
                 .header().keepalive(true).setContentLength(body.getBytes().length).setContentType("multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW").done()
                 .body()

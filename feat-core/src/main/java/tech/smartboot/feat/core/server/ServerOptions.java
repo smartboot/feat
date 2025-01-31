@@ -234,7 +234,7 @@ public class ServerOptions {
         return this;
     }
 
-    public WafOptions getWafConfiguration() {
+    public WafOptions getWafOptions() {
         return wafOptions;
     }
 

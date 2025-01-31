@@ -47,7 +47,7 @@ public class WebSocketTest extends BastTest {
     public void testWebSocket() throws IOException, ExecutionException, InterruptedException {
         CompletableFuture<String> future = new CompletableFuture<>();
         WebSocketClient webSocketClient = new WebSocketClient("ws://localhost:" + port);
-        webSocketClient.configuration().debug(true);
+        webSocketClient.options().debug(true);
         String message = "hello world";
         webSocketClient.connect(new WebSocketListener() {
             @Override
@@ -74,7 +74,7 @@ public class WebSocketTest extends BastTest {
     public void testWebSocket1() throws IOException, ExecutionException, InterruptedException {
         CompletableFuture<Long> future = new CompletableFuture<>();
         WebSocketClient webSocketClient = new WebSocketClient("ws://localhost:" + port);
-        webSocketClient.configuration().debug(true);
+        webSocketClient.options().debug(true);
         String message = "hello world";
 
         webSocketClient.connect(new WebSocketListener() {

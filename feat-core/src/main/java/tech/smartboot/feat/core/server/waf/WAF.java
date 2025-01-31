@@ -6,8 +6,8 @@ import tech.smartboot.feat.core.server.ServerOptions;
 import tech.smartboot.feat.core.server.impl.HttpEndpoint;
 
 public class WAF {
-    public static void methodCheck(ServerOptions configuration, HttpEndpoint request) {
-        WafOptions wafOptions = configuration.getWafConfiguration();
+    public static void methodCheck(ServerOptions options, HttpEndpoint request) {
+        WafOptions wafOptions = options.getWafOptions();
         if (!wafOptions.isEnable()) {
             return;
         }
@@ -19,8 +19,8 @@ public class WAF {
         }
     }
 
-    public static void checkUri(ServerOptions configuration, HttpEndpoint request) {
-        WafOptions wafOptions = configuration.getWafConfiguration();
+    public static void checkUri(ServerOptions options, HttpEndpoint request) {
+        WafOptions wafOptions = options.getWafOptions();
         if (!wafOptions.isEnable()) {
             return;
         }

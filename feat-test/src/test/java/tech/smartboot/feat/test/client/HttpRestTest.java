@@ -77,7 +77,7 @@ public class HttpRestTest {
     @Test
     public void testKeepalive() throws InterruptedException {
         HttpClient httpClient = new HttpClient("localhost", 8080);
-        httpClient.configuration().debug(true);
+        httpClient.options().debug(true);
         Map<String, String> form = new HashMap<>();
         int count = 100;
         CountDownLatch countDownLatch = new CountDownLatch(count);
