@@ -50,7 +50,7 @@ public final class Router extends BaseHttpHandler {
         BaseHttpHandler httpServerHandler = matchHandler(request.getRequestURI());
 //        System.out.println("match: " + request.getRequestURI() + " : " + httpServerHandler);
         //注册 URI 与 Handler 的映射关系
-        request.getConfiguration().getUriByteTree().addNode(request.getUri(), httpServerHandler);
+        request.getOptions().getUriByteTree().addNode(request.getUri(), httpServerHandler);
         //更新本次请求的实际 Handler
         request.setServerHandler(httpServerHandler);
         httpServerHandler.onHeaderComplete(request);

@@ -35,7 +35,7 @@ public class Http2Endpoint extends Endpoint implements HttpRequest, Reset {
     private final Http2Session session;
 
     public Http2Endpoint(int streamId, Http2Session session, boolean push) {
-        super(session.getRequest().getAioSession(), session.getRequest().getConfiguration());
+        super(session.getRequest().getAioSession(), session.getRequest().getOptions());
         this.streamId = streamId;
         this.session = session;
         response = new Http2ResponseImpl(streamId, this, push);

@@ -60,7 +60,7 @@ public abstract class Endpoint implements Reset {
      * Http请求头
      */
     protected final Map<String, HeaderValue> headers = new HashMap<>();
-    protected final ServerOptions configuration;
+    protected final ServerOptions options;
     /**
      * 请求参数
      */
@@ -106,9 +106,9 @@ public abstract class Endpoint implements Reset {
      */
     protected long latestIo;
 
-    protected Endpoint(AioSession aioSession, ServerOptions configuration) {
+    protected Endpoint(AioSession aioSession, ServerOptions options) {
         this.aioSession = aioSession;
-        this.configuration = configuration;
+        this.options = options;
         this.sslEngine = HttpRequest.SSL_ENGINE_THREAD_LOCAL.get();
         if (sslEngine != null) {
             HttpRequest.SSL_ENGINE_THREAD_LOCAL.remove();
@@ -251,7 +251,7 @@ public abstract class Endpoint implements Reset {
 
 
     public final boolean isSecure() {
-        return configuration.isSecure();
+        return options.isSecure();
     }
 
     public final void setMethod(String method) {
@@ -279,7 +279,7 @@ public abstract class Endpoint implements Reset {
     }
 
     public final String getScheme() {
-        return configuration.isSecure() ? Constant.SCHEMA_HTTPS : Constant.SCHEMA_HTTP;
+        return options.isSecure() ? Constant.SCHEMA_HTTPS : Constant.SCHEMA_HTTP;
     }
 
     public final String getQueryString() {
@@ -449,8 +449,8 @@ public abstract class Endpoint implements Reset {
         return aioSession;
     }
 
-    public final ServerOptions getConfiguration() {
-        return configuration;
+    public final ServerOptions getOptions() {
+        return options;
     }
 
 

@@ -45,7 +45,7 @@ final class HttpOutputStream extends FeatOutputStream {
         super(httpRequest.getAioSession().writeBuffer());
         this.request = httpRequest;
         this.response = response;
-        this.configuration = request.getConfiguration();
+        this.configuration = request.getOptions();
         if (SERVER_LINE == null) {
             String serverLine = HeaderNameEnum.SERVER.getName() + ':' + configuration.serverName() + "\r\n";
             SERVER_LINE = serverLine.getBytes();

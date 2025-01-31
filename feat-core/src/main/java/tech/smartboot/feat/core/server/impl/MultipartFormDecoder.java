@@ -105,7 +105,7 @@ class MultipartFormDecoder {
                 }
                 byteBuffer.reset();
                 //Header name解码
-                ByteTree<HeaderNameEnum> name = StringUtils.scanByteTree(byteBuffer, ByteTree.COLON_END_MATCHER, request.getConfiguration().getHeaderNameByteTree());
+                ByteTree<HeaderNameEnum> name = StringUtils.scanByteTree(byteBuffer, ByteTree.COLON_END_MATCHER, request.getOptions().getHeaderNameByteTree());
                 if (name == null) {
                     return false;
                 }
@@ -119,7 +119,7 @@ class MultipartFormDecoder {
                 return decode(byteBuffer, request);
             }
             case STATE_PART_HEADER_VALUE: {
-                ByteTree<?> value = StringUtils.scanByteTree(byteBuffer, ByteTree.CR_END_MATCHER, request.getConfiguration().getByteCache());
+                ByteTree<?> value = StringUtils.scanByteTree(byteBuffer, ByteTree.CR_END_MATCHER, request.getOptions().getByteCache());
                 if (value == null) {
                     if (byteBuffer.remaining() == byteBuffer.capacity()) {
                         throw new HttpException(HttpStatus.REQUEST_HEADER_FIELDS_TOO_LARGE);
@@ -131,7 +131,7 @@ class MultipartFormDecoder {
                 return decode(byteBuffer, request);
             }
             case STATE_CONTENT_DISPOSITION_DECODER: {
-                ByteTree<?> value = StringUtils.scanByteTree(byteBuffer, ByteTree.CR_END_MATCHER, request.getConfiguration().getByteCache());
+                ByteTree<?> value = StringUtils.scanByteTree(byteBuffer, ByteTree.CR_END_MATCHER, request.getOptions().getByteCache());
                 if (value == null) {
                     if (byteBuffer.remaining() == byteBuffer.capacity()) {
                         throw new HttpException(HttpStatus.REQUEST_HEADER_FIELDS_TOO_LARGE);

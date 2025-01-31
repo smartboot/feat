@@ -11,6 +11,7 @@ package tech.smartboot.feat.demo;
 import org.smartboot.socket.extension.plugins.SslPlugin;
 import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
 import org.smartboot.socket.extension.ssl.factory.PemServerSSLContextFactory;
+import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServer;
@@ -27,7 +28,7 @@ import java.util.function.Consumer;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2022/2/4
  */
-public class HttpsDemo {
+public class Http2Demo {
     public static void main(String[] args) throws Exception {
         HttpServer bootstrap = new HttpServer();
         bootstrap.httpHandler(new BaseHttpHandler() {
@@ -54,12 +55,12 @@ public class HttpsDemo {
             }
         });
 //        SslPlugin sslPlugin=new SslPlugin(new ServerSSLContextFactory(HttpsDemo.class.getClassLoader().getResourceAsStream("server.keystore"), "123456", "123456"),ClientAuth.NONE);
-        SslPlugin sslPlugin = new SslPlugin(new PemServerSSLContextFactory(HttpsDemo.class.getClassLoader().getResourceAsStream("example.org.pem"), HttpsDemo.class.getClassLoader().getResourceAsStream("example.org-key.pem")), new Consumer<SSLEngine>() {
+        SslPlugin sslPlugin = new SslPlugin(new PemServerSSLContextFactory(Http2Demo.class.getClassLoader().getResourceAsStream("example.org.pem"), Http2Demo.class.getClassLoader().getResourceAsStream("example.org-key.pem")), new Consumer<SSLEngine>() {
             @Override
             public void accept(SSLEngine sslEngine) {
                 SSLParameters sslParameters = new SSLParameters();
                 sslEngine.setUseClientMode(false);
-                sslParameters.setApplicationProtocols(new String[]{"h2"});
+                sslParameters.setApplicationProtocols(new String[]{HeaderValueEnum.Upgrade.H2});
                 sslEngine.setSSLParameters(sslParameters);
                 HttpRequest.SSL_ENGINE_THREAD_LOCAL.set(sslEngine);
             }
