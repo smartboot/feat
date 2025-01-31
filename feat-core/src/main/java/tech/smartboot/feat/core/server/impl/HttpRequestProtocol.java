@@ -29,11 +29,11 @@ import java.nio.ByteBuffer;
  * @version V1.0 , 2018/8/31
  */
 public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
-    private final ServerOptions configuration;
+    private final ServerOptions options;
     private static final ByteTree.EndMatcher URI_END_MATCHER = endByte -> (endByte == ' ' || endByte == '?');
 
-    public HttpRequestProtocol(ServerOptions configuration) {
-        this.configuration = configuration;
+    public HttpRequestProtocol(ServerOptions options) {
+        this.options = options;
     }
 
     @Override
@@ -49,16 +49,16 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
         DecoderUnit decodeState = request.getDecodeState();
         switch (decodeState.getState()) {
             case DecodeState.STATE_METHOD: {
-                ByteTree<?> method = StringUtils.scanByteTree(byteBuffer, ByteTree.SP_END_MATCHER, configuration.getByteCache());
+                ByteTree<?> method = StringUtils.scanByteTree(byteBuffer, ByteTree.SP_END_MATCHER, options.getByteCache());
                 if (method == null) {
                     break;
                 }
                 request.setMethod(method.getStringValue());
                 decodeState.setState(DecodeState.STATE_URI);
-                WAF.methodCheck(configuration, request);
+                WAF.methodCheck(options, request);
             }
             case DecodeState.STATE_URI: {
-                ByteTree<BaseHttpHandler> uriTreeNode = StringUtils.scanByteTree(byteBuffer, URI_END_MATCHER, configuration.getUriByteTree());
+                ByteTree<BaseHttpHandler> uriTreeNode = StringUtils.scanByteTree(byteBuffer, URI_END_MATCHER, options.getUriByteTree());
                 if (uriTreeNode == null) {
                     break;
                 }
@@ -66,7 +66,7 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
                 if (uriTreeNode.getAttach() != null) {
                     request.setServerHandler(uriTreeNode.getAttach());
                 }
-                WAF.checkUri(configuration, request);
+                WAF.checkUri(options, request);
                 switch (byteBuffer.get(byteBuffer.position() - 1)) {
                     case Constant.SP:
                         decodeState.setState(DecodeState.STATE_PROTOCOL_DECODE);
@@ -80,7 +80,7 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
                 return decode(byteBuffer, request);
             }
             case DecodeState.STATE_URI_QUERY: {
-                ByteTree<?> query = StringUtils.scanByteTree(byteBuffer, ByteTree.SP_END_MATCHER, configuration.getByteCache());
+                ByteTree<?> query = StringUtils.scanByteTree(byteBuffer, ByteTree.SP_END_MATCHER, options.getByteCache());
                 if (query == null) {
                     break;
                 }
@@ -142,7 +142,7 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
                     return true;
                 }
                 byteBuffer.reset();
-                if (request.getHeaderSize() < configuration.getHeaderLimiter()) {
+                if (request.getHeaderSize() < options.getHeaderLimiter()) {
                     decodeState.setState(DecodeState.STATE_HEADER_NAME);
                 } else {
                     decodeState.setState(DecodeState.STATE_HEADER_IGNORE);
@@ -151,7 +151,7 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
             }
             // header name解析
             case DecodeState.STATE_HEADER_NAME: {
-                ByteTree<HeaderNameEnum> name = StringUtils.scanByteTree(byteBuffer, ByteTree.COLON_END_MATCHER, configuration.getHeaderNameByteTree());
+                ByteTree<HeaderNameEnum> name = StringUtils.scanByteTree(byteBuffer, ByteTree.COLON_END_MATCHER, options.getHeaderNameByteTree());
                 if (name == null) {
                     break;
                 }
@@ -160,7 +160,7 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
             }
             // header value解析
             case DecodeState.STATE_HEADER_VALUE: {
-                ByteTree<?> value = StringUtils.scanByteTree(byteBuffer, ByteTree.CR_END_MATCHER, configuration.getByteCache());
+                ByteTree<?> value = StringUtils.scanByteTree(byteBuffer, ByteTree.CR_END_MATCHER, options.getByteCache());
                 if (value == null) {
                     if (byteBuffer.remaining() == byteBuffer.capacity()) {
                         throw new HttpException(HttpStatus.REQUEST_HEADER_FIELDS_TOO_LARGE);

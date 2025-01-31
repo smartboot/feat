@@ -63,8 +63,6 @@ public class HttpServer {
 
     /**
      * 服务配置
-     *
-     * @return
      */
     public final ServerOptions options() {
         return options;
@@ -142,6 +140,14 @@ public class HttpServer {
      */
     public void shutdown() {
         if (server != null) {
+            Runnable runnable = options.shutdownHook();
+            if (runnable != null) {
+                try {
+                    runnable.run();
+                } catch (Throwable e) {
+                    e.printStackTrace();
+                }
+            }
             server.shutdown();
             server = null;
             bufferPagePool.release();
