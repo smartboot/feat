@@ -36,7 +36,11 @@ export default defineConfig({
                     }
                 },{
                     tag:'script',
-                    content: 'if(!location.pathname.endsWith("feat/")){checkStar("smartboot","feat");}'
+                    content: `if(!location.pathname.endsWith("feat/")){
+                                checkStar("smartboot","feat",function(){
+                                    location.href="/feat/unstar/";
+                                });
+                            }`
                 },
                 {
                     tag: 'script',
@@ -86,7 +90,11 @@ export default defineConfig({
                     autogenerate: {directory: 'client'},
                 },
                 {
-                    label: '5. 附录',
+                    label: '5. Feat AI开发',
+                    autogenerate: {directory: 'ai'},
+                },
+                {
+                    label: '6. 附录',
                     autogenerate: {directory: 'appendix'},
                 },
             ],
