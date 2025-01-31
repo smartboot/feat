@@ -10,7 +10,7 @@ import java.util.List;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2023/2/13
  */
-class ClientConfiguration<T> {
+class ClientOptions<T> {
 
 
     /**
@@ -59,7 +59,7 @@ class ClientConfiguration<T> {
 
     private boolean debug = false;
 
-    public ClientConfiguration(String host, int port) {
+    public ClientOptions(String host, int port) {
         this.host = host;
         this.port = port;
     }
@@ -71,7 +71,7 @@ class ClientConfiguration<T> {
     /**
      * 设置建立连接的超时时间
      */
-    protected ClientConfiguration connectTimeout(int connectTimeout) {
+    protected ClientOptions connectTimeout(int connectTimeout) {
         this.connectTimeout = connectTimeout;
         return this;
     }
@@ -93,7 +93,7 @@ class ClientConfiguration<T> {
      * @param username 授权账户
      * @param password 授权密码
      */
-    protected ClientConfiguration<T> proxy(String host, int port, String username, String password) {
+    protected ClientOptions<T> proxy(String host, int port, String username, String password) {
         this.proxy = new ProxyConfig(host, port, username, password);
         return this;
     }
@@ -104,7 +104,7 @@ class ClientConfiguration<T> {
      * @param host 代理服务器地址
      * @param port 代理服务器端口
      */
-    public ClientConfiguration proxy(String host, int port) {
+    public ClientOptions proxy(String host, int port) {
         return this.proxy(host, port, null, null);
     }
 
@@ -116,12 +116,12 @@ class ClientConfiguration<T> {
         return readBufferSize;
     }
 
-    protected ClientConfiguration<T> readBufferSize(int readBufferSize) {
+    protected ClientOptions<T> readBufferSize(int readBufferSize) {
         this.readBufferSize = readBufferSize;
         return this;
     }
 
-    protected ClientConfiguration<T> readBufferPool(BufferPagePool readBufferPool) {
+    protected ClientOptions<T> readBufferPool(BufferPagePool readBufferPool) {
         this.readBufferPool = readBufferPool;
         return this;
     }
@@ -130,12 +130,12 @@ class ClientConfiguration<T> {
         return writeBufferSize;
     }
 
-    public ClientConfiguration<T> setWriteBufferSize(int writeBufferSize) {
+    public ClientOptions<T> setWriteBufferSize(int writeBufferSize) {
         this.writeBufferSize = writeBufferSize;
         return this;
     }
 
-    protected ClientConfiguration<T> writeBufferPool(BufferPagePool writeBufferPool) {
+    protected ClientOptions<T> writeBufferPool(BufferPagePool writeBufferPool) {
         this.writeBufferPool = writeBufferPool;
         return this;
     }
@@ -151,7 +151,7 @@ class ClientConfiguration<T> {
     /**
      * 启用 debug 模式后会打印码流
      */
-    protected ClientConfiguration<T> debug(boolean debug) {
+    protected ClientOptions<T> debug(boolean debug) {
         this.debug = debug;
         return this;
     }
@@ -160,7 +160,7 @@ class ClientConfiguration<T> {
         return debug;
     }
 
-    protected ClientConfiguration<T> addPlugin(Plugin<T> plugin) {
+    protected ClientOptions<T> addPlugin(Plugin<T> plugin) {
         plugins.add(plugin);
         return this;
     }
@@ -173,7 +173,7 @@ class ClientConfiguration<T> {
         return https;
     }
 
-    public ClientConfiguration setHttps(boolean https) {
+    public ClientOptions setHttps(boolean https) {
         this.https = https;
         return this;
     }

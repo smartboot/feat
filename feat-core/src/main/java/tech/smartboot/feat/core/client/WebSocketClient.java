@@ -36,7 +36,7 @@ import java.util.function.Consumer;
 public class WebSocketClient {
     private static final Logger LOGGER = LoggerFactory.getLogger(WebSocketClient.class);
 
-    private final WebSocketConfiguration configuration;
+    private final WebSocketOptions configuration;
 
     /**
      * Header: Host
@@ -124,14 +124,14 @@ public class WebSocketClient {
         if (port == -1) {
             throw new IllegalArgumentException("invalid url:" + url);
         }
-        this.configuration = new WebSocketConfiguration(host, port);
+        this.configuration = new WebSocketOptions(host, port);
         configuration.setWss(wss);
         hostHeader = configuration.getHost() + ":" + configuration.getPort();
         this.uri = uriIndex > 0 ? url.substring(uriIndex) : "/";
 
     }
 
-    public WebSocketConfiguration configuration() {
+    public WebSocketOptions configuration() {
         return configuration;
     }
 

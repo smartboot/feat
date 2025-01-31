@@ -34,7 +34,7 @@ import java.util.concurrent.Semaphore;
  */
 public final class HttpClient implements AutoCloseable {
 
-    private final HttpClientConfiguration configuration;
+    private final HttpClientOptions configuration;
 
     /**
      * Header: Host
@@ -91,14 +91,14 @@ public final class HttpClient implements AutoCloseable {
         if (port == -1) {
             throw new IllegalArgumentException("invalid url:" + url);
         }
-        this.configuration = new HttpClientConfiguration(host, port);
+        this.configuration = new HttpClientOptions(host, port);
         configuration.setHttps(https);
         hostHeader = configuration.getHost() + ":" + configuration.getPort();
         this.uri = uriIndex > 0 ? url.substring(uriIndex) : "/";
     }
 
     public HttpClient(String host, int port) {
-        this.configuration = new HttpClientConfiguration(host, port);
+        this.configuration = new HttpClientOptions(host, port);
         hostHeader = configuration.getHost() + ":" + configuration.getPort();
         this.uri = null;
     }
@@ -193,7 +193,7 @@ public final class HttpClient implements AutoCloseable {
     }
 
 
-    public HttpClientConfiguration configuration() {
+    public HttpClientOptions configuration() {
         return configuration;
     }
 
