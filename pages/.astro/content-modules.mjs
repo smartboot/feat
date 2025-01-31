@@ -16,5 +16,6 @@ export default new Map([
 ["src/content/docs/server/file_server.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fserver%2Ffile_server.mdx&astroContentModuleFlag=true")],
 ["src/content/docs/server/router.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fserver%2Frouter.mdx&astroContentModuleFlag=true")],
 ["src/content/docs/server/upgrade_http2.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fserver%2Fupgrade_http2.mdx&astroContentModuleFlag=true")],
-["src/content/docs/server/upgrade_ws.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fserver%2Fupgrade_ws.mdx&astroContentModuleFlag=true")]]);
+["src/content/docs/server/upgrade_ws.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fserver%2Fupgrade_ws.mdx&astroContentModuleFlag=true")],
+["src/content/docs/auth.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fauth.mdx&astroContentModuleFlag=true")]]);
 		

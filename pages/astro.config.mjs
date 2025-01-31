@@ -36,7 +36,7 @@ export default defineConfig({
                     }
                 },{
                     tag:'script',
-                    content: `if(!location.pathname.endsWith("feat/")&&!location.pathname.endsWith("/unstar/")&&!location.pathname.endsWith("/unauth/")){
+                    content: `if(!location.pathname.endsWith("feat/")&&!location.pathname.endsWith("/unstar/")&&!location.pathname.endsWith("/auth/")){
                                 checkStar("smartboot","feat",function(){
                                     location.href="/feat/unstar/";
                                 });
