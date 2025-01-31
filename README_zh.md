@@ -32,6 +32,16 @@ Install my-project with maven
 </dependency>
 ```
 
+## Demo
+```java
+public class HelloWorld {
+    public static void main(String[] args) {
+        Feat.httpServer()
+                .httpHandler(request -> request.getResponse().write("Hello World"))
+                .listen();
+    }
+}
+```
 
 ## Support
 
