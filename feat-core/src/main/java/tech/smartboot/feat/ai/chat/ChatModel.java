@@ -45,7 +45,7 @@ public class ChatModel {
         System.out.println("我：" + content);
         ChatRequest request = new ChatRequest();
         request.setModel(options.getModel());
-        request.setStream(false);
+        request.setStream(options.isStream());
         Message message = new Message();
         message.setContent(content);
         message.setRole("user");
