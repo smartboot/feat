@@ -8,11 +8,11 @@
 
 package tech.smartboot.feat.core.client;
 
+import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.client.impl.DefaultHttpResponseHandler;
 import tech.smartboot.feat.core.client.impl.HttpRequestImpl;
 import tech.smartboot.feat.core.client.impl.HttpResponseImpl;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
-import org.smartboot.socket.transport.AioSession;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -212,6 +212,12 @@ class HttpRestImpl implements HttpRest {
             consumer.accept(throwable);
             return null;
         });
+        return this;
+    }
+
+    @Override
+    public HttpRest onStream(BodySteaming streaming) {
+        responseHandler.onStream(streaming);
         return this;
     }
 

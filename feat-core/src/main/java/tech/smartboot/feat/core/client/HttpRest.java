@@ -6,7 +6,8 @@ import java.util.function.Consumer;
 public interface HttpRest {
     /**
      * 设置请求方法
-     * @param method    请求方法
+     *
+     * @param method 请求方法
      * @return
      */
     HttpRest setMethod(String method);
@@ -18,6 +19,8 @@ public interface HttpRest {
     HttpRest onSuccess(Consumer<HttpResponse> consumer);
 
     HttpRest onFailure(Consumer<Throwable> consumer);
+
+    HttpRest onStream(BodySteaming streaming);
 
     Header<? extends HttpRest> header();
 

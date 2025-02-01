@@ -9,6 +9,7 @@
 package tech.smartboot.feat.core.client.impl;
 
 import tech.smartboot.feat.core.client.AbstractResponse;
+import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.client.ResponseHandler;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
@@ -29,7 +30,7 @@ import java.nio.charset.Charset;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2021/7/15
  */
-public class DefaultHttpResponseHandler extends ResponseHandler {
+public final class DefaultHttpResponseHandler extends ResponseHandler {
     private static final ResponseHandler DEFAULT_HANDLER = new ResponseHandler() {
         @Override
         public void onBodyStream(ByteBuffer buffer, AbstractResponse response) {
@@ -37,9 +38,10 @@ public class DefaultHttpResponseHandler extends ResponseHandler {
         }
     };
     private ResponseHandler responseHandler;
+    private boolean gzip;
 
     @Override
-    public final void onBodyStream(ByteBuffer buffer, AbstractResponse baseHttpResponse) {
+    public void onBodyStream(ByteBuffer buffer, AbstractResponse baseHttpResponse) {
         if (responseHandler != null) {
             responseHandler.onBodyStream(buffer, baseHttpResponse);
             return;
@@ -52,6 +54,7 @@ public class DefaultHttpResponseHandler extends ResponseHandler {
         } else {
             responseHandler = DEFAULT_HANDLER;
         }
+        gzip = StringUtils.equals(HeaderValueEnum.ContentEncoding.GZIP, baseHttpResponse.getHeader(HeaderNameEnum.CONTENT_ENCODING.getName()));
         onBodyStream(buffer, baseHttpResponse);
     }
 
@@ -59,7 +62,7 @@ public class DefaultHttpResponseHandler extends ResponseHandler {
      * @author 三刀（zhengjunweimail@163.com）
      * @version V1.0 , 2021/7/12
      */
-    public static class ChunkedHttpLifecycle extends ResponseHandler {
+    public class ChunkedHttpLifecycle extends ResponseHandler {
         private final ByteArrayOutputStream body = new ByteArrayOutputStream();
         private PART part = PART.CHUNK_LENGTH;
         private SmartDecoder chunkedDecoder;
@@ -83,10 +86,17 @@ public class DefaultHttpResponseHandler extends ResponseHandler {
 
         private void decodeChunkedContent(ByteBuffer buffer, AbstractResponse response) {
             if (chunkedDecoder.decode(buffer)) {
+                byte[] data = chunkedDecoder.getBuffer().array();
+                if (DefaultHttpResponseHandler.this.gzip) {
+                    data = GzipUtils.uncompress(data);
+                }
                 try {
-                    body.write(chunkedDecoder.getBuffer().array());
+                    body.write(data);
                 } catch (IOException e) {
                     e.printStackTrace();
+                }
+                if (DefaultHttpResponseHandler.this.steaming != null) {
+                    DefaultHttpResponseHandler.this.steaming.stream((HttpResponse) response, data);
                 }
                 part = PART.CHUNK_END;
                 onBodyStream(buffer, response);
@@ -123,17 +133,13 @@ public class DefaultHttpResponseHandler extends ResponseHandler {
         }
 
         public void finishDecode(HttpResponseImpl response) {
-            if (StringUtils.equals(HeaderValueEnum.ContentEncoding.GZIP, response.getHeader(HeaderNameEnum.CONTENT_ENCODING.getName()))) {
-                response.setBody(GzipUtils.uncompressToString(body.toByteArray()));
-            } else {
-                response.setBody(body.toString());
-            }
+            response.setBody(body.toString());
             callback(response);
         }
+    }
 
-        enum PART {
-            CHUNK_LENGTH, CHUNK_CONTENT, CHUNK_END
-        }
+    enum PART {
+        CHUNK_LENGTH, CHUNK_CONTENT, CHUNK_END
     }
 
     /**

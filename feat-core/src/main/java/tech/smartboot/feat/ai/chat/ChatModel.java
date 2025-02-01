@@ -2,10 +2,13 @@ package tech.smartboot.feat.ai.chat;
 
 import com.alibaba.fastjson2.JSON;
 import tech.smartboot.feat.ai.Options;
+import tech.smartboot.feat.core.client.BodySteaming;
 import tech.smartboot.feat.core.client.HttpClient;
+import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -66,18 +69,68 @@ public class ChatModel {
 
 
         HttpClient httpClient = new HttpClient(options.baseUrl() + "/chat/completions");
-        httpClient.options().debug(true);
-        httpClient.post().header().setContentType("application/json")
-                .add(HeaderNameEnum.AUTHORIZATION.getName(), "Bearer " + options.getApiKey())
-                .done()
-                .body()
-                .write(JSON.toJSONBytes(request)).done().onSuccess(response -> {
-                    chatResponse = JSON.parseObject(response.body(), ChatResponse.class);
-                    chatResponse.getChoices().forEach(choice -> {
-                        history.add(choice.getMessage());
-                    });
-                    consumer.accept(this);
-                }).onFailure(throwable -> throwable.printStackTrace()).done();
+        httpClient.options().debug(false);
+        httpClient.post().header().setContentType("application/json").add(HeaderNameEnum.AUTHORIZATION.getName(), "Bearer " + options.getApiKey()).done().body().write(JSON.toJSONBytes(request)).done().onSuccess(response -> {
+            chatResponse = JSON.parseObject(response.body(), ChatResponse.class);
+            chatResponse.getChoices().forEach(choice -> {
+                history.add(choice.getMessage());
+            });
+            consumer.accept(this);
+        }).onStream(new BodySteaming() {
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+
+            @Override
+            public void stream(HttpResponse response, byte[] bytes) {
+                try {
+                    if (bos.size() > 0) {
+                        bos.write(bytes);
+                        bytes = bos.toByteArray();
+                        bos.reset();
+                    }
+                    int start = 0;
+                    for (int i = 0; i < bytes.length; i++) {
+                        if (bytes[i] != '\n') {
+                            continue;
+                        }
+                        String line = new String(bytes, start, i - start);
+                        start = i + 1;
+                        if (line.startsWith("data: ")) {
+                            line = line.substring(6);
+                            if ("[DONE]".equals(line)) {
+                                return;
+                            }
+                            ChatResponse object = JSON.parseObject(line, ChatResponse.class);
+                            if (chatResponse == null || !chatResponse.getId().equals(object.getId())) {
+                                chatResponse = object;
+                                ResponseMessage responseMessage = new ResponseMessage();
+                                responseMessage.setRole(object.getChoices().get(0).getDelta().getRole());
+                                responseMessage.setContent(object.getChoices().get(0).getDelta().getContent());
+                                chatResponse.getChoices().get(0).setMessage(responseMessage);
+                                history.add(responseMessage);
+                            } else {
+                                StringBuilder delta = new StringBuilder();
+                                for (Choice c : object.getChoices()) {
+                                    delta.append(c.getDelta().getContent());
+                                }
+                                Message deltaMessage = new Message();
+                                deltaMessage.setContent(delta.toString());
+                                chatResponse.getChoices().get(0).setDelta(deltaMessage);
+                                ResponseMessage fullMessage = chatResponse.getChoices().get(0).getMessage();
+                                fullMessage.setContent(fullMessage.getContent() + delta);
+                            }
+
+                            consumer.accept(ChatModel.this);
+                        }
+
+                    }
+                    if (start < bytes.length) {
+                        bos.write(bytes, start, bytes.length - start);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }).onFailure(throwable -> throwable.printStackTrace()).done();
     }
 
     public void chat(String content, String tool, Consumer<ChatModel> consumer) {

@@ -16,6 +16,8 @@ import java.nio.ByteBuffer;
  * @version V1.0 , 2021/7/25
  */
 public abstract class ResponseHandler {
+    protected BodySteaming steaming;
+
     /**
      * 解析 body 数据流
      *
@@ -25,6 +27,9 @@ public abstract class ResponseHandler {
      */
     public abstract void onBodyStream(ByteBuffer buffer, AbstractResponse request);
 
+    public final void onStream(BodySteaming streaming) {
+        this.steaming = streaming;
+    }
 
     /**
      * Http header 完成解析
