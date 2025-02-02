@@ -26,5 +26,5 @@ public interface HttpRest {
 
     HttpRest addQueryParam(String name, String value);
 
-    HttpRest onResponse(ResponseHandler responseHandler);
+//    HttpRest onResponse(ResponseHandler responseHandler);
 }

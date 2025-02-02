@@ -9,7 +9,6 @@
 package tech.smartboot.feat.core.client;
 
 import org.smartboot.socket.transport.AioSession;
-import tech.smartboot.feat.core.client.impl.DefaultHttpResponseHandler;
 import tech.smartboot.feat.core.client.impl.HttpRequestImpl;
 import tech.smartboot.feat.core.client.impl.HttpResponseImpl;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
@@ -22,7 +21,6 @@ import java.util.AbstractQueue;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -45,7 +43,7 @@ class HttpRestImpl implements HttpRest {
     /**
      * http body 解码器
      */
-    private ResponseHandler responseHandler = new DefaultHttpResponseHandler();
+    private final ResponseHandler responseHandler = new DefaultHttpResponseHandler();
     private final HttpResponseImpl response;
 
     HttpRestImpl(AioSession session, AbstractQueue<AbstractResponse> queue) {
@@ -277,10 +275,10 @@ class HttpRestImpl implements HttpRest {
     /**
      * Http 响应事件
      */
-    public HttpRestImpl onResponse(ResponseHandler responseHandler) {
-        this.responseHandler = Objects.requireNonNull(responseHandler);
-        return this;
-    }
+//    public HttpRestImpl onResponse(ResponseHandler responseHandler) {
+//        this.responseHandler = Objects.requireNonNull(responseHandler);
+//        return this;
+//    }
 
     public HttpRequestImpl getRequest() {
         return request;

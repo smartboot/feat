@@ -50,8 +50,8 @@ class HttpRestWrapper implements HttpRest {
         return rest.addQueryParam(name, value);
     }
 
-    @Override
-    public HttpRest onResponse(ResponseHandler responseHandler) {
-        return rest.onResponse(responseHandler);
-    }
+//    @Override
+//    public HttpRest onResponse(ResponseHandler responseHandler) {
+//        return rest.onResponse(responseHandler);
+//    }
 }

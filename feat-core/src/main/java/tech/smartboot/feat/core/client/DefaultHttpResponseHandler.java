@@ -6,11 +6,9 @@
  * Author: sandao (zhengjunweimail@163.com)
  ******************************************************************************/
 
-package tech.smartboot.feat.core.client.impl;
+package tech.smartboot.feat.core.client;
 
-import tech.smartboot.feat.core.client.AbstractResponse;
-import tech.smartboot.feat.core.client.HttpResponse;
-import tech.smartboot.feat.core.client.ResponseHandler;
+import tech.smartboot.feat.core.client.impl.HttpResponseImpl;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
@@ -30,7 +28,7 @@ import java.nio.charset.Charset;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2021/7/15
  */
-public final class DefaultHttpResponseHandler extends ResponseHandler {
+final class DefaultHttpResponseHandler extends ResponseHandler {
     private static final ResponseHandler DEFAULT_HANDLER = new ResponseHandler() {
         @Override
         public void onBodyStream(ByteBuffer buffer, AbstractResponse response) {
