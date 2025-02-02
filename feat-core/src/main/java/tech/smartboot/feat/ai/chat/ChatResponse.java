@@ -12,6 +12,10 @@ public class ChatResponse {
     private String object;
     private long created;
     private String model;
+    /**
+     * 是一个包含一个或多个聊天响应的列表。如果请求的参数 n 大于 1时(请求模型生成多个答复)，列表的元素将是多个。
+     * 一般情况下 choices 只包含一个元素
+     */
     private List<Choice> choices;
     private Usage usage;
     @JSONField(name = "prompt_logprobs")
@@ -47,6 +51,10 @@ public class ChatResponse {
 
     public void setModel(String model) {
         this.model = model;
+    }
+
+    public Choice getChoice() {
+        return choices.get(0);
     }
 
     public List<Choice> getChoices() {

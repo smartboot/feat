@@ -38,7 +38,7 @@ public class ChatModel {
     }
 
     public String getResponse() {
-        return "Gitee AI: " + chatResponse.getChoices().get(0).getMessage().getContent();
+        return "Gitee AI: " + chatResponse.getChoice().getMessage().getContent();
     }
 
     public List<Message> getHistory() {
@@ -77,10 +77,11 @@ public class ChatModel {
                             ChatResponse object = JSON.parseObject(line, ChatResponse.class);
                             if (chatResponse == null || !chatResponse.getId().equals(object.getId())) {
                                 chatResponse = object;
+                                Choice choice = object.getChoice();
                                 ResponseMessage responseMessage = new ResponseMessage();
-                                responseMessage.setRole(object.getChoices().get(0).getDelta().getRole());
-                                responseMessage.setContent(object.getChoices().get(0).getDelta().getContent());
-                                chatResponse.getChoices().get(0).setMessage(responseMessage);
+                                responseMessage.setRole(choice.getDelta().getRole());
+                                responseMessage.setContent(choice.getDelta().getContent());
+                                choice.setMessage(responseMessage);
                                 history.add(responseMessage);
                             } else {
                                 StringBuilder delta = new StringBuilder();
@@ -89,8 +90,8 @@ public class ChatModel {
                                 }
                                 Message deltaMessage = new Message();
                                 deltaMessage.setContent(delta.toString());
-                                chatResponse.getChoices().get(0).setDelta(deltaMessage);
-                                ResponseMessage fullMessage = chatResponse.getChoices().get(0).getMessage();
+                                chatResponse.getChoice().setDelta(deltaMessage);
+                                ResponseMessage fullMessage = chatResponse.getChoice().getMessage();
                                 fullMessage.setContent(fullMessage.getContent() + delta);
                             }
 
@@ -145,7 +146,7 @@ public class ChatModel {
 
 
         HttpPost post = Feat.postJson(options.baseUrl() + "/chat/completions", opts -> {
-//            opts.debug(true);
+            opts.debug(true);
         }, header -> {
             header.add(HeaderNameEnum.AUTHORIZATION.getName(), "Bearer " + options.getApiKey());
         }, request);
