@@ -32,10 +32,10 @@ import static java.lang.String.format;
 
 final class IntegerReader {
 
-    private static final int NEW             = 0;
-    private static final int CONFIGURED      = 1;
+    private static final int NEW = 0;
+    private static final int CONFIGURED = 1;
     private static final int FIRST_BYTE_READ = 2;
-    private static final int DONE            = 4;
+    private static final int DONE = 4;
 
     private int state = NEW;
 

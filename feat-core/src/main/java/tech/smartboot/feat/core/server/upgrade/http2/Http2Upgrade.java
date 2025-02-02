@@ -10,7 +10,6 @@ import tech.smartboot.feat.core.common.codec.h2.codec.SettingsFrame;
 import tech.smartboot.feat.core.common.codec.h2.codec.WindowUpdateFrame;
 import tech.smartboot.feat.core.common.codec.h2.hpack.DecodingCallback;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
-import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
 import tech.smartboot.feat.core.common.enums.HttpMethodEnum;
 import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
@@ -55,8 +54,8 @@ public class Http2Upgrade extends Upgrade {
 
             response.setHttpStatus(HttpStatus.SWITCHING_PROTOCOLS);
             response.setContentType(null);
-            response.setHeader(HeaderNameEnum.UPGRADE.getName(), HeaderValueEnum.Upgrade.H2C);
-            response.setHeader(HeaderNameEnum.CONNECTION.getName(), HeaderValueEnum.Connection.UPGRADE);
+            response.setHeader(HeaderNameEnum.UPGRADE.getName(), HeaderValue.Upgrade.H2C);
+            response.setHeader(HeaderNameEnum.CONNECTION.getName(), HeaderValue.Connection.UPGRADE);
             OutputStream outputStream = response.getOutputStream();
             outputStream.flush();
 

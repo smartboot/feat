@@ -4,6 +4,7 @@ import tech.smartboot.feat.core.common.codec.websocket.CloseReason;
 
 /**
  * WebSocket 监听器
+ *
  * @author 三刀
  */
 public interface WebSocketListener {
@@ -11,7 +12,7 @@ public interface WebSocketListener {
     /**
      * 默认方法，当WebSocket连接成功建立时被调用
      *
-     * @param client WebSocketClient对象
+     * @param client   WebSocketClient对象
      * @param response WebSocketResponse对象
      */
     default void onOpen(WebSocketClient client, WebSocketResponse response) {

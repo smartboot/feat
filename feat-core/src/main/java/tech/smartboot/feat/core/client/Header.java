@@ -1,7 +1,7 @@
 package tech.smartboot.feat.core.client;
 
+import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
-import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
@@ -55,7 +55,7 @@ public interface Header<T> {
     Header<T> setContentLength(int contentLength);
 
     default Header<T> keepalive(boolean flag) {
-        return keepalive(flag ? HeaderValueEnum.Connection.KEEPALIVE : HeaderValueEnum.Connection.CLOSE);
+        return keepalive(flag ? HeaderValue.Connection.KEEPALIVE : HeaderValue.Connection.CLOSE);
     }
 
     default Header<T> keepalive(String headerValue) {

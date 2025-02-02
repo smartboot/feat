@@ -3,7 +3,6 @@ package tech.smartboot.feat.core.common.utils;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.security.SecureRandom;
-import java.util.Arrays;
 
 public class WebSocketUtil {
     public static final byte OPCODE_CONTINUE = 0x0;

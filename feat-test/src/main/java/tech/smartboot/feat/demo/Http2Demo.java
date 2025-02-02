@@ -11,7 +11,7 @@ package tech.smartboot.feat.demo;
 import org.smartboot.socket.extension.plugins.SslPlugin;
 import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
 import org.smartboot.socket.extension.ssl.factory.PemServerSSLContextFactory;
-import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
+import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServer;
@@ -60,7 +60,7 @@ public class Http2Demo {
             public void accept(SSLEngine sslEngine) {
                 SSLParameters sslParameters = new SSLParameters();
                 sslEngine.setUseClientMode(false);
-                sslParameters.setApplicationProtocols(new String[]{HeaderValueEnum.Upgrade.H2});
+                sslParameters.setApplicationProtocols(new String[]{HeaderValue.Upgrade.H2});
                 sslEngine.setSSLParameters(sslParameters);
                 HttpRequest.SSL_ENGINE_THREAD_LOCAL.set(sslEngine);
             }

@@ -9,8 +9,8 @@
 package tech.smartboot.feat.core.client;
 
 import tech.smartboot.feat.core.client.impl.HttpResponseImpl;
+import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
-import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
 import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.common.utils.Constant;
@@ -45,14 +45,14 @@ final class DefaultHttpResponseHandler extends ResponseHandler {
             return;
         }
         String transferEncoding = baseHttpResponse.getHeader(HeaderNameEnum.TRANSFER_ENCODING.getName());
-        if (StringUtils.equals(transferEncoding, HeaderValueEnum.TransferEncoding.CHUNKED)) {
+        if (StringUtils.equals(transferEncoding, HeaderValue.TransferEncoding.CHUNKED)) {
             responseHandler = new ChunkedHttpLifecycle();
         } else if (baseHttpResponse.getContentLength() > 0) {
             responseHandler = new ContentLengthHttpLifecycle();
         } else {
             responseHandler = DEFAULT_HANDLER;
         }
-        gzip = StringUtils.equals(HeaderValueEnum.ContentEncoding.GZIP, baseHttpResponse.getHeader(HeaderNameEnum.CONTENT_ENCODING.getName()));
+        gzip = StringUtils.equals(HeaderValue.ContentEncoding.GZIP, baseHttpResponse.getHeader(HeaderNameEnum.CONTENT_ENCODING.getName()));
         onBodyStream(buffer, baseHttpResponse);
     }
 

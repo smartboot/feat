@@ -8,8 +8,8 @@
 
 package tech.smartboot.feat.core.common.enums;
 
-import tech.smartboot.feat.core.common.utils.Constant;
 import org.smartboot.socket.transport.WriteBuffer;
+import tech.smartboot.feat.core.common.utils.Constant;
 
 import java.io.IOException;
 

@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
 import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.core.client.HttpClient;
-import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
+import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.test.BastTest;
 import tech.smartboot.feat.test.server.RequestUnit;
@@ -102,7 +102,7 @@ public class RestfulServer2Test extends BastTest {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("param1", "paramPost1");
         jsonObject.put("param2", "paramPost2");
-        Assert.assertEquals(httpClient.post("/demo2/param3").header().setContentType(HeaderValueEnum.ContentType.APPLICATION_JSON).done().body().write(jsonObject.toJSONString().getBytes()).done().done().get().body(), "hello paramPost1 paramPost2");
+        Assert.assertEquals(httpClient.post("/demo2/param3").header().setContentType(HeaderValue.ContentType.APPLICATION_JSON).done().body().write(jsonObject.toJSONString().getBytes()).done().done().get().body(), "hello paramPost1 paramPost2");
     }
 
     @Test
@@ -111,7 +111,7 @@ public class RestfulServer2Test extends BastTest {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("param1", "paramPost1");
         jsonObject.put("param2", "paramPost2");
-        Assert.assertEquals(httpClient.post("/demo2/param4").header().setContentType(HeaderValueEnum.ContentType.APPLICATION_JSON).done().body().write(jsonObject.toJSONString().getBytes()).done().done().get().body(), "hello param is null");
+        Assert.assertEquals(httpClient.post("/demo2/param4").header().setContentType(HeaderValue.ContentType.APPLICATION_JSON).done().body().write(jsonObject.toJSONString().getBytes()).done().done().get().body(), "hello param is null");
     }
 
     @Test
@@ -120,7 +120,7 @@ public class RestfulServer2Test extends BastTest {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("param1", "paramPost1");
         jsonObject.put("param2", "paramPost2");
-        Assert.assertEquals(httpClient.post("/demo2/param5").header().setContentType(HeaderValueEnum.ContentType.APPLICATION_JSON).done().body().write(jsonObject.toJSONString().getBytes()).done().done().get().body(), "hello param is null");
+        Assert.assertEquals(httpClient.post("/demo2/param5").header().setContentType(HeaderValue.ContentType.APPLICATION_JSON).done().body().write(jsonObject.toJSONString().getBytes()).done().done().get().body(), "hello param is null");
     }
 
     @After

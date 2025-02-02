@@ -8,11 +8,11 @@ import org.smartboot.socket.transport.AioSession;
 import org.smartboot.socket.util.StringUtils;
 import tech.smartboot.feat.core.client.impl.WebSocketRequestImpl;
 import tech.smartboot.feat.core.client.impl.WebSocketResponseImpl;
+import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.codec.websocket.CloseReason;
 import tech.smartboot.feat.core.common.codec.websocket.Decoder;
 import tech.smartboot.feat.core.common.codec.websocket.WebSocket;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
-import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
 import tech.smartboot.feat.core.common.enums.HttpMethodEnum;
 import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
@@ -257,11 +257,11 @@ public class WebSocketClient {
         request.setMethod(HttpMethodEnum.GET.getMethod());
         request.setProtocol(HttpProtocolEnum.HTTP_11.getProtocol());
         request.addHeader(HeaderNameEnum.HOST.getName(), hostHeader);
-        request.addHeader(HeaderNameEnum.UPGRADE.getName(), HeaderValueEnum.Upgrade.WEBSOCKET);
-        request.setHeader(HeaderNameEnum.CONNECTION.getName(), HeaderValueEnum.Connection.UPGRADE);
+        request.addHeader(HeaderNameEnum.UPGRADE.getName(), HeaderValue.Upgrade.WEBSOCKET);
+        request.setHeader(HeaderNameEnum.CONNECTION.getName(), HeaderValue.Connection.UPGRADE);
         request.setHeader(HeaderNameEnum.Sec_WebSocket_Key.getName(), generateSecWebSocketKey());
         request.setHeader(HeaderNameEnum.Sec_WebSocket_Version.getName(), "13");
-//        request.setHeader(HeaderNameEnum.Sec_WebSocket_Protocol.getName(), HeaderValueEnum.PERMESSAGE_DEFLATE.getName());
+//        request.setHeader(HeaderNameEnum.Sec_WebSocket_Protocol.getName(), HeaderValue.PERMESSAGE_DEFLATE.getName());
         request.getOutputStream().flush();
     }
 

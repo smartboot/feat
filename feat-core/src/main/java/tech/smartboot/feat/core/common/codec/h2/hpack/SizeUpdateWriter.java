@@ -32,7 +32,8 @@ final class SizeUpdateWriter implements BinaryRepresentationWriter {
     private int maxSize;
     private boolean tableUpdated;
 
-    SizeUpdateWriter() { }
+    SizeUpdateWriter() {
+    }
 
     SizeUpdateWriter maxHeaderTableSize(int size) {
         intWriter.configure(size, 5, 0b0010_0000);

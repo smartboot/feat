@@ -18,7 +18,7 @@ import org.smartboot.socket.extension.ssl.ClientAuth;
 import org.smartboot.socket.extension.ssl.factory.ServerSSLContextFactory;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
-import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
+import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpServer;
@@ -244,7 +244,7 @@ public class HttpPostTest {
             Map<String, String> param = new HashMap<>();
             param.put("name", "zhouyu");
             param.put("age", "18");
-            httpClient.post("/post_param").header().setContentType(HeaderValueEnum.ContentType.X_WWW_FORM_URLENCODED).done().onSuccess(response -> {
+            httpClient.post("/post_param").header().setContentType(HeaderValue.ContentType.X_WWW_FORM_URLENCODED).done().onSuccess(response -> {
                 System.out.println(response.body());
                 JSONObject jsonObject = JSONObject.parseObject(response.body());
                 boolean suc = false;

@@ -2,7 +2,7 @@ package tech.smartboot.feat.test.client;
 
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
-import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
+import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServer;
@@ -39,7 +39,7 @@ public class Test {
                     System.out.println(new String(body, 0, len, StandardCharsets.UTF_8));
                     System.out.println(inputStream.read(body));
                 }
-                response.setHeader(HeaderNameEnum.CONNECTION.getName(), HeaderValueEnum.Connection.KEEPALIVE);
+                response.setHeader(HeaderNameEnum.CONNECTION.getName(), HeaderValue.Connection.KEEPALIVE);
                 response.write("success".getBytes());
             }
         });

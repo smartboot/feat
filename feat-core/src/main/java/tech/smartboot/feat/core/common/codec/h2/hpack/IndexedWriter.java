@@ -30,7 +30,8 @@ final class IndexedWriter implements BinaryRepresentationWriter {
 
     private final IntegerWriter intWriter = new IntegerWriter();
 
-    IndexedWriter() { }
+    IndexedWriter() {
+    }
 
     IndexedWriter index(int index) {
         intWriter.configure(index, 7, 0b1000_0000);

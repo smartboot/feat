@@ -79,7 +79,7 @@ public interface HttpRequest {
     void setContentType(String contentType);
 
     void write(byte[] data) throws IOException;
-    
+
 
     /**
      * 添加Cookie信息

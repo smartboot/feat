@@ -279,7 +279,6 @@ class HttpRestImpl implements HttpRest {
 //        this.responseHandler = Objects.requireNonNull(responseHandler);
 //        return this;
 //    }
-
     public HttpRequestImpl getRequest() {
         return request;
     }

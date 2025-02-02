@@ -9,12 +9,12 @@
 package tech.smartboot.feat.core.client.impl;
 
 import tech.smartboot.feat.core.client.HttpRequest;
-import tech.smartboot.feat.core.common.io.FeatOutputStream;
 import tech.smartboot.feat.core.common.Cookie;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.enums.HttpMethodEnum;
 import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
+import tech.smartboot.feat.core.common.io.FeatOutputStream;
 
 import java.io.IOException;
 import java.util.ArrayList;

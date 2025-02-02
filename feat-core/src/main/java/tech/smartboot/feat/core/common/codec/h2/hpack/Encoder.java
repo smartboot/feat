@@ -162,7 +162,7 @@ public class Encoder {
      *                               hasn't yet started to encode it
      * @see #header(CharSequence, CharSequence, boolean)
      */
-    public  void header(CharSequence name, CharSequence value)
+    public void header(CharSequence name, CharSequence value)
             throws IllegalStateException {
         header(name, value, false);
     }

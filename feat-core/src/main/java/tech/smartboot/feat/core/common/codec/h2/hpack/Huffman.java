@@ -63,19 +63,13 @@ public final class Huffman {
          * Calculates the number of bytes required to represent a subsequence of
          * the given {@code CharSequence} using the Huffman coding.
          *
-         * @param value
-         *         characters
-         * @param start
-         *         the start index, inclusive
-         * @param end
-         *         the end index, exclusive
-         *
+         * @param value characters
+         * @param start the start index, inclusive
+         * @param end   the end index, exclusive
          * @return number of bytes
-         * @throws NullPointerException
-         *         if the value is null
-         * @throws IndexOutOfBoundsException
-         *         if any invocation of {@code value.charAt(i)}, where
-         *         {@code start <= i < end}, throws an IndexOutOfBoundsException
+         * @throws NullPointerException      if the value is null
+         * @throws IndexOutOfBoundsException if any invocation of {@code value.charAt(i)}, where
+         *                                   {@code start <= i < end}, throws an IndexOutOfBoundsException
          */
         int lengthOf(CharSequence value, int start, int end);
 

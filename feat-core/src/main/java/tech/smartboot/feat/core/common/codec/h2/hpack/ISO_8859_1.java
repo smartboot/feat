@@ -42,7 +42,8 @@ import java.nio.ByteBuffer;
 //
 final class ISO_8859_1 {
 
-    private ISO_8859_1() { }
+    private ISO_8859_1() {
+    }
 
     public static final class Reader {
 
@@ -56,8 +57,7 @@ final class ISO_8859_1 {
         private int bufferLen;
 
         public void read(ByteBuffer source, Appendable destination)
-                throws IOException
-        {
+                throws IOException {
             while (true) {
                 int nBytes = HPACK.read(source, buffer, bufferLen, UPDATER);
                 if (nBytes == 0) {

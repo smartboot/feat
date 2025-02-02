@@ -7,6 +7,7 @@ import tech.smartboot.feat.core.client.Header;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpClientOptions;
 import tech.smartboot.feat.core.client.HttpPost;
+import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.ServerOptions;
@@ -81,7 +82,7 @@ public class Feat {
         HttpClient httpClient = new HttpClient(api);
         options.accept(httpClient.options());
         HttpPost post = httpClient.post();
-        Header<HttpPost> h = post.header().setContentType("application/json");
+        Header<HttpPost> h = post.header().setContentType(HeaderValue.ContentType.APPLICATION_JSON);
         header.accept(h);
         byte[] bytes = JSON.toJSONBytes(body);
         h.setContentLength(bytes.length);

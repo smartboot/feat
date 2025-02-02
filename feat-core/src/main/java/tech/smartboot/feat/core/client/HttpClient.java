@@ -15,8 +15,8 @@ import org.smartboot.socket.extension.ssl.factory.ClientSSLContextFactory;
 import org.smartboot.socket.transport.AioQuickClient;
 import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.client.impl.HttpRequestImpl;
+import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
-import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
 import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
 import tech.smartboot.feat.core.common.utils.Constant;
 import tech.smartboot.feat.core.common.utils.NumberUtils;
@@ -129,7 +129,7 @@ public final class HttpClient {
                 try {
                     return super.done();
                 } finally {
-                    if (HeaderValueEnum.Connection.KEEPALIVE.equals(getRequest().getHeader(HeaderNameEnum.CONNECTION.getName()))) {
+                    if (HeaderValue.Connection.KEEPALIVE.equals(getRequest().getHeader(HeaderNameEnum.CONNECTION.getName()))) {
                         semaphore.release();
                     }
                 }
@@ -172,7 +172,7 @@ public final class HttpClient {
                 attachment.setResponse(queue.poll());
             }
             //request标注为keep-alive，response不包含该header,默认保持连接.
-            if (HeaderValueEnum.Connection.KEEPALIVE.equalsIgnoreCase(request.getHeader(HeaderNameEnum.CONNECTION.getName())) && httpResponse.getHeader(HeaderNameEnum.CONNECTION.getName()) == null) {
+            if (HeaderValue.Connection.KEEPALIVE.equalsIgnoreCase(request.getHeader(HeaderNameEnum.CONNECTION.getName())) && httpResponse.getHeader(HeaderNameEnum.CONNECTION.getName()) == null) {
                 return;
             }
             //存在链路复用情况
@@ -180,9 +180,9 @@ public final class HttpClient {
                 return;
             }
             //非keep-alive,主动断开连接
-            if (!HeaderValueEnum.Connection.KEEPALIVE.equalsIgnoreCase(httpResponse.getHeader(HeaderNameEnum.CONNECTION.getName()))) {
+            if (!HeaderValue.Connection.KEEPALIVE.equalsIgnoreCase(httpResponse.getHeader(HeaderNameEnum.CONNECTION.getName()))) {
                 close();
-            } else if (!HeaderValueEnum.Connection.KEEPALIVE.equalsIgnoreCase(request.getHeader(HeaderNameEnum.CONNECTION.getName()))) {
+            } else if (!HeaderValue.Connection.KEEPALIVE.equalsIgnoreCase(request.getHeader(HeaderNameEnum.CONNECTION.getName()))) {
                 close();
             }
         });

@@ -36,9 +36,9 @@ abstract class IndexNameValueWriter implements BinaryRepresentationWriter {
 
     protected boolean indexedRepresentation;
 
-    private static final int NEW               = 0;
+    private static final int NEW = 0;
     private static final int NAME_PART_WRITTEN = 1;
-    private static final int VALUE_WRITTEN     = 2;
+    private static final int VALUE_WRITTEN = 2;
 
     private int state = NEW;
 

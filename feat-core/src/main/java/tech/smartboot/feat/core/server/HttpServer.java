@@ -11,8 +11,8 @@ package tech.smartboot.feat.core.server;
 import org.smartboot.socket.buffer.BufferPagePool;
 import org.smartboot.socket.transport.AioQuickServer;
 import tech.smartboot.feat.core.common.FeatUtils;
+import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
-import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
 import tech.smartboot.feat.core.common.enums.HttpMethodEnum;
 import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
 import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
@@ -123,16 +123,16 @@ public class HttpServer {
             options.getHeaderNameByteTree().addNode(headerNameEnum.getName(), headerNameEnum);
         }
         // 缓存一些常用字符串
-        options.getByteCache().addNode(HeaderValueEnum.TransferEncoding.CHUNKED);
-        options.getByteCache().addNode(HeaderValueEnum.ContentEncoding.GZIP);
-        options.getByteCache().addNode(HeaderValueEnum.Connection.UPGRADE);
-        options.getByteCache().addNode(HeaderValueEnum.Connection.KEEPALIVE);
-        options.getByteCache().addNode(HeaderValueEnum.ContentType.MULTIPART_FORM_DATA);
-        options.getByteCache().addNode(HeaderValueEnum.ContentType.APPLICATION_JSON);
-        options.getByteCache().addNode(HeaderValueEnum.ContentType.X_WWW_FORM_URLENCODED);
-        options.getByteCache().addNode(HeaderValueEnum.ContentType.APPLICATION_JSON_UTF8);
-        options.getByteCache().addNode(HeaderValueEnum.ContentType.TEXT_HTML_UTF8);
-        options.getByteCache().addNode(HeaderValueEnum.ContentType.TEXT_PLAIN_UTF8);
+        options.getByteCache().addNode(HeaderValue.TransferEncoding.CHUNKED);
+        options.getByteCache().addNode(HeaderValue.ContentEncoding.GZIP);
+        options.getByteCache().addNode(HeaderValue.Connection.UPGRADE);
+        options.getByteCache().addNode(HeaderValue.Connection.KEEPALIVE);
+        options.getByteCache().addNode(HeaderValue.ContentType.MULTIPART_FORM_DATA);
+        options.getByteCache().addNode(HeaderValue.ContentType.APPLICATION_JSON);
+        options.getByteCache().addNode(HeaderValue.ContentType.X_WWW_FORM_URLENCODED);
+        options.getByteCache().addNode(HeaderValue.ContentType.APPLICATION_JSON_UTF8);
+        options.getByteCache().addNode(HeaderValue.ContentType.TEXT_HTML_UTF8);
+        options.getByteCache().addNode(HeaderValue.ContentType.TEXT_PLAIN_UTF8);
     }
 
     /**

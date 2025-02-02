@@ -19,7 +19,6 @@ import java.util.Collection;
 interface Response {
     /**
      * 获取指定名称的Http Header值
-     *
      */
     String getHeader(String headName);
 

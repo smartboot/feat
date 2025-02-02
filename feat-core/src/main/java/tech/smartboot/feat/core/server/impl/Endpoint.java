@@ -13,7 +13,6 @@ import tech.smartboot.feat.core.common.Cookie;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.Reset;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
-import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
 import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
 import tech.smartboot.feat.core.common.exception.HttpException;
@@ -340,7 +339,7 @@ public abstract class Endpoint implements Reset {
         //application/x-www-form-urlencoded
         //application/x-www-form-urlencoded;charset=utf-8
         String contentTypeTmp = getContentType();
-        if (contentTypeTmp != null && contentTypeTmp.startsWith(HeaderValueEnum.ContentType.X_WWW_FORM_URLENCODED)) {
+        if (contentTypeTmp != null && contentTypeTmp.startsWith(HeaderValue.ContentType.X_WWW_FORM_URLENCODED)) {
             try {
                 InputStream inputStream = getInputStream();
                 if (inputStream != BodyInputStream.EMPTY_INPUT_STREAM) {

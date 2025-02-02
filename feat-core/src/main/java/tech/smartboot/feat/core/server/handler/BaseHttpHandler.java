@@ -9,8 +9,8 @@
 package tech.smartboot.feat.core.server.handler;
 
 import org.smartboot.socket.transport.AioSession;
+import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
-import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
 import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
 import tech.smartboot.feat.core.common.io.FeatOutputStream;
 import tech.smartboot.feat.core.common.io.ReadListener;
@@ -146,12 +146,12 @@ public abstract class BaseHttpHandler implements HttpHandler {
 
     private boolean isKeepAlive(HttpEndpoint abstractRequest, AbstractResponse response) {
         String connection = abstractRequest.getConnection();
-        boolean keepAlive = !HeaderValueEnum.Connection.CLOSE.equals(connection);
+        boolean keepAlive = !HeaderValue.Connection.CLOSE.equals(connection);
         // http/1.0默认短连接，http/1.1默认长连接。此处用 == 性能更高
         if (keepAlive && HttpProtocolEnum.HTTP_10 == abstractRequest.getProtocol()) {
-            keepAlive = HeaderValueEnum.Connection.KEEPALIVE.equalsIgnoreCase(connection);
+            keepAlive = HeaderValue.Connection.KEEPALIVE.equalsIgnoreCase(connection);
             if (keepAlive) {
-                response.setHeader(HeaderNameEnum.CONNECTION.getName(), HeaderValueEnum.Connection.KEEPALIVE);
+                response.setHeader(HeaderNameEnum.CONNECTION.getName(), HeaderValue.Connection.KEEPALIVE);
             }
         }
         return keepAlive;

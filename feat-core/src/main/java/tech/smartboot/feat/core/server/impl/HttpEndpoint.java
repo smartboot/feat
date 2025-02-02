@@ -12,9 +12,9 @@ import org.smartboot.socket.timer.HashedWheelTimer;
 import org.smartboot.socket.timer.TimerTask;
 import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.common.DecodeState;
+import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.Reset;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
-import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
 import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.common.io.BodyInputStream;
@@ -125,7 +125,7 @@ public final class HttpEndpoint extends Endpoint implements HttpRequest, Reset {
             inputStream = new PostInputStream(aioSession, Long.MAX_VALUE, Long.MAX_VALUE);
         }
         //如果一个消息即存在传输译码（Transfer-Encoding）头域并且也 Content-Length 头域，后者会被忽略。
-        else if (HeaderValueEnum.TransferEncoding.CHUNKED.equalsIgnoreCase(getHeader(HeaderNameEnum.TRANSFER_ENCODING))) {
+        else if (HeaderValue.TransferEncoding.CHUNKED.equalsIgnoreCase(getHeader(HeaderNameEnum.TRANSFER_ENCODING))) {
             inputStream = new ChunkedInputStream(aioSession, remainingThreshold, stringStringMap -> this.trailerFields = stringStringMap);
         } else {
             long contentLength = getContentLength();
@@ -242,7 +242,7 @@ public final class HttpEndpoint extends Endpoint implements HttpRequest, Reset {
 
     @Override
     public boolean isTrailerFieldsReady() {
-        return !HeaderValueEnum.TransferEncoding.CHUNKED.equals(getHeader(HeaderNameEnum.TRANSFER_ENCODING)) || trailerFields != null;
+        return !HeaderValue.TransferEncoding.CHUNKED.equals(getHeader(HeaderNameEnum.TRANSFER_ENCODING)) || trailerFields != null;
     }
 
 

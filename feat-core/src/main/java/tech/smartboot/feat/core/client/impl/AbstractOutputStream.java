@@ -8,13 +8,12 @@
 
 package tech.smartboot.feat.core.client.impl;
 
+import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.common.Cookie;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
-import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
 import tech.smartboot.feat.core.common.io.FeatOutputStream;
 import tech.smartboot.feat.core.common.utils.Constant;
-import org.smartboot.socket.transport.AioSession;
 
 import java.io.IOException;
 import java.util.List;
@@ -63,7 +62,7 @@ abstract class AbstractOutputStream extends FeatOutputStream {
             writeBuffer.write(getBytes(String.valueOf(request.getContentLength())));
             writeBuffer.write(Constant.CRLF_BYTES);
         } else if (chunkedSupport && source == HeaderWriteSource.WRITE) {
-            request.addHeader(HeaderNameEnum.TRANSFER_ENCODING.getName(), HeaderValueEnum.TransferEncoding.CHUNKED);
+            request.addHeader(HeaderNameEnum.TRANSFER_ENCODING.getName(), HeaderValue.TransferEncoding.CHUNKED);
         }
 
         //输出Header部分

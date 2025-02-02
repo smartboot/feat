@@ -16,7 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
-import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
+import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.enums.HttpMethodEnum;
 import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
@@ -67,7 +67,7 @@ public class HttpServer2Test extends BastTest {
         });
         tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.get("/").done().get();
         Assert.assertEquals(httpResponse.getContentType(), "test");
-        Assert.assertEquals(httpResponse.getHeader(HeaderNameEnum.TRANSFER_ENCODING.getName()), HeaderValueEnum.TransferEncoding.CHUNKED);
+        Assert.assertEquals(httpResponse.getHeader(HeaderNameEnum.TRANSFER_ENCODING.getName()), HeaderValue.TransferEncoding.CHUNKED);
     }
 
     @Test
@@ -80,7 +80,7 @@ public class HttpServer2Test extends BastTest {
         });
         tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.get("/").done().get();
         Assert.assertEquals(httpResponse.getProtocol(), HttpProtocolEnum.HTTP_11.getProtocol());
-        Assert.assertEquals(httpResponse.getHeader(HeaderNameEnum.TRANSFER_ENCODING.getName()), HeaderValueEnum.TransferEncoding.CHUNKED);
+        Assert.assertEquals(httpResponse.getHeader(HeaderNameEnum.TRANSFER_ENCODING.getName()), HeaderValue.TransferEncoding.CHUNKED);
     }
 
     @Test

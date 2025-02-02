@@ -12,7 +12,6 @@ import tech.smartboot.feat.core.common.Cookie;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.Reset;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
-import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
 import tech.smartboot.feat.core.common.io.FeatOutputStream;
 import tech.smartboot.feat.core.server.HttpResponse;
@@ -54,7 +53,7 @@ public abstract class AbstractResponse implements HttpResponse, Reset {
     /**
      * 正文编码方式
      */
-    private String contentType = HeaderValueEnum.ContentType.TEXT_HTML_UTF8;
+    private String contentType = HeaderValue.ContentType.TEXT_HTML_UTF8;
 
     /**
      * 是否关闭Socket连接通道
@@ -66,7 +65,7 @@ public abstract class AbstractResponse implements HttpResponse, Reset {
         outputStream.reset();
         headers.clear();
         setHttpStatus(HttpStatus.OK);
-        contentType = HeaderValueEnum.ContentType.TEXT_HTML_UTF8;
+        contentType = HeaderValue.ContentType.TEXT_HTML_UTF8;
         contentLength = -1;
         this.closed = false;
     }

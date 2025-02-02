@@ -38,10 +38,10 @@ import java.util.Arrays;
 //
 final class StringReader {
 
-    private static final int NEW             = 0;
+    private static final int NEW = 0;
     private static final int FIRST_BYTE_READ = 1;
-    private static final int LENGTH_READ     = 2;
-    private static final int DONE            = 4;
+    private static final int LENGTH_READ = 2;
+    private static final int DONE = 4;
 
     private final IntegerReader intReader = new IntegerReader();
     private final Huffman.Reader huffmanReader = new QuickHuffman.Reader();

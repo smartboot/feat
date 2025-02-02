@@ -46,10 +46,10 @@ import java.util.Arrays;
 //
 final class StringWriter {
 
-    private static final int NEW            = 0;
-    private static final int CONFIGURED     = 1;
+    private static final int NEW = 0;
+    private static final int CONFIGURED = 1;
     private static final int LENGTH_WRITTEN = 2;
-    private static final int DONE           = 4;
+    private static final int DONE = 4;
 
     private final IntegerWriter intWriter = new IntegerWriter();
     private final Huffman.Writer huffmanWriter = new QuickHuffman.Writer();

@@ -10,7 +10,6 @@ package tech.smartboot.feat.core.server.impl;
 
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
-import tech.smartboot.feat.core.common.enums.HeaderValueEnum;
 import tech.smartboot.feat.core.common.enums.HttpMethodEnum;
 import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
@@ -29,8 +28,8 @@ import java.util.concurrent.Semaphore;
  * @version V1.0 , 2018/2/3
  */
 final class HttpOutputStream extends FeatOutputStream {
-    private static final byte[] Content_Type_TEXT_Bytes = ("\r\nContent-Type:" + HeaderValueEnum.ContentType.TEXT_PLAIN_UTF8).getBytes();
-    private static final byte[] Content_Type_JSON_Bytes = ("\r\nContent-Type:" + HeaderValueEnum.ContentType.APPLICATION_JSON).getBytes();
+    private static final byte[] Content_Type_TEXT_Bytes = ("\r\nContent-Type:" + HeaderValue.ContentType.TEXT_PLAIN_UTF8).getBytes();
+    private static final byte[] Content_Type_JSON_Bytes = ("\r\nContent-Type:" + HeaderValue.ContentType.APPLICATION_JSON).getBytes();
     private static final byte[] Content_Length_Bytes = "\r\nContent-Length:".getBytes();
     private static final byte[] CHUNKED = "\r\nTransfer-Encoding: chunked\r\n\r\n".getBytes();
     private static final Semaphore flushDateSemaphore = new Semaphore(1);
@@ -140,9 +139,9 @@ final class HttpOutputStream extends FeatOutputStream {
         }
 
         if (contentType != null) {
-            if (contentType.equals(HeaderValueEnum.ContentType.TEXT_PLAIN_UTF8)) {
+            if (contentType.equals(HeaderValue.ContentType.TEXT_PLAIN_UTF8)) {
                 writeBuffer.write(Content_Type_TEXT_Bytes);
-            } else if (contentType.equals(HeaderValueEnum.ContentType.APPLICATION_JSON)) {
+            } else if (contentType.equals(HeaderValue.ContentType.APPLICATION_JSON)) {
                 writeBuffer.write(Content_Type_JSON_Bytes);
             } else {
                 writeBuffer.write(Content_Type_TEXT_Bytes, 0, 15);
@@ -183,7 +182,7 @@ final class HttpOutputStream extends FeatOutputStream {
             disableChunked();
         } else if (HttpProtocolEnum.HTTP_11 != request.getProtocol()) {
             disableChunked();
-        } else if (response.getContentType().startsWith(HeaderValueEnum.ContentType.EVENT_STREAM)) {
+        } else if (response.getContentType().startsWith(HeaderValue.ContentType.EVENT_STREAM)) {
             disableChunked();
         }
     }
