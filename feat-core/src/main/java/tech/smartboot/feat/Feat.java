@@ -1,7 +1,12 @@
 package tech.smartboot.feat;
 
+import com.alibaba.fastjson2.JSON;
 import tech.smartboot.feat.cloud.ApplicationContext;
 import tech.smartboot.feat.cloud.CloudOptions;
+import tech.smartboot.feat.core.client.Header;
+import tech.smartboot.feat.core.client.HttpClient;
+import tech.smartboot.feat.core.client.HttpClientOptions;
+import tech.smartboot.feat.core.client.HttpPost;
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.ServerOptions;
@@ -60,5 +65,27 @@ public class Feat {
         }
         server.httpHandler(application.getRouter());
         return server;
+    }
+
+    public static HttpPost postJson(String api, Object body) {
+        return postJson(api, h -> {
+        }, body);
+    }
+
+    public static HttpPost postJson(String api, Consumer<Header<HttpPost>> header, Object body) {
+        return postJson(api, options -> {
+        }, header, body);
+    }
+
+    public static HttpPost postJson(String api, Consumer<HttpClientOptions> options, Consumer<Header<HttpPost>> header, Object body) {
+        HttpClient httpClient = new HttpClient(api);
+        options.accept(httpClient.options());
+        HttpPost post = httpClient.post();
+        Header<HttpPost> h = post.header().setContentType("application/json");
+        header.accept(h);
+        byte[] bytes = JSON.toJSONBytes(body);
+        h.setContentLength(bytes.length);
+        post.body().write(bytes);
+        return post;
     }
 }

@@ -32,7 +32,7 @@ import java.util.concurrent.Semaphore;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2021/2/2
  */
-public final class HttpClient implements AutoCloseable {
+public final class HttpClient {
 
     private final HttpClientOptions options;
 
