@@ -134,7 +134,7 @@ final class DefaultHttpResponseHandler extends ResponseHandler {
                         byte[] bytes = new byte[4096];
                         int n;
                         ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                        while (gzipInputStream.available() > 10 && (n = gzipInputStream.read(bytes)) >= 0) {
+                        while (gzipBuffer.remaining() > 100 && (n = gzipInputStream.read(bytes)) > 0) {
                             bos.write(bytes, 0, n);
                         }
                         data = bos.toByteArray();
@@ -183,10 +183,10 @@ final class DefaultHttpResponseHandler extends ResponseHandler {
         public void finishDecode(HttpResponseImpl response) {
             try {
                 if (gzipInputStream != null && gzipInputStream.available() > 0) {
-                    byte[] bytes = new byte[256];
+                    byte[] bytes = new byte[4096];
                     int n;
                     ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                    while ((n = gzipInputStream.read(bytes)) > 0) {
+                    while (gzipBuffer.hasRemaining() && (n = gzipInputStream.read(bytes)) > 0) {
                         bos.write(bytes, 0, n);
                     }
                     byte[] data = bos.toByteArray();
