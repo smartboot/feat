@@ -113,7 +113,7 @@ public class HttpServerTest extends BastTest {
         HttpGet httpGet = httpClient.get(uriStr.toString());
         requestUnit.getHeaders().forEach((name, value) -> httpGet.header().add(name, value));
 
-        Assert.assertEquals(HttpStatus.METHOD_NOT_ALLOWED.value(), httpGet.done().get().getStatus());
+        Assert.assertEquals(HttpStatus.METHOD_NOT_ALLOWED.value(), httpGet.done().get().statusCode());
     }
 
     @Test
@@ -143,7 +143,7 @@ public class HttpServerTest extends BastTest {
                 .addAllowUriPrefix("/aa");
         HttpGet httpGet1 = httpClient.get(uriStr.toString());
         requestUnit.getHeaders().forEach((name, value) -> httpGet1.header().add(name, value));
-        Assert.assertEquals(HttpStatus.BAD_REQUEST.value(), httpGet1.done().get().getStatus());
+        Assert.assertEquals(HttpStatus.BAD_REQUEST.value(), httpGet1.done().get().statusCode());
 
         bootstrap.options().getWafOptions()
                 .getAllowUriPrefixes().add("/hello");
@@ -157,7 +157,7 @@ public class HttpServerTest extends BastTest {
         bootstrap.options().getWafOptions().getAllowUriSuffixes().add("/aa");
         HttpGet httpGet3 = httpClient.get(uriStr.toString());
         requestUnit.getHeaders().forEach((name, value) -> httpGet3.header().add(name, value));
-        Assert.assertEquals(HttpStatus.BAD_REQUEST.value(), httpGet3.done().get().getStatus());
+        Assert.assertEquals(HttpStatus.BAD_REQUEST.value(), httpGet3.done().get().statusCode());
 
         bootstrap.options().getWafOptions()
                 .getAllowUriSuffixes().add("llo");

@@ -1,4 +1,4 @@
-package tech.smartboot.feat.demo;
+package tech.smartboot.feat.demo.client;
 
 import tech.smartboot.feat.core.client.HttpClient;
 
@@ -25,7 +25,7 @@ public class PostBigDemo {
                     System.out.println("resp err: ");
                     e.printStackTrace();
                 }).onSuccess(resp -> {
-                    System.out.println("resp code: " + resp.getStatus());
+                    System.out.println("resp code: " + resp.statusCode());
                 })
                 .done();
 

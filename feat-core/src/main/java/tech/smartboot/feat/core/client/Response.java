@@ -34,7 +34,7 @@ interface Response {
      *
      * @return
      */
-    int getStatus();
+    int statusCode();
 
     /**
      * 获取响应描述

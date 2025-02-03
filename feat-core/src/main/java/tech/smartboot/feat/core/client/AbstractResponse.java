@@ -141,7 +141,7 @@ public abstract class AbstractResponse implements Response, Reset {
     }
 
 
-    public int getStatus() {
+    public int statusCode() {
         return status;
     }
 

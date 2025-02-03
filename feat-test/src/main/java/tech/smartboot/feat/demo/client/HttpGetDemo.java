@@ -6,7 +6,7 @@
  * Author: sandao (zhengjunweimail@163.com)
  ******************************************************************************/
 
-package tech.smartboot.feat.demo;
+package tech.smartboot.feat.demo.client;
 
 import tech.smartboot.feat.core.client.HttpClient;
 

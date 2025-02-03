@@ -228,7 +228,7 @@ public class WebSocketClient {
             public void onHeaderComplete(AbstractResponse abstractResponse) throws IOException {
                 WebSocketResponseImpl webSocketResponse = (WebSocketResponseImpl) abstractResponse;
                 super.onHeaderComplete(webSocketResponse);
-                if (webSocketResponse.getStatus() != HttpStatus.SWITCHING_PROTOCOLS.value()) {
+                if (webSocketResponse.statusCode() != HttpStatus.SWITCHING_PROTOCOLS.value()) {
                     listener.onClose(WebSocketClient.this, webSocketResponse, new CloseReason(CloseReason.WRONG_CODE, ""));
                     return;
                 }
