@@ -1,6 +1,5 @@
 package tech.smartboot.feat.core.client;
 
-import org.smartboot.socket.buffer.BufferPagePool;
 import org.smartboot.socket.extension.plugins.Plugin;
 
 import java.util.List;
@@ -53,16 +52,6 @@ public class WebSocketOptions extends ClientOptions<WebSocketResponse> {
 
     public WebSocketOptions readBufferSize(int readBufferSize) {
         super.readBufferSize(readBufferSize);
-        return this;
-    }
-
-    public WebSocketOptions readBufferPool(BufferPagePool readBufferPool) {
-        super.readBufferPool(readBufferPool);
-        return this;
-    }
-
-    public WebSocketOptions writeBufferPool(BufferPagePool writeBufferPool) {
-        super.writeBufferPool(writeBufferPool);
         return this;
     }
 

@@ -1,6 +1,5 @@
 package tech.smartboot.feat.core.client;
 
-import org.smartboot.socket.buffer.BufferPagePool;
 import org.smartboot.socket.extension.plugins.Plugin;
 
 import java.util.ArrayList;
@@ -44,16 +43,6 @@ class ClientOptions<T> {
      */
     private int writeBufferSize = 1024;
 
-
-    /**
-     * 缓冲池
-     */
-    private BufferPagePool writeBufferPool;
-
-    /**
-     * 缓冲池，必须是堆内缓冲区
-     */
-    private BufferPagePool readBufferPool;
 
     private boolean https = false;
 
@@ -121,11 +110,6 @@ class ClientOptions<T> {
         return this;
     }
 
-    protected ClientOptions<T> readBufferPool(BufferPagePool readBufferPool) {
-        this.readBufferPool = readBufferPool;
-        return this;
-    }
-
     public int getWriteBufferSize() {
         return writeBufferSize;
     }
@@ -133,19 +117,6 @@ class ClientOptions<T> {
     public ClientOptions<T> setWriteBufferSize(int writeBufferSize) {
         this.writeBufferSize = writeBufferSize;
         return this;
-    }
-
-    protected ClientOptions<T> writeBufferPool(BufferPagePool writeBufferPool) {
-        this.writeBufferPool = writeBufferPool;
-        return this;
-    }
-
-    BufferPagePool getWriteBufferPool() {
-        return writeBufferPool;
-    }
-
-    BufferPagePool getReadBufferPool() {
-        return readBufferPool;
     }
 
     /**

@@ -12,6 +12,7 @@ import tech.smartboot.feat.core.client.impl.HttpResponseImpl;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
+import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.common.utils.Constant;
 import tech.smartboot.feat.core.common.utils.FixedLengthFrameDecoder;
@@ -85,15 +86,12 @@ final class DefaultHttpResponseHandler extends ResponseHandler {
         private void decodeChunkedContent(ByteBuffer buffer, AbstractResponse response) {
             if (chunkedDecoder.decode(buffer)) {
                 byte[] data = chunkedDecoder.getBuffer().array();
-                if (DefaultHttpResponseHandler.this.gzip) {
-                    data = GzipUtils.uncompress(data);
-                }
                 try {
                     body.write(data);
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    throw new FeatException(e);
                 }
-                if (DefaultHttpResponseHandler.this.steaming != null) {
+                if (!DefaultHttpResponseHandler.this.gzip && DefaultHttpResponseHandler.this.steaming != null) {
                     DefaultHttpResponseHandler.this.steaming.stream((HttpResponse) response, data);
                 }
                 part = PART.CHUNK_END;
@@ -131,7 +129,11 @@ final class DefaultHttpResponseHandler extends ResponseHandler {
         }
 
         public void finishDecode(HttpResponseImpl response) {
-            response.setBody(body.toString());
+            if (DefaultHttpResponseHandler.this.gzip) {
+                response.setBody(GzipUtils.uncompressToString(body.toByteArray()));
+            } else {
+                response.setBody(body.toString());
+            }
             callback(response);
         }
     }

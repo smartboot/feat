@@ -1,6 +1,5 @@
 package tech.smartboot.feat.core.client;
 
-import org.smartboot.socket.buffer.BufferPagePool;
 import org.smartboot.socket.extension.plugins.Plugin;
 
 import java.util.List;
@@ -53,16 +52,6 @@ public class HttpClientOptions extends ClientOptions<HttpResponse> {
 
     public HttpClientOptions readBufferSize(int readBufferSize) {
         super.readBufferSize(readBufferSize);
-        return this;
-    }
-
-    public HttpClientOptions readBufferPool(BufferPagePool readBufferPool) {
-        super.readBufferPool(readBufferPool);
-        return this;
-    }
-
-    public HttpClientOptions writeBufferPool(BufferPagePool writeBufferPool) {
-        super.writeBufferPool(writeBufferPool);
         return this;
     }
 

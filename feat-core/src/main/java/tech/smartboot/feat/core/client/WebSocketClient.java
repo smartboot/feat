@@ -163,7 +163,7 @@ public class WebSocketClient {
             connected = true;
             client = options.getProxy() == null ? new AioQuickClient(options.getHost(), options.getPort(), processor, processor) :
                     new AioQuickClient(options.getProxy().getProxyHost(), options.getProxy().getProxyPort(), processor, processor);
-            client.setBufferPagePool(options.getReadBufferPool(), options.getWriteBufferPool()).setReadBufferSize(options.readBufferSize());
+            client.setReadBufferSize(options.readBufferSize());
             if (options.getConnectTimeout() > 0) {
                 client.connectTimeout(options.getConnectTimeout());
             }

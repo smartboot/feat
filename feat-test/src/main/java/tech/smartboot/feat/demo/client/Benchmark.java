@@ -43,12 +43,10 @@ public class Benchmark {
                 return new Thread(r);
             }
         });
-        BufferPagePool bufferPagePool = new BufferPagePool(10 * 1024 * 1024, threadNum, true);
         List<HttpClient> httpClients = new ArrayList<>();
         for (int i = 0; i < connectCount; i++) {
             HttpClient httpClient = new HttpClient("127.0.0.1", 8080);
             httpClient.group(asynchronousChannelGroup);
-            httpClient.options().writeBufferPool(bufferPagePool);
             httpClients.add(httpClient);
         }
         System.out.println(httpClients.size() + " clients connect success");
