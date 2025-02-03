@@ -11,9 +11,9 @@ Feat HttpClient 的设计理念注重性能、易用性和扩展性，能够与 
 
 ---
 
-## 2. 快速上手
+## 4.1.1 快速上手
 
-### 2.1 引入依赖
+### 4.1.1.1 引入依赖
 
 在 Maven 项目中，添加以下依赖到 `pom.xml`：
 
@@ -25,7 +25,7 @@ Feat HttpClient 的设计理念注重性能、易用性和扩展性，能够与 
 </dependency>
 ```
 
-### 2.2 发送第一个 GET 请求
+### 4.1.1.2 发送第一个 GET 请求
 
 以下是一个简单的示例，展示了如何使用 Feat HttpClient 发送 GET 请求并处理响应：
 
@@ -50,9 +50,9 @@ public class HttpClientDemo {
 
 ---
 
-## 3. 核心功能
+## 4.1.2 核心功能
 
-### 3.1 支持的 HTTP 方法
+### 4.1.2.1 支持的 HTTP 方法
 
 Feat HttpClient 支持所有标准的 HTTP 方法，包括：
 
@@ -78,43 +78,40 @@ HttpRequest putRequest = HttpRequest.put("https://api.example.com/users/1")
 HttpRequest deleteRequest = HttpRequest.delete("https://api.example.com/users/2");
 ```
 
-### 3.2 请求头设置
+### 4.1.2.2 请求头设置
 
 开发者可以通过 `HttpRequest` 的 `header` 方法设置请求头：
 
 ```java
-HttpRequest request = HttpRequest.get("https://api.example.com/data")
-    .header("Authorization", "Bearer your_token")
-    .header("Content-Type", "application/json");
+HttpGet httpGet = client.get("/");
+httpGet.header()
+        .set("Authorization", "Bearer your_token")
+        .set("Content-Type", "application/json")
+        .done();
 ```
 
-### 3.3 请求体构建
+### 4.1.2.3 请求体构建
 
 Feat HttpClient 支持多种方式构建请求体：
 
 - **表单数据**：
 
-```java
-HttpRequest request = HttpRequest.post("https://api.example.com/login")
-    .form("username", "张三")
-    .form("password", "123456");
-  ```
-
-- **JSON 数据**：
-
-```java
-HttpRequest request = HttpRequest.post("https://api.example.com/users")
-    .json("{\"name\": \"王五\", \"age\": 30}");
+```java "formUrlencoded"
+HttpPost httpPost = client.post("/");
+Map<String, String> form = new HashMap<>();
+form.put("username", "三刀");
+form.put("password", "123456");
+httpPost.body().formUrlencoded(form).done();
   ```
 
 - **自定义数据**：
 
-```java
-HttpRequest request = HttpRequest.post("https://api.example.com/upload")
-    .body("custom data");
-  ```
+```java "write"
+HttpPost httpPost = client.post("/");
+httpPost.body().write("Hello World").done();
+```
 
-### 3.4 响应处理
+### 4.1.2.4 响应处理
 
 Feat HttpClient 提供灵活的响应处理方式：
 
@@ -127,19 +124,13 @@ int statusCode = response.statusCode();
 - **获取响应头**：
 
 ```java
-String contentType = response.headers().get("Content-Type");
+String contentType = response.getHeader("Content-Type");
   ```
 
 - **获取响应体**：
 
 ```java
 String responseBody = response.body();
-  ```
-
-或者以字节流形式获取：
-
-```java
-byte[] responseBytes = response.bodyBytes();
   ```
 
 - **处理不同状态码**：
@@ -150,174 +141,4 @@ if (response.statusCode() == 200) {
 } else {
     System.out.println("请求失败, 状态码: " + response.statusCode());
 }
-  ```
-
-### 3.5 连接池配置
-
-Feat HttpClient 内置了连接池管理功能，支持配置连接池的大小以提升性能：
-
-```java
-HttpClient client = HttpClient.create()
-    .connectionPool()
-        .maxConnections(100)
-        .maxConnectionsPerRoute(20)
-        .build();
 ```
-
----
-
-## 4. 高级特性
-
-### 4.1 异步请求
-
-Feat HttpClient 支持异步 HTTP 请求，适用于高并发场景：
-
-```java
-HttpClient client = HttpClient.create();
-HttpRequest request = HttpRequest.get("https://api.example.com/data");
-
-client.sendAsync(request, response -> {
-    System.out.println("Status Code: " + response.statusCode());
-    System.out.println("Response Body: " + response.body());
-});
-```
-
-### 4.2 超时设置
-
-开发者可以配置请求的超时时间：
-
-```java
-HttpClient client = HttpClient.create()
-    .connectTimeout(3000) // 连接超时时间，单位：毫秒
-    .readTimeout(5000)   // 读取超时时间，单位：毫秒
-    .writeTimeout(5000); // 写入超时时间，单位：毫秒
-```
-
-### 4.3 重试机制
-
-Feat HttpClient 支持自定义重试策略，适用于网络不稳定或服务不可用的场景：
-
-```java
-HttpClient client = HttpClient.create()
-    .retryConfig()
-        .maxRetries(3) // 最大重试次数
-        .retryOnStatusCodes(408, 500, 502, 503, 504) // 根据状态码重试
-        .build();
-```
-
-### 4.4 日志记录
-
-开发者可以通过日志框架记录 HTTP 请求和响应的详细信息：
-
-```java
-HttpClient client = HttpClient.create()
-    .loggingEnabled(true); // 开启日志记录
-```
-
----
-
-## 5. 使用场景
-
-### 5.1 文件上传
-
-Feat HttpClient 支持文件上传功能：
-
-```java
-HttpRequest request = HttpRequest.post("https://api.example.com/upload")
-    .file("file", new File("path/to/file"));
-
-try (HttpResponse response = client.send(request)) {
-    System.out.println("上传结果: " + response.body());
-}
-```
-
-### 5.2 表单提交
-
-```java
-HttpRequest request = HttpRequest.post("https://api.example.com/form")
-    .form("username", "张三")
-    .form("email", "zhangsan@example.com");
-
-try (HttpResponse response = client.send(request)) {
-    System.out.println("表单提交结果: " + response.body());
-}
-```
-
-### 5.3 WebSocket 客户端
-
-Feat HttpClient 也支持 WebSocket 协议：
-
-```java
-WebSocketClient webSocketClient = WebSocketClient.create("wss://api.example.com/ws");
-webSocketClient.onMessage(message -> {
-    System.out.println("收到消息: " + message);
-});
-
-webSocketClient.connect();
-webSocketClient.send("Hello Server!");
-```
-
----
-
-## 6. 性能与优化
-
-### 6.1 连接池优化
-
-连接池是 HttpClient 性能的关键。开发者可以根据实际需求调整连接池的大小：
-
-```java
-HttpClient client = HttpClient.create()
-    .connectionPool()
-        .maxConnections(200) // 调整最大连接数
-        .maxConnectionsPerRoute(50) // 调整每个路由的最大连接数
-        .build();
-```
-
-### 6.2 线程池配置
-
-Feat HttpClient 允许自定义线程池，以优化异步请求的处理能力：
-
-```java
-ThreadPoolExecutor executor = new ThreadPoolExecutor(
-    10, 100, 60L, TimeUnit.SECONDS,
-    new LinkedBlockingQueue<>(10000)
-);
-
-HttpClient client = HttpClient.create()
-    .executor(executor);
-```
-
----
-
-## 7. 常见问题与解决
-
-### 7.1 请求超时
-
-- **检查网络连接**：确保网络正常。
-- **调整超时时间**：根据实际需求增加超时时间。
-- **服务器端优化**：确保服务器能够及时响应请求。
-
-### 7.2 404 Not Found
-
-- **检查 URL 是否正确**：确保请求的 URL 是正确的。
-- **检查服务器路由配置**：确保服务器端路由配置正确。
-
-### 7.3 500 Internal Server Error
-
-- **检查服务器日志**：查看服务器端日志，了解具体错误原因。
-- **检查请求参数**：确保请求参数符合服务器端要求。
-
----
-
-## 8. 总结与资源
-
-### 8.1 总结
-
-Feat HttpClient 是一个功能强大、灵活且高效的 HTTP 客户端库，能够满足多种场景下的需求。它支持同步和异步请求、多种请求方法、灵活的配置选项，以及强大的连接池和线程池管理功能。
-
-### 8.2 资源
-
-- **GitHub 仓库**: [Feat HttpClient GitHub](https://github.com/feat-project/feat-client)
-- **官方文档**: [Feat HttpClient 官方文档](https://feat-project.github.io/docs/http-client)
-
-希望这篇文档能够帮助开发者快速上手并高效使用 Feat HttpClient！
