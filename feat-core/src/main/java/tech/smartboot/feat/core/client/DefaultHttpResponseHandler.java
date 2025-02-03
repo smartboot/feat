@@ -16,14 +16,15 @@ import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.common.utils.Constant;
 import tech.smartboot.feat.core.common.utils.FixedLengthFrameDecoder;
-import tech.smartboot.feat.core.common.utils.GzipUtils;
 import tech.smartboot.feat.core.common.utils.SmartDecoder;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.util.zip.GZIPInputStream;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
@@ -38,6 +39,8 @@ final class DefaultHttpResponseHandler extends ResponseHandler {
     };
     private ResponseHandler responseHandler;
     private boolean gzip;
+    private GZIPInputStream gzipInputStream;
+    private ByteBuffer gzipBuffer;
 
     @Override
     public void onBodyStream(ByteBuffer buffer, AbstractResponse baseHttpResponse) {
@@ -86,13 +89,62 @@ final class DefaultHttpResponseHandler extends ResponseHandler {
         private void decodeChunkedContent(ByteBuffer buffer, AbstractResponse response) {
             if (chunkedDecoder.decode(buffer)) {
                 byte[] data = chunkedDecoder.getBuffer().array();
+
                 try {
+                    if (DefaultHttpResponseHandler.this.gzip) {
+                        if (gzipBuffer != null && gzipBuffer.remaining() > 0) {
+                            gzipBuffer.compact();
+                            ByteBuffer newBuffer = ByteBuffer.allocate(gzipBuffer.remaining() + data.length);
+                            newBuffer.put(gzipBuffer);
+                            newBuffer.put(data);
+                            newBuffer.flip();
+                            gzipBuffer = newBuffer;
+                            gzipBuffer.compact();
+                        } else {
+                            gzipBuffer = ByteBuffer.wrap(data);
+                        }
+                        if (gzipInputStream == null) {
+                            gzipInputStream = new GZIPInputStream(new InputStream() {
+                                @Override
+                                public int read() throws IOException {
+                                    return (DefaultHttpResponseHandler.this.gzipBuffer == null ? -1 : DefaultHttpResponseHandler.this.gzipBuffer.get()) & 0xFF;
+                                }
+
+                                @Override
+                                public int read(byte[] b, int off, int len) throws IOException {
+                                    if (DefaultHttpResponseHandler.this.gzipBuffer == null) {
+                                        return -1;
+                                    }
+                                    int size = Math.min(DefaultHttpResponseHandler.this.gzipBuffer.remaining(), len);
+                                    DefaultHttpResponseHandler.this.gzipBuffer.get(b, off, size);
+                                    return size;
+                                }
+
+                                @Override
+                                public int available() throws IOException {
+                                    return DefaultHttpResponseHandler.this.gzipBuffer == null ? 0 : DefaultHttpResponseHandler.this.gzipBuffer.remaining();
+                                }
+                            }) {
+                                @Override
+                                public int available() throws IOException {
+                                    return in.available();
+                                }
+                            };
+                        }
+                        byte[] bytes = new byte[4096];
+                        int n;
+                        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                        while (gzipInputStream.available() > 10 && (n = gzipInputStream.read(bytes)) >= 0) {
+                            bos.write(bytes, 0, n);
+                        }
+                        data = bos.toByteArray();
+                    }
+                    if (DefaultHttpResponseHandler.this.steaming != null) {
+                        DefaultHttpResponseHandler.this.steaming.stream((HttpResponse) response, data);
+                    }
                     body.write(data);
                 } catch (IOException e) {
                     throw new FeatException(e);
-                }
-                if (!DefaultHttpResponseHandler.this.gzip && DefaultHttpResponseHandler.this.steaming != null) {
-                    DefaultHttpResponseHandler.this.steaming.stream((HttpResponse) response, data);
                 }
                 part = PART.CHUNK_END;
                 onBodyStream(buffer, response);
@@ -129,11 +181,24 @@ final class DefaultHttpResponseHandler extends ResponseHandler {
         }
 
         public void finishDecode(HttpResponseImpl response) {
-            if (DefaultHttpResponseHandler.this.gzip) {
-                response.setBody(GzipUtils.uncompressToString(body.toByteArray()));
-            } else {
-                response.setBody(body.toString());
+            try {
+                if (gzipInputStream != null && gzipInputStream.available() > 0) {
+                    byte[] bytes = new byte[256];
+                    int n;
+                    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                    while ((n = gzipInputStream.read(bytes)) > 0) {
+                        bos.write(bytes, 0, n);
+                    }
+                    byte[] data = bos.toByteArray();
+                    if (DefaultHttpResponseHandler.this.steaming != null) {
+                        DefaultHttpResponseHandler.this.steaming.stream(response, data);
+                    }
+                    body.write(data);
+                }
+            } catch (IOException e) {
+                throw new FeatException(e);
             }
+            response.setBody(body.toString());
             callback(response);
         }
     }
