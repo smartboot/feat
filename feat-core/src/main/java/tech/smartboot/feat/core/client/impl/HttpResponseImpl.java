@@ -2,9 +2,10 @@ package tech.smartboot.feat.core.client.impl;
 
 import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.client.AbstractResponse;
-import tech.smartboot.feat.core.client.stream.Stream;
 import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.client.stream.GzipStream;
+import tech.smartboot.feat.core.client.stream.Stream;
+import tech.smartboot.feat.core.client.stream.StringStream;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.exception.FeatException;
@@ -61,6 +62,9 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
             state = STATE_FINISH;
         }
 
+        if (statusCode() != 200) {
+            streaming = new StringStream(this);
+        }
         if (StringUtils.equals(HeaderValue.ContentEncoding.GZIP, getHeader(HeaderNameEnum.CONTENT_ENCODING.getName()))) {
             state = STATE_GZIP | state;
             streaming = new GzipStream(streaming);
@@ -144,8 +148,6 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
         streaming.stream(this, new byte[0], true);
         getFuture().complete(this);
     }
-
-
 
 
     public void setStreaming(Stream streaming) {

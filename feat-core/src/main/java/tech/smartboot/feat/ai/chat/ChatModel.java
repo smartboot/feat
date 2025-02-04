@@ -5,14 +5,14 @@ import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.ai.Options;
 import tech.smartboot.feat.core.client.HttpPost;
 import tech.smartboot.feat.core.client.HttpResponse;
-import tech.smartboot.feat.core.client.stream.Stream;
+import tech.smartboot.feat.core.client.stream.ServerSentEventStream;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 
-import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 public class ChatModel {
@@ -51,60 +51,35 @@ public class ChatModel {
 
     public void chatStream(String content, List<String> tools, Consumer<ChatModel> consumer) {
         HttpPost post = chat0(content, tools, true);
-        post.onStream(new Stream() {
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-
+        post.onStream(new ServerSentEventStream() {
             @Override
-            public void stream(HttpResponse response, byte[] bytes, boolean end) {
-                try {
-                    if (bos.size() > 0) {
-                        bos.write(bytes);
-                        bytes = bos.toByteArray();
-                        bos.reset();
-                    }
-                    int start = 0;
-                    for (int i = 0; i < bytes.length; i++) {
-                        if (bytes[i] != '\n') {
-                            continue;
-                        }
-                        String line = new String(bytes, start, i - start);
-                        start = i + 1;
-                        if (line.startsWith("data: ")) {
-                            line = line.substring(6);
-                            if ("[DONE]".equals(line)) {
-                                return;
-                            }
-                            ChatResponse object = JSON.parseObject(line, ChatResponse.class);
-                            if (chatResponse == null || !chatResponse.getId().equals(object.getId())) {
-                                chatResponse = object;
-                                Choice choice = object.getChoice();
-                                ResponseMessage responseMessage = new ResponseMessage();
-                                responseMessage.setRole(choice.getDelta().getRole());
-                                responseMessage.setContent(choice.getDelta().getContent());
-                                choice.setMessage(responseMessage);
-                                history.add(responseMessage);
-                            } else {
-                                StringBuilder delta = new StringBuilder();
-                                for (Choice c : object.getChoices()) {
-                                    delta.append(c.getDelta().getContent());
-                                }
-                                Message deltaMessage = new Message();
-                                deltaMessage.setContent(delta.toString());
-                                chatResponse.getChoice().setDelta(deltaMessage);
-                                ResponseMessage fullMessage = chatResponse.getChoice().getMessage();
-                                fullMessage.setContent(fullMessage.getContent() + delta);
-                            }
-
-                            consumer.accept(ChatModel.this);
-                        }
-
-                    }
-                    if (start < bytes.length) {
-                        bos.write(bytes, start, bytes.length - start);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
+            public void onEvent(HttpResponse httpResponse, Map<String, String> event) {
+                String data = event.get(ServerSentEventStream.DATA);
+                if ("[DONE]".equals(data) || StringUtils.isBlank(data)) {
+                    return;
                 }
+                ChatResponse object = JSON.parseObject(data, ChatResponse.class);
+                if (chatResponse == null || !chatResponse.getId().equals(object.getId())) {
+                    chatResponse = object;
+                    Choice choice = object.getChoice();
+                    ResponseMessage responseMessage = new ResponseMessage();
+                    responseMessage.setRole(choice.getDelta().getRole());
+                    responseMessage.setContent(choice.getDelta().getContent());
+                    choice.setMessage(responseMessage);
+                    history.add(responseMessage);
+                } else {
+                    StringBuilder delta = new StringBuilder();
+                    for (Choice c : object.getChoices()) {
+                        delta.append(c.getDelta().getContent());
+                    }
+                    Message deltaMessage = new Message();
+                    deltaMessage.setContent(delta.toString());
+                    chatResponse.getChoice().setDelta(deltaMessage);
+                    ResponseMessage fullMessage = chatResponse.getChoice().getMessage();
+                    fullMessage.setContent(fullMessage.getContent() + delta);
+                }
+
+                consumer.accept(ChatModel.this);
             }
         });
     }
