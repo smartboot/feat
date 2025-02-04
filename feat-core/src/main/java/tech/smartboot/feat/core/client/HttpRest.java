@@ -1,5 +1,7 @@
 package tech.smartboot.feat.core.client;
 
+import tech.smartboot.feat.core.client.stream.BodyStreaming;
+
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
 

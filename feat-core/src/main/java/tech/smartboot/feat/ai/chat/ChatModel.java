@@ -3,9 +3,9 @@ package tech.smartboot.feat.ai.chat;
 import com.alibaba.fastjson2.JSON;
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.ai.Options;
-import tech.smartboot.feat.core.client.BodyStreaming;
 import tech.smartboot.feat.core.client.HttpPost;
 import tech.smartboot.feat.core.client.HttpResponse;
+import tech.smartboot.feat.core.client.stream.BodyStreaming;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 

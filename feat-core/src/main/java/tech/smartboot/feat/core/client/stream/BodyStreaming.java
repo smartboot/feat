@@ -1,4 +1,6 @@
-package tech.smartboot.feat.core.client;
+package tech.smartboot.feat.core.client.stream;
+
+import tech.smartboot.feat.core.client.HttpResponse;
 
 import java.io.IOException;
 

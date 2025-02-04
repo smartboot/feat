@@ -11,6 +11,8 @@ package tech.smartboot.feat.core.client;
 import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.client.impl.HttpRequestImpl;
 import tech.smartboot.feat.core.client.impl.HttpResponseImpl;
+import tech.smartboot.feat.core.client.stream.BodyStreaming;
+import tech.smartboot.feat.core.client.stream.StringBodyStreaming;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 
 import java.io.ByteArrayOutputStream;
@@ -215,16 +217,7 @@ class HttpRestImpl implements HttpRest {
 
     @Override
     public HttpRest asStringResponse() {
-        response.setStreaming((r, bytes, end) -> {
-            try {
-                bodyStream.write(bytes);
-                if (end) {
-                    response.setBody(bodyStream.toString());
-                }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        });
+        response.setStreaming(new StringBodyStreaming(response));
         return this;
     }
 
