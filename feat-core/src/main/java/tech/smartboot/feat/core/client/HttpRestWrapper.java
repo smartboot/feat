@@ -36,6 +36,11 @@ class HttpRestWrapper implements HttpRest {
     }
 
     @Override
+    public HttpRest asStringResponse() {
+        return rest.asStringResponse();
+    }
+
+    @Override
     public HttpRest onStream(BodyStreaming streaming) {
         return rest.onStream(streaming);
     }

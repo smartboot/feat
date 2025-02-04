@@ -43,27 +43,14 @@ class HttpRestImpl implements HttpRest {
     private Body<HttpRestImpl> body;
 
     private final HttpResponseImpl response;
-    private ByteArrayOutputStream bodyStream = new ByteArrayOutputStream();
+    private final ByteArrayOutputStream bodyStream = new ByteArrayOutputStream();
 
-    private BodyStreaming defaultSteaming = new BodyStreaming() {
-        @Override
-        public void stream(HttpResponse r, byte[] bytes, boolean end) {
-            try {
-                bodyStream.write(bytes);
-                if (end) {
-                    response.setBody(bodyStream.toString());
-                }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-    };
 
     HttpRestImpl(AioSession session, AbstractQueue<AbstractResponse> queue) {
         this.request = new HttpRequestImpl(session);
         this.queue = queue;
         this.response = new HttpResponseImpl(session, completableFuture);
-        response.setStreaming(defaultSteaming);
+        asStringResponse();
     }
 
     protected final void willSendRequest() {
@@ -222,6 +209,21 @@ class HttpRestImpl implements HttpRest {
         completableFuture.exceptionally(throwable -> {
             consumer.accept(throwable);
             return null;
+        });
+        return this;
+    }
+
+    @Override
+    public HttpRest asStringResponse() {
+        response.setStreaming((r, bytes, end) -> {
+            try {
+                bodyStream.write(bytes);
+                if (end) {
+                    response.setBody(bodyStream.toString());
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         });
         return this;
     }

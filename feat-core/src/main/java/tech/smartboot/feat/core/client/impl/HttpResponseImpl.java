@@ -24,7 +24,7 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
     private static final int STATE_CONTENT_LENGTH = 1 << 3;
     private static final int STATE_FINISH = 1 << 4;
     private static final int STATE_GZIP = 0x80;
-    private BodyStreaming streaming;
+    private BodyStreaming streaming = BodyStreaming.SKIP_BODY_STREAMING;
     private int state;
 
     private long remaining;
@@ -160,13 +160,11 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
         @Override
         public void stream(HttpResponse response, byte[] data, boolean end) throws IOException {
             if (buffer != null && buffer.remaining() > 0) {
-                buffer.compact();
                 ByteBuffer newBuffer = ByteBuffer.allocate(buffer.remaining() + data.length);
                 newBuffer.put(buffer);
                 newBuffer.put(data);
                 newBuffer.flip();
                 buffer = newBuffer;
-                buffer.compact();
             } else {
                 buffer = ByteBuffer.wrap(data);
             }

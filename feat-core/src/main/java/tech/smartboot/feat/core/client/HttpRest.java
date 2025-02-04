@@ -20,6 +20,8 @@ public interface HttpRest {
 
     HttpRest onFailure(Consumer<Throwable> consumer);
 
+    HttpRest asStringResponse();
+
     HttpRest onStream(BodyStreaming streaming);
 
     Header<? extends HttpRest> header();
