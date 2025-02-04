@@ -1,7 +1,5 @@
 package tech.smartboot.feat.core.client;
 
-import tech.smartboot.feat.core.client.stream.Stream;
-
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
@@ -38,21 +36,6 @@ class HttpRestWrapper implements HttpRest {
     }
 
     @Override
-    public HttpRest asStringResponse() {
-        return rest.asStringResponse();
-    }
-
-    @Override
-    public HttpRest onHeaderResponse(Consumer<HttpResponse> consumer) {
-        return rest.onHeaderResponse(consumer);
-    }
-
-    @Override
-    public HttpRest onStream(Stream streaming) {
-        return rest.onStream(streaming);
-    }
-
-    @Override
     public Header<? extends HttpRest> header() {
         return rest.header();
     }
@@ -60,6 +43,11 @@ class HttpRestWrapper implements HttpRest {
     @Override
     public HttpRest addQueryParam(String name, String value) {
         return rest.addQueryParam(name, value);
+    }
+
+    @Override
+    public HttpResponse response() {
+        return rest.response();
     }
 
 //    @Override

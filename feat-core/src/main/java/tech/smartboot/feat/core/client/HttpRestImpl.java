@@ -11,8 +11,6 @@ package tech.smartboot.feat.core.client;
 import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.client.impl.HttpRequestImpl;
 import tech.smartboot.feat.core.client.impl.HttpResponseImpl;
-import tech.smartboot.feat.core.client.stream.Stream;
-import tech.smartboot.feat.core.client.stream.StringStream;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 
 import java.io.ByteArrayOutputStream;
@@ -51,7 +49,6 @@ class HttpRestImpl implements HttpRest {
         this.request = new HttpRequestImpl(session);
         this.queue = queue;
         this.response = new HttpResponseImpl(session, completableFuture);
-        asStringResponse();
     }
 
     protected final void willSendRequest() {
@@ -214,24 +211,6 @@ class HttpRestImpl implements HttpRest {
         return this;
     }
 
-    @Override
-    public HttpRest asStringResponse() {
-        response.setStreaming(new StringStream());
-        return this;
-    }
-
-    @Override
-    public HttpRest onHeaderResponse(Consumer<HttpResponse> consumer) {
-        response.setHeaderConsumer(consumer);
-        return this;
-    }
-
-    @Override
-    public HttpRest onStream(Stream streaming) {
-        response.setStreaming(streaming);
-        return this;
-    }
-
     public HttpRest setMethod(String method) {
         request.setMethod(method);
         return this;
@@ -283,6 +262,11 @@ class HttpRestImpl implements HttpRest {
         }
         queryParams.put(name, value);
         return this;
+    }
+
+    @Override
+    public HttpResponse response() {
+        return response;
     }
 
     /**

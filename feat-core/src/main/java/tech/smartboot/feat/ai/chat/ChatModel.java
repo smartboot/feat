@@ -53,9 +53,9 @@ public class ChatModel {
 
     public void chatStream(String content, List<String> tools, Consumer<ChatModel> consumer) {
         HttpPost post = chat0(content, tools, true);
-        post.onHeaderResponse(resp -> {
+        post.response().headerCompleted(resp -> {
             if (resp.statusCode() == 200) {
-                post.onStream(new ServerSentEventStream() {
+                resp.onStream(new ServerSentEventStream() {
                     @Override
                     public void onEvent(HttpResponse httpResponse, Map<String, String> event) {
                         String data = event.get(ServerSentEventStream.DATA);
@@ -88,7 +88,7 @@ public class ChatModel {
                     }
                 });
             } else {
-                post.onStream(new Stream() {
+                resp.onStream(new Stream() {
                     @Override
                     public void stream(HttpResponse response, byte[] bytes, boolean end) throws IOException {
                         System.out.print(new String(bytes));

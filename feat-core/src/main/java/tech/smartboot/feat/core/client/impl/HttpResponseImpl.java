@@ -5,6 +5,7 @@ import tech.smartboot.feat.core.client.AbstractResponse;
 import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.client.stream.GzipStream;
 import tech.smartboot.feat.core.client.stream.Stream;
+import tech.smartboot.feat.core.client.stream.StringStream;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.exception.FeatException;
@@ -23,7 +24,7 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
     private static final int STATE_CONTENT_LENGTH = 1 << 3;
     private static final int STATE_FINISH = 1 << 4;
     private static final int STATE_GZIP = 0x80;
-    private Stream streaming = Stream.SKIP_BODY_STREAMING;
+    private Stream streaming = new StringStream();
     private int state;
 
     private long remaining;
@@ -39,6 +40,12 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
 
     public String body() {
         return body;
+    }
+
+    @Override
+    public HttpResponse headerCompleted(Consumer<HttpResponse> resp) {
+        this.headerConsumer = resp;
+        return this;
     }
 
     public void setBody(String body) {
@@ -149,11 +156,9 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
     }
 
 
-    public void setStreaming(Stream streaming) {
+    public HttpResponse onStream(Stream streaming) {
         this.streaming = streaming;
+        return this;
     }
 
-    public void setHeaderConsumer(Consumer<HttpResponse> headerConsumer) {
-        this.headerConsumer = headerConsumer;
-    }
 }

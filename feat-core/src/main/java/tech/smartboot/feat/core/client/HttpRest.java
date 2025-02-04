@@ -1,7 +1,5 @@
 package tech.smartboot.feat.core.client;
 
-import tech.smartboot.feat.core.client.stream.Stream;
-
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
@@ -22,14 +20,10 @@ public interface HttpRest {
 
     HttpRest onFailure(Consumer<Throwable> consumer);
 
-    HttpRest asStringResponse();
-
-    HttpRest onHeaderResponse(Consumer<HttpResponse> consumer);
-
-    HttpRest onStream(Stream streaming);
-
     Header<? extends HttpRest> header();
 
     HttpRest addQueryParam(String name, String value);
+
+    HttpResponse response();
 
 }
