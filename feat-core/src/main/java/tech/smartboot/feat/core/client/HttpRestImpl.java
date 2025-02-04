@@ -63,7 +63,7 @@ class HttpRestImpl implements HttpRest {
         this.request = new HttpRequestImpl(session);
         this.queue = queue;
         this.response = new HttpResponseImpl(session, completableFuture);
-        response.setSteaming(defaultSteaming);
+        response.setStreaming(defaultSteaming);
     }
 
     protected final void willSendRequest() {
@@ -228,7 +228,7 @@ class HttpRestImpl implements HttpRest {
 
     @Override
     public HttpRest onStream(BodyStreaming streaming) {
-        response.setSteaming(streaming);
+        response.setStreaming(streaming);
         return this;
     }
 

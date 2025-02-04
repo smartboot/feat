@@ -24,7 +24,7 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
     private static final int STATE_CONTENT_LENGTH = 1 << 3;
     private static final int STATE_FINISH = 1 << 4;
     private static final int STATE_GZIP = 0x80;
-    private BodyStreaming steaming;
+    private BodyStreaming streaming;
     private int state;
 
     private long remaining;
@@ -65,7 +65,7 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
 
         if (StringUtils.equals(HeaderValue.ContentEncoding.GZIP, getHeader(HeaderNameEnum.CONTENT_ENCODING.getName()))) {
             state = STATE_GZIP | state;
-            steaming = new GzipBodyStreaming(steaming);
+            streaming = new GzipBodyStreaming(streaming);
         }
     }
 
@@ -97,7 +97,7 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
                     byte[] bytes = new byte[length];
                     buffer.get(bytes);
                     remaining -= length;
-                    steaming.stream(this, bytes, false);
+                    streaming.stream(this, bytes, false);
                     if (remaining == 0) {
                         state = STATE_CHUNK_END;
                     }
@@ -124,7 +124,7 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
                     byte[] bytes = new byte[length];
                     buffer.get(bytes);
                     remaining -= length;
-                    steaming.stream(this, bytes, false);
+                    streaming.stream(this, bytes, false);
                     if (remaining == 0) {
                         state = STATE_FINISH;
                     }
@@ -143,7 +143,7 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
     }
 
     public void finishDecode() throws IOException {
-        steaming.stream(this, new byte[0], true);
+        streaming.stream(this, new byte[0], true);
         getFuture().complete(this);
     }
 
@@ -173,12 +173,12 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
             if (gzipInputStream == null) {
                 gzipInputStream = new GZIPInputStream(new InputStream() {
                     @Override
-                    public int read() throws IOException {
+                    public int read() {
                         return (buffer == null ? -1 : buffer.get()) & 0xFF;
                     }
 
                     @Override
-                    public int read(byte[] b, int off, int len) throws IOException {
+                    public int read(byte[] b, int off, int len) {
                         if (buffer == null) {
                             return -1;
                         }
@@ -188,12 +188,12 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
                     }
 
                     @Override
-                    public int available() throws IOException {
+                    public int available() {
                         return buffer == null ? 0 : buffer.remaining();
                     }
                 }) {
                     @Override
-                    public int available() throws IOException {
+                    public int available() {
                         return buffer == null ? 0 : buffer.remaining();
                     }
                 };
@@ -208,7 +208,7 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
         }
     }
 
-    public void setSteaming(BodyStreaming steaming) {
-        this.steaming = steaming;
+    public void setStreaming(BodyStreaming streaming) {
+        this.streaming = streaming;
     }
 }
