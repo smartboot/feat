@@ -19,7 +19,6 @@ import tech.smartboot.feat.core.common.utils.ByteTree;
 import tech.smartboot.feat.core.common.utils.Constant;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.ExecutorService;
 
@@ -145,12 +144,7 @@ final class HttpMessageProcessor extends AbstractMessageProcessor<AbstractRespon
 
         switch (decoderUnit.getState()) {
             case DecodeState.STATE_HEADER_CALLBACK:
-                try {
-                    response.onHeaderComplete();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    throw new RuntimeException(e);
-                }
+                response.onHeaderComplete();
                 decoderUnit.setState(DecoderUnit.STATE_BODY);
                 response.onBodyStream(session.readBuffer());
                 return;

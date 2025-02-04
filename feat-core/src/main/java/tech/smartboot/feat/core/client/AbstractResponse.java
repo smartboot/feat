@@ -166,7 +166,7 @@ public abstract class AbstractResponse implements Response, Reset {
     /**
      * Http header 完成解析
      */
-    protected abstract void onHeaderComplete() throws IOException;
+    protected abstract void onHeaderComplete();
 
     /**
      * 解析 body 数据流

@@ -52,7 +52,7 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
     }
 
     @Override
-    public void onHeaderComplete() throws IOException {
+    public void onHeaderComplete() {
         String transferEncoding = getHeader(HeaderNameEnum.TRANSFER_ENCODING.getName());
         if (StringUtils.equals(transferEncoding, HeaderValue.TransferEncoding.CHUNKED)) {
             state = STATE_CHUNK_LENGTH;
@@ -153,7 +153,7 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
         private GZIPInputStream gzipInputStream;
         private final BodySteaming bodySteaming;
 
-        public GzipBodySteaming(BodySteaming bodySteaming) throws IOException {
+        public GzipBodySteaming(BodySteaming bodySteaming) {
             this.bodySteaming = bodySteaming;
         }
 
