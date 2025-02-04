@@ -10,6 +10,7 @@ public class Options {
     private String model;
     private String apiKey = System.getenv("OPENAI_API_KEY");
     private String system;
+    private boolean debug;
     private Map<String, Function> functions = new HashMap<>();
 
     public String baseUrl() {
@@ -54,6 +55,15 @@ public class Options {
 
     public Options system(String system) {
         this.system = system;
+        return this;
+    }
+
+    public boolean isDebug() {
+        return debug;
+    }
+
+    public Options debug(boolean debug) {
+        this.debug = debug;
         return this;
     }
 }

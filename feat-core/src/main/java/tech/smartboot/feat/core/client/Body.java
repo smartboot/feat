@@ -24,11 +24,6 @@ public interface Body<T> {
     /**
      * 往缓冲区中写入数据
      */
-//    voidvoidvoid write(byte[] bytes, int offset, int len, Consumer<Body<T>> consumer);
-
-    /**
-     * 往缓冲区中写入数据
-     */
     void transferFrom(ByteBuffer buffer, Consumer<Body<T>> consumer);
 
     /**

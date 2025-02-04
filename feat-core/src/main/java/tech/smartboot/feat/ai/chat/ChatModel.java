@@ -55,7 +55,7 @@ public class ChatModel {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
 
             @Override
-            public void stream(HttpResponse response, byte[] bytes,boolean end) {
+            public void stream(HttpResponse response, byte[] bytes, boolean end) {
                 try {
                     if (bos.size() > 0) {
                         bos.write(bytes);
@@ -146,7 +146,7 @@ public class ChatModel {
 
 
         HttpPost post = Feat.postJson(options.baseUrl() + "/chat/completions", opts -> {
-            opts.debug(true);
+            opts.debug(options.isDebug());
         }, header -> {
             header.add(HeaderNameEnum.AUTHORIZATION.getName(), "Bearer " + options.getApiKey());
         }, request);
