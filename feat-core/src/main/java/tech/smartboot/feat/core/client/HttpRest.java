@@ -20,7 +20,7 @@ public interface HttpRest {
 
     HttpRest onFailure(Consumer<Throwable> consumer);
 
-    HttpRest onStream(BodySteaming streaming);
+    HttpRest onStream(BodyStreaming streaming);
 
     Header<? extends HttpRest> header();
 

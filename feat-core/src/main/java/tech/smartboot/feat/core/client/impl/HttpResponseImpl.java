@@ -2,7 +2,7 @@ package tech.smartboot.feat.core.client.impl;
 
 import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.client.AbstractResponse;
-import tech.smartboot.feat.core.client.BodySteaming;
+import tech.smartboot.feat.core.client.BodyStreaming;
 import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
@@ -24,7 +24,7 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
     private static final int STATE_CONTENT_LENGTH = 1 << 3;
     private static final int STATE_FINISH = 1 << 4;
     private static final int STATE_GZIP = 0x80;
-    protected BodySteaming steaming;
+    private BodyStreaming steaming;
     private int state;
 
     private long remaining;
@@ -65,7 +65,7 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
 
         if (StringUtils.equals(HeaderValue.ContentEncoding.GZIP, getHeader(HeaderNameEnum.CONTENT_ENCODING.getName()))) {
             state = STATE_GZIP | state;
-            steaming = new GzipBodySteaming(steaming);
+            steaming = new GzipBodyStreaming(steaming);
         }
     }
 
@@ -97,7 +97,7 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
                     byte[] bytes = new byte[length];
                     buffer.get(bytes);
                     remaining -= length;
-                    steaming.stream(this, bytes);
+                    steaming.stream(this, bytes, false);
                     if (remaining == 0) {
                         state = STATE_CHUNK_END;
                     }
@@ -124,7 +124,7 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
                     byte[] bytes = new byte[length];
                     buffer.get(bytes);
                     remaining -= length;
-                    steaming.stream(this, bytes);
+                    steaming.stream(this, bytes, false);
                     if (remaining == 0) {
                         state = STATE_FINISH;
                     }
@@ -143,22 +143,22 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
     }
 
     public void finishDecode() throws IOException {
-        steaming.end(this);
+        steaming.stream(this, new byte[0], true);
         getFuture().complete(this);
     }
 
 
-    class GzipBodySteaming implements BodySteaming {
+    class GzipBodyStreaming implements BodyStreaming {
         ByteBuffer buffer;
         private GZIPInputStream gzipInputStream;
-        private final BodySteaming bodySteaming;
+        private final BodyStreaming bodyStreaming;
 
-        public GzipBodySteaming(BodySteaming bodySteaming) {
-            this.bodySteaming = bodySteaming;
+        public GzipBodyStreaming(BodyStreaming bodyStreaming) {
+            this.bodyStreaming = bodyStreaming;
         }
 
         @Override
-        public void stream(HttpResponse response, byte[] data) throws IOException {
+        public void stream(HttpResponse response, byte[] data, boolean end) throws IOException {
             if (buffer != null && buffer.remaining() > 0) {
                 buffer.compact();
                 ByteBuffer newBuffer = ByteBuffer.allocate(buffer.remaining() + data.length);
@@ -201,28 +201,14 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
             byte[] b = new byte[4096];
             int n;
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            while (buffer.remaining() > 100 && (n = gzipInputStream.read(b)) > 0) {
+            while ((end || buffer.remaining() > 100) && buffer.hasRemaining() && (n = gzipInputStream.read(b)) > 0) {
                 bos.write(b, 0, n);
             }
-            bodySteaming.stream(response, bos.toByteArray());
-        }
-
-        @Override
-        public void end(HttpResponse response) throws IOException {
-            if (gzipInputStream.available() > 0) {
-                byte[] bytes = new byte[4096];
-                int n;
-                ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                while (buffer.hasRemaining() && (n = gzipInputStream.read(bytes)) > 0) {
-                    bos.write(bytes, 0, n);
-                }
-                bodySteaming.stream(response, bos.toByteArray());
-            }
-            bodySteaming.end(response);
+            bodyStreaming.stream(response, bos.toByteArray(), end);
         }
     }
 
-    public void setSteaming(BodySteaming steaming) {
+    public void setSteaming(BodyStreaming steaming) {
         this.steaming = steaming;
     }
 }

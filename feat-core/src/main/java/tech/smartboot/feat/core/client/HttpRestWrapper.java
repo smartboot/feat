@@ -36,7 +36,7 @@ class HttpRestWrapper implements HttpRest {
     }
 
     @Override
-    public HttpRest onStream(BodySteaming streaming) {
+    public HttpRest onStream(BodyStreaming streaming) {
         return rest.onStream(streaming);
     }
 

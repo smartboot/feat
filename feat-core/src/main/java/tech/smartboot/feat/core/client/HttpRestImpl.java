@@ -45,19 +45,17 @@ class HttpRestImpl implements HttpRest {
     private final HttpResponseImpl response;
     private ByteArrayOutputStream bodyStream = new ByteArrayOutputStream();
 
-    private BodySteaming defaultSteaming = new BodySteaming() {
+    private BodyStreaming defaultSteaming = new BodyStreaming() {
         @Override
-        public void stream(HttpResponse response, byte[] bytes) {
+        public void stream(HttpResponse r, byte[] bytes, boolean end) {
             try {
                 bodyStream.write(bytes);
+                if (end) {
+                    response.setBody(bodyStream.toString());
+                }
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-        }
-
-        @Override
-        public void end(HttpResponse r) {
-            response.setBody(bodyStream.toString());
         }
     };
 
@@ -229,7 +227,7 @@ class HttpRestImpl implements HttpRest {
     }
 
     @Override
-    public HttpRest onStream(BodySteaming streaming) {
+    public HttpRest onStream(BodyStreaming streaming) {
         response.setSteaming(streaming);
         return this;
     }

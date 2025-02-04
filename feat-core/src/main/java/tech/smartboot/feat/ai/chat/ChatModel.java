@@ -3,7 +3,7 @@ package tech.smartboot.feat.ai.chat;
 import com.alibaba.fastjson2.JSON;
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.ai.Options;
-import tech.smartboot.feat.core.client.BodySteaming;
+import tech.smartboot.feat.core.client.BodyStreaming;
 import tech.smartboot.feat.core.client.HttpPost;
 import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
@@ -51,11 +51,11 @@ public class ChatModel {
 
     public void chatStream(String content, List<String> tools, Consumer<ChatModel> consumer) {
         HttpPost post = chat0(content, tools, true);
-        post.onStream(new BodySteaming() {
+        post.onStream(new BodyStreaming() {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
 
             @Override
-            public void stream(HttpResponse response, byte[] bytes) {
+            public void stream(HttpResponse response, byte[] bytes,boolean end) {
                 try {
                     if (bos.size() > 0) {
                         bos.write(bytes);
