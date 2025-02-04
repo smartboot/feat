@@ -133,7 +133,7 @@ final class HttpMessageProcessor extends AbstractMessageProcessor<AbstractRespon
             }
             //
             case DecodeState.STATE_BODY: {
-                response.getResponseHandler().onBodyStream(buffer, response);
+                response.onBodyStream(buffer);
             }
         }
         return null;
@@ -142,18 +142,17 @@ final class HttpMessageProcessor extends AbstractMessageProcessor<AbstractRespon
     @Override
     public void process0(AioSession session, AbstractResponse response) {
         DecoderUnit decoderUnit = session.getAttachment();
-        ResponseHandler responseHandler = response.getResponseHandler();
 
         switch (decoderUnit.getState()) {
             case DecodeState.STATE_HEADER_CALLBACK:
                 try {
-                    responseHandler.onHeaderComplete(response);
+                    response.onHeaderComplete();
                 } catch (IOException e) {
                     e.printStackTrace();
                     throw new RuntimeException(e);
                 }
                 decoderUnit.setState(DecoderUnit.STATE_BODY);
-                responseHandler.onBodyStream(session.readBuffer(), response);
+                response.onBodyStream(session.readBuffer());
                 return;
             case DecodeState.STATE_FINISH:
                 if (executorService == null) {

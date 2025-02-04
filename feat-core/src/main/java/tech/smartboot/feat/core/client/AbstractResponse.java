@@ -15,6 +15,8 @@ import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.utils.NumberUtils;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -38,7 +40,7 @@ public abstract class AbstractResponse implements Response, Reset {
      */
     private String protocol;
     private String contentType;
-    private int contentLength = INIT_CONTENT_LENGTH;
+    private long contentLength = INIT_CONTENT_LENGTH;
 
     /**
      * http 响应码
@@ -49,7 +51,6 @@ public abstract class AbstractResponse implements Response, Reset {
      */
     private String reasonPhrase;
     private String encoding;
-    private ResponseHandler responseHandler;
     private final CompletableFuture<AbstractResponse> future;
 
     public AbstractResponse(AioSession session, CompletableFuture<AbstractResponse> future) {
@@ -117,12 +118,12 @@ public abstract class AbstractResponse implements Response, Reset {
         return contentType;
     }
 
-    public final int getContentLength() {
+    public final long getContentLength() {
         if (contentLength > INIT_CONTENT_LENGTH) {
             return contentLength;
         }
         //不包含content-length,则为：-1
-        contentLength = NumberUtils.toInt(getHeader(HeaderNameEnum.CONTENT_LENGTH.getName()), NONE_CONTENT_LENGTH);
+        contentLength = NumberUtils.toLong(getHeader(HeaderNameEnum.CONTENT_LENGTH.getName()), NONE_CONTENT_LENGTH);
         return contentLength;
     }
 
@@ -157,15 +158,21 @@ public abstract class AbstractResponse implements Response, Reset {
         this.reasonPhrase = reasonPhrase;
     }
 
-    public ResponseHandler getResponseHandler() {
-        return responseHandler;
-    }
-
-    public void setResponseHandler(ResponseHandler responseHandler) {
-        this.responseHandler = responseHandler;
-    }
 
     public CompletableFuture<AbstractResponse> getFuture() {
         return future;
     }
+
+    /**
+     * Http header 完成解析
+     */
+    protected abstract void onHeaderComplete() throws IOException;
+
+    /**
+     * 解析 body 数据流
+     *
+     * @param buffer
+     * @return
+     */
+    protected abstract void onBodyStream(ByteBuffer buffer);
 }

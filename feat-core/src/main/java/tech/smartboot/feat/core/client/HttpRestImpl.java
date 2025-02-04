@@ -13,6 +13,7 @@ import tech.smartboot.feat.core.client.impl.HttpRequestImpl;
 import tech.smartboot.feat.core.client.impl.HttpResponseImpl;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -40,16 +41,31 @@ class HttpRestImpl implements HttpRest {
     private Map<String, String> queryParams = null;
     private boolean commit = false;
     private Body<HttpRestImpl> body;
-    /**
-     * http body 解码器
-     */
-    private final ResponseHandler responseHandler = new DefaultHttpResponseHandler();
+
     private final HttpResponseImpl response;
+    private ByteArrayOutputStream bodyStream = new ByteArrayOutputStream();
+
+    private BodySteaming defaultSteaming = new BodySteaming() {
+        @Override
+        public void stream(HttpResponse response, byte[] bytes) {
+            try {
+                bodyStream.write(bytes);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Override
+        public void end(HttpResponse r) {
+            response.setBody(bodyStream.toString());
+        }
+    };
 
     HttpRestImpl(AioSession session, AbstractQueue<AbstractResponse> queue) {
         this.request = new HttpRequestImpl(session);
         this.queue = queue;
         this.response = new HttpResponseImpl(session, completableFuture);
+        response.setSteaming(defaultSteaming);
     }
 
     protected final void willSendRequest() {
@@ -62,7 +78,6 @@ class HttpRestImpl implements HttpRest {
         if (!headers.contains(HeaderNameEnum.USER_AGENT.getName())) {
             request.addHeader(HeaderNameEnum.USER_AGENT.getName(), DEFAULT_USER_AGENT);
         }
-        response.setResponseHandler(responseHandler);
         AioSession session = response.getSession();
         DecoderUnit attachment = session.getAttachment();
         synchronized (session) {
@@ -215,7 +230,7 @@ class HttpRestImpl implements HttpRest {
 
     @Override
     public HttpRest onStream(BodySteaming streaming) {
-        responseHandler.onStream(streaming);
+        response.setSteaming(streaming);
         return this;
     }
 

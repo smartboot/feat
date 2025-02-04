@@ -25,7 +25,7 @@ import java.util.concurrent.CompletableFuture;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2021/2/2
  */
-public class WebSocketResponseImpl extends AbstractResponse implements WebSocket, WebSocketResponse {
+public abstract class WebSocketResponseImpl extends AbstractResponse implements WebSocket, WebSocketResponse {
     public final static Decoder basicFrameDecoder = new BasicFrameDecoder();
     private Decoder decoder = basicFrameDecoder;
     private final ByteArrayOutputStream payload = new ByteArrayOutputStream();

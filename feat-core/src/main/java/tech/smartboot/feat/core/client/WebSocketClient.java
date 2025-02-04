@@ -222,30 +222,25 @@ public class WebSocketClient {
                 }
             }
         });
-        WebSocketResponseImpl webSocketResponse = new WebSocketResponseImpl(session, completableFuture);
-        webSocketResponse.setResponseHandler(new ResponseHandler() {
+        WebSocketResponseImpl webSocketResponse = new WebSocketResponseImpl(session, completableFuture) {
             @Override
-            public void onHeaderComplete(AbstractResponse abstractResponse) throws IOException {
-                WebSocketResponseImpl webSocketResponse = (WebSocketResponseImpl) abstractResponse;
-                super.onHeaderComplete(webSocketResponse);
-                if (webSocketResponse.statusCode() != HttpStatus.SWITCHING_PROTOCOLS.value()) {
-                    listener.onClose(WebSocketClient.this, webSocketResponse, new CloseReason(CloseReason.WRONG_CODE, ""));
+            public void onHeaderComplete() {
+                if (statusCode() != HttpStatus.SWITCHING_PROTOCOLS.value()) {
+                    listener.onClose(WebSocketClient.this, this, new CloseReason(CloseReason.WRONG_CODE, ""));
                     return;
                 }
-                listener.onOpen(WebSocketClient.this, webSocketResponse);
+                listener.onOpen(WebSocketClient.this, this);
             }
 
             @Override
-            public void onBodyStream(ByteBuffer buffer, AbstractResponse abstractResponse) {
-                WebSocketResponseImpl webSocketResponse = (WebSocketResponseImpl) abstractResponse;
-                Decoder decoder = webSocketResponse.getDecoder().decode(buffer, webSocketResponse);
-                webSocketResponse.setDecoder(decoder);
+            public void onBodyStream(ByteBuffer buffer) {
+                Decoder decoder = getDecoder().decode(buffer, this);
+                setDecoder(decoder);
                 if (decoder == WebSocket.PAYLOAD_FINISH) {
-                    abstractResponse.getFuture().complete(abstractResponse);
+                    this.getFuture().complete(this);
                 }
             }
-
-        });
+        };
 
         attachment.setResponse(webSocketResponse);
         initRest();

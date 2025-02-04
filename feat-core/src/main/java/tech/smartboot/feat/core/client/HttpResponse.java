@@ -18,7 +18,7 @@ public interface HttpResponse extends Response {
 
     String getContentType();
 
-    int getContentLength();
+    long getContentLength();
 
     String getCharacterEncoding();
 
