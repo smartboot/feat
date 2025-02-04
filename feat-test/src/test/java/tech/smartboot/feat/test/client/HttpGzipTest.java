@@ -13,12 +13,12 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import tech.smartboot.feat.core.client.HttpClient;
-import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
+import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.utils.NumberUtils;
+import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
-import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 import tech.smartboot.feat.router.Router;
 
@@ -43,7 +43,7 @@ public class HttpGzipTest {
         routeHandle.route("/test", new BaseHttpHandler() {
             @Override
             public void handle(HttpRequest request) throws IOException {
-                HttpResponse response = request.getResponse();
+                HttpResponse response=request.getResponse();
                 int count = NumberUtils.toInt(request.getParameter("count"), 1);
                 response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValue.ContentEncoding.GZIP);
                 GZIPOutputStream outputStream = new GZIPOutputStream(response.getOutputStream());
@@ -57,7 +57,7 @@ public class HttpGzipTest {
         routeHandle.route("/html", new BaseHttpHandler() {
             @Override
             public void handle(HttpRequest request) throws IOException {
-                HttpResponse response = request.getResponse();
+                HttpResponse response=request.getResponse();
                 response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValue.ContentEncoding.GZIP);
                 GZIPOutputStream outputStream = new GZIPOutputStream(response.getOutputStream());
                 outputStream.write("<html>".getBytes());
@@ -91,7 +91,7 @@ public class HttpGzipTest {
         HttpClient client = new HttpClient("127.0.0.1", 8080);
         client.options().debug(true);
         Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/html")
-                .header().keepalive(true).done()
+                .header(h->h.keepalive(true))
                 .onSuccess(response -> {
                     System.out.println(response.body());
                 })
@@ -106,7 +106,7 @@ public class HttpGzipTest {
         HttpClient client = new HttpClient("127.0.0.1", 8080);
         client.options().debug(true);
         Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/test?count=" + count)
-                .header().keepalive(true).done()
+                .header(h->h.keepalive(true))
                 .onSuccess(response -> {
 //                    System.out.println(response.body());
                 })

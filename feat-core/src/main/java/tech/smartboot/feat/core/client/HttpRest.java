@@ -20,7 +20,9 @@ public interface HttpRest {
 
     HttpRest onFailure(Consumer<Throwable> consumer);
 
-    Header<? extends HttpRest> header();
+    HttpRest header(Consumer<Header> header);
+
+    Header header();
 
     HttpRest addQueryParam(String name, String value);
 

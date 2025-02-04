@@ -37,7 +37,9 @@ public class HttpGet extends HttpRestWrapper {
     }
 
     @Override
-    public Header<HttpGet> header() {
-        return new HeaderWrapper<>(this, rest.header());
+    public HttpGet header(Consumer<Header> header) {
+        super.header(header);
+        return this;
     }
+
 }

@@ -154,7 +154,7 @@ public class HttpPostTest {
             String body = "test a body string";
             client.options().debug(true);
             Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/chunk")
-                    .header().keepalive(true).done()
+                    .header(h->h.keepalive(true))
                     .body()
                     .write(body.getBytes()).write(body.getBytes())
                     .done()
@@ -180,7 +180,7 @@ public class HttpPostTest {
             String body = "test a body string";
             client.options().debug(true);
             Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/header")
-                    .header().keepalive(true).setContentLength(body.getBytes().length).done()
+                    .header(h->h.keepalive(true).setContentLength(body.getBytes().length))
                     .body()
                     .write(body.getBytes())
                     .done()
@@ -206,7 +206,7 @@ public class HttpPostTest {
             String body2 = "test a body2 string";
             client.options().debug(true);
             Future<tech.smartboot.feat.core.client.HttpResponse> future1 = client.post("/other/abc")
-                    .header().keepalive(true).setContentLength(body.getBytes().length).done()
+                    .header(h->h.keepalive(true).setContentLength(body.getBytes().length))
                     .body()
                     .write(body.getBytes())
                     .done()
@@ -219,7 +219,7 @@ public class HttpPostTest {
                     }).done();
 
             Future<tech.smartboot.feat.core.client.HttpResponse> future2 = client.post("/other/abc")
-                    .header().keepalive(true).setContentLength(body2.getBytes().length).done()
+                    .header(h->h.keepalive(true).setContentLength(body2.getBytes().length))
                     .body()
                     .write(body2.getBytes())
                     .done()
@@ -244,7 +244,7 @@ public class HttpPostTest {
             Map<String, String> param = new HashMap<>();
             param.put("name", "zhouyu");
             param.put("age", "18");
-            httpClient.post("/post_param").header().setContentType(HeaderValue.ContentType.X_WWW_FORM_URLENCODED).done().onSuccess(response -> {
+            httpClient.post("/post_param").header(h->h.setContentType(HeaderValue.ContentType.X_WWW_FORM_URLENCODED)).onSuccess(response -> {
                 System.out.println(response.body());
                 JSONObject jsonObject = JSONObject.parseObject(response.body());
                 boolean suc = false;
@@ -273,7 +273,7 @@ public class HttpPostTest {
         Consumer consumer = httpClient -> {
             httpClient.options().debug(true);
             byte[] jsonBytes = "{\"a\":1,\"b\":\"123\"}".getBytes(StandardCharsets.UTF_8);
-            httpClient.post("/json").header().setContentLength(jsonBytes.length).setContentType("application/json").done().body().write(jsonBytes).flush().done();
+            httpClient.post("/json").header(h->h.setContentLength(jsonBytes.length).setContentType("application/json")).body().write(jsonBytes).flush().done();
             Thread.sleep(100);
         };
         doRequest(new HttpClient("http://127.0.0.1:8080"), consumer);
@@ -285,8 +285,8 @@ public class HttpPostTest {
         Consumer consumer = httpClient -> {
             httpClient.options().debug(true);
             byte[] jsonBytes = "{\"a\":1,\"b\":\"123\"}".getBytes(StandardCharsets.UTF_8);
-            String resp = httpClient.post("/body").header().setContentLength(jsonBytes.length).setContentType(
-                    "application/json").done().body().write(jsonBytes).flush().done().done().get().body();
+            String resp = httpClient.post("/body").header(h->h.setContentLength(jsonBytes.length).setContentType(
+                    "application/json")).body().write(jsonBytes).flush().done().done().get().body();
             Assert.assertEquals(resp, jsonBytes.length + new String(jsonBytes));
         };
         doRequest(new HttpClient("http://127.0.0.1:8080"), consumer);
@@ -298,8 +298,8 @@ public class HttpPostTest {
         Consumer consumer = httpClient -> {
             httpClient.options().debug(true);
             byte[] jsonBytes = "{\"a\":1,\"b\":\"123\"}".getBytes(StandardCharsets.UTF_8);
-            tech.smartboot.feat.core.client.HttpResponse resp = httpClient.post("/empty").header().setContentLength(jsonBytes.length).setContentType(
-                    "application/json").done().body().write(jsonBytes).flush().done().done().get();
+            tech.smartboot.feat.core.client.HttpResponse resp = httpClient.post("/empty").header(h->h.setContentLength(jsonBytes.length).setContentType(
+                    "application/json")).body().write(jsonBytes).flush().done().done().get();
             Assert.assertEquals(0, resp.getContentLength());
         };
         doRequest(new HttpClient("http://127.0.0.1:8080"), consumer);

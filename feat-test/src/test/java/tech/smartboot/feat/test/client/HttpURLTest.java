@@ -89,8 +89,8 @@ public class HttpURLTest {
         HttpClient httpClient = new HttpClient("http://localhost:8080/json");
         httpClient.options().debug(true);
         byte[] jsonBytes = "{\"a\":1,\"b\":\"123\"}".getBytes(StandardCharsets.UTF_8);
-        httpClient.post().header().setContentLength(jsonBytes.length).setContentType("application/json").done().body().write(jsonBytes).flush().done();
-        httpClient.post().header().setContentLength(jsonBytes.length).setContentType("application/json").done().body().write(jsonBytes).flush().done();
+        httpClient.post().header(h->h.setContentLength(jsonBytes.length).setContentType("application/json")).body().write(jsonBytes).flush().done();
+        httpClient.post().header(h->h.setContentLength(jsonBytes.length).setContentType("application/json")).body().write(jsonBytes).flush().done();
         httpClient.post().body().write(jsonBytes).flush().done().done();
         Thread.sleep(100);
     }

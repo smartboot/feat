@@ -104,7 +104,7 @@ public class MultipartTest {
                         "------WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n";
         client.options().debug(true);
         Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/formdata")
-                .header().keepalive(true).setContentLength(body.getBytes().length).setContentType("multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW").done()
+                .header(h->h.keepalive(true).setContentLength(body.getBytes().length).setContentType("multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW"))
                 .body()
                 .write(body.getBytes())
                 .done()
@@ -141,7 +141,7 @@ public class MultipartTest {
 
         client.options().debug(true);
         Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/formdata")
-                .header().keepalive(true).setContentLength(body.getBytes().length).setContentType("multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW").done()
+                .header(h->h.keepalive(true).setContentLength(body.getBytes().length).setContentType("multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW"))
                 .body()
                 .write(body.getBytes())
                 .done()
@@ -165,7 +165,7 @@ public class MultipartTest {
         String body = "------WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n";
         client.options().debug(true);
         Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/formdata")
-                .header().keepalive(true).setContentLength(body.getBytes().length).setContentType("multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW").done()
+                .header(h->h.keepalive(true).setContentLength(body.getBytes().length).setContentType("multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW"))
                 .body()
                 .write(body.getBytes())
                 .done()
@@ -198,7 +198,7 @@ public class MultipartTest {
                         "------WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n";
         client.options().debug(false);
         Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/formdata")
-                .header().keepalive(true).setContentLength(body.getBytes().length).setContentType("multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW").done()
+                .header(h->h.keepalive(true).setContentLength(body.getBytes().length).setContentType("multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW"))
                 .body()
                 .write(body.getBytes())
                 .done()
@@ -229,7 +229,7 @@ public class MultipartTest {
                         "------WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n";
         client.options().debug(false);
         Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/formdata")
-                .header().keepalive(true).setContentLength(body.getBytes().length).setContentType("multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW").done()
+                .header(h->h.keepalive(true).setContentLength(body.getBytes().length).setContentType("multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW"))
                 .body()
                 .write(body.getBytes())
                 .done()
@@ -258,7 +258,7 @@ public class MultipartTest {
                         "------WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n";
         client.options().debug(false);
         Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/formdata")
-                .header().keepalive(true).setContentLength(body.getBytes().length).setContentType("multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW").done()
+                .header(h->h.keepalive(true).setContentLength(body.getBytes().length).setContentType("multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW"))
                 .body()
                 .write(body.getBytes())
                 .done()
@@ -301,7 +301,7 @@ public class MultipartTest {
                         "------WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n";
         client.options().debug(false);
         Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/formdata")
-                .header().keepalive(true).setContentLength(body.getBytes().length).setContentType("multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW").done()
+                .header(h->h.keepalive(true).setContentLength(body.getBytes().length).setContentType("multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW"))
                 .body()
                 .write(body.getBytes())
                 .done()
@@ -336,7 +336,7 @@ public class MultipartTest {
                         "------WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n";
         client.options().debug(true);
         Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/formdata")
-                .header().keepalive(true).setContentLength(body.getBytes().length).setContentType("multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW").done()
+                .header(h->h.keepalive(true).setContentLength(body.getBytes().length).setContentType("multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW"))
                 .body()
                 .write(body.getBytes())
                 .done()
@@ -363,7 +363,7 @@ public class MultipartTest {
                         "------WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n";
         client.options().debug(true);
         Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/formdata")
-                .header().keepalive(true).setContentLength(body.getBytes().length).setContentType("multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW").done()
+                .header(h->h.keepalive(true).setContentLength(body.getBytes().length).setContentType("multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW"))
                 .body()
                 .write(body.getBytes())
                 .done()

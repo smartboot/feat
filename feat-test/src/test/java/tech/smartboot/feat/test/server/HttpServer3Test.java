@@ -107,13 +107,13 @@ public class HttpServer3Test extends BastTest {
 
         HttpClient httpClient = getHttpClient();
         HttpPost httpPost = httpClient.post(requestUnit.getUri());
-        requestUnit.getHeaders().forEach((name, value) -> httpPost.header().add(name, value));
+        requestUnit.getHeaders().forEach((name, value) -> httpPost.header(h->h.add(name, value)));
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("author").append("=").append("三刀");
         for (int i = 0; i < 10000; i++) {
             stringBuilder.append("&").append("author").append(i).append("=").append("三刀").append(i);
         }
-        httpPost.header().add("longText", stringBuilder.toString());
+        httpPost.header(h->h.add("longText", stringBuilder.toString()));
         httpPost.body().formUrlencoded(requestUnit.getParameters());
 
         JSONObject jsonObject = basicCheck(httpPost.done().get(), requestUnit);

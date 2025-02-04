@@ -211,43 +211,44 @@ class HttpRestImpl implements HttpRest {
         return this;
     }
 
+
     public HttpRest setMethod(String method) {
         request.setMethod(method);
         return this;
     }
 
-
-    public Header<? extends HttpRestImpl> header() {
-        return new Header<HttpRestImpl>() {
+    public Header header() {
+        return new Header() {
             @Override
-            public Header<HttpRestImpl> add(String headerName, String headerValue) {
+            public Header add(String headerName, String headerValue) {
                 request.addHeader(headerName, headerValue);
                 return this;
             }
 
             @Override
-            public Header<HttpRestImpl> set(String headerName, String headerValue) {
+            public Header set(String headerName, String headerValue) {
                 request.setHeader(headerName, headerValue);
                 return this;
             }
 
             @Override
-            public Header<HttpRestImpl> setContentType(String contentType) {
+            public Header setContentType(String contentType) {
                 request.setContentType(contentType);
                 return this;
             }
 
             @Override
-            public Header<HttpRestImpl> setContentLength(int contentLength) {
+            public Header setContentLength(int contentLength) {
                 request.setContentLength(contentLength);
                 return this;
             }
-
-            @Override
-            public HttpRestImpl done() {
-                return HttpRestImpl.this;
-            }
         };
+    }
+
+    @Override
+    public HttpRest header(Consumer<Header> header) {
+        header.accept(header());
+        return this;
     }
 
     /**

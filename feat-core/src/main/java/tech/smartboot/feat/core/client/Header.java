@@ -7,7 +7,7 @@ import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2023/2/13
  */
-public interface Header<T> {
+public interface Header {
     /**
      * 添加 header，支持同名追加
      *
@@ -15,7 +15,7 @@ public interface Header<T> {
      * @param headerValue header值
      * @return 当前Header对象
      */
-    Header<T> add(String headerName, String headerValue);
+    Header add(String headerName, String headerValue);
 
     /**
      * 添加 header，支持同名追加
@@ -24,7 +24,7 @@ public interface Header<T> {
      * @param headerValue header值
      * @return 当前Header对象
      */
-    default Header<T> add(String headerName, int headerValue) {
+    default Header add(String headerName, int headerValue) {
         add(headerName, String.valueOf(headerValue));
         return this;
     }
@@ -36,7 +36,7 @@ public interface Header<T> {
      * @param headerValue header值
      * @return 当前Header对象
      */
-    Header<T> set(String headerName, String headerValue);
+    Header set(String headerName, String headerValue);
 
     /**
      * 设置header，覆盖同名header
@@ -45,27 +45,20 @@ public interface Header<T> {
      * @param headerValue header值
      * @return 当前Header对象
      */
-    default Header<T> set(String headerName, int headerValue) {
+    default Header set(String headerName, int headerValue) {
         set(headerName, String.valueOf(headerValue));
         return this;
     }
 
-    Header<T> setContentType(String contentType);
+    Header setContentType(String contentType);
 
-    Header<T> setContentLength(int contentLength);
+    Header setContentLength(int contentLength);
 
-    default Header<T> keepalive(boolean flag) {
+    default Header keepalive(boolean flag) {
         return keepalive(flag ? HeaderValue.Connection.KEEPALIVE : HeaderValue.Connection.CLOSE);
     }
 
-    default Header<T> keepalive(String headerValue) {
+    default Header keepalive(String headerValue) {
         return set(HeaderNameEnum.CONNECTION.getName(), headerValue);
     }
-
-    /**
-     * 结束header设置
-     *
-     * @return header归属的HTTP请求主体
-     */
-    T done();
 }

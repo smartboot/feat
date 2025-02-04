@@ -21,7 +21,7 @@ public class HttpGetDemo2 {
         for (int i = 0; i < 100; i++) {
             int j=i;
             executorService.submit(() -> {
-                httpClient.get("/").header().keepalive(false).done()
+                httpClient.get("/").header(h->h.keepalive(false))
                         .onSuccess(response -> System.out.println(j))
                         .onFailure(Throwable::printStackTrace)
                         .done();

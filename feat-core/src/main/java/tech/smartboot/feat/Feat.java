@@ -73,19 +73,21 @@ public class Feat {
         }, body);
     }
 
-    public static HttpPost postJson(String api, Consumer<Header<HttpPost>> header, Object body) {
+    public static HttpPost postJson(String api, Consumer<Header> header, Object body) {
         return postJson(api, options -> {
         }, header, body);
     }
 
-    public static HttpPost postJson(String api, Consumer<HttpClientOptions> options, Consumer<Header<HttpPost>> header, Object body) {
+    public static HttpPost postJson(String api, Consumer<HttpClientOptions> options, Consumer<Header> header, Object body) {
         HttpClient httpClient = new HttpClient(api);
         options.accept(httpClient.options());
-        HttpPost post = httpClient.post();
-        Header<HttpPost> h = post.header().setContentType(HeaderValue.ContentType.APPLICATION_JSON);
-        header.accept(h);
         byte[] bytes = JSON.toJSONBytes(body);
-        h.setContentLength(bytes.length);
+        HttpPost post = httpClient.post();
+        post.header(h -> {
+            header.accept(h);
+            h.setContentType(HeaderValue.ContentType.APPLICATION_JSON);
+            h.setContentLength(bytes.length);
+        });
         post.body().write(bytes);
         return post;
     }

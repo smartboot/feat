@@ -63,7 +63,7 @@ public class HttpReconnectTest {
         int i = 1000;
         while (i-- > 0) {
             Future<tech.smartboot.feat.core.client.HttpResponse> future = httpClient.post("/post")
-                    .header().keepalive(true).done()
+                    .header(h->h.keepalive(true))
                     .onSuccess(response -> {
                         System.out.println(response.body());
                         httpClient.close();

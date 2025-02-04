@@ -36,7 +36,12 @@ class HttpRestWrapper implements HttpRest {
     }
 
     @Override
-    public Header<? extends HttpRest> header() {
+    public HttpRest header(Consumer<Header> header) {
+        return rest.header(header);
+    }
+
+    @Override
+    public Header header() {
         return rest.header();
     }
 

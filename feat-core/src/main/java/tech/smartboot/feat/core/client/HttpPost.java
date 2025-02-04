@@ -105,7 +105,8 @@ public final class HttpPost extends HttpRestWrapper {
     }
 
     @Override
-    public Header<HttpPost> header() {
-        return new HeaderWrapper<>(this, rest.header());
+    public HttpPost header(Consumer<Header> header) {
+        super.header(header);
+        return this;
     }
 }

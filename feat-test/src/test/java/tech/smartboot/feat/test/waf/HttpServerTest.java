@@ -111,7 +111,7 @@ public class HttpServerTest extends BastTest {
         StringBuilder uriStr = new StringBuilder(requestUnit.getUri()).append("?");
         requestUnit.getParameters().forEach((key, value) -> uriStr.append(key).append('=').append(value).append('&'));
         HttpGet httpGet = httpClient.get(uriStr.toString());
-        requestUnit.getHeaders().forEach((name, value) -> httpGet.header().add(name, value));
+        requestUnit.getHeaders().forEach((name, value) -> httpGet.header(h->h.add(name, value)));
 
         Assert.assertEquals(HttpStatus.METHOD_NOT_ALLOWED.value(), httpGet.done().get().statusCode());
     }
@@ -124,7 +124,7 @@ public class HttpServerTest extends BastTest {
         StringBuilder uriStr = new StringBuilder(requestUnit.getUri()).append("?");
         requestUnit.getParameters().forEach((key, value) -> uriStr.append(key).append('=').append(value).append('&'));
         HttpGet httpGet = httpClient.get(uriStr.toString());
-        requestUnit.getHeaders().forEach((name, value) -> httpGet.header().add(name, value));
+        requestUnit.getHeaders().forEach((name, value) -> httpGet.header(h->h.add(name, value)));
         JSONObject jsonObject = basicCheck(httpGet.done().get(), requestUnit);
         Assert.assertEquals(HttpMethodEnum.GET.getMethod(), jsonObject.get(KEY_METHOD));
     }
@@ -135,20 +135,20 @@ public class HttpServerTest extends BastTest {
         StringBuilder uriStr = new StringBuilder(requestUnit.getUri()).append("?");
         requestUnit.getParameters().forEach((key, value) -> uriStr.append(key).append('=').append(value).append('&'));
         HttpGet httpGet = httpClient.get(uriStr.toString());
-        requestUnit.getHeaders().forEach((name, value) -> httpGet.header().add(name, value));
+        requestUnit.getHeaders().forEach((name, value) -> httpGet.header(h->h.add(name, value)));
         JSONObject jsonObject = basicCheck(httpGet.done().get(), requestUnit);
         Assert.assertEquals(HttpMethodEnum.GET.getMethod(), jsonObject.get(KEY_METHOD));
 
         bootstrap.options().getWafOptions()
                 .addAllowUriPrefix("/aa");
         HttpGet httpGet1 = httpClient.get(uriStr.toString());
-        requestUnit.getHeaders().forEach((name, value) -> httpGet1.header().add(name, value));
+        requestUnit.getHeaders().forEach((name, value) -> httpGet1.header(h->h.add(name, value)));
         Assert.assertEquals(HttpStatus.BAD_REQUEST.value(), httpGet1.done().get().statusCode());
 
         bootstrap.options().getWafOptions()
                 .getAllowUriPrefixes().add("/hello");
         HttpGet httpGet2 = httpClient.get(uriStr.toString());
-        requestUnit.getHeaders().forEach((name, value) -> httpGet2.header().add(name, value));
+        requestUnit.getHeaders().forEach((name, value) -> httpGet2.header(h->h.add(name, value)));
         jsonObject = basicCheck(httpGet2.done().get(), requestUnit);
         Assert.assertEquals(HttpMethodEnum.GET.getMethod(), jsonObject.get(KEY_METHOD));
 
@@ -156,13 +156,13 @@ public class HttpServerTest extends BastTest {
                 .getAllowUriPrefixes().clear();
         bootstrap.options().getWafOptions().getAllowUriSuffixes().add("/aa");
         HttpGet httpGet3 = httpClient.get(uriStr.toString());
-        requestUnit.getHeaders().forEach((name, value) -> httpGet3.header().add(name, value));
+        requestUnit.getHeaders().forEach((name, value) -> httpGet3.header(h->h.add(name, value)));
         Assert.assertEquals(HttpStatus.BAD_REQUEST.value(), httpGet3.done().get().statusCode());
 
         bootstrap.options().getWafOptions()
                 .getAllowUriSuffixes().add("llo");
         HttpGet httpGet4 = httpClient.get(uriStr.toString());
-        requestUnit.getHeaders().forEach((name, value) -> httpGet4.header().add(name, value));
+        requestUnit.getHeaders().forEach((name, value) -> httpGet4.header(h->h.add(name, value)));
         jsonObject = basicCheck(httpGet4.done().get(), requestUnit);
         Assert.assertEquals(HttpMethodEnum.GET.getMethod(), jsonObject.get(KEY_METHOD));
     }

@@ -84,7 +84,7 @@ public class HttpRestTest {
         for (int i = 0; i < count; i++) {
             form.put("name" + i, "value" + i);
             final int j = i + 1;
-            httpClient.post("/post").header().keepalive(true).done()
+            httpClient.post("/post").header(h->h.keepalive(true))
                     .body().formUrlencoded(form)
                     .onSuccess(httpResponse -> {
                         countDownLatch.countDown();

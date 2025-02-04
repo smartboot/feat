@@ -107,7 +107,7 @@ public class HttpServer2Test extends BastTest {
         });
         for (int i = 0; i < 10; i++) {
             String body = "hello" + i;
-            tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.post("/").header().setContentLength(body.length()).done().body().write(body).done().done().get();
+            tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.post("/").header(h->h.setContentLength(body.length())).body().write(body).done().done().get();
             Assert.assertEquals(httpResponse.getProtocol(), HttpProtocolEnum.HTTP_11.getProtocol());
             Assert.assertEquals(httpResponse.statusCode(), HttpStatus.OK.value());
             Assert.assertEquals(httpResponse.body(), "Hello World");
@@ -128,7 +128,7 @@ public class HttpServer2Test extends BastTest {
         });
         for (int i = 0; i < 10; i++) {
             String body = "hello" + i;
-            tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.post("/").header().keepalive(true).setContentLength(body.length()).done().body().write(body).done().done().get();
+            tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.post("/").header(h->h.keepalive(true).setContentLength(body.length())).body().write(body).done().done().get();
             Assert.assertEquals(httpResponse.getProtocol(), HttpProtocolEnum.HTTP_11.getProtocol());
             Assert.assertEquals(httpResponse.statusCode(), HttpStatus.OK.value());
             Assert.assertEquals(httpResponse.body(), body);
@@ -158,7 +158,7 @@ public class HttpServer2Test extends BastTest {
             }
         });
 
-        tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.post("/").header().keepalive(true).done().body().formUrlencoded(param).done().get();
+        tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.post("/").header(h->h.keepalive(true)).body().formUrlencoded(param).done().get();
         Assert.assertEquals(httpResponse.getProtocol(), HttpProtocolEnum.HTTP_11.getProtocol());
         Assert.assertEquals(httpResponse.statusCode(), HttpStatus.OK.value());
         Assert.assertEquals("ok", httpResponse.body());
