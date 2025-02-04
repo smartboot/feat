@@ -1,6 +1,6 @@
 package tech.smartboot.feat.core.client;
 
-import tech.smartboot.feat.core.client.stream.BodyStreaming;
+import tech.smartboot.feat.core.client.stream.Stream;
 
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
@@ -24,7 +24,7 @@ public interface HttpRest {
 
     HttpRest asStringResponse();
 
-    HttpRest onStream(BodyStreaming streaming);
+    HttpRest onStream(Stream streaming);
 
     Header<? extends HttpRest> header();
 

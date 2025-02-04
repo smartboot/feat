@@ -2,21 +2,18 @@ package tech.smartboot.feat.core.client.impl;
 
 import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.client.AbstractResponse;
-import tech.smartboot.feat.core.client.stream.BodyStreaming;
+import tech.smartboot.feat.core.client.stream.Stream;
 import tech.smartboot.feat.core.client.HttpResponse;
-import tech.smartboot.feat.core.client.stream.GzipBodyStreaming;
+import tech.smartboot.feat.core.client.stream.GzipStream;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.utils.Constant;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.concurrent.CompletableFuture;
-import java.util.zip.GZIPInputStream;
 
 public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
     private static final int STATE_CHUNK_LENGTH = 1;
@@ -25,7 +22,7 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
     private static final int STATE_CONTENT_LENGTH = 1 << 3;
     private static final int STATE_FINISH = 1 << 4;
     private static final int STATE_GZIP = 0x80;
-    private BodyStreaming streaming = BodyStreaming.SKIP_BODY_STREAMING;
+    private Stream streaming = Stream.SKIP_BODY_STREAMING;
     private int state;
 
     private long remaining;
@@ -66,7 +63,7 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
 
         if (StringUtils.equals(HeaderValue.ContentEncoding.GZIP, getHeader(HeaderNameEnum.CONTENT_ENCODING.getName()))) {
             state = STATE_GZIP | state;
-            streaming = new GzipBodyStreaming(streaming);
+            streaming = new GzipStream(streaming);
         }
     }
 
@@ -151,7 +148,7 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
 
 
 
-    public void setStreaming(BodyStreaming streaming) {
+    public void setStreaming(Stream streaming) {
         this.streaming = streaming;
     }
 }

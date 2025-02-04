@@ -6,11 +6,11 @@ import tech.smartboot.feat.core.client.impl.HttpResponseImpl;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-public class StringBodyStreaming implements BodyStreaming {
+public class StringStream implements Stream {
     private final ByteArrayOutputStream bodyStream = new ByteArrayOutputStream();
     private final HttpResponseImpl response;
 
-    public StringBodyStreaming(HttpResponseImpl response) {
+    public StringStream(HttpResponseImpl response) {
         this.response = response;
     }
 

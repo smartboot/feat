@@ -5,7 +5,7 @@ import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.ai.Options;
 import tech.smartboot.feat.core.client.HttpPost;
 import tech.smartboot.feat.core.client.HttpResponse;
-import tech.smartboot.feat.core.client.stream.BodyStreaming;
+import tech.smartboot.feat.core.client.stream.Stream;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 
@@ -51,7 +51,7 @@ public class ChatModel {
 
     public void chatStream(String content, List<String> tools, Consumer<ChatModel> consumer) {
         HttpPost post = chat0(content, tools, true);
-        post.onStream(new BodyStreaming() {
+        post.onStream(new Stream() {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
 
             @Override

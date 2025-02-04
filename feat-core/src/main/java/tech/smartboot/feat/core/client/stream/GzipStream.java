@@ -8,13 +8,13 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.zip.GZIPInputStream;
 
-public class GzipBodyStreaming implements BodyStreaming {
+public class GzipStream implements Stream {
     private ByteBuffer buffer;
     private GZIPInputStream gzipInputStream;
-    private final BodyStreaming bodyStreaming;
+    private final Stream stream;
 
-    public GzipBodyStreaming(BodyStreaming bodyStreaming) {
-        this.bodyStreaming = bodyStreaming;
+    public GzipStream(Stream stream) {
+        this.stream = stream;
     }
 
     @Override
@@ -62,6 +62,6 @@ public class GzipBodyStreaming implements BodyStreaming {
         while ((end || buffer.remaining() > 100) && buffer.hasRemaining() && (n = gzipInputStream.read(b)) > 0) {
             bos.write(b, 0, n);
         }
-        bodyStreaming.stream(response, bos.toByteArray(), end);
+        stream.stream(response, bos.toByteArray(), end);
     }
 }

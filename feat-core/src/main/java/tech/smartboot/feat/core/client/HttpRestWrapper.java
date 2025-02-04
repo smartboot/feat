@@ -1,6 +1,6 @@
 package tech.smartboot.feat.core.client;
 
-import tech.smartboot.feat.core.client.stream.BodyStreaming;
+import tech.smartboot.feat.core.client.stream.Stream;
 
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
@@ -43,7 +43,7 @@ class HttpRestWrapper implements HttpRest {
     }
 
     @Override
-    public HttpRest onStream(BodyStreaming streaming) {
+    public HttpRest onStream(Stream streaming) {
         return rest.onStream(streaming);
     }
 
