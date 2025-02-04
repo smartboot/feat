@@ -47,7 +47,6 @@ class HttpRestImpl implements HttpRest {
     private final HttpResponseImpl response;
     private final ByteArrayOutputStream bodyStream = new ByteArrayOutputStream();
 
-
     HttpRestImpl(AioSession session, AbstractQueue<AbstractResponse> queue) {
         this.request = new HttpRequestImpl(session);
         this.queue = queue;
@@ -217,7 +216,13 @@ class HttpRestImpl implements HttpRest {
 
     @Override
     public HttpRest asStringResponse() {
-        response.setStreaming(new StringStream(response));
+        response.setStreaming(new StringStream());
+        return this;
+    }
+
+    @Override
+    public HttpRest onHeaderResponse(Consumer<HttpResponse> consumer) {
+        response.setHeaderConsumer(consumer);
         return this;
     }
 

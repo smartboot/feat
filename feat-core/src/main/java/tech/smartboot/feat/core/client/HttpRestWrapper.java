@@ -43,6 +43,11 @@ class HttpRestWrapper implements HttpRest {
     }
 
     @Override
+    public HttpRest onHeaderResponse(Consumer<HttpResponse> consumer) {
+        return rest.onHeaderResponse(consumer);
+    }
+
+    @Override
     public HttpRest onStream(Stream streaming) {
         return rest.onStream(streaming);
     }

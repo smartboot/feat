@@ -24,6 +24,8 @@ public interface HttpRest {
 
     HttpRest asStringResponse();
 
+    HttpRest onHeaderResponse(Consumer<HttpResponse> consumer);
+
     HttpRest onStream(Stream streaming);
 
     Header<? extends HttpRest> header();

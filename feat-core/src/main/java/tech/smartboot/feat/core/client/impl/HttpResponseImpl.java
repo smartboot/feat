@@ -5,7 +5,6 @@ import tech.smartboot.feat.core.client.AbstractResponse;
 import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.client.stream.GzipStream;
 import tech.smartboot.feat.core.client.stream.Stream;
-import tech.smartboot.feat.core.client.stream.StringStream;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.exception.FeatException;
@@ -15,6 +14,7 @@ import tech.smartboot.feat.core.common.utils.StringUtils;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 
 public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
     private static final int STATE_CHUNK_LENGTH = 1;
@@ -31,7 +31,7 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
      * body内容
      */
     private String body;
-
+    private Consumer<HttpResponse> headerConsumer;
 
     public HttpResponseImpl(AioSession session, CompletableFuture future) {
         super(session, future);
@@ -61,9 +61,8 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
         } else {
             state = STATE_FINISH;
         }
-
-        if (statusCode() != 200) {
-            streaming = new StringStream(this);
+        if (headerConsumer != null) {
+            headerConsumer.accept(this);
         }
         if (StringUtils.equals(HeaderValue.ContentEncoding.GZIP, getHeader(HeaderNameEnum.CONTENT_ENCODING.getName()))) {
             state = STATE_GZIP | state;
@@ -152,5 +151,9 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
 
     public void setStreaming(Stream streaming) {
         this.streaming = streaming;
+    }
+
+    public void setHeaderConsumer(Consumer<HttpResponse> headerConsumer) {
+        this.headerConsumer = headerConsumer;
     }
 }
