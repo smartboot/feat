@@ -31,9 +31,14 @@ public final class HttpPost extends HttpRestWrapper {
     }
 
 
+    public HttpPost postBody(Consumer<PostBody> body) {
+        body.accept(body());
+        return this;
+    }
+
     @Override
     public PostBody body() {
-        return new PostBody(rest.body(), this) {
+        return new PostBody(rest.body()) {
             @Override
             public HttpPost formUrlencoded(Map<String, String> params) {
                 if (params == null || params.isEmpty()) {

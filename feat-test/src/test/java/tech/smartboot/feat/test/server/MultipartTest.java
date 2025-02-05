@@ -105,9 +105,7 @@ public class MultipartTest {
         client.options().debug(true);
         Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/formdata")
                 .header(h->h.keepalive(true).setContentLength(body.getBytes().length).setContentType("multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW"))
-                .body()
-                .write(body.getBytes())
-                .done()
+                .body(b->b.write(body.getBytes()))
                 .onSuccess(response -> {
                     JSONObject jsonObject = JSONObject.parseObject(response.body());
                     System.out.println("response: " + jsonObject);
@@ -142,9 +140,7 @@ public class MultipartTest {
         client.options().debug(true);
         Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/formdata")
                 .header(h->h.keepalive(true).setContentLength(body.getBytes().length).setContentType("multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW"))
-                .body()
-                .write(body.getBytes())
-                .done()
+                .body(b->b.write(body.getBytes()))
                 .onSuccess(response -> {
                     JSONObject jsonObject = JSONObject.parseObject(response.body());
                     System.out.println("jsonObject = " + jsonObject);
@@ -166,9 +162,7 @@ public class MultipartTest {
         client.options().debug(true);
         Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/formdata")
                 .header(h->h.keepalive(true).setContentLength(body.getBytes().length).setContentType("multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW"))
-                .body()
-                .write(body.getBytes())
-                .done()
+                .body(b->b.write(body.getBytes()))
                 .onSuccess(response -> {
                     System.out.println("jsonObject = " + JSONObject.parseObject(response.body()));
                 })
@@ -199,9 +193,7 @@ public class MultipartTest {
         client.options().debug(false);
         Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/formdata")
                 .header(h->h.keepalive(true).setContentLength(body.getBytes().length).setContentType("multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW"))
-                .body()
-                .write(body.getBytes())
-                .done()
+                .body(b->b.write(body.getBytes()))
                 .onSuccess(response -> {
                     JSONObject jsonObject = JSONObject.parseObject(response.body());
                     System.out.println("jsonObject = " + jsonObject);
@@ -230,9 +222,7 @@ public class MultipartTest {
         client.options().debug(false);
         Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/formdata")
                 .header(h->h.keepalive(true).setContentLength(body.getBytes().length).setContentType("multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW"))
-                .body()
-                .write(body.getBytes())
-                .done()
+                .body(b->b.write(body.getBytes()))
                 .onSuccess(response -> {
                     JSONObject jsonObject = JSONObject.parseObject(response.body());
                     System.out.println("jsonObject = " + jsonObject);
@@ -259,9 +249,7 @@ public class MultipartTest {
         client.options().debug(false);
         Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/formdata")
                 .header(h->h.keepalive(true).setContentLength(body.getBytes().length).setContentType("multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW"))
-                .body()
-                .write(body.getBytes())
-                .done()
+                .body(b->b.write(body.getBytes()))
                 .onSuccess(response -> {
                     JSONObject jsonObject = JSONObject.parseObject(response.body());
                     System.out.println("jsonObject = " + jsonObject);
@@ -302,9 +290,7 @@ public class MultipartTest {
         client.options().debug(false);
         Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/formdata")
                 .header(h->h.keepalive(true).setContentLength(body.getBytes().length).setContentType("multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW"))
-                .body()
-                .write(body.getBytes())
-                .done()
+                .body(b->b.write(body.getBytes()))
                 .onSuccess(response -> {
                     JSONObject jsonObject = JSONObject.parseObject(response.body());
                     System.out.println("jsonObject = " + jsonObject);
@@ -337,9 +323,7 @@ public class MultipartTest {
         client.options().debug(true);
         Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/formdata")
                 .header(h->h.keepalive(true).setContentLength(body.getBytes().length).setContentType("multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW"))
-                .body()
-                .write(body.getBytes())
-                .done()
+                .body(b->b.write(body.getBytes()))
                 .onSuccess(response -> {
                     JSONObject jsonObject = JSONObject.parseObject(response.body());
                     System.out.println("jsonObject = " + jsonObject);
@@ -364,9 +348,7 @@ public class MultipartTest {
         client.options().debug(true);
         Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/formdata")
                 .header(h->h.keepalive(true).setContentLength(body.getBytes().length).setContentType("multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW"))
-                .body()
-                .write(body.getBytes())
-                .done()
+                .body(b->b.write(body.getBytes()))
                 .onSuccess(response -> {
                     JSONObject jsonObject = JSONObject.parseObject(response.body());
                     System.out.println("jsonObject = " + jsonObject);

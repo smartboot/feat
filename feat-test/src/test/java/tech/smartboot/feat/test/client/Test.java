@@ -60,7 +60,7 @@ public class Test {
         CountDownLatch latch = new CountDownLatch(2);
         client.post("/other/abc?k=v&v=s")
 //                .header().keepalive(true).done()
-                .body().write(bytes).done()
+                .body(b->b.write(bytes))
                 .onSuccess(response -> {
                     System.out.println("======1=======>" + response.body());
                     latch.countDown();
@@ -72,7 +72,7 @@ public class Test {
         System.out.println("======================");
         client.post("/other/abc")
 //                .header().keepalive(true).done()
-                .body().write(bytes).done()
+                .body(b->b.write(bytes))
                 .onSuccess(response -> {
                     System.out.println("=======2======>" + response.body());
                     latch.countDown();

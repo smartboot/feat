@@ -16,7 +16,12 @@ class HttpRestWrapper implements HttpRest {
     }
 
     @Override
-    public Body<? extends HttpRest> body() {
+    public HttpRest body(Consumer<Body> body) {
+        return rest.body(body);
+    }
+
+    @Override
+    public Body body() {
         return rest.body();
     }
 

@@ -12,7 +12,9 @@ public interface HttpRest {
      */
     HttpRest setMethod(String method);
 
-    Body<? extends HttpRest> body();
+    HttpRest body(Consumer<Body> body);
+
+    Body body();
 
     Future<HttpResponse> done();
 
