@@ -253,7 +253,7 @@ public class HttpPostTest {
                 throwable.printStackTrace();
                 Assert.fail();
                 future.complete(false);
-            }).body().formUrlencoded(param);
+            }).postBody(p -> p.formUrlencoded(param));
             Assert.assertTrue(future.get());
         };
         doRequest(new HttpClient("http://127.0.0.1:8080"), consumer);
