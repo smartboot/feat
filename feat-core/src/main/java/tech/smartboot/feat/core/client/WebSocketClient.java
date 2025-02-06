@@ -9,11 +9,11 @@ import org.smartboot.socket.util.StringUtils;
 import tech.smartboot.feat.core.client.impl.WebSocketRequestImpl;
 import tech.smartboot.feat.core.client.impl.WebSocketResponseImpl;
 import tech.smartboot.feat.core.common.HeaderValue;
+import tech.smartboot.feat.core.common.HttpMethod;
 import tech.smartboot.feat.core.common.codec.websocket.CloseReason;
 import tech.smartboot.feat.core.common.codec.websocket.Decoder;
 import tech.smartboot.feat.core.common.codec.websocket.WebSocket;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
-import tech.smartboot.feat.core.common.HttpMethod;
 import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
 import tech.smartboot.feat.core.common.logging.Logger;
@@ -24,7 +24,6 @@ import tech.smartboot.feat.core.common.utils.WebSocketUtil;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.AsynchronousChannelGroup;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.Base64;
@@ -46,11 +45,6 @@ public class WebSocketClient {
      * 客户端Client
      */
     private AioQuickClient client;
-
-    /**
-     * 绑定线程池资源组
-     */
-    private AsynchronousChannelGroup asynchronousChannelGroup;
 
     private boolean connected;
 
@@ -167,10 +161,10 @@ public class WebSocketClient {
             if (options.getConnectTimeout() > 0) {
                 client.connectTimeout(options.getConnectTimeout());
             }
-            if (asynchronousChannelGroup == null) {
+            if (options.group() == null) {
                 client.start();
             } else {
-                client.start(asynchronousChannelGroup);
+                client.start(options.group());
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -293,11 +287,6 @@ public class WebSocketClient {
         // 发送二进制消息到服务器
         WebSocketUtil.sendMask(request.getOutputStream(), WebSocketUtil.OPCODE_BINARY, bytes, 0, bytes.length);
         request.getOutputStream().flush();
-    }
-
-
-    public void group(AsynchronousChannelGroup asynchronousChannelGroup) {
-        this.asynchronousChannelGroup = asynchronousChannelGroup;
     }
 
     public void close() {
