@@ -22,7 +22,6 @@ import tech.smartboot.feat.core.common.utils.Constant;
 import tech.smartboot.feat.core.common.utils.NumberUtils;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 
-import java.nio.channels.AsynchronousChannelGroup;
 import java.util.Base64;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Future;
@@ -44,11 +43,6 @@ public final class HttpClient {
      * 客户端Client
      */
     private AioQuickClient client;
-
-    /**
-     * 绑定线程池资源组
-     */
-    private AsynchronousChannelGroup asynchronousChannelGroup;
 
     private boolean connected;
 
@@ -237,20 +231,16 @@ public final class HttpClient {
             if (options.getConnectTimeout() > 0) {
                 client.connectTimeout(options.getConnectTimeout());
             }
-            if (asynchronousChannelGroup == null) {
+            if (options.group() == null) {
                 client.start();
             } else {
-                client.start(asynchronousChannelGroup);
+                client.start(options.group());
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-
-    public void group(AsynchronousChannelGroup asynchronousChannelGroup) {
-        this.asynchronousChannelGroup = asynchronousChannelGroup;
-    }
 
     public void close() {
         connected = false;

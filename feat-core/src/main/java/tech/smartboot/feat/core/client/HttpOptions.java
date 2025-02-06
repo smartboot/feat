@@ -2,6 +2,7 @@ package tech.smartboot.feat.core.client;
 
 import org.smartboot.socket.extension.plugins.Plugin;
 
+import java.nio.channels.AsynchronousChannelGroup;
 import java.util.List;
 
 /**
@@ -78,6 +79,12 @@ public class HttpOptions extends Options<HttpResponse> {
 
     public HttpOptions setHttps(boolean https) {
         this.https = https;
+        return this;
+    }
+
+    @Override
+    public HttpOptions group(AsynchronousChannelGroup group) {
+        super.group(group);
         return this;
     }
 }

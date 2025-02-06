@@ -2,6 +2,7 @@ package tech.smartboot.feat.core.client;
 
 import org.smartboot.socket.extension.plugins.Plugin;
 
+import java.nio.channels.AsynchronousChannelGroup;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,6 +48,10 @@ class Options<T> {
     private boolean https = false;
 
     private boolean debug = false;
+    /**
+     * 绑定线程池资源组
+     */
+    private AsynchronousChannelGroup group;
 
     public Options(String host, int port) {
         this.host = host;
@@ -147,5 +152,15 @@ class Options<T> {
     public Options setHttps(boolean https) {
         this.https = https;
         return this;
+    }
+
+
+    public Options group(AsynchronousChannelGroup group) {
+        this.group = group;
+        return this;
+    }
+
+    public AsynchronousChannelGroup group() {
+        return group;
     }
 }

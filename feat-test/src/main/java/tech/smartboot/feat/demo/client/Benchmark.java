@@ -10,7 +10,6 @@ package tech.smartboot.feat.demo.client;
 
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpResponse;
-import org.smartboot.socket.buffer.BufferPagePool;
 
 import java.io.IOException;
 import java.nio.channels.AsynchronousChannelGroup;
@@ -46,7 +45,7 @@ public class Benchmark {
         List<HttpClient> httpClients = new ArrayList<>();
         for (int i = 0; i < connectCount; i++) {
             HttpClient httpClient = new HttpClient("127.0.0.1", 8080);
-            httpClient.group(asynchronousChannelGroup);
+            httpClient.options().group(asynchronousChannelGroup);
             httpClients.add(httpClient);
         }
         System.out.println(httpClients.size() + " clients connect success");
