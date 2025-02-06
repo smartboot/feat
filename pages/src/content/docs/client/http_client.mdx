@@ -1,11 +1,53 @@
 ---
-title: 4.2 HttpClient 详解
+title: 4.1 HttpClient 详解
 description: Feat Client
 sidebar:
-    order: 2
+    order: 1
+---
+Feat HttpClient 是一个功能强大、灵活且高效的 HTTP 客户端库，旨在帮助开发者轻松发送 HTTP 请求、处理响应，并支持多种高级功能。它支持常见的 HTTP 方法（如 GET、POST、PUT、DELETE 等），并提供了灵活的配置选项，以满足不同场景下的需求。
+
+Feat HttpClient 的设计理念注重性能、易用性和扩展性，能够与 Feat 框架的其他组件无缝集成，为开发者提供一致的开发体验。
+
+## 4.1.1 快速上手
+
+### 4.1.1.1 引入依赖
+
+在 Maven 项目中，添加以下依赖到 `pom.xml`：
+
+```xml
+<dependency>
+    <groupId>tech.smartboot.feat</groupId>
+    <artifactId>feat-core</artifactId>
+    <version>${feat.version}</version>
+</dependency>
+```
+
+### 4.1.1.2 发送第一个 GET 请求
+
+以下是一个简单的示例，展示了如何使用 Feat HttpClient 发送 GET 请求并处理响应：
+
+```java
+import tech.smartboot.feat.core.client.HttpClient;
+import java.io.IOException;
+
+public class HttpClientDemo {
+    public static void main(String[] args) throws IOException {
+        // 创建 HttpClient 实例
+        HttpClient client = new HttpClient("https://www.baidu.com");
+
+        // 发送 GET 请求
+        client.get().onSuccess(response -> {
+            // 处理响应
+            System.out.println("Status Code: " + response.statusCode());
+            System.out.println("Body: " + response.body());
+        }).done();
+    }
+}
+```
+
 ---
 
-## 4.2.1 HttpClient 实例化
+## 4.1.2 HttpClient 实例化
 HttpClient 提供了 2 种实例化方式：
 
 **方式一：完整的请求URL**
@@ -24,7 +66,7 @@ HttpClient httpClient = new HttpClient("smartboot.tech", 443);
 ```
 
 
-## 4.2.2 Options 配置
+## 4.1.3 Options 配置
 通过 HttpClient.options() 方法提供了客户端的配置选项，支持链式调用。
 ### host
 **类型:** `String`
@@ -76,7 +118,7 @@ HttpClient httpClient = new HttpClient("smartboot.tech", 443);
 
 代理配置。
 
-## 4.2.3 HTTP请求
+## 4.1.4 HTTP请求
 HttpClient 提供了 rest() 方法用于发送通用的 HTTP 请求。rest() 方法的参数包括：
 - method: HTTP 请求方法，如 GET、POST、PUT、DELETE 等。
 - path: 请求路径，如 /api/user。
@@ -111,10 +153,10 @@ public class HttpGetDemo {
 }
 ```
 
-## 4.2.4 异步回调
+## 4.1.5 异步回调
 HttpClient 提供了异步回调机制，可以在请求发送后立即返回，而不需要等待请求完成。
 
-### 4.2.4.1 onResponseHeader
+### 4.1.5.1 onResponseHeader
 当响应 Header 解析完成后，会触发 onResponseHeader 回调。
 ```java title=ResponseHeaderDemo.java "onResponseHeader"
 public class ResponseHeaderDemo {
@@ -131,7 +173,7 @@ public class ResponseHeaderDemo {
 }
 ```
 
-### 4.2.4.2 onResponseBody
+### 4.1.5.2 onResponseBody
 对于存在响应体的请求，当`onResponseHeader`回调结束并开始接收到Body内容时，会触发 onResponseBody 回调。
 ```java title=ResponseBodyDemo.java "onResponseBody"
 public class ResponseBodyDemo {
@@ -155,7 +197,7 @@ onResponseBody 的参数是一个 Stream 对象，用于消费响应体的内容
 - response: HttpResponse 对象，表示当前的响应。
 - bytes: 字节数组，表示接收到的响应体内容。
 - end: boolean 值，表示是否接收到了响应体的最后一部分内容。
-### 4.2.4.3 onSuccess
+### 4.1.5.3 onSuccess
 当请求成功时，会触发 onSuccess 回调。该回调发生于 onResponseBody 正常结束之后。
-### 4.2.4.4 onFailure
+### 4.1.5.4 onFailure
 当请求失败时，会触发 onFailure 回调。
