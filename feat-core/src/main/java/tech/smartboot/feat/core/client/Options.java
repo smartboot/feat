@@ -9,7 +9,7 @@ import java.util.List;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2023/2/13
  */
-class ClientOptions<T> {
+class Options<T> {
 
 
     /**
@@ -31,7 +31,7 @@ class ClientOptions<T> {
      */
     private final int port;
 
-    private ProxyConfig proxy;
+    private ProxyOptions proxy;
 
     /**
      * read缓冲区大小
@@ -48,7 +48,7 @@ class ClientOptions<T> {
 
     private boolean debug = false;
 
-    public ClientOptions(String host, int port) {
+    public Options(String host, int port) {
         this.host = host;
         this.port = port;
     }
@@ -60,7 +60,7 @@ class ClientOptions<T> {
     /**
      * 设置建立连接的超时时间
      */
-    protected ClientOptions connectTimeout(int connectTimeout) {
+    protected Options connectTimeout(int connectTimeout) {
         this.connectTimeout = connectTimeout;
         return this;
     }
@@ -82,8 +82,8 @@ class ClientOptions<T> {
      * @param username 授权账户
      * @param password 授权密码
      */
-    protected ClientOptions<T> proxy(String host, int port, String username, String password) {
-        this.proxy = new ProxyConfig(host, port, username, password);
+    protected Options<T> proxy(String host, int port, String username, String password) {
+        this.proxy = new ProxyOptions(host, port, username, password);
         return this;
     }
 
@@ -93,11 +93,11 @@ class ClientOptions<T> {
      * @param host 代理服务器地址
      * @param port 代理服务器端口
      */
-    public ClientOptions proxy(String host, int port) {
+    public Options proxy(String host, int port) {
         return this.proxy(host, port, null, null);
     }
 
-    ProxyConfig getProxy() {
+    ProxyOptions getProxy() {
         return proxy;
     }
 
@@ -105,7 +105,7 @@ class ClientOptions<T> {
         return readBufferSize;
     }
 
-    protected ClientOptions<T> readBufferSize(int readBufferSize) {
+    protected Options<T> readBufferSize(int readBufferSize) {
         this.readBufferSize = readBufferSize;
         return this;
     }
@@ -114,7 +114,7 @@ class ClientOptions<T> {
         return writeBufferSize;
     }
 
-    public ClientOptions<T> setWriteBufferSize(int writeBufferSize) {
+    public Options<T> setWriteBufferSize(int writeBufferSize) {
         this.writeBufferSize = writeBufferSize;
         return this;
     }
@@ -122,7 +122,7 @@ class ClientOptions<T> {
     /**
      * 启用 debug 模式后会打印码流
      */
-    protected ClientOptions<T> debug(boolean debug) {
+    protected Options<T> debug(boolean debug) {
         this.debug = debug;
         return this;
     }
@@ -131,7 +131,7 @@ class ClientOptions<T> {
         return debug;
     }
 
-    protected ClientOptions<T> addPlugin(Plugin<T> plugin) {
+    protected Options<T> addPlugin(Plugin<T> plugin) {
         plugins.add(plugin);
         return this;
     }
@@ -144,7 +144,7 @@ class ClientOptions<T> {
         return https;
     }
 
-    public ClientOptions setHttps(boolean https) {
+    public Options setHttps(boolean https) {
         this.https = https;
         return this;
     }

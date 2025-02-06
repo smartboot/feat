@@ -8,7 +8,7 @@ import java.util.List;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2023/2/13
  */
-public class WebSocketOptions extends ClientOptions<WebSocketResponse> {
+public class WebSocketOptions extends Options<WebSocketResponse> {
 
 
     private boolean wss = false;

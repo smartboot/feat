@@ -7,7 +7,8 @@ import java.io.IOException;
 public class HttpClientDemo {
     public static void main(String[] args) throws IOException {
         // 创建 HttpClient 实例
-        HttpClient client = new HttpClient("https://www.baidu.com");
+//        HttpClient client = new HttpClient("https://www.baidu.com");
+        HttpClient client = new HttpClient("https://smartboot.tech/feat");
 
         // 发送 GET 请求
         client.get().onSuccess(response -> {

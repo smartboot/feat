@@ -1,7 +1,78 @@
 ---
-title: 4.2 HttpClient
+title: 4.2 HttpClient 详解
 description: Feat Client
 sidebar:
-    order: 1
+    order: 2
 ---
+
+## 4.2.1 HttpClient 实例化
+HttpClient 提供了 2 种实例化方式：
+
+**方式一：完整的请求URL**
+```java
+HttpClient client = new HttpClient("http://127.0.0.1:8080");
+
+HttpClient client = new HttpClient("https://smartboot.tech/feat/");
+```
+该种方式会自动解析 URL 中的 host 和 port 信息，并识别是否使用 HTTPS 协议。
+
+**方式二：指定 host、port**
+```java
+HttpClient httpClient = new HttpClient("127.0.0.1", 8080);
+
+HttpClient httpClient = new HttpClient("smartboot.tech", 443);
+```
+
+
+## 4.2.2 Options 配置
+
+### host
+**类型:** `String`
+
+**默认值:** `null`
+
+服务地址，必填
+
+### port
+**类型:** `int`
+
+**默认值:** `80`
+
+服务端口
+
+
+### connectTimeout
+**类型:** `int`
+
+**默认值:** `0`
+
+连接超时时间，单位毫秒
+
+### readBufferSize
+**类型:** `int`
+
+**默认值:** `1024`
+
+读缓冲区大小，单位：字节。合理的大小可以减少系统调用次数，提高性能。
+
+### writeBufferSize
+**类型:** `int`
+
+**默认值:** `1024`
+
+写缓冲区大小，单位：字节。合理的大小可以减少系统调用次数，提高性能。
+
+### debug
+**类型:** `boolean`
+
+**默认值:** `false`
+
+是否开启调试模式。启用后会在控制台打印请求和响应的详细信息。
+
+### proxy
+**类型:** `ProxyOptions`
+
+**默认值:** `null`
+
+代理配置。
 

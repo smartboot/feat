@@ -8,12 +8,12 @@ import java.util.List;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2023/2/13
  */
-public class HttpClientOptions extends ClientOptions<HttpResponse> {
+public class HttpOptions extends Options<HttpResponse> {
 
 
     private boolean https = false;
 
-    public HttpClientOptions(String host, int port) {
+    public HttpOptions(String host, int port) {
         super(host, port);
     }
 
@@ -21,7 +21,7 @@ public class HttpClientOptions extends ClientOptions<HttpResponse> {
     /**
      * 设置建立连接的超时时间
      */
-    public HttpClientOptions connectTimeout(int connectTimeout) {
+    public HttpOptions connectTimeout(int connectTimeout) {
         super.connectTimeout(connectTimeout);
         return this;
     }
@@ -34,7 +34,7 @@ public class HttpClientOptions extends ClientOptions<HttpResponse> {
      * @param username 授权账户
      * @param password 授权密码
      */
-    public HttpClientOptions proxy(String host, int port, String username, String password) {
+    public HttpOptions proxy(String host, int port, String username, String password) {
         super.proxy(host, port, username, password);
         return this;
     }
@@ -45,12 +45,12 @@ public class HttpClientOptions extends ClientOptions<HttpResponse> {
      * @param host 代理服务器地址
      * @param port 代理服务器端口
      */
-    public HttpClientOptions proxy(String host, int port) {
+    public HttpOptions proxy(String host, int port) {
         return this.proxy(host, port, null, null);
     }
 
 
-    public HttpClientOptions readBufferSize(int readBufferSize) {
+    public HttpOptions readBufferSize(int readBufferSize) {
         super.readBufferSize(readBufferSize);
         return this;
     }
@@ -58,12 +58,12 @@ public class HttpClientOptions extends ClientOptions<HttpResponse> {
     /**
      * 启用 debug 模式后会打印码流
      */
-    public HttpClientOptions debug(boolean debug) {
+    public HttpOptions debug(boolean debug) {
         super.debug(debug);
         return this;
     }
 
-    public HttpClientOptions addPlugin(Plugin<HttpResponse> plugin) {
+    public HttpOptions addPlugin(Plugin<HttpResponse> plugin) {
         super.addPlugin(plugin);
         return this;
     }
@@ -76,7 +76,7 @@ public class HttpClientOptions extends ClientOptions<HttpResponse> {
         return https;
     }
 
-    public HttpClientOptions setHttps(boolean https) {
+    public HttpOptions setHttps(boolean https) {
         this.https = https;
         return this;
     }

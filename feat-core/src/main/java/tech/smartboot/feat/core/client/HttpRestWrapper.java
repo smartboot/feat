@@ -59,9 +59,4 @@ class HttpRestWrapper implements HttpRest {
     public HttpResponse response() {
         return rest.response();
     }
-
-//    @Override
-//    public HttpRest onResponse(ResponseHandler responseHandler) {
-//        return rest.onResponse(responseHandler);
-//    }
 }

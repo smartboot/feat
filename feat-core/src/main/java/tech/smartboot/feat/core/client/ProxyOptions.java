@@ -4,7 +4,7 @@ package tech.smartboot.feat.core.client;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2023/2/13
  */
-class ProxyConfig {
+class ProxyOptions {
     /**
      * 代理服务器地址
      */
@@ -22,7 +22,7 @@ class ProxyConfig {
      */
     private final String proxyPassword;
 
-    public ProxyConfig(String proxyHost, int proxyPort, String proxyUserName, String proxyPassword) {
+    public ProxyOptions(String proxyHost, int proxyPort, String proxyUserName, String proxyPassword) {
         this.proxyHost = proxyHost;
         this.proxyPort = proxyPort;
         this.proxyUserName = proxyUserName;

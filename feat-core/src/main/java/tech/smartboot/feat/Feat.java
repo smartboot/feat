@@ -5,7 +5,7 @@ import tech.smartboot.feat.cloud.ApplicationContext;
 import tech.smartboot.feat.cloud.CloudOptions;
 import tech.smartboot.feat.core.client.Header;
 import tech.smartboot.feat.core.client.HttpClient;
-import tech.smartboot.feat.core.client.HttpClientOptions;
+import tech.smartboot.feat.core.client.HttpOptions;
 import tech.smartboot.feat.core.client.HttpPost;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.exception.FeatException;
@@ -78,7 +78,7 @@ public class Feat {
         }, header, body);
     }
 
-    public static HttpPost postJson(String api, Consumer<HttpClientOptions> options, Consumer<Header> header, Object body) {
+    public static HttpPost postJson(String api, Consumer<HttpOptions> options, Consumer<Header> header, Object body) {
         HttpClient httpClient = new HttpClient(api);
         options.accept(httpClient.options());
         byte[] bytes = JSON.toJSONBytes(body);

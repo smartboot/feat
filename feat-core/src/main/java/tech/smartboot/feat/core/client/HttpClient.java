@@ -34,7 +34,7 @@ import java.util.concurrent.Semaphore;
  */
 public final class HttpClient {
 
-    private final HttpClientOptions options;
+    private final HttpOptions options;
 
     /**
      * Header: Host
@@ -91,14 +91,14 @@ public final class HttpClient {
         if (port == -1) {
             throw new IllegalArgumentException("invalid url:" + url);
         }
-        this.options = new HttpClientOptions(host, port);
+        this.options = new HttpOptions(host, port);
         options.setHttps(https);
         hostHeader = options.getHost() + ":" + options.getPort();
         this.uri = uriIndex > 0 ? url.substring(uriIndex) : "/";
     }
 
     public HttpClient(String host, int port) {
-        this.options = new HttpClientOptions(host, port);
+        this.options = new HttpOptions(host, port);
         hostHeader = options.getHost() + ":" + options.getPort();
         this.uri = null;
     }
@@ -193,7 +193,7 @@ public final class HttpClient {
     }
 
 
-    public HttpClientOptions options() {
+    public HttpOptions options() {
         return options;
     }
 
