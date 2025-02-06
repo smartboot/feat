@@ -18,12 +18,12 @@ class HttpRestWrapper implements HttpRest {
     }
 
     @Override
-    public HttpRest body(Consumer<Body> body) {
+    public HttpRest body(Consumer<RequestBody> body) {
         return rest.body(body);
     }
 
     @Override
-    public Body body() {
+    public RequestBody body() {
         return rest.body();
     }
 
@@ -67,8 +67,4 @@ class HttpRestWrapper implements HttpRest {
         return rest.addQueryParam(name, value);
     }
 
-    @Override
-    public HttpResponse response() {
-        return rest.response();
-    }
 }

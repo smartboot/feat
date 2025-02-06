@@ -15,31 +15,31 @@ import java.util.function.Consumer;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2021/7/17
  */
-public interface Body {
+public interface RequestBody {
     /**
      * 往缓冲区中写入数据
      */
-    Body write(byte[] bytes, int offset, int len);
+    RequestBody write(byte[] bytes, int offset, int len);
 
     /**
      * 往缓冲区中写入数据
      */
-    void transferFrom(ByteBuffer buffer, Consumer<Body> consumer);
+    void transferFrom(ByteBuffer buffer, Consumer<RequestBody> consumer);
 
     /**
      * 往缓冲区中写入数据
      */
-    default Body write(byte[] bytes) {
+    default RequestBody write(byte[] bytes) {
         write(bytes, 0, bytes.length);
         return this;
     }
 
-    default Body write(String str) {
+    default RequestBody write(String str) {
         return write(str.getBytes());
     }
 
     /**
      * 输出缓冲区的数据
      */
-    Body flush();
+    RequestBody flush();
 }

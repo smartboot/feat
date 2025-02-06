@@ -148,7 +148,7 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
         }
     }
 
-    public void finishDecode() throws IOException {
+    private void finishDecode() throws IOException {
         streaming.stream(this, new byte[0], true);
         getFuture().complete(this);
     }

@@ -41,7 +41,7 @@ class HttpRestImpl implements HttpRest {
     private final AbstractQueue<AbstractResponse> queue;
     private Map<String, String> queryParams = null;
     private boolean commit = false;
-    private Body body;
+    private RequestBody body;
 
     private final HttpResponseImpl response;
     private final ByteArrayOutputStream bodyStream = new ByteArrayOutputStream();
@@ -101,12 +101,12 @@ class HttpRestImpl implements HttpRest {
         request.setUri(stringBuilder.toString());
     }
 
-    public Body body() {
+    public RequestBody body() {
         if (body == null) {
-            body = new Body() {
+            body = new RequestBody() {
 
                 @Override
-                public Body write(byte[] bytes, int offset, int len) {
+                public RequestBody write(byte[] bytes, int offset, int len) {
                     try {
                         willSendRequest();
                         request.getOutputStream().write(bytes, offset, len);
@@ -118,7 +118,7 @@ class HttpRestImpl implements HttpRest {
                 }
 
                 @Override
-                public void transferFrom(ByteBuffer buffer, Consumer<Body> consumer) {
+                public void transferFrom(ByteBuffer buffer, Consumer<RequestBody> consumer) {
                     try {
                         willSendRequest();
                         request.getOutputStream().transferFrom(buffer, bufferOutputStream -> consumer.accept(HttpRestImpl.this.body));
@@ -129,7 +129,7 @@ class HttpRestImpl implements HttpRest {
                 }
 
                 @Override
-                public Body flush() {
+                public RequestBody flush() {
                     try {
                         willSendRequest();
                         request.getOutputStream().flush();
@@ -216,8 +216,8 @@ class HttpRestImpl implements HttpRest {
     }
 
     @Override
-    public HttpRest body(Consumer<Body> body) {
-        Body b = body();
+    public HttpRest body(Consumer<RequestBody> body) {
+        RequestBody b = body();
         body.accept(b);
         return this;
     }
@@ -268,11 +268,6 @@ class HttpRestImpl implements HttpRest {
         }
         queryParams.put(name, value);
         return this;
-    }
-
-    @Override
-    public HttpResponse response() {
-        return response;
     }
 
     /**

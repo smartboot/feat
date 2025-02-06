@@ -14,9 +14,9 @@ public interface HttpRest {
      */
     HttpRest setMethod(String method);
 
-    HttpRest body(Consumer<Body> body);
+    HttpRest body(Consumer<RequestBody> body);
 
-    Body body();
+    RequestBody body();
 
     Future<HttpResponse> submit();
 
@@ -33,7 +33,5 @@ public interface HttpRest {
     Header header();
 
     HttpRest addQueryParam(String name, String value);
-
-    HttpResponse response();
 
 }
