@@ -8,7 +8,7 @@
 
 package tech.smartboot.feat.core.client;
 
-import tech.smartboot.feat.core.common.enums.HttpMethodEnum;
+import tech.smartboot.feat.core.common.HttpMethod;
 
 import java.util.function.Consumer;
 
@@ -20,7 +20,7 @@ public class HttpGet extends HttpRestWrapper {
 
     HttpGet(HttpRestImpl rest) {
         super(rest);
-        rest.setMethod(HttpMethodEnum.GET.getMethod());
+        rest.setMethod(HttpMethod.GET);
     }
 
 

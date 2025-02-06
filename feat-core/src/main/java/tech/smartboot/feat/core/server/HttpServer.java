@@ -12,8 +12,8 @@ import org.smartboot.socket.buffer.BufferPagePool;
 import org.smartboot.socket.transport.AioQuickServer;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderValue;
+import tech.smartboot.feat.core.common.HttpMethod;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
-import tech.smartboot.feat.core.common.enums.HttpMethodEnum;
 import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
 import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 import tech.smartboot.feat.core.server.impl.HttpMessageProcessor;
@@ -113,9 +113,8 @@ public class HttpServer {
     }
 
     private void initByteCache() {
-        for (HttpMethodEnum httpMethodEnum : HttpMethodEnum.values()) {
-            options.getByteCache().addNode(httpMethodEnum.getMethod());
-        }
+        options.getByteCache().addNode(HttpMethod.GET);
+        options.getByteCache().addNode(HttpMethod.POST);
         for (HttpProtocolEnum httpProtocolEnum : HttpProtocolEnum.values()) {
             options.getByteCache().addNode(httpProtocolEnum.getProtocol(), httpProtocolEnum);
         }

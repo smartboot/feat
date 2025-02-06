@@ -13,7 +13,7 @@ import tech.smartboot.feat.core.common.codec.websocket.CloseReason;
 import tech.smartboot.feat.core.common.codec.websocket.Decoder;
 import tech.smartboot.feat.core.common.codec.websocket.WebSocket;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
-import tech.smartboot.feat.core.common.enums.HttpMethodEnum;
+import tech.smartboot.feat.core.common.HttpMethod;
 import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
 import tech.smartboot.feat.core.common.logging.Logger;
@@ -249,7 +249,7 @@ public class WebSocketClient {
     private void initRest() throws IOException {
         request = new WebSocketRequestImpl(client.getSession());
         request.setUri(uri);
-        request.setMethod(HttpMethodEnum.GET.getMethod());
+        request.setMethod(HttpMethod.GET);
         request.setProtocol(HttpProtocolEnum.HTTP_11.getProtocol());
         request.addHeader(HeaderNameEnum.HOST.getName(), hostHeader);
         request.addHeader(HeaderNameEnum.UPGRADE.getName(), HeaderValue.Upgrade.WEBSOCKET);

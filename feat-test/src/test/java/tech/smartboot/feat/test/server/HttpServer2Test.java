@@ -15,9 +15,9 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tech.smartboot.feat.core.client.HttpClient;
-import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.HeaderValue;
-import tech.smartboot.feat.core.common.enums.HttpMethodEnum;
+import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
+import tech.smartboot.feat.core.common.HttpMethod;
 import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
 import tech.smartboot.feat.core.server.HttpRequest;
@@ -91,7 +91,7 @@ public class HttpServer2Test extends BastTest {
                 request.getResponse().write("Hello World".getBytes(StandardCharsets.UTF_8));
             }
         });
-        tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.rest("/").setMethod(HttpMethodEnum.PUT.getMethod()).submit().get();
+        tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.rest(HttpMethod.PUT, "/").submit().get();
         Assert.assertEquals(httpResponse.getProtocol(), HttpProtocolEnum.HTTP_11.getProtocol());
         Assert.assertEquals(httpResponse.statusCode(), HttpStatus.OK.value());
     }
@@ -107,7 +107,7 @@ public class HttpServer2Test extends BastTest {
         });
         for (int i = 0; i < 10; i++) {
             String body = "hello" + i;
-            tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.post("/").header(h->h.setContentLength(body.length())).body(b->b.write(body)).submit().get();
+            tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.post("/").header(h -> h.setContentLength(body.length())).body(b -> b.write(body)).submit().get();
             Assert.assertEquals(httpResponse.getProtocol(), HttpProtocolEnum.HTTP_11.getProtocol());
             Assert.assertEquals(httpResponse.statusCode(), HttpStatus.OK.value());
             Assert.assertEquals(httpResponse.body(), "Hello World");
@@ -128,7 +128,7 @@ public class HttpServer2Test extends BastTest {
         });
         for (int i = 0; i < 10; i++) {
             String body = "hello" + i;
-            tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.post("/").header(h->h.keepalive(true).setContentLength(body.length())).body(b->b.write(body)).submit().get();
+            tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.post("/").header(h -> h.keepalive(true).setContentLength(body.length())).body(b -> b.write(body)).submit().get();
             Assert.assertEquals(httpResponse.getProtocol(), HttpProtocolEnum.HTTP_11.getProtocol());
             Assert.assertEquals(httpResponse.statusCode(), HttpStatus.OK.value());
             Assert.assertEquals(httpResponse.body(), body);
@@ -147,7 +147,7 @@ public class HttpServer2Test extends BastTest {
         bootstrap.httpHandler(new BaseHttpHandler() {
             @Override
             public void handle(HttpRequest request) throws IOException {
-                HttpResponse response=request.getResponse();
+                HttpResponse response = request.getResponse();
                 for (String key : request.getParameters().keySet()) {
                     if (!Objects.equals(param.get(key), request.getParameter(key))) {
                         response.write("fail");
@@ -158,7 +158,7 @@ public class HttpServer2Test extends BastTest {
             }
         });
 
-        tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.post("/").header(h->h.keepalive(true)).body().formUrlencoded(param).submit().get();
+        tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.post("/").header(h -> h.keepalive(true)).body().formUrlencoded(param).submit().get();
         Assert.assertEquals(httpResponse.getProtocol(), HttpProtocolEnum.HTTP_11.getProtocol());
         Assert.assertEquals(httpResponse.statusCode(), HttpStatus.OK.value());
         Assert.assertEquals("ok", httpResponse.body());

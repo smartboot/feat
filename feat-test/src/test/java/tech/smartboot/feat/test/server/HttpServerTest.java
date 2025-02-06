@@ -21,7 +21,7 @@ import tech.smartboot.feat.core.client.HttpGet;
 import tech.smartboot.feat.core.client.HttpPost;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.HeaderValue;
-import tech.smartboot.feat.core.common.enums.HttpMethodEnum;
+import tech.smartboot.feat.core.common.HttpMethod;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
@@ -112,7 +112,7 @@ public class HttpServerTest extends BastTest {
         requestUnit.getHeaders().forEach((name, value) -> httpGet.header().add(name, value));
 
         JSONObject jsonObject = basicCheck(httpGet.submit().get(), requestUnit);
-        Assert.assertEquals(HttpMethodEnum.GET.getMethod(), jsonObject.get(KEY_METHOD));
+        Assert.assertEquals(HttpMethod.GET, jsonObject.get(KEY_METHOD));
     }
 
     @Test
@@ -124,7 +124,7 @@ public class HttpServerTest extends BastTest {
         requestUnit.getHeaders().forEach((name, value) -> httpGet.header().add(name, value));
 
         JSONObject jsonObject = basicCheck(httpGet.submit().get(), requestUnit);
-        Assert.assertEquals(HttpMethodEnum.GET.getMethod(), jsonObject.get(KEY_METHOD));
+        Assert.assertEquals(HttpMethod.GET, jsonObject.get(KEY_METHOD));
     }
 
     @Test
@@ -136,7 +136,7 @@ public class HttpServerTest extends BastTest {
         JSONObject parameters = jsonObject.getJSONObject(KEY_PARAMETERS);
         Assert.assertEquals("123", parameters.get("abc"));
         Assert.assertEquals("三刀", parameters.get("author"));
-        Assert.assertEquals(HttpMethodEnum.GET.getMethod(), jsonObject.get(KEY_METHOD));
+        Assert.assertEquals(HttpMethod.GET, jsonObject.get(KEY_METHOD));
     }
 
     @Test
@@ -148,7 +148,7 @@ public class HttpServerTest extends BastTest {
         JSONObject parameters = jsonObject.getJSONObject(KEY_PARAMETERS);
         Assert.assertEquals("123", parameters.get("abc"));
         Assert.assertEquals("三刀", parameters.get("author"));
-        Assert.assertEquals(HttpMethodEnum.GET.getMethod(), jsonObject.get(KEY_METHOD));
+        Assert.assertEquals(HttpMethod.GET, jsonObject.get(KEY_METHOD));
     }
 
     @Test
@@ -160,7 +160,7 @@ public class HttpServerTest extends BastTest {
         JSONObject parameters = jsonObject.getJSONObject(KEY_PARAMETERS);
         Assert.assertEquals("123", parameters.get("abc"));
         Assert.assertEquals("三刀", parameters.get("author"));
-        Assert.assertEquals(HttpMethodEnum.GET.getMethod(), jsonObject.get(KEY_METHOD));
+        Assert.assertEquals(HttpMethod.GET, jsonObject.get(KEY_METHOD));
     }
 
     @Test
@@ -172,7 +172,7 @@ public class HttpServerTest extends BastTest {
         JSONObject parameters = jsonObject.getJSONObject(KEY_PARAMETERS);
         Assert.assertEquals("123", parameters.get("abc"));
         Assert.assertEquals("三刀", parameters.get("author"));
-        Assert.assertEquals(HttpMethodEnum.GET.getMethod(), jsonObject.get(KEY_METHOD));
+        Assert.assertEquals(HttpMethod.GET, jsonObject.get(KEY_METHOD));
     }
 
     @Test
@@ -185,7 +185,7 @@ public class HttpServerTest extends BastTest {
         Assert.assertEquals("123", parameters.get("abc"));
         Assert.assertEquals("三刀", parameters.get("author"));
         Assert.assertEquals("b", parameters.get("a"));
-        Assert.assertEquals(HttpMethodEnum.GET.getMethod(), jsonObject.get(KEY_METHOD));
+        Assert.assertEquals(HttpMethod.GET, jsonObject.get(KEY_METHOD));
     }
 
     @Test
@@ -197,7 +197,7 @@ public class HttpServerTest extends BastTest {
         JSONObject parameters = jsonObject.getJSONObject(KEY_PARAMETERS);
         Assert.assertEquals("123", parameters.get("abc"));
         Assert.assertEquals("三刀", parameters.get("author"));
-        Assert.assertEquals(HttpMethodEnum.GET.getMethod(), jsonObject.get(KEY_METHOD));
+        Assert.assertEquals(HttpMethod.GET, jsonObject.get(KEY_METHOD));
     }
 
     @Test
@@ -208,7 +208,7 @@ public class HttpServerTest extends BastTest {
         httpPost.body().formUrlencoded(requestUnit.getParameters());
 
         JSONObject jsonObject = basicCheck(httpPost.submit().get(), requestUnit);
-        Assert.assertEquals(HttpMethodEnum.POST.getMethod(), jsonObject.get(KEY_METHOD));
+        Assert.assertEquals(HttpMethod.POST, jsonObject.get(KEY_METHOD));
     }
 
     @Test
@@ -220,7 +220,7 @@ public class HttpServerTest extends BastTest {
         httpPost.body().formUrlencoded(requestUnit.getParameters());
 
         JSONObject jsonObject = basicCheck(httpPost.submit().get(), requestUnit);
-        Assert.assertEquals(HttpMethodEnum.POST.getMethod(), jsonObject.get(KEY_METHOD));
+        Assert.assertEquals(HttpMethod.POST, jsonObject.get(KEY_METHOD));
     }
 
     @Test
@@ -235,7 +235,7 @@ public class HttpServerTest extends BastTest {
         httpPost.body().formUrlencoded(requestUnit.getParameters());
 
         JSONObject jsonObject = basicCheck(httpPost.submit().get(), requestUnit);
-        Assert.assertEquals(HttpMethodEnum.POST.getMethod(), jsonObject.get(KEY_METHOD));
+        Assert.assertEquals(HttpMethod.POST, jsonObject.get(KEY_METHOD));
     }
 
 

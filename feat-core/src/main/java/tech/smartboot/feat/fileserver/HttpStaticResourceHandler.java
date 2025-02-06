@@ -8,8 +8,8 @@
 
 package tech.smartboot.feat.fileserver;
 
+import tech.smartboot.feat.core.common.HttpMethod;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
-import tech.smartboot.feat.core.common.enums.HttpMethodEnum;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.exception.HttpException;
@@ -127,7 +127,7 @@ public class HttpStaticResourceHandler extends BaseHttpHandler {
         response.setHeader(HeaderNameEnum.LAST_MODIFIED.getName(), DateUtils.formatRFC1123(lastModifyDate));
         response.setHeader(HeaderNameEnum.CONTENT_TYPE.getName(), Mimetypes.getInstance().getMimetype(file) + "; charset=utf-8");
         //HEAD不输出内容
-        if (HttpMethodEnum.HEAD.getMethod().equals(request.getMethod())) {
+        if (HttpMethod.HEAD.equals(request.getMethod())) {
             completableFuture.complete(null);
             return;
         }
@@ -199,7 +199,7 @@ public class HttpStaticResourceHandler extends BaseHttpHandler {
         response.setHttpStatus(HttpStatus.NOT_FOUND);
         response.setHeader(HeaderNameEnum.CONTENT_TYPE.getName(), "text/html; charset=utf-8");
 
-        if (!HttpMethodEnum.HEAD.getMethod().equals(request.getMethod())) {
+        if (!HttpMethod.HEAD.equals(request.getMethod())) {
             throw new HttpException(HttpStatus.NOT_FOUND);
         }
     }

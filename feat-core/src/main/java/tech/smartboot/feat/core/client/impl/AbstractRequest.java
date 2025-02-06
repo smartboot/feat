@@ -12,7 +12,7 @@ import tech.smartboot.feat.core.client.HttpRequest;
 import tech.smartboot.feat.core.common.Cookie;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
-import tech.smartboot.feat.core.common.enums.HttpMethodEnum;
+import tech.smartboot.feat.core.common.HttpMethod;
 import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
 import tech.smartboot.feat.core.common.io.FeatOutputStream;
 
@@ -209,7 +209,7 @@ class AbstractRequest implements HttpRequest {
 
     public void setMethod(String method) {
         this.method = method;
-        if (HttpMethodEnum.GET.name().equals(method)) {
+        if (HttpMethod.GET.equals(method)) {
             outputStream.disableChunked();
         }
     }

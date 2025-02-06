@@ -10,7 +10,7 @@ package tech.smartboot.feat.core.server.impl;
 
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
-import tech.smartboot.feat.core.common.enums.HttpMethodEnum;
+import tech.smartboot.feat.core.common.HttpMethod;
 import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
 import tech.smartboot.feat.core.common.io.FeatOutputStream;
@@ -178,7 +178,7 @@ final class HttpOutputStream extends FeatOutputStream {
             disableChunked();
         } else if (response.getHttpStatus().value() == HttpStatus.CONTINUE.value() || response.getHttpStatus().value() == HttpStatus.SWITCHING_PROTOCOLS.value()) {
             disableChunked();
-        } else if (HttpMethodEnum.HEAD.name().equals(request.getMethod())) {
+        } else if (HttpMethod.HEAD.equals(request.getMethod())) {
             disableChunked();
         } else if (HttpProtocolEnum.HTTP_11 != request.getProtocol()) {
             disableChunked();

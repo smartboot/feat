@@ -8,7 +8,7 @@
 
 package tech.smartboot.feat.core.client;
 
-import tech.smartboot.feat.core.common.enums.HttpMethodEnum;
+import tech.smartboot.feat.core.common.HttpMethod;
 
 import java.util.function.Consumer;
 
@@ -20,7 +20,7 @@ public final class HttpPost extends HttpRestWrapper {
 
     HttpPost(HttpRestImpl rest) {
         super(rest);
-        rest.setMethod(HttpMethodEnum.POST.getMethod());
+        rest.setMethod(HttpMethod.POST);
     }
 
 

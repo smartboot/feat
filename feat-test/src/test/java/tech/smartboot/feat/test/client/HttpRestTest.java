@@ -60,8 +60,7 @@ public class HttpRestTest {
     @Test
     public void testPost() throws ExecutionException, InterruptedException {
         HttpClient httpClient = new HttpClient("localhost", 8080);
-        Future<tech.smartboot.feat.core.client.HttpResponse> future = httpClient.rest("/post")
-                .setMethod("post")
+        Future<tech.smartboot.feat.core.client.HttpResponse> future = httpClient.rest("post","/post")
                 .onSuccess(response -> {
                     System.out.println(response.body());
                     httpClient.close();

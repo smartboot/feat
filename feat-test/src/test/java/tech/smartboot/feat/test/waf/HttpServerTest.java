@@ -20,7 +20,7 @@ import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpGet;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.HeaderValue;
-import tech.smartboot.feat.core.common.enums.HttpMethodEnum;
+import tech.smartboot.feat.core.common.HttpMethod;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
@@ -106,7 +106,7 @@ public class HttpServerTest extends BastTest {
     @Test
     public void testGet() throws ExecutionException, InterruptedException {
         bootstrap.options().getWafOptions()
-                .addAllowMethod(HttpMethodEnum.POST.getMethod());
+                .addAllowMethod(HttpMethod.POST);
         HttpClient httpClient = getHttpClient();
         StringBuilder uriStr = new StringBuilder(requestUnit.getUri()).append("?");
         requestUnit.getParameters().forEach((key, value) -> uriStr.append(key).append('=').append(value).append('&'));
@@ -119,14 +119,14 @@ public class HttpServerTest extends BastTest {
     @Test
     public void testGet1() throws ExecutionException, InterruptedException {
         bootstrap.options().getWafOptions()
-                .addAllowMethod(HttpMethodEnum.GET.getMethod());
+                .addAllowMethod(HttpMethod.GET);
         HttpClient httpClient = getHttpClient();
         StringBuilder uriStr = new StringBuilder(requestUnit.getUri()).append("?");
         requestUnit.getParameters().forEach((key, value) -> uriStr.append(key).append('=').append(value).append('&'));
         HttpGet httpGet = httpClient.get(uriStr.toString());
         requestUnit.getHeaders().forEach((name, value) -> httpGet.header(h->h.add(name, value)));
         JSONObject jsonObject = basicCheck(httpGet.submit().get(), requestUnit);
-        Assert.assertEquals(HttpMethodEnum.GET.getMethod(), jsonObject.get(KEY_METHOD));
+        Assert.assertEquals(HttpMethod.GET, jsonObject.get(KEY_METHOD));
     }
 
     @Test
@@ -137,7 +137,7 @@ public class HttpServerTest extends BastTest {
         HttpGet httpGet = httpClient.get(uriStr.toString());
         requestUnit.getHeaders().forEach((name, value) -> httpGet.header(h->h.add(name, value)));
         JSONObject jsonObject = basicCheck(httpGet.submit().get(), requestUnit);
-        Assert.assertEquals(HttpMethodEnum.GET.getMethod(), jsonObject.get(KEY_METHOD));
+        Assert.assertEquals(HttpMethod.GET, jsonObject.get(KEY_METHOD));
 
         bootstrap.options().getWafOptions()
                 .addAllowUriPrefix("/aa");
@@ -150,7 +150,7 @@ public class HttpServerTest extends BastTest {
         HttpGet httpGet2 = httpClient.get(uriStr.toString());
         requestUnit.getHeaders().forEach((name, value) -> httpGet2.header(h->h.add(name, value)));
         jsonObject = basicCheck(httpGet2.submit().get(), requestUnit);
-        Assert.assertEquals(HttpMethodEnum.GET.getMethod(), jsonObject.get(KEY_METHOD));
+        Assert.assertEquals(HttpMethod.GET, jsonObject.get(KEY_METHOD));
 
         bootstrap.options().getWafOptions()
                 .getAllowUriPrefixes().clear();
@@ -164,7 +164,7 @@ public class HttpServerTest extends BastTest {
         HttpGet httpGet4 = httpClient.get(uriStr.toString());
         requestUnit.getHeaders().forEach((name, value) -> httpGet4.header(h->h.add(name, value)));
         jsonObject = basicCheck(httpGet4.submit().get(), requestUnit);
-        Assert.assertEquals(HttpMethodEnum.GET.getMethod(), jsonObject.get(KEY_METHOD));
+        Assert.assertEquals(HttpMethod.GET, jsonObject.get(KEY_METHOD));
     }
 
 

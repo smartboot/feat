@@ -4,7 +4,7 @@ import tech.smartboot.feat.core.common.codec.h2.codec.ContinuationFrame;
 import tech.smartboot.feat.core.common.codec.h2.codec.Http2Frame;
 import tech.smartboot.feat.core.common.codec.h2.codec.PushPromiseFrame;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
-import tech.smartboot.feat.core.common.enums.HttpMethodEnum;
+import tech.smartboot.feat.core.common.HttpMethod;
 import tech.smartboot.feat.core.common.utils.HttpUtils;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.PushBuilder;
@@ -34,7 +34,7 @@ public class PushBuilderImpl implements PushBuilder {
         response.getCookies().forEach(cookie -> pushRequest.addHeader(HeaderNameEnum.COOKIE.getLowCaseName(),
                 HeaderNameEnum.COOKIE.getName(), cookie.getName() + "=" + cookie.getValue()));
 
-        method(HttpMethodEnum.GET.getMethod());
+        method(HttpMethod.GET);
     }
 
     @Override

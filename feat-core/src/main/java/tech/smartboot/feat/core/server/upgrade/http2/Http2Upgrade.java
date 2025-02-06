@@ -10,7 +10,7 @@ import tech.smartboot.feat.core.common.codec.h2.codec.SettingsFrame;
 import tech.smartboot.feat.core.common.codec.h2.codec.WindowUpdateFrame;
 import tech.smartboot.feat.core.common.codec.h2.hpack.DecodingCallback;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
-import tech.smartboot.feat.core.common.enums.HttpMethodEnum;
+import tech.smartboot.feat.core.common.HttpMethod;
 import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
 import tech.smartboot.feat.core.server.HttpRequest;
@@ -190,7 +190,7 @@ public class Http2Upgrade extends Upgrade {
                 if (headersFrame.getFlag(Http2Frame.FLAG_END_HEADERS)) {
                     request.setState(Http2Endpoint.STATE_DATA_FRAME);
                     onHeaderComplete(request);
-                    if (HttpMethodEnum.GET.getMethod().equals(request.getMethod())) {
+                    if (HttpMethod.GET.equals(request.getMethod())) {
                         handleHttpRequest(request);
                     } else if (request.getContentLength() > 0) {
                         request.setBody(new ByteArrayOutputStream((int) request.getContentLength()));

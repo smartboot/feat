@@ -2,7 +2,7 @@ package tech.smartboot.feat.core.server.upgrade.http2;
 
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.Reset;
-import tech.smartboot.feat.core.common.enums.HttpMethodEnum;
+import tech.smartboot.feat.core.common.HttpMethod;
 import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
 import tech.smartboot.feat.core.common.io.BodyInputStream;
 import tech.smartboot.feat.core.common.io.ReadListener;
@@ -60,7 +60,7 @@ public class Http2Endpoint extends Endpoint implements HttpRequest, Reset {
     @Override
     public void reset() {
         super.reset();
-        method = HttpMethodEnum.GET.getMethod();
+        method = HttpMethod.GET;
         response.reset();
     }
 

@@ -111,8 +111,8 @@ public final class HttpClient {
     }
 
 
-    public HttpRest rest(String uri) {
-        return rest0(uri);
+    public HttpRest rest(String method, String uri) {
+        return rest0(uri).setMethod(method);
     }
 
     private HttpRestImpl rest0(String uri) {

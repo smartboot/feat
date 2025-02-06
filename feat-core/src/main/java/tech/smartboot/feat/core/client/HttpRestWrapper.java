@@ -13,11 +13,6 @@ class HttpRestWrapper implements HttpRest {
     }
 
     @Override
-    public HttpRest setMethod(String method) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public HttpRest body(Consumer<RequestBody> body) {
         return rest.body(body);
     }
