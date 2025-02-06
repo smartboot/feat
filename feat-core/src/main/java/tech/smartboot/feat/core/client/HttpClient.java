@@ -112,6 +112,9 @@ public final class HttpClient {
 
 
     public HttpRest rest(String method, String uri) {
+        if (method == null) {
+            throw new IllegalArgumentException("method is null");
+        }
         return rest0(uri).setMethod(method);
     }
 

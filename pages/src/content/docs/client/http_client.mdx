@@ -76,7 +76,37 @@ HttpClient httpClient = new HttpClient("smartboot.tech", 443);
 
 代理配置。
 
-## 4.2.3 通用请求
-## 4.2.4 Get 请求
+## 4.2.3 HTTP请求
+HttpClient 提供了 rest() 方法用于发送通用的 HTTP 请求。rest() 方法的参数包括：
+- method: HTTP 请求方法，如 GET、POST、PUT、DELETE 等。
+- path: 请求路径，如 /api/user。
 
-## 4.2.5 Post 请求
+请求构造完毕后，需要调用 submit() 方法发送请求。
+
+```java title=HttpRestDemo.java "rest" "HttpMethod.GET" "submit"
+public class HttpRestDemo {
+    public static void main(String[] args) throws IOException {
+        // 创建 HttpClient 实例
+        HttpClient client = new HttpClient("https://smartboot.tech");
+        client.options().debug(true);
+        // 发送 GET 请求
+        client.rest(HttpMethod.GET, "/feat/").onSuccess(response -> {
+            System.out.println("Status Code: " + response.statusCode());
+            System.out.println("Body: " + response.body());
+        }).submit();
+    }
+}
+```
+
+对于 GET、POST 等常见的 HTTP 请求方法，HttpClient 提供了对应的方法，如 get()、post() 等，例如：
+```java title=HttpGetDemo.java "get" "submit"
+public class HttpGetDemo {
+    public static void main(String[] args) {
+        HttpClient httpClient = new HttpClient("https://smartboot.tech");
+        httpClient.get("/feat/")
+                .onSuccess(response -> System.out.println(response.body()))
+                .onFailure(Throwable::printStackTrace)
+                .submit();
+    }
+}
+```

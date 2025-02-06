@@ -12,8 +12,8 @@ import tech.smartboot.feat.core.client.HttpClient;
 
 public class HttpGetDemo {
     public static void main(String[] args) {
-        HttpClient httpClient = new HttpClient("www.baidu.com", 80);
-        httpClient.get("/").header(header -> header.keepalive(false))
+        HttpClient httpClient = new HttpClient("https://smartboot.tech");
+        httpClient.get("/feat/")
                 .onSuccess(response -> System.out.println(response.body()))
                 .onFailure(Throwable::printStackTrace)
                 .submit();
