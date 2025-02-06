@@ -11,6 +11,7 @@ package tech.smartboot.feat.core.client;
 import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.client.impl.HttpRequestImpl;
 import tech.smartboot.feat.core.client.impl.HttpResponseImpl;
+import tech.smartboot.feat.core.client.stream.Stream;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 
 import java.io.ByteArrayOutputStream;
@@ -116,17 +117,6 @@ class HttpRestImpl implements HttpRest {
                     return this;
                 }
 
-//                @Override
-//                public void write(byte[] bytes, int offset, int len, Consumer<Body<HttpRestImpl>> consumer) {
-//                    try {
-//                        willSendRequest();
-//                        request.getOutputStream().write(bytes, offset, len, bufferOutputStream -> consumer.accept(HttpRestImpl.this.body));
-//                    } catch (IOException e) {
-//                        System.out.println("body stream write error! " + e.getMessage());
-//                        completableFuture.completeExceptionally(e);
-//                    }
-//                }
-
                 @Override
                 public void transferFrom(ByteBuffer buffer, Consumer<Body> consumer) {
                     try {
@@ -192,6 +182,18 @@ class HttpRestImpl implements HttpRest {
 
         };
 
+    }
+
+    @Override
+    public HttpRest onResponseHeader(Consumer<HttpResponse> resp) {
+        response.headerCompleted(resp);
+        return this;
+    }
+
+    @Override
+    public HttpRest onResponseBody(Stream streaming) {
+        response.onStream(streaming);
+        return this;
     }
 
     public HttpRestImpl onSuccess(Consumer<HttpResponse> consumer) {

@@ -42,10 +42,8 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
         return body;
     }
 
-    @Override
-    public HttpResponse headerCompleted(Consumer<HttpResponse> resp) {
+    public void headerCompleted(Consumer<HttpResponse> resp) {
         this.headerConsumer = resp;
-        return this;
     }
 
     public void setBody(String body) {
@@ -156,9 +154,8 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
     }
 
 
-    public HttpResponse onStream(Stream streaming) {
+    public void onStream(Stream streaming) {
         this.streaming = streaming;
-        return this;
     }
 
 }

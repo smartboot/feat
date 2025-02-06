@@ -8,10 +8,6 @@
 
 package tech.smartboot.feat.core.client;
 
-import tech.smartboot.feat.core.client.stream.Stream;
-
-import java.util.function.Consumer;
-
 /**
  * Http消息请求接口
  *
@@ -27,8 +23,4 @@ public interface HttpResponse extends Response {
     String getCharacterEncoding();
 
     String body();
-
-    HttpResponse headerCompleted(Consumer<HttpResponse> resp);
-
-    HttpResponse onStream(Stream streaming);
 }

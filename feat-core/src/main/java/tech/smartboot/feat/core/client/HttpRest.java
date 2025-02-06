@@ -1,5 +1,7 @@
 package tech.smartboot.feat.core.client;
 
+import tech.smartboot.feat.core.client.stream.Stream;
+
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
@@ -17,6 +19,10 @@ public interface HttpRest {
     Body body();
 
     Future<HttpResponse> submit();
+
+    HttpRest onResponseHeader(Consumer<HttpResponse> resp);
+
+    HttpRest onResponseBody(Stream streaming);
 
     HttpRest onSuccess(Consumer<HttpResponse> consumer);
 

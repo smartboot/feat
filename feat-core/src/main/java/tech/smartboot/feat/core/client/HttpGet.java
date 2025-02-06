@@ -42,4 +42,13 @@ public class HttpGet extends HttpRestWrapper {
         return this;
     }
 
+    @Override
+    public HttpRest body(Consumer<Body> body) {
+        throw new UnsupportedOperationException("GET method does not support body");
+    }
+
+    @Override
+    public Body body() {
+        throw new UnsupportedOperationException("GET method does not support body");
+    }
 }

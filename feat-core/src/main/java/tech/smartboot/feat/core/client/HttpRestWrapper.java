@@ -1,5 +1,7 @@
 package tech.smartboot.feat.core.client;
 
+import tech.smartboot.feat.core.client.stream.Stream;
+
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
@@ -28,6 +30,16 @@ class HttpRestWrapper implements HttpRest {
     @Override
     public Future<HttpResponse> submit() {
         return rest.submit();
+    }
+
+    @Override
+    public HttpRest onResponseHeader(Consumer<HttpResponse> resp) {
+        return rest.onResponseHeader(resp);
+    }
+
+    @Override
+    public HttpRest onResponseBody(Stream streaming) {
+        return rest.onResponseBody(streaming);
     }
 
     @Override
