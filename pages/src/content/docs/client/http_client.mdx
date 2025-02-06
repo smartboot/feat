@@ -110,3 +110,52 @@ public class HttpGetDemo {
     }
 }
 ```
+
+## 4.2.4 异步回调
+HttpClient 提供了异步回调机制，可以在请求发送后立即返回，而不需要等待请求完成。
+
+### 4.2.4.1 onResponseHeader
+当响应 Header 解析完成后，会触发 onResponseHeader 回调。
+```java title=ResponseHeaderDemo.java "onResponseHeader"
+public class ResponseHeaderDemo {
+    public static void main(String[] args) {
+        HttpClient httpClient = new HttpClient("https://smartboot.tech");
+        httpClient.get("/feat/")
+                .onResponseHeader(response -> {
+                    for (String name : response.getHeaderNames()) {
+                        System.out.println(name + ": " + response.getHeader(name));
+                    }
+                })
+                .submit();
+    }
+}
+```
+
+### 4.2.4.2 onResponseBody
+对于存在响应体的请求，当`onResponseHeader`回调结束并开始接收到Body内容时，会触发 onResponseBody 回调。
+```java title=ResponseBodyDemo.java "onResponseBody"
+public class ResponseBodyDemo {
+    public static void main(String[] args) {
+        HttpClient httpClient = new HttpClient("https://smartboot.tech");
+        httpClient.get("/feat/")
+                .onResponseBody(new Stream() {
+                    @Override
+                    public void stream(HttpResponse response, byte[] bytes, boolean end) throws IOException {
+                        System.out.println("接收到数据：" + new String(bytes));
+                        if (end) {
+                            System.out.println("数据接收完毕");
+                        }
+                    }
+                })
+                .submit();
+    }
+}
+```
+onResponseBody 的参数是一个 Stream 对象，用于消费响应体的内容：
+- response: HttpResponse 对象，表示当前的响应。
+- bytes: 字节数组，表示接收到的响应体内容。
+- end: boolean 值，表示是否接收到了响应体的最后一部分内容。
+### 4.2.4.3 onSuccess
+当请求成功时，会触发 onSuccess 回调。该回调发生于 onResponseBody 正常结束之后。
+### 4.2.4.4 onFailure
+当请求失败时，会触发 onFailure 回调。
