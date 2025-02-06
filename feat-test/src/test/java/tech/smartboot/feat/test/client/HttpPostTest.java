@@ -161,7 +161,7 @@ public class HttpPostTest {
                     })
                     .onFailure(t -> {
                         System.out.println(t.getMessage());
-                    }).done();
+                    }).submit();
             Assert.assertEquals(future.get().body(), body + body);
         };
         doRequest(new HttpClient("http://127.0.0.1:8080"), consumer);
@@ -185,7 +185,7 @@ public class HttpPostTest {
                     })
                     .onFailure(t -> {
                         System.out.println(t.getMessage());
-                    }).done();
+                    }).submit();
             JSONObject jsonObject = JSONObject.parseObject(future.get().body());
             Assert.assertNull(jsonObject.getString(HeaderNameEnum.TRANSFER_ENCODING.getName()));
             Assert.assertEquals(jsonObject.getString(HeaderNameEnum.CONTENT_LENGTH.getName()),
@@ -210,7 +210,7 @@ public class HttpPostTest {
                     })
                     .onFailure(t -> {
                         System.out.println(t.getMessage());
-                    }).done();
+                    }).submit();
 
             Future<tech.smartboot.feat.core.client.HttpResponse> future2 = client.post("/other/abc")
                     .header(h -> h.keepalive(true).setContentLength(body2.getBytes().length))
@@ -221,7 +221,7 @@ public class HttpPostTest {
                     })
                     .onFailure(t -> {
                         System.out.println(t.getMessage());
-                    }).done();
+                    }).submit();
             Assert.assertEquals(body, future1.get().body());
             Assert.assertEquals(body2, future2.get().body());
         };
@@ -278,7 +278,7 @@ public class HttpPostTest {
             httpClient.options().debug(true);
             byte[] jsonBytes = "{\"a\":1,\"b\":\"123\"}".getBytes(StandardCharsets.UTF_8);
             String resp = httpClient.post("/body").header(h -> h.setContentLength(jsonBytes.length).setContentType(
-                    "application/json")).body(b -> b.write(jsonBytes).flush()).done().get().body();
+                    "application/json")).body(b -> b.write(jsonBytes).flush()).submit().get().body();
             Assert.assertEquals(resp, jsonBytes.length + new String(jsonBytes));
         };
         doRequest(new HttpClient("http://127.0.0.1:8080"), consumer);
@@ -291,7 +291,7 @@ public class HttpPostTest {
             httpClient.options().debug(true);
             byte[] jsonBytes = "{\"a\":1,\"b\":\"123\"}".getBytes(StandardCharsets.UTF_8);
             tech.smartboot.feat.core.client.HttpResponse resp = httpClient.post("/empty").header(h -> h.setContentLength(jsonBytes.length).setContentType(
-                    "application/json")).body(b -> b.write(jsonBytes).flush()).done().get();
+                    "application/json")).body(b -> b.write(jsonBytes).flush()).submit().get();
             Assert.assertEquals(0, resp.getContentLength());
         };
         doRequest(new HttpClient("http://127.0.0.1:8080"), consumer);

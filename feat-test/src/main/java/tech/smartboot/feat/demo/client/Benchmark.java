@@ -64,7 +64,7 @@ public class Benchmark {
                     success.incrementAndGet();
 //                    System.out.println(response.body());
                     if (running.get()) {
-                        httpClient.get("/plaintext").onSuccess(this).onFailure(failure).done();
+                        httpClient.get("/plaintext").onSuccess(this).onFailure(failure).submit();
                     } else {
                         httpClient.close();
                     }
@@ -74,7 +74,7 @@ public class Benchmark {
                 httpClient.get("/plaintext")
                         .onSuccess(consumer)
                         .onFailure(failure)
-                        .done();
+                        .submit();
             }
         }
         System.out.println("all client started,cost:" + (System.currentTimeMillis() - startTime));

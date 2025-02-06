@@ -112,7 +112,7 @@ public class MultipartTest {
                 })
                 .onFailure(t -> {
                     System.out.println(t.getMessage());
-                }).done();
+                }).submit();
         JSONObject jsonObject = JSONObject.parseObject(future.get().body());
         Assert.assertEquals("value1", jsonObject.getJSONObject("1").getString("value"));
         Assert.assertEquals("example.txt", jsonObject.getJSONObject("2").getString("filename"));
@@ -146,7 +146,7 @@ public class MultipartTest {
                     System.out.println("jsonObject = " + jsonObject);
                 })
                 .onFailure(t -> System.out.println(t.getMessage()))
-                .done();
+                .submit();
         JSONObject jsonObject = JSONObject.parseObject(future.get().body());
         Assert.assertEquals("FiLe1", jsonObject.getJSONObject("1").getString("fieldName"));
         Assert.assertEquals("testFILE.txt", jsonObject.getJSONObject("1").getString("filename"));
@@ -167,7 +167,7 @@ public class MultipartTest {
                     System.out.println("jsonObject = " + JSONObject.parseObject(response.body()));
                 })
                 .onFailure(t -> System.out.println(t.getMessage()))
-                .done();
+                .submit();
         JSONObject jsonObject = JSONObject.parseObject(future.get().body());
         Assert.assertTrue(jsonObject.isEmpty());
 
@@ -199,7 +199,7 @@ public class MultipartTest {
                     System.out.println("jsonObject = " + jsonObject);
                 })
                 .onFailure(t -> System.out.println(t.getMessage()))
-                .done();
+                .submit();
         JSONObject jsonObject = JSONObject.parseObject(future.get().body());
         Assert.assertEquals("largefile.txt", jsonObject.getJSONObject("1").getString("filename"));
         Assert.assertEquals("368890", jsonObject.getJSONObject("1").getString("contentLength"));
@@ -228,7 +228,7 @@ public class MultipartTest {
                     System.out.println("jsonObject = " + jsonObject);
                 })
                 .onFailure(t -> System.out.println(t.getMessage()))
-                .done();
+                .submit();
         JSONObject jsonObject = JSONObject.parseObject(future.get().body());
         Assert.assertEquals("This is ***fun***", jsonObject.getJSONObject("1").getString("filename"));
 
@@ -255,7 +255,7 @@ public class MultipartTest {
                     System.out.println("jsonObject = " + jsonObject);
                 })
                 .onFailure(t -> System.out.println(t.getMessage()))
-                .done();
+                .submit();
         JSONObject jsonObject = JSONObject.parseObject(future.get().body());
         Assert.assertEquals("0", jsonObject.getJSONObject("1").getString("contentLength"));
         Assert.assertEquals("", jsonObject.getJSONObject("1").getString("filename"));
@@ -296,7 +296,7 @@ public class MultipartTest {
                     System.out.println("jsonObject = " + jsonObject);
                 })
                 .onFailure(t -> System.out.println(t.getMessage()))
-                .done();
+                .submit();
         JSONObject jsonObject = JSONObject.parseObject(future.get().body());
         // 验证 file 字段
         Assert.assertEquals("bar.txt", jsonObject.getJSONObject("1").getString("filename"));
@@ -329,7 +329,7 @@ public class MultipartTest {
                     System.out.println("jsonObject = " + jsonObject);
                 })
                 .onFailure(t -> System.out.println(t.getMessage()))
-                .done();
+                .submit();
         JSONObject jsonObject = JSONObject.parseObject(future.get().body());
         Assert.assertEquals("FiLe", jsonObject.getJSONObject("1").getString("fieldName"));
         Assert.assertEquals("testFILE.txt", jsonObject.getJSONObject("1").getString("filename"));
@@ -354,7 +354,7 @@ public class MultipartTest {
                     System.out.println("jsonObject = " + jsonObject);
                 })
                 .onFailure(t -> System.out.println(t.getMessage()))
-                .done();
+                .submit();
         JSONObject jsonObject = JSONObject.parseObject(future.get().body());
         Assert.assertEquals("field", jsonObject.getJSONObject("1").getString("fieldName"));
 

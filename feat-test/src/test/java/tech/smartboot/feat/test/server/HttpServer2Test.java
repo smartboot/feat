@@ -65,7 +65,7 @@ public class HttpServer2Test extends BastTest {
                 response.write("Hello World".getBytes(StandardCharsets.UTF_8));
             }
         });
-        tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.get("/").done().get();
+        tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.get("/").submit().get();
         Assert.assertEquals(httpResponse.getContentType(), "test");
         Assert.assertEquals(httpResponse.getHeader(HeaderNameEnum.TRANSFER_ENCODING.getName()), HeaderValue.TransferEncoding.CHUNKED);
     }
@@ -78,7 +78,7 @@ public class HttpServer2Test extends BastTest {
                 request.getResponse().write("Hello World".getBytes(StandardCharsets.UTF_8));
             }
         });
-        tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.get("/").done().get();
+        tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.get("/").submit().get();
         Assert.assertEquals(httpResponse.getProtocol(), HttpProtocolEnum.HTTP_11.getProtocol());
         Assert.assertEquals(httpResponse.getHeader(HeaderNameEnum.TRANSFER_ENCODING.getName()), HeaderValue.TransferEncoding.CHUNKED);
     }
@@ -91,7 +91,7 @@ public class HttpServer2Test extends BastTest {
                 request.getResponse().write("Hello World".getBytes(StandardCharsets.UTF_8));
             }
         });
-        tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.rest("/").setMethod(HttpMethodEnum.PUT.getMethod()).done().get();
+        tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.rest("/").setMethod(HttpMethodEnum.PUT.getMethod()).submit().get();
         Assert.assertEquals(httpResponse.getProtocol(), HttpProtocolEnum.HTTP_11.getProtocol());
         Assert.assertEquals(httpResponse.statusCode(), HttpStatus.OK.value());
     }
@@ -107,7 +107,7 @@ public class HttpServer2Test extends BastTest {
         });
         for (int i = 0; i < 10; i++) {
             String body = "hello" + i;
-            tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.post("/").header(h->h.setContentLength(body.length())).body(b->b.write(body)).done().get();
+            tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.post("/").header(h->h.setContentLength(body.length())).body(b->b.write(body)).submit().get();
             Assert.assertEquals(httpResponse.getProtocol(), HttpProtocolEnum.HTTP_11.getProtocol());
             Assert.assertEquals(httpResponse.statusCode(), HttpStatus.OK.value());
             Assert.assertEquals(httpResponse.body(), "Hello World");
@@ -128,7 +128,7 @@ public class HttpServer2Test extends BastTest {
         });
         for (int i = 0; i < 10; i++) {
             String body = "hello" + i;
-            tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.post("/").header(h->h.keepalive(true).setContentLength(body.length())).body(b->b.write(body)).done().get();
+            tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.post("/").header(h->h.keepalive(true).setContentLength(body.length())).body(b->b.write(body)).submit().get();
             Assert.assertEquals(httpResponse.getProtocol(), HttpProtocolEnum.HTTP_11.getProtocol());
             Assert.assertEquals(httpResponse.statusCode(), HttpStatus.OK.value());
             Assert.assertEquals(httpResponse.body(), body);
@@ -158,7 +158,7 @@ public class HttpServer2Test extends BastTest {
             }
         });
 
-        tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.post("/").header(h->h.keepalive(true)).body().formUrlencoded(param).done().get();
+        tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.post("/").header(h->h.keepalive(true)).body().formUrlencoded(param).submit().get();
         Assert.assertEquals(httpResponse.getProtocol(), HttpProtocolEnum.HTTP_11.getProtocol());
         Assert.assertEquals(httpResponse.statusCode(), HttpStatus.OK.value());
         Assert.assertEquals("ok", httpResponse.body());

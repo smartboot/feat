@@ -50,13 +50,13 @@ public class RestfulServerTest extends BastTest {
     public void testGet() throws ExecutionException, InterruptedException {
         HttpClient httpClient = getHttpClient();
 
-        Assert.assertEquals(httpClient.get("/").done().get().body(), "hello");
+        Assert.assertEquals(httpClient.get("/").submit().get().body(), "hello");
     }
 
     @Test
     public void testGet2() throws ExecutionException, InterruptedException {
         HttpClient httpClient = getHttpClient();
-        Assert.assertEquals(httpClient.get("/demo2").done().get().body(), "hello world");
+        Assert.assertEquals(httpClient.get("/demo2").submit().get().body(), "hello world");
     }
 
 

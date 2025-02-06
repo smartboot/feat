@@ -71,7 +71,7 @@ public class HttpReconnectTest {
                     .onFailure(throwable -> {
                         httpClient.close();
                     })
-                    .done();
+                    .submit();
             if (i % 3 == 0) {
                 Thread.sleep(10);
             }

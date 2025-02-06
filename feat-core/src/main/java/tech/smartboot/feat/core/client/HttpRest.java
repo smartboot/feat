@@ -16,7 +16,7 @@ public interface HttpRest {
 
     Body body();
 
-    Future<HttpResponse> done();
+    Future<HttpResponse> submit();
 
     HttpRest onSuccess(Consumer<HttpResponse> consumer);
 

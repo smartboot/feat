@@ -111,7 +111,7 @@ public class HttpServerTest extends BastTest {
         HttpGet httpGet = httpClient.get(uriStr.toString());
         requestUnit.getHeaders().forEach((name, value) -> httpGet.header().add(name, value));
 
-        JSONObject jsonObject = basicCheck(httpGet.done().get(), requestUnit);
+        JSONObject jsonObject = basicCheck(httpGet.submit().get(), requestUnit);
         Assert.assertEquals(HttpMethodEnum.GET.getMethod(), jsonObject.get(KEY_METHOD));
     }
 
@@ -123,14 +123,14 @@ public class HttpServerTest extends BastTest {
         requestUnit.getParameters().forEach(httpGet::addQueryParam);
         requestUnit.getHeaders().forEach((name, value) -> httpGet.header().add(name, value));
 
-        JSONObject jsonObject = basicCheck(httpGet.done().get(), requestUnit);
+        JSONObject jsonObject = basicCheck(httpGet.submit().get(), requestUnit);
         Assert.assertEquals(HttpMethodEnum.GET.getMethod(), jsonObject.get(KEY_METHOD));
     }
 
     @Test
     public void testGet2() throws ExecutionException, InterruptedException {
         HttpClient httpClient = getHttpClient();
-        tech.smartboot.feat.core.client.HttpResponse response = httpClient.get("/hello?").addQueryParam("author", "三刀").addQueryParam("abc", "123").done().get();
+        tech.smartboot.feat.core.client.HttpResponse response = httpClient.get("/hello?").addQueryParam("author", "三刀").addQueryParam("abc", "123").submit().get();
 
         JSONObject jsonObject = JSON.parseObject(response.body());
         JSONObject parameters = jsonObject.getJSONObject(KEY_PARAMETERS);
@@ -142,7 +142,7 @@ public class HttpServerTest extends BastTest {
     @Test
     public void testGet3() throws ExecutionException, InterruptedException {
         HttpClient httpClient = getHttpClient();
-        tech.smartboot.feat.core.client.HttpResponse response = httpClient.get("/hello").addQueryParam("author", "三刀").addQueryParam("abc", "123").done().get();
+        tech.smartboot.feat.core.client.HttpResponse response = httpClient.get("/hello").addQueryParam("author", "三刀").addQueryParam("abc", "123").submit().get();
 
         JSONObject jsonObject = JSON.parseObject(response.body());
         JSONObject parameters = jsonObject.getJSONObject(KEY_PARAMETERS);
@@ -154,7 +154,7 @@ public class HttpServerTest extends BastTest {
     @Test
     public void testGet4() throws ExecutionException, InterruptedException {
         HttpClient httpClient = getHttpClient();
-        tech.smartboot.feat.core.client.HttpResponse response = httpClient.get("/hello#").addQueryParam("author", "三刀").addQueryParam("abc", "123").done().get();
+        tech.smartboot.feat.core.client.HttpResponse response = httpClient.get("/hello#").addQueryParam("author", "三刀").addQueryParam("abc", "123").submit().get();
 
         JSONObject jsonObject = JSON.parseObject(response.body());
         JSONObject parameters = jsonObject.getJSONObject(KEY_PARAMETERS);
@@ -166,7 +166,7 @@ public class HttpServerTest extends BastTest {
     @Test
     public void testGet5() throws ExecutionException, InterruptedException {
         HttpClient httpClient = getHttpClient();
-        tech.smartboot.feat.core.client.HttpResponse response = httpClient.get("/hello#abca=sdf").addQueryParam("author", "三刀").addQueryParam("abc", "123").done().get();
+        tech.smartboot.feat.core.client.HttpResponse response = httpClient.get("/hello#abca=sdf").addQueryParam("author", "三刀").addQueryParam("abc", "123").submit().get();
 
         JSONObject jsonObject = JSON.parseObject(response.body());
         JSONObject parameters = jsonObject.getJSONObject(KEY_PARAMETERS);
@@ -178,7 +178,7 @@ public class HttpServerTest extends BastTest {
     @Test
     public void testGet6() throws ExecutionException, InterruptedException {
         HttpClient httpClient = getHttpClient();
-        tech.smartboot.feat.core.client.HttpResponse response = httpClient.get("/hello?a=b#abca=sdf").addQueryParam("author", "三刀").addQueryParam("abc", "123").done().get();
+        tech.smartboot.feat.core.client.HttpResponse response = httpClient.get("/hello?a=b#abca=sdf").addQueryParam("author", "三刀").addQueryParam("abc", "123").submit().get();
 
         JSONObject jsonObject = JSON.parseObject(response.body());
         JSONObject parameters = jsonObject.getJSONObject(KEY_PARAMETERS);
@@ -191,7 +191,7 @@ public class HttpServerTest extends BastTest {
     @Test
     public void testGet7() throws ExecutionException, InterruptedException {
         HttpClient httpClient = getHttpClient();
-        tech.smartboot.feat.core.client.HttpResponse response = httpClient.get("/hello?#abca=sdf").addQueryParam("author", "三刀").addQueryParam("abc", "123").done().get();
+        tech.smartboot.feat.core.client.HttpResponse response = httpClient.get("/hello?#abca=sdf").addQueryParam("author", "三刀").addQueryParam("abc", "123").submit().get();
 
         JSONObject jsonObject = JSON.parseObject(response.body());
         JSONObject parameters = jsonObject.getJSONObject(KEY_PARAMETERS);
@@ -207,7 +207,7 @@ public class HttpServerTest extends BastTest {
         requestUnit.getHeaders().forEach((name, value) -> httpPost.header().add(name, value));
         httpPost.body().formUrlencoded(requestUnit.getParameters());
 
-        JSONObject jsonObject = basicCheck(httpPost.done().get(), requestUnit);
+        JSONObject jsonObject = basicCheck(httpPost.submit().get(), requestUnit);
         Assert.assertEquals(HttpMethodEnum.POST.getMethod(), jsonObject.get(KEY_METHOD));
     }
 
@@ -219,7 +219,7 @@ public class HttpServerTest extends BastTest {
         requestUnit.getParameters().put("author", "三刀");
         httpPost.body().formUrlencoded(requestUnit.getParameters());
 
-        JSONObject jsonObject = basicCheck(httpPost.done().get(), requestUnit);
+        JSONObject jsonObject = basicCheck(httpPost.submit().get(), requestUnit);
         Assert.assertEquals(HttpMethodEnum.POST.getMethod(), jsonObject.get(KEY_METHOD));
     }
 
@@ -234,7 +234,7 @@ public class HttpServerTest extends BastTest {
         }
         httpPost.body().formUrlencoded(requestUnit.getParameters());
 
-        JSONObject jsonObject = basicCheck(httpPost.done().get(), requestUnit);
+        JSONObject jsonObject = basicCheck(httpPost.submit().get(), requestUnit);
         Assert.assertEquals(HttpMethodEnum.POST.getMethod(), jsonObject.get(KEY_METHOD));
     }
 

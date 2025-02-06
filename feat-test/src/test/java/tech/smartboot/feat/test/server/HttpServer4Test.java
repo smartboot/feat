@@ -116,7 +116,7 @@ public class HttpServer4Test extends BastTest {
         requestUnit.getHeaders().forEach((name, value) -> httpPost.header().add(name, value));
         httpPost.header().add("overfLow", "1234567890abcdefghi");
 
-        tech.smartboot.feat.core.client.HttpResponse response = httpPost.done().get();
+        tech.smartboot.feat.core.client.HttpResponse response = httpPost.submit().get();
         Assert.assertEquals(response.statusCode(), HttpStatus.REQUEST_HEADER_FIELDS_TOO_LARGE.value());
     }
 
@@ -132,7 +132,7 @@ public class HttpServer4Test extends BastTest {
         HttpPost httpPost = httpClient.post(requestUnit.getUri());
         httpPost.header().add("1234567890abcdefghi", "1234567890abcdefghi");
 
-        tech.smartboot.feat.core.client.HttpResponse response = httpPost.done().get();
+        tech.smartboot.feat.core.client.HttpResponse response = httpPost.submit().get();
         Assert.assertEquals(response.statusCode(), HttpStatus.INTERNAL_SERVER_ERROR.value());
     }
 

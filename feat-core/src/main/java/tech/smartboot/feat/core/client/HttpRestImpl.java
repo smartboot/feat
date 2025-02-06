@@ -156,7 +156,7 @@ class HttpRestImpl implements HttpRest {
         return body;
     }
 
-    public Future<HttpResponse> done() {
+    public Future<HttpResponse> submit() {
         try {
             willSendRequest();
             request.getOutputStream().close();

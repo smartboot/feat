@@ -91,7 +91,7 @@ public class HttpURLTest {
         byte[] jsonBytes = "{\"a\":1,\"b\":\"123\"}".getBytes(StandardCharsets.UTF_8);
         httpClient.post().header(h->h.setContentLength(jsonBytes.length).setContentType("application/json")).body(b->b.write(jsonBytes).flush());
         httpClient.post().header(h->h.setContentLength(jsonBytes.length).setContentType("application/json")).body(b->b.write(jsonBytes).flush());
-        httpClient.post().body(b->b.write(jsonBytes).flush()).done();
+        httpClient.post().body(b->b.write(jsonBytes).flush()).submit();
         Thread.sleep(100);
     }
 

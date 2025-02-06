@@ -68,7 +68,7 @@ public class Test {
                 .onFailure(t -> {
                     System.out.println(t.getMessage());
                     latch.countDown();
-                }).done();
+                }).submit();
         System.out.println("======================");
         client.post("/other/abc")
 //                .header().keepalive(true).done()
@@ -80,7 +80,7 @@ public class Test {
                 .onFailure(t -> {
                     System.out.println(t.getMessage());
                     latch.countDown();
-                }).done();
+                }).submit();
         latch.await();
     }
 }

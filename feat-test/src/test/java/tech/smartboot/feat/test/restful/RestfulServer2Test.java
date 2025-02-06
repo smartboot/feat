@@ -55,19 +55,19 @@ public class RestfulServer2Test extends BastTest {
     public void testGet() throws ExecutionException, InterruptedException {
         HttpClient httpClient = getHttpClient();
 
-        Assert.assertEquals(httpClient.get("/").done().get().body(), "hello");
+        Assert.assertEquals(httpClient.get("/").submit().get().body(), "hello");
     }
 
     @Test
     public void testGet2() throws ExecutionException, InterruptedException {
         HttpClient httpClient = getHttpClient();
-        Assert.assertEquals(httpClient.get("/demo2").done().get().body(), "hello world");
+        Assert.assertEquals(httpClient.get("/demo2").submit().get().body(), "hello world");
     }
 
     @Test
     public void testGet3() throws ExecutionException, InterruptedException {
         HttpClient httpClient = getHttpClient();
-        Assert.assertEquals(httpClient.get("/demo2/param1?param=param1").done().get().body(), "hello param1");
+        Assert.assertEquals(httpClient.get("/demo2/param1?param=param1").submit().get().body(), "hello param1");
     }
 
     @Test
@@ -75,7 +75,7 @@ public class RestfulServer2Test extends BastTest {
         HttpClient httpClient = getHttpClient();
         Map<String, String> params = new HashMap<>();
         params.put("param", "paramPost");
-        Assert.assertEquals(httpClient.post("/demo2/param1").postBody(p -> p.formUrlencoded(params)).done().get().body(), "hello paramPost");
+        Assert.assertEquals(httpClient.post("/demo2/param1").postBody(p -> p.formUrlencoded(params)).submit().get().body(), "hello paramPost");
     }
 
     @Test
@@ -84,7 +84,7 @@ public class RestfulServer2Test extends BastTest {
         Map<String, String> params = new HashMap<>();
         params.put("param1", "paramPost1");
         params.put("param2", "paramPost2");
-        Assert.assertEquals(httpClient.post("/demo2/param2").body().formUrlencoded(params).done().get().body(), "hello paramPost1 paramPost2");
+        Assert.assertEquals(httpClient.post("/demo2/param2").body().formUrlencoded(params).submit().get().body(), "hello paramPost1 paramPost2");
     }
 
     @Test
@@ -93,7 +93,7 @@ public class RestfulServer2Test extends BastTest {
         Map<String, String> params = new HashMap<>();
         params.put("param1", "paramPost1");
         params.put("param2", "paramPost2");
-        Assert.assertEquals(httpClient.post("/demo2/param3").body().formUrlencoded(params).done().get().body(), "hello paramPost1 paramPost2");
+        Assert.assertEquals(httpClient.post("/demo2/param3").body().formUrlencoded(params).submit().get().body(), "hello paramPost1 paramPost2");
     }
 
     @Test
@@ -102,7 +102,7 @@ public class RestfulServer2Test extends BastTest {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("param1", "paramPost1");
         jsonObject.put("param2", "paramPost2");
-        Assert.assertEquals(httpClient.post("/demo2/param3").header(h -> h.setContentType(HeaderValue.ContentType.APPLICATION_JSON)).body(b -> b.write(jsonObject.toJSONString().getBytes())).done().get().body(), "hello paramPost1 paramPost2");
+        Assert.assertEquals(httpClient.post("/demo2/param3").header(h -> h.setContentType(HeaderValue.ContentType.APPLICATION_JSON)).body(b -> b.write(jsonObject.toJSONString().getBytes())).submit().get().body(), "hello paramPost1 paramPost2");
     }
 
     @Test
@@ -111,7 +111,7 @@ public class RestfulServer2Test extends BastTest {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("param1", "paramPost1");
         jsonObject.put("param2", "paramPost2");
-        Assert.assertEquals(httpClient.post("/demo2/param4").header(h -> h.setContentType(HeaderValue.ContentType.APPLICATION_JSON)).body(b -> b.write(jsonObject.toJSONString().getBytes())).done().get().body(), "hello param is null");
+        Assert.assertEquals(httpClient.post("/demo2/param4").header(h -> h.setContentType(HeaderValue.ContentType.APPLICATION_JSON)).body(b -> b.write(jsonObject.toJSONString().getBytes())).submit().get().body(), "hello param is null");
     }
 
     @Test
@@ -120,7 +120,7 @@ public class RestfulServer2Test extends BastTest {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("param1", "paramPost1");
         jsonObject.put("param2", "paramPost2");
-        Assert.assertEquals(httpClient.post("/demo2/param5").header(h -> h.setContentType(HeaderValue.ContentType.APPLICATION_JSON)).body(b -> b.write(jsonObject.toJSONString().getBytes())).done().get().body(), "hello param is null");
+        Assert.assertEquals(httpClient.post("/demo2/param5").header(h -> h.setContentType(HeaderValue.ContentType.APPLICATION_JSON)).body(b -> b.write(jsonObject.toJSONString().getBytes())).submit().get().body(), "hello param is null");
     }
 
     @After

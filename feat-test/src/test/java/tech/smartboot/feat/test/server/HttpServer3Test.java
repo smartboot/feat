@@ -116,7 +116,7 @@ public class HttpServer3Test extends BastTest {
         httpPost.header(h->h.add("longText", stringBuilder.toString()));
         httpPost.body().formUrlencoded(requestUnit.getParameters());
 
-        JSONObject jsonObject = basicCheck(httpPost.done().get(), requestUnit);
+        JSONObject jsonObject = basicCheck(httpPost.submit().get(), requestUnit);
         Assert.assertEquals(HttpMethodEnum.POST.getMethod(), jsonObject.get(KEY_METHOD));
     }
     @After

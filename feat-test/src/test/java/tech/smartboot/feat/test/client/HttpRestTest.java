@@ -70,7 +70,7 @@ public class HttpRestTest {
                     throwable.printStackTrace();
                     httpClient.close();
                 })
-                .done();
+                .submit();
         System.out.println(future.get().body());
     }
 
@@ -95,7 +95,7 @@ public class HttpRestTest {
                     .onFailure(throwable -> {
                         countDownLatch.countDown();
                         throwable.printStackTrace();
-                    }).done();
+                    }).submit();
         }
         countDownLatch.await();
         System.out.println("finish...");

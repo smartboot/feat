@@ -140,7 +140,7 @@ public class ChatModel {
         }, header -> {
             header.add(HeaderNameEnum.AUTHORIZATION.getName(), "Bearer " + options.getApiKey());
         }, request);
-        post.onFailure(throwable -> throwable.printStackTrace()).done();
+        post.onFailure(throwable -> throwable.printStackTrace()).submit();
         return post;
     }
 

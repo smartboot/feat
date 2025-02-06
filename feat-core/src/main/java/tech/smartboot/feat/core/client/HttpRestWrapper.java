@@ -26,8 +26,8 @@ class HttpRestWrapper implements HttpRest {
     }
 
     @Override
-    public Future<HttpResponse> done() {
-        return rest.done();
+    public Future<HttpResponse> submit() {
+        return rest.submit();
     }
 
     @Override

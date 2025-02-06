@@ -97,7 +97,7 @@ public class HttpGzipTest {
                 })
                 .onFailure(t -> {
                     System.out.println(t.getMessage());
-                }).done();
+                }).submit();
         Assert.assertEquals(HeaderValue.ContentEncoding.GZIP, future.get().getHeader(HeaderNameEnum.CONTENT_ENCODING.getName()));
 //        Assert.assertEquals(count * chunk, future.get().body().length());
     }
@@ -112,7 +112,7 @@ public class HttpGzipTest {
                 })
                 .onFailure(t -> {
                     System.out.println(t.getMessage());
-                }).done();
+                }).submit();
         Assert.assertEquals(HeaderValue.ContentEncoding.GZIP, future.get().getHeader(HeaderNameEnum.CONTENT_ENCODING.getName()));
         Assert.assertEquals(count * chunk, future.get().body().length());
     }

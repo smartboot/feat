@@ -23,7 +23,7 @@ public final class PostBody extends CommonBody {
 
     public HttpPost formUrlencoded(Map<String, String> params) {
         if (params == null || params.isEmpty()) {
-            httpPost.done();
+            httpPost.submit();
             return httpPost;
         }
         try {

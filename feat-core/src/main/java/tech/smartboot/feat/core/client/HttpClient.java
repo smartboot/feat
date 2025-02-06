@@ -119,9 +119,9 @@ public final class HttpClient {
         connect();
         HttpRestImpl httpRestImpl = new HttpRestImpl(client.getSession(), queue) {
             @Override
-            public Future<HttpResponse> done() {
+            public Future<HttpResponse> submit() {
                 try {
-                    return super.done();
+                    return super.submit();
                 } finally {
                     if (HeaderValue.Connection.KEEPALIVE.equals(getRequest().getHeader(HeaderNameEnum.CONNECTION.getName()))) {
                         semaphore.release();

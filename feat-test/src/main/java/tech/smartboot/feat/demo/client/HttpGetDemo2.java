@@ -24,7 +24,7 @@ public class HttpGetDemo2 {
                 httpClient.get("/").header(h->h.keepalive(false))
                         .onSuccess(response -> System.out.println(j))
                         .onFailure(Throwable::printStackTrace)
-                        .done();
+                        .submit();
             });
         }
         // 关闭线程池并等待任务完成

@@ -15,6 +15,6 @@ public class HttpClientDemo {
             // 处理响应
             System.out.println("Status Code: " + response.statusCode());
             System.out.println("Body: " + response.body());
-        }).done();
+        }).submit();
     }
 }
