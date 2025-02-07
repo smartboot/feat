@@ -68,12 +68,13 @@ public class HttpServer {
         return options;
     }
 
-    public final void listen() {
-        listen(8080);
+    public final HttpServer listen() {
+        return listen(8080);
     }
 
-    public final void listen(int port) {
+    public final HttpServer listen(int port) {
         listen(null, port);
+        return this;
     }
 
     /**

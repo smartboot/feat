@@ -4,14 +4,13 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.core.client.WebSocketClient;
 import tech.smartboot.feat.core.client.WebSocketListener;
 import tech.smartboot.feat.core.common.codec.websocket.CloseReason;
-import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.WebSocketRequest;
 import tech.smartboot.feat.core.server.WebSocketResponse;
-import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 import tech.smartboot.feat.core.server.upgrade.websocket.WebSocketUpgrade;
 import tech.smartboot.feat.test.BastTest;
 
@@ -26,21 +25,14 @@ public class WebSocketTest extends BastTest {
 
     @Before
     public void init() {
-        bootstrap = new HttpServer();
-        bootstrap.httpHandler(new BaseHttpHandler() {
+
+        bootstrap = Feat.httpServer(opts -> opts.debug(true)).httpHandler(req -> req.upgrade(new WebSocketUpgrade(idleTimeout) {
             @Override
-            public void handle(HttpRequest request) throws Throwable {
-                request.upgrade(new WebSocketUpgrade(idleTimeout) {
-                    @Override
-                    public void handleTextMessage(WebSocketRequest request, WebSocketResponse response, String data) {
-                        System.out.println(data);
-                        response.sendTextMessage(data);
-                    }
-                });
+            public void handleTextMessage(WebSocketRequest request, WebSocketResponse response, String data) {
+                System.out.println(data);
+                response.sendTextMessage(data);
             }
-        });
-        bootstrap.options().debug(true);
-        bootstrap.listen(port);
+        })).listen(port);
     }
 
     @Test
