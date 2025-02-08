@@ -4,20 +4,23 @@ description: A reference page in my new Starlight docs site.
 ---
 # 状态码
 ## 2xx 成功
-- 200 OK
-- 201 Created
-- 204 No Content
+- **200 OK**：表示请求成功。通常用于确认操作完成。
+- **201 Created**：表示请求成功并且服务器创建了新的资源。
+- **204 No Content**：表示请求成功，但没有返回任何内容。
+
 ## 3xx 重定向
-- 301 Moved Permanently
-- 302 Found
-- 304 Not Modified
+- **301 Moved Permanently**：永久重定向，客户端应更新缓存。
+- **302 Found**：临时重定向，客户端应继续使用原方法访问新地址。
+- **304 Not Modified**：表示资源未被修改，客户端可以使用缓存。
+
 ## 4xx 客户端错误
-- 400 Bad Request
-- 401 Unauthorized
-- 403 Forbidden
-- 404 Not Found
+- **400 Bad Request**：请求语法错误。
+- **401 Unauthorized**：未提供有效的身份验证信息。
+- **403 Forbidden**：服务器理解请求，但拒绝执行。
+- **404 Not Found**：请求的资源不存在。
+
 ## 5xx 服务器错误
-- 500 Internal Server Error
-- 502 Bad Gateway
-- 503 Service Unavailable
-- 504 Gateway Timeout
+- **500 Internal Server Error**：服务器内部错误。
+- **502 Bad Gateway**：服务器作为网关或代理时，从上游服务器接收到无效响应。
+- **503 Service Unavailable**：服务器暂时不可用。
+- **504 Gateway Timeout**：作为网关或代理的服务器未及时从上游服务器接收响应。
