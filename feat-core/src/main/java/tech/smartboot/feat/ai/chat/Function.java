@@ -31,29 +31,29 @@ public class Function {
         return this;
     }
 
-    public Function addIntParam(String name, String value) {
-        return addIntParam(name, value, true);
+    public Function addIntParam(String name, String description) {
+        return addIntParam(name, description, true);
     }
 
-    public Function addIntParam(String name, String value, boolean required) {
-        return addParam(name, value, ParameterProperty.TYPE_INTEGER, required);
+    public Function addIntParam(String name, String description, boolean required) {
+        return addParam(name, description, ParameterProperty.TYPE_INTEGER, required);
     }
 
 
-    public Function addDoubleParam(String name, String value, boolean required) {
-        return addParam(name, value, ParameterProperty.TYPE_DOUBLE, required);
+    public Function addDoubleParam(String name, String description, boolean required) {
+        return addParam(name, description, ParameterProperty.TYPE_DOUBLE, required);
     }
 
-    public Function addDoubleParam(String name, String value) {
-        return addDoubleParam(name, value, true);
+    public Function addDoubleParam(String name, String description) {
+        return addDoubleParam(name, description, true);
     }
 
-    public Function addStringParam(String name, String value, boolean required) {
-        return addParam(name, value, ParameterProperty.TYPE_STRING, required);
+    public Function addStringParam(String name, String description, boolean required) {
+        return addParam(name, description, ParameterProperty.TYPE_STRING, required);
     }
 
-    public Function addStringParam(String name, String value) {
-        return addStringParam(name, value, true);
+    public Function addStringParam(String name, String description) {
+        return addStringParam(name, description, true);
     }
 
     public Function addParam(String name, String description, String type, boolean required) {

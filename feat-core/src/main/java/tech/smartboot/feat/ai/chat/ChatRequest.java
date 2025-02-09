@@ -1,6 +1,7 @@
 package tech.smartboot.feat.ai.chat;
 
 
+import com.alibaba.fastjson2.JSONWriter;
 import com.alibaba.fastjson2.annotation.JSONField;
 
 import java.util.List;
@@ -12,9 +13,10 @@ public class ChatRequest {
     /**
      * 用于定义工具列表，
      */
+    @JSONField(serializeFeatures = JSONWriter.Feature.IgnoreNoneSerializable)
     private List<Tool> tools;
-    @JSONField(name = "tool_choice")
-    private String toolChoice = "auto";
+    @JSONField(name = "tool_choice", serializeFeatures = JSONWriter.Feature.IgnoreNoneSerializable)
+    private String toolChoice;
 
     public String getModel() {
         return model;

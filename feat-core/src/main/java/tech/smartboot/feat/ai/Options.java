@@ -6,12 +6,18 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Options {
-    private String baseUrl = System.getenv("OPENAI_BASE_URL") != null ? System.getenv("OPENAI_BASE_URL") : "https://ai.gitee.com/v1/";
+    public static final String AI_VENDOR_GITEE = "https://ai.gitee.com/v1/";
+    private String baseUrl = System.getenv("FEATAI_BASE_URL") != null ? System.getenv("FEAT_AI_BASE_URL") : AI_VENDOR_GITEE;
     private String model;
-    private String apiKey = System.getenv("OPENAI_API_KEY");
+    private String apiKey = System.getenv("FEATAI_API_KEY");
     private String system;
     private boolean debug;
+    /**
+     * 是否忽略不支持的工具
+     */
+    private boolean ignoreUnSupportedTool = false;
     private Map<String, Function> functions = new HashMap<>();
+
 
     public String baseUrl() {
         return baseUrl;
@@ -64,6 +70,15 @@ public class Options {
 
     public Options debug(boolean debug) {
         this.debug = debug;
+        return this;
+    }
+
+    public boolean isIgnoreUnSupportedTool() {
+        return ignoreUnSupportedTool;
+    }
+
+    public Options ignoreUnSupportedTool(boolean ignoreUnSupportedTool) {
+        this.ignoreUnSupportedTool = ignoreUnSupportedTool;
         return this;
     }
 }
