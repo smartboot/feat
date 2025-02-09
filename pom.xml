@@ -5,12 +5,12 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>tech.smartboot.feat</groupId>
     <artifactId>feat-parent</artifactId>
-    <version>0.5</version>
+    <version>0.6</version>
     <packaging>pom</packaging>
 
     <properties>
         <smartsocket.version>1.5.57</smartsocket.version>
-        <feat.version>0.5</feat.version>
+        <feat.version>0.6</feat.version>
     </properties>
 
     <dependencyManagement>
@@ -160,8 +160,8 @@
                 <executions>
                     <execution>
                         <id>sign-artifacts</id>
-<!--                                                                                                <phase>verify</phase>-->
-                        <phase>deploy</phase>
+                                                                                                <phase>verify</phase>
+<!--                        <phase>deploy</phase>-->
                         <goals>
                             <goal>sign</goal>
                         </goals>
