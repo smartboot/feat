@@ -11,6 +11,9 @@ public class ChatDemo {
         chatModel.chat("你好，请自我介绍一下。", rsp -> {
             System.out.println("rsp: " + rsp.getContent());
             System.out.println("usage: " + rsp.getUsage());
+            chatModel.chat("我对你说的上一句话是什么？", rsp2 -> {
+                System.out.println("rsp2: " + rsp2.getContent());
+            });
         });
     }
 }
