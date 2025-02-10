@@ -33,4 +33,13 @@ public class Usage {
     public void setCompletionTokens(int completionTokens) {
         this.completionTokens = completionTokens;
     }
+
+    @Override
+    public String toString() {
+        return "Usage{" +
+                "promptTokens=" + promptTokens +
+                ", totalTokens=" + totalTokens +
+                ", completionTokens=" + completionTokens +
+                '}';
+    }
 }
