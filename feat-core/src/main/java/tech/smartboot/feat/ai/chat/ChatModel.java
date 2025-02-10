@@ -4,6 +4,16 @@ import com.alibaba.fastjson2.JSON;
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.ai.ModelMeta;
 import tech.smartboot.feat.ai.Options;
+import tech.smartboot.feat.ai.chat.entity.ChatRequest;
+import tech.smartboot.feat.ai.chat.entity.ChatStreamResponse;
+import tech.smartboot.feat.ai.chat.entity.ChatWholeResponse;
+import tech.smartboot.feat.ai.chat.entity.Message;
+import tech.smartboot.feat.ai.chat.entity.ResponseCallback;
+import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
+import tech.smartboot.feat.ai.chat.entity.StreamChoice;
+import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
+import tech.smartboot.feat.ai.chat.entity.Tool;
+import tech.smartboot.feat.ai.chat.entity.ToolCall;
 import tech.smartboot.feat.core.client.HttpPost;
 import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.client.stream.ServerSentEventStream;
@@ -103,7 +113,7 @@ public class ChatModel {
                 });
             } else {
                 post.onResponseBody(new Stream() {
-                    ByteArrayOutputStream sb = new ByteArrayOutputStream();
+                    final ByteArrayOutputStream sb = new ByteArrayOutputStream();
 
                     @Override
                     public void stream(HttpResponse response, byte[] bytes, boolean end) throws IOException {

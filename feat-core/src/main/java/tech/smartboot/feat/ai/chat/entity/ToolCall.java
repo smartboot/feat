@@ -1,4 +1,4 @@
-package tech.smartboot.feat.ai.chat;
+package tech.smartboot.feat.ai.chat.entity;
 
 import java.util.Map;
 

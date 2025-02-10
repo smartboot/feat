@@ -1,4 +1,4 @@
-package tech.smartboot.feat.ai.chat;
+package tech.smartboot.feat.ai.chat.entity;
 
 public class ParameterProperty {
     public static final String TYPE_STRING = "string";

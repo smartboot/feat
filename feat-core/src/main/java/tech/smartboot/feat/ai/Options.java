@@ -1,6 +1,6 @@
 package tech.smartboot.feat.ai;
 
-import tech.smartboot.feat.ai.chat.Function;
+import tech.smartboot.feat.ai.chat.entity.Function;
 
 import java.util.HashMap;
 import java.util.Map;
