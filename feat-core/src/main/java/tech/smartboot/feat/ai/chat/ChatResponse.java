@@ -1,16 +1,14 @@
 package tech.smartboot.feat.ai.chat;
 
-import com.alibaba.fastjson2.annotation.JSONField;
-
 public class ChatResponse {
     private String id;
     private String object;
     private long created;
+    /**
+     * 模型名称
+     */
     private String model;
 
-    private Usage usage;
-    @JSONField(name = "prompt_logprobs")
-    private String promptLogprobs;
 
     public String getId() {
         return id;
@@ -43,23 +41,5 @@ public class ChatResponse {
     public void setModel(String model) {
         this.model = model;
     }
-
-
-    public Usage getUsage() {
-        return usage;
-    }
-
-    public void setUsage(Usage usage) {
-        this.usage = usage;
-    }
-
-    public String getPromptLogprobs() {
-        return promptLogprobs;
-    }
-
-    public void setPromptLogprobs(String promptLogprobs) {
-        this.promptLogprobs = promptLogprobs;
-    }
-
 
 }

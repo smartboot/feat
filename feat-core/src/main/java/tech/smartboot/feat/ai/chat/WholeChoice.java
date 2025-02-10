@@ -1,6 +1,6 @@
 package tech.smartboot.feat.ai.chat;
 
-public class FullChoice extends Choice {
+public class WholeChoice extends Choice {
 
     /**
      * 非 stream 全量返回

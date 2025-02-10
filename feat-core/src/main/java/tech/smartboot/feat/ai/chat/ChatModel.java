@@ -18,12 +18,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 
 public class ChatModel {
     private final Options options;
     private final List<Message> history = new ArrayList<>();
-    private ChatFullResponse chatResponse;
 
     public ChatModel(Options options) {
         if (options.baseUrl().endsWith("/")) {
@@ -36,14 +34,6 @@ public class ChatModel {
             message.setContent(options.getSystem());
             history.add(message);
         }
-    }
-
-    public ChatResponse getChatResponse() {
-        return chatResponse;
-    }
-
-    public String getResponse() {
-        return "Gitee AI: " + chatResponse.getChoice().getMessage().getContent();
     }
 
     public List<Message> getHistory() {
@@ -71,8 +61,11 @@ public class ChatModel {
                             responseMessage.setContent(contentBuilder.toString());
                             responseMessage.setToolCalls(toolCallMap.values());
                             responseMessage.setSuccess(true);
-                            history.add(responseMessage);
-                            consumer.onStreamEnd(responseMessage);
+                            consumer.onCompletion(responseMessage);
+                            Message message = new Message();
+                            message.setRole(Message.ROLE_ASSISTANT);
+                            message.setContent(contentBuilder.toString());
+                            history.add(message);
                             return;
                         }
                         ChatStreamResponse object = JSON.parseObject(data, ChatStreamResponse.class);
@@ -120,7 +113,7 @@ public class ChatModel {
                             responseMessage.setRole(Message.ROLE_ASSISTANT);
                             responseMessage.setContent(sb.toString());
                             responseMessage.setSuccess(false);
-                            consumer.onStreamEnd(responseMessage);
+                            consumer.onCompletion(responseMessage);
                         }
                     }
 
@@ -130,14 +123,16 @@ public class ChatModel {
 
     }
 
-    public void chat(String content, List<String> tools, Consumer<ChatModel> consumer) {
+    public void chat(String content, List<String> tools, ResponseCallback callback) {
         HttpPost post = chat0(content, tools, false);
         post.onSuccess(response -> {
-            chatResponse = JSON.parseObject(response.body(), ChatFullResponse.class);
-            chatResponse.getChoices().forEach(choice -> {
-                history.add(choice.getMessage());
-            });
-            consumer.accept(this);
+            ChatWholeResponse chatResponse = JSON.parseObject(response.body(), ChatWholeResponse.class);
+            chatResponse.getChoices().forEach(choice -> history.add(choice.getMessage()));
+            ResponseMessage responseMessage = chatResponse.getChoice().getMessage();
+            responseMessage.setUsage(chatResponse.getUsage());
+            responseMessage.setPromptLogprobs(chatResponse.getPromptLogprobs());
+            responseMessage.setSuccess(true);
+            callback.onCompletion(responseMessage);
         });
     }
 
@@ -186,12 +181,12 @@ public class ChatModel {
         return post;
     }
 
-    public void chat(String content, String tool, Consumer<ChatModel> consumer) {
-        chat(content, Collections.singletonList(tool), consumer);
+    public void chat(String content, String tool, ResponseCallback callback) {
+        chat(content, Collections.singletonList(tool), callback);
     }
 
-    public void chat(String content, Consumer<ChatModel> consumer) {
-        chat(content, Collections.emptyList(), consumer);
+    public void chat(String content, ResponseCallback callback) {
+        chat(content, Collections.emptyList(), callback);
     }
 
 }

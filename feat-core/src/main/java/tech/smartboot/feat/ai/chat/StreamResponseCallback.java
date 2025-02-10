@@ -1,8 +1,5 @@
 package tech.smartboot.feat.ai.chat;
 
-public interface StreamResponseCallback {
+public interface StreamResponseCallback extends ResponseCallback {
     void onStreamResponse(String content);
-
-    void onStreamEnd(ResponseMessage responseMessage);
-
 }
