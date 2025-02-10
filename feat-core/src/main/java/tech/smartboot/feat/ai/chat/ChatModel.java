@@ -11,9 +11,11 @@ import tech.smartboot.feat.core.client.stream.Stream;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -21,7 +23,7 @@ import java.util.function.Consumer;
 public class ChatModel {
     private final Options options;
     private final List<Message> history = new ArrayList<>();
-    private ChatResponse chatResponse;
+    private ChatFullResponse chatResponse;
 
     public ChatModel(Options options) {
         if (options.baseUrl().endsWith("/")) {
@@ -48,12 +50,15 @@ public class ChatModel {
         return history;
     }
 
-    public void chatStream(String content, Consumer<ChatModel> consumer) {
+    public void chatStream(String content, StreamResponseCallback consumer) {
         chatStream(content, Collections.emptyList(), consumer);
     }
 
-    public void chatStream(String content, List<String> tools, Consumer<ChatModel> consumer) {
+    public void chatStream(String content, List<String> tools, StreamResponseCallback consumer) {
         HttpPost post = chat0(content, tools, true);
+        StringBuilder contentBuilder = new StringBuilder();
+        Map<Integer, ToolCall> toolCallMap = new HashMap<>();
+
         post.onResponseHeader(resp -> {
             if (resp.statusCode() == 200) {
                 post.onResponseBody(new ServerSentEventStream() {
@@ -61,39 +66,64 @@ public class ChatModel {
                     public void onEvent(HttpResponse httpResponse, Map<String, String> event) {
                         String data = event.get(ServerSentEventStream.DATA);
                         if ("[DONE]".equals(data) || StringUtils.isBlank(data)) {
+                            ResponseMessage responseMessage = new ResponseMessage();
+                            responseMessage.setRole(Message.ROLE_ASSISTANT);
+                            responseMessage.setContent(contentBuilder.toString());
+                            responseMessage.setToolCalls(toolCallMap.values());
+                            responseMessage.setSuccess(true);
+                            history.add(responseMessage);
+                            consumer.onStreamEnd(responseMessage);
                             return;
                         }
-                        ChatResponse object = JSON.parseObject(data, ChatResponse.class);
-                        Choice choice = object.getChoice();
-                        if (choice.getDelta().getContent() == null) {
-                            choice.getDelta().setContent("");
+                        ChatStreamResponse object = JSON.parseObject(data, ChatStreamResponse.class);
+                        StreamChoice choice = object.getChoice();
+                        if (choice.getDelta().getContent() != null) {
+                            consumer.onStreamResponse(choice.getDelta().getContent());
+                            contentBuilder.append(choice.getDelta().getContent());
                         }
-                        if (chatResponse == null || !chatResponse.getId().equals(object.getId())) {
-                            chatResponse = object;
-                            ResponseMessage responseMessage = new ResponseMessage();
-                            responseMessage.setRole(choice.getDelta().getRole());
-                            responseMessage.setContent(choice.getDelta().getContent());
-                            choice.setMessage(responseMessage);
-                            history.add(responseMessage);
-                        } else {
-                            Message deltaMessage = new Message();
-                            deltaMessage.setContent(choice.getDelta().getContent());
-                            chatResponse.getChoice().setDelta(deltaMessage);
-                            chatResponse.getChoice().setStopReason(choice.getStopReason());
-                            chatResponse.getChoice().setFinishReason(choice.getFinishReason());
-                            ResponseMessage fullMessage = chatResponse.getChoice().getMessage();
-                            fullMessage.setContent(fullMessage.getContent() + choice.getDelta().getContent());
+                        if (choice.getDelta().getToolCalls() != null) {
+                            for (ToolCall toolCall : choice.getDelta().getToolCalls()) {
+                                ToolCall tool = toolCallMap.computeIfAbsent(toolCall.getIndex(), k -> {
+                                    ToolCall t = new ToolCall();
+                                    t.setFunction(new HashMap<>());
+                                    return t;
+                                });
+                                if (StringUtils.isNotBlank(toolCall.getId())) {
+                                    tool.setId(toolCall.getId());
+                                }
+                                if (StringUtils.isNotBlank(toolCall.getType())) {
+                                    tool.setType(toolCall.getType());
+                                }
+                                if (toolCall.getFunction() != null) {
+                                    toolCall.getFunction().forEach((k, v) -> {
+                                        String preV = tool.getFunction().get(k);
+                                        if (StringUtils.isNotBlank(preV)) {
+                                            tool.getFunction().put(k, preV + v);
+                                        } else {
+                                            tool.getFunction().put(k, v);
+                                        }
+                                    });
+                                }
+                            }
                         }
-
-                        consumer.accept(ChatModel.this);
                     }
                 });
             } else {
                 post.onResponseBody(new Stream() {
+                    ByteArrayOutputStream sb = new ByteArrayOutputStream();
+
                     @Override
                     public void stream(HttpResponse response, byte[] bytes, boolean end) throws IOException {
-                        System.out.print(new String(bytes));
+                        sb.write(bytes);
+                        if (end) {
+                            ResponseMessage responseMessage = new ResponseMessage();
+                            responseMessage.setRole(Message.ROLE_ASSISTANT);
+                            responseMessage.setContent(sb.toString());
+                            responseMessage.setSuccess(false);
+                            consumer.onStreamEnd(responseMessage);
+                        }
                     }
+
                 });
             }
         });
@@ -103,7 +133,7 @@ public class ChatModel {
     public void chat(String content, List<String> tools, Consumer<ChatModel> consumer) {
         HttpPost post = chat0(content, tools, false);
         post.onSuccess(response -> {
-            chatResponse = JSON.parseObject(response.body(), ChatResponse.class);
+            chatResponse = JSON.parseObject(response.body(), ChatFullResponse.class);
             chatResponse.getChoices().forEach(choice -> {
                 history.add(choice.getMessage());
             });

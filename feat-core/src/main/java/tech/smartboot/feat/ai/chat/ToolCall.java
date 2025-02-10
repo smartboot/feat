@@ -3,6 +3,7 @@ package tech.smartboot.feat.ai.chat;
 import java.util.Map;
 
 public class ToolCall {
+    private int index;
     private String id;
     private String type;
     private Map<String, String> function;
@@ -31,4 +32,11 @@ public class ToolCall {
         this.function = function;
     }
 
+    public int getIndex() {
+        return index;
+    }
+
+    public void setIndex(int index) {
+        this.index = index;
+    }
 }

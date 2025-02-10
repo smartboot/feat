@@ -4,11 +4,7 @@ import com.alibaba.fastjson2.annotation.JSONField;
 
 public class Choice {
     private int index;
-    /**
-     * stream 增量返回
-     */
-    private Message delta;
-    private ResponseMessage message;
+
     private String logprobs;
     @JSONField(name = "finish_reason")
     private String finishReason;
@@ -21,14 +17,6 @@ public class Choice {
 
     public void setIndex(int index) {
         this.index = index;
-    }
-
-    public ResponseMessage getMessage() {
-        return message;
-    }
-
-    public void setMessage(ResponseMessage message) {
-        this.message = message;
     }
 
     public String getLogprobs() {
@@ -53,13 +41,5 @@ public class Choice {
 
     public void setStopReason(String stopReason) {
         this.stopReason = stopReason;
-    }
-
-    public Message getDelta() {
-        return delta;
-    }
-
-    public void setDelta(Message delta) {
-        this.delta = delta;
     }
 }
