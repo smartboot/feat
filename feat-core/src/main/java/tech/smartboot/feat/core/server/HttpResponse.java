@@ -114,6 +114,8 @@ public interface HttpResponse {
         write(data.getBytes());
     }
 
+    void write(byte[] data, int offset, int length) throws IOException;
+
     void write(byte[] data) throws IOException;
 
     public void close();

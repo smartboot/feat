@@ -193,6 +193,11 @@ public abstract class AbstractResponse implements HttpResponse, Reset {
     }
 
     @Override
+    public void write(byte[] data, int offset, int length) throws IOException {
+        outputStream.write(data, offset, length);
+    }
+
+    @Override
     public abstract void close();
 
     @Override

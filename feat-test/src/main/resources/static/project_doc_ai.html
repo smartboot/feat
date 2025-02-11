@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>开源项目文档生成</title>
+    <style>
+        /* 调整输入框的宽度和高度 */
+        #userInput {
+            width: 500px; /* 调整宽度 */
+            height: 100px; /* 调整高度 */
+            padding: 10px; /* 添加内边距 */
+            font-size: 16px; /* 调整字体大小 */
+        }
+
+        /* 调整按钮的样式 */
+        button {
+            padding: 10px 20px; /* 添加内边距 */
+            font-size: 16px; /* 调整字体大小 */
+            background-color: #007BFF; /* 设置背景颜色 */
+            color: white; /* 设置文字颜色 */
+            border: none; /* 移除边框 */
+            cursor: pointer; /* 添加鼠标指针样式 */
+        }
+
+        /* 调整响应区域的样式 */
+        #responseArea {
+            margin-top: 20px; /* 添加顶部外边距 */
+            padding: 10px; /* 添加内边距 */
+            border: 1px solid #ccc; /* 添加边框 */
+            min-height: 200px; /* 设置最小高度 */
+            font-size: 16px; /* 调整字体大小 */
+            white-space: pre-wrap; /* 保留文本中的空格和换行符 */
+        }
+
+    </style>
+</head>
+<body>
+
+<!-- 添加输入框和按钮 -->
+<input type="text" id="userInput" placeholder="请输入您的请求">
+<button onclick="sendRequest()">发送请求</button>
+
+<!-- 用于显示后台响应的区域 -->
+<pre id="responseArea"></pre>
+
+<script>
+    function sendRequest() {
+        // 获取用户输入的请求
+        const userInput = document.getElementById('userInput').value;
+
+        // 创建一个新的EventSource对象，用于与后台建立SSE连接
+        const eventSource = new EventSource('/chat?content=' + encodeURIComponent(userInput));
+
+        // 监听message事件，当后台推送消息时触发
+        eventSource.onmessage = function(event) {
+            // 将后台推送的消息显示在页面上，不做HTML转义
+            const responseArea = document.getElementById('responseArea');
+            responseArea.textContent += event.data;
+        };
+
+        // 监听error事件，当SSE连接出现错误时触发
+        eventSource.onerror = function() {
+            console.error('SSE连接错误');
+            eventSource.close();
+        };
+    }
+</script>
+</body>
+</html>

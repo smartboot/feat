@@ -1,14 +1,20 @@
 package tech.smartboot.feat.demo.ai;
 
+import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.ai.FeatAI;
 import tech.smartboot.feat.ai.ModelMeta;
 import tech.smartboot.feat.ai.chat.ChatModel;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
+import tech.smartboot.feat.core.server.HttpResponse;
+import tech.smartboot.feat.core.server.upgrade.sse.SSEUpgrade;
+import tech.smartboot.feat.core.server.upgrade.sse.SseEmitter;
+import tech.smartboot.feat.router.Router;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 public class ProjectDocumentDemo {
     public static void main(String[] args) throws IOException {
@@ -29,18 +35,43 @@ public class ProjectDocumentDemo {
                             + "\n 示例代码为：" + demoBuilder)
             ;
         });
-        chatModel.chatStream("写一篇关于 Fead AI的基本介绍，主要围绕关键接口的基本使用，不需要详细示例。", new StreamResponseCallback() {
 
-            @Override
-            public void onCompletion(ResponseMessage responseMessage) {
 
-            }
-
-            @Override
-            public void onStreamResponse(String content) {
-                System.out.print(content);
+        Router router = new Router();
+        router.route("/", req -> {
+            HttpResponse response = req.getResponse();
+            response.setContentType("text/html");
+            InputStream inputStream = ProjectDocumentDemo.class.getClassLoader().getResourceAsStream("static/project_doc_ai.html");
+            byte[] buffer = new byte[1024];
+            int length = 0;
+            while ((length = inputStream.read(buffer)) != -1) {
+                response.write(buffer, 0, length);
             }
         });
+        router.route("/chat", req -> {
+            req.upgrade(new SSEUpgrade() {
+                public void onOpen(SseEmitter sseEmitter) {
+                    chatModel.chatStream(req.getParameter("content"), new StreamResponseCallback() {
+
+                        @Override
+                        public void onCompletion(ResponseMessage responseMessage) {
+                            sseEmitter.complete();
+                        }
+
+                        @Override
+                        public void onStreamResponse(String content) {
+                            System.out.print(content);
+                            try {
+                                sseEmitter.send(SseEmitter.event().data(content));
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
+                    });
+                }
+            });
+        });
+        Feat.httpServer().httpHandler(router).listen(8080);
     }
 
     public static void loadFile(File file, StringBuilder sb) throws IOException {
