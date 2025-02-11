@@ -37,6 +37,10 @@ public class Options {
         return this;
     }
 
+    public Options model(ModelMeta model) {
+        return baseUrl(model.getVendor()).model(model.getModel());
+    }
+
     public String getApiKey() {
         return apiKey;
     }
