@@ -29,7 +29,7 @@ public class ProjectDocumentDemo {
                             + "\n 示例代码为：" + demoBuilder)
             ;
         });
-        chatModel.chatStream("写一篇关于 Fead AI 的使用手册markdown？", new StreamResponseCallback() {
+        chatModel.chatStream("写一篇关于 Fead AI的基本介绍，主要围绕关键接口的基本使用，不需要详细示例。", new StreamResponseCallback() {
 
             @Override
             public void onCompletion(ResponseMessage responseMessage) {

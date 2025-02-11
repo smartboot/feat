@@ -1,0 +1,83 @@
+---
+title: 5.1 关于
+description: Feat AI
+sidebar:
+    order: 1
+---
+
+Feat AI 是一个功能强大、灵活且高效的智能对话框架，旨在帮助开发者轻松集成和使用各种智能对话模型。它支持多种模型和自定义配置，提供了丰富的 API 接口，方便用户快速构建智能对话应用。
+
+## 核心功能
+
+Feat AI 提供了以下核心功能：
+
+1. **多模型支持**：支持多种智能对话模型，如 DeepSeek-R1、Qwen2.5-72B 等。
+2. **灵活配置**：允许用户自定义 API 配置，如模型选择、API 密钥、系统提示等。
+3. **异步处理**：支持异步回调机制，提升应用性能。
+4. **流式响应**：支持流式响应，实时接收模型输出。
+
+## 关键接口
+
+### FeatAI 类
+
+`FeatAI` 是框架的入口类，用于创建 `ChatModel` 实例。通过 `chatModel` 方法，用户可以配置客户端选项并创建对话模型实例。
+
+```java
+public static ChatModel chatModel(Consumer<Options> consumer)
+```
+
+- **参数**：`Consumer<Options>` 用于配置客户端选项。
+- **返回值**：`ChatModel` 实例，用于发送和处理聊天请求。
+
+### Options 类
+
+`Options` 类提供了丰富的配置选项，允许用户自定义模型的行为和环境。
+
+- **baseUrl**：设置模型的基 URL。
+- **model**：选择具体的模型。
+- **apiKey**：配置 API 密钥。
+- **system**：设置系统提示，指导模型的行为。
+- **debug**：启用调试模式，打印详细的请求和响应信息。
+
+### ModelMeta 类
+
+`ModelMeta` 类定义了预设的模型及其元数据，用户可以通过这些静态常量选择不同的模型。
+
+```java
+public static final ModelMeta GITEE_AI_DeepSeek_R1 = new ModelMeta(Options.AI_VENDOR_GITEE, "DeepSeek-R1", false);
+```
+
+- **vendor**：模型的供应商。
+- **model**：模型的名称。
+- **toolSupport**：是否支持工具调用。
+
+### ChatModel 类
+
+`ChatModel` 是发送和处理聊天请求的核心类，提供了以下方法：
+
+- **chat**：发送同步聊天请求。
+- **chatStream**：发送异步流式聊天请求。
+- **onSuccess**：处理成功的响应。
+- **onFailure**：处理失败的响应。
+
+## 主要功能
+
+### 模型选择
+
+Feat AI 支持多种智能对话模型，用户可以通过 `ModelMeta` 类选择合适的模型。
+
+### 自定义配置
+
+用户可以通过 `Options` 类自定义模型配置，例如设置 API 密钥、系统提示等。
+
+### 异步回调
+
+Feat AI 支持异步回调机制，允许用户在请求发送后立即返回，而不需要等待响应。
+
+### 流式响应
+
+Feat AI 支持流式响应，允许用户实时接收模型输出。
+
+## 总结
+
+Feat AI 是一个功能丰富、性能优越的智能对话框架，能够满足多种实时通信场景的需求。通过简单的 API 和灵活的配置选项，开发者可以快速构建高效的智能对话应用。其高性能、易用性和扩展性使其成为智能对话开发的理想选择。
