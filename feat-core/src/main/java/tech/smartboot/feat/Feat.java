@@ -7,6 +7,9 @@ import tech.smartboot.feat.core.client.Header;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpOptions;
 import tech.smartboot.feat.core.client.HttpPost;
+import tech.smartboot.feat.core.client.WebSocketClient;
+import tech.smartboot.feat.core.client.WebSocketListener;
+import tech.smartboot.feat.core.client.WebSocketOptions;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.server.HttpServer;
@@ -14,6 +17,7 @@ import tech.smartboot.feat.core.server.ServerOptions;
 import tech.smartboot.feat.fileserver.FileServerOptions;
 import tech.smartboot.feat.fileserver.HttpStaticResourceHandler;
 
+import java.io.IOException;
 import java.util.function.Consumer;
 
 public class Feat {
@@ -90,5 +94,17 @@ public class Feat {
         });
         post.body().write(bytes);
         return post;
+    }
+
+    public static WebSocketClient websocket(String url, WebSocketListener listener) throws IOException {
+        return websocket(url, opts -> {
+        }, listener);
+    }
+
+    public static WebSocketClient websocket(String url, Consumer<WebSocketOptions> options, WebSocketListener listener) throws IOException {
+        WebSocketClient webSocketClient = new WebSocketClient(url);
+        options.accept(webSocketClient.options());
+        webSocketClient.connect(listener);
+        return webSocketClient;
     }
 }

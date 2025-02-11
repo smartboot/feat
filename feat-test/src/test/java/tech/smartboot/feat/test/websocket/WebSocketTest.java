@@ -38,14 +38,12 @@ public class WebSocketTest extends BastTest {
     @Test
     public void testWebSocket() throws IOException, ExecutionException, InterruptedException {
         CompletableFuture<String> future = new CompletableFuture<>();
-        WebSocketClient webSocketClient = new WebSocketClient("ws://localhost:" + port);
-        webSocketClient.options().debug(true);
         String message = "hello world";
-        webSocketClient.connect(new WebSocketListener() {
+        WebSocketClient webSocketClient = Feat.websocket("ws://localhost:" + port, new WebSocketListener() {
             @Override
             public void onOpen(WebSocketClient client, tech.smartboot.feat.core.client.WebSocketResponse response) {
                 try {
-                    webSocketClient.sendMessage(message);
+                    client.sendMessage(message);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }

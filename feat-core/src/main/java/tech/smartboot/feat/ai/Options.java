@@ -16,6 +16,7 @@ public class Options {
      * 是否忽略不支持的工具
      */
     private boolean ignoreUnSupportedTool = false;
+    private final Map<String, String> headers = new HashMap<>();
     private Map<String, Function> functions = new HashMap<>();
 
 
@@ -83,6 +84,15 @@ public class Options {
 
     public Options ignoreUnSupportedTool(boolean ignoreUnSupportedTool) {
         this.ignoreUnSupportedTool = ignoreUnSupportedTool;
+        return this;
+    }
+
+    public Map<String, String> getHeaders() {
+        return headers;
+    }
+
+    public Options addHeader(String key, String value) {
+        this.headers.put(key, value);
         return this;
     }
 }

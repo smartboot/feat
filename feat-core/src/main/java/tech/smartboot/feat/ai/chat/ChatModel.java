@@ -72,10 +72,12 @@ public class ChatModel {
                             responseMessage.setToolCalls(toolCallMap.values());
                             responseMessage.setSuccess(true);
                             consumer.onCompletion(responseMessage);
-                            Message message = new Message();
-                            message.setRole(Message.ROLE_ASSISTANT);
-                            message.setContent(contentBuilder.toString());
-                            history.add(message);
+                            if (!responseMessage.isDiscard()) {
+                                Message message = new Message();
+                                message.setRole(Message.ROLE_ASSISTANT);
+                                message.setContent(contentBuilder.toString());
+                                history.add(message);
+                            }
                             return;
                         }
                         ChatStreamResponse object = JSON.parseObject(data, ChatStreamResponse.class);
@@ -121,7 +123,7 @@ public class ChatModel {
                         if (end) {
                             ResponseMessage responseMessage = new ResponseMessage();
                             responseMessage.setRole(Message.ROLE_ASSISTANT);
-                            responseMessage.setContent(sb.toString());
+                            responseMessage.setError(sb.toString());
                             responseMessage.setSuccess(false);
                             consumer.onCompletion(responseMessage);
                         }
@@ -136,6 +138,14 @@ public class ChatModel {
     public void chat(String content, List<String> tools, ResponseCallback callback) {
         HttpPost post = chat0(content, tools, false);
         post.onSuccess(response -> {
+            if (response.statusCode() != 200) {
+                ResponseMessage responseMessage = new ResponseMessage();
+                responseMessage.setRole(Message.ROLE_ASSISTANT);
+                responseMessage.setError(response.body());
+                responseMessage.setSuccess(false);
+                callback.onCompletion(responseMessage);
+                return;
+            }
             ChatWholeResponse chatResponse = JSON.parseObject(response.body(), ChatWholeResponse.class);
             chatResponse.getChoices().forEach(choice -> history.add(choice.getMessage()));
             ResponseMessage responseMessage = chatResponse.getChoice().getMessage();
@@ -185,7 +195,10 @@ public class ChatModel {
         HttpPost post = Feat.postJson(options.baseUrl() + "/chat/completions", opts -> {
             opts.debug(options.isDebug());
         }, header -> {
-            header.add(HeaderNameEnum.AUTHORIZATION.getName(), "Bearer " + options.getApiKey());
+            if (StringUtils.isNotBlank(options.getApiKey())) {
+                header.add(HeaderNameEnum.AUTHORIZATION.getName(), "Bearer " + options.getApiKey());
+            }
+            options.getHeaders().forEach(header::add);
         }, request);
         post.onFailure(throwable -> throwable.printStackTrace()).submit();
         return post;
