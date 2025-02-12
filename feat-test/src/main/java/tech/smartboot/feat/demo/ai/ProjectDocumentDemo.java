@@ -29,10 +29,12 @@ public class ProjectDocumentDemo {
         loadSource(new File("feat-test/src/main/java/tech/smartboot/feat/demo/ai"), demoBuilder);
         ChatModel chatModel = FeatAI.chatModel(opts -> {
             opts.model(ModelMeta.GITEE_AI_DeepSeek_R1_Distill_Qwen_32B)
-                    .system("你主要负责为这个项目编写使用文档，根据用户要求编写相关章节内容。" +
-                            "参考内容为：\n" + docs
+                    .system("你主要负责为这个项目编写使用文档，根据用户要求编写相关章节内容。"
+                            + "参考内容为：\n" + docs
                             + "\n 实现源码为：\n" + sourceBuilder
-                            + "\n 示例代码为：" + demoBuilder)
+                            + "\n 示例代码为：" + demoBuilder
+                    )
+                    .debug(true)
             ;
         });
 
@@ -62,7 +64,7 @@ public class ProjectDocumentDemo {
                         public void onStreamResponse(String content) {
                             System.out.print(content);
                             try {
-                                sseEmitter.send(SseEmitter.event().data(content));
+                                sseEmitter.send(SseEmitter.event().data(content.replace("&", "&amp;").replace("<", "&lt;").replace(">","&gt;").replace("\n", "<br/>").replace("\r", "<br/>").replace(" ", "&nbsp;")));
                             } catch (IOException e) {
                                 throw new RuntimeException(e);
                             }
@@ -71,7 +73,7 @@ public class ProjectDocumentDemo {
                 }
             });
         });
-        Feat.httpServer().httpHandler(router).listen(8080);
+        Feat.httpServer(opt -> opt.debug(false)).httpHandler(router).listen(8080);
     }
 
     public static void loadFile(File file, StringBuilder sb) throws IOException {

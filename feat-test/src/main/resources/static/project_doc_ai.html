@@ -34,7 +34,7 @@
         }
 
         /* 美化响应区域的样式 */
-        #responseArea {
+        .responseBlock {
             margin-top: 20px;
             padding: 10px;
             border: 1px solid #ccc;
@@ -56,22 +56,32 @@
     <button onclick="sendRequest()">发送请求</button>
 </div>
 
-<!-- 用于显示后台响应的区域 -->
-<pre id="responseArea"></pre>
+<!-- 用于显示聊天记录的容器 -->
+<div id="chatContainer"></div>
 
 <script>
     function sendRequest() {
         // 获取用户输入的请求
         const userInput = document.getElementById('userInput').value;
 
+        // 创建一个新的区块来显示当前的聊天记录
+        const responseBlock = document.createElement('div');
+        responseBlock.className = 'responseBlock';
+        // 将新的区块插入到chatContainer的第一个子元素之前
+        const chatContainer = document.getElementById('chatContainer');
+        if (chatContainer.firstChild) {
+            chatContainer.insertBefore(responseBlock, chatContainer.firstChild);
+        } else {
+            chatContainer.appendChild(responseBlock);
+        }
+
         // 创建一个新的EventSource对象，用于与后台建立SSE连接
         const eventSource = new EventSource('/chat?content=' + encodeURIComponent(userInput));
 
         // 监听message事件，当后台推送消息时触发
         eventSource.onmessage = function (event) {
-            // 将后台推送的消息显示在页面上，支持换行
-            const responseArea = document.getElementById('responseArea');
-            responseArea.innerHTML += event.data;
+            // 将后台推送的消息显示在当前区块上，支持换行
+            responseBlock.innerHTML += event.data;
         };
 
         // 监听error事件，当SSE连接出现错误时触发
