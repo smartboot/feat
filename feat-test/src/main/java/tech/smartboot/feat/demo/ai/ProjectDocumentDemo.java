@@ -12,11 +12,10 @@ import tech.smartboot.feat.core.server.upgrade.sse.SseEmitter;
 import tech.smartboot.feat.router.Router;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class ProjectDocumentDemo {
+public class ProjectDocumentDemo extends BaseChat {
     public static void main(String[] args) throws IOException {
         File file = new File("pages/src/content");
         StringBuilder docs = new StringBuilder();
@@ -57,14 +56,60 @@ public class ProjectDocumentDemo {
 
                         @Override
                         public void onCompletion(ResponseMessage responseMessage) {
-                            sseEmitter.complete();
+                            try {
+                                sseEmitter.send(SseEmitter.event().data("<br/>开始阅读文章初稿...<br/>"));
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                            FeatAI.chatModel(opts -> {
+                                opts.model(ModelMeta.GITEE_AI_DeepSeek_R1_Distill_Qwen_32B)
+                                        .system("你是这篇文章的目标读者，可以反馈你对于文章内容的改进意见，文章内容为：\n" + responseMessage.getContent()
+                                        )
+                                        .debug(true)
+                                ;
+                            }).chatStream("指出你觉得需要优化的部分", new StreamResponseCallback() {
+
+                                @Override
+                                public void onCompletion(ResponseMessage responseMessage) {
+                                    try {
+                                        sseEmitter.send(SseEmitter.event().data("<br/>阅读完毕...<br/>"));
+                                    } catch (IOException e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                    chatModel.chatStream("根据读者的改进建议优化文章内容：\n" + responseMessage.getContent(), new StreamResponseCallback() {
+
+                                        @Override
+                                        public void onCompletion(ResponseMessage responseMessage) {
+                                            sseEmitter.complete();
+                                        }
+
+                                        @Override
+                                        public void onStreamResponse(String content) {
+                                            try {
+                                                sseEmitter.send(SseEmitter.event().data(toHtml(content)));
+                                            } catch (IOException e) {
+                                                throw new RuntimeException(e);
+                                            }
+                                        }
+                                    });
+                                }
+
+                                @Override
+                                public void onStreamResponse(String content) {
+                                    try {
+                                        sseEmitter.send(SseEmitter.event().data(toHtml(content)));
+                                    } catch (IOException e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                }
+                            });
                         }
 
                         @Override
                         public void onStreamResponse(String content) {
                             System.out.print(content);
                             try {
-                                sseEmitter.send(SseEmitter.event().data(content.replace("&", "&amp;").replace("<", "&lt;").replace(">","&gt;").replace("\n", "<br/>").replace("\r", "<br/>").replace(" ", "&nbsp;")));
+                                sseEmitter.send(SseEmitter.event().data(toHtml(content)));
                             } catch (IOException e) {
                                 throw new RuntimeException(e);
                             }
@@ -76,40 +121,5 @@ public class ProjectDocumentDemo {
         Feat.httpServer(opt -> opt.debug(false)).httpHandler(router).listen(8080);
     }
 
-    public static void loadFile(File file, StringBuilder sb) throws IOException {
-        for (File f : file.listFiles()) {
-            if (f.isDirectory()) {
-                loadFile(f, sb);
-            }
-            if (f.isFile() && f.getName().endsWith(".mdx")) {
-                try (FileInputStream fis = new FileInputStream(f);) {
-                    byte[] bytes = new byte[1024];
-                    int len;
-                    while ((len = fis.read(bytes)) != -1) {
-                        sb.append(new String(bytes, 0, len));
-                    }
-                }
-            }
-        }
-    }
 
-    public static void loadSource(File file, StringBuilder sb) throws IOException {
-        for (File f : file.listFiles()) {
-//            if (f.isDirectory()) {
-//                loadFile(f, sb);
-//            }
-            if (f.isFile() && f.getName().endsWith(".java")) {
-                sb.append("## " + f.getName() + "\n");
-                sb.append("```java\n");
-                try (FileInputStream fis = new FileInputStream(f);) {
-                    byte[] bytes = new byte[1024];
-                    int len;
-                    while ((len = fis.read(bytes)) != -1) {
-                        sb.append(new String(bytes, 0, len));
-                    }
-                }
-                sb.append("\n```\n");
-            }
-        }
-    }
 }

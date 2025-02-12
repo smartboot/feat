@@ -11,10 +11,17 @@ Feat AI 是一个功能强大、灵活且高效的智能对话框架，旨在帮
 
 Feat AI 提供了以下核心功能：
 
-1. **多模型支持**：支持多种智能对话模型，如 DeepSeek-R1、Qwen2.5-72B 等。
-2. **灵活配置**：允许用户自定义 API 配置，如模型选择、API 密钥、系统提示等。
-3. **异步处理**：支持异步回调机制，提升应用性能。
-4. **流式响应**：支持流式响应，实时接收模型输出。
+1. **多模型支持**
+支持多种智能对话模型，如 DeepSeek-R1、Qwen2.5-72B 等，适用于不同的应用场景。
+
+2. **灵活配置**
+允许用户自定义 API 配置，如模型选择、API 密钥、系统提示等，满足个性化需求。
+
+3. **异步处理**
+支持异步回调机制，提升应用性能，避免阻塞主线程。
+
+4. **流式响应**
+支持流式响应，实时接收模型输出，适用于需要即时反馈的场景。
 
 ## 关键接口
 
@@ -60,24 +67,63 @@ public static final ModelMeta GITEE_AI_DeepSeek_R1 = new ModelMeta(Options.AI_VE
 - **onSuccess**：处理成功的响应。
 - **onFailure**：处理失败的响应。
 
-## 主要功能
+## 快速上手
 
-### 模型选择
+### 初始化和配置
 
-Feat AI 支持多种智能对话模型，用户可以通过 `ModelMeta` 类选择合适的模型。
+```java
+import tech.smartboot.feat.ai.FeatAI;
+import tech.smartboot.feat.ai.ModelMeta;
+import tech.smartboot.feat.ai.chat.ChatModel;
 
-### 自定义配置
+public class ChatDemo {
+    public static void main(String[] args) {
+        // 创建 ChatModel 实例
+        ChatModel chatModel = FeatAI.chatModel(opts -> {
+            opts.model(ModelMeta.GITEE_AI_DeepSeek_R1)
+                .system("你是一个乐于助人的助手。")
+                .debug(true);
+        });
+    }
+}
+```
 
-用户可以通过 `Options` 类自定义模型配置，例如设置 API 密钥、系统提示等。
+### 发送同步请求
 
-### 异步回调
+```java
+chatModel.chat("你好，请自我介绍一下。", rsp -> {
+    System.out.println("rsp: " + rsp.getContent());
+    System.out.println("usage: " + rsp.getUsage());
+});
+```
 
-Feat AI 支持异步回调机制，允许用户在请求发送后立即返回，而不需要等待响应。
+### 发送异步请求
 
-### 流式响应
+```java
+chatModel.chatStream("你好，请自我介绍一下。", new StreamResponseCallback() {
+    @Override
+    public void onStreamResponse(String content) {
+        System.out.println("Streaming response: " + content);
+    }
 
-Feat AI 支持流式响应，允许用户实时接收模型输出。
+    @Override
+    public void onCompletion(ResponseMessage responseMessage) {
+        System.out.println("Response completed.");
+    }
+
+    @Override
+    public void onFailure(Throwable throwable) {
+        System.out.println("Error: " + throwable.getMessage());
+    }
+});
+```
 
 ## 总结
 
 Feat AI 是一个功能丰富、性能优越的智能对话框架，能够满足多种实时通信场景的需求。通过简单的 API 和灵活的配置选项，开发者可以快速构建高效的智能对话应用。其高性能、易用性和扩展性使其成为智能对话开发的理想选择。
+
+## 应用场景
+
+- **智能客服**：实时回答用户问题，提升客户满意度。
+- **虚拟助手**：帮助用户完成日常任务，提高效率。
+- **内容生成**：生成高质量的文章、报告等文本内容。
