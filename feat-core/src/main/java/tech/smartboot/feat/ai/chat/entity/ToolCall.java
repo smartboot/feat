@@ -39,4 +39,14 @@ public class ToolCall {
     public void setIndex(int index) {
         this.index = index;
     }
+
+    @Override
+    public String toString() {
+        return "ToolCall{" +
+                "index=" + index +
+                ", id='" + id + '\'' +
+                ", type='" + type + '\'' +
+                ", function=" + function +
+                '}';
+    }
 }
