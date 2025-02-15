@@ -67,7 +67,8 @@ public abstract class ServerSentEventStream implements Stream {
                     throw new IllegalStateException("Unexpected value: " + state);
             }
         }
-        if (keyPos + 1 < bytes.length) {
+
+        if (keyPos < bytes.length) {
             baos.write(bytes, keyPos, bytes.length - keyPos);
         }
     }
