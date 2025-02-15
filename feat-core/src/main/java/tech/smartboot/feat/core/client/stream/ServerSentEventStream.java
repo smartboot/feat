@@ -53,8 +53,8 @@ public abstract class ServerSentEventStream implements Stream {
                     }
                     break;
                 case STATE_END_CHECK:
-                    keyPos = i;
                     if (b == '\n') {
+                        keyPos = i + 1;
                         //结束
 //                        System.out.println(event);
                         onEvent(response, event);
