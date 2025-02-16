@@ -35,7 +35,15 @@ public class RouterHandlerImpl implements HttpHandler {
         } else {
             String[] path = request.getRequestURI().split("/");
             HashMap<String, String> params = new HashMap<>();
-            pathIndexes.forEach(pathIndex -> params.put(pathIndex.path.substring(1), path[pathIndex.index]));
+            for (PathIndex pathIndex : pathIndexes) {
+                //此时说明是最后一个路径，并且是空字符串
+                if (pathIndex.index == path.length) {
+                    params.put(pathIndex.path.substring(1), "");
+                } else {
+                    params.put(pathIndex.path.substring(1), path[pathIndex.index]);
+                }
+
+            }
             pathParams = Collections.unmodifiableMap(params);
         }
         Context context = new Context(request, pathParams);
