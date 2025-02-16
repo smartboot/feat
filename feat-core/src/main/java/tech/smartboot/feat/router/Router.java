@@ -84,6 +84,16 @@ public final class Router extends BaseHttpHandler {
         return this;
     }
 
+    public Router route(String urlPattern, RouterHandler httpHandler) {
+        httpHandler.setUrlPattern(urlPattern);
+        return route(urlPattern, new BaseHttpHandler() {
+            @Override
+            public void handle(HttpRequest request) throws Throwable {
+                httpHandler.handle(request);
+            }
+        });
+    }
+
     public Router route(String urlPattern, HttpHandler httpHandler) {
         return route(urlPattern, new BaseHttpHandler() {
             @Override
