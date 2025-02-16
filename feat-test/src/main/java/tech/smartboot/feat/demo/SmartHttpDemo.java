@@ -60,12 +60,7 @@ public class SmartHttpDemo {
                         response.getOutputStream().write(body);
                     }
                 })
-                .route("/get", request -> request.getResponse().write(("收到Get参数text=" + request.getParameter("text")).getBytes())).route("/post", new BaseHttpHandler() {
-                    @Override
-                    public void handle(HttpRequest request) throws IOException {
-                        request.getResponse().write(("收到Post参数text=" + request.getParameter("text")).getBytes());
-                    }
-                }).route("/upload", request -> {
+                .route("/get", request -> request.getResponse().write(("收到Get参数text=" + request.getParameter("text")).getBytes())).route("/post", request -> request.getResponse().write(("收到Post参数text=" + request.getParameter("text")).getBytes())).route("/upload", request -> {
                     InputStream in = request.getInputStream();
                     byte[] buffer = new byte[1024];
                     int len = 0;
