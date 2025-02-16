@@ -121,7 +121,7 @@ final class NodePath {
         if (nextIndex != -1) {
             String nodePath = subPath.substring(offset + 1, nextIndex);
             NodePath curNode = null;
-            if (subPath.charAt(0) == ':') {
+            if (subPath.charAt(offset + 1) == ':') {
                 curNode = patternPaths.computeIfAbsent(nodePath, ptah -> new NodePath(ptah, TYPE_PATH_PARAM_NODE, depth + 1));
             } else {
                 curNode = exactPaths.computeIfAbsent(nodePath, ptah -> new NodePath(ptah, TYPE_EXACT_PATH_NODE, depth + 1));
