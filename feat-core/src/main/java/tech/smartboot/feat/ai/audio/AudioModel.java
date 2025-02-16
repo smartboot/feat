@@ -2,7 +2,6 @@ package tech.smartboot.feat.ai.audio;
 
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.core.client.HttpPost;
-import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 

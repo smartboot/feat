@@ -1,7 +1,7 @@
 package tech.smartboot.feat.test.server;
 
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson2.JSONArray;
+import com.alibaba.fastjson2.JSONObject;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;

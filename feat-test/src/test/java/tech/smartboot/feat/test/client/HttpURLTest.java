@@ -8,7 +8,7 @@
 
 package tech.smartboot.feat.test.client;
 
-import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson2.JSONObject;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
