@@ -24,7 +24,7 @@
         </dependency>
         <dependency>
             <groupId>tech.smartboot.feat</groupId>
-            <artifactId>feat-core</artifactId>
+            <artifactId>feat-cloud</artifactId>
         </dependency>
         <dependency>
             <groupId>com.alibaba.fastjson2</groupId>

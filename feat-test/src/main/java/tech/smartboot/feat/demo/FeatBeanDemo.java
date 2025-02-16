@@ -1,6 +1,7 @@
 package tech.smartboot.feat.demo;
 
 import tech.smartboot.feat.Feat;
+import tech.smartboot.feat.cloud.FeatCloud;
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Bean;
 import tech.smartboot.feat.cloud.annotation.PostConstruct;
@@ -16,7 +17,7 @@ public class FeatBeanDemo {
     }
 
     public static void main(String[] args) {
-        Feat.cloudServer(opts -> opts.addExternalBean("hello", "你好~")).listen();
+        FeatCloud.cloudServer(opts -> opts.addExternalBean("hello", "你好~")).listen();
     }
 
     public void setHello(String hello) {

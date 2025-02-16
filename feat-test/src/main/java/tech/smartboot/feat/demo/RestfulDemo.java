@@ -1,6 +1,7 @@
 package tech.smartboot.feat.demo;
 
 import tech.smartboot.feat.Feat;
+import tech.smartboot.feat.cloud.FeatCloud;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.cloud.annotation.RequestMethod;
@@ -38,6 +39,6 @@ public class RestfulDemo {
 
     public static void main(String[] args) throws Exception {
         //扫描指定路径下的Controller、Bean
-        Feat.cloudServer(opts -> opts.setPackages("tech.smartboot.feat.demo.apt")).listen();
+        FeatCloud.cloudServer(opts -> opts.setPackages("tech.smartboot.feat.demo.apt")).listen();
     }
 }

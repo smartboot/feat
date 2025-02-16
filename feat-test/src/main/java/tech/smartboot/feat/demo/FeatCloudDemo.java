@@ -1,6 +1,7 @@
 package tech.smartboot.feat.demo;
 
 import tech.smartboot.feat.Feat;
+import tech.smartboot.feat.cloud.FeatCloud;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 
@@ -12,6 +13,6 @@ public class FeatCloudDemo {
     }
 
     public static void main(String[] args) {
-        Feat.cloudServer().listen();
+        FeatCloud.cloudServer().listen();
     }
 }

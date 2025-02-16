@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
 import tech.smartboot.feat.Feat;
+import tech.smartboot.feat.cloud.FeatCloud;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.test.BastTest;
@@ -40,7 +41,7 @@ public class RestfulServerTest extends BastTest {
 
     @Before
     public void init() throws Exception {
-        bootstrap = Feat.cloudServer(opts -> {
+        bootstrap = FeatCloud.cloudServer(opts -> {
             opts.setPackages(Demo1Controller.class.getName(), Demo2Controller.class.getName()).addPlugin(new StreamMonitorPlugin<>((asynchronousSocketChannel, bytes) -> System.out.println(new String(bytes)), (asynchronousSocketChannel, bytes) -> System.out.println(new String(bytes))));
         });
         bootstrap.listen(SERVER_PORT);

@@ -10,6 +10,7 @@ package tech.smartboot.feat.demo.benchmark;
 
 
 import tech.smartboot.feat.Feat;
+import tech.smartboot.feat.cloud.FeatCloud;
 
 public class Bootstrap {
 
@@ -32,7 +33,7 @@ public class Bootstrap {
 //                JsonUtil.writeJsonBytes(response, new Message("Hello, World!"));
 //            }
 //        }).listen(8080);
-        Feat.cloudServer(options -> {
+        FeatCloud.cloudServer(options -> {
             options.threadNum(cpuNum + 1)
                     .headerLimiter(0)
                     .readBufferSize(1024 * 4)
