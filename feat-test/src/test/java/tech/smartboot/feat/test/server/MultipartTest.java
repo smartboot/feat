@@ -8,14 +8,10 @@ import org.junit.Before;
 import org.junit.Test;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.common.multipart.Part;
-import tech.smartboot.feat.core.server.HttpHandler;
-import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpServer;
-import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 import tech.smartboot.feat.router.Router;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -35,7 +31,7 @@ public class MultipartTest {
         bootstrap = new HttpServer();
         bootstrap.options().debug(true);
         Router routeHandle = new Router();
-        routeHandle.route("/formdata", request -> {
+        routeHandle.http("/formdata", request -> {
             try {
                 JSONObject jsonObject = new JSONObject();
                 int i = 0;

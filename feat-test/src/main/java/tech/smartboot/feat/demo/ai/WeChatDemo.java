@@ -34,7 +34,7 @@ public class WeChatDemo extends BaseChat {
 
 
         Router router = new Router();
-        router.route("/", req -> {
+        router.http("/", req -> {
             HttpResponse response = req.getResponse();
             response.setContentType("text/html");
             InputStream inputStream = WeChatDemo.class.getClassLoader().getResourceAsStream("static/project_doc_ai.html");
@@ -44,7 +44,7 @@ public class WeChatDemo extends BaseChat {
                 response.write(buffer, 0, length);
             }
         });
-        router.route("/chat", req -> {
+        router.http("/chat", req -> {
             req.upgrade(new SSEUpgrade() {
                 public void onOpen(SseEmitter sseEmitter) {
                     chatModel.chatStream(req.getParameter("content"), new StreamResponseCallback() {

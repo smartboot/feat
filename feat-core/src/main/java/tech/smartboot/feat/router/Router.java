@@ -79,23 +79,23 @@ public final class Router extends BaseHttpHandler {
      * @param httpHandler 处理handler
      * @return
      */
-    public Router route(String urlPattern, BaseHttpHandler httpHandler) {
+    public Router http(String urlPattern, BaseHttpHandler httpHandler) {
         rootPath.add(urlPattern, httpHandler);
         return this;
     }
 
     public Router route(String urlPattern, RouterHandler httpHandler) {
-        httpHandler.setUrlPattern(urlPattern);
-        return route(urlPattern, new BaseHttpHandler() {
+        RouterHandlerImpl routerHandler = new RouterHandlerImpl(urlPattern, httpHandler);
+        return http(urlPattern, new BaseHttpHandler() {
             @Override
             public void handle(HttpRequest request) throws Throwable {
-                httpHandler.handle(request);
+                routerHandler.handle(request);
             }
         });
     }
 
-    public Router route(String urlPattern, HttpHandler httpHandler) {
-        return route(urlPattern, new BaseHttpHandler() {
+    public Router http(String urlPattern, HttpHandler httpHandler) {
+        return http(urlPattern, new BaseHttpHandler() {
             @Override
             public void handle(HttpRequest request) throws Throwable {
                 httpHandler.handle(request);

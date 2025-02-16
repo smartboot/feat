@@ -16,14 +16,10 @@ import org.junit.Test;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.HeaderValue;
-import tech.smartboot.feat.core.server.HttpHandler;
-import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServer;
-import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 import tech.smartboot.feat.router.Router;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -43,7 +39,7 @@ public class HttpRestTest {
     public void init() {
         httpServer = new HttpServer();
         Router routeHandler = new Router();
-        routeHandler.route("/post", request -> {
+        routeHandler.http("/post", request -> {
             HttpResponse response=request.getResponse();
             response.setHeader(HeaderNameEnum.CONNECTION.getName(), HeaderValue.Connection.keepalive);
             JSONObject jsonObject = new JSONObject();

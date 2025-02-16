@@ -48,7 +48,7 @@ public class ProjectCoder extends BaseChat {
 
 
         Router router = new Router();
-        router.route("/", req -> {
+        router.http("/", req -> {
             HttpResponse response = req.getResponse();
             response.setContentType("text/html");
             InputStream inputStream = ProjectCoder.class.getClassLoader().getResourceAsStream("static/project_doc_ai.html");
@@ -58,7 +58,7 @@ public class ProjectCoder extends BaseChat {
                 response.write(buffer, 0, length);
             }
         });
-        router.route("/chat", req -> {
+        router.http("/chat", req -> {
             req.upgrade(new SSEUpgrade() {
                 public void onOpen(SseEmitter sseEmitter) {
                     chatModel.chatStream(req.getParameter("content"), new StreamResponseCallback() {

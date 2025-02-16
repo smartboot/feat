@@ -13,7 +13,6 @@ import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
-import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 import tech.smartboot.feat.router.Router;
 
 import java.io.IOException;
@@ -27,7 +26,7 @@ public class FileUploadDemo {
     public static void main(String[] args) {
 
         Router routeHandler = new Router();
-        routeHandler.route("/", new HttpHandler() {
+        routeHandler.http("/", new HttpHandler() {
                     byte[] body = ("<html>" +
                             "<head><title>feat demo</title></head>" +
                             "<body>" +
@@ -43,7 +42,7 @@ public class FileUploadDemo {
                         response.getOutputStream().write(body);
                     }
                 })
-                .route("/upload", request -> {
+                .http("/upload", request -> {
                     try {
                         for (Part part : request.getParts()) {
                             String name = part.getName();

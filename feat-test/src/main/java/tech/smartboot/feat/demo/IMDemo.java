@@ -12,16 +12,12 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.core.common.codec.websocket.CloseReason;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
-import tech.smartboot.feat.core.server.HttpHandler;
-import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.WebSocketRequest;
 import tech.smartboot.feat.core.server.WebSocketResponse;
-import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 import tech.smartboot.feat.core.server.upgrade.websocket.WebSocketUpgrade;
 import tech.smartboot.feat.router.Router;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Map;
@@ -35,7 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class IMDemo {
     public static void main(String[] args) {
         Router routeHandle = new Router();
-        routeHandle.route("/", request -> {
+        routeHandle.http("/", request -> {
             if (request.getHeader(HeaderNameEnum.UPGRADE.getName()).equalsIgnoreCase("websocket")) {
                 request.upgrade(new WebSocketUpgrade() {
                     private Map<WebSocketRequest, WebSocketResponse> sessionMap = new ConcurrentHashMap<>();

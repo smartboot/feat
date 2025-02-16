@@ -8,13 +8,8 @@
 
 package tech.smartboot.feat.demo;
 
-import tech.smartboot.feat.core.server.HttpHandler;
-import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpServer;
-import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 import tech.smartboot.feat.router.Router;
-
-import java.io.IOException;
 
 /**
  * 请求路由示例
@@ -28,7 +23,7 @@ public class HttpRouteDemo {
         Router routeHandle = new Router();
 
         //2. 指定路由规则以及请求的处理实现
-        routeHandle.route("/", request -> request.getResponse().write("feat".getBytes()))
+        routeHandle.http("/", request -> request.getResponse().write("feat".getBytes()))
 //                .route("/h2", new BaseHttpHandler() {
 //                    @Override
 //                    public void handle(HttpRequest request) throws IOException {
@@ -66,8 +61,8 @@ public class HttpRouteDemo {
 //                        request.getResponse().write(("test1").getBytes());
 //                    }
 //                })
-                .route("/b/c/test1", request -> request.getResponse().write(("/b/c/test1").getBytes()))
-                .route("/b/c/test2", request -> request.getResponse().write(("/b/c/test2").getBytes()));
+                .http("/b/c/test1", request -> request.getResponse().write(("/b/c/test1").getBytes()))
+                .http("/b/c/test2", request -> request.getResponse().write(("/b/c/test2").getBytes()));
 
 
         // 3. 启动服务

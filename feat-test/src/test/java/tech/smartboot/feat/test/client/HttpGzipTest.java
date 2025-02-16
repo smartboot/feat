@@ -16,14 +16,10 @@ import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.utils.NumberUtils;
-import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpServer;
-import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
-import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 import tech.smartboot.feat.router.Router;
 
-import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.zip.GZIPOutputStream;
@@ -41,7 +37,7 @@ public class HttpGzipTest {
     public void init() {
         httpServer = new HttpServer();
         Router routeHandle = new Router();
-        routeHandle.route("/test", request -> {
+        routeHandle.http("/test", request -> {
             HttpResponse response=request.getResponse();
             int count = NumberUtils.toInt(request.getParameter("count"), 1);
             response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValue.ContentEncoding.GZIP);
@@ -52,7 +48,7 @@ public class HttpGzipTest {
             outputStream.close();
         });
 
-        routeHandle.route("/html", request -> {
+        routeHandle.http("/html", request -> {
             HttpResponse response=request.getResponse();
             response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValue.ContentEncoding.GZIP);
             GZIPOutputStream outputStream = new GZIPOutputStream(response.getOutputStream());

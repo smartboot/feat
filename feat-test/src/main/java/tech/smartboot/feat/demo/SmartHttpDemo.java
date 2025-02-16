@@ -38,13 +38,13 @@ public class SmartHttpDemo {
         System.setProperty("smartHttp.server.alias", "SANDAO base on ");
 
         Router routeHandle = new Router();
-        routeHandle.route("/basic", new BasicAuthServerHandler("admin", "admin1", new BaseHttpHandler() {
+        routeHandle.http("/basic", new BasicAuthServerHandler("admin", "admin1", new BaseHttpHandler() {
             @Override
             public void handle(HttpRequest request) throws IOException {
                 request.getResponse().write("success".getBytes());
             }
         }));
-        routeHandle.route("/", new HttpHandler() {
+        routeHandle.http("/", new HttpHandler() {
                     byte[] body = ("<html>" +
                             "<head><title>feat demo</title></head>" +
                             "<body>" +
@@ -60,7 +60,7 @@ public class SmartHttpDemo {
                         response.getOutputStream().write(body);
                     }
                 })
-                .route("/get", request -> request.getResponse().write(("收到Get参数text=" + request.getParameter("text")).getBytes())).route("/post", request -> request.getResponse().write(("收到Post参数text=" + request.getParameter("text")).getBytes())).route("/upload", request -> {
+                .http("/get", request -> request.getResponse().write(("收到Get参数text=" + request.getParameter("text")).getBytes())).http("/post", request -> request.getResponse().write(("收到Post参数text=" + request.getParameter("text")).getBytes())).http("/upload", request -> {
                     InputStream in = request.getInputStream();
                     byte[] buffer = new byte[1024];
                     int len = 0;
@@ -68,7 +68,7 @@ public class SmartHttpDemo {
                         request.getResponse().getOutputStream().write(buffer, 0, len);
                     }
                     in.close();
-                }).route("/post_json", request -> {
+                }).http("/post_json", request -> {
                     InputStream in = request.getInputStream();
                     byte[] buffer = new byte[1024];
                     int len = 0;
@@ -77,7 +77,7 @@ public class SmartHttpDemo {
                         request.getResponse().getOutputStream().write(buffer, 0, len);
                     }
                     in.close();
-                }).route("/plaintext", new HttpHandler() {
+                }).http("/plaintext", new HttpHandler() {
                     byte[] body = "Hello World!".getBytes();
 
                     @Override
@@ -88,7 +88,7 @@ public class SmartHttpDemo {
                         response.write(body);
 //                LOGGER.info("hello world");
                     }
-                }).route("/head", request -> {
+                }).http("/head", request -> {
                     HttpResponse response = request.getResponse();
                     response.addHeader("a", "b");
                     response.addHeader("a", "c");
@@ -96,12 +96,12 @@ public class SmartHttpDemo {
                     for (String headerName : headNames) {
                         response.write((headerName + ": " + request.getHeaders(headerName) + "</br>").getBytes());
                     }
-                }).route("/post_param", request -> {
+                }).http("/post_param", request -> {
                     //curl -X POST -H "Transfer-Encoding: chunked" -H "Content-Type: application/x-www-form-urlencoded" --data "field1=value1&field2=value2" http://localhost:8080/post_param
                     for (String parameter : request.getParameters().keySet()) {
                         request.getResponse().write((parameter + ": " + request.getParameter(parameter) + "</br>").getBytes());
                     }
-                }).route("/ws", request -> request.upgrade(new WebSocketUpgrade() {
+                }).http("/ws", request -> request.upgrade(new WebSocketUpgrade() {
                     @Override
                     public void onHandShake(WebSocketRequest request, WebSocketResponse webSocketResponse) {
                         System.out.println("收到握手消息");

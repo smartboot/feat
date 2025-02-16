@@ -9,21 +9,16 @@
 package tech.smartboot.feat.demo;
 
 import tech.smartboot.feat.Feat;
-import tech.smartboot.feat.core.server.HttpHandler;
-import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServer;
-import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 import tech.smartboot.feat.router.Router;
-
-import java.io.IOException;
 
 public class Bootstrap {
     static byte[] body = "Hello, World!".getBytes();
 
     public static void main(String[] args) {
         Router routeHandle = new Router();
-        routeHandle.route("/plaintext", request -> {
+        routeHandle.http("/plaintext", request -> {
             HttpResponse response=request.getResponse();
             response.setContentLength(body.length);
             response.setContentType("text/plain; charset=UTF-8");
