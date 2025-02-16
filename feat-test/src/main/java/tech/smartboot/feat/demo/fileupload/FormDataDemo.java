@@ -1,6 +1,7 @@
 package tech.smartboot.feat.demo.fileupload;
 
 import tech.smartboot.feat.core.common.multipart.Part;
+import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
@@ -20,7 +21,7 @@ public class FormDataDemo {
     public static void main(String[] args) {
 
         Router routeHandler = new Router();
-        routeHandler.route("/", new BaseHttpHandler() {
+        routeHandler.route("/", new HttpHandler() {
                     byte[] body = ("<html>" +
                             "<head><title>feat demo</title></head>" +
                             "<body>" +
@@ -36,33 +37,30 @@ public class FormDataDemo {
                         response.getOutputStream().write(body);
                     }
                 })
-                .route("/upload", new BaseHttpHandler() {
-                    @Override
-                    public void handle(HttpRequest request) {
-                        try {
-                            for (Part item : request.getParts()) {
-                                String name = item.getName();
-                                System.out.println("name = " + name);
-                                InputStream inputStream = item.getInputStream();
-                                if (item.getSubmittedFileName() != null) {
-                                    System.out.println("filename = " + item.getSubmittedFileName());
-                                    //保存到指定路径
-                                    Path filePath = Paths.get("feat-test", "src", "main", "resources").resolve(item.getSubmittedFileName());
-                                    Files.createDirectories(filePath.getParent());
-                                    Files.copy(inputStream, filePath);
-                                    item.delete();
-                                } else {
-                                    //打印inputStream
-                                    try (Scanner scanner = new Scanner(inputStream)) {
-                                        while (scanner.hasNextLine()) {
-                                            System.out.println(scanner.nextLine());
-                                        }
+                .route("/upload", request -> {
+                    try {
+                        for (Part item : request.getParts()) {
+                            String name = item.getName();
+                            System.out.println("name = " + name);
+                            InputStream inputStream = item.getInputStream();
+                            if (item.getSubmittedFileName() != null) {
+                                System.out.println("filename = " + item.getSubmittedFileName());
+                                //保存到指定路径
+                                Path filePath = Paths.get("feat-test", "src", "main", "resources").resolve(item.getSubmittedFileName());
+                                Files.createDirectories(filePath.getParent());
+                                Files.copy(inputStream, filePath);
+                                item.delete();
+                            } else {
+                                //打印inputStream
+                                try (Scanner scanner = new Scanner(inputStream)) {
+                                    while (scanner.hasNextLine()) {
+                                        System.out.println(scanner.nextLine());
                                     }
                                 }
                             }
-                        } catch (Exception e) {
-                            e.printStackTrace();
                         }
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
                 });
 

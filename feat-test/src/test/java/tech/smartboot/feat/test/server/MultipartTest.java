@@ -8,6 +8,7 @@ import org.junit.Before;
 import org.junit.Test;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.common.multipart.Part;
+import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
@@ -34,55 +35,52 @@ public class MultipartTest {
         bootstrap = new HttpServer();
         bootstrap.options().debug(true);
         Router routeHandle = new Router();
-        routeHandle.route("/formdata", new BaseHttpHandler() {
-            @Override
-            public void handle(HttpRequest request) throws IOException {
-                try {
-                    JSONObject jsonObject = new JSONObject();
-                    int i = 0;
-                    for (Part part : request.getParts()) {
-                        String name = part.getName();
-                        JSONObject jsonObject2 = new JSONObject();
-                        InputStream inputStream = part.getInputStream();
-                        JSONArray headers = new JSONArray();
-                        for (String headerName : part.getHeaderNames()) {
-                            JSONObject j = new JSONObject();
-                            j.put("name", headerName);
-                            j.put("value", part.getHeader(headerName));
-                            headers.add(j);
-                        }
-                        jsonObject2.put("header", headers);
-                        // 非文件处理
-                        int contentLength = 0;
-                        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-                        byte[] buffer = new byte[1024];
-                        int bytesRead;
+        routeHandle.route("/formdata", request -> {
+            try {
+                JSONObject jsonObject = new JSONObject();
+                int i = 0;
+                for (Part part : request.getParts()) {
+                    String name = part.getName();
+                    JSONObject jsonObject2 = new JSONObject();
+                    InputStream inputStream = part.getInputStream();
+                    JSONArray headers = new JSONArray();
+                    for (String headerName : part.getHeaderNames()) {
+                        JSONObject j = new JSONObject();
+                        j.put("name", headerName);
+                        j.put("value", part.getHeader(headerName));
+                        headers.add(j);
+                    }
+                    jsonObject2.put("header", headers);
+                    // 非文件处理
+                    int contentLength = 0;
+                    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                    byte[] buffer = new byte[1024];
+                    int bytesRead;
 
-                        while ((bytesRead = inputStream.read(buffer)) != -1) {
-                            if (part.getSubmittedFileName() == null) outputStream.write(buffer, 0, bytesRead);
-                            contentLength += bytesRead;
-                        }
-
-                        if (part.getSubmittedFileName() != null) {
-                            // 文件处理
-                            jsonObject2.put("filename", part.getSubmittedFileName());
-                            part.delete();
-                        } else {
-                            String value = outputStream.toString();
-                            jsonObject2.put("value", value);
-                        }
-
-                        // 添加公共字段
-                        jsonObject2.put("fieldName", name);
-                        jsonObject2.put("contentLength", contentLength);
-                        jsonObject.put(++i + "", jsonObject2);
+                    while ((bytesRead = inputStream.read(buffer)) != -1) {
+                        if (part.getSubmittedFileName() == null) outputStream.write(buffer, 0, bytesRead);
+                        contentLength += bytesRead;
                     }
 
-                    request.getResponse().write(jsonObject.toJSONString().getBytes());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    throw new RuntimeException(e);
+                    if (part.getSubmittedFileName() != null) {
+                        // 文件处理
+                        jsonObject2.put("filename", part.getSubmittedFileName());
+                        part.delete();
+                    } else {
+                        String value = outputStream.toString();
+                        jsonObject2.put("value", value);
+                    }
+
+                    // 添加公共字段
+                    jsonObject2.put("fieldName", name);
+                    jsonObject2.put("contentLength", contentLength);
+                    jsonObject.put(++i + "", jsonObject2);
                 }
+
+                request.getResponse().write(jsonObject.toJSONString().getBytes());
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw new RuntimeException(e);
             }
         });
         bootstrap.httpHandler(routeHandle).listen(8080);

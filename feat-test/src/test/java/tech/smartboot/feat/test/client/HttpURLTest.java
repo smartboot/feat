@@ -13,6 +13,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import tech.smartboot.feat.core.client.HttpClient;
+import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
@@ -34,50 +35,37 @@ public class HttpURLTest {
     public void init() {
         httpServer = new HttpServer();
         Router routeHandle = new Router();
-        routeHandle.route("/post_param", new BaseHttpHandler() {
-            @Override
-            public void handle(HttpRequest request) throws IOException {
-                JSONObject jsonObject = new JSONObject();
-                for (String key : request.getParameters().keySet()) {
-                    jsonObject.put(key, request.getParameter(key));
-                }
-                request.getResponse().write(jsonObject.toString().getBytes());
+        routeHandle.route("/post_param", request -> {
+            JSONObject jsonObject = new JSONObject();
+            for (String key : request.getParameters().keySet()) {
+                jsonObject.put(key, request.getParameter(key));
+            }
+            request.getResponse().write(jsonObject.toString().getBytes());
+        });
+        routeHandle.route("/json", request -> {
+            System.out.println("--");
+            InputStream inputStream = request.getInputStream();
+            byte[] bytes = new byte[1024];
+            int size;
+            while ((size = inputStream.read(bytes)) != -1) {
+                request.getResponse().getOutputStream().write(bytes, 0, size);
             }
         });
-        routeHandle.route("/json", new BaseHttpHandler() {
-
-            @Override
-            public void handle(HttpRequest request) throws IOException {
-                System.out.println("--");
-                InputStream inputStream = request.getInputStream();
-                byte[] bytes = new byte[1024];
-                int size;
-                while ((size = inputStream.read(bytes)) != -1) {
-                    request.getResponse().getOutputStream().write(bytes, 0, size);
-                }
+        routeHandle.route("/header", request -> {
+            JSONObject jsonObject = new JSONObject();
+            for (String header : request.getHeaderNames()) {
+                jsonObject.put(header, request.getHeader(header));
             }
-        });
-        routeHandle.route("/header", new BaseHttpHandler() {
-            @Override
-            public void handle(HttpRequest request) throws IOException {
-                JSONObject jsonObject = new JSONObject();
-                for (String header : request.getHeaderNames()) {
-                    jsonObject.put(header, request.getHeader(header));
-                }
-                request.getResponse().write(jsonObject.toJSONString().getBytes());
-            }
+            request.getResponse().write(jsonObject.toJSONString().getBytes());
         });
 
-        routeHandle.route("/other/abc", new BaseHttpHandler() {
-            @Override
-            public void handle(HttpRequest request) throws IOException {
-                System.out.println("--");
-                InputStream inputStream = request.getInputStream();
-                byte[] bytes = new byte[1024];
-                int size;
-                while ((size = inputStream.read(bytes)) != -1) {
-                    request.getResponse().getOutputStream().write(bytes, 0, size);
-                }
+        routeHandle.route("/other/abc", request -> {
+            System.out.println("--");
+            InputStream inputStream = request.getInputStream();
+            byte[] bytes = new byte[1024];
+            int size;
+            while ((size = inputStream.read(bytes)) != -1) {
+                request.getResponse().getOutputStream().write(bytes, 0, size);
             }
         });
 

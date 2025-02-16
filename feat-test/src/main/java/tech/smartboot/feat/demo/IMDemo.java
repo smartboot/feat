@@ -12,6 +12,7 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.core.common.codec.websocket.CloseReason;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
+import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.WebSocketRequest;
@@ -34,47 +35,44 @@ import java.util.concurrent.ConcurrentHashMap;
 public class IMDemo {
     public static void main(String[] args) {
         Router routeHandle = new Router();
-        routeHandle.route("/", new BaseHttpHandler() {
-            @Override
-            public void handle(HttpRequest request) throws IOException {
-                if (request.getHeader(HeaderNameEnum.UPGRADE.getName()).equalsIgnoreCase("websocket")) {
-                    request.upgrade(new WebSocketUpgrade() {
-                        private Map<WebSocketRequest, WebSocketResponse> sessionMap = new ConcurrentHashMap<>();
+        routeHandle.route("/", request -> {
+            if (request.getHeader(HeaderNameEnum.UPGRADE.getName()).equalsIgnoreCase("websocket")) {
+                request.upgrade(new WebSocketUpgrade() {
+                    private Map<WebSocketRequest, WebSocketResponse> sessionMap = new ConcurrentHashMap<>();
 
-                        @Override
-                        public void handleTextMessage(WebSocketRequest request, WebSocketResponse response, String data) {
-                            JSONObject jsonObject = JSON.parseObject(data);
-                            jsonObject.put("sendTime", System.currentTimeMillis());
-                            jsonObject.put("id", UUID.randomUUID().toString());
-                            jsonObject.put("from", request.hashCode());
-                            jsonObject.put("avatar", "https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png");
-                            sessionMap.values().forEach(rsp -> {
-                                System.out.println("收到消息");
-                                rsp.sendTextMessage(jsonObject.toJSONString());
+                    @Override
+                    public void handleTextMessage(WebSocketRequest request, WebSocketResponse response, String data) {
+                        JSONObject jsonObject = JSON.parseObject(data);
+                        jsonObject.put("sendTime", System.currentTimeMillis());
+                        jsonObject.put("id", UUID.randomUUID().toString());
+                        jsonObject.put("from", request.hashCode());
+                        jsonObject.put("avatar", "https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png");
+                        sessionMap.values().forEach(rsp -> {
+                            System.out.println("收到消息");
+                            rsp.sendTextMessage(jsonObject.toJSONString());
 //                    rsp.flush();
-                            });
-                        }
+                        });
+                    }
 
-                        @Override
-                        public void onHandShake(WebSocketRequest request, WebSocketResponse response) {
-                            System.out.println("加入群组 session");
-                            sessionMap.put(request, response);
-                        }
+                    @Override
+                    public void onHandShake(WebSocketRequest request, WebSocketResponse response) {
+                        System.out.println("加入群组 session");
+                        sessionMap.put(request, response);
+                    }
 
-                        @Override
-                        public void onClose(WebSocketRequest request, WebSocketResponse response, CloseReason closeReason) {
-                            System.out.println("移除群组");
-                            sessionMap.remove(request);
-                        }
-                    });
-                }
-                OutputStream writeBuffer = request.getResponse().getOutputStream();
-                InputStream inputStream = IMDemo.class.getClassLoader().getResourceAsStream("im.html");
-                byte[] bytes = new byte[1024];
-                int length = 0;
-                while ((length = inputStream.read(bytes)) != -1) {
-                    writeBuffer.write(bytes, 0, length);
-                }
+                    @Override
+                    public void onClose(WebSocketRequest request, WebSocketResponse response, CloseReason closeReason) {
+                        System.out.println("移除群组");
+                        sessionMap.remove(request);
+                    }
+                });
+            }
+            OutputStream writeBuffer = request.getResponse().getOutputStream();
+            InputStream inputStream = IMDemo.class.getClassLoader().getResourceAsStream("im.html");
+            byte[] bytes = new byte[1024];
+            int length = 0;
+            while ((length = inputStream.read(bytes)) != -1) {
+                writeBuffer.write(bytes, 0, length);
             }
         });
 

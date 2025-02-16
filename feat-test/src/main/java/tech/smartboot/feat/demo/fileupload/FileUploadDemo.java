@@ -9,6 +9,7 @@
 package tech.smartboot.feat.demo.fileupload;
 
 import tech.smartboot.feat.core.common.multipart.Part;
+import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
@@ -26,7 +27,7 @@ public class FileUploadDemo {
     public static void main(String[] args) {
 
         Router routeHandler = new Router();
-        routeHandler.route("/", new BaseHttpHandler() {
+        routeHandler.route("/", new HttpHandler() {
                     byte[] body = ("<html>" +
                             "<head><title>feat demo</title></head>" +
                             "<body>" +
@@ -42,25 +43,22 @@ public class FileUploadDemo {
                         response.getOutputStream().write(body);
                     }
                 })
-                .route("/upload", new BaseHttpHandler() {
-                    @Override
-                    public void handle(HttpRequest request) throws IOException {
-                        try {
-                            for (Part part : request.getParts()) {
-                                String name = part.getName();
-                                InputStream stream = part.getInputStream();
-                                if (part.getSubmittedFileName() == null) {
-                                    System.out.println("Form field " + name + " with value "
-                                            + stream + " detected.");
-                                } else {
-                                    System.out.println("File field " + name + " with file name "
-                                            + part.getName() + " detected.");
-                                    // Process the input stream
-                                }
+                .route("/upload", request -> {
+                    try {
+                        for (Part part : request.getParts()) {
+                            String name = part.getName();
+                            InputStream stream = part.getInputStream();
+                            if (part.getSubmittedFileName() == null) {
+                                System.out.println("Form field " + name + " with value "
+                                        + stream + " detected.");
+                            } else {
+                                System.out.println("File field " + name + " with file name "
+                                        + part.getName() + " detected.");
+                                // Process the input stream
                             }
-                        } catch (Exception e) {
-                            e.printStackTrace();
                         }
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
                 });
 

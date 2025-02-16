@@ -16,6 +16,7 @@ import org.junit.Test;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.HeaderValue;
+import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServer;
@@ -42,17 +43,14 @@ public class HttpRestTest {
     public void init() {
         httpServer = new HttpServer();
         Router routeHandler = new Router();
-        routeHandler.route("/post", new BaseHttpHandler() {
-            @Override
-            public void handle(HttpRequest request) throws IOException {
-                HttpResponse response=request.getResponse();
-                response.setHeader(HeaderNameEnum.CONNECTION.getName(), HeaderValue.Connection.keepalive);
-                JSONObject jsonObject = new JSONObject();
-                for (String key : request.getParameters().keySet()) {
-                    jsonObject.put(key, request.getParameter(key));
-                }
-                response.write(jsonObject.toString().getBytes());
+        routeHandler.route("/post", request -> {
+            HttpResponse response=request.getResponse();
+            response.setHeader(HeaderNameEnum.CONNECTION.getName(), HeaderValue.Connection.keepalive);
+            JSONObject jsonObject = new JSONObject();
+            for (String key : request.getParameters().keySet()) {
+                jsonObject.put(key, request.getParameter(key));
             }
+            response.write(jsonObject.toString().getBytes());
         });
         httpServer.httpHandler(routeHandler).listen(8080);
     }

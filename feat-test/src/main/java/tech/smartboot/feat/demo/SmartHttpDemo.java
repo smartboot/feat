@@ -10,6 +10,7 @@ package tech.smartboot.feat.demo;
 
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
+import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServer;
@@ -43,7 +44,7 @@ public class SmartHttpDemo {
                 request.getResponse().write("success".getBytes());
             }
         }));
-        routeHandle.route("/", new BaseHttpHandler() {
+        routeHandle.route("/", new HttpHandler() {
                     byte[] body = ("<html>" +
                             "<head><title>feat demo</title></head>" +
                             "<body>" +
@@ -59,40 +60,29 @@ public class SmartHttpDemo {
                         response.getOutputStream().write(body);
                     }
                 })
-                .route("/get", new BaseHttpHandler() {
-                    @Override
-                    public void handle(HttpRequest request) throws IOException {
-                        request.getResponse().write(("收到Get参数text=" + request.getParameter("text")).getBytes());
-                    }
-                }).route("/post", new BaseHttpHandler() {
+                .route("/get", request -> request.getResponse().write(("收到Get参数text=" + request.getParameter("text")).getBytes())).route("/post", new BaseHttpHandler() {
                     @Override
                     public void handle(HttpRequest request) throws IOException {
                         request.getResponse().write(("收到Post参数text=" + request.getParameter("text")).getBytes());
                     }
-                }).route("/upload", new BaseHttpHandler() {
-                    @Override
-                    public void handle(HttpRequest request) throws IOException {
-                        InputStream in = request.getInputStream();
-                        byte[] buffer = new byte[1024];
-                        int len = 0;
-                        while ((len = in.read(buffer)) != -1) {
-                            request.getResponse().getOutputStream().write(buffer, 0, len);
-                        }
-                        in.close();
+                }).route("/upload", request -> {
+                    InputStream in = request.getInputStream();
+                    byte[] buffer = new byte[1024];
+                    int len = 0;
+                    while ((len = in.read(buffer)) != -1) {
+                        request.getResponse().getOutputStream().write(buffer, 0, len);
                     }
-                }).route("/post_json", new BaseHttpHandler() {
-                    @Override
-                    public void handle(HttpRequest request) throws IOException {
-                        InputStream in = request.getInputStream();
-                        byte[] buffer = new byte[1024];
-                        int len = 0;
-                        System.out.println(request.getContentType());
-                        while ((len = in.read(buffer)) != -1) {
-                            request.getResponse().getOutputStream().write(buffer, 0, len);
-                        }
-                        in.close();
+                    in.close();
+                }).route("/post_json", request -> {
+                    InputStream in = request.getInputStream();
+                    byte[] buffer = new byte[1024];
+                    int len = 0;
+                    System.out.println(request.getContentType());
+                    while ((len = in.read(buffer)) != -1) {
+                        request.getResponse().getOutputStream().write(buffer, 0, len);
                     }
-                }).route("/plaintext", new BaseHttpHandler() {
+                    in.close();
+                }).route("/plaintext", new HttpHandler() {
                     byte[] body = "Hello World!".getBytes();
 
                     @Override
@@ -103,24 +93,18 @@ public class SmartHttpDemo {
                         response.write(body);
 //                LOGGER.info("hello world");
                     }
-                }).route("/head", new BaseHttpHandler() {
-                    @Override
-                    public void handle(HttpRequest request) throws IOException {
-                        HttpResponse response = request.getResponse();
-                        response.addHeader("a", "b");
-                        response.addHeader("a", "c");
-                        Collection<String> headNames = request.getHeaderNames();
-                        for (String headerName : headNames) {
-                            response.write((headerName + ": " + request.getHeaders(headerName) + "</br>").getBytes());
-                        }
+                }).route("/head", request -> {
+                    HttpResponse response = request.getResponse();
+                    response.addHeader("a", "b");
+                    response.addHeader("a", "c");
+                    Collection<String> headNames = request.getHeaderNames();
+                    for (String headerName : headNames) {
+                        response.write((headerName + ": " + request.getHeaders(headerName) + "</br>").getBytes());
                     }
-                }).route("/post_param", new BaseHttpHandler() {
-                    @Override
-                    public void handle(HttpRequest request) throws IOException {
-                        //curl -X POST -H "Transfer-Encoding: chunked" -H "Content-Type: application/x-www-form-urlencoded" --data "field1=value1&field2=value2" http://localhost:8080/post_param
-                        for (String parameter : request.getParameters().keySet()) {
-                            request.getResponse().write((parameter + ": " + request.getParameter(parameter) + "</br>").getBytes());
-                        }
+                }).route("/post_param", request -> {
+                    //curl -X POST -H "Transfer-Encoding: chunked" -H "Content-Type: application/x-www-form-urlencoded" --data "field1=value1&field2=value2" http://localhost:8080/post_param
+                    for (String parameter : request.getParameters().keySet()) {
+                        request.getResponse().write((parameter + ": " + request.getParameter(parameter) + "</br>").getBytes());
                     }
                 }).route("/ws", request -> request.upgrade(new WebSocketUpgrade() {
                     @Override

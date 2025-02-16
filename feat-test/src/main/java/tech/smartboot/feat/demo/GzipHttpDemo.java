@@ -10,6 +10,7 @@ package tech.smartboot.feat.demo;
 
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.HeaderValue;
+import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServer;
@@ -28,49 +29,37 @@ public class GzipHttpDemo {
     public static void main(String[] args) {
         String text = "Hello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello World";
         Router routeHandle = new Router();
-        routeHandle.route("/a", new BaseHttpHandler() {
-            @Override
-            public void handle(HttpRequest request) throws IOException {
-                HttpResponse response=request.getResponse();
-                byte[] data = text.getBytes();
-                response.setContentLength(data.length);
+        routeHandle.route("/a", request -> {
+            HttpResponse response=request.getResponse();
+            byte[] data = text.getBytes();
+            response.setContentLength(data.length);
 //                response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValue.GZIP.getName());
-                response.write(data);
-            }
-        }).route("/b", new BaseHttpHandler() {
-            @Override
-            public void handle(HttpRequest request) throws IOException {
-                HttpResponse response=request.getResponse();
-                response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValue.ContentEncoding.GZIP);
-                response.write(text.getBytes());
-            }
-        }).route("/c", new BaseHttpHandler() {
-            @Override
-            public void handle(HttpRequest request) throws Throwable {
-                HttpResponse response=request.getResponse();
-                response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValue.ContentEncoding.GZIP);
-                GZIPOutputStream gzipOutputStream = new GZIPOutputStream(response.getOutputStream());
-                gzipOutputStream.write(("<html><body>hello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello " +
-                        "worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello world").getBytes());
-                gzipOutputStream.write("hello world111".getBytes());
-                gzipOutputStream.write("</body></html>".getBytes());
-                gzipOutputStream.close();
-            }
-        }).route("/d", new BaseHttpHandler() {
-            @Override
-            public void handle(HttpRequest request) throws Throwable {
-                HttpResponse response=request.getResponse();
-                String content = "Hello world";
-                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-                GZIPOutputStream gzipOutputStream = new GZIPOutputStream(outputStream);
-                gzipOutputStream.write(content.getBytes());
-                gzipOutputStream.close();
+            response.write(data);
+        }).route("/b", request -> {
+            HttpResponse response=request.getResponse();
+            response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValue.ContentEncoding.GZIP);
+            response.write(text.getBytes());
+        }).route("/c", request -> {
+            HttpResponse response=request.getResponse();
+            response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValue.ContentEncoding.GZIP);
+            GZIPOutputStream gzipOutputStream = new GZIPOutputStream(response.getOutputStream());
+            gzipOutputStream.write(("<html><body>hello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello " +
+                    "worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello world").getBytes());
+            gzipOutputStream.write("hello world111".getBytes());
+            gzipOutputStream.write("</body></html>".getBytes());
+            gzipOutputStream.close();
+        }).route("/d", request -> {
+            HttpResponse response=request.getResponse();
+            String content = "Hello world";
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            GZIPOutputStream gzipOutputStream = new GZIPOutputStream(outputStream);
+            gzipOutputStream.write(content.getBytes());
+            gzipOutputStream.close();
 
-                byte[] data = outputStream.toByteArray();
-                response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValue.ContentEncoding.GZIP);
-                response.setContentLength(data.length);
-                response.write(data);
-            }
+            byte[] data = outputStream.toByteArray();
+            response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValue.ContentEncoding.GZIP);
+            response.setContentLength(data.length);
+            response.write(data);
         });
         HttpServer bootstrap = new HttpServer();
         bootstrap.httpHandler(routeHandle);

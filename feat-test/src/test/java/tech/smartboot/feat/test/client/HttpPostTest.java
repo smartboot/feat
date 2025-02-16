@@ -20,6 +20,7 @@ import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.utils.StringUtils;
+import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
@@ -47,93 +48,71 @@ public class HttpPostTest {
     public void init() throws Exception {
 
         Router routeHandle = new Router();
-        routeHandle.route("/post_param", new BaseHttpHandler() {
-            @Override
-            public void handle(HttpRequest request) throws IOException {
-                JSONObject jsonObject = new JSONObject();
-                for (String key : request.getParameters().keySet()) {
-                    jsonObject.put(key, request.getParameter(key));
-                }
-                request.getResponse().write(jsonObject.toString().getBytes());
+        routeHandle.route("/post_param", request -> {
+            JSONObject jsonObject = new JSONObject();
+            for (String key : request.getParameters().keySet()) {
+                jsonObject.put(key, request.getParameter(key));
             }
+            request.getResponse().write(jsonObject.toString().getBytes());
         });
-        routeHandle.route("/json", new BaseHttpHandler() {
-
-            @Override
-            public void handle(HttpRequest request) throws IOException {
-                System.out.println(request.getParameters());
-                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                byteArrayOutputStream.write(String.valueOf(request.getContentLength()).getBytes());
-                InputStream inputStream = request.getInputStream();
-                byte[] bytes = new byte[1024];
-                int size;
-                while ((size = inputStream.read(bytes)) != -1) {
-                    byteArrayOutputStream.write(bytes, 0, size);
-                }
-                request.getResponse().write(byteArrayOutputStream.toByteArray());
+        routeHandle.route("/json", request -> {
+            System.out.println(request.getParameters());
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            byteArrayOutputStream.write(String.valueOf(request.getContentLength()).getBytes());
+            InputStream inputStream = request.getInputStream();
+            byte[] bytes = new byte[1024];
+            int size;
+            while ((size = inputStream.read(bytes)) != -1) {
+                byteArrayOutputStream.write(bytes, 0, size);
             }
+            request.getResponse().write(byteArrayOutputStream.toByteArray());
         });
-        routeHandle.route("/header", new BaseHttpHandler() {
-            @Override
-            public void handle(HttpRequest request) throws IOException {
-                JSONObject jsonObject = new JSONObject();
-                for (String header : request.getHeaderNames()) {
-                    jsonObject.put(header, request.getHeader(header));
-                }
-                request.getResponse().write(jsonObject.toJSONString().getBytes());
+        routeHandle.route("/header", request -> {
+            JSONObject jsonObject = new JSONObject();
+            for (String header : request.getHeaderNames()) {
+                jsonObject.put(header, request.getHeader(header));
             }
+            request.getResponse().write(jsonObject.toJSONString().getBytes());
         });
 
-        routeHandle.route("/other/abc", new BaseHttpHandler() {
-            @Override
-            public void handle(HttpRequest request) throws IOException {
-                System.out.println("--");
-                InputStream inputStream = request.getInputStream();
-                byte[] bytes = new byte[1024];
-                int size;
-                while ((size = inputStream.read(bytes)) != -1) {
-                    request.getResponse().getOutputStream().write(bytes, 0, size);
-                }
+        routeHandle.route("/other/abc", request -> {
+            System.out.println("--");
+            InputStream inputStream = request.getInputStream();
+            byte[] bytes = new byte[1024];
+            int size;
+            while ((size = inputStream.read(bytes)) != -1) {
+                request.getResponse().getOutputStream().write(bytes, 0, size);
             }
         });
 
-        routeHandle.route("/chunk", new BaseHttpHandler() {
-            @Override
-            public void handle(HttpRequest request) throws Throwable {
-                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                InputStream inputStream = request.getInputStream();
-                int b;
-                while ((b = inputStream.read()) != -1) {
-                    byteArrayOutputStream.write(b);
-                    request.getResponse().write(new byte[]{(byte) b});
-                }
-
-                System.out.println(byteArrayOutputStream.toString());
+        routeHandle.route("/chunk", request -> {
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            InputStream inputStream = request.getInputStream();
+            int b;
+            while ((b = inputStream.read()) != -1) {
+                byteArrayOutputStream.write(b);
+                request.getResponse().write(new byte[]{(byte) b});
             }
+
+            System.out.println(byteArrayOutputStream.toString());
         });
 
-        routeHandle.route("/body", new BaseHttpHandler() {
-            @Override
-            public void handle(HttpRequest request) throws Throwable {
-                System.out.println(request.getParameters());
-                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                byteArrayOutputStream.write(String.valueOf(request.getContentLength()).getBytes());
-                InputStream inputStream = request.getInputStream();
-                byte[] bytes = new byte[1024];
-                int size;
-                while ((size = inputStream.read(bytes)) != -1) {
-                    byteArrayOutputStream.write(bytes, 0, size);
-                }
-                request.getResponse().write(byteArrayOutputStream.toByteArray());
+        routeHandle.route("/body", request -> {
+            System.out.println(request.getParameters());
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            byteArrayOutputStream.write(String.valueOf(request.getContentLength()).getBytes());
+            InputStream inputStream = request.getInputStream();
+            byte[] bytes = new byte[1024];
+            int size;
+            while ((size = inputStream.read(bytes)) != -1) {
+                byteArrayOutputStream.write(bytes, 0, size);
             }
+            request.getResponse().write(byteArrayOutputStream.toByteArray());
         });
 
-        routeHandle.route("/empty", new BaseHttpHandler() {
-            @Override
-            public void handle(HttpRequest request) throws Throwable {
-                System.out.println(request.getParameters());
-                request.getResponse().setContentLength(0);
-            }
+        routeHandle.route("/empty", request -> {
+            System.out.println(request.getParameters());
+            request.getResponse().setContentLength(0);
         });
 
         httpServer = new HttpServer();

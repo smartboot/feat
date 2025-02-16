@@ -3,6 +3,7 @@ package tech.smartboot.feat.test.client;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.HeaderValue;
+import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServer;
@@ -24,24 +25,21 @@ public class Test {
         HttpServer bootstrap = new HttpServer();
         Router route = new Router();
         byte[] body = new byte[4096];
-        route.route("/other/**", new BaseHttpHandler() {
-            @Override
-            public void handle(HttpRequest request) throws IOException {
-                HttpResponse response=request.getResponse();
-                System.out.println("=====");
-                System.out.println(request.getMethod());
-                System.out.println("=====");
-                InputStream inputStream = request.getInputStream();
-                int len = inputStream.read(body);
-                if (len < 0) {
-                    System.out.println("no body request");
-                } else {
-                    System.out.println(new String(body, 0, len, StandardCharsets.UTF_8));
-                    System.out.println(inputStream.read(body));
-                }
-                response.setHeader(HeaderNameEnum.CONNECTION.getName(), HeaderValue.Connection.KEEPALIVE);
-                response.write("success".getBytes());
+        route.route("/other/**", request -> {
+            HttpResponse response=request.getResponse();
+            System.out.println("=====");
+            System.out.println(request.getMethod());
+            System.out.println("=====");
+            InputStream inputStream = request.getInputStream();
+            int len = inputStream.read(body);
+            if (len < 0) {
+                System.out.println("no body request");
+            } else {
+                System.out.println(new String(body, 0, len, StandardCharsets.UTF_8));
+                System.out.println(inputStream.read(body));
             }
+            response.setHeader(HeaderNameEnum.CONNECTION.getName(), HeaderValue.Connection.KEEPALIVE);
+            response.write("success".getBytes());
         });
         bootstrap
                 .httpHandler(route)
