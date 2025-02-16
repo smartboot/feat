@@ -5,22 +5,107 @@ sidebar:
     order: 2
 ---
 
-Router 组件是 Feat 中最核心的组件之一，它负责管理整个 Web 应用的请求路由。
+Feat 提供了一个强大的路由组件 `Router`，用于管理 Web 应用的请求路由。通过 `Router`，你可以将不同的 URL 映射到相应的处理逻辑，使得应用能够灵活地响应各种请求。
 
-基本用法：
-```java "Router router = new Router();" "router.route" ".route" "router"
-public class RouterDemo1 {
-    public static void main(String[] args) {
-        Router router = new Router();
-        router.route("/", (request) -> {
-            request.getResponse().write("root: " + request.getRequestURI());
-        });
-        router.route("/route1", (request) -> {
-            request.getResponse().write("route1: " + request.getRequestURI());
-        }).route("/route2", (request) -> {
-            request.getResponse().write("route2: " + request.getRequestURI());
-        });
-        Feat.httpServer().httpHandler(router).listen();
-    }
-}
+### 基本用法
+
+#### 1. 创建和配置 Router
+
+`Router` 可以通过构造函数创建，并配置默认的处理程序，用于处理未匹配到任何路由的请求。
+
+```java
+Router router = new Router();
 ```
+
+#### 2. 添加路由规则
+
+使用 `route` 方法可以将特定的 URL 模式映射到对应的处理程序。
+
+```java
+router.route("/hello", (request) -> {
+    request.getResponse().write("Hello Feat");
+});
+```
+
+#### 3. 处理不同的 HTTP 方法
+
+`Router` 支持不同的 HTTP 方法，如 GET、POST 等。通过重载的 `route` 方法，可以指定处理特定 HTTP 方法的请求。
+
+```java
+router.route("/api/data", HttpMethod.POST, (request) -> {
+    // 处理 POST 请求
+});
+```
+
+#### 4. 动态路由和路径参数
+
+`Router` 支持动态路由，通过在 URL 中使用冒号 `:` 标记路径参数，可以捕获动态值并在处理程序中使用。
+
+```java
+router.route("/user/:id", (request) -> {
+    String userId = request.getParameter("id");
+    request.getResponse().write("User ID: " + userId);
+});
+```
+
+### 实现原理
+
+#### 1. 节点树结构
+
+`Router` 内部使用了一棵节点树（`NodePath`）来存储所有的路由规则。每个节点代表 URL 的一部分，叶子节点则对应具体的处理程序。
+
+#### 2. 路由匹配算法
+
+当接收到一个 HTTP 请求时，`Router` 会从根节点开始，逐步匹配 URL 的各个部分。匹配过程中，会处理精准匹配、路径参数、通配符等多种情况，最终找到对应的处理程序。
+
+#### 3. 动态路由和正则表达式
+
+`Router` 支持通过正则表达式定义动态路由，使得复杂的 URL 模式也能被灵活地处理。
+
+### 使用示例
+
+#### 1. 简单路由
+
+```java
+Router router = new Router();
+router.route("/", (request) -> {
+    request.getResponse().write("Welcome to Feat!");
+});
+
+router.route("/about", (request) -> {
+    request.getResponse().write("About Us");
+});
+
+Feat.httpServer().httpHandler(router).listen();
+```
+
+#### 2. 动态路由
+
+```java
+Router router = new Router();
+router.route("/user/:id", (request) -> {
+    String userId = request.getParameter("id");
+    request.getResponse().write("User ID: " + userId);
+});
+
+Feat.httpServer().httpHandler(router).listen();
+```
+
+#### 3. 多种 HTTP 方法
+
+```java
+Router router = new Router();
+router.route("/api/data", HttpMethod.GET, (request) -> {
+    request.getResponse().write("Get Data");
+});
+
+router.route("/api/data", HttpMethod.POST, (request) -> {
+    request.getResponse().write("Post Data");
+});
+
+Feat.httpServer().httpHandler(router).listen();
+```
+
+### 总结
+
+`Router` 是 Feat 中一个非常重要的组件，它通过灵活的路由配置，使得 Web 应用能够高效地处理各种请求。无论是简单的静态路由，还是复杂的动态路由，`Router` 都能提供强大的支持，帮助开发者构建功能丰富的 Web 应用。

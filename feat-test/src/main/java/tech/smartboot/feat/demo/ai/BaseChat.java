@@ -13,8 +13,15 @@ public class BaseChat {
     }
 
     public static void loadFile(File file, StringBuilder sb) throws IOException {
+        loadFile(file, Collections.emptySet(), sb);
+    }
+
+    public static void loadFile(File file, Set<String> ignore, StringBuilder sb) throws IOException {
         for (File f : file.listFiles()) {
             if (f.isDirectory()) {
+                if (ignore.contains(f.getName())) {
+                    continue;
+                }
                 loadFile(f, sb);
             }
             if (f.isFile() && f.getName().endsWith(".mdx")) {
