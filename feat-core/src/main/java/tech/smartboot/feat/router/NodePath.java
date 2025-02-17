@@ -89,7 +89,8 @@ final class NodePath {
             }
             return patternPaths.get(PATTERN_KEY);
         }
-        NodePath path = exactPaths.get(subPath.substring(offset + 1, nextIndex));
+        String node = subPath.substring(offset + 1, nextIndex);
+        NodePath path = exactPaths.get(node);
         if (path != null) {
             path = path.match(subPath, nextIndex);
             if (path != null) {
@@ -98,6 +99,11 @@ final class NodePath {
         }
 
         for (NodePath nodePath : patternPaths.values()) {
+            //通配匹配 /*
+            if (nodePath.type == TYPE_PATTERN_LEAF) {
+                path = nodePath;
+                break;
+            }
             nodePath = nodePath.match(subPath, nextIndex);
             if (nodePath == null) {
                 continue;
