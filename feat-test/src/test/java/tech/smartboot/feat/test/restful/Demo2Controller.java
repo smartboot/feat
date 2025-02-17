@@ -33,7 +33,7 @@ class Demo2Controller {
     }
 
     @RequestMapping("/param5")
-    public String test6(@Param("param1") TestParam param) {
-        return "hello param is " + param.getParam1();
+    public String test6(@Param("param3") TestParam param) {
+        return "hello param is null";
     }
 }

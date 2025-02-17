@@ -14,8 +14,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import tech.smartboot.feat.core.client.HttpClient;
-import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.HeaderValue;
+import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServer;
@@ -41,8 +41,8 @@ public class HttpRestTest {
         httpServer = new HttpServer();
         Router routeHandler = new Router();
         routeHandler.route("/post", ctx -> {
-            HttpRequest request=ctx.Request;
-            HttpResponse response=request.getResponse();
+            HttpRequest request = ctx.Request;
+            HttpResponse response = request.getResponse();
             response.setHeader(HeaderNameEnum.CONNECTION.getName(), HeaderValue.Connection.keepalive);
             JSONObject jsonObject = new JSONObject();
             for (String key : request.getParameters().keySet()) {
@@ -56,7 +56,7 @@ public class HttpRestTest {
     @Test
     public void testPost() throws ExecutionException, InterruptedException {
         HttpClient httpClient = new HttpClient("localhost", 8080);
-        Future<tech.smartboot.feat.core.client.HttpResponse> future = httpClient.rest("post","/post")
+        Future<tech.smartboot.feat.core.client.HttpResponse> future = httpClient.rest("post", "/post")
                 .onSuccess(response -> {
                     System.out.println(response.body());
                     httpClient.close();
@@ -79,7 +79,7 @@ public class HttpRestTest {
         for (int i = 0; i < count; i++) {
             form.put("name" + i, "value" + i);
             final int j = i + 1;
-            httpClient.post("/post").header(h->h.keepalive(true))
+            httpClient.post("/post").header(h -> h.keepalive(true))
                     .body().formUrlencoded(form)
                     .onSuccess(httpResponse -> {
                         countDownLatch.countDown();
