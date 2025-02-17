@@ -22,6 +22,7 @@ import tech.smartboot.feat.core.client.HttpPost;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpMethod;
+import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
@@ -55,35 +56,32 @@ public class HttpServerTest extends BastTest {
     @Before
     public void init() {
         bootstrap = new HttpServer();
-        bootstrap.httpHandler(new BaseHttpHandler() {
-            @Override
-            public void handle(HttpRequest request) throws IOException {
-                HttpResponse response=request.getResponse();
-                //随机启用GZIP
-                OutputStream outputStream;
-                if (System.currentTimeMillis() % 2 == 0) {
-                    response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValue.ContentEncoding.GZIP);
-                    outputStream = new GZIPOutputStream(response.getOutputStream());
-                } else {
-                    outputStream = response.getOutputStream();
-                }
-
-                JSONObject jsonObject = new JSONObject();
-                jsonObject.put(KEY_METHOD, request.getMethod());
-                jsonObject.put(KEY_URI, request.getRequestURI());
-                jsonObject.put(KEY_URL, request.getRequestURL());
-
-                Map<String, String> parameterMap = new HashMap<>();
-                request.getParameters().keySet().forEach(parameter -> parameterMap.put(parameter, request.getParameter(parameter)));
-                jsonObject.put(KEY_PARAMETERS, parameterMap);
-
-                Map<String, String> headerMap = new HashMap<>();
-                request.getHeaderNames().forEach(headerName -> headerMap.put(headerName, request.getHeader(headerName)));
-                jsonObject.put(KEY_HEADERS, headerMap);
-
-                outputStream.write(jsonObject.toJSONString().getBytes(StandardCharsets.UTF_8));
-                outputStream.close();
+        bootstrap.httpHandler(request -> {
+            HttpResponse response=request.getResponse();
+            //随机启用GZIP
+            OutputStream outputStream;
+            if (System.currentTimeMillis() % 2 == 0) {
+                response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValue.ContentEncoding.GZIP);
+                outputStream = new GZIPOutputStream(response.getOutputStream());
+            } else {
+                outputStream = response.getOutputStream();
             }
+
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put(KEY_METHOD, request.getMethod());
+            jsonObject.put(KEY_URI, request.getRequestURI());
+            jsonObject.put(KEY_URL, request.getRequestURL());
+
+            Map<String, String> parameterMap = new HashMap<>();
+            request.getParameters().keySet().forEach(parameter -> parameterMap.put(parameter, request.getParameter(parameter)));
+            jsonObject.put(KEY_PARAMETERS, parameterMap);
+
+            Map<String, String> headerMap = new HashMap<>();
+            request.getHeaderNames().forEach(headerName -> headerMap.put(headerName, request.getHeader(headerName)));
+            jsonObject.put(KEY_HEADERS, headerMap);
+
+            outputStream.write(jsonObject.toJSONString().getBytes(StandardCharsets.UTF_8));
+            outputStream.close();
         });
         bootstrap.options().addPlugin(new StreamMonitorPlugin<>(StreamMonitorPlugin.BLUE_TEXT_INPUT_STREAM, StreamMonitorPlugin.RED_TEXT_OUTPUT_STREAM));
         bootstrap.listen(SERVER_PORT);

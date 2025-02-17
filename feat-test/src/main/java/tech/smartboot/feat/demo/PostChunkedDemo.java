@@ -2,9 +2,7 @@ package tech.smartboot.feat.demo;
 
 import org.smartboot.socket.transport.AioQuickClient;
 import org.smartboot.socket.transport.AioSession;
-import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpServer;
-import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 
 import java.io.IOException;
 
@@ -12,13 +10,10 @@ public class PostChunkedDemo {
     public static void main(String[] args) throws IOException {
         HttpServer bootstrap = new HttpServer();
         bootstrap.options().debug(true);
-        bootstrap.httpHandler(new BaseHttpHandler() {
-            @Override
-            public void handle(HttpRequest request) throws Throwable {
-                System.out.println("http request...");
-                for (String s : request.getParameters().keySet()) {
-                    System.out.println(s + " :" + request.getParameter(s));
-                }
+        bootstrap.httpHandler(request -> {
+            System.out.println("http request...");
+            for (String s : request.getParameters().keySet()) {
+                System.out.println(s + " :" + request.getParameter(s));
             }
         });
         bootstrap.listen();

@@ -53,14 +53,6 @@ public abstract class BaseHttpHandler implements HttpHandler {
         }
     }
 
-    public void handle(HttpRequest request, CompletableFuture<Object> completableFuture) throws Throwable {
-        try {
-            handle(request);
-        } finally {
-            completableFuture.complete(null);
-        }
-    }
-
     @Override
     public void handle(HttpRequest request) throws Throwable {
     }

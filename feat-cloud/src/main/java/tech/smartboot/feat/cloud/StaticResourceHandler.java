@@ -40,7 +40,12 @@ class StaticResourceHandler extends BaseHttpHandler {
     @Override
     public void handle(HttpRequest request, CompletableFuture<Object> completableFuture) throws Throwable {
         if (asyncExecutor == null) {
-            super.handle(request, completableFuture);
+            try {
+                handle(request);
+                completableFuture.complete(null);
+            } catch (IOException e) {
+                completableFuture.completeExceptionally(e);
+            }
         } else {
             asyncExecutor.execute(() -> {
                 try {

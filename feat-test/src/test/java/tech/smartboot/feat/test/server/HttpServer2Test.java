@@ -16,8 +16,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.common.HeaderValue;
-import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.HttpMethod;
+import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
 import tech.smartboot.feat.core.server.HttpRequest;
@@ -57,13 +57,10 @@ public class HttpServer2Test extends BastTest {
 
     @Test
     public void test1() throws ExecutionException, InterruptedException {
-        bootstrap.httpHandler(new BaseHttpHandler() {
-            @Override
-            public void handle(HttpRequest request) throws IOException {
-                HttpResponse response = request.getResponse();
-                response.setContentType("test");
-                response.write("Hello World".getBytes(StandardCharsets.UTF_8));
-            }
+        bootstrap.httpHandler(request -> {
+            HttpResponse response = request.getResponse();
+            response.setContentType("test");
+            response.write("Hello World".getBytes(StandardCharsets.UTF_8));
         });
         tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.get("/").submit().get();
         Assert.assertEquals(httpResponse.getContentType(), "test");
@@ -72,12 +69,7 @@ public class HttpServer2Test extends BastTest {
 
     @Test
     public void test2() throws ExecutionException, InterruptedException {
-        bootstrap.httpHandler(new BaseHttpHandler() {
-            @Override
-            public void handle(HttpRequest request) throws IOException {
-                request.getResponse().write("Hello World".getBytes(StandardCharsets.UTF_8));
-            }
-        });
+        bootstrap.httpHandler(request -> request.getResponse().write("Hello World".getBytes(StandardCharsets.UTF_8)));
         tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.get("/").submit().get();
         Assert.assertEquals(httpResponse.getProtocol(), HttpProtocolEnum.HTTP_11.getProtocol());
         Assert.assertEquals(httpResponse.getHeader(HeaderNameEnum.TRANSFER_ENCODING.getName()), HeaderValue.TransferEncoding.CHUNKED);
@@ -85,12 +77,7 @@ public class HttpServer2Test extends BastTest {
 
     @Test
     public void testPut() throws ExecutionException, InterruptedException {
-        bootstrap.httpHandler(new BaseHttpHandler() {
-            @Override
-            public void handle(HttpRequest request) throws IOException {
-                request.getResponse().write("Hello World".getBytes(StandardCharsets.UTF_8));
-            }
-        });
+        bootstrap.httpHandler(request -> request.getResponse().write("Hello World".getBytes(StandardCharsets.UTF_8)));
         tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.rest(HttpMethod.PUT, "/").submit().get();
         Assert.assertEquals(httpResponse.getProtocol(), HttpProtocolEnum.HTTP_11.getProtocol());
         Assert.assertEquals(httpResponse.statusCode(), HttpStatus.OK.value());
@@ -98,12 +85,9 @@ public class HttpServer2Test extends BastTest {
 
     @Test
     public void testPost() throws ExecutionException, InterruptedException {
-        bootstrap.httpHandler(new BaseHttpHandler() {
-            @Override
-            public void handle(HttpRequest request) throws IOException {
-                request.getInputStream().close();
-                request.getResponse().write("Hello World".getBytes(StandardCharsets.UTF_8));
-            }
+        bootstrap.httpHandler(request -> {
+            request.getInputStream().close();
+            request.getResponse().write("Hello World".getBytes(StandardCharsets.UTF_8));
         });
         for (int i = 0; i < 10; i++) {
             String body = "hello" + i;
@@ -117,14 +101,11 @@ public class HttpServer2Test extends BastTest {
 
     @Test
     public void testPost1() throws ExecutionException, InterruptedException {
-        bootstrap.httpHandler(new BaseHttpHandler() {
-            @Override
-            public void handle(HttpRequest request) throws IOException {
-                byte[] buffer = new byte[(int) request.getContentLength()];
-                request.getInputStream().read(buffer);
+        bootstrap.httpHandler(request -> {
+            byte[] buffer = new byte[(int) request.getContentLength()];
+            request.getInputStream().read(buffer);
 //                request.getInputStream().close();
-                request.getResponse().write(buffer);
-            }
+            request.getResponse().write(buffer);
         });
         for (int i = 0; i < 10; i++) {
             String body = "hello" + i;
