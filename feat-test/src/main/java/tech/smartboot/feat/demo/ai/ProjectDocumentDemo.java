@@ -20,34 +20,35 @@ import java.util.Set;
 public class ProjectDocumentDemo extends BaseChat {
     public static void main(String[] args) throws IOException {
         File file = new File("pages/src/content/docs/server");
-        Set<String> ignoreDoc=new HashSet<>();
+        Set<String> ignoreDoc = new HashSet<>();
         ignoreDoc.add("client");
         ignoreDoc.add("cloud");
         ignoreDoc.add("ai");
         StringBuilder docs = new StringBuilder();
-        loadFile(file,ignoreDoc, docs);
+        loadFile(file, ignoreDoc, docs);
 
-        Set<String> ignore=new HashSet<>();
+        Set<String> ignore = new HashSet<>();
         ignore.add("ai");
-        ignore.add("cloud");
         ignore.add("client");
         ignore.add("common");
         ignore.add("upgrade");
+        ignore.add("impl");
+        ignore.add("waf");
         StringBuilder sourceBuilder = new StringBuilder();
-        loadSource(new File("feat-core/src/main/java/tech/smartboot/feat/"),ignore, sourceBuilder);
+        loadSource(new File("feat-core/src/main/java/tech/smartboot/feat/"), ignore, sourceBuilder);
 
         StringBuilder demoBuilder = new StringBuilder();
-        Set<String> ignore1=new HashSet<>();
+        Set<String> ignore1 = new HashSet<>();
         ignore1.add("ai");
         ignore1.add("apt");
         ignore1.add("client");
-        loadSource(new File("feat-test/src/main/java/tech/smartboot/feat/demo/"),ignore1, demoBuilder);
+        loadSource(new File("feat-test/src/main/java/tech/smartboot/feat/demo/router"), ignore1, demoBuilder);
         ChatModel chatModel = FeatAI.chatModel(opts -> {
             opts.model(ModelMeta.GITEE_AI_DeepSeek_R1_Distill_Qwen_32B)
                     .system("你主要负责为这个项目编写使用文档，根据用户要求编写相关章节内容。"
-//                            + "参考内容为：\n" + docs
-                            + "\n 实现源码为：\n" + sourceBuilder
-//                            + "\n 示例代码为：" + demoBuilder
+                            + "参考内容为：\n" + docs
+                                    + "\n 实现源码为：\n" + sourceBuilder
+                            + "\n 示例代码为：" + demoBuilder
                     )
                     .debug(true)
             ;
@@ -77,48 +78,48 @@ public class ProjectDocumentDemo extends BaseChat {
                             } catch (IOException e) {
                                 throw new RuntimeException(e);
                             }
-                            FeatAI.chatModel(opts -> {
-                                opts.model(ModelMeta.GITEE_AI_DeepSeek_R1_Distill_Qwen_32B)
-                                        .system("你是这篇文章的目标读者，可以反馈你对于文章内容的改进意见，文章内容为：\n" + responseMessage.getContent()
-                                        )
-                                        .debug(true)
-                                ;
-                            }).chatStream("指出你觉得需要优化的部分", new StreamResponseCallback() {
-
-                                @Override
-                                public void onCompletion(ResponseMessage responseMessage) {
-                                    try {
-                                        sseEmitter.send(SseEmitter.event().data("<br/>阅读完毕...<br/>"));
-                                    } catch (IOException e) {
-                                        throw new RuntimeException(e);
-                                    }
-                                    chatModel.chatStream("根据读者的改进建议优化文章内容：\n" + responseMessage.getContent(), new StreamResponseCallback() {
-
-                                        @Override
-                                        public void onCompletion(ResponseMessage responseMessage) {
-                                            sseEmitter.complete();
-                                        }
-
-                                        @Override
-                                        public void onStreamResponse(String content) {
-                                            try {
-                                                sseEmitter.send(SseEmitter.event().data(toHtml(content)));
-                                            } catch (IOException e) {
-                                                throw new RuntimeException(e);
-                                            }
-                                        }
-                                    });
-                                }
-
-                                @Override
-                                public void onStreamResponse(String content) {
-                                    try {
-                                        sseEmitter.send(SseEmitter.event().data(toHtml(content)));
-                                    } catch (IOException e) {
-                                        throw new RuntimeException(e);
-                                    }
-                                }
-                            });
+//                            FeatAI.chatModel(opts -> {
+//                                opts.model(ModelMeta.GITEE_AI_DeepSeek_R1_Distill_Qwen_32B)
+//                                        .system("你是这篇文章的目标读者，可以反馈你对于文章内容的改进意见，文章内容为：\n" + responseMessage.getContent()
+//                                        )
+//                                        .debug(true)
+//                                ;
+//                            }).chatStream("指出你觉得需要优化的部分", new StreamResponseCallback() {
+//
+//                                @Override
+//                                public void onCompletion(ResponseMessage responseMessage) {
+//                                    try {
+//                                        sseEmitter.send(SseEmitter.event().data("<br/>阅读完毕...<br/>"));
+//                                    } catch (IOException e) {
+//                                        throw new RuntimeException(e);
+//                                    }
+//                                    chatModel.chatStream("根据读者的改进建议优化文章内容：\n" + responseMessage.getContent(), new StreamResponseCallback() {
+//
+//                                        @Override
+//                                        public void onCompletion(ResponseMessage responseMessage) {
+//                                            sseEmitter.complete();
+//                                        }
+//
+//                                        @Override
+//                                        public void onStreamResponse(String content) {
+//                                            try {
+//                                                sseEmitter.send(SseEmitter.event().data(toHtml(content)));
+//                                            } catch (IOException e) {
+//                                                throw new RuntimeException(e);
+//                                            }
+//                                        }
+//                                    });
+//                                }
+//
+//                                @Override
+//                                public void onStreamResponse(String content) {
+//                                    try {
+//                                        sseEmitter.send(SseEmitter.event().data(toHtml(content)));
+//                                    } catch (IOException e) {
+//                                        throw new RuntimeException(e);
+//                                    }
+//                                }
+//                            });
                         }
 
                         @Override

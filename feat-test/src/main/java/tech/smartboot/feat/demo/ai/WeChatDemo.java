@@ -21,10 +21,10 @@ public class WeChatDemo extends BaseChat {
         StringBuilder stringBuilder = new StringBuilder();
         loadFile(file, stringBuilder);
         StringBuilder sourceBuilder = new StringBuilder();
-        loadSource(new File("feat-core/src/main/java/tech/smartboot/feat/ai"), sourceBuilder);
+        loadSource(new File("feat-core/src/main/java/tech/smartboot/feat/router"), sourceBuilder);
 
         StringBuilder demoBuilder = new StringBuilder();
-        loadSource(new File("feat-test/src/main/java/tech/smartboot/feat/demo/ai"), demoBuilder);
+        loadSource(new File("feat-test/src/main/java/tech/smartboot/feat/demo/router"), demoBuilder);
         ChatModel chatModel = FeatAI.chatModel(opts -> {
             opts.model(ModelMeta.GITEE_AI_DeepSeek_R1_Distill_Qwen_32B).system("你是一个负责Feat微信公众号的编辑人员，你的任务是根据用户要求编写微信公众号文章。"
                     + "Feat参考内容为：\n" + stringBuilder
