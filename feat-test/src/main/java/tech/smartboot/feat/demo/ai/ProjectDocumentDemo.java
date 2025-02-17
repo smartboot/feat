@@ -14,24 +14,40 @@ import tech.smartboot.feat.router.Router;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashSet;
+import java.util.Set;
 
 public class ProjectDocumentDemo extends BaseChat {
     public static void main(String[] args) throws IOException {
-        File file = new File("pages/src/content");
+        File file = new File("pages/src/content/docs/server");
+        Set<String> ignoreDoc=new HashSet<>();
+        ignoreDoc.add("client");
+        ignoreDoc.add("cloud");
+        ignoreDoc.add("ai");
         StringBuilder docs = new StringBuilder();
-        loadFile(file, docs);
+        loadFile(file,ignoreDoc, docs);
 
+        Set<String> ignore=new HashSet<>();
+        ignore.add("ai");
+        ignore.add("cloud");
+        ignore.add("client");
+        ignore.add("common");
+        ignore.add("upgrade");
         StringBuilder sourceBuilder = new StringBuilder();
-        loadSource(new File("feat-core/src/main/java/tech/smartboot/feat/ai"), sourceBuilder);
+        loadSource(new File("feat-core/src/main/java/tech/smartboot/feat/"),ignore, sourceBuilder);
 
         StringBuilder demoBuilder = new StringBuilder();
-        loadSource(new File("feat-test/src/main/java/tech/smartboot/feat/demo/ai"), demoBuilder);
+        Set<String> ignore1=new HashSet<>();
+        ignore1.add("ai");
+        ignore1.add("apt");
+        ignore1.add("client");
+        loadSource(new File("feat-test/src/main/java/tech/smartboot/feat/demo/"),ignore1, demoBuilder);
         ChatModel chatModel = FeatAI.chatModel(opts -> {
             opts.model(ModelMeta.GITEE_AI_DeepSeek_R1_Distill_Qwen_32B)
                     .system("你主要负责为这个项目编写使用文档，根据用户要求编写相关章节内容。"
-                            + "参考内容为：\n" + docs
+//                            + "参考内容为：\n" + docs
                             + "\n 实现源码为：\n" + sourceBuilder
-                            + "\n 示例代码为：" + demoBuilder
+//                            + "\n 示例代码为：" + demoBuilder
                     )
                     .debug(true)
             ;
@@ -39,8 +55,8 @@ public class ProjectDocumentDemo extends BaseChat {
 
 
         Router router = new Router();
-        router.route("/", req -> {
-            HttpResponse response = req.getResponse();
+        router.route("/", ctx -> {
+            HttpResponse response = ctx.Response;
             response.setContentType("text/html");
             InputStream inputStream = ProjectDocumentDemo.class.getClassLoader().getResourceAsStream("static/project_doc_ai.html");
             byte[] buffer = new byte[1024];
@@ -49,10 +65,10 @@ public class ProjectDocumentDemo extends BaseChat {
                 response.write(buffer, 0, length);
             }
         });
-        router.route("/chat", req -> {
-            req.upgrade(new SSEUpgrade() {
+        router.route("/chat", ctx -> {
+            ctx.Request.upgrade(new SSEUpgrade() {
                 public void onOpen(SseEmitter sseEmitter) {
-                    chatModel.chatStream(req.getParameter("content"), new StreamResponseCallback() {
+                    chatModel.chatStream(ctx.getParameter("content"), new StreamResponseCallback() {
 
                         @Override
                         public void onCompletion(ResponseMessage responseMessage) {
