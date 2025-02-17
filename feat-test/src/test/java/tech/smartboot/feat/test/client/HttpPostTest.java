@@ -20,6 +20,7 @@ import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.utils.StringUtils;
+import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.router.Router;
 
@@ -44,14 +45,16 @@ public class HttpPostTest {
     public void init() throws Exception {
 
         Router routeHandle = new Router();
-        routeHandle.http("/post_param", request -> {
+        routeHandle.route("/post_param", ctx -> {
+            HttpRequest request = ctx.Request;
             JSONObject jsonObject = new JSONObject();
             for (String key : request.getParameters().keySet()) {
                 jsonObject.put(key, request.getParameter(key));
             }
             request.getResponse().write(jsonObject.toString().getBytes());
         });
-        routeHandle.http("/json", request -> {
+        routeHandle.route("/json", ctx -> {
+            HttpRequest request = ctx.Request;
             System.out.println(request.getParameters());
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             byteArrayOutputStream.write(String.valueOf(request.getContentLength()).getBytes());
@@ -63,7 +66,8 @@ public class HttpPostTest {
             }
             request.getResponse().write(byteArrayOutputStream.toByteArray());
         });
-        routeHandle.http("/header", request -> {
+        routeHandle.route("/header", ctx -> {
+            HttpRequest request = ctx.Request;
             JSONObject jsonObject = new JSONObject();
             for (String header : request.getHeaderNames()) {
                 jsonObject.put(header, request.getHeader(header));
@@ -71,7 +75,8 @@ public class HttpPostTest {
             request.getResponse().write(jsonObject.toJSONString().getBytes());
         });
 
-        routeHandle.http("/other/abc", request -> {
+        routeHandle.route("/other/abc", ctx -> {
+            HttpRequest request = ctx.Request;
             System.out.println("--");
             InputStream inputStream = request.getInputStream();
             byte[] bytes = new byte[1024];
@@ -81,7 +86,8 @@ public class HttpPostTest {
             }
         });
 
-        routeHandle.http("/chunk", request -> {
+        routeHandle.route("/chunk", ctx -> {
+            HttpRequest request = ctx.Request;
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             InputStream inputStream = request.getInputStream();
             int b;
@@ -93,7 +99,8 @@ public class HttpPostTest {
             System.out.println(byteArrayOutputStream.toString());
         });
 
-        routeHandle.http("/body", request -> {
+        routeHandle.route("/body", ctx -> {
+            HttpRequest request = ctx.Request;
             System.out.println(request.getParameters());
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             byteArrayOutputStream.write(String.valueOf(request.getContentLength()).getBytes());
@@ -106,7 +113,8 @@ public class HttpPostTest {
             request.getResponse().write(byteArrayOutputStream.toByteArray());
         });
 
-        routeHandle.http("/empty", request -> {
+        routeHandle.route("/empty", ctx -> {
+            HttpRequest request = ctx.Request;
             System.out.println(request.getParameters());
             request.getResponse().setContentLength(0);
         });

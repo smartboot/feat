@@ -34,8 +34,8 @@ public class WeChatDemo extends BaseChat {
 
 
         Router router = new Router();
-        router.http("/", req -> {
-            HttpResponse response = req.getResponse();
+        router.route("/", ctx -> {
+            HttpResponse response = ctx.Response;
             response.setContentType("text/html");
             InputStream inputStream = WeChatDemo.class.getClassLoader().getResourceAsStream("static/project_doc_ai.html");
             byte[] buffer = new byte[1024];
@@ -44,10 +44,10 @@ public class WeChatDemo extends BaseChat {
                 response.write(buffer, 0, length);
             }
         });
-        router.http("/chat", req -> {
-            req.upgrade(new SSEUpgrade() {
+        router.route("/chat", ctx -> {
+            ctx.Request.upgrade(new SSEUpgrade() {
                 public void onOpen(SseEmitter sseEmitter) {
-                    chatModel.chatStream(req.getParameter("content"), new StreamResponseCallback() {
+                    chatModel.chatStream(ctx.getParameter("content"), new StreamResponseCallback() {
 
                         @Override
                         public void onCompletion(ResponseMessage responseMessage) {

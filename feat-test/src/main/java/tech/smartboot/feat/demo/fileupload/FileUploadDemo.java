@@ -9,11 +9,11 @@
 package tech.smartboot.feat.demo.fileupload;
 
 import tech.smartboot.feat.core.common.multipart.Part;
-import tech.smartboot.feat.core.server.HttpHandler;
-import tech.smartboot.feat.core.server.HttpServer;
-import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
+import tech.smartboot.feat.core.server.HttpServer;
+import tech.smartboot.feat.router.Context;
 import tech.smartboot.feat.router.Router;
+import tech.smartboot.feat.router.RouterHandler;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,7 +26,7 @@ public class FileUploadDemo {
     public static void main(String[] args) {
 
         Router routeHandler = new Router();
-        routeHandler.http("/", new HttpHandler() {
+        routeHandler.route("/", new RouterHandler() {
                     byte[] body = ("<html>" +
                             "<head><title>feat demo</title></head>" +
                             "<body>" +
@@ -36,15 +36,15 @@ public class FileUploadDemo {
                             "</body></html>").getBytes();
 
                     @Override
-                    public void handle(HttpRequest request) throws IOException {
-                        HttpResponse response=request.getResponse();
+                    public void handle(Context ctx) throws IOException {
+                        HttpResponse response = ctx.Response;
                         response.setContentLength(body.length);
                         response.getOutputStream().write(body);
                     }
                 })
-                .http("/upload", request -> {
+                .route("/upload", ctx -> {
                     try {
-                        for (Part part : request.getParts()) {
+                        for (Part part : ctx.Request.getParts()) {
                             String name = part.getName();
                             InputStream stream = part.getInputStream();
                             if (part.getSubmittedFileName() == null) {

@@ -13,6 +13,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import tech.smartboot.feat.core.client.HttpClient;
+import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.router.Router;
 
@@ -31,14 +32,16 @@ public class HttpURLTest {
     public void init() {
         httpServer = new HttpServer();
         Router routeHandle = new Router();
-        routeHandle.http("/post_param", request -> {
+        routeHandle.route("/post_param", ctx -> {
+            HttpRequest request = ctx.Request;
             JSONObject jsonObject = new JSONObject();
             for (String key : request.getParameters().keySet()) {
                 jsonObject.put(key, request.getParameter(key));
             }
             request.getResponse().write(jsonObject.toString().getBytes());
         });
-        routeHandle.http("/json", request -> {
+        routeHandle.route("/json", ctx -> {
+            HttpRequest request = ctx.Request;
             System.out.println("--");
             InputStream inputStream = request.getInputStream();
             byte[] bytes = new byte[1024];
@@ -47,7 +50,8 @@ public class HttpURLTest {
                 request.getResponse().getOutputStream().write(bytes, 0, size);
             }
         });
-        routeHandle.http("/header", request -> {
+        routeHandle.route("/header", ctx -> {
+            HttpRequest request = ctx.Request;
             JSONObject jsonObject = new JSONObject();
             for (String header : request.getHeaderNames()) {
                 jsonObject.put(header, request.getHeader(header));
@@ -55,7 +59,8 @@ public class HttpURLTest {
             request.getResponse().write(jsonObject.toJSONString().getBytes());
         });
 
-        routeHandle.http("/other/abc", request -> {
+        routeHandle.route("/other/abc", ctx -> {
+            HttpRequest request = ctx.Request;
             System.out.println("--");
             InputStream inputStream = request.getInputStream();
             byte[] bytes = new byte[1024];

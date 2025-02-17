@@ -10,7 +10,6 @@ package tech.smartboot.feat.demo;
 
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
-import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServer;
@@ -19,7 +18,9 @@ import tech.smartboot.feat.core.server.WebSocketResponse;
 import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 import tech.smartboot.feat.core.server.handler.BasicAuthServerHandler;
 import tech.smartboot.feat.core.server.upgrade.websocket.WebSocketUpgrade;
+import tech.smartboot.feat.router.Context;
 import tech.smartboot.feat.router.Router;
+import tech.smartboot.feat.router.RouterHandler;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,13 +39,13 @@ public class SmartHttpDemo {
         System.setProperty("smartHttp.server.alias", "SANDAO base on ");
 
         Router routeHandle = new Router();
-        routeHandle.http("/basic", new BasicAuthServerHandler("admin", "admin1", new BaseHttpHandler() {
+        routeHandle.route("/basic", new BasicAuthServerHandler("admin", "admin1", new BaseHttpHandler() {
             @Override
             public void handle(HttpRequest request) throws IOException {
                 request.getResponse().write("success".getBytes());
             }
         }));
-        routeHandle.http("/", new HttpHandler() {
+        routeHandle.route("/", new RouterHandler() {
                     byte[] body = ("<html>" +
                             "<head><title>feat demo</title></head>" +
                             "<body>" +
@@ -54,13 +55,16 @@ public class SmartHttpDemo {
                             "</body></html>").getBytes();
 
                     @Override
-                    public void handle(HttpRequest request) throws IOException {
-                        HttpResponse response = request.getResponse();
+                    public void handle(Context ctx) throws IOException {
+                        HttpResponse response = ctx.Response;
                         response.setContentLength(body.length);
                         response.getOutputStream().write(body);
                     }
                 })
-                .http("/get", request -> request.getResponse().write(("收到Get参数text=" + request.getParameter("text")).getBytes())).http("/post", request -> request.getResponse().write(("收到Post参数text=" + request.getParameter("text")).getBytes())).http("/upload", request -> {
+                .route("/get", ctx -> ctx.Response.write(("收到Get参数text=" + ctx.Request.getParameter("text")).getBytes()))
+                .route("/post", ctx -> ctx.Response.write(("收到Post参数text=" + ctx.Request.getParameter("text")).getBytes()))
+                .route("/upload", ctx -> {
+                    HttpRequest request = ctx.Request;
                     InputStream in = request.getInputStream();
                     byte[] buffer = new byte[1024];
                     int len = 0;
@@ -68,7 +72,8 @@ public class SmartHttpDemo {
                         request.getResponse().getOutputStream().write(buffer, 0, len);
                     }
                     in.close();
-                }).http("/post_json", request -> {
+                }).route("/post_json", ctx -> {
+                    HttpRequest request = ctx.Request;
                     InputStream in = request.getInputStream();
                     byte[] buffer = new byte[1024];
                     int len = 0;
@@ -77,31 +82,32 @@ public class SmartHttpDemo {
                         request.getResponse().getOutputStream().write(buffer, 0, len);
                     }
                     in.close();
-                }).http("/plaintext", new HttpHandler() {
+                }).route("/plaintext", new RouterHandler() {
                     byte[] body = "Hello World!".getBytes();
 
                     @Override
-                    public void handle(HttpRequest request) throws IOException {
-                        HttpResponse response = request.getResponse();
+                    public void handle(Context ctx) throws IOException {
+                        HttpResponse response = ctx.Response;
                         response.setContentLength(body.length);
                         response.setContentType("text/plain; charset=UTF-8");
                         response.write(body);
 //                LOGGER.info("hello world");
                     }
-                }).http("/head", request -> {
-                    HttpResponse response = request.getResponse();
+                }).route("/head", ctx -> {
+                    HttpResponse response = ctx.Response;
                     response.addHeader("a", "b");
                     response.addHeader("a", "c");
-                    Collection<String> headNames = request.getHeaderNames();
+                    Collection<String> headNames = ctx.Request.getHeaderNames();
                     for (String headerName : headNames) {
-                        response.write((headerName + ": " + request.getHeaders(headerName) + "</br>").getBytes());
+                        response.write((headerName + ": " + ctx.Request.getHeaders(headerName) + "</br>").getBytes());
                     }
-                }).http("/post_param", request -> {
+                }).route("/post_param", ctx -> {
+                    HttpRequest request = ctx.Request;
                     //curl -X POST -H "Transfer-Encoding: chunked" -H "Content-Type: application/x-www-form-urlencoded" --data "field1=value1&field2=value2" http://localhost:8080/post_param
                     for (String parameter : request.getParameters().keySet()) {
                         request.getResponse().write((parameter + ": " + request.getParameter(parameter) + "</br>").getBytes());
                     }
-                }).http("/ws", request -> request.upgrade(new WebSocketUpgrade() {
+                }).route("/ws", ctx -> ctx.Request.upgrade(new WebSocketUpgrade() {
                     @Override
                     public void onHandShake(WebSocketRequest request, WebSocketResponse webSocketResponse) {
                         System.out.println("收到握手消息");

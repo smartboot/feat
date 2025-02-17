@@ -40,7 +40,7 @@ public class ProjectCoder extends BaseChat {
             opts.model(ModelMeta.GITEE_AI_DeepSeek_R1_Distill_Qwen_32B)
                     .system("你是一名专业的Java程序员，Feat是你设计的一个开源项目。"
 //                            + "参考内容为：\n" + docs
-                            + "\n 实现源码为：\n" + sourceBuilder
+                                    + "\n 实现源码为：\n" + sourceBuilder
                     )
                     .debug(true)
             ;
@@ -48,8 +48,8 @@ public class ProjectCoder extends BaseChat {
 
 
         Router router = new Router();
-        router.http("/", req -> {
-            HttpResponse response = req.getResponse();
+        router.route("/", ctx -> {
+            HttpResponse response = ctx.Response;
             response.setContentType("text/html");
             InputStream inputStream = ProjectCoder.class.getClassLoader().getResourceAsStream("static/project_doc_ai.html");
             byte[] buffer = new byte[1024];
@@ -58,10 +58,10 @@ public class ProjectCoder extends BaseChat {
                 response.write(buffer, 0, length);
             }
         });
-        router.http("/chat", req -> {
-            req.upgrade(new SSEUpgrade() {
+        router.route("/chat", ctx -> {
+            ctx.Request.upgrade(new SSEUpgrade() {
                 public void onOpen(SseEmitter sseEmitter) {
-                    chatModel.chatStream(req.getParameter("content"), new StreamResponseCallback() {
+                    chatModel.chatStream(ctx.Request.getParameter("content"), new StreamResponseCallback() {
 
                         @Override
                         public void onCompletion(ResponseMessage responseMessage) {

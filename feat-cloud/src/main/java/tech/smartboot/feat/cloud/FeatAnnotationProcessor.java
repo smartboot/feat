@@ -258,7 +258,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                         throw new FeatException("the value of RequestMapping on " + element.getSimpleName() + "@" + se.getSimpleName() + " is not allowed to be empty.");
                     }
                     writer.write("    System.out.println(\" \\u001B[32m|->\\u001B[0m " + requestURL + " ==> " + element.getSimpleName() + "@" + se.getSimpleName() + "\");\n");
-                    writer.write("    router.http(\"" + requestURL + "\", req->{\n");
+                    writer.write("    router.route(\"" + requestURL + "\", ctx->{\n");
 
                     boolean first = true;
                     StringBuilder newParams = new StringBuilder();
@@ -271,12 +271,12 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                             params.append(",");
                         }
                         if (param.asType().toString().equals(HttpRequest.class.getName())) {
-                            params.append("req");
+                            params.append("ctx.Request");
                         } else if (param.asType().toString().equals(HttpResponse.class.getName())) {
-                            params.append("req.getResponse()");
+                            params.append("ctx.Response");
                         } else {
                             if (i == 0) {
-                                newParams.append("JSONObject jsonObject=getParams(req);\n");
+                                newParams.append("JSONObject jsonObject=getParams(ctx.Request);\n");
                             }
                             Param paramAnnotation = param.getAnnotation(Param.class);
                             if (paramAnnotation == null && param.asType().toString().startsWith("java")) {
@@ -323,7 +323,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                             writer.write("      byte[] bytes = bean." + se.getSimpleName() + "(");
                             break;
                         case RETURN_TYPE_OBJECT:
-                            writer.write("req.getResponse().setContentType(\"application/json\");");
+                            writer.write("ctx.Response.setContentType(\"application/json\");");
                             writer.write("      " + returnType + " rst = bean." + se.getSimpleName() + "(");
                             break;
                         default:
@@ -338,29 +338,29 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                             break;
                         case RETURN_TYPE_STRING:
                             writer.write("        byte[] bytes=rst.getBytes(\"UTF-8\");\n ");
-                            writer.write("        req.getResponse().setContentLength(bytes.length);\n");
-                            writer.write("        req.getResponse().write(bytes);\n");
+                            writer.write("        ctx.Response.setContentLength(bytes.length);\n");
+                            writer.write("        ctx.Response.write(bytes);\n");
                             break;
                         case RETURN_TYPE_BYTE_ARRAY:
-                            writer.write("        req.getResponse().setContentLength(bytes.length);\n");
-                            writer.write("        req.getResponse().write(bytes);\n");
+                            writer.write("        ctx.Response.setContentLength(bytes.length);\n");
+                            writer.write("        ctx.Response.write(bytes);\n");
                             break;
                         case RETURN_TYPE_OBJECT:
                             writer.write("java.io.ByteArrayOutputStream os=new java.io.ByteArrayOutputStream();");
                             writeJsonObject(writer, returnType, "rst", 0, new HashMap<>());
                             writer.write("        byte[] bytes=os.toByteArray();\n ");
-                            writer.write("        req.getResponse().setContentLength(bytes.length);\n");
-                            writer.write("        req.getResponse().write(bytes);\n");
+                            writer.write("        ctx.Response.setContentLength(bytes.length);\n");
+                            writer.write("        ctx.Response.write(bytes);\n");
 //                            System.out.println("typeMirror:" + stringBuilder);
 //                            writer.write("        byte[] bytes=JSON.toJSONBytes(rst);\n ");
-//                            writer.write("        req.getResponse().setContentLength(bytes.length);\n");
-//                            writer.write("        req.getResponse().write(bytes);\n");
+//                            writer.write("        ctx.Response.setContentLength(bytes.length);\n");
+//                            writer.write("        ctx.Response.write(bytes);\n");
                             break;
 //                        case RETURN_TYPE_OBJECT:
 //                            writeJsonObject(writer,returnType);
 //                            writer.write("        byte[] bytes=JSON.toJSONBytes(rst);\n ");
-//                            writer.write("        req.getResponse().setContentLength(bytes.length);\n");
-//                            writer.write("        req.getResponse().write(bytes);\n");
+//                            writer.write("        ctx.Response.setContentLength(bytes.length);\n");
+//                            writer.write("        ctx.Response.write(bytes);\n");
 //                            break;
                         default:
                             throw new RuntimeException("不支持的返回类型");
@@ -576,7 +576,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
 //                        if (param.asType().toString().equals(HttpRequest.class.getName())) {
 //                            params.append("req");
 //                        } else if (param.asType().toString().equals(HttpResponse.class.getName())) {
-//                            params.append("req.getResponse()");
+//                            params.append("ctx.Response");
 //                        } else {
 //                            if (i == 0) {
 //                                newParams.append("JSONObject jsonObject=getParams(req);\n");

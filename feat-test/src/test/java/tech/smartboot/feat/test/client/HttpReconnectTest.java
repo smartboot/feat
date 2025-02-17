@@ -15,6 +15,7 @@ import org.junit.Test;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.HeaderValue;
+import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.router.Router;
@@ -36,8 +37,9 @@ public class HttpReconnectTest {
         httpServer = new HttpServer();
         Router routeHandler = new Router();
 
-        routeHandler.http("/post", request -> {
-            HttpResponse response=request.getResponse();
+        routeHandler.route("/post", ctx -> {
+            HttpRequest request = ctx.Request;
+            HttpResponse response=ctx.Response;
             response.setHeader(HeaderNameEnum.CONNECTION.getName(), HeaderValue.Connection.keepalive);
             JSONObject jsonObject = new JSONObject();
             for (String key : request.getParameters().keySet()) {

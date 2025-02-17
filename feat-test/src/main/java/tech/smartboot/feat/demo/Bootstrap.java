@@ -18,8 +18,8 @@ public class Bootstrap {
 
     public static void main(String[] args) {
         Router routeHandle = new Router();
-        routeHandle.http("/plaintext", request -> {
-            HttpResponse response=request.getResponse();
+        routeHandle.route("/plaintext", ctx -> {
+            HttpResponse response=ctx.Response;
             response.setContentLength(body.length);
             response.setContentType("text/plain; charset=UTF-8");
             response.write(body);

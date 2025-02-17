@@ -6,22 +6,14 @@ import tech.smartboot.feat.core.server.HttpResponse;
 import java.util.Map;
 
 public class Context {
-    private final HttpRequest request;
-    private final HttpResponse response;
+    public final HttpRequest Request;
+    public final HttpResponse Response;
     private final Map<String, String> pathParams;
 
     public Context(HttpRequest request, Map<String, String> pathParams) {
-        this.request = request;
-        this.response = request.getResponse();
+        this.Request = request;
+        this.Response = request.getResponse();
         this.pathParams = pathParams;
-    }
-
-    public HttpRequest getRequest() {
-        return request;
-    }
-
-    public HttpResponse getResponse() {
-        return response;
     }
 
     public Map<String, String> getPathParams() {
@@ -30,5 +22,9 @@ public class Context {
 
     public String getPathParam(String key) {
         return pathParams.get(key);
+    }
+
+    public String getParameter(String name) {
+        return Request.getParameter(name);
     }
 }

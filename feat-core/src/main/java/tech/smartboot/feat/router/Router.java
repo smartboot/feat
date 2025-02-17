@@ -12,7 +12,6 @@ import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
-import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 import tech.smartboot.feat.core.server.impl.HttpEndpoint;
@@ -79,26 +78,17 @@ public final class Router extends BaseHttpHandler {
      * @param httpHandler 处理handler
      * @return
      */
-    public Router http(String urlPattern, BaseHttpHandler httpHandler) {
+    public Router route(String urlPattern, BaseHttpHandler httpHandler) {
         rootPath.add(urlPattern, httpHandler);
         return this;
     }
 
     public Router route(String urlPattern, RouterHandler httpHandler) {
         RouterHandlerImpl routerHandler = new RouterHandlerImpl(urlPattern, httpHandler);
-        return http(urlPattern, new BaseHttpHandler() {
+        return route(urlPattern, new BaseHttpHandler() {
             @Override
             public void handle(HttpRequest request) throws Throwable {
                 routerHandler.handle(request);
-            }
-        });
-    }
-
-    public Router http(String urlPattern, HttpHandler httpHandler) {
-        return http(urlPattern, new BaseHttpHandler() {
-            @Override
-            public void handle(HttpRequest request) throws Throwable {
-                httpHandler.handle(request);
             }
         });
     }

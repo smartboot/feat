@@ -23,7 +23,7 @@ public class HttpRouteDemo {
         Router routeHandle = new Router();
 
         //2. 指定路由规则以及请求的处理实现
-        routeHandle.http("/", request -> request.getResponse().write("feat".getBytes()))
+        routeHandle.route("/", ctx -> ctx.Response.write("feat".getBytes()))
 //                .route("/h2", new BaseHttpHandler() {
 //                    @Override
 //                    public void handle(HttpRequest request) throws IOException {
@@ -61,8 +61,8 @@ public class HttpRouteDemo {
 //                        request.getResponse().write(("test1").getBytes());
 //                    }
 //                })
-                .http("/b/c/test1", request -> request.getResponse().write(("/b/c/test1").getBytes()))
-                .http("/b/c/test2", request -> request.getResponse().write(("/b/c/test2").getBytes()));
+                .route("/b/c/test1", ctx -> ctx.Response.write(("/b/c/test1").getBytes()))
+                .route("/b/c/test2", ctx -> ctx.Response.write(("/b/c/test2").getBytes()));
 
 
         // 3. 启动服务

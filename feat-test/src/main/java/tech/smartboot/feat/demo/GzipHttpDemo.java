@@ -8,8 +8,8 @@
 
 package tech.smartboot.feat.demo;
 
-import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.HeaderValue;
+import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.router.Router;
@@ -25,18 +25,18 @@ public class GzipHttpDemo {
     public static void main(String[] args) {
         String text = "Hello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello WorldHello World";
         Router routeHandle = new Router();
-        routeHandle.http("/a", request -> {
-            HttpResponse response=request.getResponse();
+        routeHandle.route("/a", ctx -> {
+            HttpResponse response = ctx.Response;
             byte[] data = text.getBytes();
             response.setContentLength(data.length);
 //                response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValue.GZIP.getName());
             response.write(data);
-        }).http("/b", request -> {
-            HttpResponse response=request.getResponse();
+        }).route("/b", ctx -> {
+            HttpResponse response = ctx.Response;
             response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValue.ContentEncoding.GZIP);
             response.write(text.getBytes());
-        }).http("/c", request -> {
-            HttpResponse response=request.getResponse();
+        }).route("/c", ctx -> {
+            HttpResponse response = ctx.Response;
             response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValue.ContentEncoding.GZIP);
             GZIPOutputStream gzipOutputStream = new GZIPOutputStream(response.getOutputStream());
             gzipOutputStream.write(("<html><body>hello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello " +
@@ -44,8 +44,8 @@ public class GzipHttpDemo {
             gzipOutputStream.write("hello world111".getBytes());
             gzipOutputStream.write("</body></html>".getBytes());
             gzipOutputStream.close();
-        }).http("/d", request -> {
-            HttpResponse response=request.getResponse();
+        }).route("/d", ctx -> {
+            HttpResponse response = ctx.Response;
             String content = "Hello world";
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             GZIPOutputStream gzipOutputStream = new GZIPOutputStream(outputStream);

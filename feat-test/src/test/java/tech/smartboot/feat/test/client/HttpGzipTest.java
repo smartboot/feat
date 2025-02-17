@@ -37,9 +37,9 @@ public class HttpGzipTest {
     public void init() {
         httpServer = new HttpServer();
         Router routeHandle = new Router();
-        routeHandle.http("/test", request -> {
-            HttpResponse response=request.getResponse();
-            int count = NumberUtils.toInt(request.getParameter("count"), 1);
+        routeHandle.route("/test", ctx -> {
+            HttpResponse response=ctx.Response;
+            int count = NumberUtils.toInt(ctx.Request.getParameter("count"), 1);
             response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValue.ContentEncoding.GZIP);
             GZIPOutputStream outputStream = new GZIPOutputStream(response.getOutputStream());
             while (count-- > 0) {
@@ -48,8 +48,8 @@ public class HttpGzipTest {
             outputStream.close();
         });
 
-        routeHandle.http("/html", request -> {
-            HttpResponse response=request.getResponse();
+        routeHandle.route("/html", ctx -> {
+            HttpResponse response=ctx.Response;
             response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValue.ContentEncoding.GZIP);
             GZIPOutputStream outputStream = new GZIPOutputStream(response.getOutputStream());
             outputStream.write("<html>".getBytes());

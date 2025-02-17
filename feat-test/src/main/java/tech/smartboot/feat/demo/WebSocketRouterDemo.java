@@ -21,22 +21,22 @@ import tech.smartboot.feat.router.Router;
 public class WebSocketRouterDemo {
     public static void main(String[] args) {
         Router router = new Router();
-        router.http("/ws1", request -> {
-            request.upgrade(new WebSocketUpgrade() {
+        router.route("/ws1", ctx -> {
+            ctx.Request.upgrade(new WebSocketUpgrade() {
                 @Override
                 public void handleTextMessage(WebSocketRequest request, WebSocketResponse response, String message) {
                     response.sendTextMessage("ws1接受到客户端消息：" + message);
                 }
             });
-        }).http("/ws2", request -> {
-            request.upgrade(new WebSocketUpgrade() {
+        }).route("/ws2", ctx -> {
+            ctx.Request.upgrade(new WebSocketUpgrade() {
                 @Override
                 public void handleTextMessage(WebSocketRequest request, WebSocketResponse response, String message) {
                     response.sendTextMessage("ws2接受到客户端消息：" + message);
                 }
             });
-        }).http("/http", request -> {
-            request.getResponse().write("http".getBytes());
+        }).route("/http", ctx -> {
+            ctx.Request.getResponse().write("http".getBytes());
         });
         Feat.httpServer().httpHandler(router).listen();
     }

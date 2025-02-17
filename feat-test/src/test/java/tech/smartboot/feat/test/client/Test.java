@@ -3,6 +3,7 @@ package tech.smartboot.feat.test.client;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.HeaderValue;
+import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.router.Router;
@@ -21,7 +22,8 @@ public class Test {
         HttpServer bootstrap = new HttpServer();
         Router route = new Router();
         byte[] body = new byte[4096];
-        route.http("/other/**", request -> {
+        route.route("/other/**", ctx -> {
+            HttpRequest request=ctx.Request;
             HttpResponse response=request.getResponse();
             System.out.println("=====");
             System.out.println(request.getMethod());
