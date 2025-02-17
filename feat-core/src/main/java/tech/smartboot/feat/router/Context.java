@@ -16,15 +16,7 @@ public class Context {
         this.pathParams = pathParams;
     }
 
-    public Map<String, String> getPathParams() {
-        return pathParams;
-    }
-
-    public String getPathParam(String key) {
+    public String pathParam(String key) {
         return pathParams.get(key);
-    }
-
-    public String getParameter(String name) {
-        return Request.getParameter(name);
     }
 }

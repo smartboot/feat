@@ -47,7 +47,7 @@ public class WeChatDemo extends BaseChat {
         router.route("/chat", ctx -> {
             ctx.Request.upgrade(new SSEUpgrade() {
                 public void onOpen(SseEmitter sseEmitter) {
-                    chatModel.chatStream(ctx.getParameter("content"), new StreamResponseCallback() {
+                    chatModel.chatStream(ctx.Request.getParameter("content"), new StreamResponseCallback() {
 
                         @Override
                         public void onCompletion(ResponseMessage responseMessage) {

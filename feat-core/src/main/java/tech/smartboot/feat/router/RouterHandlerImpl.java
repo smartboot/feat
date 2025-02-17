@@ -1,7 +1,7 @@
 package tech.smartboot.feat.router;
 
-import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpRequest;
+import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class RouterHandlerImpl implements HttpHandler {
+class RouterHandlerImpl extends BaseHttpHandler {
     private List<PathIndex> pathIndexes;
     private final RouterHandler routerHandler;
 
@@ -27,7 +27,6 @@ public class RouterHandlerImpl implements HttpHandler {
         }
     }
 
-    @Override
     public final void handle(HttpRequest request) throws Throwable {
         Map<String, String> pathParams;
         if (pathIndexes.isEmpty()) {
