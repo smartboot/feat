@@ -2,8 +2,8 @@ package tech.smartboot.feat.ai.audio;
 
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.core.client.HttpPost;
+import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpRequest;
-import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 
 import java.io.FileNotFoundException;
 import java.util.HashMap;
@@ -12,7 +12,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class AudioModel {
     public static void main(String[] args) throws FileNotFoundException {
-        Feat.httpServer().httpHandler(new BaseHttpHandler() {
+        Feat.httpServer().httpHandler(new HttpHandler() {
             @Override
             public void handle(HttpRequest request, CompletableFuture<Object> completableFuture) throws Throwable {
                 Map<String, String> params = new HashMap<>();
@@ -33,6 +33,11 @@ public class AudioModel {
                     }
                 });
                 post.onFailure(throwable -> throwable.printStackTrace()).submit();
+            }
+
+            @Override
+            public void handle(HttpRequest request) throws Throwable {
+
             }
         }).listen();
     }

@@ -15,20 +15,16 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpPost;
-import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpMethod;
-import tech.smartboot.feat.core.server.HttpHandler;
-import tech.smartboot.feat.core.server.HttpServer;
-import tech.smartboot.feat.core.server.HttpRequest;
+import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.server.HttpResponse;
-import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
+import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.test.BastTest;
-import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
 
-import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -55,7 +51,7 @@ public class HttpServer3Test extends BastTest {
     public void init() {
         bootstrap = new HttpServer();
         bootstrap.httpHandler(request -> {
-            HttpResponse response=request.getResponse();
+            HttpResponse response = request.getResponse();
             //随机启用GZIP
             OutputStream outputStream;
             if (System.currentTimeMillis() % 2 == 0) {
@@ -105,18 +101,19 @@ public class HttpServer3Test extends BastTest {
 
         HttpClient httpClient = getHttpClient();
         HttpPost httpPost = httpClient.post(requestUnit.getUri());
-        requestUnit.getHeaders().forEach((name, value) -> httpPost.header(h->h.add(name, value)));
+        requestUnit.getHeaders().forEach((name, value) -> httpPost.header(h -> h.add(name, value)));
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("author").append("=").append("三刀");
         for (int i = 0; i < 10000; i++) {
             stringBuilder.append("&").append("author").append(i).append("=").append("三刀").append(i);
         }
-        httpPost.header(h->h.add("longText", stringBuilder.toString()));
+        httpPost.header(h -> h.add("longText", stringBuilder.toString()));
         httpPost.body().formUrlencoded(requestUnit.getParameters());
 
         JSONObject jsonObject = basicCheck(httpPost.submit().get(), requestUnit);
         Assert.assertEquals(HttpMethod.POST, jsonObject.get(KEY_METHOD));
     }
+
     @After
     public void destroy() {
         bootstrap.shutdown();

@@ -23,9 +23,9 @@ import tech.smartboot.feat.core.common.utils.Constant;
 import tech.smartboot.feat.core.common.utils.HttpUtils;
 import tech.smartboot.feat.core.common.utils.NumberUtils;
 import tech.smartboot.feat.core.common.utils.StringUtils;
+import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.ServerOptions;
-import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 
 import javax.net.ssl.SSLEngine;
 import java.io.ByteArrayOutputStream;
@@ -99,7 +99,7 @@ public abstract class Endpoint implements Reset {
 //     */
 //    private Attachment attachment;
 
-    private BaseHttpHandler serverHandler;
+    private HttpHandler serverHandler;
     /**
      * 最近一次IO时间
      */
@@ -218,11 +218,11 @@ public abstract class Endpoint implements Reset {
     }
 
 
-    public BaseHttpHandler getServerHandler() {
+    public HttpHandler getServerHandler() {
         return serverHandler;
     }
 
-    public void setServerHandler(BaseHttpHandler serverHandler) {
+    public void setServerHandler(HttpHandler serverHandler) {
         this.serverHandler = serverHandler;
     }
 

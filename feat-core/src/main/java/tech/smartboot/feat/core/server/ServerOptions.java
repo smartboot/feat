@@ -15,7 +15,6 @@ import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.utils.ByteTree;
 import tech.smartboot.feat.core.common.utils.StringUtils;
-import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 import tech.smartboot.feat.core.server.impl.HttpEndpoint;
 import tech.smartboot.feat.core.server.waf.WafOptions;
 
@@ -37,7 +36,7 @@ public class ServerOptions {
     /**
      * URI缓存
      */
-    private final ByteTree<BaseHttpHandler> uriByteTree = new ByteTree<>(16 * 1024);
+    private final ByteTree<HttpHandler> uriByteTree = new ByteTree<>(16 * 1024);
 
     private final ByteTree<HeaderNameEnum> headerNameByteTree = new ByteTree<>(16 * 1024);
 
@@ -180,7 +179,7 @@ public class ServerOptions {
         return this;
     }
 
-    public ByteTree<BaseHttpHandler> getUriByteTree() {
+    public ByteTree<HttpHandler> getUriByteTree() {
         return uriByteTree;
     }
 

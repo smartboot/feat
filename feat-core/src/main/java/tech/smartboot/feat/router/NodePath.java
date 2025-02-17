@@ -1,6 +1,6 @@
 package tech.smartboot.feat.router;
 
-import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
+import tech.smartboot.feat.core.server.HttpHandler;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,7 +24,7 @@ final class NodePath {
 
     //后缀匹配
     private final Map<String, NodePath> patternPaths;
-    private final BaseHttpHandler handler;
+    private final HttpHandler handler;
 
     public NodePath(String path) {
         this(path, TYPE_EXACT_PATH_NODE, 0);
@@ -40,7 +40,7 @@ final class NodePath {
         patternPaths = new HashMap<>();
     }
 
-    public NodePath(String path, int type, BaseHttpHandler handler, int depth) {
+    public NodePath(String path, int type, HttpHandler handler, int depth) {
         this.handler = handler;
         this.path = path;
         this.type = type;
@@ -57,11 +57,11 @@ final class NodePath {
         return type;
     }
 
-    public void add(String subPath, BaseHttpHandler handler) {
+    public void add(String subPath, HttpHandler handler) {
         add(subPath, 0, handler);
     }
 
-    public BaseHttpHandler match(String uri) {
+    public HttpHandler match(String uri) {
         NodePath nodePath = match(uri, 0);
         return nodePath == null ? null : nodePath.handler;
     }
@@ -115,7 +115,7 @@ final class NodePath {
         return path;
     }
 
-    public void add(final String subPath, int offset, BaseHttpHandler handler) {
+    public void add(final String subPath, int offset, HttpHandler handler) {
         int nextIndex;
         //尾部匹配
         if (subPath.charAt(offset) != '/') {

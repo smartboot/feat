@@ -18,18 +18,15 @@ import org.slf4j.LoggerFactory;
 import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpGet;
-import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpMethod;
+import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
-import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServer;
-import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 import tech.smartboot.feat.test.BastTest;
 import tech.smartboot.feat.test.server.RequestUnit;
 
-import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -55,35 +52,32 @@ public class HttpServerTest extends BastTest {
     @Before
     public void init() {
         bootstrap = new HttpServer();
-        bootstrap.httpHandler(new BaseHttpHandler() {
-            @Override
-            public void handle(HttpRequest request) throws IOException {
-                HttpResponse response=request.getResponse();
-                //随机启用GZIP
-                OutputStream outputStream;
-                if (System.currentTimeMillis() % 2 == 0) {
-                    response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValue.ContentEncoding.GZIP);
-                    outputStream = new GZIPOutputStream(response.getOutputStream());
-                } else {
-                    outputStream = response.getOutputStream();
-                }
-
-                JSONObject jsonObject = new JSONObject();
-                jsonObject.put(KEY_METHOD, request.getMethod());
-                jsonObject.put(KEY_URI, request.getRequestURI());
-                jsonObject.put(KEY_URL, request.getRequestURL());
-
-                Map<String, String> parameterMap = new HashMap<>();
-                request.getParameters().keySet().forEach(parameter -> parameterMap.put(parameter, request.getParameter(parameter)));
-                jsonObject.put(KEY_PARAMETERS, parameterMap);
-
-                Map<String, String> headerMap = new HashMap<>();
-                request.getHeaderNames().forEach(headerName -> headerMap.put(headerName, request.getHeader(headerName)));
-                jsonObject.put(KEY_HEADERS, headerMap);
-
-                outputStream.write(jsonObject.toJSONString().getBytes(StandardCharsets.UTF_8));
-                outputStream.close();
+        bootstrap.httpHandler(request -> {
+            HttpResponse response = request.getResponse();
+            //随机启用GZIP
+            OutputStream outputStream;
+            if (System.currentTimeMillis() % 2 == 0) {
+                response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValue.ContentEncoding.GZIP);
+                outputStream = new GZIPOutputStream(response.getOutputStream());
+            } else {
+                outputStream = response.getOutputStream();
             }
+
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put(KEY_METHOD, request.getMethod());
+            jsonObject.put(KEY_URI, request.getRequestURI());
+            jsonObject.put(KEY_URL, request.getRequestURL());
+
+            Map<String, String> parameterMap = new HashMap<>();
+            request.getParameters().keySet().forEach(parameter -> parameterMap.put(parameter, request.getParameter(parameter)));
+            jsonObject.put(KEY_PARAMETERS, parameterMap);
+
+            Map<String, String> headerMap = new HashMap<>();
+            request.getHeaderNames().forEach(headerName -> headerMap.put(headerName, request.getHeader(headerName)));
+            jsonObject.put(KEY_HEADERS, headerMap);
+
+            outputStream.write(jsonObject.toJSONString().getBytes(StandardCharsets.UTF_8));
+            outputStream.close();
         });
         bootstrap.options().addPlugin(new StreamMonitorPlugin<>(StreamMonitorPlugin.BLUE_TEXT_INPUT_STREAM, StreamMonitorPlugin.RED_TEXT_OUTPUT_STREAM));
         bootstrap.listen(SERVER_PORT);
@@ -111,7 +105,7 @@ public class HttpServerTest extends BastTest {
         StringBuilder uriStr = new StringBuilder(requestUnit.getUri()).append("?");
         requestUnit.getParameters().forEach((key, value) -> uriStr.append(key).append('=').append(value).append('&'));
         HttpGet httpGet = httpClient.get(uriStr.toString());
-        requestUnit.getHeaders().forEach((name, value) -> httpGet.header(h->h.add(name, value)));
+        requestUnit.getHeaders().forEach((name, value) -> httpGet.header(h -> h.add(name, value)));
 
         Assert.assertEquals(HttpStatus.METHOD_NOT_ALLOWED.value(), httpGet.submit().get().statusCode());
     }
@@ -124,7 +118,7 @@ public class HttpServerTest extends BastTest {
         StringBuilder uriStr = new StringBuilder(requestUnit.getUri()).append("?");
         requestUnit.getParameters().forEach((key, value) -> uriStr.append(key).append('=').append(value).append('&'));
         HttpGet httpGet = httpClient.get(uriStr.toString());
-        requestUnit.getHeaders().forEach((name, value) -> httpGet.header(h->h.add(name, value)));
+        requestUnit.getHeaders().forEach((name, value) -> httpGet.header(h -> h.add(name, value)));
         JSONObject jsonObject = basicCheck(httpGet.submit().get(), requestUnit);
         Assert.assertEquals(HttpMethod.GET, jsonObject.get(KEY_METHOD));
     }
@@ -135,20 +129,20 @@ public class HttpServerTest extends BastTest {
         StringBuilder uriStr = new StringBuilder(requestUnit.getUri()).append("?");
         requestUnit.getParameters().forEach((key, value) -> uriStr.append(key).append('=').append(value).append('&'));
         HttpGet httpGet = httpClient.get(uriStr.toString());
-        requestUnit.getHeaders().forEach((name, value) -> httpGet.header(h->h.add(name, value)));
+        requestUnit.getHeaders().forEach((name, value) -> httpGet.header(h -> h.add(name, value)));
         JSONObject jsonObject = basicCheck(httpGet.submit().get(), requestUnit);
         Assert.assertEquals(HttpMethod.GET, jsonObject.get(KEY_METHOD));
 
         bootstrap.options().getWafOptions()
                 .addAllowUriPrefix("/aa");
         HttpGet httpGet1 = httpClient.get(uriStr.toString());
-        requestUnit.getHeaders().forEach((name, value) -> httpGet1.header(h->h.add(name, value)));
+        requestUnit.getHeaders().forEach((name, value) -> httpGet1.header(h -> h.add(name, value)));
         Assert.assertEquals(HttpStatus.BAD_REQUEST.value(), httpGet1.submit().get().statusCode());
 
         bootstrap.options().getWafOptions()
                 .getAllowUriPrefixes().add("/hello");
         HttpGet httpGet2 = httpClient.get(uriStr.toString());
-        requestUnit.getHeaders().forEach((name, value) -> httpGet2.header(h->h.add(name, value)));
+        requestUnit.getHeaders().forEach((name, value) -> httpGet2.header(h -> h.add(name, value)));
         jsonObject = basicCheck(httpGet2.submit().get(), requestUnit);
         Assert.assertEquals(HttpMethod.GET, jsonObject.get(KEY_METHOD));
 
@@ -156,13 +150,13 @@ public class HttpServerTest extends BastTest {
                 .getAllowUriPrefixes().clear();
         bootstrap.options().getWafOptions().getAllowUriSuffixes().add("/aa");
         HttpGet httpGet3 = httpClient.get(uriStr.toString());
-        requestUnit.getHeaders().forEach((name, value) -> httpGet3.header(h->h.add(name, value)));
+        requestUnit.getHeaders().forEach((name, value) -> httpGet3.header(h -> h.add(name, value)));
         Assert.assertEquals(HttpStatus.BAD_REQUEST.value(), httpGet3.submit().get().statusCode());
 
         bootstrap.options().getWafOptions()
                 .getAllowUriSuffixes().add("llo");
         HttpGet httpGet4 = httpClient.get(uriStr.toString());
-        requestUnit.getHeaders().forEach((name, value) -> httpGet4.header(h->h.add(name, value)));
+        requestUnit.getHeaders().forEach((name, value) -> httpGet4.header(h -> h.add(name, value)));
         jsonObject = basicCheck(httpGet4.submit().get(), requestUnit);
         Assert.assertEquals(HttpMethod.GET, jsonObject.get(KEY_METHOD));
     }

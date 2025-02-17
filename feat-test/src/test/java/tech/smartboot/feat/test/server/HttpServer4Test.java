@@ -15,20 +15,16 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpPost;
-import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.HeaderValue;
+import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
-import tech.smartboot.feat.core.server.HttpHandler;
-import tech.smartboot.feat.core.server.HttpServer;
-import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
-import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
+import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.test.BastTest;
-import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
 
-import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -55,7 +51,7 @@ public class HttpServer4Test extends BastTest {
     public void init() {
         bootstrap = new HttpServer();
         bootstrap.httpHandler(request -> {
-            HttpResponse response=request.getResponse();
+            HttpResponse response = request.getResponse();
             //随机启用GZIP
             OutputStream outputStream;
             if (System.currentTimeMillis() % 2 == 0) {

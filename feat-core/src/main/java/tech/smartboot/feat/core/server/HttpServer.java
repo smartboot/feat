@@ -15,7 +15,6 @@ import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpMethod;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
-import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 import tech.smartboot.feat.core.server.impl.HttpMessageProcessor;
 import tech.smartboot.feat.core.server.impl.HttpRequestProtocol;
 
@@ -47,16 +46,7 @@ public class HttpServer {
     }
 
     public HttpServer httpHandler(HttpHandler handler) {
-        if (handler instanceof BaseHttpHandler) {
-            processor.httpServerHandler((BaseHttpHandler) handler);
-        } else {
-            processor.httpServerHandler(new BaseHttpHandler() {
-                @Override
-                public void handle(HttpRequest request) throws Throwable {
-                    handler.handle(request);
-                }
-            });
-        }
+        processor.httpServerHandler(handler);
         return this;
     }
 

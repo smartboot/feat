@@ -20,13 +20,10 @@ import tech.smartboot.feat.core.common.HttpMethod;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
-import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServer;
-import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 import tech.smartboot.feat.test.BastTest;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
@@ -125,18 +122,15 @@ public class HttpServer2Test extends BastTest {
         param.put("p]", "p");
         param.put("p<]>", "p");
 
-        bootstrap.httpHandler(new BaseHttpHandler() {
-            @Override
-            public void handle(HttpRequest request) throws IOException {
-                HttpResponse response = request.getResponse();
-                for (String key : request.getParameters().keySet()) {
-                    if (!Objects.equals(param.get(key), request.getParameter(key))) {
-                        response.write("fail");
-                        return;
-                    }
+        bootstrap.httpHandler(request -> {
+            HttpResponse response = request.getResponse();
+            for (String key : request.getParameters().keySet()) {
+                if (!Objects.equals(param.get(key), request.getParameter(key))) {
+                    response.write("fail");
+                    return;
                 }
-                response.write("ok");
             }
+            response.write("ok");
         });
 
         tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.post("/").header(h -> h.keepalive(true)).body().formUrlencoded(param).submit().get();

@@ -6,13 +6,11 @@
  * Author: sandao (zhengjunweimail@163.com)
  ******************************************************************************/
 
-package tech.smartboot.feat.core.server.handler;
+package tech.smartboot.feat.router;
 
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
 import tech.smartboot.feat.core.common.utils.StringUtils;
-import tech.smartboot.feat.core.server.HttpHandler;
-import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.impl.HttpEndpoint;
 
@@ -23,11 +21,11 @@ import java.util.Base64;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2021/2/23
  */
-public final class BasicAuthServerHandler implements HttpHandler {
-    private final HttpHandler httpServerHandler;
+public final class BasicAuthRouterHandler implements RouterHandler {
+    private final RouterHandler httpServerHandler;
     private final String basic;
 
-    public BasicAuthServerHandler(String username, String password, HttpHandler httpServerHandler) {
+    public BasicAuthRouterHandler(String username, String password, RouterHandler httpServerHandler) {
         this.httpServerHandler = httpServerHandler;
         basic = "Basic " + Base64.getEncoder().encodeToString((username + ":" + password).getBytes());
     }
@@ -51,8 +49,7 @@ public final class BasicAuthServerHandler implements HttpHandler {
     }
 
     @Override
-    public void handle(HttpRequest request) throws Throwable {
+    public void handle(Context request) throws Throwable {
         httpServerHandler.handle(request);
     }
-
 }

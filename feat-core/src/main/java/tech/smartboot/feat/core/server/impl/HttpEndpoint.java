@@ -24,9 +24,9 @@ import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.multipart.MultipartConfig;
 import tech.smartboot.feat.core.common.multipart.Part;
+import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.ServerOptions;
-import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -46,7 +46,7 @@ public final class HttpEndpoint extends Endpoint implements HttpRequest, Reset {
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpEndpoint.class);
 
     private final DecoderUnit decodeState = new DecoderUnit();
-    private BaseHttpHandler serverHandler;
+    private HttpHandler serverHandler;
     /**
      * 释放维持长连接
      */
@@ -146,11 +146,11 @@ public final class HttpEndpoint extends Endpoint implements HttpRequest, Reset {
         }
     }
 
-    public BaseHttpHandler getServerHandler() {
+    public HttpHandler getServerHandler() {
         return serverHandler;
     }
 
-    public void setServerHandler(BaseHttpHandler serverHandler) {
+    public void setServerHandler(HttpHandler serverHandler) {
         this.serverHandler = serverHandler;
     }
 

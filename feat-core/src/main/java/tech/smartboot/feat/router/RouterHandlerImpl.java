@@ -1,15 +1,17 @@
 package tech.smartboot.feat.router;
 
+import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpRequest;
-import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
+import tech.smartboot.feat.core.server.impl.HttpEndpoint;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-class RouterHandlerImpl extends BaseHttpHandler {
+class RouterHandlerImpl implements HttpHandler {
     private List<PathIndex> pathIndexes;
     private final RouterHandler routerHandler;
 
@@ -25,6 +27,11 @@ class RouterHandlerImpl extends BaseHttpHandler {
         if (pathIndexes.isEmpty()) {
             pathIndexes = Collections.emptyList();
         }
+    }
+
+    @Override
+    public void onHeaderComplete(HttpEndpoint request) throws IOException {
+        routerHandler.onHeaderComplete(request);
     }
 
     public final void handle(HttpRequest request) throws Throwable {
@@ -49,6 +56,10 @@ class RouterHandlerImpl extends BaseHttpHandler {
         routerHandler.handle(context);
     }
 
+    @Override
+    public void onClose(HttpEndpoint request) {
+        routerHandler.onClose(request);
+    }
 
     static class PathIndex {
         private final String path;

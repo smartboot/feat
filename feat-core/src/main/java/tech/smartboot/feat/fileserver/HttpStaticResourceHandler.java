@@ -19,9 +19,9 @@ import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.utils.DateUtils;
 import tech.smartboot.feat.core.common.utils.Mimetypes;
 import tech.smartboot.feat.core.common.utils.StringUtils;
+import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
-import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -43,7 +43,7 @@ import java.util.function.Consumer;
  * @author 三刀
  * @version V1.0 , 2018/2/7
  */
-public class HttpStaticResourceHandler extends BaseHttpHandler {
+public class HttpStaticResourceHandler implements HttpHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpStaticResourceHandler.class);
 
     private final File baseDir;
@@ -176,6 +176,11 @@ public class HttpStaticResourceHandler extends BaseHttpHandler {
                 }
             });
         }
+    }
+
+    @Override
+    public void handle(HttpRequest request) throws Throwable {
+        throw new UnsupportedOperationException();
     }
 
     private void fileNotFound(HttpRequest request, HttpResponse response) throws IOException {

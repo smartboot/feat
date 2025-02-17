@@ -12,19 +12,25 @@ import org.smartboot.socket.StateMachineEnum;
 import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
 import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.common.DecodeState;
+import tech.smartboot.feat.core.common.HeaderValue;
+import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
+import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
 import tech.smartboot.feat.core.common.exception.HttpException;
+import tech.smartboot.feat.core.common.io.FeatOutputStream;
+import tech.smartboot.feat.core.common.io.ReadListener;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.utils.StringUtils;
-import tech.smartboot.feat.core.server.HttpRequest;
+import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.ServerOptions;
-import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * http消息处理器
@@ -35,14 +41,9 @@ import java.util.Objects;
 public final class HttpMessageProcessor extends AbstractMessageProcessor<HttpEndpoint> {
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpMessageProcessor.class);
     private static final int MAX_LENGTH = 255 * 1024;
-    private static final BaseHttpHandler BASE_HTTP_HANDLER = new BaseHttpHandler() {
-        @Override
-        public void handle(HttpRequest request) throws IOException {
-            request.getResponse().write("Hello Feat".getBytes(StandardCharsets.UTF_8));
-        }
-    };
+    private static final HttpHandler BASE_HTTP_HANDLER = request -> request.getResponse().write("Hello Feat".getBytes(StandardCharsets.UTF_8));
     private final ServerOptions options;
-    private BaseHttpHandler httpServerHandler;
+    private HttpHandler httpServerHandler;
 
     public HttpMessageProcessor(ServerOptions options) {
         this.options = options;
@@ -51,7 +52,7 @@ public final class HttpMessageProcessor extends AbstractMessageProcessor<HttpEnd
     @Override
     public void process0(AioSession session, HttpEndpoint request) {
         DecodeState decodeState = request.getDecodeState();
-        BaseHttpHandler httpHandler = request.getServerHandler();
+        HttpHandler httpHandler = request.getServerHandler();
         if (httpHandler == null) {
             request.setServerHandler(httpServerHandler == null ? BASE_HTTP_HANDLER : httpServerHandler);
         }
@@ -71,7 +72,7 @@ public final class HttpMessageProcessor extends AbstractMessageProcessor<HttpEnd
                     if (upgrade != null) {
                         upgrade.onBodyStream(session.readBuffer());
                     } else {
-                        request.getServerHandler().onBodyStream(session.readBuffer(), request);
+                        onBodyStream(session.readBuffer(), request);
                     }
                     break;
                 }
@@ -152,7 +153,7 @@ public final class HttpMessageProcessor extends AbstractMessageProcessor<HttpEnd
         }
     }
 
-    public void httpServerHandler(BaseHttpHandler httpServerHandler) {
+    public void httpServerHandler(HttpHandler httpServerHandler) {
         Objects.requireNonNull(httpServerHandler, "httpServerHandler");
         if (this.httpServerHandler != null) {
             throw new IllegalStateException("httpServerHandler has been set");
@@ -220,5 +221,106 @@ public final class HttpMessageProcessor extends AbstractMessageProcessor<HttpEnd
         } else {
             request.setRequestURI(originalUri);
         }
+    }
+
+    public void onBodyStream(ByteBuffer buffer, HttpEndpoint request) {
+        AbstractResponse response = request.getResponse();
+        try {
+            if (request.getInputStream().getReadListener() != null) {
+                if (buffer.hasRemaining()) {
+                    request.getInputStream().getReadListener().onDataAvailable();
+                }
+                return;
+            }
+            CompletableFuture<Object> future = new CompletableFuture<>();
+            boolean keepAlive = isKeepAlive(request, response);
+            request.setKeepAlive(keepAlive);
+            request.getServerHandler().handle(request, future);
+            if (request.getUpgrade() == null) {
+                finishHttpHandle(request, future);
+            }
+        } catch (Throwable e) {
+            HttpMessageProcessor.responseError(response, e);
+        }
+    }
+
+    private void finishHttpHandle(HttpEndpoint abstractRequest, CompletableFuture<Object> future) throws IOException {
+        if (future.isDone()) {
+            if (keepConnection(abstractRequest)) {
+                finishResponse(abstractRequest);
+            }
+            return;
+        }
+
+        AioSession session = abstractRequest.getAioSession();
+        ReadListener readListener = abstractRequest.getInputStream().getReadListener();
+        if (readListener == null) {
+            session.awaitRead();
+        } else if (abstractRequest.getAioSession().readBuffer().hasRemaining()) {
+            abstractRequest.getInputStream().getReadListener().onDataAvailable();
+        }
+
+        Thread thread = Thread.currentThread();
+        AbstractResponse response = abstractRequest.getResponse();
+        future.thenRun(() -> {
+            try {
+                if (keepConnection(abstractRequest)) {
+                    finishResponse(abstractRequest);
+                    if (thread != Thread.currentThread()) {
+                        session.writeBuffer().flush();
+                    }
+                }
+            } catch (Exception e) {
+                HttpMessageProcessor.responseError(response, e);
+            } finally {
+                if (readListener == null) {
+                    session.signalRead();
+                }
+            }
+        }).exceptionally(throwable -> {
+            try {
+                HttpMessageProcessor.responseError(response, throwable);
+            } finally {
+                if (readListener == null) {
+                    session.signalRead();
+                }
+            }
+            return null;
+        });
+    }
+
+    private void finishResponse(HttpEndpoint abstractRequest) throws IOException {
+        AbstractResponse response = abstractRequest.getResponse();
+        //关闭本次请求的输出流
+        FeatOutputStream bufferOutputStream = response.getOutputStream();
+        if (!bufferOutputStream.isClosed()) {
+            bufferOutputStream.close();
+        }
+        abstractRequest.reset();
+    }
+
+    private boolean keepConnection(HttpEndpoint request) throws IOException {
+        if (request.getResponse().isClosed()) {
+            return false;
+        }
+        //非keepAlive或者 body部分未读取完毕,释放连接资源
+        if (!request.isKeepAlive() || !request.getInputStream().isFinished()) {
+            request.getResponse().close();
+            return false;
+        }
+        return true;
+    }
+
+    private boolean isKeepAlive(HttpEndpoint abstractRequest, AbstractResponse response) {
+        String connection = abstractRequest.getConnection();
+        boolean keepAlive = !HeaderValue.Connection.CLOSE.equals(connection);
+        // http/1.0默认短连接，http/1.1默认长连接。此处用 == 性能更高
+        if (keepAlive && HttpProtocolEnum.HTTP_10 == abstractRequest.getProtocol()) {
+            keepAlive = HeaderValue.Connection.KEEPALIVE.equalsIgnoreCase(connection);
+            if (keepAlive) {
+                response.setHeader(HeaderNameEnum.CONNECTION.getName(), HeaderValue.Connection.KEEPALIVE);
+            }
+        }
+        return keepAlive;
     }
 }

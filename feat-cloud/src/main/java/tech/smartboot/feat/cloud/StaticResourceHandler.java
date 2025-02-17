@@ -7,9 +7,9 @@ import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.utils.DateUtils;
 import tech.smartboot.feat.core.common.utils.Mimetypes;
 import tech.smartboot.feat.core.common.utils.StringUtils;
+import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
-import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,7 +21,7 @@ import java.util.concurrent.ExecutorService;
  * @author 三刀（zhengjunweimail@163.com）
  * @version V1.0 , 2023/1/26
  */
-class StaticResourceHandler extends BaseHttpHandler {
+class StaticResourceHandler implements HttpHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(StaticResourceHandler.class);
     private final Date lastModifyDate = new Date(System.currentTimeMillis() / 1000 * 1000);
 

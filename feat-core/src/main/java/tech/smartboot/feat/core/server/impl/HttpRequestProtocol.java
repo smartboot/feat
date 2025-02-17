@@ -18,8 +18,8 @@ import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.common.utils.ByteTree;
 import tech.smartboot.feat.core.common.utils.Constant;
 import tech.smartboot.feat.core.common.utils.StringUtils;
+import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.ServerOptions;
-import tech.smartboot.feat.core.server.handler.BaseHttpHandler;
 import tech.smartboot.feat.core.server.waf.WAF;
 
 import java.nio.ByteBuffer;
@@ -58,7 +58,7 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
                 WAF.methodCheck(options, request);
             }
             case DecodeState.STATE_URI: {
-                ByteTree<BaseHttpHandler> uriTreeNode = StringUtils.scanByteTree(byteBuffer, URI_END_MATCHER, options.getUriByteTree());
+                ByteTree<HttpHandler> uriTreeNode = StringUtils.scanByteTree(byteBuffer, URI_END_MATCHER, options.getUriByteTree());
                 if (uriTreeNode == null) {
                     break;
                 }
