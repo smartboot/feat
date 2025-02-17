@@ -17,6 +17,10 @@ public class SseEmitter {
         aioSession.writeBuffer().flush();
     }
 
+    public void send(String data) throws IOException {
+        send(event().data(data));
+    }
+
     public synchronized void onTimeout(Runnable callback) {
     }
 
