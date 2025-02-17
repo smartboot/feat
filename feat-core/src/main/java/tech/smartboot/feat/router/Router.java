@@ -74,16 +74,12 @@ public final class Router implements HttpHandler {
     /**
      * 配置URL路由
      *
-     * @param urlPattern  url匹配
-     * @param httpHandler 处理handler
+     * @param urlPattern url匹配
+     * @param handler    处理handler
      * @return
      */
-//    public Router route(String urlPattern, HttpHandler httpHandler) {
-//        rootPath.add(urlPattern, httpHandler);
-//        return this;
-//    }
-    public Router route(String urlPattern, RouterHandler httpHandler) {
-        rootPath.add(urlPattern, new RouterHandlerImpl(urlPattern, httpHandler));
+    public Router route(String urlPattern, RouterHandler handler) {
+        rootPath.add(urlPattern, new RouterHandlerImpl(urlPattern, handler));
         return this;
     }
 

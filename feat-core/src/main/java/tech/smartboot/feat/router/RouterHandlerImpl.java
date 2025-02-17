@@ -10,8 +10,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
-class RouterHandlerImpl implements HttpHandler {
+final class RouterHandlerImpl implements HttpHandler {
     private List<PathIndex> pathIndexes;
     private final RouterHandler routerHandler;
 
@@ -34,7 +35,8 @@ class RouterHandlerImpl implements HttpHandler {
         routerHandler.onHeaderComplete(request);
     }
 
-    public final void handle(HttpRequest request) throws Throwable {
+    @Override
+    public void handle(HttpRequest request, CompletableFuture<Object> completableFuture) throws Throwable {
         Map<String, String> pathParams;
         if (pathIndexes.isEmpty()) {
             pathParams = Collections.emptyMap();
@@ -53,7 +55,11 @@ class RouterHandlerImpl implements HttpHandler {
             pathParams = Collections.unmodifiableMap(params);
         }
         Context context = new Context(request, pathParams);
-        routerHandler.handle(context);
+        routerHandler.handle(context, completableFuture);
+    }
+
+    public void handle(HttpRequest request) {
+        throw new UnsupportedOperationException();
     }
 
     @Override

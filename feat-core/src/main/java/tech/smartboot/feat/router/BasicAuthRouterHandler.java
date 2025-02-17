@@ -16,6 +16,7 @@ import tech.smartboot.feat.core.server.impl.HttpEndpoint;
 
 import java.io.IOException;
 import java.util.Base64;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
@@ -49,7 +50,12 @@ public final class BasicAuthRouterHandler implements RouterHandler {
     }
 
     @Override
+    public void handle(Context request, CompletableFuture<Object> completableFuture) throws Throwable {
+        httpServerHandler.handle(request, completableFuture);
+    }
+
+    @Override
     public void handle(Context request) throws Throwable {
-        httpServerHandler.handle(request);
+        throw new UnsupportedOperationException();
     }
 }
