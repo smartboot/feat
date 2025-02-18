@@ -2,6 +2,7 @@ package tech.smartboot.feat.ai.vector.chroma;
 
 import com.alibaba.fastjson2.JSON;
 import tech.smartboot.feat.Feat;
+import tech.smartboot.feat.ai.vector.chroma.collection.Collection;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpGet;
 import tech.smartboot.feat.core.client.HttpPost;
@@ -11,6 +12,7 @@ import tech.smartboot.feat.core.common.HttpMethod;
 import tech.smartboot.feat.core.common.exception.FeatException;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -91,27 +93,66 @@ public class Chroma {
         return "true".equals(rsp);
     }
 
-    public void createCollection(String collection, Map<String, String> metadata) {
-        createCollection(options.defaultTenant(), options.defaultDatabase(), collection, metadata);
+    public Collection createCollection(String collection, Map<String, String> metadata) {
+        return createCollection(options.defaultTenant(), options.defaultDatabase(), collection, metadata);
     }
 
-    public void createCollection(String tenant, String database, String collection, Map<String, String> metadata) {
+//    public Collection getCollection(String id) {
+//        return getCollection(id, Request.of());
+//    }
+//
+//    public Collection getCollection(String id, Request request) {
+//        return getCollection(options.defaultTenant(), options.defaultDatabase(), id, request);
+//    }
+//
+//    public Collection getCollection(String tenant, String database, String id, Request request) {
+//        HttpPost http = httpClient.post("/api/v2/tenants/" + tenant + "/databases/" + database + "/collections/" + id + "/get");
+//        http.postJson(request);
+//        return execute(http, Collection.class);
+//    }
+
+    public Collection getCollection(String name) {
+        return getCollection(options.defaultTenant(), options.defaultDatabase(), name);
+    }
+
+
+    public Collection getCollection(String tenant, String database, String name) {
+        HttpRest http = httpClient.get("/api/v2/tenants/" + tenant + "/databases/" + database + "/collections/" + name);
+        Collection collection = execute(http, Collection.class);
+        collection.setHttpClient(httpClient);
+        return collection;
+    }
+
+    public List<Collection> getCollections(int offset, int limit) {
+        return getCollections(options.defaultTenant(), options.defaultDatabase(), offset, limit);
+    }
+
+    public List<Collection> getCollections(String tenant, String database, int offset, int limit) {
+        HttpGet http = httpClient.get("/api/v2/tenants/" + tenant + "/databases/" + database + "/collections");
+        http.addQueryParam("limit", limit);
+        http.addQueryParam("offset", offset);
+        return JSON.parseArray(execute(http), Collection.class);
+    }
+
+    public Collection createCollection(String tenant, String database, String collection, Map<String, String> metadata) {
         HttpPost httpPost = httpClient.post("/api/v2/tenants/" + tenant + "/databases/" + database + "/collections");
         Map<String, Object> body = new HashMap<>();
         body.put("name", collection);
         body.put("metadata", metadata);
         httpPost.postJson(body);
-        execute(httpPost);
+        Collection c = execute(httpPost, Collection.class);
+        c.setHttpClient(httpClient);
+        return c;
     }
 
-    private String execute(HttpRest rest) {
+    public static String execute(HttpRest rest) {
         return execute(rest, String.class);
     }
 
-    private <T> T execute(HttpRest rest, Class<T> clazz) {
+    public static <T> T execute(HttpRest rest, Class<T> clazz) {
         try {
             HttpResponse response = rest.submit().get();
-            if (response.statusCode() != 200) {
+            if (response.statusCode() >= 400) {
                 ValidationError err = JSON.parseObject(response.body(), ValidationError.class);
                 throw new FeatException(err.getMessage());
             }

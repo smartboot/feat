@@ -273,6 +273,11 @@ class HttpRestImpl implements HttpRest {
         return this;
     }
 
+    @Override
+    public HttpRest addQueryParam(String name, int value) {
+        return addQueryParam(name, String.valueOf(value));
+    }
+
     private void commitCheck() {
         if (commit) {
             throw new IllegalStateException("http request has been commit!");

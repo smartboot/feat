@@ -62,4 +62,9 @@ class HttpRestWrapper implements HttpRest {
         return rest.addQueryParam(name, value);
     }
 
+    @Override
+    public HttpRest addQueryParam(String name, int value) {
+        return rest.addQueryParam(name, value);
+    }
+
 }

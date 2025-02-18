@@ -56,4 +56,6 @@ public interface HttpRest {
 
     HttpRest addQueryParam(String name, String value);
 
+    HttpRest addQueryParam(String name, int value);
+
 }
