@@ -14,7 +14,6 @@ import tech.smartboot.feat.core.client.impl.HttpResponseImpl;
 import tech.smartboot.feat.core.client.stream.Stream;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -44,7 +43,6 @@ class HttpRestImpl implements HttpRest {
     private RequestBody body;
 
     private final HttpResponseImpl response;
-    private final ByteArrayOutputStream bodyStream = new ByteArrayOutputStream();
 
     HttpRestImpl(AioSession session, AbstractQueue<AbstractResponse> queue) {
         this.request = new HttpRequestImpl(session);
@@ -226,24 +224,28 @@ class HttpRestImpl implements HttpRest {
         return new Header() {
             @Override
             public Header add(String headerName, String headerValue) {
+                commitCheck();
                 request.addHeader(headerName, headerValue);
                 return this;
             }
 
             @Override
             public Header set(String headerName, String headerValue) {
+                commitCheck();
                 request.setHeader(headerName, headerValue);
                 return this;
             }
 
             @Override
             public Header setContentType(String contentType) {
+                commitCheck();
                 request.setContentType(contentType);
                 return this;
             }
 
             @Override
             public Header setContentLength(int contentLength) {
+                commitCheck();
                 request.setContentLength(contentLength);
                 return this;
             }
@@ -263,11 +265,18 @@ class HttpRestImpl implements HttpRest {
      * @param value 参数值
      */
     public final HttpRestImpl addQueryParam(String name, String value) {
+        commitCheck();
         if (queryParams == null) {
             queryParams = new HashMap<>();
         }
         queryParams.put(name, value);
         return this;
+    }
+
+    private void commitCheck() {
+        if (commit) {
+            throw new IllegalStateException("http request has been commit!");
+        }
     }
 
     /**

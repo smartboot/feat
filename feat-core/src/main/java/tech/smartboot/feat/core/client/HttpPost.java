@@ -8,7 +8,10 @@
 
 package tech.smartboot.feat.core.client;
 
+import com.alibaba.fastjson2.JSON;
+import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpMethod;
+import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 
 import java.util.function.Consumer;
 
@@ -26,6 +29,13 @@ public final class HttpPost extends HttpRestWrapper {
 
     public HttpPost postBody(Consumer<PostBody> body) {
         body.accept(body());
+        return this;
+    }
+
+    public HttpPost postJson(Object object) {
+        byte[] bytes = JSON.toJSONBytes(object);
+        header().set(HeaderNameEnum.CONTENT_TYPE.getName(), HeaderValue.ContentType.APPLICATION_JSON_UTF8).set(HeaderNameEnum.CONTENT_LENGTH.getName(), bytes.length);
+        body().write(bytes);
         return this;
     }
 

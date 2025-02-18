@@ -48,9 +48,15 @@ public class Feat {
         }, header, body);
     }
 
-    public static HttpPost postJson(String api, Consumer<HttpOptions> options, Consumer<Header> header, Object body) {
-        HttpClient httpClient = new HttpClient(api);
+
+    public static HttpClient httpClient(String baseUrl, Consumer<HttpOptions> options) {
+        HttpClient httpClient = new HttpClient(baseUrl);
         options.accept(httpClient.options());
+        return httpClient;
+    }
+
+    public static HttpPost postJson(String api, Consumer<HttpOptions> options, Consumer<Header> header, Object body) {
+        HttpClient httpClient = httpClient(api, options);
         byte[] bytes = JSON.toJSONBytes(body);
         HttpPost post = httpClient.post();
         post.header(h -> {
