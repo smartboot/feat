@@ -35,14 +35,14 @@ public class ProjectDocumentDemo extends BaseChat {
         ignore.add("impl");
         ignore.add("waf");
         StringBuilder sourceBuilder = new StringBuilder();
-        loadSource(new File("feat-core/src/main/java/tech/smartboot/feat/"), ignore, sourceBuilder);
+        loadSource(new File("feat-core/src/main/java/tech/smartboot/feat/ai/embedding"), ignore, sourceBuilder);
 
         StringBuilder demoBuilder = new StringBuilder();
         Set<String> ignore1 = new HashSet<>();
         ignore1.add("ai");
         ignore1.add("apt");
         ignore1.add("client");
-        loadSource(new File("feat-test/src/main/java/tech/smartboot/feat/demo/router"), ignore1, demoBuilder);
+        loadSource(new File("feat-test/src/test/java/tech/smartboot/feat/test/ai"), ignore1, demoBuilder);
         ChatModel chatModel = FeatAI.chatModel(opts -> {
             opts.model(ModelMeta.GITEE_AI_DeepSeek_R1_Distill_Qwen_32B)
                     .system("你主要负责为这个项目编写使用文档，根据用户要求编写相关章节内容。"
