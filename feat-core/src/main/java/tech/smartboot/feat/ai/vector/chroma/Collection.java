@@ -1,12 +1,14 @@
-package tech.smartboot.feat.ai.vector.chroma.collection;
+package tech.smartboot.feat.ai.vector.chroma;
 
 import com.alibaba.fastjson2.JSONObject;
-import tech.smartboot.feat.ai.vector.chroma.Chroma;
-import tech.smartboot.feat.core.client.HttpClient;
+import tech.smartboot.feat.ai.vector.chroma.collection.Document;
+import tech.smartboot.feat.ai.vector.chroma.collection.Query;
+import tech.smartboot.feat.ai.vector.chroma.collection.Request;
 import tech.smartboot.feat.core.client.HttpGet;
 import tech.smartboot.feat.core.client.HttpPost;
 import tech.smartboot.feat.core.client.HttpRest;
 import tech.smartboot.feat.core.common.HttpMethod;
+import tech.smartboot.feat.core.common.utils.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -19,7 +21,7 @@ public class Collection {
     private String tenant;
     private String database;
     private String collection;
-    private HttpClient httpClient;
+    private Chroma chroma;
 
     public String getId() {
         return id;
@@ -61,16 +63,12 @@ public class Collection {
         this.collection = collection;
     }
 
-    public HttpClient getHttpClient() {
-        return httpClient;
-    }
-
-    public void setHttpClient(HttpClient httpClient) {
-        this.httpClient = httpClient;
+    public void setChroma(Chroma chroma) {
+        this.chroma = chroma;
     }
 
     public int count() {
-        HttpGet http = httpClient.get("/api/v2/tenants/" + tenant + "/databases/" + database + "/collections/" + id + "/count");
+        HttpGet http = chroma.getHttpClient().get("/api/v2/tenants/" + tenant + "/databases/" + database + "/collections/" + id + "/count");
         return Chroma.execute(http, int.class);
     }
 
@@ -82,12 +80,12 @@ public class Collection {
     }
 
     public void delete() {
-        HttpRest http = httpClient.rest(HttpMethod.DELETE, "/api/v2/tenants/" + tenant + "/databases/" + database + "/collections/" + name);
+        HttpRest http = chroma.getHttpClient().rest(HttpMethod.DELETE, "/api/v2/tenants/" + tenant + "/databases/" + database + "/collections/" + name);
         Chroma.execute(http);
     }
 
     public void get(Request request) {
-        HttpPost httpPost = httpClient.post("/api/v2/tenants/" + tenant + "/databases/" + database + "/collections/" + id + "/get");
+        HttpPost httpPost = chroma.getHttpClient().post("/api/v2/tenants/" + tenant + "/databases/" + database + "/collections/" + id + "/get");
         httpPost.postJson(request);
         Chroma.execute(httpPost);
     }
@@ -101,7 +99,7 @@ public class Collection {
     }
 
     public void upsert(List<Document> document) {
-        HttpPost httpPost = httpClient.post("/api/v2/tenants/" + tenant + "/databases/" + database + "/collections/" + id + "/upsert");
+        HttpPost httpPost = chroma.getHttpClient().post("/api/v2/tenants/" + tenant + "/databases/" + database + "/collections/" + id + "/upsert");
         JSONObject object = toVector(document);
         httpPost.postJson(object);
         Chroma.execute(httpPost);
@@ -116,7 +114,7 @@ public class Collection {
     }
 
     public void update(List<Document> document) {
-        HttpPost httpPost = httpClient.post("/api/v2/tenants/" + tenant + "/databases/" + database + "/collections/" + id + "/update");
+        HttpPost httpPost = chroma.getHttpClient().post("/api/v2/tenants/" + tenant + "/databases/" + database + "/collections/" + id + "/update");
         JSONObject object = toVector(document);
         httpPost.postJson(object);
         Chroma.execute(httpPost);
@@ -127,27 +125,38 @@ public class Collection {
     }
 
     public boolean add(List<Document> document) {
-        HttpPost httpPost = httpClient.post("/api/v2/tenants/" + tenant + "/databases/" + database + "/collections/" + id + "/add");
+        HttpPost httpPost = chroma.getHttpClient().post("/api/v2/tenants/" + tenant + "/databases/" + database + "/collections/" + id + "/add");
         JSONObject object = toVector(document);
         httpPost.postJson(object);
         return Chroma.execute(httpPost, boolean.class);
     }
 
-    private static JSONObject toVector(List<Document> document) {
+    public void query(Query query) {
+        HttpPost httpPost = chroma.getHttpClient().post("/api/v2/tenants/" + tenant + "/databases/" + database + "/collections/" + id + "/query");
+        // 若queryTexts不为空，则将其转换为embeddings
+        if (CollectionUtils.isNotEmpty(query.getQueryTexts())) {
+            query.setQueryEmbeddings(chroma.options().getEmbeddingModel().embed(query.getQueryTexts()));
+        }
+        httpPost.postJson(query);
+        Chroma.execute(httpPost);
+    }
+
+    private JSONObject toVector(List<Document> document) {
         List<String> ids = new ArrayList<>();
         List<Map<String, String>> metadatas = new ArrayList<>();
-        List<List<Float>> embeddings = new ArrayList<>();
+        List<float[]> embeddings = new ArrayList<>();
         List<String> documents = new ArrayList<>();
         for (Document doc : document) {
             ids.add(doc.getId());
             metadatas.add(doc.getMetadata());
-//            embeddings.add(doc.getEmbedding());
+            embeddings.add(chroma.options().getEmbeddingModel().embed(doc.getDocument()));
             documents.add(doc.getDocument());
         }
         JSONObject object = new JSONObject();
         object.put("ids", ids);
         object.put("metadata", metadatas);
         object.put("documents", documents);
+        object.put("embeddings", embeddings);
         return object;
     }
 }

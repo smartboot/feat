@@ -2,7 +2,6 @@ package tech.smartboot.feat.ai.vector.chroma;
 
 import com.alibaba.fastjson2.JSON;
 import tech.smartboot.feat.Feat;
-import tech.smartboot.feat.ai.vector.chroma.collection.Collection;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpGet;
 import tech.smartboot.feat.core.client.HttpPost;
@@ -97,20 +96,6 @@ public class Chroma {
         return createCollection(options.defaultTenant(), options.defaultDatabase(), collection, metadata);
     }
 
-//    public Collection getCollection(String id) {
-//        return getCollection(id, Request.of());
-//    }
-//
-//    public Collection getCollection(String id, Request request) {
-//        return getCollection(options.defaultTenant(), options.defaultDatabase(), id, request);
-//    }
-//
-//    public Collection getCollection(String tenant, String database, String id, Request request) {
-//        HttpPost http = httpClient.post("/api/v2/tenants/" + tenant + "/databases/" + database + "/collections/" + id + "/get");
-//        http.postJson(request);
-//        return execute(http, Collection.class);
-//    }
-
     public Collection getCollection(String name) {
         return getCollection(options.defaultTenant(), options.defaultDatabase(), name);
     }
@@ -119,7 +104,7 @@ public class Chroma {
     public Collection getCollection(String tenant, String database, String name) {
         HttpRest http = httpClient.get("/api/v2/tenants/" + tenant + "/databases/" + database + "/collections/" + name);
         Collection collection = execute(http, Collection.class);
-        collection.setHttpClient(httpClient);
+        collection.setChroma(this);
         return collection;
     }
 
@@ -141,7 +126,7 @@ public class Chroma {
         body.put("metadata", metadata);
         httpPost.postJson(body);
         Collection c = execute(httpPost, Collection.class);
-        c.setHttpClient(httpClient);
+        c.setChroma(this);
         return c;
     }
 
@@ -165,6 +150,10 @@ public class Chroma {
         } catch (Exception e) {
             throw new FeatException(e);
         }
+    }
+
+    HttpClient getHttpClient() {
+        return httpClient;
     }
 
     public Options options() {
