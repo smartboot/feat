@@ -41,7 +41,31 @@ public class ModelVendor {
         return modelMetas.getOrDefault(vendor, new HashMap<>()).getOrDefault(model, null);
     }
 
+    /**
+     *  Ollama 模型
+     */
     public interface Ollama {
+        /**
+         * A high-performing open embedding model with a large token context window.
+         *
+         * nomic-embed-text 是一个大上下文长度的文本编码器，
+         * 它超越了 OpenAItext-embedding-ada-002 并 text-embedding-3-small 短上下文任务和长上下文任务的性能。
+         */
         String nomic_embed_text = "nomic-embed-text";
+
+        /**
+         * State-of-the-art large embedding model from mixedbread.ai
+         *
+         * 截至 2024 年 3 月，该模型在 MTEB 上归档了 Bert 大尺寸模型的 SOTA 性能。
+         * 它优于商业模型，如 OpenAI 的 text-embedding-3-large 模型，并与模型 20 倍的性能相匹配。
+         *
+         * mxbae-embed-size 在没有 MTEB 数据重叠的情况下进行了训练，这表明该模型在多个领域、任务和文本长度上具有良好的泛化性。
+         */
+        String mxbai_embed_large = "mxbai-embed-large";
+
+        /**
+         * A suite of text embedding models by Snowflake, optimized for performance.
+         */
+        String snowflake_arctic_embed = "snowflake-arctic-embed";
     }
 }

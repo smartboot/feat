@@ -34,13 +34,11 @@ public class EmbeddingModel {
             if (StringUtils.isNotBlank(options.getApiKey())) {
                 header.add(HeaderNameEnum.AUTHORIZATION.getName(), "Bearer " + options.getApiKey());
             }
-            header.add(HeaderNameEnum.CONTENT_TYPE.getName(), "application/json")
-                    .add(HeaderNameEnum.CONTENT_LENGTH.getName(), bytes.length);
+            header.add(HeaderNameEnum.CONTENT_TYPE.getName(), "application/json").add(HeaderNameEnum.CONTENT_LENGTH.getName(), bytes.length);
         });
 
         httpPost.body().write(bytes);
         String rsp = execute(httpPost);
-        System.out.println("rsp: " + rsp);
         JSONObject responseObject = JSON.parseObject(rsp);
         JSONArray array = responseObject.getJSONArray("data");
         float[][] embedding = new float[array.size()][];
