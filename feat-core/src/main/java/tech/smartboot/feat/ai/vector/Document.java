@@ -1,4 +1,4 @@
-package tech.smartboot.feat.ai.vector.chroma.collection;
+package tech.smartboot.feat.ai.vector;
 
 import java.util.Map;
 

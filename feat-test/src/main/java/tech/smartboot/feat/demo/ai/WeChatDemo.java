@@ -21,10 +21,10 @@ public class WeChatDemo extends BaseChat {
         StringBuilder stringBuilder = new StringBuilder();
         loadFile(file, stringBuilder);
         StringBuilder sourceBuilder = new StringBuilder();
-        loadSource(new File("feat-core/src/main/java/tech/smartboot/feat/router"), sourceBuilder);
+        loadSource(new File("feat-core/src/main/java/tech/smartboot/feat/ai/"), sourceBuilder);
 
         StringBuilder demoBuilder = new StringBuilder();
-        loadSource(new File("feat-test/src/main/java/tech/smartboot/feat/demo/router"), demoBuilder);
+        loadSource(new File("feat-test/src/test/java/tech/smartboot/feat/test/ai"), demoBuilder);
         ChatModel chatModel = FeatAI.chatModel(opts -> {
             opts.model(ModelMeta.GITEE_AI_DeepSeek_R1_Distill_Qwen_32B).system("你是一个负责Feat微信公众号的编辑人员，你的任务是根据用户要求编写微信公众号文章。"
                     + "Feat参考内容为：\n" + stringBuilder
@@ -56,6 +56,9 @@ public class WeChatDemo extends BaseChat {
                                 return;
                             }
                             String content = responseMessage.getContent();
+                            if (true) {
+                                return;
+                            }
                             try {
                                 sseEmitter.send(SseEmitter.event().data("<br/>开始优化文章...<br/>"));
                             } catch (IOException e) {
@@ -94,6 +97,6 @@ public class WeChatDemo extends BaseChat {
                 }
             });
         });
-        Feat.httpServer(opt -> opt.debug(false)).httpHandler(router).listen(8080);
+        Feat.httpServer(opt -> opt.debug(false).readBufferSize(1024 * 1024)).httpHandler(router).listen(8080);
     }
 }

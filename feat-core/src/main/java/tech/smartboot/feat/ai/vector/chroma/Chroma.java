@@ -17,9 +17,9 @@ import java.util.function.Consumer;
 
 public class Chroma {
     private final HttpClient httpClient;
-    private final Options options = new Options();
+    private final ChromaOptions options = new ChromaOptions();
 
-    public Chroma(String url, Consumer<Options> opt) {
+    public Chroma(String url, Consumer<ChromaOptions> opt) {
         opt.accept(options);
         this.httpClient = Feat.httpClient(url, opts -> {
             opts.debug(options.isDebug());
@@ -156,7 +156,7 @@ public class Chroma {
         return httpClient;
     }
 
-    public Options options() {
+    public ChromaOptions options() {
         return options;
     }
 }

@@ -6,9 +6,9 @@ import org.junit.Test;
 import tech.smartboot.feat.ai.FeatAI;
 import tech.smartboot.feat.ai.chat.ChatModel;
 import tech.smartboot.feat.ai.embedding.ModelVendor;
+import tech.smartboot.feat.ai.vector.Document;
 import tech.smartboot.feat.ai.vector.chroma.Chroma;
 import tech.smartboot.feat.ai.vector.chroma.Collection;
-import tech.smartboot.feat.ai.vector.chroma.collection.Document;
 import tech.smartboot.feat.ai.vector.chroma.collection.Query;
 
 import java.util.ArrayList;

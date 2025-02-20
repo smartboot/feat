@@ -1,7 +1,8 @@
 package tech.smartboot.feat.ai.vector.chroma;
 
 import com.alibaba.fastjson2.JSONObject;
-import tech.smartboot.feat.ai.vector.chroma.collection.Document;
+import tech.smartboot.feat.ai.vector.Document;
+import tech.smartboot.feat.ai.vector.chroma.collection.DocumentDeleteRequest;
 import tech.smartboot.feat.ai.vector.chroma.collection.Query;
 import tech.smartboot.feat.ai.vector.chroma.collection.Request;
 import tech.smartboot.feat.core.client.HttpGet;
@@ -131,11 +132,27 @@ public class Collection {
         return Chroma.execute(httpPost, boolean.class);
     }
 
+    public void delete(String id) {
+        delete(Collections.singletonList(id));
+    }
+
+    public void delete(List<String> idList) {
+        DocumentDeleteRequest request = new DocumentDeleteRequest();
+        request.setIds(idList);
+        delete(request);
+    }
+
+    public void delete(DocumentDeleteRequest request) {
+        HttpPost httpPost = chroma.getHttpClient().post("/api/v2/tenants/" + tenant + "/databases/" + database + "/collections/" + id + "/delete");
+        httpPost.postJson(request);
+        Chroma.execute(httpPost);
+    }
+
     public void query(Query query) {
         HttpPost httpPost = chroma.getHttpClient().post("/api/v2/tenants/" + tenant + "/databases/" + database + "/collections/" + id + "/query");
         // 若queryTexts不为空，则将其转换为embeddings
         if (CollectionUtils.isNotEmpty(query.getQueryTexts())) {
-            query.setQueryEmbeddings(chroma.options().getEmbeddingModel().embed(query.getQueryTexts()));
+            query.setQueryEmbeddings(chroma.options().embeddingModel().embed(query.getQueryTexts()));
         }
         httpPost.postJson(query);
         Chroma.execute(httpPost);
@@ -149,7 +166,7 @@ public class Collection {
         for (Document doc : document) {
             ids.add(doc.getId());
             metadatas.add(doc.getMetadata());
-            embeddings.add(chroma.options().getEmbeddingModel().embed(doc.getDocument()));
+            embeddings.add(chroma.options().embeddingModel().embed(doc.getDocument()));
             documents.add(doc.getDocument());
         }
         JSONObject object = new JSONObject();
