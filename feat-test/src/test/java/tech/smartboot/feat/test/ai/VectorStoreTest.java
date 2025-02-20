@@ -59,7 +59,7 @@ public class VectorStoreTest {
             Document document = new Document();
             document.setId(i + "");
             Map<String, String> metadata = new HashMap<>();
-            metadata.put("name", "sndao" + i);
+            metadata.put("name", "sandao" + i);
             metadata.put("age", String.valueOf(i));
             document.setMetadata(metadata);
             document.setDocument("hello world" + i);
@@ -68,14 +68,13 @@ public class VectorStoreTest {
         vectorStore.add(documents);
 
 
-        Expression a = Expression.of("name").eq("sandao1");
-        Expression b = Expression.of("age").eq("1");
+        Expression a = Expression.of("name").eq("sandao0");
+        Expression b = Expression.of("age").eq("0");
 
         SearchRequest request = new SearchRequest();
         request.setQuery("hello world");
 //        request.setTopK(1);
-        vectorStore.similaritySearch(request);
-        request.setExpression(a.or(b));
+        request.setExpression(a.and(b));
         vectorStore.similaritySearch(request);
     }
 
