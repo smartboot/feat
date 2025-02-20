@@ -21,4 +21,8 @@ public class SearchRequest {
     public void setExpression(Expression expression) {
         this.expression = expression;
     }
+
+    public void setExpression(String expression) {
+
+    }
 }

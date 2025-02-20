@@ -9,6 +9,10 @@ public abstract class Expression {
         this.type = type;
     }
 
+    public static Expression parse(String expression) {
+        return new ExpressionParser(expression).parse();
+    }
+
     public static SimpleExpression of(String key) {
         return new SimpleExpression(null, key, null);
     }

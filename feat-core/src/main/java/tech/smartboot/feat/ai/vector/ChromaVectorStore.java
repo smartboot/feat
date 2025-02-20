@@ -18,6 +18,55 @@ import java.util.List;
 import java.util.function.Consumer;
 
 public class ChromaVectorStore implements VectorStore {
+    public static final Convert convert = new Convert() {
+        @Override
+        public void build(JSONObject object, SimpleExpression expression) {
+            switch (expression.getType()) {
+                case EQ:
+                    object.put(expression.getKey(), Collections.singletonMap("$eq", expression.getValue()));
+                    break;
+                case NE:
+                    object.put(expression.getKey(), Collections.singletonMap("$ne", expression.getValue()));
+                    break;
+                case LT:
+                    object.put(expression.getKey(), Collections.singletonMap("$lt", expression.getValue()));
+                    break;
+                case LTE:
+                    object.put(expression.getKey(), Collections.singletonMap("$lte", expression.getValue()));
+                    break;
+                case GT:
+                    object.put(expression.getKey(), Collections.singletonMap("$gt", expression.getValue()));
+                    break;
+                case GTE:
+                    object.put(expression.getKey(), Collections.singletonMap("$gte", expression.getValue()));
+                    break;
+                default:
+                    throw new UnsupportedOperationException("Not supported yet.");
+            }
+        }
+
+        @Override
+        public void and(JSONObject object, List<Expression> filters) {
+            JSONArray jsonArray = new JSONArray();
+            for (Expression expression : filters) {
+                JSONObject jsonObject = new JSONObject();
+                expression.build(jsonObject, this);
+                jsonArray.add(jsonObject);
+            }
+            object.put("$and", jsonArray);
+        }
+
+        @Override
+        public void or(JSONObject object, List<Expression> filters) {
+            JSONArray jsonArray = new JSONArray();
+            for (Expression expression : filters) {
+                JSONObject jsonObject = new JSONObject();
+                expression.build(jsonObject, this);
+                jsonArray.add(jsonObject);
+            }
+            object.put("$or", jsonArray);
+        }
+    };
     private final ChromaVectorOptions options = new ChromaVectorOptions();
     private Chroma chroma;
     private Collection collection;
@@ -59,57 +108,7 @@ public class ChromaVectorStore implements VectorStore {
         List<String> include = new ArrayList<>();
         if (request.getExpression() != null) {
             JSONObject jsonObject = new JSONObject();
-            request.getExpression().build(jsonObject, new Convert() {
-                        @Override
-                        public void build(JSONObject object, SimpleExpression expression) {
-                            switch (expression.getType()) {
-                                case EQ:
-                                    object.put(expression.getKey(), Collections.singletonMap("$eq", expression.getValue()));
-                                    break;
-                                case NE:
-                                    object.put(expression.getKey(), Collections.singletonMap("$ne", expression.getValue()));
-                                    break;
-                                case LT:
-                                    object.put(expression.getKey(), Collections.singletonMap("$lt", expression.getValue()));
-                                    break;
-                                case LTE:
-                                    object.put(expression.getKey(), Collections.singletonMap("$lte", expression.getValue()));
-                                    break;
-                                case GT:
-                                    object.put(expression.getKey(), Collections.singletonMap("$gt", expression.getValue()));
-                                    break;
-                                case GTE:
-                                    object.put(expression.getKey(), Collections.singletonMap("$gte", expression.getValue()));
-                                    break;
-                                default:
-                                    throw new UnsupportedOperationException("Not supported yet.");
-                            }
-                        }
-
-                        @Override
-                        public void and(JSONObject object, List<Expression> filters) {
-                            JSONArray jsonArray = new JSONArray();
-                            for (Expression expression : filters) {
-                                JSONObject jsonObject = new JSONObject();
-                                expression.build(jsonObject, this);
-                                jsonArray.add(jsonObject);
-                            }
-                            jsonObject.put("$and", jsonArray);
-                        }
-
-                        @Override
-                        public void or(JSONObject object, List<Expression> filters) {
-                            JSONArray jsonArray = new JSONArray();
-                            for (Expression expression : filters) {
-                                JSONObject jsonObject = new JSONObject();
-                                expression.build(jsonObject, this);
-                                jsonArray.add(jsonObject);
-                            }
-                            jsonObject.put("$or", jsonArray);
-                        }
-                    }
-
-            );
+            request.getExpression().build(jsonObject, convert);
             query.where(jsonObject);
             include.add("metadatas");
         }

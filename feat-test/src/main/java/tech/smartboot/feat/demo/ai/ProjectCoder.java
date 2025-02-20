@@ -28,16 +28,16 @@ public class ProjectCoder extends BaseChat {
         loadFile(file, ignoreDoc, docs);
 
         Set<String> ignore = new HashSet<>();
-        ignore.add("ai");
-        ignore.add("common");
-        ignore.add("fileserver");
-        ignore.add("client");
-        ignore.add("upgrade");
+//        ignore.add("ai");
+//        ignore.add("common");
+//        ignore.add("fileserver");
+//        ignore.add("client");
+//        ignore.add("upgrade");
         StringBuilder sourceBuilder = new StringBuilder();
-        loadSource(new File("feat-core/src/main/java/tech/smartboot/feat/"), ignore, sourceBuilder);
+        loadSource(new File("feat-core/src/main/java/tech/smartboot/feat/ai/vector/expression"), ignore, sourceBuilder);
 
         ChatModel chatModel = FeatAI.chatModel(opts -> {
-            opts.model(ModelMeta.GITEE_AI_DeepSeek_R1_Distill_Qwen_32B)
+            opts.model(ModelMeta.GITEE_AI_Qwen2_5_32B_Instruct)
                     .system("你是一名专业的Java程序员，Feat是你设计的一个开源项目。"
 //                            + "参考内容为：\n" + docs
                                     + "\n 实现源码为：\n" + sourceBuilder

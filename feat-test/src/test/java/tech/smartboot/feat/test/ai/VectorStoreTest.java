@@ -1,10 +1,12 @@
 package tech.smartboot.feat.test.ai;
 
+import com.alibaba.fastjson2.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 import tech.smartboot.feat.ai.FeatAI;
 import tech.smartboot.feat.ai.embedding.EmbeddingModel;
 import tech.smartboot.feat.ai.embedding.ModelVendor;
+import tech.smartboot.feat.ai.vector.ChromaVectorStore;
 import tech.smartboot.feat.ai.vector.Document;
 import tech.smartboot.feat.ai.vector.SearchRequest;
 import tech.smartboot.feat.ai.vector.VectorStore;
@@ -78,4 +80,12 @@ public class VectorStoreTest {
         vectorStore.similaritySearch(request);
     }
 
+
+    @Test
+    public void testExpression() {
+        Expression a = Expression.parse("name == '1'");
+        JSONObject object = new JSONObject();
+        a.build(object, ChromaVectorStore.convert);
+        System.out.println(object);
+    }
 }
