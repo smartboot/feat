@@ -8,7 +8,6 @@ import tech.smartboot.feat.ai.embedding.ModelVendor;
 import tech.smartboot.feat.ai.vector.Document;
 import tech.smartboot.feat.ai.vector.VectorStore;
 import tech.smartboot.feat.ai.vector.expression.Expression;
-import tech.smartboot.feat.ai.vector.expression.Filter;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -52,10 +51,9 @@ public class VectorStoreTest {
 
     @Test
     public void testQuery() {
-        Filter filter = new Filter();
         Expression a = Expression.of("a").eq("b");
         Expression b = Expression.of("b").eq("c");
-        vectorStore.similaritySearch(filter);
+        vectorStore.similaritySearch(b);
     }
 
 }

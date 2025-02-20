@@ -1,8 +1,9 @@
 package tech.smartboot.feat.ai.vector.expression;
 
+import com.alibaba.fastjson2.JSONObject;
+
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 
 public class ComplexExpression extends Expression {
     private final List<Expression> expressions = new ArrayList<>();
@@ -53,7 +54,12 @@ public class ComplexExpression extends Expression {
     }
 
     @Override
-    public void build(Consumer<Filter> consumer) {
-        super.build(consumer);
+    public void build(JSONObject object, Convert convert) {
+        if (getType() == ExpressionType.AND) {
+            convert.and(object, expressions);
+        } else if (getType() == ExpressionType.OR) {
+            convert.or(object, expressions);
+        }
+        throw new RuntimeException("不支持的表达式类型");
     }
 }

@@ -1,6 +1,6 @@
 package tech.smartboot.feat.ai.vector.expression;
 
-public class Expression extends Filter {
+public abstract class Expression extends Filter {
     private final ExpressionType type;
 
     public Expression(ExpressionType type) {
@@ -8,7 +8,7 @@ public class Expression extends Filter {
     }
 
     public static SimpleExpression of(String key) {
-        return new SimpleExpression(key);
+        return new SimpleExpression(null, key, null);
     }
 
     public Expression and(Expression right) {

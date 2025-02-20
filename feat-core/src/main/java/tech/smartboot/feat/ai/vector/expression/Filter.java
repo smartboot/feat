@@ -1,9 +1,7 @@
 package tech.smartboot.feat.ai.vector.expression;
 
-import java.util.function.Consumer;
+import com.alibaba.fastjson2.JSONObject;
 
-public class Filter {
-    public void build(Consumer<Filter> consumer) {
-        consumer.accept(this);
-    }
+public abstract class Filter {
+    public abstract void build(JSONObject object, Convert convert);
 }
