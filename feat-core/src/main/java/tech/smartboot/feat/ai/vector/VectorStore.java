@@ -1,6 +1,6 @@
 package tech.smartboot.feat.ai.vector;
 
-import tech.smartboot.feat.ai.vector.expression.Filter;
+import tech.smartboot.feat.ai.vector.expression.Expression;
 
 import java.util.Collections;
 import java.util.List;
@@ -36,11 +36,11 @@ public interface VectorStore {
 
     void delete(List<String> idList);
 
-    void delete(Filter filter);
+    void delete(Expression filter);
 
 
     List<Document> similaritySearch(String query);
 
-    List<Document> similaritySearch(Filter query);
+    List<Document> similaritySearch(SearchRequest request);
 
 }

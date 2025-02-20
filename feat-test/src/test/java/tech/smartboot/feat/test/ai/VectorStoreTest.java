@@ -6,12 +6,15 @@ import tech.smartboot.feat.ai.FeatAI;
 import tech.smartboot.feat.ai.embedding.EmbeddingModel;
 import tech.smartboot.feat.ai.embedding.ModelVendor;
 import tech.smartboot.feat.ai.vector.Document;
+import tech.smartboot.feat.ai.vector.SearchRequest;
 import tech.smartboot.feat.ai.vector.VectorStore;
 import tech.smartboot.feat.ai.vector.expression.Expression;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class VectorStoreTest {
     private VectorStore vectorStore;
@@ -51,9 +54,29 @@ public class VectorStoreTest {
 
     @Test
     public void testQuery() {
-        Expression a = Expression.of("a").eq("b");
-        Expression b = Expression.of("b").eq("c");
-        vectorStore.similaritySearch(b);
+        List<Document> documents = new ArrayList<>();
+        for (int i = 0; i < 2; i++) {
+            Document document = new Document();
+            document.setId(i + "");
+            Map<String, String> metadata = new HashMap<>();
+            metadata.put("name", "sndao" + i);
+            metadata.put("age", String.valueOf(i));
+            document.setMetadata(metadata);
+            document.setDocument("hello world" + i);
+            documents.add(document);
+        }
+        vectorStore.add(documents);
+
+
+        Expression a = Expression.of("name").eq("sandao1");
+        Expression b = Expression.of("age").eq("1");
+
+        SearchRequest request = new SearchRequest();
+        request.setQuery("hello world");
+//        request.setTopK(1);
+        vectorStore.similaritySearch(request);
+        request.setExpression(a.or(b));
+        vectorStore.similaritySearch(request);
     }
 
 }

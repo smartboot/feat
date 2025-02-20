@@ -4,13 +4,15 @@ import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.ai.vector.chroma.Chroma;
 import tech.smartboot.feat.ai.vector.chroma.Collection;
+import tech.smartboot.feat.ai.vector.chroma.collection.Query;
 import tech.smartboot.feat.ai.vector.expression.Convert;
 import tech.smartboot.feat.ai.vector.expression.Expression;
-import tech.smartboot.feat.ai.vector.expression.Filter;
 import tech.smartboot.feat.ai.vector.expression.SimpleExpression;
 import tech.smartboot.feat.core.common.exception.FeatException;
+import tech.smartboot.feat.core.common.utils.CollectionUtils;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
@@ -26,9 +28,7 @@ public class ChromaVectorStore implements VectorStore {
             throw new FeatException("Collection name is required");
         }
         chroma = new Chroma(options.getUrl(), opt -> {
-            opt.debug(options.isDebug())
-                    .embeddingModel(options.embeddingModel())
-                    .setApiVersion(ChromaVectorOptions.API_VERSION_2);
+            opt.debug(options.isDebug()).embeddingModel(options.embeddingModel()).setApiVersion(ChromaVectorOptions.API_VERSION_2);
         });
         collection = chroma.getCollection(options.getCollectionName());
     }
@@ -44,7 +44,7 @@ public class ChromaVectorStore implements VectorStore {
     }
 
     @Override
-    public void delete(Filter filter) {
+    public void delete(Expression filter) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -54,60 +54,70 @@ public class ChromaVectorStore implements VectorStore {
     }
 
     @Override
-    public List<Document> similaritySearch(Filter query) {
-        JSONObject jsonObject = new JSONObject();
-        query.build(jsonObject, new Convert() {
-                    @Override
-                    public void build(JSONObject object, SimpleExpression expression) {
-                        switch (expression.getType()) {
-                            case EQ:
-                                object.put(expression.getKey(), Collections.singletonMap("$eq", expression.getValue()));
-                                break;
-                            case NE:
-                                object.put(expression.getKey(), Collections.singletonMap("$ne", expression.getValue()));
-                                break;
-                            case LT:
-                                object.put(expression.getKey(), Collections.singletonMap("$lt", expression.getValue()));
-                                break;
-                            case LTE:
-                                object.put(expression.getKey(), Collections.singletonMap("$lte", expression.getValue()));
-                                break;
-                            case GT:
-                                object.put(expression.getKey(), Collections.singletonMap("$gt", expression.getValue()));
-                                break;
-                            case GTE:
-                                object.put(expression.getKey(), Collections.singletonMap("$gte", expression.getValue()));
-                                break;
-                            default:
-                                throw new UnsupportedOperationException("Not supported yet.");
+    public List<Document> similaritySearch(SearchRequest request) {
+        Query query = new Query();
+        List<String> include = new ArrayList<>();
+        if (request.getExpression() != null) {
+            JSONObject jsonObject = new JSONObject();
+            request.getExpression().build(jsonObject, new Convert() {
+                        @Override
+                        public void build(JSONObject object, SimpleExpression expression) {
+                            switch (expression.getType()) {
+                                case EQ:
+                                    object.put(expression.getKey(), Collections.singletonMap("$eq", expression.getValue()));
+                                    break;
+                                case NE:
+                                    object.put(expression.getKey(), Collections.singletonMap("$ne", expression.getValue()));
+                                    break;
+                                case LT:
+                                    object.put(expression.getKey(), Collections.singletonMap("$lt", expression.getValue()));
+                                    break;
+                                case LTE:
+                                    object.put(expression.getKey(), Collections.singletonMap("$lte", expression.getValue()));
+                                    break;
+                                case GT:
+                                    object.put(expression.getKey(), Collections.singletonMap("$gt", expression.getValue()));
+                                    break;
+                                case GTE:
+                                    object.put(expression.getKey(), Collections.singletonMap("$gte", expression.getValue()));
+                                    break;
+                                default:
+                                    throw new UnsupportedOperationException("Not supported yet.");
+                            }
+                        }
+
+                        @Override
+                        public void and(JSONObject object, List<Expression> filters) {
+                            JSONArray jsonArray = new JSONArray();
+                            for (Expression expression : filters) {
+                                JSONObject jsonObject = new JSONObject();
+                                expression.build(jsonObject, this);
+                                jsonArray.add(jsonObject);
+                            }
+                            jsonObject.put("$and", jsonArray);
+                        }
+
+                        @Override
+                        public void or(JSONObject object, List<Expression> filters) {
+                            JSONArray jsonArray = new JSONArray();
+                            for (Expression expression : filters) {
+                                JSONObject jsonObject = new JSONObject();
+                                expression.build(jsonObject, this);
+                                jsonArray.add(jsonObject);
+                            }
+                            jsonObject.put("$or", jsonArray);
                         }
                     }
 
-                    @Override
-                    public void and(JSONObject object, List<Expression> filters) {
-                        JSONArray jsonArray = new JSONArray();
-                        for (Expression expression : filters) {
-                            JSONObject jsonObject = new JSONObject();
-                            expression.build(jsonObject, this);
-                            jsonArray.add(jsonObject);
-                        }
-                        jsonObject.put("$and", jsonArray);
-                    }
-
-                    @Override
-                    public void or(JSONObject object, List<Expression> filters) {
-                        JSONArray jsonArray = new JSONArray();
-                        for (Expression expression : filters) {
-                            JSONObject jsonObject = new JSONObject();
-                            expression.build(jsonObject, this);
-                            jsonArray.add(jsonObject);
-                        }
-                        jsonObject.put("$or", jsonArray);
-                    }
-                }
-
-        );
-        System.out.println(jsonObject.toString());
+            );
+            query.where(jsonObject);
+            include.add("metadatas");
+        }
+        query.setQueryText(request.getQuery());
+        if (CollectionUtils.isNotEmpty(include)) {
+            query.setInclude(include);
+        }
+        collection.query(query);
         return Collections.emptyList();
     }
 }

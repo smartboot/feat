@@ -171,7 +171,7 @@ public class Collection {
         }
         JSONObject object = new JSONObject();
         object.put("ids", ids);
-        object.put("metadata", metadatas);
+        object.put("metadatas", metadatas);
         object.put("documents", documents);
         object.put("embeddings", embeddings);
         return object;

@@ -5,18 +5,13 @@ import com.alibaba.fastjson2.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ComplexExpression extends Expression {
+class ComplexExpression extends Expression {
     private final List<Expression> expressions = new ArrayList<>();
 
     public ComplexExpression(boolean and, Expression left, Expression right) {
         super(and ? ExpressionType.AND : ExpressionType.OR);
         expressions.add(left);
         expressions.add(right);
-    }
-
-
-    public List<Expression> getExpressions() {
-        return expressions;
     }
 
     @Override
@@ -55,11 +50,15 @@ public class ComplexExpression extends Expression {
 
     @Override
     public void build(JSONObject object, Convert convert) {
-        if (getType() == ExpressionType.AND) {
-            convert.and(object, expressions);
-        } else if (getType() == ExpressionType.OR) {
-            convert.or(object, expressions);
+        switch (getType()) {
+            case AND:
+                convert.and(object, expressions);
+                break;
+            case OR:
+                convert.or(object, expressions);
+                break;
+            default:
+                throw new RuntimeException("不支持的表达式类型");
         }
-        throw new RuntimeException("不支持的表达式类型");
     }
 }

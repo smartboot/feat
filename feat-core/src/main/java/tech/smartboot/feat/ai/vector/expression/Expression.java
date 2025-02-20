@@ -1,9 +1,11 @@
 package tech.smartboot.feat.ai.vector.expression;
 
-public abstract class Expression extends Filter {
+import com.alibaba.fastjson2.JSONObject;
+
+public abstract class Expression {
     private final ExpressionType type;
 
-    public Expression(ExpressionType type) {
+    Expression(ExpressionType type) {
         this.type = type;
     }
 
@@ -22,4 +24,6 @@ public abstract class Expression extends Filter {
     public ExpressionType getType() {
         return type;
     }
+
+    public abstract void build(JSONObject object, Convert convert);
 }

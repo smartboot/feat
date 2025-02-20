@@ -1,13 +1,15 @@
 package tech.smartboot.feat.ai.vector.chroma.collection;
 
+import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.annotation.JSONField;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class Query {
-    private Map<String, String> where;
+    private JSONObject where;
     @JSONField(name = "where_document")
     private Map<String, String> whereDocument;
     @JSONField(name = "query_embeddings")
@@ -26,9 +28,13 @@ public class Query {
 
     public void where(String key, String value) {
         if (where == null) {
-            where = new HashMap<>();
+            where = new JSONObject();
         }
         where.put(key, value);
+    }
+
+    public void where(JSONObject where) {
+        this.where = where;
     }
 
     public void whereDocument(String key, String value) {
@@ -41,6 +47,10 @@ public class Query {
 
     public void setQueryEmbeddings(List<float[]> queryEmbeddings) {
         this.queryEmbeddings = queryEmbeddings;
+    }
+
+    public List<float[]> getQueryEmbeddings() {
+        return queryEmbeddings;
     }
 
     public int getResults() {
@@ -59,7 +69,7 @@ public class Query {
         this.include = include;
     }
 
-    public Map<String, String> getWhere() {
+    public JSONObject getWhere() {
         return where;
     }
 
@@ -74,5 +84,9 @@ public class Query {
 
     public void setQueryTexts(List<String> queryTexts) {
         this.queryTexts = queryTexts;
+    }
+
+    public void setQueryText(String queryText) {
+        this.queryTexts = Collections.singletonList(queryText);
     }
 }
