@@ -3,7 +3,13 @@ package tech.smartboot.feat.ai.vector;
 import tech.smartboot.feat.ai.vector.expression.Expression;
 
 public class SearchRequest {
+    /**
+     * 匹配document中的内容
+     */
     private String query;
+    /**
+     * 匹配metadata
+     */
     private Expression expression;
 
     public String getQuery() {

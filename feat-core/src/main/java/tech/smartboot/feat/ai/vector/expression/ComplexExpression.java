@@ -1,7 +1,5 @@
 package tech.smartboot.feat.ai.vector.expression;
 
-import com.alibaba.fastjson2.JSONObject;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -49,7 +47,7 @@ class ComplexExpression extends Expression {
     }
 
     @Override
-    public void build(JSONObject object, Convert convert) {
+    public <T> void build(T object, Convert<T> convert) {
         switch (getType()) {
             case AND:
                 convert.and(object, expressions);

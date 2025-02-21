@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 public class ChromaVectorStore implements VectorStore {
-    public static final Convert convert = new Convert() {
+    public static final Convert<JSONObject> convert = new Convert<JSONObject>() {
         @Override
         public void build(JSONObject object, SimpleExpression expression) {
             switch (expression.getType()) {

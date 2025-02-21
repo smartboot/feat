@@ -14,7 +14,7 @@ public abstract class Expression {
     }
 
     public static SimpleExpression of(String key) {
-        return new SimpleExpression(null, key, null);
+        return new SimpleExpression(key);
     }
 
     public Expression and(Expression right) {
@@ -29,5 +29,5 @@ public abstract class Expression {
         return type;
     }
 
-    public abstract void build(JSONObject object, Convert convert);
+    public abstract<T> void build(T object, Convert<T> convert);
 }
