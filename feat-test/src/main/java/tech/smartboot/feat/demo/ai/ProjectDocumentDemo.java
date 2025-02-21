@@ -28,14 +28,9 @@ public class ProjectDocumentDemo extends BaseChat {
         loadFile(file, ignoreDoc, docs);
 
         Set<String> ignore = new HashSet<>();
-        ignore.add("ai");
-        ignore.add("client");
-        ignore.add("common");
-        ignore.add("upgrade");
-        ignore.add("impl");
-        ignore.add("waf");
+        ignore.add("milvus");
         StringBuilder sourceBuilder = new StringBuilder();
-        loadSource(new File("feat-core/src/main/java/tech/smartboot/feat/ai/embedding"), ignore, sourceBuilder);
+        loadSource(new File("feat-core/src/main/java/tech/smartboot/feat/ai/vector"), ignore, sourceBuilder);
 
         StringBuilder demoBuilder = new StringBuilder();
         Set<String> ignore1 = new HashSet<>();
