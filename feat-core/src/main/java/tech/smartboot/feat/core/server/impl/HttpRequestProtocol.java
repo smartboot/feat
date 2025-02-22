@@ -163,7 +163,7 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
                 ByteTree<?> value = StringUtils.scanByteTree(byteBuffer, ByteTree.CR_END_MATCHER, options.getByteCache());
                 if (value == null) {
                     if (byteBuffer.remaining() == byteBuffer.capacity()) {
-                        throw new HttpException(HttpStatus.REQUEST_HEADER_FIELDS_TOO_LARGE);
+                        throw new HttpException(HttpStatus.REQUEST_HEADER_FIELDS_TOO_LARGE, "The length of the value of header <u>" + decodeState.getDecodeHeaderName().getStringValue() + "</u> exceeds the read buffer.");
                     }
                     break;
                 }
