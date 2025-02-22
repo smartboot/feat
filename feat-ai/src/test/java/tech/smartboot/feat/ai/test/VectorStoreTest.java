@@ -1,4 +1,4 @@
-package tech.smartboot.feat.test.ai;
+package tech.smartboot.feat.ai.test;
 
 import com.alibaba.fastjson2.JSONObject;
 import org.junit.Before;

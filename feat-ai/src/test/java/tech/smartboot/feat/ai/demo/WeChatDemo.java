@@ -1,4 +1,4 @@
-package tech.smartboot.feat.demo.ai;
+package tech.smartboot.feat.ai.demo;
 
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.ai.FeatAI;

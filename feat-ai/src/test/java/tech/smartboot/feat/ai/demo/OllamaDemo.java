@@ -1,11 +1,9 @@
-package tech.smartboot.feat.demo.ai;
+package tech.smartboot.feat.ai.demo;
 
 import tech.smartboot.feat.ai.FeatAI;
 import tech.smartboot.feat.ai.chat.ChatModel;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
-
-import java.io.IOException;
 
 public class OllamaDemo {
     public static void main(String[] args) {

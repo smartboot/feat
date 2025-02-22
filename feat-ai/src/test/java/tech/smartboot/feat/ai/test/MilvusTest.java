@@ -1,4 +1,4 @@
-package tech.smartboot.feat.test.ai;
+package tech.smartboot.feat.ai.test;
 
 import org.junit.Before;
 import org.junit.Test;

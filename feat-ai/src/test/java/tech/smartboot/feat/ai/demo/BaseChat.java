@@ -1,4 +1,4 @@
-package tech.smartboot.feat.demo.ai;
+package tech.smartboot.feat.ai.demo;
 
 import java.io.File;
 import java.io.FileInputStream;
