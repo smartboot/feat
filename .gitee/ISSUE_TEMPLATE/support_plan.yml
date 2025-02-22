@@ -1,22 +1,22 @@
 name: 参与企业扶持计划
-description: 成立 3 年以内的初创企业，可申请免费使用 Feat 产品直至企业成立 3 年期满。
-title: 格式：XXXX申请参与 Feat 扶持计划
+description: 成立 3 年以内的初创企业，可申请免费使用 Feat 产品。
+title: 企业扶持计划申请-[企业名称]
 labels: ["support"]
 body:
-  - type: input
-    id: company
+  - type: markdown
     attributes:
-      label: 企业名称
-      validations:
-        required: true
-      placeholder: https://gitee.com/your_id/your_test_project.git
+    value: |
+      注意事项：
+      - 请在本 **issue 标题** 中填写完整企业名称。
+      - 申请企业扶持计划，需要提供**准确、完整**的企业名称、统一社会信用代码、企业Logo。
+      - 授权有效期：申请通过之日至企业成立满 3 年。剩余期限不足 1 年，按1年提供授权期限。
+      - 审核结果将由 Feat 团队在此 issue 中回复。
   - type: input
     id: uscc
     validations:
       required: true
     attributes:
       label: 统一社会信用代码
-      placeholder: https://gitee.com/your_id/your_test_project.git
   - type: textarea
     attributes:
       label: 企业Logo
@@ -25,3 +25,7 @@ body:
         可在此处进行图片粘贴上传。
     validations:
       required: true
+  - type: input
+    validations:
+    attributes:
+      label: 企业网址
