@@ -29,7 +29,7 @@ body:
     validations:
     attributes:
       label: 企业网址
-  - type: input
+  - type: textarea
     validations:
     attributes:
       label: 应用场景
