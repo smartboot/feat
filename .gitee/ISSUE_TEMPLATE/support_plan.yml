@@ -1,6 +1,6 @@
 name: 参与企业扶持计划
-description: 成立 3 年以内的初创企业，可申请免费使用 Feat 产品
-title:
+description: 成立 3 年以内的初创企业，可申请免费使用 Feat 产品直至企业成立 3 年期满。
+title: 格式：XXXX申请参与 Feat 扶持计划
 labels: ["support"]
 body:
   - type: input
@@ -9,7 +9,6 @@ body:
       label: 企业名称
       validations:
         required: true
-      description: 请提供复现错误的 Demo 下载
       placeholder: https://gitee.com/your_id/your_test_project.git
   - type: input
     id: uscc
@@ -17,7 +16,6 @@ body:
       required: true
     attributes:
       label: 统一社会信用代码
-      description: 请提供复现错误的 Demo 下载
       placeholder: https://gitee.com/your_id/your_test_project.git
   - type: textarea
     attributes:
