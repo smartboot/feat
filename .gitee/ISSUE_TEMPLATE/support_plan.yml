@@ -1,7 +1,7 @@
 name: 参与企业扶持计划
 description: 成立 3 年以内的初创企业，可申请免费使用 Feat 产品。
 title: 企业扶持计划申请-[企业名称]
-labels: ["support"]
+labels: [ "support" ]
 body:
   - type: markdown
     attributes:
@@ -29,3 +29,9 @@ body:
     validations:
     attributes:
       label: 企业网址
+  - type: input
+    validations:
+    attributes:
+      label: 应用场景
+      placeholder: |
+        请介绍 Feat 在贵司中的应用场景。
