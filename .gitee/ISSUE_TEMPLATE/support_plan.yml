@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-      注意事项：
+    注意事项：
 
   - type: input
     id: uscc
