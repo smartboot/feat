@@ -5,7 +5,7 @@ labels: ["support"]
 body:
   - type: markdown
     attributes:
-    value: |
+      value: |
       注意事项：
       - 请在本 **issue 标题** 中填写完整企业名称。
       - 申请企业扶持计划，需要提供**准确、完整**的企业名称、统一社会信用代码、企业Logo。
