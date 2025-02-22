@@ -4,8 +4,7 @@ title: 企业扶持计划申请-[企业名称]
 labels: ["support"]
 body:
   - type: markdown
-    attributes:
-      value: aa |
+    value: aa |
       ss
   - type: input
     id: uscc
