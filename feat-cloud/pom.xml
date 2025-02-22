@@ -19,7 +19,7 @@
 <dependencies>
     <dependency>
         <groupId>tech.smartboot.feat</groupId>
-        <artifactId>feat-core</artifactId>
+        <artifactId>feat-ai</artifactId>
     </dependency>
     <dependency>
         <groupId>org.mybatis</groupId>
