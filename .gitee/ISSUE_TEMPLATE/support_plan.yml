@@ -3,9 +3,6 @@ description: 成立 3 年以内的初创企业，可申请免费使用 Feat 产�
 title: 企业扶持计划申请-[企业名称]
 labels: ["support"]
 body:
-  - type: markdown
-    value: aa |
-      ss
   - type: input
     id: uscc
     validations:
