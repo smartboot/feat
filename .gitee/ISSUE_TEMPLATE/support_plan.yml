@@ -5,9 +5,8 @@ labels: ["support"]
 body:
   - type: markdown
     attributes:
-      value: |
-    注意事项：
-
+      value: aa |
+      ss
   - type: input
     id: uscc
     validations:
