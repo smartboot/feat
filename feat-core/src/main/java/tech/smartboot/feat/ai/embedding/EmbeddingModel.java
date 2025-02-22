@@ -4,7 +4,6 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.Feat;
-import tech.smartboot.feat.ai.vector.chroma.ValidationError;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpPost;
 import tech.smartboot.feat.core.client.HttpResponse;
@@ -65,8 +64,7 @@ public class EmbeddingModel {
         try {
             HttpResponse response = rest.submit().get();
             if (response.statusCode() >= 400) {
-                ValidationError err = JSON.parseObject(response.body(), ValidationError.class);
-                throw new FeatException(err.getMessage());
+                throw new FeatException(response.body());
             }
             if (clazz == String.class) {
                 return (T) response.body();

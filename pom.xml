@@ -246,5 +246,6 @@
         <module>feat-cloud-starter</module>
         <module>feat-test</module>
         <module>feat-cloud</module>
+        <module>feat-ai</module>
     </modules>
 </project>
