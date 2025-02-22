@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>开源项目文档生成</title>
+    <style>
+        /* 美化输入框的样式 */
+        #userInput {
+            width: 100%;
+            max-width: 600px;
+            height: 100px;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 美化按钮的样式 */
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        /* 美化响应区域的样式 */
+        .responseBlock {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            min-height: 200px;
+            font-size: 16px;
+            white-space: pre-wrap;
+            background-color: #f9f9f9;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- 添加输入框和按钮 -->
+<div style="text-align: center; margin-top: 50px;">
+    <textarea id="userInput" placeholder="请输入您的请求"></textarea>
+    <button onclick="sendRequest()">发送请求</button>
+</div>
+
+<!-- 用于显示聊天记录的容器 -->
+<div id="chatContainer"></div>
+
+<script>
+    function sendRequest() {
+        // 获取用户输入的请求
+        const userInput = document.getElementById('userInput').value;
+
+        // 创建一个新的区块来显示当前的聊天记录
+        const responseBlock = document.createElement('div');
+        responseBlock.className = 'responseBlock';
+        // 将新的区块插入到chatContainer的第一个子元素之前
+        const chatContainer = document.getElementById('chatContainer');
+        if (chatContainer.firstChild) {
+            chatContainer.insertBefore(responseBlock, chatContainer.firstChild);
+        } else {
+            chatContainer.appendChild(responseBlock);
+        }
+
+        // 创建一个新的EventSource对象，用于与后台建立SSE连接
+        const eventSource = new EventSource('/chat?content=' + encodeURIComponent(userInput));
+
+        // 监听message事件，当后台推送消息时触发
+        eventSource.onmessage = function (event) {
+            // 将后台推送的消息显示在当前区块上，支持换行
+            responseBlock.innerHTML += event.data;
+        };
+
+        // 监听error事件，当SSE连接出现错误时触发
+        eventSource.onerror = function () {
+            console.error('SSE连接错误');
+            eventSource.close();
+        };
+    }
+</script>
+</body>
+
+</html>

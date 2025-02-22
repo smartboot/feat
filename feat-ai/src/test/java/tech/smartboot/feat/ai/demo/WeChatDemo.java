@@ -19,7 +19,7 @@ import java.util.Set;
 
 public class WeChatDemo extends BaseChat {
     public static void main(String[] args) throws IOException {
-        File file = new File("pages/src/content/docs/ai");
+        File file = new File("pages/src/content/docs/");
         Set<String> ig = new HashSet<>();
         ig.add("client");
         ig.add("cloud");
@@ -31,10 +31,11 @@ public class WeChatDemo extends BaseChat {
         ig.add("chat");
         ig.add("milvus");
         ig.add("expression");
-        loadSource(new File("feat-core/src/main/java/tech/smartboot/feat/ai/"), sourceBuilder);
+//        loadSource(new File("feat-ai/src/main/java/tech/smartboot/feat/ai/"), sourceBuilder);
+        loadSource(new File("feat-core/src/main/java/tech/smartboot/feat/core/client"), sourceBuilder);
 
         StringBuilder demoBuilder = new StringBuilder();
-        loadSource(new File("feat-test/src/test/java/tech/smartboot/feat/test/ai"), demoBuilder);
+        loadSource(new File("feat-ai/src/test/java/tech/smartboot/feat/ai/test/"), demoBuilder);
         ChatModel chatModel = FeatAI.chatModel(opts -> {
             opts.model(ModelMeta.GITEE_AI_DeepSeek_R1_Distill_Qwen_32B).system("你是一个负责Feat微信公众号的编辑人员，你的任务是根据用户要求编写微信公众号文章。"
                     + "Feat参考内容为：\n" + stringBuilder
@@ -49,7 +50,7 @@ public class WeChatDemo extends BaseChat {
         router.route("/", ctx -> {
             HttpResponse response = ctx.Response;
             response.setContentType("text/html");
-            InputStream inputStream = WeChatDemo.class.getClassLoader().getResourceAsStream("static/project_doc_ai.html");
+            InputStream inputStream = Feat.class.getClassLoader().getResourceAsStream("static/project_doc_ai.html");
             byte[] buffer = new byte[1024];
             int length = 0;
             while ((length = inputStream.read(buffer)) != -1) {
