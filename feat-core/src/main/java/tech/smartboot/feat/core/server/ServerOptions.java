@@ -52,7 +52,7 @@ public class ServerOptions {
     /**
      * read缓冲区大小
      */
-    private int readBufferSize = 1024;
+    private int readBufferSize = 8 * 1024;
     /**
      * write缓冲区大小
      */
