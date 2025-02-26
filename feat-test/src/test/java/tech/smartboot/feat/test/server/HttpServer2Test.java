@@ -12,8 +12,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpMethod;
@@ -40,7 +38,6 @@ public class HttpServer2Test extends BastTest {
     public static final String KEY_URI = "uri";
     public static final String KEY_URL = "url";
     public static final String KEY_HEADERS = "headers";
-    private static final Logger LOGGER = LoggerFactory.getLogger(HttpServer2Test.class);
     HttpClient httpClient;
     HttpServer bootstrap;
 

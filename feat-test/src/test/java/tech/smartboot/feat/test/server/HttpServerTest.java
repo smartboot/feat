@@ -14,8 +14,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpGet;
@@ -45,7 +43,6 @@ public class HttpServerTest extends BastTest {
 
     public static final String KEY_URL = "url";
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(HttpServerTest.class);
     private HttpServer bootstrap;
     private RequestUnit requestUnit;
 

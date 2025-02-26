@@ -13,8 +13,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpPost;
@@ -43,7 +41,6 @@ public class HttpServer3Test extends BastTest {
     public static final String KEY_URI = "uri";
     public static final String KEY_URL = "url";
     public static final String KEY_HEADERS = "headers";
-    private static final Logger LOGGER = LoggerFactory.getLogger(HttpServer3Test.class);
     private HttpServer bootstrap;
     private RequestUnit requestUnit;
 
