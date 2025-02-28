@@ -1,0 +1,53 @@
+package tech.smartboot.feat.ai.coder;
+
+import tech.smartboot.feat.ai.FeatAI;
+import tech.smartboot.feat.ai.ModelMeta;
+import tech.smartboot.feat.ai.chat.ChatModel;
+import tech.smartboot.feat.ai.demo.BaseChat;
+import tech.smartboot.feat.ai.prompt.PromptTemplate;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
+
+public class MavenProjectMermaid extends BaseChat {
+    public static void main(String[] args) throws IOException {
+
+        ChatModel chatModel = FeatAI.chatModel(opts -> {
+            opts
+//                    .model("qwen2.5:3b")
+//                    .baseUrl("http://localhost:11434/v1") // Ollama本地服务地址
+                    .model(ModelMeta.GITEE_AI_Qwen2_5_32B_Instruct)
+                    .debug(true)
+            ;
+        });
+
+        File file1 = new File("./");
+        StringBuilder sourceBuilder = new StringBuilder();
+        Files.walkFileTree(file1.toPath(), new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                if (file.getFileName().toString().equals("pom.xml")) {
+                    readFile(file.toFile(), sourceBuilder);
+                    return FileVisitResult.CONTINUE;
+                } else {
+                    return FileVisitResult.SKIP_SUBTREE;
+                }
+            }
+        });
+
+        chatModel.chat(PromptTemplate.MAVEN_PROJECT_MERMAID, data -> {
+            data.put("file_list", sourceBuilder.toString());
+        }).whenComplete((responseMessage, throwable) -> {
+            System.out.println(responseMessage.getContent());
+        });
+
+
+    }
+
+
+}

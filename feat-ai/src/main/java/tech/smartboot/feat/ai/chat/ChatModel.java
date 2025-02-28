@@ -14,6 +14,7 @@ import tech.smartboot.feat.ai.chat.entity.StreamChoice;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
 import tech.smartboot.feat.ai.chat.entity.Tool;
 import tech.smartboot.feat.ai.chat.entity.ToolCall;
+import tech.smartboot.feat.ai.prompt.Prompt;
 import tech.smartboot.feat.core.client.HttpPost;
 import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.client.stream.ServerSentEventStream;
@@ -28,6 +29,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 
 public class ChatModel {
     private final Options options;
@@ -135,8 +138,19 @@ public class ChatModel {
 
     }
 
+    public CompletableFuture<ResponseMessage> chat(String content) {
+        return chat(content, Collections.emptyList());
+    }
+
+    public CompletableFuture<ResponseMessage> chat(String content, List<String> tools) {
+        CompletableFuture<ResponseMessage> future = new CompletableFuture<>();
+        chat(content, tools, future::complete);
+        return future;
+    }
+
     public void chat(String content, List<String> tools, ResponseCallback callback) {
         HttpPost post = chat0(content, tools, false);
+
         post.onSuccess(response -> {
             if (response.statusCode() != 200) {
                 ResponseMessage responseMessage = new ResponseMessage();
@@ -210,6 +224,26 @@ public class ChatModel {
 
     public void chat(String content, ResponseCallback callback) {
         chat(content, Collections.emptyList(), callback);
+    }
+
+    public CompletableFuture<ResponseMessage> chat(Prompt prompt, Consumer<Map<String, String>> data) {
+        CompletableFuture<ResponseMessage> future = new CompletableFuture<>();
+        chat(prompt, data, future::complete);
+        return future;
+    }
+
+    public void chat(Prompt prompt, Consumer<Map<String, String>> data, ResponseCallback callback) {
+        Map<String, String> params = new HashMap<>();
+        data.accept(params);
+        history.clear();
+        if (StringUtils.isNotBlank(prompt.role())) {
+            options.system(prompt.role());
+            Message message = new Message();
+            message.setRole(Message.ROLE_SYSTEM);
+            message.setContent(options.getSystem());
+            history.add(message);
+        }
+        chat(prompt.prompt(params), callback);
     }
 
 }

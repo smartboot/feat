@@ -25,7 +25,7 @@ public class WeChatDemo extends BaseChat {
         ig.add("cloud");
         ig.add("server");
         StringBuilder stringBuilder = new StringBuilder();
-        loadFile(file, ig, stringBuilder);
+        loadFile(file,  stringBuilder);
         StringBuilder sourceBuilder = new StringBuilder();
         ig.clear();
         ig.add("chat");

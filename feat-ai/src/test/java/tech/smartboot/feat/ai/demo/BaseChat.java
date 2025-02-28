@@ -1,8 +1,14 @@
 package tech.smartboot.feat.ai.demo;
 
+import tech.smartboot.feat.core.common.exception.FeatException;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Set;
 
@@ -12,29 +18,56 @@ public class BaseChat {
         return content.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br/>").replace("\r", "<br/>").replace(" ", "&nbsp;");
     }
 
-    public static void loadFile(File file, StringBuilder sb) throws IOException {
-        loadFile(file, Collections.emptySet(), sb);
-    }
-
-    public static void loadFile(File file, Set<String> ignore, StringBuilder sb) throws IOException {
+    public static void loadFileNames(File file, StringBuilder sb) {
         for (File f : file.listFiles()) {
+            if (f.getName().startsWith(".")) {
+                continue;
+            }
             if (f.isDirectory()) {
-                if (ignore.contains(f.getName())) {
+                if (Arrays.asList("node_modules", ".idea", ".git", "target").contains(f.getName())) {
                     continue;
                 }
-                loadFile(f, sb);
+                loadFileNames(f, sb);
             }
-            if (f.isFile() && f.getName().endsWith(".mdx")) {
-                sb.append("## ").append(f.getName()).append("\n");
-                try (FileInputStream fis = new FileInputStream(f);) {
-                    byte[] bytes = new byte[1024];
-                    int len;
-                    while ((len = fis.read(bytes)) != -1) {
-                        sb.append(new String(bytes, 0, len));
-                    }
-                    sb.append("\n");
+            if (f.isFile()) {
+                try {
+                    sb.append(f.getCanonicalFile()).append("\n");
+                } catch (IOException e) {
+                    throw new FeatException(e);
                 }
             }
+        }
+    }
+
+
+    public static void loadFile(File file, StringBuilder sb) throws IOException {
+        loadFile(file, new SimpleFileVisitor<Path>() {
+        }, sb);
+    }
+
+    public static void loadFile(File file, SimpleFileVisitor<Path> visitor, StringBuilder sb) throws IOException {
+        for (Path path : Files.walkFileTree(file.toPath(), visitor)) {
+            sb.append("## ").append(path.getFileName()).append("\n");
+            try (FileInputStream fis = new FileInputStream(path.toFile());) {
+                byte[] bytes = new byte[1024];
+                int len;
+                while ((len = fis.read(bytes)) != -1) {
+                    sb.append(new String(bytes, 0, len));
+                }
+                sb.append("\n");
+            }
+        }
+    }
+
+    public static void readFile(File file,StringBuilder sb) throws IOException {
+        sb.append("## ").append(file.getCanonicalFile()).append("\n");
+        try (FileInputStream fis = new FileInputStream(file)) {
+            byte[] bytes = new byte[1024];
+            int len;
+            while ((len = fis.read(bytes)) != -1) {
+                sb.append(new String(bytes, 0, len));
+            }
+            sb.append("\n");
         }
     }
 

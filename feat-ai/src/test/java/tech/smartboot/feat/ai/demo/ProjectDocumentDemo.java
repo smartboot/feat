@@ -25,7 +25,7 @@ public class ProjectDocumentDemo extends BaseChat {
         ignoreDoc.add("cloud");
         ignoreDoc.add("ai");
         StringBuilder docs = new StringBuilder();
-        loadFile(file, ignoreDoc, docs);
+        loadFile(file,  docs);
 
         Set<String> ignore = new HashSet<>();
         ignore.add("milvus");
