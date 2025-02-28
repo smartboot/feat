@@ -58,6 +58,28 @@ public class PromptTemplate {
             return Arrays.asList(ModelMeta.GITEE_AI_Qwen2_5_32B_Instruct.getModel());
         }
     };
+    /**
+     * 项目代码生成器
+     */
+    public static Prompt PROJECT_CODER = new Prompt() {
+        private final Set<String> prompts = new HashSet<>(Arrays.asList("input", "reference"));
+
+        @Override
+        public String prompt(Map<String, String> params) {
+            String prompt = getPromptTpl("project_coder.tpl");
+            return mergePrompt(prompt, params(), params);
+        }
+
+        @Override
+        public Set<String> params() {
+            return prompts;
+        }
+
+        @Override
+        public List<String> suggestedModels() {
+            return Arrays.asList(ModelMeta.GITEE_AI_Qwen2_5_32B_Instruct.getModel());
+        }
+    };
 
     private static String mergePrompt(String prompt, Set<String> params, Map<String, String> data) {
         for (String param : params) {
