@@ -3,6 +3,8 @@ package tech.smartboot.feat.ai.wechat;
 import tech.smartboot.feat.ai.FeatAI;
 import tech.smartboot.feat.ai.ModelMeta;
 import tech.smartboot.feat.ai.chat.ChatModel;
+import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
+import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
 import tech.smartboot.feat.ai.demo.BaseChat;
 import tech.smartboot.feat.ai.prompt.PromptTemplate;
 
@@ -23,7 +25,7 @@ public class WeChatEditor extends BaseChat {
 //                    .model("qwen2.5:3b")
 //                    .baseUrl("http://localhost:11434/v1") // Ollama本地服务地址
                     .model(ModelMeta.GITEE_AI_DeepSeek_R1_Distill_Qwen_32B)
-                    .debug(true)
+//                    .debug(true)
             ;
         });
 
@@ -34,13 +36,16 @@ public class WeChatEditor extends BaseChat {
         Files.walkFileTree(sourcePath.toPath(), new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                readFile(file.toFile(), sourceBuilder);
+                if (!file.getFileName().toString().endsWith(".html")) {
+                    readFile(file.toFile(), sourceBuilder);
+                }
+
                 return FileVisitResult.CONTINUE;
             }
 
             @Override
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-                if (Arrays.asList("audio", "embedding", "vector").contains(dir.getFileName().toString())) {
+                if (Arrays.asList("audio", "embedding", "vector","chat").contains(dir.getFileName().toString())) {
                     return FileVisitResult.SKIP_SUBTREE;
                 }
                 return super.preVisitDirectory(dir, attrs);
@@ -66,13 +71,31 @@ public class WeChatEditor extends BaseChat {
             }
         });
         sourceBuilder.append("---demo end---\n");
-        System.out.println(sourceBuilder);
 
-        chatModel.chat(PromptTemplate.WECHAT_EDITOR, data -> {
-            data.put("topic", "通过Feat AI与大模型技术的结合，未来将打造一款智能应用，基于开源项目的源码自动生成项目文档。此次以Feat项目自身为例，通过解析工程中的pom.xml文件，自动生成项目架构图。在文章内容中解读其实现原理");
+        chatModel.chatStream(PromptTemplate.WECHAT_EDITOR, data -> {
+            data.put("topic", "写一篇介绍Feat AI 关于提示词功能设计的文章。可以结合适当的代码和配置文件，介绍Feat AI 提示词的设计原理和使用方法。");
             data.put("reference", sourceBuilder.toString());
-        }).whenComplete((responseMessage, throwable) -> {
-            System.out.println(responseMessage.getContent());
+        }, new StreamResponseCallback() {
+            @Override
+            public void onStreamResponse(String content) {
+                System.out.print(content);
+            }
+
+            @Override
+            public void onCompletion(ResponseMessage responseMessage) {
+                System.out.println(responseMessage.getContent());
+                chatModel.chatStream("优化这篇文章:\n" + responseMessage.getContent(), new StreamResponseCallback() {
+                    @Override
+                    public void onStreamResponse(String content) {
+                        System.out.print(content);
+                    }
+
+                    @Override
+                    public void onCompletion(ResponseMessage responseMessage) {
+
+                    }
+                });
+            }
         });
 
 

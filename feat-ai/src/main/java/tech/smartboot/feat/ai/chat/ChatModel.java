@@ -246,4 +246,18 @@ public class ChatModel {
         chat(prompt.prompt(params), callback);
     }
 
+    public void chatStream(Prompt prompt, Consumer<Map<String, String>> data, StreamResponseCallback callback) {
+        Map<String, String> params = new HashMap<>();
+        data.accept(params);
+        history.clear();
+        if (StringUtils.isNotBlank(prompt.role())) {
+            options.system(prompt.role());
+            Message message = new Message();
+            message.setRole(Message.ROLE_SYSTEM);
+            message.setContent(options.getSystem());
+            history.add(message);
+        }
+        chatStream(prompt.prompt(params), callback);
+    }
+
 }
