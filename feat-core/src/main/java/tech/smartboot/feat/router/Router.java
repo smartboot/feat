@@ -33,7 +33,7 @@ public final class Router implements HttpHandler {
      */
     private final HttpHandler defaultHandler;
     private final NodePath rootPath = new NodePath("/");
-    private final List<Interceptor> interceptors = new ArrayList<>();
+    private final List<InterceptorUnit> interceptors = new ArrayList<>();
 
     public Router() {
         this(request -> request.getResponse().setHttpStatus(HttpStatus.NOT_FOUND));
@@ -93,10 +93,10 @@ public final class Router implements HttpHandler {
             httpHandler = defaultHandler;
         }
         // 检查是否存在匹配的拦截器
-        List<Interceptor> list = interceptors.stream().filter(interceptor -> {
-            //todo pathPattern
-            return false;
-        }).collect(Collectors.toList());
+        List<Interceptor> list = interceptors.stream()
+                .filter(interceptor -> interceptor.path.stream()
+                        .anyMatch(pattern -> pattern.match(uri) != null))
+                .map(InterceptorUnit::getInterceptor).collect(Collectors.toList());
         if (list.isEmpty()) {
             return httpHandler;
         }
@@ -105,7 +105,7 @@ public final class Router implements HttpHandler {
 
             @Override
             public void handle(HttpRequest request, CompletableFuture<Object> completableFuture) throws Throwable {
-                ChainImpl chain = new ChainImpl(routerHandler.getRouterHandler(), list);
+                Chain chain = new Chain(routerHandler.getRouterHandler(), list);
                 chain.proceed(routerHandler.getContext(request), completableFuture);
             }
 
@@ -117,27 +117,43 @@ public final class Router implements HttpHandler {
     }
 
     public Router addInterceptor(Interceptor interceptor) {
-        interceptors.add(interceptor);
+        interceptors.add(new InterceptorUnit(interceptor));
         return this;
     }
 
-    class ChainImpl implements Interceptor.Chain {
-        private int index;
-        private final List<Interceptor> interceptors;
-        private final RouterHandler handler;
+    private boolean matchesPath(String uri, String pattern) {
+        if (uri == null || pattern == null || pattern.isEmpty()) {
+            return false;
+        }
+        // 确保模式以斜杠开头
+        if (!pattern.startsWith("/")) {
+            pattern = "/" + pattern;
+        }
+        // 创建临时NodePath实例进行匹配
+        NodePath tempRoot = new NodePath("/");
+        tempRoot.add(pattern, (HttpHandler) (request -> {
+        }));
+        return tempRoot.match(uri) != null;
+    }
 
-        public ChainImpl(RouterHandler handler, List<Interceptor> interceptors) {
-            this.interceptors = interceptors;
-            this.handler = handler;
+    class InterceptorUnit {
+        private final List<NodePath> path;
+        private final Interceptor interceptor;
+
+        public InterceptorUnit(Interceptor interceptor) {
+            this.interceptor = interceptor;
+            this.path = new ArrayList<>();
+            for (String pattern : interceptor.pathPatterns()) {
+                NodePath nodePath = new NodePath("/" + pattern);
+                nodePath.add(pattern, (HttpHandler) (request -> {
+
+                }));
+                path.add(nodePath);
+            }
         }
 
-        @Override
-        public void proceed(Context context, CompletableFuture<Object> completableFuture) throws Throwable {
-            if (index < interceptors.size()) {
-                interceptors.get(index++).intercept(context, completableFuture, this);
-            } else {
-                handler.handle(context, completableFuture);
-            }
+        public Interceptor getInterceptor() {
+            return interceptor;
         }
     }
 }

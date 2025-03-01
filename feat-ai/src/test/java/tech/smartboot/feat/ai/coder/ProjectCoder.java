@@ -21,27 +21,23 @@ public class ProjectCoder extends BaseChat {
             opts
 //                    .model("qwen2.5:3b")
 //                    .baseUrl("http://localhost:11434/v1") // Ollama本地服务地址
-                    .model(ModelMeta.GITEE_AI_Qwen2_5_32B_Instruct)
-                    .debug(true)
-            ;
+                    .model(ModelMeta.GITEE_AI_DeepSeek_R1_Distill_Qwen_32B).debug(false);
         });
 
         File file1 = new File("./feat-core/src/main/java/tech/smartboot/feat/router");
-        StringBuilder sourceBuilder = new StringBuilder();
+        StringBuilder sources = new StringBuilder();
         Files.walkFileTree(file1.toPath(), new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                readFile(file.toFile(), sourceBuilder);
+                readFile(file.toFile(), sources);
                 return FileVisitResult.CONTINUE;
             }
         });
 
-        chatModel.chat(PromptTemplate.PROJECT_CODER, data -> {
-            data.put("reference", sourceBuilder.toString());
-            data.put("input", "实现Router.java matchHandler方法中的拦截器路由匹配算法");
-        }).whenComplete((responseMessage, throwable) -> {
-            System.out.println(responseMessage.getContent());
-        });
+        chatModel.chatStream(PromptTemplate.PROJECT_CODER, data -> {
+            data.put("reference", sources.toString());
+            data.put("input", "实现Router.java matchHandler方法中的拦截器路由匹配算法。路由的匹配规则类似route方法");
+        }, System.out::print);
 
 
     }
