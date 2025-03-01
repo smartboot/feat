@@ -17,7 +17,10 @@ import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.impl.HttpEndpoint;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 /**
  * @author 三刀
@@ -30,6 +33,7 @@ public final class Router implements HttpHandler {
      */
     private final HttpHandler defaultHandler;
     private final NodePath rootPath = new NodePath("/");
+    private final List<Interceptor> interceptors = new ArrayList<>();
 
     public Router() {
         this(request -> request.getResponse().setHttpStatus(HttpStatus.NOT_FOUND));
@@ -88,7 +92,52 @@ public final class Router implements HttpHandler {
         if (httpHandler == null) {
             httpHandler = defaultHandler;
         }
-        return httpHandler;
+        // 检查是否存在匹配的拦截器
+        List<Interceptor> list = interceptors.stream().filter(interceptor -> {
+            //todo pathPattern
+            return false;
+        }).collect(Collectors.toList());
+        if (list.isEmpty()) {
+            return httpHandler;
+        }
+        RouterHandlerImpl routerHandler = (RouterHandlerImpl) httpHandler;
+        return new HttpHandler() {
+
+            @Override
+            public void handle(HttpRequest request, CompletableFuture<Object> completableFuture) throws Throwable {
+                ChainImpl chain = new ChainImpl(routerHandler.getRouterHandler(), list);
+                chain.proceed(routerHandler.getContext(request), completableFuture);
+            }
+
+            @Override
+            public void handle(HttpRequest request) {
+                throw new UnsupportedOperationException();
+            }
+        };
     }
 
+    public Router addInterceptor(Interceptor interceptor) {
+        interceptors.add(interceptor);
+        return this;
+    }
+
+    class ChainImpl implements Interceptor.Chain {
+        private int index;
+        private final List<Interceptor> interceptors;
+        private final RouterHandler handler;
+
+        public ChainImpl(RouterHandler handler, List<Interceptor> interceptors) {
+            this.interceptors = interceptors;
+            this.handler = handler;
+        }
+
+        @Override
+        public void proceed(Context context, CompletableFuture<Object> completableFuture) throws Throwable {
+            if (index < interceptors.size()) {
+                interceptors.get(index++).intercept(context, completableFuture, this);
+            } else {
+                handler.handle(context, completableFuture);
+            }
+        }
+    }
 }

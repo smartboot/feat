@@ -38,7 +38,7 @@ public class ProjectCoder extends BaseChat {
 
         chatModel.chat(PromptTemplate.PROJECT_CODER, data -> {
             data.put("reference", sourceBuilder.toString());
-            data.put("input", "为Router添加拦截器的设计");
+            data.put("input", "实现Router.java matchHandler方法中的拦截器路由匹配算法");
         }).whenComplete((responseMessage, throwable) -> {
             System.out.println(responseMessage.getContent());
         });

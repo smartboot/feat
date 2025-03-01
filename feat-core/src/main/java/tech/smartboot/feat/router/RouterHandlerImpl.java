@@ -37,6 +37,15 @@ final class RouterHandlerImpl implements HttpHandler {
 
     @Override
     public void handle(HttpRequest request, CompletableFuture<Object> completableFuture) throws Throwable {
+        Context context = getContext(request);
+        routerHandler.handle(context, completableFuture);
+    }
+
+    public RouterHandler getRouterHandler() {
+        return routerHandler;
+    }
+
+    public Context getContext(HttpRequest request) {
         Map<String, String> pathParams;
         if (pathIndexes.isEmpty()) {
             pathParams = Collections.emptyMap();
@@ -54,8 +63,7 @@ final class RouterHandlerImpl implements HttpHandler {
             }
             pathParams = Collections.unmodifiableMap(params);
         }
-        Context context = new Context(request, pathParams);
-        routerHandler.handle(context, completableFuture);
+        return new Context(request, pathParams);
     }
 
     public void handle(HttpRequest request) {
