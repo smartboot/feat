@@ -38,7 +38,5 @@ public class ProjectCoder extends BaseChat {
             data.put("reference", sources.toString());
             data.put("input", "实现Router.java matchHandler方法中的拦截器路由匹配算法。路由的匹配规则类似route方法");
         }, System.out::print);
-
-
     }
 }

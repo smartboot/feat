@@ -1,5 +1,6 @@
 package tech.smartboot.feat.router;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public interface Interceptor {
@@ -7,7 +8,7 @@ public interface Interceptor {
      * 拦截路径
      * @return 路径
      */
-    String[] pathPatterns();
+    List<String> pathPatterns();
 
     /**
      * 拦截请求
@@ -15,7 +16,7 @@ public interface Interceptor {
      * @param completableFuture 完成回调
      * @param chain 链
      */
-    void intercept(Context context, CompletableFuture<Object> completableFuture, Chain chain);
+    void intercept(Context context, CompletableFuture<Object> completableFuture, Chain chain) throws Throwable;
 
 
 }

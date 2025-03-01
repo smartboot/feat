@@ -3,12 +3,12 @@ package tech.smartboot.feat.router;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-class Chain {
+public class Chain {
     private int index;
     private final List<Interceptor> interceptors;
     private final RouterHandler handler;
 
-    public Chain(RouterHandler handler, List<Interceptor> interceptors) {
+    Chain(RouterHandler handler, List<Interceptor> interceptors) {
         this.interceptors = interceptors;
         this.handler = handler;
     }
