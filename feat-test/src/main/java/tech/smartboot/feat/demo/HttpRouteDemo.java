@@ -9,14 +9,7 @@
 package tech.smartboot.feat.demo;
 
 import tech.smartboot.feat.core.server.HttpServer;
-import tech.smartboot.feat.router.Chain;
-import tech.smartboot.feat.router.Context;
-import tech.smartboot.feat.router.Interceptor;
 import tech.smartboot.feat.router.Router;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * 请求路由示例
@@ -70,17 +63,9 @@ public class HttpRouteDemo {
 //                })
                 .route("/b/c/test1", ctx -> ctx.Response.write(("/b/c/test1").getBytes()))
                 .route("/b/c/test2", ctx -> ctx.Response.write(("/b/c/test2").getBytes()));
-        routeHandle.addInterceptor(new Interceptor() {
-            @Override
-            public List<String> pathPatterns() {
-                return Arrays.asList("/b/*");
-            }
-
-            @Override
-            public void intercept(Context context, CompletableFuture<Object> completableFuture, Chain chain) throws Throwable {
-                System.out.println("intercept:" + context.Request.getRequestURI());
-                chain.proceed(context, completableFuture);
-            }
+        routeHandle.addInterceptor("/b/*", (context, completableFuture, chain) -> {
+            System.out.println("intercept:" + context.Request.getRequestURI());
+            chain.proceed(context, completableFuture);
         });
 
         // 3. 启动服务

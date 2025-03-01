@@ -18,6 +18,7 @@ import tech.smartboot.feat.core.server.impl.HttpEndpoint;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -116,34 +117,24 @@ public final class Router implements HttpHandler {
         };
     }
 
-    public Router addInterceptor(Interceptor interceptor) {
-        interceptors.add(new InterceptorUnit(interceptor));
+    public Router addInterceptor(String urlPattern, Interceptor interceptor) {
+        return addInterceptors(Collections.singletonList(urlPattern), interceptor);
+    }
+
+    public Router addInterceptors(List<String> urlPatterns, Interceptor interceptor) {
+        interceptors.add(new InterceptorUnit(urlPatterns, interceptor));
         return this;
     }
 
-    private boolean matchesPath(String uri, String pattern) {
-        if (uri == null || pattern == null || pattern.isEmpty()) {
-            return false;
-        }
-        // 确保模式以斜杠开头
-        if (!pattern.startsWith("/")) {
-            pattern = "/" + pattern;
-        }
-        // 创建临时NodePath实例进行匹配
-        NodePath tempRoot = new NodePath("/");
-        tempRoot.add(pattern, (HttpHandler) (request -> {
-        }));
-        return tempRoot.match(uri) != null;
-    }
 
-    class InterceptorUnit {
+    private class InterceptorUnit {
         private final List<NodePath> path;
         private final Interceptor interceptor;
 
-        public InterceptorUnit(Interceptor interceptor) {
+        public InterceptorUnit(List<String> patterns, Interceptor interceptor) {
             this.interceptor = interceptor;
             this.path = new ArrayList<>();
-            for (String pattern : interceptor.pathPatterns()) {
+            for (String pattern : patterns) {
                 NodePath nodePath = new NodePath("/" + pattern);
                 nodePath.add(pattern, (HttpHandler) (request -> {
 
