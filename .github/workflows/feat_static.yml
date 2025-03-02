@@ -1,0 +1,41 @@
+# This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-maven
+
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+name: 自动化构建 Feat Static
+
+on:
+  push:
+    branches: [ "master" ]
+    tags:
+      - v**
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        name: Checkout
+      - name: Set up JDK 8
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '8'
+      - name: Set up Maven 3.9
+        uses: stCarolas/setup-maven@v5
+      - name: Build Feat
+        run: mvn -B install --file pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
+      - name: Build Feat Static
+        run: mvn -B install --file deploy/feat_static/pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
+      - name: 上传 feat-static 制品
+        uses: actions/upload-artifact@v4
+        with:
+          name: feat-static-${{ github.ref_name }}
+          compression-level: 0
+          path: deploy/feat_static/target/*.tar.gz
