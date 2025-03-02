@@ -32,6 +32,8 @@ import java.net.URLDecoder;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Date;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -210,7 +212,4 @@ public class HttpStaticResourceHandler implements HttpHandler {
         }
     }
 
-    public static void main(String[] args) {
-        Feat.fileServer(opts -> opts.autoIndex(true)).listen();
-    }
 }

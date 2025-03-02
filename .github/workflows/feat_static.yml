@@ -38,4 +38,4 @@ jobs:
         with:
           name: feat-static-${{ github.ref_name }}
           compression-level: 0
-          path: deploy/feat_static/target/*.tar.gz
+          path: deploy/feat_static/target/feat_static-*.jar
