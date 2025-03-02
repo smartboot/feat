@@ -8,6 +8,7 @@
 
 package tech.smartboot.feat.fileserver;
 
+import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.core.common.HttpMethod;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
@@ -207,5 +208,9 @@ public class HttpStaticResourceHandler implements HttpHandler {
         if (!HttpMethod.HEAD.equals(request.getMethod())) {
             throw new HttpException(HttpStatus.NOT_FOUND);
         }
+    }
+
+    public static void main(String[] args) {
+        Feat.fileServer(opts -> opts.autoIndex(true)).listen();
     }
 }
