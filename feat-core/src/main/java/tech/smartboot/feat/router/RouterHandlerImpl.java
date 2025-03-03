@@ -29,8 +29,10 @@ import java.util.concurrent.CompletableFuture;
 final class RouterHandlerImpl implements HttpHandler {
     private List<PathIndex> pathIndexes;
     private final RouterHandler routerHandler;
+    private Router router;
 
-    public RouterHandlerImpl(String urlPattern, RouterHandler routerHandler) {
+    public RouterHandlerImpl(Router router, String urlPattern, RouterHandler routerHandler) {
+        this.router = router;
         this.routerHandler = routerHandler;
         String[] path = urlPattern.split("/");
         pathIndexes = new ArrayList<>();
@@ -77,7 +79,7 @@ final class RouterHandlerImpl implements HttpHandler {
             }
             pathParams = Collections.unmodifiableMap(params);
         }
-        return new Context(request, pathParams);
+        return new Context(router,request, pathParams);
     }
 
     public void handle(HttpRequest request) {

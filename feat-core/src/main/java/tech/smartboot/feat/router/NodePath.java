@@ -71,7 +71,7 @@ final class NodePath {
         return type;
     }
 
-    public void add(String subPath, HttpHandler handler) {
+    public void add(String subPath, RouterHandlerImpl handler) {
         add(subPath, 0, handler);
     }
 
@@ -129,7 +129,7 @@ final class NodePath {
         return path;
     }
 
-    public void add(final String subPath, int offset, HttpHandler handler) {
+    private void add(final String subPath, int offset, HttpHandler handler) {
         int nextIndex;
         //尾部匹配
         if (subPath.charAt(offset) != '/') {

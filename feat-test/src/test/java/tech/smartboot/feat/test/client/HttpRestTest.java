@@ -44,7 +44,7 @@ public class HttpRestTest {
         Router routeHandler = new Router();
         routeHandler.route("/post", ctx -> {
             HttpRequest request = ctx.Request;
-            HttpResponse response = request.getResponse();
+            tech.smartboot.feat.core.server.HttpResponse response = request.getResponse();
             response.setHeader(HeaderNameEnum.CONNECTION.getName(), HeaderValue.Connection.keepalive);
             JSONObject jsonObject = new JSONObject();
             for (String key : request.getParameters().keySet()) {

@@ -14,13 +14,14 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 public class Chain {
     private int index;
     private final List<Interceptor> interceptors;
     private final RouterHandler handler;
+    private boolean isInterrupted = true;
 
     Chain(RouterHandler handler, List<Interceptor> interceptors) {
         this.interceptors = interceptors;
@@ -31,7 +32,12 @@ public class Chain {
         if (index < interceptors.size()) {
             interceptors.get(index++).intercept(context, completableFuture, this);
         } else {
+            isInterrupted = false;
             handler.handle(context, completableFuture);
         }
+    }
+
+    public boolean isInterrupted() {
+        return isInterrupted;
     }
 }

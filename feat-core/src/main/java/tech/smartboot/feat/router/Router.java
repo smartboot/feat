@@ -17,16 +17,19 @@ import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.impl.HttpEndpoint;
+import tech.smartboot.feat.router.session.Session;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 public final class Router implements HttpHandler {
@@ -34,16 +37,37 @@ public final class Router implements HttpHandler {
     /**
      * 默认404
      */
-    private final HttpHandler defaultHandler;
+    private final RouterHandlerImpl defaultHandler;
     private final NodePath rootPath = new NodePath("/");
     private final List<InterceptorUnit> interceptors = new ArrayList<>();
+    private final Map<String, Session> sessions = new ConcurrentHashMap<>();
 
     public Router() {
         this(request -> request.getResponse().setHttpStatus(HttpStatus.NOT_FOUND));
     }
 
-    public Router(HttpHandler defaultHandler) {
-        this.defaultHandler = defaultHandler;
+    public Router(HttpHandler httpHandler) {
+        this.defaultHandler = new RouterHandlerImpl(this, "", new RouterHandler() {
+            @Override
+            public void onHeaderComplete(HttpEndpoint request) throws IOException {
+                httpHandler.onHeaderComplete(request);
+            }
+
+            @Override
+            public void handle(Context request, CompletableFuture<Object> completableFuture) throws Throwable {
+                httpHandler.handle(request.Request, completableFuture);
+            }
+
+            @Override
+            public void onClose(HttpEndpoint request) {
+                httpHandler.onClose(request);
+            }
+
+            @Override
+            public void handle(Context ctx) throws Throwable {
+                httpHandler.handle(ctx.Request);
+            }
+        });
     }
 
     @Override
@@ -86,7 +110,7 @@ public final class Router implements HttpHandler {
      * @return
      */
     public Router route(String urlPattern, RouterHandler handler) {
-        rootPath.add(urlPattern, new RouterHandlerImpl(urlPattern, handler));
+        rootPath.add(urlPattern, new RouterHandlerImpl(this, urlPattern, handler));
         return this;
     }
 
@@ -96,10 +120,7 @@ public final class Router implements HttpHandler {
             httpHandler = defaultHandler;
         }
         // 检查是否存在匹配的拦截器
-        List<Interceptor> list = interceptors.stream()
-                .filter(interceptor -> interceptor.path.stream()
-                        .anyMatch(pattern -> pattern.match(uri) != null))
-                .map(InterceptorUnit::getInterceptor).collect(Collectors.toList());
+        List<Interceptor> list = interceptors.stream().filter(interceptor -> interceptor.path.stream().anyMatch(pattern -> pattern.match(uri) != null)).map(InterceptorUnit::getInterceptor).collect(Collectors.toList());
         if (list.isEmpty()) {
             return httpHandler;
         }
@@ -110,6 +131,9 @@ public final class Router implements HttpHandler {
             public void handle(HttpRequest request, CompletableFuture<Object> completableFuture) throws Throwable {
                 Chain chain = new Chain(routerHandler.getRouterHandler(), list);
                 chain.proceed(routerHandler.getContext(request), completableFuture);
+                if (chain.isInterrupted()) {
+                    completableFuture.complete(null);
+                }
             }
 
             @Override
@@ -138,9 +162,7 @@ public final class Router implements HttpHandler {
             this.path = new ArrayList<>();
             for (String pattern : patterns) {
                 NodePath nodePath = new NodePath("/" + pattern);
-                nodePath.add(pattern, (HttpHandler) (request -> {
-
-                }));
+                nodePath.add(pattern, new RouterHandlerImpl(Router.this, pattern, null));
                 path.add(nodePath);
             }
         }
@@ -148,5 +170,9 @@ public final class Router implements HttpHandler {
         public Interceptor getInterceptor() {
             return interceptor;
         }
+    }
+
+    Map<String, Session> getSessions() {
+        return sessions;
     }
 }

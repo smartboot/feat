@@ -40,7 +40,7 @@ public class HttpGzipTest {
         httpServer = new HttpServer();
         Router routeHandle = new Router();
         routeHandle.route("/test", ctx -> {
-            HttpResponse response = ctx.Response;
+            tech.smartboot.feat.core.server.HttpResponse response = ctx.Response;
             int count = NumberUtils.toInt(ctx.Request.getParameter("count"), 1);
             response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValue.ContentEncoding.GZIP);
             GZIPOutputStream outputStream = new GZIPOutputStream(response.getOutputStream());
@@ -51,7 +51,7 @@ public class HttpGzipTest {
         });
 
         routeHandle.route("/html", ctx -> {
-            HttpResponse response = ctx.Response;
+            tech.smartboot.feat.core.server.HttpResponse response = ctx.Response;
             response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValue.ContentEncoding.GZIP);
             GZIPOutputStream outputStream = new GZIPOutputStream(response.getOutputStream());
             outputStream.write("<html>".getBytes());
