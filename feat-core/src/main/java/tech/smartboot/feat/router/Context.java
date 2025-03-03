@@ -10,8 +10,6 @@
 
 package tech.smartboot.feat.router;
 
-import tech.smartboot.feat.core.common.Cookie;
-import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.router.session.Session;
@@ -44,30 +42,7 @@ public class Context {
         if (session != null) {
             return session;
         }
-        String sessionId = null;
-        Cookie[] cookies = Request.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if (Session.DEFAULT_SESSION_COOKIE_NAME.equals(cookie.getName())) {
-                    sessionId = cookie.getValue();
-                    break;
-                }
-            }
-        }
-        if (StringUtils.isNotBlank(sessionId)) {
-            session = router.getSessions().get(sessionId);
-        }
-
-        if (session == null) {
-            session = new Session(Request) {
-                @Override
-                public void invalidate() {
-                    router.getSessions().remove(getSessionId());
-                    super.invalidate();
-                }
-            };
-            router.getSessions().put(session.getSessionId(), session);
-        }
+        session = router.getSession(Request);
         return session;
     }
 }

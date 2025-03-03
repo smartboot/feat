@@ -10,6 +10,7 @@
 
 package tech.smartboot.feat.router;
 
+import tech.smartboot.feat.core.common.Cookie;
 import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
 import tech.smartboot.feat.core.common.logging.Logger;
@@ -174,5 +175,29 @@ public final class Router implements HttpHandler {
 
     Map<String, Session> getSessions() {
         return sessions;
+    }
+
+    Session getSession(HttpRequest request) {
+        Session session = null;
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (Session.DEFAULT_SESSION_COOKIE_NAME.equals(cookie.getName())) {
+                    session = sessions.get(cookie.getValue());
+                    break;
+                }
+            }
+        }
+        if (session == null) {
+            session = new Session(request) {
+                @Override
+                public void invalidate() {
+                    sessions.remove(getSessionId());
+                    super.invalidate();
+                }
+            };
+            sessions.put(session.getSessionId(), session);
+        }
+        return session;
     }
 }
