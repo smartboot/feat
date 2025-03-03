@@ -35,7 +35,7 @@ public class Session {
     private final long creationTime = System.currentTimeMillis();
     private final String sessionId;
     private final HttpRequest request;
-    private final Map<String, Object> attributes = new HashMap<>();
+    private final Map<String, String> attributes = new HashMap<>();
 
     public Session(HttpRequest request) {
         this.sessionId = createSessionId();
@@ -51,11 +51,11 @@ public class Session {
         return sessionId;
     }
 
-    public synchronized void put(String key, Object value) {
+    public synchronized void put(String key, String value) {
         attributes.put(key, value);
     }
 
-    public synchronized Object get(String key) {
+    public synchronized String get(String key) {
         return attributes.get(key);
     }
 
