@@ -15,6 +15,7 @@ import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpMethod;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
+import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.impl.HttpMessageProcessor;
 import tech.smartboot.feat.core.server.impl.HttpRequestProtocol;
 
@@ -97,6 +98,7 @@ public class HttpServer {
                 System.out.println(FeatUtils.getResourceAsString("feat-support.txt"));
                 System.out.println("\u001B[32m\uD83C\uDF89Congratulations, the feat startup is successful" + ".\u001B[0m");
             }
+            System.out.println((options.isSecure() ? "https://" : "http://") + (StringUtils.isBlank(host) ? "0.0.0.0" : host) + ":" + port + "/");
         } catch (Throwable e) {
             System.out.println("\u001B[31m❗feat has failed to start for some reason.\u001B[0m");
             throw new RuntimeException("server start error.", e);

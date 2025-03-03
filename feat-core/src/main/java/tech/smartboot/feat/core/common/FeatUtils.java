@@ -29,4 +29,18 @@ public class FeatUtils {
             return null;
         }
     }
+
+    public static byte[] toByteArray(InputStream inputStream) throws IOException {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        byte[] buffer = new byte[1024];
+        int len;
+        while ((len = inputStream.read(buffer)) != -1) {
+            outputStream.write(buffer, 0, len);
+        }
+        return outputStream.toByteArray();
+    }
+
+    public static String asString(InputStream inputStream) throws IOException {
+        return new String(toByteArray(inputStream));
+    }
 }

@@ -7,8 +7,48 @@ sidebar:
 import file_server_1 from './img/file_server_1.png';
 import file_server_2 from './img/file_server_2.png';
 import {Steps} from "@astrojs/starlight/components";
+import Mermaid from '../../../components/Mermaid.astro';
 
-Feat 内置了一个静态文件服务，你可以通过以下方式启用：
+Feat框架内置了一个高性能的静态文件服务模块（FileServer），它可以作为Nginx的替代方案，用于托管静态资源。
+
+本文将详细介绍如何使用FileServer模块，包括基本用法、功能特性以及高级配置。
+
+## 1. 概述
+
+FileServer模块是一个轻量级的静态资源服务器，支持以下功能：
+- 静态文件托管
+- 自动目录索引（可选）
+- 文件缓存
+- 断点续传
+- 支持大文件传输
+- 高性能IO处理
+
+通过FileServer模块，开发者可以快速搭建一个高效的静态资源服务器，适用于以下场景：
+- 托管网站静态资源（HTML、CSS、JavaScript等）
+- 提供文件下载服务
+- 替代Nginx作为静态资源服务器
+
+<Mermaid code={`
+graph TD
+    A[用户请求] --> B[Bootstrap初始化]
+    B --> C[配置FileServerOptions]
+    C --> D[HttpStaticResourceHandler处理请求]
+    D --> E[解析请求URI]
+    E --> F{文件/目录检查}
+    F --> G[文件存在]
+    G --> H[读取文件内容]
+    H --> I[发送响应]
+    F --> J[文件不存在]
+    J --> K[返回404错误]
+    D --> L[处理目录索引]
+    L --> M[生成目录列表]
+    M --> I
+    D --> N[处理缓存]
+    N --> O{缓存检查}
+    O --> P[返回304未修改]
+    O --> Q[返回文件内容]
+    Q --> I
+    `}/>
 
 基本用法：
 ```java "baseDir(\"./\")" "fileServer"
