@@ -59,11 +59,11 @@ public class Context {
         }
 
         if (session == null) {
-            session = new Session(router, Request) {
+            session = new Session(Request) {
                 @Override
                 public void invalidate() {
-                    super.invalidate();
                     router.getSessions().remove(getSessionId());
+                    super.invalidate();
                 }
             };
             router.getSessions().put(session.getSessionId(), session);

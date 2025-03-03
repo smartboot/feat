@@ -16,7 +16,6 @@ import tech.smartboot.feat.core.common.utils.CollectionUtils;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.ServerOptions;
-import tech.smartboot.feat.router.Router;
 
 import java.util.Base64;
 import java.util.Collection;
@@ -38,7 +37,7 @@ public class Session {
     private final HttpRequest request;
     private final Map<String, Object> attributes = new HashMap<>();
 
-    public Session(Router router, HttpRequest request) {
+    public Session(HttpRequest request) {
         this.sessionId = createSessionId();
         this.request = request;
         Cookie cookie = new Cookie(DEFAULT_SESSION_COOKIE_NAME, sessionId);
