@@ -173,10 +173,6 @@ public final class Router implements HttpHandler {
         }
     }
 
-    Map<String, Session> getSessions() {
-        return sessions;
-    }
-
     Session getSession(HttpRequest request) {
         Session session = null;
         Cookie[] cookies = request.getCookies();
