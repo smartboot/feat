@@ -11,8 +11,8 @@
 package tech.smartboot.feat.core.common.enums;
 
 /**
- * @author 三刀
- * @version V1.0 , 2018/12/6
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public enum HeaderNameEnum {
     ACCEPT("Accept"),

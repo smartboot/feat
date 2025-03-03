@@ -15,6 +15,10 @@ import tech.smartboot.feat.core.server.HttpResponse;
 
 import java.util.Map;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class Context {
     public final HttpRequest Request;
     public final HttpResponse Response;

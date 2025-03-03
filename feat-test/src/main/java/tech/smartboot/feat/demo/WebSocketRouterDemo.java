@@ -17,8 +17,8 @@ import tech.smartboot.feat.core.server.upgrade.websocket.WebSocketUpgrade;
 import tech.smartboot.feat.router.Router;
 
 /**
- * @author 三刀
- * @version V1.0 , 2020/4/1
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public class WebSocketRouterDemo {
     public static void main(String[] args) {

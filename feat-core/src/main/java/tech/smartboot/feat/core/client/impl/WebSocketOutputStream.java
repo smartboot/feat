@@ -13,8 +13,8 @@ package tech.smartboot.feat.core.client.impl;
 import org.smartboot.socket.transport.AioSession;
 
 /**
- * @author 三刀
- * @version V1.0 , 2018/2/3
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 final class WebSocketOutputStream extends AbstractOutputStream {
     public WebSocketOutputStream(WebSocketRequestImpl request, AioSession session) {

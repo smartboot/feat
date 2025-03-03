@@ -13,10 +13,8 @@ package tech.smartboot.feat.core.server;
 import tech.smartboot.feat.core.common.utils.Constant;
 
 /**
- * WebSocket消息响应接口
- *
- * @author 三刀
- * @version V1.0 , 2020/3/31
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public interface WebSocketResponse {
     /**

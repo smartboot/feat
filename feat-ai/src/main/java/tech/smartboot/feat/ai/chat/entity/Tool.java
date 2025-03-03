@@ -10,6 +10,10 @@
 
 package tech.smartboot.feat.ai.chat.entity;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class Tool {
     private String type;
     private Function function;

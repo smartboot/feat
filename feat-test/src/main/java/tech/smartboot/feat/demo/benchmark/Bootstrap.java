@@ -14,6 +14,10 @@ package tech.smartboot.feat.demo.benchmark;
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.cloud.FeatCloud;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class Bootstrap {
 
     public static void main(String[] args) {
@@ -43,24 +47,4 @@ public class Bootstrap {
         }).listen(8080);
     }
 
-//    private static void initDB(HttpRouteHandler routeHandle) {
-//        try {
-//            Class.forName("org.postgresql.Driver");
-//        } catch (ClassNotFoundException e) {
-//            e.printStackTrace();
-//        }
-//        HikariConfig config = new HikariConfig();
-//        config.setJdbcUrl("jdbc:postgresql://tfb-database:5432/hello_world");
-//        config.setUsername("benchmarkdbuser");
-//        config.setPassword("benchmarkdbpass");
-//        config.setMaximumPoolSize(64);
-//        config.addDataSourceProperty("cachePrepStmts", "true");
-//        config.addDataSourceProperty("prepStmtCacheSize", "250");
-//        config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
-//        DataSource dataSource = new HikariDataSource(config);
-//        routeHandle.route("/db", new SingleQueryHandler(dataSource))
-//                .route("/queries", new MultipleQueriesHandler(dataSource))
-//                .route("/updates", new UpdateHandler(dataSource));
-////                .route("/fortunes", new FortunesHandler(dataSource));
-//    }
 }

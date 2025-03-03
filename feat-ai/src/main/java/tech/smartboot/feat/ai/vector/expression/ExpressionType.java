@@ -10,6 +10,10 @@
 
 package tech.smartboot.feat.ai.vector.expression;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public enum ExpressionType {
     AND, OR, EQ, NE, GT, GTE, LT, LTE, IN, NIN, NOT;
 

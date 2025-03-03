@@ -13,6 +13,10 @@ package tech.smartboot.feat.ai.vector.expression;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 class ComplexExpression extends Expression {
     private final List<Expression> expressions = new ArrayList<>();
 

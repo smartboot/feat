@@ -15,6 +15,10 @@ import org.smartboot.socket.transport.WriteBuffer;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class HeadersFrame extends Http2Frame {
     private int padLength;
     private int streamDependency;
@@ -26,10 +30,6 @@ public class HeadersFrame extends Http2Frame {
     public HeadersFrame(int streamId, int flags, int remaining) {
         super(streamId, flags, remaining);
     }
-
-//    public HeadersFrame(int streamId) {
-//        super(streamId, FLAG_END_HEADERS, 0);
-//    }
 
 
     @Override

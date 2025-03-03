@@ -27,6 +27,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class ChromaVectorStore implements VectorStore {
     public static final Convert<JSONObject> convert = new Convert<JSONObject>() {
         @Override

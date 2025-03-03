@@ -21,9 +21,8 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Prompt模板
- * @author 三刀
- * @version V1.0
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public class PromptTemplate {
     public static Prompt MAVEN_PROJECT_MERMAID = new Prompt() {

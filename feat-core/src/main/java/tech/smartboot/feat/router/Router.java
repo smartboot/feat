@@ -26,8 +26,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 /**
- * @author 三刀
- * @version V1.0 , 2018/3/24
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public final class Router implements HttpHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(Router.class);

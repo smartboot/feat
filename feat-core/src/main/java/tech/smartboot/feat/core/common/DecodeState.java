@@ -10,6 +10,10 @@
 
 package tech.smartboot.feat.core.common;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class DecodeState {
     public static final int STATE_PROTOCOL_DECODE = 0;
     public static final int STATE_STATUS_CODE = 1;

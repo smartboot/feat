@@ -38,6 +38,10 @@ import java.util.Base64;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class WebSocketUpgrade extends Upgrade {
     private static final Logger LOGGER = LoggerFactory.getLogger(WebSocketUpgrade.class);
     private static final String WEBSOCKET_13_ACCEPT_GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";

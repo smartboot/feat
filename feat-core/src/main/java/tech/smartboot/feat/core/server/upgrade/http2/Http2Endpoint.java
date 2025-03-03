@@ -31,6 +31,10 @@ import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Map;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class Http2Endpoint extends Endpoint implements HttpRequest, Reset {
     private static final int INIT_CONTENT_LENGTH = -2;
     private static final int NONE_CONTENT_LENGTH = -1;

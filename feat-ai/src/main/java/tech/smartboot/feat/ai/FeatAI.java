@@ -16,6 +16,10 @@ import tech.smartboot.feat.ai.embedding.EmbeddingOptions;
 
 import java.util.function.Consumer;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class FeatAI {
     public static ChatModel chatModel(Consumer<Options> consumer) {
         Options options = new Options();

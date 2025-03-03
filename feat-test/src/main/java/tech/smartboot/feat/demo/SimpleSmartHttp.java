@@ -15,6 +15,10 @@ import tech.smartboot.feat.Feat;
 import java.io.InputStream;
 
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class SimpleSmartHttp {
     public static void main(String[] args) {
         Feat.httpServer(options -> options.debug(true))

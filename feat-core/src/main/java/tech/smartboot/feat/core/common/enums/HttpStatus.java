@@ -15,16 +15,17 @@ import tech.smartboot.feat.core.common.utils.Constant;
 
 import java.io.IOException;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class HttpStatus {
     private static final HttpStatus[] HASH_TABLE = new HttpStatus[600];
-    // 1xx Informational
 
     public static final HttpStatus CONTINUE = new HttpStatus(100, "Continue", true, true);
     public static final HttpStatus SWITCHING_PROTOCOLS = new HttpStatus(101, "Switching Protocols", true, true);
     public static final HttpStatus PROCESSING = new HttpStatus(102, "Processing", false, true);
     public static final HttpStatus CHECKPOINT = new HttpStatus(103, "Checkpoint", false, true);
-
-    // 2xx Success
 
     public static final HttpStatus OK = new HttpStatus(200, "OK", true, true);
     public static final HttpStatus CREATED = new HttpStatus(201, "Created", false, true);
@@ -37,8 +38,6 @@ public class HttpStatus {
     public static final HttpStatus ALREADY_REPORTED = new HttpStatus(208, "Already Reported", false, true);
     public static final HttpStatus IM_USED = new HttpStatus(226, "IM Used", false, true);
 
-    // 3xx Redirection
-
     public static final HttpStatus MULTIPLE_CHOICES = new HttpStatus(300, "Multiple Choices", false, true);
     public static final HttpStatus MOVED_PERMANENTLY = new HttpStatus(301, "Moved Permanently", false, true);
     public static final HttpStatus FOUND = new HttpStatus(302, "Found", false, true);
@@ -47,8 +46,6 @@ public class HttpStatus {
     public static final HttpStatus USE_PROXY = new HttpStatus(305, "Use Proxy", false, true);
     public static final HttpStatus TEMPORARY_REDIRECT = new HttpStatus(307, "Temporary Redirect", false, true);
     public static final HttpStatus PERMANENT_REDIRECT = new HttpStatus(308, "Permanent Redirect", false, true);
-
-    // --- 4xx Client Error ---
 
     public static final HttpStatus BAD_REQUEST = new HttpStatus(400, "Bad Request", true, true);
     public static final HttpStatus UNAUTHORIZED = new HttpStatus(401, "Unauthorized", true, true);
@@ -79,8 +76,6 @@ public class HttpStatus {
     public static final HttpStatus PRECONDITION_REQUIRED = new HttpStatus(428, "Precondition Required", false, true);
     public static final HttpStatus TOO_MANY_REQUESTS = new HttpStatus(429, "Too Many Requests", false, true);
     public static final HttpStatus REQUEST_HEADER_FIELDS_TOO_LARGE = new HttpStatus(431, "Request Header Fields Too Large", false, true);
-
-    // --- 5xx Server Error ---
 
     public static final HttpStatus INTERNAL_SERVER_ERROR = new HttpStatus(500, "Internal Server Error", true, true);
     public static final HttpStatus NOT_IMPLEMENTED = new HttpStatus(501, "Not Implemented", false, true);

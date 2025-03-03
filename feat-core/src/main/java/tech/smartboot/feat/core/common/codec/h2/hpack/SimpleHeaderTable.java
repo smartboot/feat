@@ -22,6 +22,10 @@ import static java.lang.String.format;
  * is the total number of entries in both the static and the dynamic tables.
  * The size of the table is the sum of the sizes of its dynamic table's entries.
  */
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 class SimpleHeaderTable {
 
     /* An immutable list of static header fields */

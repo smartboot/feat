@@ -23,8 +23,8 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 /**
- * @author huqiang
- * @since 2021/3/2 10:57
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public class HttpURLTest {
 
@@ -80,9 +80,9 @@ public class HttpURLTest {
         HttpClient httpClient = new HttpClient("http://localhost:8080/json");
         httpClient.options().debug(true);
         byte[] jsonBytes = "{\"a\":1,\"b\":\"123\"}".getBytes(StandardCharsets.UTF_8);
-        httpClient.post().header(h->h.setContentLength(jsonBytes.length).setContentType("application/json")).body(b->b.write(jsonBytes).flush());
-        httpClient.post().header(h->h.setContentLength(jsonBytes.length).setContentType("application/json")).body(b->b.write(jsonBytes).flush());
-        httpClient.post().body(b->b.write(jsonBytes).flush()).submit();
+        httpClient.post().header(h -> h.setContentLength(jsonBytes.length).setContentType("application/json")).body(b -> b.write(jsonBytes).flush());
+        httpClient.post().header(h -> h.setContentLength(jsonBytes.length).setContentType("application/json")).body(b -> b.write(jsonBytes).flush());
+        httpClient.post().body(b -> b.write(jsonBytes).flush()).submit();
         Thread.sleep(100);
     }
 

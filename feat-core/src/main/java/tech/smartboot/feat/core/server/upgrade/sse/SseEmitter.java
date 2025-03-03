@@ -15,6 +15,10 @@ import org.smartboot.socket.transport.AioSession;
 import java.io.IOException;
 import java.util.function.Consumer;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class SseEmitter {
     private final AioSession aioSession;
 

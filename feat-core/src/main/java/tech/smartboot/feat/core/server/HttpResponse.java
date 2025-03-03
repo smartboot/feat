@@ -20,10 +20,8 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 /**
- * Http消息响应接口
- *
- * @author 三刀
- * @version V1.0 , 2018/2/3
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public interface HttpResponse {
 
@@ -68,7 +66,7 @@ public interface HttpResponse {
      *              (http://www.ietf.org/rfc/rfc2047.txt)
      * @see #addHeader
      */
-    public void setHeader(String name, String value);
+    void setHeader(String name, String value);
 
     /**
      * Adds a response header with the given name and value. This method allows
@@ -80,7 +78,7 @@ public interface HttpResponse {
      *              (http://www.ietf.org/rfc/rfc2047.txt)
      * @see #setHeader
      */
-    public void addHeader(String name, String value);
+    void addHeader(String name, String value);
 
     String getHeader(String name);
 
@@ -94,7 +92,7 @@ public interface HttpResponse {
      * returned as a single header value.
      * @since Servlet 3.0
      */
-    public Collection<String> getHeaders(String name);
+    Collection<String> getHeaders(String name);
 
     /**
      * Get the header names set for this HTTP response.
@@ -102,7 +100,7 @@ public interface HttpResponse {
      * @return The header names set for this HTTP response.
      * @since Servlet 3.0
      */
-    public Collection<String> getHeaderNames();
+    Collection<String> getHeaderNames();
 
     void setContentLength(long contentLength);
 
@@ -120,7 +118,7 @@ public interface HttpResponse {
 
     void write(byte[] data) throws IOException;
 
-    public void close();
+    void close();
 
     /**
      * 添加Cookie信息
@@ -159,7 +157,7 @@ public interface HttpResponse {
      * @implSpec The default implementation is a no-op.
      * @since Servlet 4.0
      */
-    default public void setTrailerFields(Supplier<Map<String, String>> supplier) {
+    default void setTrailerFields(Supplier<Map<String, String>> supplier) {
     }
 
     /**
@@ -169,7 +167,7 @@ public interface HttpResponse {
      * @implSpec The default implememtation return null.
      * @since Servlet 4.0
      */
-    default public Supplier<Map<String, String>> getTrailerFields() {
+    default Supplier<Map<String, String>> getTrailerFields() {
         return null;
     }
 

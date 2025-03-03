@@ -24,6 +24,10 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class ProjectDocumentDemo extends BaseChat {
     public static void main(String[] args) throws IOException {
         //文档

@@ -18,6 +18,10 @@ import tech.smartboot.feat.core.server.HttpRequest;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public abstract class AbstractServiceLoader implements CloudService {
     protected JSONObject getParams(HttpRequest request) {
         try {

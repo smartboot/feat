@@ -16,10 +16,10 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import tech.smartboot.feat.core.client.HttpClient;
+import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.server.HttpRequest;
-import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.router.Router;
 
@@ -30,8 +30,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 /**
- * @author 三刀（zhengjunweimail@163.com）
- * @version V1.0 , 2021/2/7
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public class HttpRestTest {
 
@@ -58,7 +58,7 @@ public class HttpRestTest {
     @Test
     public void testPost() throws ExecutionException, InterruptedException {
         HttpClient httpClient = new HttpClient("localhost", 8080);
-        Future<tech.smartboot.feat.core.client.HttpResponse> future = httpClient.rest("post", "/post")
+        Future<HttpResponse> future = httpClient.rest("post", "/post")
                 .onSuccess(response -> {
                     System.out.println(response.body());
                     httpClient.close();

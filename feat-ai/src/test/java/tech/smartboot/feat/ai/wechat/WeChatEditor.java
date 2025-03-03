@@ -27,6 +27,10 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Arrays;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class WeChatEditor extends BaseChat {
     public static void main(String[] args) throws IOException {
 
@@ -55,7 +59,7 @@ public class WeChatEditor extends BaseChat {
 
             @Override
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-                if (Arrays.asList("audio", "embedding", "vector","chat").contains(dir.getFileName().toString())) {
+                if (Arrays.asList("audio", "embedding", "vector", "chat").contains(dir.getFileName().toString())) {
                     return FileVisitResult.SKIP_SUBTREE;
                 }
                 return super.preVisitDirectory(dir, attrs);

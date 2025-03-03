@@ -14,6 +14,10 @@ import java.util.Iterator;
 
 import static java.util.Objects.requireNonNull;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 final class BulkSizeUpdateWriter implements BinaryRepresentationWriter {
 
     private final SizeUpdateWriter writer = new SizeUpdateWriter();

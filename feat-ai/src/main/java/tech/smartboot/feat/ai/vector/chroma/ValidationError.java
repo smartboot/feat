@@ -10,6 +10,10 @@
 
 package tech.smartboot.feat.ai.vector.chroma;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class ValidationError {
     private String error;
     private String message;

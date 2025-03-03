@@ -19,6 +19,7 @@ import org.smartboot.socket.extension.plugins.SslPlugin;
 import org.smartboot.socket.extension.ssl.ClientAuth;
 import org.smartboot.socket.extension.ssl.factory.ServerSSLContextFactory;
 import tech.smartboot.feat.core.client.HttpClient;
+import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.utils.StringUtils;
@@ -35,8 +36,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 
 /**
- * @author huqiang
- * @since 2021/3/2 10:57
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public class HttpPostTest {
 
@@ -138,7 +139,7 @@ public class HttpPostTest {
         Consumer consumer = client -> {
             String body = "test a body string";
             client.options().debug(true);
-            Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/chunk")
+            Future<HttpResponse> future = client.post("/chunk")
                     .header(h -> h.keepalive(true))
                     .body(b -> b.write(body.getBytes()).write(body.getBytes()))
                     .onSuccess(response -> {
@@ -162,7 +163,7 @@ public class HttpPostTest {
         Consumer consumer = client -> {
             String body = "test a body string";
             client.options().debug(true);
-            Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/header")
+            Future<HttpResponse> future = client.post("/header")
                     .header(h -> h.keepalive(true).setContentLength(body.getBytes().length))
                     .body(b -> b.write(body.getBytes()))
                     .onSuccess(response -> {
@@ -186,7 +187,7 @@ public class HttpPostTest {
             String body = "test a body string";
             String body2 = "test a body2 string";
             client.options().debug(true);
-            Future<tech.smartboot.feat.core.client.HttpResponse> future1 = client.post("/other/abc")
+            Future<HttpResponse> future1 = client.post("/other/abc")
                     .header(h -> h.keepalive(true).setContentLength(body.getBytes().length))
                     .body(b -> b.write(body.getBytes()))
                     .onSuccess(response -> {
@@ -197,7 +198,7 @@ public class HttpPostTest {
                         System.out.println(t.getMessage());
                     }).submit();
 
-            Future<tech.smartboot.feat.core.client.HttpResponse> future2 = client.post("/other/abc")
+            Future<HttpResponse> future2 = client.post("/other/abc")
                     .header(h -> h.keepalive(true).setContentLength(body2.getBytes().length))
                     .body(b -> b.write(body2.getBytes()))
                     .onSuccess(response -> {
@@ -275,7 +276,7 @@ public class HttpPostTest {
         Consumer consumer = httpClient -> {
             httpClient.options().debug(true);
             byte[] jsonBytes = "{\"a\":1,\"b\":\"123\"}".getBytes(StandardCharsets.UTF_8);
-            tech.smartboot.feat.core.client.HttpResponse resp = httpClient.post("/empty").header(h -> h.setContentLength(jsonBytes.length).setContentType(
+            HttpResponse resp = httpClient.post("/empty").header(h -> h.setContentLength(jsonBytes.length).setContentType(
                     "application/json")).body(b -> b.write(jsonBytes).flush()).submit().get();
             Assert.assertEquals(0, resp.getContentLength());
         };

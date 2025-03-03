@@ -13,6 +13,10 @@ package tech.smartboot.feat.core.common.io;
 import java.io.IOException;
 import java.util.EventListener;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public interface ReadListener extends EventListener {
 
     void onDataAvailable() throws IOException;

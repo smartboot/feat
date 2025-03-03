@@ -59,6 +59,10 @@ import java.util.Map;
 import java.util.Set;
 
 // 该注解表示该处理器支持的 Java 源代码版本
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 //@SupportedAnnotationTypes({"tech.smartboot.feat.core.apt.annotation.Bean", "tech.smartboot.feat.core.apt.annotation.Controller", "org.apache.ibatis.annotations.Mapper"})
 public class FeatAnnotationProcessor extends AbstractProcessor {

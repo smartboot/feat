@@ -15,11 +15,11 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import tech.smartboot.feat.core.client.HttpClient;
+import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.utils.NumberUtils;
 import tech.smartboot.feat.core.server.HttpServer;
-import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.router.Router;
 
 import java.util.concurrent.ExecutionException;
@@ -27,8 +27,8 @@ import java.util.concurrent.Future;
 import java.util.zip.GZIPOutputStream;
 
 /**
- * @author huqiang
- * @since 2021/3/2 10:57
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public class HttpGzipTest {
 
@@ -40,7 +40,7 @@ public class HttpGzipTest {
         httpServer = new HttpServer();
         Router routeHandle = new Router();
         routeHandle.route("/test", ctx -> {
-            HttpResponse response=ctx.Response;
+            HttpResponse response = ctx.Response;
             int count = NumberUtils.toInt(ctx.Request.getParameter("count"), 1);
             response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValue.ContentEncoding.GZIP);
             GZIPOutputStream outputStream = new GZIPOutputStream(response.getOutputStream());
@@ -51,7 +51,7 @@ public class HttpGzipTest {
         });
 
         routeHandle.route("/html", ctx -> {
-            HttpResponse response=ctx.Response;
+            HttpResponse response = ctx.Response;
             response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValue.ContentEncoding.GZIP);
             GZIPOutputStream outputStream = new GZIPOutputStream(response.getOutputStream());
             outputStream.write("<html>".getBytes());
@@ -83,8 +83,8 @@ public class HttpGzipTest {
     public void testGzip4() throws InterruptedException, ExecutionException {
         HttpClient client = new HttpClient("127.0.0.1", 8080);
         client.options().debug(true);
-        Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/html")
-                .header(h->h.keepalive(true))
+        Future<HttpResponse> future = client.post("/html")
+                .header(h -> h.keepalive(true))
                 .onSuccess(response -> {
                     System.out.println(response.body());
                 })
@@ -98,8 +98,8 @@ public class HttpGzipTest {
     private void extracted(int count) throws InterruptedException, ExecutionException {
         HttpClient client = new HttpClient("127.0.0.1", 8080);
         client.options().debug(true);
-        Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/test?count=" + count)
-                .header(h->h.keepalive(true))
+        Future<HttpResponse> future = client.post("/test?count=" + count)
+                .header(h -> h.keepalive(true))
                 .onSuccess(response -> {
 //                    System.out.println(response.body());
                 })

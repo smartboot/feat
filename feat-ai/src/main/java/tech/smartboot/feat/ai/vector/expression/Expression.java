@@ -12,6 +12,10 @@ package tech.smartboot.feat.ai.vector.expression;
 
 import com.alibaba.fastjson2.JSONObject;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public abstract class Expression {
     private final ExpressionType type;
 
@@ -39,5 +43,5 @@ public abstract class Expression {
         return type;
     }
 
-    public abstract<T> void build(T object, Convert<T> convert);
+    public abstract <T> void build(T object, Convert<T> convert);
 }

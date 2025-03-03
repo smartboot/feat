@@ -14,14 +14,14 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
 /**
- * @author 三刀（zhengjunweimail@163.com）
- * @version V1.0 , 2022/1/2
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public class ByteTree<T> {
     public final static ByteTree<?> DEFAULT = new ByteTree<>();
-    public final static ByteTree.EndMatcher SP_END_MATCHER = endByte -> endByte == Constant.SP;
-    public final static ByteTree.EndMatcher COLON_END_MATCHER = endByte -> endByte == ':';
-    public final static ByteTree.EndMatcher CR_END_MATCHER = endByte -> endByte == Constant.CR;
+    public final static EndMatcher SP_END_MATCHER = endByte -> endByte == Constant.SP;
+    public final static EndMatcher COLON_END_MATCHER = endByte -> endByte == ':';
+    public final static EndMatcher CR_END_MATCHER = endByte -> endByte == Constant.CR;
     private static final int MAX_DEPTH = 128;
     private static final EndMatcher NULL_END_MATCHER = endByte -> false;
     private final byte value;

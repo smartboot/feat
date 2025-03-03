@@ -16,6 +16,10 @@ import tech.smartboot.feat.core.client.impl.HttpResponseImpl;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class StringStream implements Stream {
     private final ByteArrayOutputStream bodyStream = new ByteArrayOutputStream();
 

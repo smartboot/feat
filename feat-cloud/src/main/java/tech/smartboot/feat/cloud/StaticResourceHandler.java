@@ -30,8 +30,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
 /**
- * @author 三刀（zhengjunweimail@163.com）
- * @version V1.0 , 2023/1/26
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 class StaticResourceHandler implements HttpHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(StaticResourceHandler.class);

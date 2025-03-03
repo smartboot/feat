@@ -16,6 +16,10 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public abstract class Http2Frame {
     public static final ByteBuffer EMPTY_BUFFER = ByteBuffer.allocate(0);
     public static final int FRAME_TYPE_DATA = 0x0;

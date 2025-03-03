@@ -21,6 +21,10 @@ import java.util.Arrays;
 //        |  String Data (Length octets)  |
 //        +-------------------------------+
 //
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 final class StringReader {
 
     private static final int NEW = 0;

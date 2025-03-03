@@ -12,6 +12,10 @@ package tech.smartboot.feat.ai.vector;
 
 import java.util.Map;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class Document {
     private String id;
     private Map<String, String> metadata;

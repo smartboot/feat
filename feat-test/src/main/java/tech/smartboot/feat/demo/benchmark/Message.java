@@ -11,8 +11,8 @@
 package tech.smartboot.feat.demo.benchmark;
 
 /**
- * @author 三刀
- * @version V1.0 , 2018/8/12
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public class Message {
     private String message;

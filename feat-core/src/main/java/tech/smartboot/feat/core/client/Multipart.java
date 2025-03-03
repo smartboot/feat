@@ -10,6 +10,10 @@
 
 package tech.smartboot.feat.core.client;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public abstract class Multipart {
     public static FormItemMultipart newFormMultipart(String name, String value) {
         return new FormItemMultipart(name, value);

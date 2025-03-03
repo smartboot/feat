@@ -12,6 +12,10 @@ package tech.smartboot.feat.ai.vector;
 
 import tech.smartboot.feat.ai.embedding.EmbeddingModel;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class MilvusVectorOptions extends VectorOptions {
     public static final String API_VERSION_1 = "v1";
     public static final String API_VERSION_2 = "v2";

@@ -15,8 +15,8 @@ import tech.smartboot.feat.core.common.utils.Constant;
 import java.nio.ByteBuffer;
 
 /**
- * @author 三刀（zhengjunweimail@163.com）
- * @version V1.0 , 2023/2/24
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 class PayloadLengthDecoder implements Decoder {
 

@@ -17,9 +17,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * @author qinluo
- * @date 2023-07-07 14:49:11
- * @since 1.3.0
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 @Target({ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)

@@ -13,6 +13,10 @@ package tech.smartboot.feat.core.common.utils;
 import java.security.MessageDigest;
 
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class SHA1 {
 
     public static byte[] encode(String str) {

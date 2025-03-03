@@ -22,6 +22,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 final class RouterHandlerImpl implements HttpHandler {
     private List<PathIndex> pathIndexes;
     private final RouterHandler routerHandler;

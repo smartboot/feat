@@ -17,6 +17,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import tech.smartboot.feat.core.client.HttpClient;
+import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.common.multipart.Part;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.router.Router;
@@ -27,11 +28,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 /**
- * @Description: TODO
- * @Author MiSinG
- * @Date 2024/8/3
- * @Version V1.0
- **/
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class MultipartTest {
 
     private HttpServer bootstrap;
@@ -107,7 +106,7 @@ public class MultipartTest {
                         "This is the content of the file.\r\n" +
                         "------WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n";
         client.options().debug(true);
-        Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/formdata")
+        Future<HttpResponse> future = client.post("/formdata")
                 .header(h -> h.keepalive(true).setContentLength(body.getBytes().length).setContentType("multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW"))
                 .body(b -> b.write(body.getBytes()))
                 .onSuccess(response -> {
@@ -142,7 +141,7 @@ public class MultipartTest {
                         "------WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n";
 
         client.options().debug(true);
-        Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/formdata")
+        Future<HttpResponse> future = client.post("/formdata")
                 .header(h -> h.keepalive(true).setContentLength(body.getBytes().length).setContentType("multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW"))
                 .body(b -> b.write(body.getBytes()))
                 .onSuccess(response -> {
@@ -164,7 +163,7 @@ public class MultipartTest {
         HttpClient client = new HttpClient("127.0.0.1", 8080);
         String body = "------WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n";
         client.options().debug(true);
-        Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/formdata")
+        Future<HttpResponse> future = client.post("/formdata")
                 .header(h -> h.keepalive(true).setContentLength(body.getBytes().length).setContentType("multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW"))
                 .body(b -> b.write(body.getBytes()))
                 .onSuccess(response -> {
@@ -195,7 +194,7 @@ public class MultipartTest {
                         largeContent + "\r\n" +
                         "------WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n";
         client.options().debug(false);
-        Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/formdata")
+        Future<HttpResponse> future = client.post("/formdata")
                 .header(h -> h.keepalive(true).setContentLength(body.getBytes().length).setContentType("multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW"))
                 .body(b -> b.write(body.getBytes()))
                 .onSuccess(response -> {
@@ -224,7 +223,7 @@ public class MultipartTest {
                         "This is the content of the encoded file.\r\n" +
                         "------WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n";
         client.options().debug(false);
-        Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/formdata")
+        Future<HttpResponse> future = client.post("/formdata")
                 .header(h -> h.keepalive(true).setContentLength(body.getBytes().length).setContentType("multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW"))
                 .body(b -> b.write(body.getBytes()))
                 .onSuccess(response -> {
@@ -251,7 +250,7 @@ public class MultipartTest {
                         "\r\n" +
                         "------WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n";
         client.options().debug(false);
-        Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/formdata")
+        Future<HttpResponse> future = client.post("/formdata")
                 .header(h -> h.keepalive(true).setContentLength(body.getBytes().length).setContentType("multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW"))
                 .body(b -> b.write(body.getBytes()))
                 .onSuccess(response -> {
@@ -292,7 +291,7 @@ public class MultipartTest {
                         "multiValue2\r\n" +
                         "------WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n";
         client.options().debug(false);
-        Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/formdata")
+        Future<HttpResponse> future = client.post("/formdata")
                 .header(h -> h.keepalive(true).setContentLength(body.getBytes().length).setContentType("multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW"))
                 .body(b -> b.write(body.getBytes()))
                 .onSuccess(response -> {
@@ -325,7 +324,7 @@ public class MultipartTest {
                         "This is the content of the encoded file.\r\n" +
                         "------WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n";
         client.options().debug(true);
-        Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/formdata")
+        Future<HttpResponse> future = client.post("/formdata")
                 .header(h -> h.keepalive(true).setContentLength(body.getBytes().length).setContentType("multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW"))
                 .body(b -> b.write(body.getBytes()))
                 .onSuccess(response -> {
@@ -350,7 +349,7 @@ public class MultipartTest {
                         "This is the content.\r\n\r\n" +
                         "------WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n";
         client.options().debug(true);
-        Future<tech.smartboot.feat.core.client.HttpResponse> future = client.post("/formdata")
+        Future<HttpResponse> future = client.post("/formdata")
                 .header(h -> h.keepalive(true).setContentLength(body.getBytes().length).setContentType("multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW"))
                 .body(b -> b.write(body.getBytes()))
                 .onSuccess(response -> {

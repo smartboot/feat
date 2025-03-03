@@ -17,6 +17,10 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class Bootstrap {
     public static void main(String[] args) throws IOException {
         boolean autoIndex = "true".equals(System.getenv("FEAT_AUTO_INDEX"));

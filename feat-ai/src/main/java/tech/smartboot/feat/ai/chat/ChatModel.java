@@ -42,6 +42,10 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class ChatModel {
     private final Options options;
     private final List<Message> history = new ArrayList<>();

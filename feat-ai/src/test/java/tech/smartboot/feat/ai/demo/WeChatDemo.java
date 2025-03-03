@@ -27,6 +27,10 @@ import java.io.InputStream;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class WeChatDemo extends BaseChat {
     public static void main(String[] args) throws IOException {
         File file = new File("pages/src/content/docs/");
@@ -35,7 +39,7 @@ public class WeChatDemo extends BaseChat {
         ig.add("cloud");
         ig.add("server");
         StringBuilder stringBuilder = new StringBuilder();
-        loadFile(file,  stringBuilder);
+        loadFile(file, stringBuilder);
         StringBuilder sourceBuilder = new StringBuilder();
         ig.clear();
         ig.add("chat");
@@ -48,8 +52,8 @@ public class WeChatDemo extends BaseChat {
         loadSource(new File("feat-ai/src/test/java/tech/smartboot/feat/ai/test/"), demoBuilder);
         ChatModel chatModel = FeatAI.chatModel(opts -> {
             opts.model(ModelMeta.GITEE_AI_DeepSeek_R1_Distill_Qwen_32B).system("你是一个负责Feat微信公众号的编辑人员，你的任务是根据用户要求编写微信公众号文章。"
-                    + "Feat参考内容为：\n" + stringBuilder
-                    + "\n FeatClient的实现源码为：\n" + sourceBuilder
+                                    + "Feat参考内容为：\n" + stringBuilder
+                                    + "\n FeatClient的实现源码为：\n" + sourceBuilder
 //                    + "\n 示例代码为：" + demoBuilder
                     )
                     .debug(true);

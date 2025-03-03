@@ -14,6 +14,10 @@ import tech.smartboot.feat.core.common.utils.StringUtils;
 
 import java.nio.charset.StandardCharsets;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class CloseReason {
     //1000 表示正常关闭，意思是建议的连接已经完成了。
     public static final int NORMAL_CLOSURE = 1000;

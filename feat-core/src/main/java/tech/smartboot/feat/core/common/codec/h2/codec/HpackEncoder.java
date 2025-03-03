@@ -13,12 +13,17 @@ package tech.smartboot.feat.core.common.codec.h2.codec;
 import tech.smartboot.feat.core.common.HeaderValue;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class HpackEncoder {
     private static final int STATIC_TABLE_LENGTH = 61;
     private static final Map<String, Integer> STATIC_TABLE_MAP = createStaticTableMap();
@@ -109,7 +114,7 @@ public class HpackEncoder {
     }
 
     private void encodeString(ByteBuffer buffer, String s) throws HpackException {
-        byte[] bytes = s.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        byte[] bytes = s.getBytes(StandardCharsets.UTF_8);
         byte[] huffmanEncoded = HUFFMAN_ENCODER.encode(bytes);
 
         if (huffmanEncoded.length < bytes.length) {

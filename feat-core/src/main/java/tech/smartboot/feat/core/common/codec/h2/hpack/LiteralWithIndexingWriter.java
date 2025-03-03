@@ -11,6 +11,10 @@ package tech.smartboot.feat.core.common.codec.h2.hpack;
 
 import java.nio.ByteBuffer;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 final class LiteralWithIndexingWriter extends IndexNameValueWriter {
 
     private boolean tableUpdated;

@@ -20,6 +20,10 @@ import java.util.List;
 import static tech.smartboot.feat.core.common.codec.h2.hpack.HPACK.bytesForBits;
 
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public final class QuickHuffman {
 
     /*

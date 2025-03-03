@@ -18,6 +18,10 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.zip.GZIPInputStream;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class GzipStream implements Stream {
     private ByteBuffer buffer;
     private GZIPInputStream gzipInputStream;

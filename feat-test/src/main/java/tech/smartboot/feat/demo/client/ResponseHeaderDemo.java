@@ -12,6 +12,10 @@ package tech.smartboot.feat.demo.client;
 
 import tech.smartboot.feat.core.client.HttpClient;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class ResponseHeaderDemo {
     public static void main(String[] args) {
         HttpClient httpClient = new HttpClient("https://smartboot.tech");

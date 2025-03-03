@@ -12,31 +12,8 @@ package tech.smartboot.feat.core.common.codec.h2.hpack;
 import java.nio.ByteBuffer;
 
 /**
- * Delivers results of the {@link Decoder#decode(ByteBuffer, boolean,
- * DecodingCallback) decoding operation}.
- *
- * <p> Methods of the callback are never called by a decoder with any of the
- * arguments being {@code null}.
- *
- * @apiNote <p> The callback provides methods for all possible
- * <a href="https://tools.ietf.org/html/rfc7541#section-6">binary representations</a>.
- * This could be useful for implementing an intermediary, logging, debugging,
- * etc.
- *
- * <p> The callback is an interface in order to interoperate with lambdas (in
- * the most common use case):
- * <pre>{@code
- *     DecodingCallback callback = (name, value) -> System.out.println(name + ", " + value);
- * }</pre>
- *
- * <p> Names and values are {@link CharSequence}s rather than {@link String}s in
- * order to allow users to decide whether or not they need to create objects. A
- * {@code CharSequence} might be used in-place, for example, to be appended to
- * an {@link Appendable} (e.g. {@link StringBuilder}) and then discarded.
- *
- * <p> That said, if a passed {@code CharSequence} needs to outlast the method
- * call, it needs to be copied.
- * @since 9
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 @FunctionalInterface
 public interface DecodingCallback {

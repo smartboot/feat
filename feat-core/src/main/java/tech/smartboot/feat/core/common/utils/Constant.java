@@ -12,6 +12,10 @@ package tech.smartboot.feat.core.common.utils;
 
 import java.nio.charset.StandardCharsets;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public interface Constant {
     int WS_DEFAULT_MAX_FRAME_SIZE = (1 << 15) - 1;
     int WS_PLAY_LOAD_126 = 126;

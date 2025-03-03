@@ -25,8 +25,8 @@ import java.nio.ByteBuffer;
 import java.util.concurrent.ExecutorService;
 
 /**
- * @author 三刀
- * @version V1.0 , 2018/6/10
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 final class HttpMessageProcessor extends AbstractMessageProcessor<AbstractResponse> implements Protocol<AbstractResponse> {
     private final ExecutorService executorService;

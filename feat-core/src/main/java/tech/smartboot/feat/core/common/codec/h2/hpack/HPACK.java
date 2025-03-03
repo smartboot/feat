@@ -12,15 +12,14 @@ package tech.smartboot.feat.core.common.codec.h2.hpack;
 import java.nio.ByteBuffer;
 
 /**
- * Internal utilities and stuff.
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public final class HPACK {
 
 
     private HPACK() {
     }
-
-    // -- low-level utilities --
 
     @FunctionalInterface
     interface BufferUpdateConsumer {

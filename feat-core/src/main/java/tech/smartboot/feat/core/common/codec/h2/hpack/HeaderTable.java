@@ -19,72 +19,11 @@ import java.util.Map;
  * for performance reasons. Decoder does not need this functionality. On the
  * other hand, Encoder does.
  */
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 final class HeaderTable extends SimpleHeaderTable {
-
-    //
-    // To quickly find an index of an entry in the dynamic table with the given
-    // contents an effective inverse mapping is needed. Here's a simple idea
-    // behind such a mapping.
-    //
-    // # The problem:
-    //
-    // We have a queue with an O(1) lookup by index:
-    //
-    //     get: index -> x
-    //
-    // What we want is an O(1) reverse lookup:
-    //
-    //     indexOf: x -> index
-    //
-    // # Solution:
-    //
-    // Let's store an inverse mapping in a Map<x, Integer>. This have a problem
-    // that when a new element is added to the queue, all indexes in the map
-    // become invalid. Namely, the new element is assigned with an index of 1,
-    // and each index i, i > 1 becomes shifted by 1 to the left:
-    //
-    //     1, 1, 2, 3, ... , n-1, n
-    //
-    // Re-establishing the invariant would seem to require a pass through the
-    // map incrementing all indexes (map values) by 1, which is O(n).
-    //
-    // The good news is we can do much better then this!
-    //
-    // Let's create a single field of type long, called 'counter'. Then each
-    // time a new element 'x' is added to the queue, a value of this field gets
-    // incremented. Then the resulting value of the 'counter_x' is then put as a
-    // value under key 'x' to the map:
-    //
-    //    map.put(x, counter_x)
-    //
-    // It gives us a map that maps an element to a value the counter had at the
-    // time the element had been added.
-    //
-    // In order to retrieve an index of any element 'x' in the queue (at any
-    // given time) we simply need to subtract the value (the snapshot of the
-    // counter at the time when the 'x' was added) from the current value of the
-    // counter. This operation basically answers the question:
-    //
-    //     How many elements ago 'x' was the tail of the queue?
-    //
-    // Which is the same as its index in the queue now. Given, of course, it's
-    // still in the queue.
-    //
-    // I'm pretty sure in a real life long overflow will never happen, so it's
-    // not too practical to add recalibrating code, but a pedantic person might
-    // want to do so:
-    //
-    //     if (counter == Long.MAX_VALUE) {
-    //         recalibrate();
-    //     }
-    //
-    // Where 'recalibrate()' goes through the table doing this:
-    //
-    //     value -= counter
-    //
-    // That's given, of course, the size of the table itself is less than
-    // Long.MAX_VALUE :-)
-    //
 
     /* An immutable map of static header fields' indexes */
     private static final Map<String, Map<String, Integer>> staticIndexes;

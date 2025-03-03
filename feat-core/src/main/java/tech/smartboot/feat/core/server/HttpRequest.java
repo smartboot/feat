@@ -27,10 +27,8 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * Http消息请求接口
- *
- * @author 三刀
- * @version V1.0 , 2018/8/7
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public interface HttpRequest {
     ThreadLocal<SSLEngine> SSL_ENGINE_THREAD_LOCAL = ThreadLocal.withInitial(() -> null);
@@ -136,9 +134,9 @@ public interface HttpRequest {
      */
     String getRemoteHost();
 
-    public Locale getLocale();
+    Locale getLocale();
 
-    public Enumeration<Locale> getLocales();
+    Enumeration<Locale> getLocales();
 
     String getCharacterEncoding();
 

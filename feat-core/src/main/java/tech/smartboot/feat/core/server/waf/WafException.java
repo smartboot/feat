@@ -13,6 +13,10 @@ package tech.smartboot.feat.core.server.waf;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
 import tech.smartboot.feat.core.common.exception.HttpException;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class WafException extends HttpException {
     public WafException(HttpStatus httpStatus) {
         super(httpStatus.value(), WafOptions.DESC);

@@ -15,6 +15,10 @@ import tech.smartboot.feat.ai.chat.entity.Function;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class Options {
     public static final String AI_VENDOR_GITEE = "https://ai.gitee.com/v1/";
     private String baseUrl = System.getenv("FEATAI_BASE_URL") != null ? System.getenv("FEAT_AI_BASE_URL") : AI_VENDOR_GITEE;

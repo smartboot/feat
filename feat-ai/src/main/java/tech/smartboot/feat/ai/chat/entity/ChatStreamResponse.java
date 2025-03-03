@@ -12,6 +12,10 @@ package tech.smartboot.feat.ai.chat.entity;
 
 import java.util.List;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class ChatStreamResponse extends ChatResponse {
 
     /**
@@ -32,16 +36,4 @@ public class ChatStreamResponse extends ChatResponse {
         this.choices = choices;
     }
 
-//    public <T> boolean ifMatchTool(String functionName, Class<T> clazz, Consumer<T> consumer) {
-//        List<T> result = new ArrayList<>();
-//        choices.forEach(choice -> choice.getMessage().getToolCalls().stream()
-//                .filter(functionCall -> functionCall.getFunction().get("name").equals(functionName))
-//                .forEach(toolCall -> {
-//                    String args = toolCall.getFunction().get("arguments");
-//                    T t = JSON.parseObject(args, clazz);
-//                    result.add(t);
-//                }));
-//        result.forEach(consumer);
-//        return !result.isEmpty();
-//    }
 }

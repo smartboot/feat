@@ -12,6 +12,10 @@ package tech.smartboot.feat.demo.apt;
 
 import java.util.List;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class Dto3 {
     private String name;
     private int age;

@@ -14,8 +14,8 @@ import java.util.Collections;
 import java.util.Map;
 
 /**
- * @author 三刀（zhengjunweimail@163.com）
- * @version V1.0 , 2021/6/4
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public class RequestUnit {
     private String uri;

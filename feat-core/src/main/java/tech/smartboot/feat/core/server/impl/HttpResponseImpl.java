@@ -17,8 +17,8 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 /**
- * @author 三刀
- * @version V1.0 , 2018/2/3
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 class HttpResponseImpl extends AbstractResponse {
     private final HttpEndpoint request;

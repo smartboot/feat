@@ -15,6 +15,10 @@ import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.server.HttpResponse;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 @Controller
 public class FeatController {
     static byte[] body = "Hello, World!".getBytes();

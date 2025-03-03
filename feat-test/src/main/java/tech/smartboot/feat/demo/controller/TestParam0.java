@@ -12,7 +12,11 @@ package tech.smartboot.feat.demo.controller;
 
 import java.util.List;
 
-public class TestParam0<T,K> {
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
+public class TestParam0<T, K> {
     private T param1;
     private List<K> param2;
 

@@ -11,9 +11,9 @@
 package tech.smartboot.feat.cloud.annotation;
 
 /**
- * @author 三刀（zhengjunweimail@163.com）
- * @version V1.0 , 2022/7/2
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public enum RequestMethod {
-    GET,HEAD,POST,PUT,PATCH,DELETE,OPTIONS,TRACE
+    GET, HEAD, POST, PUT, PATCH, DELETE, OPTIONS, TRACE
 }

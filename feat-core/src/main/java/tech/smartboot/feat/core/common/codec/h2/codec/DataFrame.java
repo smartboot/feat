@@ -16,6 +16,10 @@ import org.smartboot.socket.transport.WriteBuffer;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class DataFrame extends Http2Frame {
 
     private static final int STATE_PAD_LENGTH = 0;

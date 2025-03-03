@@ -16,20 +16,12 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 /**
- * @author 三刀（zhengjunweimail@163.com）
- * @version V1.0 , 2021/7/12
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public class GzipUtils {
     public static final String GZIP_ENCODE_UTF_8 = "UTF-8";
     public static final String GZIP_ENCODE_ISO_8859_1 = "ISO-8859-1";
-
-
-//    public static byte[] compress(String str, String encoding) {
-//        if (str == null || str.length() == 0) {
-//            return null;
-//        }
-//        return compress(str.getBytes(encoding));
-//    }
 
     public static byte[] compress(byte[] data, int offset, int length) {
         return compress(data, offset, length, GZIP_ENCODE_UTF_8);
@@ -47,10 +39,6 @@ public class GzipUtils {
         }
         return out.toByteArray();
     }
-
-//    public static byte[] compress(String str) throws IOException {
-//        return compress(str, GZIP_ENCODE_UTF_8);
-//    }
 
     public static byte[] uncompress(byte[] bytes) {
         if (bytes == null || bytes.length == 0) {

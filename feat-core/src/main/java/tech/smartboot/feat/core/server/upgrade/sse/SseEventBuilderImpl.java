@@ -10,6 +10,10 @@
 
 package tech.smartboot.feat.core.server.upgrade.sse;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 class SseEventBuilderImpl implements SseEventBuilder {
 
     private final StringBuilder sb = new StringBuilder();

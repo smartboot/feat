@@ -16,6 +16,10 @@ import com.alibaba.fastjson2.annotation.JSONField;
 
 import java.util.List;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class ChatRequest {
     private String model;
     private boolean stream;

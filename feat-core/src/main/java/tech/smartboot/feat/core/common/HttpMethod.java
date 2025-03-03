@@ -11,10 +11,8 @@
 package tech.smartboot.feat.core.common;
 
 /**
- * Http支持的Method
- *
- * @author 三刀
- * @version V1.0 , 2018/2/6
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public final class HttpMethod {
     public static final String OPTIONS = "OPTIONS";

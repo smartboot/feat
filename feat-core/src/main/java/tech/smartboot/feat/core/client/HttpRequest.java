@@ -16,10 +16,8 @@ import java.io.IOException;
 import java.util.Collection;
 
 /**
- * Http消息响应接口
- *
- * @author 三刀
- * @version V1.0 , 2018/2/3
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public interface HttpRequest {
     String getProtocol();
@@ -40,7 +38,7 @@ public interface HttpRequest {
      *              (http://www.ietf.org/rfc/rfc2047.txt)
      * @see #addHeader
      */
-    public void setHeader(String name, String value);
+    void setHeader(String name, String value);
 
     /**
      * Adds a response header with the given name and value. This method allows
@@ -52,7 +50,7 @@ public interface HttpRequest {
      *              (http://www.ietf.org/rfc/rfc2047.txt)
      * @see #setHeader
      */
-    public void addHeader(String name, String value);
+    void addHeader(String name, String value);
 
     String getHeader(String name);
 
@@ -66,7 +64,7 @@ public interface HttpRequest {
      * returned as a single header value.
      * @since Servlet 3.0
      */
-    public Collection<String> getHeaders(String name);
+    Collection<String> getHeaders(String name);
 
     /**
      * Get the header names set for this HTTP response.
@@ -74,7 +72,7 @@ public interface HttpRequest {
      * @return The header names set for this HTTP response.
      * @since Servlet 3.0
      */
-    public Collection<String> getHeaderNames();
+    Collection<String> getHeaderNames();
 
     void setContentLength(int contentLength);
 

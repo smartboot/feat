@@ -11,8 +11,8 @@
 package tech.smartboot.feat.core.common.logging;
 
 /**
- * @author 三刀（zhengjunweimail@163.com）
- * @version V1.0 , 2021/1/27
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public interface Logger {
 
@@ -21,14 +21,14 @@ public interface Logger {
      *
      * @since 1.3
      */
-    final public String ROOT_LOGGER_NAME = "ROOT";
+    String ROOT_LOGGER_NAME = "ROOT";
 
     /**
      * Return the name of this <code>Logger</code> instance.
      *
      * @return name of this logger instance
      */
-    public String getName();
+    String getName();
 
     /**
      * Is the logger instance enabled for the TRACE level?
@@ -37,7 +37,7 @@ public interface Logger {
      * false otherwise.
      * @since 1.4
      */
-    public boolean isTraceEnabled();
+    boolean isTraceEnabled();
 
     /**
      * Log a message at the TRACE level.
@@ -45,7 +45,7 @@ public interface Logger {
      * @param msg the message string to be logged
      * @since 1.4
      */
-    public void trace(String msg);
+    void trace(String msg);
 
     /**
      * Log a message at the TRACE level according to the specified format
@@ -58,7 +58,7 @@ public interface Logger {
      * @param arg    the argument
      * @since 1.4
      */
-    public void trace(String format, Object arg);
+    void trace(String format, Object arg);
 
     /**
      * Log a message at the TRACE level according to the specified format
@@ -72,7 +72,7 @@ public interface Logger {
      * @param arg2   the second argument
      * @since 1.4
      */
-    public void trace(String format, Object arg1, Object arg2);
+    void trace(String format, Object arg1, Object arg2);
 
     /**
      * Log a message at the TRACE level according to the specified format
@@ -88,7 +88,7 @@ public interface Logger {
      * @param arguments a list of 3 or more arguments
      * @since 1.4
      */
-    public void trace(String format, Object... arguments);
+    void trace(String format, Object... arguments);
 
     /**
      * Log an exception (throwable) at the TRACE level with an
@@ -98,7 +98,7 @@ public interface Logger {
      * @param t   the exception (throwable) to log
      * @since 1.4
      */
-    public void trace(String msg, Throwable t);
+    void trace(String msg, Throwable t);
 
 
     /**
@@ -107,14 +107,14 @@ public interface Logger {
      * @return True if this Logger is enabled for the DEBUG level,
      * false otherwise.
      */
-    public boolean isDebugEnabled();
+    boolean isDebugEnabled();
 
     /**
      * Log a message at the DEBUG level.
      *
      * @param msg the message string to be logged
      */
-    public void debug(String msg);
+    void debug(String msg);
 
     /**
      * Log a message at the DEBUG level according to the specified format
@@ -126,7 +126,7 @@ public interface Logger {
      * @param format the format string
      * @param arg    the argument
      */
-    public void debug(String format, Object arg);
+    void debug(String format, Object arg);
 
     /**
      * Log a message at the DEBUG level according to the specified format
@@ -139,7 +139,7 @@ public interface Logger {
      * @param arg1   the first argument
      * @param arg2   the second argument
      */
-    public void debug(String format, Object arg1, Object arg2);
+    void debug(String format, Object arg1, Object arg2);
 
     /**
      * Log a message at the DEBUG level according to the specified format
@@ -155,7 +155,7 @@ public interface Logger {
      * @param format    the format string
      * @param arguments a list of 3 or more arguments
      */
-    public void debug(String format, Object... arguments);
+    void debug(String format, Object... arguments);
 
     /**
      * Log an exception (throwable) at the DEBUG level with an
@@ -164,7 +164,7 @@ public interface Logger {
      * @param msg the message accompanying the exception
      * @param t   the exception (throwable) to log
      */
-    public void debug(String msg, Throwable t);
+    void debug(String msg, Throwable t);
 
 
     /**
@@ -173,14 +173,14 @@ public interface Logger {
      * @return True if this Logger is enabled for the INFO level,
      * false otherwise.
      */
-    public boolean isInfoEnabled();
+    boolean isInfoEnabled();
 
     /**
      * Log a message at the INFO level.
      *
      * @param msg the message string to be logged
      */
-    public void info(String msg);
+    void info(String msg);
 
     /**
      * Log a message at the INFO level according to the specified format
@@ -192,7 +192,7 @@ public interface Logger {
      * @param format the format string
      * @param arg    the argument
      */
-    public void info(String format, Object arg);
+    void info(String format, Object arg);
 
     /**
      * Log a message at the INFO level according to the specified format
@@ -205,7 +205,7 @@ public interface Logger {
      * @param arg1   the first argument
      * @param arg2   the second argument
      */
-    public void info(String format, Object arg1, Object arg2);
+    void info(String format, Object arg1, Object arg2);
 
     /**
      * Log a message at the INFO level according to the specified format
@@ -221,7 +221,7 @@ public interface Logger {
      * @param format    the format string
      * @param arguments a list of 3 or more arguments
      */
-    public void info(String format, Object... arguments);
+    void info(String format, Object... arguments);
 
     /**
      * Log an exception (throwable) at the INFO level with an
@@ -230,7 +230,7 @@ public interface Logger {
      * @param msg the message accompanying the exception
      * @param t   the exception (throwable) to log
      */
-    public void info(String msg, Throwable t);
+    void info(String msg, Throwable t);
 
 
     /**
@@ -239,14 +239,14 @@ public interface Logger {
      * @return True if this Logger is enabled for the WARN level,
      * false otherwise.
      */
-    public boolean isWarnEnabled();
+    boolean isWarnEnabled();
 
     /**
      * Log a message at the WARN level.
      *
      * @param msg the message string to be logged
      */
-    public void warn(String msg);
+    void warn(String msg);
 
     /**
      * Log a message at the WARN level according to the specified format
@@ -258,7 +258,7 @@ public interface Logger {
      * @param format the format string
      * @param arg    the argument
      */
-    public void warn(String format, Object arg);
+    void warn(String format, Object arg);
 
     /**
      * Log a message at the WARN level according to the specified format
@@ -274,7 +274,7 @@ public interface Logger {
      * @param format    the format string
      * @param arguments a list of 3 or more arguments
      */
-    public void warn(String format, Object... arguments);
+    void warn(String format, Object... arguments);
 
     /**
      * Log a message at the WARN level according to the specified format
@@ -287,7 +287,7 @@ public interface Logger {
      * @param arg1   the first argument
      * @param arg2   the second argument
      */
-    public void warn(String format, Object arg1, Object arg2);
+    void warn(String format, Object arg1, Object arg2);
 
     /**
      * Log an exception (throwable) at the WARN level with an
@@ -296,7 +296,7 @@ public interface Logger {
      * @param msg the message accompanying the exception
      * @param t   the exception (throwable) to log
      */
-    public void warn(String msg, Throwable t);
+    void warn(String msg, Throwable t);
 
 
     /**
@@ -305,14 +305,14 @@ public interface Logger {
      * @return True if this Logger is enabled for the ERROR level,
      * false otherwise.
      */
-    public boolean isErrorEnabled();
+    boolean isErrorEnabled();
 
     /**
      * Log a message at the ERROR level.
      *
      * @param msg the message string to be logged
      */
-    public void error(String msg);
+    void error(String msg);
 
     /**
      * Log a message at the ERROR level according to the specified format
@@ -324,7 +324,7 @@ public interface Logger {
      * @param format the format string
      * @param arg    the argument
      */
-    public void error(String format, Object arg);
+    void error(String format, Object arg);
 
     /**
      * Log a message at the ERROR level according to the specified format
@@ -336,7 +336,7 @@ public interface Logger {
      * @param arg1   the first argument
      * @param arg2   the second argument
      */
-    public void error(String format, Object arg1, Object arg2);
+    void error(String format, Object arg1, Object arg2);
 
     /**
      * Log a message at the ERROR level according to the specified format
@@ -351,7 +351,7 @@ public interface Logger {
      * @param format    the format string
      * @param arguments a list of 3 or more arguments
      */
-    public void error(String format, Object... arguments);
+    void error(String format, Object... arguments);
 
     /**
      * Log an exception (throwable) at the ERROR level with an
@@ -360,6 +360,6 @@ public interface Logger {
      * @param msg the message accompanying the exception
      * @param t   the exception (throwable) to log
      */
-    public void error(String msg, Throwable t);
+    void error(String msg, Throwable t);
 
 }

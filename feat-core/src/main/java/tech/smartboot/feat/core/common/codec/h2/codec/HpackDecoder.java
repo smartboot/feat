@@ -13,11 +13,16 @@ package tech.smartboot.feat.core.common.codec.h2.codec;
 import tech.smartboot.feat.core.common.HeaderValue;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class HpackDecoder {
     private static final int STATIC_TABLE_LENGTH = 61;
     private static final Map<Integer, HeaderValue> STATIC_TABLE = createStaticTable();
@@ -142,7 +147,7 @@ public class HpackDecoder {
             // Huffman encoded
             return HUFFMAN_DECODER.decode(array);
         } else {
-            return new String(array, java.nio.charset.StandardCharsets.UTF_8);
+            return new String(array, StandardCharsets.UTF_8);
         }
     }
 

@@ -23,8 +23,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CountDownLatch;
 
 /**
- * @author 三刀（zhengjunweimail@163.com）
- * @version V1.0 , 6/8/23
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public class Test {
     @org.junit.Test
@@ -33,8 +33,8 @@ public class Test {
         Router route = new Router();
         byte[] body = new byte[4096];
         route.route("/other/**", ctx -> {
-            HttpRequest request=ctx.Request;
-            HttpResponse response=request.getResponse();
+            HttpRequest request = ctx.Request;
+            HttpResponse response = request.getResponse();
             System.out.println("=====");
             System.out.println(request.getMethod());
             System.out.println("=====");
@@ -66,7 +66,7 @@ public class Test {
         CountDownLatch latch = new CountDownLatch(2);
         client.post("/other/abc?k=v&v=s")
 //                .header().keepalive(true).done()
-                .body(b->b.write(bytes))
+                .body(b -> b.write(bytes))
                 .onSuccess(response -> {
                     System.out.println("======1=======>" + response.body());
                     latch.countDown();
@@ -78,7 +78,7 @@ public class Test {
         System.out.println("======================");
         client.post("/other/abc")
 //                .header().keepalive(true).done()
-                .body(b->b.write(bytes))
+                .body(b -> b.write(bytes))
                 .onSuccess(response -> {
                     System.out.println("=======2======>" + response.body());
                     latch.countDown();

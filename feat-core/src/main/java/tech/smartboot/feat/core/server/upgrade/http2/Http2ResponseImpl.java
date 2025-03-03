@@ -19,8 +19,8 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * @author 三刀
- * @version V1.0 , 2018/2/3
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public class Http2ResponseImpl extends AbstractResponse {
     private List<Cookie> cookies = Collections.emptyList();

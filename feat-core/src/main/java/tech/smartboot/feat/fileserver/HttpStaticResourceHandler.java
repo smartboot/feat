@@ -43,10 +43,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
 /**
- * 静态资源加载Handle
- *
- * @author 三刀
- * @version V1.0 , 2018/2/7
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public class HttpStaticResourceHandler implements HttpHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpStaticResourceHandler.class);

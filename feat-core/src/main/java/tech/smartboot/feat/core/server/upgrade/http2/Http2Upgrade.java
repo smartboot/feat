@@ -38,6 +38,10 @@ import java.util.Base64;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class Http2Upgrade extends Upgrade {
     private static final byte[] H2C_PREFACE = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n".getBytes();
     private static final int FRAME_HEADER_SIZE = 9;
@@ -288,57 +292,4 @@ public class Http2Upgrade extends Upgrade {
             completableFuture.complete(null);
         }
     }
-//    private void finishHttpHandle(Http2RequestImpl abstractRequest, CompletableFuture<Object> future) throws IOException {
-//        if (future.isDone()) {
-//           abstractRequest.getResponse().close();
-//            return;
-//        }
-//
-//        AioSession session = abstractRequest.request.getAioSession();
-//        ReadListener readListener = abstractRequest.getInputStream().getReadListener();
-//        if (readListener == null) {
-//            session.awaitRead();
-//        } else {
-//            //todo
-////            abstractRequest.request.setDecoder(session.readBuffer().hasRemaining() ? HttpRequestProtocol.BODY_READY_DECODER : HttpRequestProtocol.BODY_CONTINUE_DECODER);
-//        }
-//
-//        Thread thread = Thread.currentThread();
-//        AbstractResponse response = abstractRequest.getResponse();
-//        future.thenRun(() -> {
-//            try {
-//                if (keepConnection(abstractRequest)) {
-//                    finishResponse(abstractRequest);
-//                    if (thread != Thread.currentThread()) {
-//                        session.writeBuffer().flush();
-//                    }
-//                }
-//            } catch (Exception e) {
-//                HttpMessageProcessor.responseError(response, e);
-//            } finally {
-//                if (readListener == null) {
-//                    session.signalRead();
-//                }
-//            }
-//        }).exceptionally(throwable -> {
-//            try {
-//                HttpMessageProcessor.responseError(response, throwable);
-//            } finally {
-//                if (readListener == null) {
-//                    session.signalRead();
-//                }
-//            }
-//            return null;
-//        });
-//    }
-//
-//    private void finishResponse(HttpRequestImpl abstractRequest) throws IOException {
-//        AbstractResponse response = abstractRequest.getResponse();
-//        //关闭本次请求的输出流
-//        BufferOutputStream bufferOutputStream = response.getOutputStream();
-//        if (!bufferOutputStream.isClosed()) {
-//            bufferOutputStream.close();
-//        }
-//        abstractRequest.reset();
-//    }
 }

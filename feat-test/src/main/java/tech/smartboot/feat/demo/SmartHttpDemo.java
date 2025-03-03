@@ -28,10 +28,8 @@ import java.io.InputStream;
 import java.util.Collection;
 
 /**
- * 打开浏览器请求：http://127.0.0.0:8080/
- *
- * @author 三刀
- * @version V1.0 , 2019/11/3
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public class SmartHttpDemo {
     private static final Logger LOGGER = LoggerFactory.getLogger(SmartHttpDemo.class);

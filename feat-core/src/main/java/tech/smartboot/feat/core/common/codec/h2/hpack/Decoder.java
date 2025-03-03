@@ -20,27 +20,8 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 /**
- * Decodes headers from their binary representation.
- *
- * <p> Typical lifecycle looks like this:
- *
- * <p> {@link #Decoder(int) new Decoder}
- * ({@link #setMaxCapacity(int) setMaxCapacity}?
- * {@link #decode(ByteBuffer, boolean, DecodingCallback) decode})*
- *
- * @apiNote <p> The design intentions behind Decoder were to facilitate flexible and
- * incremental style of processing.
- *
- * <p> {@code Decoder} does not require a complete header block in a single
- * {@code ByteBuffer}. The header block can be spread across many buffers of any
- * size and decoded one-by-one the way it makes most sense for the user. This
- * way also allows not to limit the size of the header block.
- *
- * <p> Headers are delivered to the {@linkplain DecodingCallback callback} as
- * soon as they become decoded. Using the callback also gives the user a freedom
- * to decide how headers are processed. The callback does not limit the number
- * of headers decoded during single decoding operation.
- * @since 9
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public final class Decoder {
 

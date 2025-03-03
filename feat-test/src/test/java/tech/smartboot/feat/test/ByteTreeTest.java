@@ -17,14 +17,14 @@ import tech.smartboot.feat.core.common.utils.ByteTree;
 import java.nio.ByteBuffer;
 
 /**
- * @author 三刀（zhengjunweimail@163.com）
- * @version V1.0 , 2022/1/4
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public class ByteTreeTest {
 
     @Test
     public void test1() {
-        ByteTree byteTree = new ByteTree( Byte.MAX_VALUE);
+        ByteTree byteTree = new ByteTree(Byte.MAX_VALUE);
         byteTree.addNode("Hello");
         byteTree.addNode("Hello1");
         byteTree.addNode("Hello2");
@@ -47,7 +47,7 @@ public class ByteTreeTest {
 
     @Test
     public void test2() {
-        ByteTree byteTree = new ByteTree( Byte.MAX_VALUE);
+        ByteTree byteTree = new ByteTree(Byte.MAX_VALUE);
         byte[] bytes = "Hello Worldaa".getBytes();
         ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
         ByteTree searchTree = byteTree.search(byteBuffer, endByte -> endByte == 'a', true);

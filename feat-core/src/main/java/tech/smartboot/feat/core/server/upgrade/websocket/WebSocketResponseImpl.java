@@ -22,8 +22,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 /**
- * @author 三刀
- * @version V1.0 , 2018/2/3
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 class WebSocketResponseImpl implements WebSocketResponse {
     private static final Logger LOGGER = LoggerFactory.getLogger(WebSocketResponseImpl.class);

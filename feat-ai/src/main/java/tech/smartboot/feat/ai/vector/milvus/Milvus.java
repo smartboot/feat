@@ -30,6 +30,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class Milvus {
     private final HttpClient httpClient;
     private final MilvusOptions options = new MilvusOptions();

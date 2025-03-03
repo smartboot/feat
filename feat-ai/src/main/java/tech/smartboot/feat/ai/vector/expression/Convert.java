@@ -14,8 +14,12 @@ import com.alibaba.fastjson2.JSONObject;
 
 import java.util.List;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public interface Convert<T> {
-    public void build(T object, SimpleExpression expression);
+    void build(T object, SimpleExpression expression);
 
     default void and(T object, List<Expression> filters) {
     }

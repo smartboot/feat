@@ -16,6 +16,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public abstract class BodyInputStream extends InputStream {
     public static final BodyInputStream EMPTY_INPUT_STREAM = new BodyInputStream(null) {
         @Override

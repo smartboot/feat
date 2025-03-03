@@ -12,6 +12,10 @@ package tech.smartboot.feat.ai.vector;
 
 import tech.smartboot.feat.ai.embedding.EmbeddingModel;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public abstract class VectorOptions {
     private boolean debug;
     protected EmbeddingModel embeddingModel;

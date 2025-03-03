@@ -17,6 +17,10 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public abstract class ServerSentEventStream implements Stream {
     private static final int STATE_COLON = 1;
     private static final int STATE_COLON_RIGHT_TRIM = 2;

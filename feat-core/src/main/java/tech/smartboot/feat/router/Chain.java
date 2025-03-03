@@ -13,6 +13,10 @@ package tech.smartboot.feat.router;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class Chain {
     private int index;
     private final List<Interceptor> interceptors;

@@ -27,6 +27,10 @@ import tech.smartboot.feat.fileserver.HttpStaticResourceHandler;
 import java.io.IOException;
 import java.util.function.Consumer;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class Feat {
     public static HttpServer httpServer() {
         return httpServer(new ServerOptions());

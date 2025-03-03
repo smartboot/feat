@@ -35,10 +35,8 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * http消息处理器
- *
- * @author 三刀
- * @version V1.0 , 2018/6/10
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public final class HttpMessageProcessor extends AbstractMessageProcessor<HttpEndpoint> {
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpMessageProcessor.class);

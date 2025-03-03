@@ -16,6 +16,10 @@ import tech.smartboot.feat.core.client.stream.Stream;
 
 import java.io.IOException;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class ResponseBodyDemo {
     public static void main(String[] args) {
         HttpClient httpClient = new HttpClient("https://smartboot.tech");

@@ -24,6 +24,10 @@ import java.nio.ByteBuffer;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class Http2Session {
     private static final Logger LOGGER = LoggerFactory.getLogger(Http2Session.class);
     public static final int STATE_FIRST_REQUEST = 0;

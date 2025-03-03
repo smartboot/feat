@@ -21,8 +21,8 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
- * @author 三刀
- * @version V1.0 , 2019/11/24
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public class FileUploadDemo {
     public static void main(String[] args) {

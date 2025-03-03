@@ -17,8 +17,8 @@ import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.cloud.annotation.RequestMethod;
 
 /**
- * @author 三刀（zhengjunweimail@163.com）
- * @version V1.0 , 2023/1/27
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 @Controller
 public class RestfulDemo {

@@ -15,10 +15,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import tech.smartboot.feat.core.client.HttpClient;
+import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.server.HttpRequest;
-import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.router.Router;
 
@@ -26,8 +26,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 /**
- * @author 三刀（zhengjunweimail@163.com）
- * @version V1.0 , 2021/2/7
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public class HttpReconnectTest {
 
@@ -41,7 +41,7 @@ public class HttpReconnectTest {
 
         routeHandler.route("/post", ctx -> {
             HttpRequest request = ctx.Request;
-            HttpResponse response=ctx.Response;
+            HttpResponse response = ctx.Response;
             response.setHeader(HeaderNameEnum.CONNECTION.getName(), HeaderValue.Connection.keepalive);
             JSONObject jsonObject = new JSONObject();
             for (String key : request.getParameters().keySet()) {
@@ -60,8 +60,8 @@ public class HttpReconnectTest {
 //        httpClient.configuration().debug(true);
         int i = 1000;
         while (i-- > 0) {
-            Future<tech.smartboot.feat.core.client.HttpResponse> future = httpClient.post("/post")
-                    .header(h->h.keepalive(true))
+            Future<HttpResponse> future = httpClient.post("/post")
+                    .header(h -> h.keepalive(true))
                     .onSuccess(response -> {
                         System.out.println(response.body());
                         httpClient.close();

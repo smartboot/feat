@@ -11,14 +11,12 @@
 package tech.smartboot.feat.core.server;
 
 /**
- * WebSocket消息请求接口
- *
- * @author 三刀
- * @version V1.0 , 2020/4/1
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public interface WebSocketRequest {
 
-    public int getFrameOpcode();
+    int getFrameOpcode();
 
-    public byte[] getPayload();
+    byte[] getPayload();
 }

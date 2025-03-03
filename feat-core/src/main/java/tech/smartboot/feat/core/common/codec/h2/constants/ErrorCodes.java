@@ -11,11 +11,8 @@
 package tech.smartboot.feat.core.common.codec.h2.constants;
 
 /**
- * HTTP/2 Error Codes
- *
- * @author 三刀
- * @version V1.0 , 2020/5/25
- * @see <a href="https://tools.ietf.org/html/rfc7540#section-7">RFC7540</a>
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public class ErrorCodes {
     public static final int NO_ERROR = 0x0;

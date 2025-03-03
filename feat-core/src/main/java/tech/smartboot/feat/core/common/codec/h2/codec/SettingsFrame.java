@@ -15,6 +15,10 @@ import org.smartboot.socket.transport.WriteBuffer;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class SettingsFrame extends Http2Frame {
 
     public static final int TYPE = 0x4;

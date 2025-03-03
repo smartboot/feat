@@ -20,8 +20,8 @@ import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 /**
- * @author 三刀
- * @version V1.0 , 2020/12/3
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public class DateUtils {
     private static final String COOKIE_PATTERN = "EEE, dd-MMM-yyyy HH:mm:ss z";

@@ -26,6 +26,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class PushBuilderImpl implements PushBuilder {
     public static final List<String> IGNORE_HEADERS = Arrays.asList("if-match", "if-none-match", "if-modified-since",
             "if-unmodified-since", "if-range", "range", "proxy-authorization", "from", "user-agent", "range", "expect"

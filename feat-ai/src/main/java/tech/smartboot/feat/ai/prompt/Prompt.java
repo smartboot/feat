@@ -15,13 +15,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public interface Prompt {
     /**
      * 建议使用的模型, 可多个
      *
      * @return 模型
      */
-    public default List<String> suggestedModels() {
+    default List<String> suggestedModels() {
         return Collections.emptyList();
     }
 
@@ -29,7 +33,7 @@ public interface Prompt {
      * 角色
      * @return 角色
      */
-    public default String role() {
+    default String role() {
         return "";
     }
 
@@ -38,11 +42,11 @@ public interface Prompt {
      * @param params 提示词参数
      * @return 提示词
      */
-    public String prompt(Map<String, String> params);
+    String prompt(Map<String, String> params);
 
     /**
      * 提示词参数
      * @return 参数
      */
-    public Set<String> params();
+    Set<String> params();
 }

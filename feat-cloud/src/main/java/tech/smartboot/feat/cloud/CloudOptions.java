@@ -16,6 +16,10 @@ import tech.smartboot.feat.core.server.ServerOptions;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class CloudOptions extends ServerOptions {
     private String[] packages;
     private final Map<String, Object> externalBeans = new HashMap<>();

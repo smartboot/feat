@@ -27,8 +27,8 @@ import tech.smartboot.feat.core.server.waf.WAF;
 import java.nio.ByteBuffer;
 
 /**
- * @author 三刀
- * @version V1.0 , 2018/8/31
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
     private final ServerOptions options;

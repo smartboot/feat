@@ -20,8 +20,8 @@ import java.io.ByteArrayOutputStream;
 import java.util.zip.GZIPOutputStream;
 
 /**
- * @author 三刀（zhengjunweimail@163.com）
- * @version V1.0 , 2021/10/24
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public class GzipHttpDemo {
     public static void main(String[] args) {

@@ -20,8 +20,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @author 三刀（zhengjunweimail@163.com）
- * @version V1.0 , 2023/2/13
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public final class PostBody extends CommonBody {
     private final HttpPost httpPost;

@@ -18,6 +18,10 @@ import java.io.IOException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class SSEDemo {
     public static void main(String[] args) throws Exception {
         Feat.httpServer(serverOptions -> serverOptions.debug(true)).httpHandler(req -> {

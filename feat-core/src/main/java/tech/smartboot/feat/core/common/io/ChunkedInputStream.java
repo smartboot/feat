@@ -23,8 +23,8 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 /**
- * @author 三刀（zhengjunweimail@163.com）
- * @version V1.0 , 2022/12/6
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public class ChunkedInputStream extends BodyInputStream {
     private static final int FLAG_CHUNKED_TRAILER = 1 << 4;

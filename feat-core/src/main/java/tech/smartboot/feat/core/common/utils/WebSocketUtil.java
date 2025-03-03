@@ -14,6 +14,10 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.security.SecureRandom;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class WebSocketUtil {
     public static final byte OPCODE_CONTINUE = 0x0;
     public static final byte OPCODE_TEXT = 0x1;

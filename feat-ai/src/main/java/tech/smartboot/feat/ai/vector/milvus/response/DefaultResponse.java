@@ -12,6 +12,10 @@ package tech.smartboot.feat.ai.vector.milvus.response;
 
 import com.alibaba.fastjson2.JSONObject;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class DefaultResponse extends Response {
     private JSONObject data;
 

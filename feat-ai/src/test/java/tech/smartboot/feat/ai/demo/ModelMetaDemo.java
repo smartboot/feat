@@ -16,6 +16,10 @@ import tech.smartboot.feat.ai.chat.ChatModel;
 
 import java.io.IOException;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class ModelMetaDemo {
     public static void main(String[] args) throws IOException {
         ChatModel chatModel = FeatAI.chatModel(opts -> opts.model(ModelMeta.GITEE_AI_DeepSeek_R1_Distill_Qwen_32B));

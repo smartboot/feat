@@ -16,14 +16,18 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class HttpGetDemo2 {
     public static void main(String[] args) {
         ExecutorService executorService = Executors.newFixedThreadPool(100);
         HttpClient httpClient = new HttpClient("www.baidu.com", 80);
         for (int i = 0; i < 100; i++) {
-            int j=i;
+            int j = i;
             executorService.submit(() -> {
-                httpClient.get("/").header(h->h.keepalive(false))
+                httpClient.get("/").header(h -> h.keepalive(false))
                         .onSuccess(response -> System.out.println(j))
                         .onFailure(Throwable::printStackTrace)
                         .submit();

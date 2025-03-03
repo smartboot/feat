@@ -11,10 +11,8 @@
 package tech.smartboot.feat.core.client;
 
 /**
- * Http消息请求接口
- *
- * @author 三刀
- * @version V1.0 , 2018/8/7
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public interface HttpResponse extends Response {
 

@@ -24,8 +24,8 @@ import java.nio.ByteBuffer;
 import java.util.List;
 
 /**
- * @author 三刀
- * @version V1.0 , 2018/2/3
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public final class Http2OutputStream extends FeatOutputStream {
     private final int streamId;

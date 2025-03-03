@@ -14,6 +14,10 @@ import tech.smartboot.feat.core.client.HttpResponse;
 
 import java.io.IOException;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public interface Stream {
     Stream SKIP_BODY_STREAMING = (response, bytes, end) -> {
     };

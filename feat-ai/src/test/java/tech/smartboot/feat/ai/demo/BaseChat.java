@@ -22,6 +22,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Set;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class BaseChat {
 
     public static String toHtml(String content) {
@@ -69,7 +73,7 @@ public class BaseChat {
         }
     }
 
-    public static void readFile(File file,StringBuilder sb) throws IOException {
+    public static void readFile(File file, StringBuilder sb) throws IOException {
         sb.append("## ").append(file.getCanonicalFile()).append("\n");
         try (FileInputStream fis = new FileInputStream(file)) {
             byte[] bytes = new byte[1024];

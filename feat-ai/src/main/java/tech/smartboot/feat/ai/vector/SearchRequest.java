@@ -12,6 +12,10 @@ package tech.smartboot.feat.ai.vector;
 
 import tech.smartboot.feat.ai.vector.expression.Expression;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class SearchRequest {
     /**
      * 匹配document中的内容

@@ -17,8 +17,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * @author 三刀（zhengjunweimail@163.com）
- * @version V1.0 , 2022/7/2
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.SOURCE)

@@ -21,8 +21,8 @@ import java.util.Base64;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * @author 三刀（zhengjunweimail@163.com）
- * @version V1.0 , 2021/2/23
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public final class BasicAuthRouterHandler implements RouterHandler {
     private final RouterHandler httpServerHandler;

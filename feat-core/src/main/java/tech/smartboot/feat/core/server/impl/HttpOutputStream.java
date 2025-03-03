@@ -26,8 +26,8 @@ import java.util.Map;
 import java.util.concurrent.Semaphore;
 
 /**
- * @author 三刀
- * @version V1.0 , 2018/2/3
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 final class HttpOutputStream extends FeatOutputStream {
     private static final byte[] Content_Type_TEXT_Bytes = ("\r\nContent-Type:" + HeaderValue.ContentType.TEXT_PLAIN_UTF8).getBytes();

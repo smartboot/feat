@@ -15,6 +15,10 @@ import tech.smartboot.feat.core.server.impl.HttpEndpoint;
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public interface HttpHandler {
     default void onHeaderComplete(HttpEndpoint request) throws IOException {
     }

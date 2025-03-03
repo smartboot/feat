@@ -23,8 +23,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 /**
- * @author 三刀（zhengjunweimail@163.com）
- * @version V1.0 , 2021/5/14
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public class BastTest {
     protected static final int SERVER_PORT = 8080;

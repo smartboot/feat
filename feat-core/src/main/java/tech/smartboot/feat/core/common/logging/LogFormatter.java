@@ -18,10 +18,8 @@ import java.util.logging.Formatter;
 import java.util.logging.LogRecord;
 
 /**
- * 定义日志内容的格式,包可见
- *
- * @author 三刀
- * @version V1.0 , 2020/1/1
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 class LogFormatter extends Formatter {
     private final static String format = "{0,date,yyyy-MM-dd} {0,time,HH:mm:ss.SS}";

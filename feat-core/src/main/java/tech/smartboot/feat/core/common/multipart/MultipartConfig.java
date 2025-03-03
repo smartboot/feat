@@ -15,6 +15,10 @@ import tech.smartboot.feat.core.common.utils.StringUtils;
 
 import java.nio.file.Paths;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class MultipartConfig {
 
     private String location;

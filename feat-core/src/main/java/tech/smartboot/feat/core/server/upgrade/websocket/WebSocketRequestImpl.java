@@ -20,8 +20,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 /**
- * @author 三刀
- * @version V1.0 , 2018/8/31
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 class WebSocketRequestImpl implements WebSocketRequest, WebSocket, Reset {
     private SmartDecoder payloadDecoder;
@@ -79,67 +79,6 @@ class WebSocketRequestImpl implements WebSocketRequest, WebSocket, Reset {
     public byte[] getPayload() {
         return payload.toByteArray();
     }
-
-//    @Override
-//    public String getRequestURL() {
-//        return request.getRequestURL();
-//    }
-//
-//    @Override
-//    public String getRequestURI() {
-//        return request.getRequestURI();
-//    }
-//
-//    @Override
-//    public String getQueryString() {
-//        return request.getQueryString();
-//    }
-//
-//    @Override
-//    public Map<String, String[]> getParameters() {
-//        return request.getParameters();
-//    }
-//
-//    @Override
-//    public InetSocketAddress getRemoteAddress() {
-//        return request.getRemoteAddress();
-//    }
-//
-//    @Override
-//    public InetSocketAddress getLocalAddress() {
-//        return request.getLocalAddress();
-//    }
-//
-//    @Override
-//    public boolean isSecure() {
-//        return request.isSecure();
-//    }
-
-
-//    @Override
-//    public Attachment getAttachment() {
-//        return request.getAttachment();
-//    }
-//
-//    @Override
-//    public void setAttachment(Attachment attachment) {
-//        request.setAttachment(attachment);
-//    }
-
-//    @Override
-//    public String getHeader(String headName) {
-//        return request.getHeader(headName);
-//    }
-//
-//    @Override
-//    public Collection<String> getHeaders(String name) {
-//        return request.getHeaders(name);
-//    }
-//
-//    @Override
-//    public Collection<String> getHeaderNames() {
-//        return request.getHeaderNames();
-//    }
 
     public long getPayloadLength() {
         return payloadLength;

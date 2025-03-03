@@ -11,8 +11,8 @@
 package tech.smartboot.feat.cloud;
 
 /**
- * @author 三刀（zhengjunweimail@163.com）
- * @version V1.0 , 2023/1/22
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public class RestResult<T> {
     /**

@@ -46,8 +46,8 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * @author 三刀
- * @version V1.0 , 2018/8/31
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public abstract class Endpoint implements Reset {
     private static final Logger LOGGER = LoggerFactory.getLogger(Endpoint.class);
@@ -95,11 +95,6 @@ public abstract class Endpoint implements Reset {
 
     private Cookie[] cookies;
     private final SSLEngine sslEngine;
-
-//    /**
-//     * 附件对象
-//     */
-//    private Attachment attachment;
 
     private HttpHandler serverHandler;
     /**

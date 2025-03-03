@@ -15,6 +15,10 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class FunctionParameters {
     private String type = "object";
     private Map<String, ParameterProperty> properties = new HashMap<>();

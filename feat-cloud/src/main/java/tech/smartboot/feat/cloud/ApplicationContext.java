@@ -21,8 +21,8 @@ import java.util.Map;
 import java.util.ServiceLoader;
 
 /**
- * @author 三刀（zhengjunweimail@163.com）
- * @version V1.0 , 6/23/23
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public class ApplicationContext {
     private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationContext.class);

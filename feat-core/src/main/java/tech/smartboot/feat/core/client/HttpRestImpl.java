@@ -32,8 +32,8 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
 /**
- * @author 三刀（zhengjunweimail@163.com）
- * @version V1.0 , 2021/2/3
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 class HttpRestImpl implements HttpRest {
     private final static String DEFAULT_USER_AGENT = "feat";

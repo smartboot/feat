@@ -22,8 +22,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @author 三刀
- * @version V1.0 , 2018/2/3
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 abstract class AbstractOutputStream extends FeatOutputStream {
 

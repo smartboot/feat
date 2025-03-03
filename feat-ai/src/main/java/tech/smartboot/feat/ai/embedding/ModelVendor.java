@@ -15,11 +15,15 @@ import tech.smartboot.feat.ai.Options;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class ModelVendor {
     private static final Map<String, Map<String, ModelVendor>> modelMetas = new HashMap<>();
-    public static final ModelVendor GITEE_AI_BCE_BASE_V1 = new ModelVendor(tech.smartboot.feat.ai.Options.AI_VENDOR_GITEE, "bce-embedding-base_v1");
-    public static final ModelVendor GITEE_AI_BGE_SMALL_ZH_V1_5 = new ModelVendor(tech.smartboot.feat.ai.Options.AI_VENDOR_GITEE, "bge-small-zh-v1.5");
-    public static final ModelVendor GITEE_AI_BGE_LARGE_ZH_V1_5 = new ModelVendor(tech.smartboot.feat.ai.Options.AI_VENDOR_GITEE, "bge-large-zh-v1.5");
+    public static final ModelVendor GITEE_AI_BCE_BASE_V1 = new ModelVendor(Options.AI_VENDOR_GITEE, "bce-embedding-base_v1");
+    public static final ModelVendor GITEE_AI_BGE_SMALL_ZH_V1_5 = new ModelVendor(Options.AI_VENDOR_GITEE, "bge-small-zh-v1.5");
+    public static final ModelVendor GITEE_AI_BGE_LARGE_ZH_V1_5 = new ModelVendor(Options.AI_VENDOR_GITEE, "bge-large-zh-v1.5");
     public static final ModelVendor GITEE_AI_BGE_M3 = new ModelVendor(Options.AI_VENDOR_GITEE, "bge-m3");
 
     /**

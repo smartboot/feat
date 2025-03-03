@@ -18,6 +18,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class FeatUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(FeatUtils.class);
 

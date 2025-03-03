@@ -10,6 +10,10 @@
 
 package tech.smartboot.feat.test.restful;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class TestParam {
     private String param1;
     private String param2;

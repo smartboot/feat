@@ -15,6 +15,10 @@ import tech.smartboot.feat.cloud.annotation.JSONField;
 
 import java.util.Date;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class TestParam {
     @JSONField(serialize = false)
     private String param1;

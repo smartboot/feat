@@ -13,12 +13,16 @@ package tech.smartboot.feat.core.common.io;
 import java.io.IOException;
 import java.util.EventListener;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public interface WriteListener extends EventListener {
 
 
-    public void onWritePossible() throws IOException;
+    void onWritePossible() throws IOException;
 
 
-    public void onError(final Throwable t);
+    void onError(final Throwable t);
 
 }

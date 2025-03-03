@@ -42,6 +42,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class WebSocketClient {
     private static final Logger LOGGER = LoggerFactory.getLogger(WebSocketClient.class);
 

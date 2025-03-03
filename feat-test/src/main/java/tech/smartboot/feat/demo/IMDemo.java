@@ -28,8 +28,8 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * @author 三刀
- * @version V1.0 , 2020/5/10
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public class IMDemo {
     public static void main(String[] args) {

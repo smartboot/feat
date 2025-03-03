@@ -11,8 +11,8 @@
 package tech.smartboot.feat.core.common;
 
 /**
- * @author 三刀
- * @version V1.0 , 2020/3/31
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public interface Reset {
     void reset();

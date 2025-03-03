@@ -20,62 +20,8 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 /**
- * Encodes headers to their binary representation.
- *
- * <p> Typical lifecycle looks like this:
- *
- * <p> {@link #Encoder(int) new Encoder}
- * ({@link #setMaxCapacity(int) setMaxCapacity}?
- * {@link #encode(ByteBuffer) encode})*
- *
- * <p> Suppose headers are represented by {@code Map<String, List<String>>}.
- * A supplier and a consumer of {@link ByteBuffer}s in forms of
- * {@code Supplier<ByteBuffer>} and {@code Consumer<ByteBuffer>} respectively.
- * Then to encode headers, the following approach might be used:
- *
- * <pre>{@code
- *     for (Map.Entry<String, List<String>> h : headers.entrySet()) {
- *         String name = h.getKey();
- *         for (String value : h.getValue()) {
- *             encoder.header(name, value);        // Set up header
- *             boolean encoded;
- *             do {
- *                 ByteBuffer b = buffersSupplier.get();
- *                 encoded = encoder.encode(b);    // Encode the header
- *                 buffersConsumer.accept(b);
- *             } while (!encoded);
- *         }
- *     }
- * }</pre>
- *
- * <p> Though the specification <a href="https://tools.ietf.org/html/rfc7541#section-2">does not define</a>
- * how an encoder is to be implemented, a default implementation is provided by
- * the method {@link #header(CharSequence, CharSequence, boolean)}.
- *
- * <p> To provide a custom encoding implementation, {@code Encoder} has to be
- * extended. A subclass then can access methods for encoding using specific
- * representations (e.g. {@link #literal(int, CharSequence, boolean) literal},
- * {@link #indexed(int) indexed}, etc.)
- *
- * @apiNote <p> An Encoder provides an incremental way of encoding headers.
- * {@link #encode(ByteBuffer)} takes a buffer a returns a boolean indicating
- * whether, or not, the buffer was sufficiently sized to hold the
- * remaining of the encoded representation.
- *
- * <p> This way, there's no need to provide a buffer of a specific size, or to
- * resize (and copy) the buffer on demand, when the remaining encoded
- * representation will not fit in the buffer's remaining space. Instead, an
- * array of existing buffers can be used, prepended with a frame that encloses
- * the resulting header block afterwards.
- *
- * <p> Splitting the encoding operation into header set up and header encoding,
- * separates long lived arguments ({@code name}, {@code value},
- * {@code sensitivity}, etc.) from the short lived ones (e.g. {@code buffer}),
- * simplifying each operation itself.
- * @implNote <p> The default implementation does not use dynamic table. It reports to a
- * coupled Decoder a size update with the value of {@code 0}, and never changes
- * it afterwards.
- * @since 9
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public class Encoder {
 

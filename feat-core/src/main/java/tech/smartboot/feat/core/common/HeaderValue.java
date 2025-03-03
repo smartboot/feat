@@ -11,10 +11,8 @@
 package tech.smartboot.feat.core.common;
 
 /**
- * 支持多Value的Header
- *
- * @author 三刀
- * @version V1.0 , 2019/11/30
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public class HeaderValue {
     String CONTINUE = "100-continue";

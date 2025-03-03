@@ -29,6 +29,10 @@ import java.util.Arrays;
 //
 //     configure write* (reset configure write*)*
 //
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 final class StringWriter {
 
     private static final int NEW = 0;

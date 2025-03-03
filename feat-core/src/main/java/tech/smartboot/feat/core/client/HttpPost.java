@@ -18,8 +18,8 @@ import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import java.util.function.Consumer;
 
 /**
- * @author 三刀（zhengjunweimail@163.com）
- * @version V1.0 , 2021/2/4
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public final class HttpPost extends HttpRestWrapper {
 

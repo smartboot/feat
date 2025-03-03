@@ -21,8 +21,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * @author 三刀（zhengjunweimail@163.com）
- * @version V1.0 , 2021/10/28
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public class AsyncHttpDemo {
     public static void main(String[] args) {

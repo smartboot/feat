@@ -15,6 +15,10 @@ import tech.smartboot.feat.core.server.HttpHandler;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 final class NodePath {
     private final static String PATTERN_KEY = "$E";
     private final static int TYPE_EXACT_PATH_NODE = 1;

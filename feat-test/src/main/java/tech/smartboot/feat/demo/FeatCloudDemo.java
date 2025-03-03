@@ -15,6 +15,10 @@ import tech.smartboot.feat.cloud.FeatCloud;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 @Controller
 public class FeatCloudDemo {
     @RequestMapping("/cloud")

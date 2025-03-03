@@ -13,6 +13,10 @@ package tech.smartboot.feat.ai;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class ModelMeta {
     private static final Map<String, Map<String, ModelMeta>> modelMetas = new HashMap<>();
     public static final ModelMeta GITEE_AI_DeepSeek_R1 = new ModelMeta(Options.AI_VENDOR_GITEE, "DeepSeek-R1", false);

@@ -15,6 +15,10 @@ import tech.smartboot.feat.core.client.stream.Stream;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public interface HttpRest {
 
     /**

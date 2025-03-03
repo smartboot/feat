@@ -25,8 +25,8 @@ import javax.net.ssl.SSLParameters;
 import java.util.function.Consumer;
 
 /**
- * @author 三刀（zhengjunweimail@163.com）
- * @version V1.0 , 2022/2/4
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public class Http2Demo {
     public static void main(String[] args) throws Exception {

@@ -12,6 +12,10 @@ package tech.smartboot.feat.demo;
 
 import tech.smartboot.feat.Feat;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class HelloFeat {
     public static void main(String[] args) {
         Feat.httpServer().listen();

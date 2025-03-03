@@ -15,34 +15,38 @@ import java.io.InputStream;
 import java.util.Collection;
 
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public interface Part {
 
-    public InputStream getInputStream() throws IOException;
+    InputStream getInputStream() throws IOException;
 
-    public String getContentType();
-
-
-    public String getName();
+    String getContentType();
 
 
-    public String getSubmittedFileName();
+    String getName();
 
 
-    public long getSize();
+    String getSubmittedFileName();
 
 
-    public void write(String fileName) throws IOException;
+    long getSize();
 
 
-    public void delete() throws IOException;
+    void write(String fileName) throws IOException;
 
 
-    public String getHeader(String name);
+    void delete() throws IOException;
 
 
-    public Collection<String> getHeaders(String name);
+    String getHeader(String name);
 
 
-    public Collection<String> getHeaderNames();
+    Collection<String> getHeaders(String name);
+
+
+    Collection<String> getHeaderNames();
 
 }

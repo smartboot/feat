@@ -13,10 +13,8 @@ package tech.smartboot.feat.core.common.utils;
 import java.nio.ByteBuffer;
 
 /**
- * 指定长度的解码器
- *
- * @author 三刀
- * @version V1.0 , 2017/10/20
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public class FixedLengthFrameDecoder implements SmartDecoder {
     private ByteBuffer buffer;

@@ -14,6 +14,10 @@ import java.nio.ByteBuffer;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class GoAwayFrame extends Http2Frame {
     private static final int STATE_DEFAULT = 0;
     private static final int STATE_DEBUG_DATA = 1;

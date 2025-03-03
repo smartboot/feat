@@ -28,8 +28,8 @@ import java.util.Vector;
 import java.util.function.Supplier;
 
 /**
- * @author 三刀
- * @version V1.0 , 2018/2/3
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public abstract class AbstractResponse implements HttpResponse, Reset {
     /**

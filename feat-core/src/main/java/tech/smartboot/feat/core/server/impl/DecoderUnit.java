@@ -14,6 +14,10 @@ import tech.smartboot.feat.core.common.DecodeState;
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.utils.ByteTree;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class DecoderUnit extends DecodeState {
     private ByteTree<HeaderNameEnum> decodeHeaderName;
 

@@ -22,8 +22,8 @@ import java.io.IOException;
 import java.util.Base64;
 
 /**
- * @author 三刀（zhengjunweimail@163.com）
- * @version V1.0 , 2021/2/23
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public final class BasicAuthServerHandler implements HttpHandler {
     private final HttpHandler httpServerHandler;

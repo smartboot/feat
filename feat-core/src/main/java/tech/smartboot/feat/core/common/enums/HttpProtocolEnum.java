@@ -11,14 +11,13 @@
 package tech.smartboot.feat.core.common.enums;
 
 /**
- * @author 三刀（zhengjunweimail@163.com）
- * @version V1.0 , 2021/2/4
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public enum HttpProtocolEnum {
     HTTP_11("HTTP/1.1"),
     HTTP_10("HTTP/1.0"),
-    HTTP_2("HTTP/2.0"),
-    ;
+    HTTP_2("HTTP/2.0");
 
     private final String protocol;
 

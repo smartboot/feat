@@ -20,8 +20,8 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * @author 三刀
- * @version V1.0 , 2018/8/31
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public class Cookie {
     private static final String TSPECIALS;

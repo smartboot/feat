@@ -15,6 +15,10 @@ import tech.smartboot.feat.core.common.utils.CollectionUtils;
 import tech.smartboot.feat.core.server.ServerOptions;
 import tech.smartboot.feat.core.server.impl.HttpEndpoint;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class WAF {
     public static void methodCheck(ServerOptions options, HttpEndpoint request) {
         WafOptions wafOptions = options.getWafOptions();

@@ -15,13 +15,17 @@ import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.router.Router;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public class Bootstrap {
     static byte[] body = "Hello, World!".getBytes();
 
     public static void main(String[] args) {
         Router routeHandle = new Router();
         routeHandle.route("/plaintext", ctx -> {
-            HttpResponse response=ctx.Response;
+            HttpResponse response = ctx.Response;
             response.setContentLength(body.length);
             response.setContentType("text/plain; charset=UTF-8");
             response.write(body);

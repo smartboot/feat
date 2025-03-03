@@ -10,10 +10,8 @@
 package tech.smartboot.feat.core.common.utils;
 
 /**
- * <p>Provides extra functionality for Java Number classes.</p>
- *
- * @version $Id: NumberUtils.java 1507169 2013-07-26 01:03:52Z sebb $
- * @since 2.0
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
  */
 public class NumberUtils {
 
@@ -28,8 +26,6 @@ public class NumberUtils {
     public NumberUtils() {
         super();
     }
-
-    //-----------------------------------------------------------------------
 
 
     /**

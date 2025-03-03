@@ -27,6 +27,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public abstract class AbstractResponse implements Response, Reset {
 
     private static final int INIT_CONTENT_LENGTH = -2;

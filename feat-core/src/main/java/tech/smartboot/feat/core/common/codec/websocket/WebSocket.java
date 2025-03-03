@@ -14,41 +14,45 @@ import tech.smartboot.feat.core.common.utils.SmartDecoder;
 
 import java.nio.ByteBuffer;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 public interface WebSocket {
-    public static final Decoder PAYLOAD_FINISH = new Decoder() {
+    Decoder PAYLOAD_FINISH = new Decoder() {
         @Override
         public Decoder decode(ByteBuffer byteBuffer, WebSocket request) {
             return this;
         }
     };
 
-    public boolean isFrameFinalFlag();
+    boolean isFrameFinalFlag();
 
-    public void setFrameFinalFlag(boolean frameFinalFlag);
+    void setFrameFinalFlag(boolean frameFinalFlag);
 
-    public boolean isFrameMasked();
+    boolean isFrameMasked();
 
-    public void setFrameMasked(boolean frameMasked);
+    void setFrameMasked(boolean frameMasked);
 
-    public int getFrameRsv();
+    int getFrameRsv();
 
-    public void setFrameRsv(int frameRsv);
+    void setFrameRsv(int frameRsv);
 
-    public int getFrameOpcode();
+    int getFrameOpcode();
 
-    public void setFrameOpcode(int frameOpcode);
+    void setFrameOpcode(int frameOpcode);
 
-    public byte[] getPayload();
+    byte[] getPayload();
 
-    public long getPayloadLength();
+    long getPayloadLength();
 
-    public void setPayloadLength(long payloadLength);
+    void setPayloadLength(long payloadLength);
 
-    public byte[] getMaskingKey();
+    byte[] getMaskingKey();
 
-    public void setMaskingKey(byte[] maskingKey);
+    void setMaskingKey(byte[] maskingKey);
 
-    public void setPayload(byte[] payload);
+    void setPayload(byte[] payload);
 
     SmartDecoder getPayloadDecoder();
 

@@ -14,6 +14,10 @@ package tech.smartboot.feat.demo.controller;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 
+/**
+ * @author 三刀(zhengjunweimail@163.com)
+ * @version v1.0.0
+ */
 @Controller("controller2")
 public class Controller2 {
     @RequestMapping("/helloworld")
