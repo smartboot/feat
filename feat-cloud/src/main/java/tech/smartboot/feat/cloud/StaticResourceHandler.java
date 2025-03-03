@@ -2,6 +2,7 @@ package tech.smartboot.feat.cloud;
 
 import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
+import tech.smartboot.feat.core.common.io.FeatOutputStream;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.utils.DateUtils;
@@ -16,6 +17,7 @@ import java.io.InputStream;
 import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Consumer;
 
 /**
  * @author 三刀（zhengjunweimail@163.com）
@@ -41,16 +43,14 @@ class StaticResourceHandler implements HttpHandler {
     public void handle(HttpRequest request, CompletableFuture<Object> completableFuture) throws Throwable {
         if (asyncExecutor == null) {
             try {
-                handle(request);
-                completableFuture.complete(null);
+                handle0(request, completableFuture);
             } catch (IOException e) {
                 completableFuture.completeExceptionally(e);
             }
         } else {
             asyncExecutor.execute(() -> {
                 try {
-                    handle(request);
-                    completableFuture.complete(null);
+                    handle0(request, completableFuture);
                 } catch (IOException e) {
                     completableFuture.completeExceptionally(e);
                 }
@@ -59,7 +59,11 @@ class StaticResourceHandler implements HttpHandler {
     }
 
     @Override
-    public void handle(HttpRequest request) throws IOException {
+    public void handle(HttpRequest request) throws Throwable {
+        throw new UnsupportedOperationException();
+    }
+
+    public void handle0(HttpRequest request, CompletableFuture<Object> completableFuture) throws IOException {
         HttpResponse response = request.getResponse();
         String fileName = request.getRequestURI();
 
@@ -86,11 +90,29 @@ class StaticResourceHandler implements HttpHandler {
             }
             String contentType = Mimetypes.getInstance().getMimetype(fileName);
             response.setHeader(HeaderNameEnum.CONTENT_TYPE.getName(), contentType + "; charset=utf-8");
+
             byte[] bytes = new byte[1024];
             int length;
-            while ((length = inputStream.read(bytes)) > 0) {
-                response.getOutputStream().write(bytes, 0, length);
+            if ((length = inputStream.read(bytes)) > 0) {
+                response.getOutputStream().write(bytes, 0, length, new Consumer<FeatOutputStream>() {
+
+                    @Override
+                    public void accept(FeatOutputStream featOutputStream) {
+                        int length;
+                        try {
+                            if ((length = inputStream.read(bytes)) > 0) {
+                                response.getOutputStream().write(bytes, 0, length, this);
+                            } else {
+                                completableFuture.complete(null);
+                            }
+                        } catch (Throwable throwable) {
+                            completableFuture.completeExceptionally(throwable);
+                        }
+                    }
+                });
             }
         }
     }
+
+
 }
