@@ -11,11 +11,18 @@
 package tech.smartboot.feat.demo.controller;
 
 
+import tech.smartboot.feat.cloud.RestResult;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
+import tech.smartboot.feat.core.client.HttpResponse;
+import tech.smartboot.feat.core.server.HttpRequest;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 @Controller("controller1")
@@ -23,5 +30,12 @@ public class Controller1 {
     @RequestMapping("/helloworld")
     public String helloworld() {
         return "hello " + Controller1.class.getSimpleName();
+    }
+
+    @RequestMapping("/test2")
+    public RestResult<List<Map<String, String>>> hello11ss2(HttpRequest request, HttpResponse response) {
+        RestResult<List<Map<String, String>>> result = new RestResult<>();
+        result.setData(Collections.singletonList(Collections.singletonMap("hello", "world")));
+        return result;
     }
 }

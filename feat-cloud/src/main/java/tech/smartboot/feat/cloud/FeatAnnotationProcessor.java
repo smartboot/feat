@@ -59,8 +59,9 @@ import java.util.Map;
 import java.util.Set;
 
 // 该注解表示该处理器支持的 Java 源代码版本
+
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
@@ -432,6 +433,9 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             writer.write("byte[] bnull={'n','u','l','l'};\n");
             writer.append("os.write(bnull);");
             writer.write("}\n");
+            return;
+        } else if (typeMirror.toString().startsWith("java.util.Map")) {
+            writer.append("os.write(new JSONObject(" + obj + ").toString().getBytes());\n");
             return;
         } else if (typeMirror.toString().endsWith(".JSONObject")) {
             writer.write("if(" + obj + "!=null){\n");
