@@ -15,6 +15,7 @@ import org.apache.ibatis.annotations.Mapper;
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Bean;
 import tech.smartboot.feat.cloud.annotation.Controller;
+import tech.smartboot.feat.cloud.annotation.InterceptorMapping;
 import tech.smartboot.feat.cloud.annotation.JSONField;
 import tech.smartboot.feat.cloud.annotation.Param;
 import tech.smartboot.feat.cloud.annotation.PostConstruct;
@@ -564,107 +565,25 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
     }
 
     private static <T extends Annotation> void addInterceptor(Element element, Writer writer) throws IOException {
-//        for (Element se : element.getEnclosedElements()) {
-//            for (AnnotationMirror mirror : se.getAnnotationMirrors()) {
-//                if (Interceptor.class.getName().equals(mirror.getAnnotationType().toString())) {
-//                    String patterns = "";
-//                    String exclude = "";
-//
-//                    for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry : mirror.getElementValues().entrySet()) {
-//                        ExecutableElement k = entry.getKey();
-//                        AnnotationValue v = entry.getValue();
-//                        if ("patterns".equals(k.getSimpleName().toString())) {
-//                            patterns = v.getValue().toString();
-//                        } else if ("exclude".equals(k.getSimpleName().toString())) {
-//                            exclude = v.getValue().toString();
-//                        }
-//                    }
-//                    writer.write("    router.addInterceptor(new String[]{" + patterns + "},new String[]{" + exclude + "}, req->{\n");
-//
-//                    boolean first = true;
-//                    StringBuilder newParams = new StringBuilder();
-//                    StringBuilder params = new StringBuilder();
-//                    int i = 0;
-//                    for (VariableElement param : ((ExecutableElement) se).getParameters()) {
-//                        if (first) {
-//                            first = false;
-//                        } else {
-//                            params.append(",");
-//                        }
-//                        if (param.asType().toString().equals(HttpRequest.class.getName())) {
-//                            params.append("req");
-//                        } else if (param.asType().toString().equals(HttpResponse.class.getName())) {
-//                            params.append("ctx.Response");
-//                        } else {
-//                            if (i == 0) {
-//                                newParams.append("JSONObject jsonObject=getParams(req);\n");
-//                            }
-//                            Param paramAnnotation = param.getAnnotation(Param.class);
-//                            if (paramAnnotation == null && param.asType().toString().startsWith("java")) {
-//                                throw new FeatException("the param of " + element.getSimpleName() + "@" + se.getSimpleName() + " is not allowed to be empty.");
-//                            }
-//                            if (paramAnnotation != null) {
-//                                if (param.asType().toString().startsWith(List.class.getName())) {
-//                                    newParams.append(param.asType().toString()).append(" param").append(i).append("=jsonObject.getObject(\"").append(paramAnnotation.value()).append("\",java.util"
-//                                    + ".List.class);\n");
-//                                } else {
-//                                    newParams.append(param.asType().toString()).append(" param").append(i).append("=jsonObject.getObject(\"").append(paramAnnotation.value()).append("\",").append
-//                                    (param.asType().toString()).append(".class);\n");
-//                                }
-//                            } else {
-//                                newParams.append(param.asType().toString()).append(" param").append(i).append("=jsonObject.to(").append(param.asType().toString()).append(".class);\n");
-//                            }
-////                                    newParams.append(param.asType().toString()).append(" param").append(i).append("=jsonObject.getObject(").append(param.asType().toString()).append(".class);\n");
-//                            params.append("param").append(i);
-//                            i++;
-//                        }
-////                                writer.write("req.getParam(\"" + param.getSimpleName() + "\")");
-//                    }
-//                    if (newParams.length() > 0) {
-//                        writer.write(newParams.toString());
-//                    }
-//
-//                    TypeMirror returnType = ((ExecutableElement) se).getReturnType();
-//                    int returnTypeInt = -1;
-//                    if (returnType.toString().equals("void")) {
-//                        returnTypeInt = RETURN_TYPE_VOID;
-//                    } else if (String.class.getName().equals(returnType.toString())) {
-//                        returnTypeInt = RETURN_TYPE_STRING;
-//                    } else {
-//                        returnTypeInt = RETURN_TYPE_OBJECT;
-//                    }
-//                    switch (returnTypeInt) {
-//                        case RETURN_TYPE_VOID:
-//                            writer.write("        bean." + se.getSimpleName() + "(");
-//                            break;
-//                        case RETURN_TYPE_STRING:
-//                            writer.write("      String rst = bean." + se.getSimpleName() + "(");
-//                            break;
-//                        case RETURN_TYPE_OBJECT:
-//                            writer.write("      Object rst = bean." + se.getSimpleName() + "(");
-//                            break;
-//                        default:
-//                            throw new RuntimeException("不支持的返回类型");
-//                    }
-//                    writer.write(params.toString());
-//
-//                    writer.write(");\n");
-//
-//                    switch (returnTypeInt) {
-//                        case RETURN_TYPE_VOID:
-//                            writer.write("        return null;\n");
-//                            break;
-//                        case RETURN_TYPE_STRING:
-//                        case RETURN_TYPE_OBJECT:
-//                            writer.write("        return rst;\n ");
-//                            break;
-//                        default:
-//                            throw new RuntimeException("不支持的返回类型");
-//                    }
-//                    writer.write("    });\n");
-//                }
-//            }
-//        }
+        for (Element se : element.getEnclosedElements()) {
+            for (AnnotationMirror mirror : se.getAnnotationMirrors()) {
+                if (!InterceptorMapping.class.getName().equals(mirror.getAnnotationType().toString())) {
+                    continue;
+                }
+                String patterns = "";
+
+                for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry : mirror.getElementValues().entrySet()) {
+                    ExecutableElement k = entry.getKey();
+                    AnnotationValue v = entry.getValue();
+                    if ("value".equals(k.getSimpleName().toString())) {
+                        patterns = v.getValue().toString();
+                    }
+                }
+                writer.write("    router.addInterceptors(java.util.Arrays.asList(" + patterns + ")");
+                writer.write(",bean." + se.getSimpleName() + "()");
+                writer.write(");\n");
+            }
+        }
     }
 
     private static <T extends Annotation> void createMapperBean(Element element, Mapper annotation, Writer writer) throws IOException {

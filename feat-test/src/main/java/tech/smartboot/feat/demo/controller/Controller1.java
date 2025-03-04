@@ -13,13 +13,18 @@ package tech.smartboot.feat.demo.controller;
 
 import tech.smartboot.feat.cloud.RestResult;
 import tech.smartboot.feat.cloud.annotation.Controller;
+import tech.smartboot.feat.cloud.annotation.InterceptorMapping;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.server.HttpRequest;
+import tech.smartboot.feat.router.Chain;
+import tech.smartboot.feat.router.Context;
+import tech.smartboot.feat.router.Interceptor;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * @author 三刀(zhengjunweimail @ 163.com)
@@ -37,5 +42,15 @@ public class Controller1 {
         RestResult<List<Map<String, String>>> result = new RestResult<>();
         result.setData(Collections.singletonList(Collections.singletonMap("hello", "world")));
         return result;
+    }
+
+    @InterceptorMapping({"a","b"})
+    public Interceptor interceptor() {
+        return new Interceptor() {
+            @Override
+            public void intercept(Context context, CompletableFuture<Object> completableFuture, Chain chain) throws Throwable {
+
+            }
+        };
     }
 }
