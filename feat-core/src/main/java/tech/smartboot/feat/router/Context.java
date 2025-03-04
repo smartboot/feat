@@ -12,7 +12,6 @@ package tech.smartboot.feat.router;
 
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
-import tech.smartboot.feat.router.session.Session;
 
 import java.util.Map;
 
@@ -42,7 +41,7 @@ public class Context {
         if (session != null) {
             return session;
         }
-        session = router.getSession(Request);
+        session = router.getSession(Request, true).getSession();
         return session;
     }
 }

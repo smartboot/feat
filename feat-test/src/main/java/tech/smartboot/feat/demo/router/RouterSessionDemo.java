@@ -12,7 +12,7 @@ package tech.smartboot.feat.demo.router;
 
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.router.Router;
-import tech.smartboot.feat.router.session.Session;
+import tech.smartboot.feat.router.Session;
 
 /**
  * @author 三刀(zhengjunweimail @ 163.com)

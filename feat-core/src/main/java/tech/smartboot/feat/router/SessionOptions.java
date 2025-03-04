@@ -8,12 +8,24 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.router.session;
+package tech.smartboot.feat.router;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0 3/3/25
  */
 public class SessionOptions {
+    /**
+     * session的最大存活时间, 单位：秒
+     */
+    private int maxAge = 30 * 60;
 
+    public int getMaxAge() {
+        return maxAge;
+    }
+
+    public SessionOptions setMaxAge(int maxAge) {
+        this.maxAge = maxAge;
+        return this;
+    }
 }

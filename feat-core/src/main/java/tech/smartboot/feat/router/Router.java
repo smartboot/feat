@@ -10,6 +10,8 @@
 
 package tech.smartboot.feat.router;
 
+import org.smartboot.socket.timer.HashedWheelTimer;
+import org.smartboot.socket.timer.TimerTask;
 import tech.smartboot.feat.core.common.Cookie;
 import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
 import tech.smartboot.feat.core.common.enums.HttpStatus;
@@ -18,7 +20,6 @@ import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.impl.HttpEndpoint;
-import tech.smartboot.feat.router.session.Session;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -27,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -41,7 +43,19 @@ public final class Router implements HttpHandler {
     private final RouterHandlerImpl defaultHandler;
     private final NodePath rootPath = new NodePath("/");
     private final List<InterceptorUnit> interceptors = new ArrayList<>();
-    private final Map<String, Session> sessions = new ConcurrentHashMap<>();
+
+    /**
+     * 所有的session
+     */
+    private final Map<String, SessionUnit> sessions = new ConcurrentHashMap<>();
+    /**
+     * session监听器,用于清理过期的session
+     */
+    private final HashedWheelTimer timer = new HashedWheelTimer(r -> new Thread(r, "feat-session-timer"), 10, 64);
+    /**
+     * session的配置
+     */
+    private final SessionOptions sessionOptions = new SessionOptions();
 
     public Router() {
         this(request -> request.getResponse().setHttpStatus(HttpStatus.NOT_FOUND));
@@ -130,11 +144,22 @@ public final class Router implements HttpHandler {
 
             @Override
             public void handle(HttpRequest request, CompletableFuture<Object> completableFuture) throws Throwable {
+                SessionUnit session = getSession(request, false);
+                if (session != null) {
+                    session.updateTimeoutTask();
+                }
+                completableFuture.whenComplete((obj, throwable) -> {
+                    SessionUnit session0 = getSession(request, false);
+                    if (session0 != null) {
+                        session0.updateTimeoutTask();
+                    }
+                });
                 Chain chain = new Chain(routerHandler.getRouterHandler(), list);
                 chain.proceed(routerHandler.getContext(request), completableFuture);
                 if (chain.isInterrupted()) {
                     completableFuture.complete(null);
                 }
+
             }
 
             @Override
@@ -173,27 +198,68 @@ public final class Router implements HttpHandler {
         }
     }
 
-    Session getSession(HttpRequest request) {
-        Session session = null;
+    SessionUnit getSession(HttpRequest request, boolean create) {
+        SessionUnit sessionUnit = null;
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
             for (Cookie cookie : cookies) {
                 if (Session.DEFAULT_SESSION_COOKIE_NAME.equals(cookie.getName())) {
-                    session = sessions.get(cookie.getValue());
+                    sessionUnit = sessions.get(cookie.getValue());
                     break;
                 }
             }
         }
-        if (session == null) {
-            session = new Session(request) {
-                @Override
-                public void invalidate() {
-                    sessions.remove(getSessionId());
-                    super.invalidate();
-                }
-            };
-            sessions.put(session.getSessionId(), session);
+        if (sessionUnit != null) {
+            return sessionUnit;
+        } else if (!create) {
+            return null;
         }
-        return session;
+        SessionUnit unit = new SessionUnit();
+        Session session = new Session(request) {
+            @Override
+            public void invalidate() {
+                sessions.remove(getSessionId());
+                super.invalidate();
+            }
+
+            @Override
+            public void setMaxAge(int interval) {
+                super.setMaxAge(interval);
+                unit.pauseTimeoutTask();
+            }
+        };
+        session.setMaxAge(sessionOptions.getMaxAge());
+        sessions.put(session.getSessionId(), unit);
+        unit.session = session;
+
+        return unit;
+    }
+
+    class SessionUnit {
+        private Session session;
+        private TimerTask timerTask;
+
+
+        void pauseTimeoutTask() {
+            if (timerTask != null) {
+                timerTask.cancel();
+                timerTask = null;
+            }
+        }
+
+        synchronized void updateTimeoutTask() {
+            pauseTimeoutTask();
+            if (session.getMaxAge() <= 0) {
+                return;
+            }
+            timerTask = timer.schedule(() -> {
+                LOGGER.info("sessionId:{} has be expired, lastAccessedTime:{} ,maxInactiveInterval:{}", session.getSessionId());
+                session.invalidate();
+            }, session.getMaxAge(), TimeUnit.SECONDS);
+        }
+
+        public Session getSession() {
+            return session;
+        }
     }
 }
