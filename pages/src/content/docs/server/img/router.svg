@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
+    <!-- 背景 -->
+    <rect width="800" height="600" fill="#f8f9fa"/>
+    
+    <!-- 标题 -->
+    <text x="400" y="50" text-anchor="middle" font-size="24" fill="#333">Router 路由匹配原理</text>
+    
+    <!-- 根节点 -->
+    <g transform="translate(400,120)">
+        <rect x="-50" y="-30" width="100" height="60" rx="10" fill="#4a90e2" filter="url(#shadow)"/>
+        <text x="0" y="10" text-anchor="middle" fill="white" font-size="16">/</text>
+    </g>
+    
+    <!-- 路径节点 -->
+    <g transform="translate(200,250)">
+        <rect x="-60" y="-30" width="120" height="60" rx="10" fill="#50c878" filter="url(#shadow)"/>
+        <text x="0" y="10" text-anchor="middle" fill="white" font-size="16">/user</text>
+    </g>
+    
+    <g transform="translate(400,250)">
+        <rect x="-60" y="-30" width="120" height="60" rx="10" fill="#50c878" filter="url(#shadow)"/>
+        <text x="0" y="10" text-anchor="middle" fill="white" font-size="16">/api</text>
+    </g>
+    
+    <g transform="translate(600,250)">
+        <rect x="-60" y="-30" width="120" height="60" rx="10" fill="#50c878" filter="url(#shadow)"/>
+        <text x="0" y="10" text-anchor="middle" fill="white" font-size="16">/*</text>
+    </g>
+    
+    <!-- 叶子节点 -->
+    <g transform="translate(150,380)">
+        <rect x="-70" y="-30" width="140" height="60" rx="10" fill="#ff7f50" filter="url(#shadow)"/>
+        <text x="0" y="0" text-anchor="middle" fill="white" font-size="14">/user/info</text>
+        <text x="0" y="20" text-anchor="middle" fill="white" font-size="12">精确匹配</text>
+    </g>
+    
+    <g transform="translate(300,380)">
+        <rect x="-70" y="-30" width="140" height="60" rx="10" fill="#ff7f50" filter="url(#shadow)"/>
+        <text x="0" y="0" text-anchor="middle" fill="white" font-size="14">/user/:id</text>
+        <text x="0" y="20" text-anchor="middle" fill="white" font-size="12">参数匹配</text>
+    </g>
+    
+    <g transform="translate(450,380)">
+        <rect x="-70" y="-30" width="140" height="60" rx="10" fill="#ff7f50" filter="url(#shadow)"/>
+        <text x="0" y="0" text-anchor="middle" fill="white" font-size="14">/api/v1/*</text>
+        <text x="0" y="20" text-anchor="middle" fill="white" font-size="12">通配符匹配</text>
+    </g>
+    
+    <!-- 连接线 -->
+    <g stroke="#666" stroke-width="2">
+        <!-- 根节点到路径节点 -->
+        <path d="M400,150 L200,220" fill="none"/>
+        <path d="M400,150 L400,220" fill="none"/>
+        <path d="M400,150 L600,220" fill="none"/>
+        
+        <!-- 路径节点到叶子节点 -->
+        <path d="M200,280 L150,350" fill="none"/>
+        <path d="M200,280 L300,350" fill="none"/>
+        <path d="M400,280 L450,350" fill="none"/>
+    </g>
+    
+    <!-- 阴影效果 -->
+    <defs>
+        <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feOffset result="offOut" in="SourceAlpha" dx="2" dy="2"/>
+            <feGaussianBlur result="blurOut" in="offOut" stdDeviation="3"/>
+            <feBlend in="SourceGraphic" in2="blurOut" mode="normal"/>
+        </filter>
+    </defs>
+    
+    <!-- 图例 -->
+    <g transform="translate(50,500)">
+        <rect x="0" y="0" width="20" height="20" fill="#4a90e2"/>
+        <text x="30" y="15" fill="#333" font-size="14">根节点</text>
+        
+        <rect x="120" y="0" width="20" height="20" fill="#50c878"/>
+        <text x="150" y="15" fill="#333" font-size="14">路径节点</text>
+        
+        <rect x="240" y="0" width="20" height="20" fill="#ff7f50"/>
+        <text x="270" y="15" fill="#333" font-size="14">叶子节点(Handler)</text>
+    </g>
+</svg>
