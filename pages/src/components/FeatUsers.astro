@@ -15,8 +15,8 @@ console.log(code)
     const storedCount = localStorage.getItem('userCount');
     const d = document.getElementById('userCountDisplay');
     if (storedCount) {
-        d.textContent = `当前在册用户数: ${storedCount}`;
-    }else{
+        d.textContent = "当前在册用户数: " + storedCount;
+    } else {
         //隐藏d
         d.style.display = "none";
     }
