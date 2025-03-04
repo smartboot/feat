@@ -50,6 +50,7 @@ public class FeatCloud {
             server.options().shutdownHook(application::destroy);
         }
         server.httpHandler(application.getRouter());
+        Runtime.getRuntime().addShutdownHook(new Thread(server::shutdown));
         return server;
     }
 }

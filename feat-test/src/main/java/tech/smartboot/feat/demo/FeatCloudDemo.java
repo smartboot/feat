@@ -13,6 +13,7 @@ package tech.smartboot.feat.demo;
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.cloud.FeatCloud;
 import tech.smartboot.feat.cloud.annotation.Controller;
+import tech.smartboot.feat.cloud.annotation.PreDestroy;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 
 /**
@@ -24,6 +25,11 @@ public class FeatCloudDemo {
     @RequestMapping("/cloud")
     public String helloWorld() {
         return "hello Feat Cloud";
+    }
+
+    @PreDestroy
+    public void destroy(){
+        System.out.println("destroy...");
     }
 
     public static void main(String[] args) {
