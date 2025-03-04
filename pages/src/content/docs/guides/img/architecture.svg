@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="400" xmlns="http://www.w3.org/2000/svg">
+    <!-- Smart Socket 底层 -->
+    <g transform="translate(0,300)">
+        <rect x="100" y="0" width="600" height="60" rx="5" fill="#1890ff" opacity="0.9"/>
+        <text x="400" y="35" font-size="18" text-anchor="middle" fill="white">smart socket</text>
+        <text x="400" y="55" font-size="12" text-anchor="middle" fill="white">高性能网络通信引擎</text>
+    </g>
+    
+    <!-- Feat Core 核心层 -->
+    <g transform="translate(0,200)">
+        <rect x="100" y="0" width="600" height="80" rx="5" fill="#52c41a" opacity="0.9"/>
+        <text x="400" y="35" font-size="18" text-anchor="middle" fill="white">Feat Core</text>
+        <text x="400" y="55" font-size="12" text-anchor="middle" fill="white">HTTP/WebSocket/SSE协议支持 | 异步处理 | 静态资源服务</text>
+    </g>
+    
+    <!-- Feat Cloud 和 Feat AI 业务层 -->
+    <g transform="translate(0,40)">
+        <!-- Feat Cloud -->
+        <g transform="translate(0,0)">
+            <rect x="100" y="0" width="280" height="140" rx="5" fill="#722ed1" opacity="0.9"/>
+            <text x="240" y="40" font-size="18" text-anchor="middle" fill="white">Feat Cloud</text>
+            <text x="240" y="70" font-size="12" text-anchor="middle" fill="white">企业级开发框架</text>
+            <text x="240" y="90" font-size="12" text-anchor="middle" fill="white">类Spring Boot开发体验</text>
+            <text x="240" y="110" font-size="12" text-anchor="middle" fill="white">静态优化 | 依赖注入</text>
+        </g>
+        
+        <!-- Feat AI -->
+        <g transform="translate(320,0)">
+            <rect x="100" y="0" width="280" height="140" rx="5" fill="#eb2f96" opacity="0.9"/>
+            <text x="240" y="40" font-size="18" text-anchor="middle" fill="white">Feat AI</text>
+            <text x="240" y="70" font-size="12" text-anchor="middle" fill="white">智能对话框架</text>
+            <text x="240" y="90" font-size="12" text-anchor="middle" fill="white">多模型支持 | 异步处理</text>
+            <text x="240" y="110" font-size="12" text-anchor="middle" fill="white">流式响应 | 灵活配置</text>
+        </g>
+    </g>
+    
+    <!-- 连接线 -->
+    <g stroke="#999" stroke-width="2" opacity="0.5">
+        <!-- Cloud和AI到Core的连接 -->
+        <line x1="240" y1="180" x2="240" y2="200"/>
+        <line x1="560" y1="180" x2="560" y2="200"/>
+        <!-- Core到Socket的连接 -->
+        <line x1="400" y1="280" x2="400" y2="300"/>
+    </g>
+</svg>
