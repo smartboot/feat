@@ -44,13 +44,11 @@ public class Controller1 {
         return result;
     }
 
-    @InterceptorMapping({"a","b"})
+    @InterceptorMapping({"/controller1/*"})
     public Interceptor interceptor() {
-        return new Interceptor() {
-            @Override
-            public void intercept(Context context, CompletableFuture<Object> completableFuture, Chain chain) throws Throwable {
-
-            }
+        return (context, completableFuture, chain) -> {
+            System.out.println("interceptor...");
+            chain.proceed(context, completableFuture);
         };
     }
 }
