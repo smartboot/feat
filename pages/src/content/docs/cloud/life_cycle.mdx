@@ -5,7 +5,12 @@ sidebar:
     order: 2
 ---
 
-在 Feat Cloud 中对于托管的实例的生命周期管理可分为：**创建** -> **属性填充** -> **初始化** -> **使用** -> **销毁** 几个核心阶段。
+import lifecycle from './img/lifecycle.svg';
+
+在 Feat Cloud 中对于托管的实例的生命周期管理可分为：**创建** -> **属性填充** -> **初始化** -> **使用** -> **销毁** 几个核心阶段。下图直观展示了 Bean 的完整生命周期流程：
+
+<img src={lifecycle.src} alt="Feat Cloud 生命周期" width="100%" className="shadow"/>
+
 
 ## 3.2.1 创建实例
 Feat Cloud 通过 **@Bean** 和 **@Controller** 注解来定义实例对象。
@@ -105,6 +110,100 @@ public class FeatBeanDemo {
 ```
 ## 3.2.4 使用 Bean
 
+在 Feat Cloud 中，可以通过 `@Autowired` 注解来注入和使用其他 Bean。Bean 之间可以相互依赖，形成依赖关系图。
+
+```java "@Autowired" "otherBean"
+@Bean
+public class BeanDemo {
+    @Autowired
+    private OtherBean otherBean;
+    
+    public void useOtherBean() {
+        // 使用注入的 otherBean
+        otherBean.doSomething();
+    }
+    
+    public void setOtherBean(OtherBean otherBean) {
+        this.otherBean = otherBean;
+    }
+}
+
+@Bean
+public class OtherBean {
+    public void doSomething() {
+        System.out.println("OtherBean is doing something");
+    }
+}
+```
+
+### 3.2.4.1 循环依赖
+
+Feat Cloud 支持 Bean 之间的循环依赖。当两个或多个 Bean 相互依赖时，Feat Cloud 能够正确处理这种情况，确保所有 Bean 都能正确初始化。
+
+```java "beanA" "beanB"
+@Bean
+public class BeanA {
+    @Autowired
+    private BeanB beanB;
+    
+    public void setBeaB(BeanB beanB) {
+        this.beanB = beanB;
+    }
+}
+
+@Bean
+public class BeanB {
+    @Autowired
+    private BeanA beanA;
+    
+    public void setBeanA(BeanA beanA) {
+        this.beanA = beanA;
+    }
+}
+```
+
+### 3.2.4.2 Bean 的作用域
+
+目前 Feat Cloud 中的 Bean 默认都是单例的，即在整个应用中只有一个实例。这意味着无论在哪里注入这个 Bean，获取到的都是同一个实例。
 
 ## 3.2.5 @PreDestroy：销毁
-@PreDestroy 作用于 Bean 或者 Controller 内部 public 方法上，类似于 Spring 中的 `@PreDestroy`。
+
+@PreDestroy 作用于 Bean 或者 Controller 内部 public 方法上，类似于 Spring 中的 `@PreDestroy`。当应用关闭时，Feat Cloud 会调用标记了 @PreDestroy 注解的方法，以便 Bean 可以释放资源或执行其他清理操作。
+
+```java "@PreDestroy" "destroy"
+@Bean
+public class ResourceBean {
+    private Resource resource;
+    
+    @PostConstruct
+    public void init() {
+        // 初始化资源
+        resource = new Resource();
+        System.out.println("资源已初始化");
+    }
+    
+    @PreDestroy
+    public void destroy() {
+        // 释放资源
+        if (resource != null) {
+            resource.close();
+            System.out.println("资源已释放");
+        }
+    }
+    
+    // 资源类示例
+    private class Resource {
+        public void close() {
+            // 关闭资源的逻辑
+        }
+    }
+}
+```
+
+### 3.2.5.1 销毁时机
+
+当以下情况发生时，@PreDestroy 注解的方法会被调用：
+
+1. 应用正常关闭时（如调用 `System.exit()`）
+2. 通过 JVM 的 shutdown hook 关闭应用时
+3. 在 Feat Cloud 中，当调用 `server.shutdown()` 方法时
