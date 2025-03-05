@@ -93,16 +93,16 @@
     <!-- 时间轮指针 -->
     <line x1="450" y1="300" x2="450" y2="170" stroke="#FF5722" stroke-width="3" class="wheel-pointer"/>
     <circle cx="450" cy="300" r="10" fill="#FF5722"/>
-    
+
     <!-- Session 任务 -->
-    <circle cx="450" cy="170" r="15" fill="#FFC107" class="session-create"/>
-    <text x="450" y="175" text-anchor="middle" font-size="12" fill="#333" class="session-create">ID_1</text>
+    <circle cx="450" cy="170" r="15" fill="#4CAF50" class="session-create"/>
+    <text x="450" y="175" text-anchor="middle" font-size="12" fill="#fff" class="session-create">ID_1</text>
     
     <circle cx="575" cy="300" r="15" fill="#FFC107" class="session-update"/>
-    <text x="575" y="305" text-anchor="middle" font-size="12" fill="#333">ID_2</text>
+    <text x="575" y="305" text-anchor="middle" font-size="12" fill="#fff">ID_2</text>
     
-    <circle cx="375" cy="425" r="15" fill="#FFC107" class="session-expire"/>
-    <text x="375" y="430" text-anchor="middle" font-size="12" fill="#333" class="session-expire">ID_3</text>
+    <circle cx="375" cy="425" r="15" fill="#F44336" class="session-expire"/>
+    <text x="375" y="430" text-anchor="middle" font-size="12" fill="#fff" class="session-expire">ID_3</text>
     
     <!-- Session 生命周期 -->
     <rect x="50" y="480" width="700" height="100" rx="10" fill="#E3F2FD" stroke="#2196F3" stroke-width="2"/>
@@ -145,4 +145,6 @@
     
     <circle cx="620" cy="170" r="10" fill="#FFC107"/>
     <text x="640" y="175" text-anchor="start" font-size="12" fill="#333">定时任务</text>
+
+
 </svg>
