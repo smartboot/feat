@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="500" xmlns="http://www.w3.org/2000/svg">
+    <!-- 背景 -->
+    <defs>
+        <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#f8f9fa;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#e9ecef;stop-opacity:1" />
+        </linearGradient>
+    </defs>
+    <rect width="800" height="500" fill="url(#bg-gradient)" />
+
+    <!-- 标题 -->
+    <text x="400" y="40" text-anchor="middle" font-size="24" font-weight="bold" fill="#212529">Feat Router 拦截器执行流程</text>
+
+    <!-- HTTP请求 -->
+    <rect x="50" y="100" width="120" height="60" rx="10" fill="#4dabf7" />
+    <text x="110" y="135" text-anchor="middle" fill="white" font-size="14">HTTP请求</text>
+
+    <!-- Router组件 -->
+    <rect x="250" y="80" width="300" height="340" rx="15" fill="#f1f3f5" stroke="#adb5bd" stroke-width="2" />
+    <text x="400" y="110" text-anchor="middle" font-size="16" font-weight="bold" fill="#495057">Interceptor Chain</text>
+
+    <!-- 拦截器链 -->
+    <g transform="translate(300,150)">
+        <!-- 拦截器1 -->
+        <rect x="0" y="0" width="200" height="60" rx="8" fill="#51cf66" opacity="0.9" />
+        <text x="100" y="35" text-anchor="middle" fill="white" font-size="14">拦截器 1</text>
+
+        <!-- 拦截器2 -->
+        <rect x="0" y="80" width="200" height="60" rx="8" fill="#51cf66" opacity="0.9" />
+        <text x="100" y="115" text-anchor="middle" fill="white" font-size="14">拦截器 2</text>
+
+        <!-- 拦截器N -->
+        <rect x="0" y="160" width="200" height="60" rx="8" fill="#51cf66" opacity="0.9" />
+        <text x="100" y="195" text-anchor="middle" fill="white" font-size="14">拦截器 N</text>
+    </g>
+
+    <!-- 处理程序 -->
+    <rect x="650" y="100" width="120" height="60" rx="10" fill="#845ef7" />
+    <text x="710" y="135" text-anchor="middle" fill="white" font-size="14">处理程序</text>
+
+    <!-- 连接线和箭头 -->
+    <!-- 请求流向 -->
+    <defs>
+        <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+            <path d="M0,0 L10,5 L0,10 L2,5 Z" fill="#868e96" />
+        </marker>
+        <marker id="arrow-red" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+            <path d="M0,0 L10,5 L0,10 L2,5 Z" fill="#fa5252" />
+        </marker>
+    </defs>
+
+    <!-- 请求路径 -->
+    <path d="M170,130 H250" stroke="#868e96" stroke-width="2" marker-end="url(#arrow)" />
+    <path d="M550,130 H650" stroke="#868e96" stroke-width="2" marker-end="url(#arrow)" />
+
+    <!-- 垂直连接线 -->
+    <line x1="400" y1="210" x2="400" y2="230" stroke="#868e96" stroke-width="2" stroke-dasharray="4" />
+    <line x1="400" y1="290" x2="400" y2="310" stroke="#868e96" stroke-width="2" stroke-dasharray="4" />
+
+
+    <!-- 说明文本 -->
+    <text x="400" y="450" text-anchor="middle" font-size="14" fill="#495057">Chain链式调用：proceed(ctx) → 依次执行拦截器 → 最终处理程序</text>
+    <text x="400" y="470" text-anchor="middle" font-size="14" fill="#fa5252">当拦截器返回false时，中断后续执行并直接返回响应</text>
+</svg>
