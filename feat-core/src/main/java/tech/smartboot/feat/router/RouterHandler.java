@@ -23,9 +23,9 @@ public interface RouterHandler {
     default void onHeaderComplete(HttpEndpoint request) throws IOException {
     }
 
-    default void handle(Context request, CompletableFuture<Object> completableFuture) throws Throwable {
+    default void handle(Context context, CompletableFuture<Object> completableFuture) throws Throwable {
         try {
-            handle(request);
+            handle(context);
         } finally {
             completableFuture.complete(null);
         }
@@ -36,6 +36,6 @@ public interface RouterHandler {
     /**
      * 断开 TCP 连接
      */
-    default void onClose(HttpEndpoint request) {
+    default void onClose(HttpEndpoint context) {
     }
 }

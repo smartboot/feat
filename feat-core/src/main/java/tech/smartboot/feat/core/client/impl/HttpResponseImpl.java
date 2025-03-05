@@ -80,12 +80,12 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
         } else {
             state = STATE_FINISH;
         }
-        if (headerConsumer != null) {
-            headerConsumer.accept(this);
-        }
         if (StringUtils.equals(HeaderValue.ContentEncoding.GZIP, getHeader(HeaderNameEnum.CONTENT_ENCODING.getName()))) {
             state = STATE_GZIP | state;
             streaming = new GzipStream(streaming);
+        }
+        if (headerConsumer != null) {
+            headerConsumer.accept(this);
         }
     }
 

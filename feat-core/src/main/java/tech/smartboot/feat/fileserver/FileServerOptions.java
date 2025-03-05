@@ -22,6 +22,10 @@ public class FileServerOptions extends ServerOptions {
      * 若设置为true，则允许以目录列表的形式展现
      */
     private boolean autoIndex = false;
+    /**
+     * 代理配置
+     */
+    private ProxyOptions proxyOptions = new ProxyOptions();
 
     public String baseDir() {
         return baseDir;
@@ -39,5 +43,9 @@ public class FileServerOptions extends ServerOptions {
     public FileServerOptions autoIndex(boolean autoIndex) {
         this.autoIndex = autoIndex;
         return this;
+    }
+
+    public ProxyOptions proxyOptions() {
+        return proxyOptions;
     }
 }

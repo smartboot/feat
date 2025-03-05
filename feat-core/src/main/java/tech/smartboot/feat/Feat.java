@@ -19,10 +19,13 @@ import tech.smartboot.feat.core.client.WebSocketClient;
 import tech.smartboot.feat.core.client.WebSocketListener;
 import tech.smartboot.feat.core.client.WebSocketOptions;
 import tech.smartboot.feat.core.common.HeaderValue;
+import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.ServerOptions;
 import tech.smartboot.feat.fileserver.FileServerOptions;
 import tech.smartboot.feat.fileserver.HttpStaticResourceHandler;
+import tech.smartboot.feat.fileserver.ProxyHandler;
+import tech.smartboot.feat.router.Router;
 
 import java.io.IOException;
 import java.util.function.Consumer;
@@ -49,7 +52,13 @@ public class Feat {
     public static HttpServer fileServer(Consumer<FileServerOptions> options) {
         FileServerOptions opt = new FileServerOptions();
         options.accept(opt);
-        return httpServer(opt).httpHandler(new HttpStaticResourceHandler(opt));
+        HttpHandler handler = new HttpStaticResourceHandler(opt);
+        if (!opt.proxyOptions().getProxyRules().isEmpty()) {
+            Router router = new Router(handler);
+            opt.proxyOptions().getProxyRules().forEach(rule -> router.route(rule.getLocation(), new ProxyHandler(rule)));
+            handler = router;
+        }
+        return httpServer(opt).httpHandler(handler);
     }
 
     public static HttpPost postJson(String api, Object body) {
