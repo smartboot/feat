@@ -5,5 +5,222 @@ sidebar:
     order: 4
 ---
 import CheckAuthorize from '../../../components/CheckAuthorize.astro'
+import {TabItem, Tabs, Aside} from "@astrojs/starlight/components";
 
 <CheckAuthorize/>
+
+# Controller 开发
+
+## 3.4.1 Feat Cloud 与 Spring Boot 的对比
+
+Feat Cloud 和 Spring Boot 都提供了便捷的 Web 开发体验，但在 Controller 的实现方式上有一些区别。下面我们对比两者的主要差异：
+
+| 特性 | Feat Cloud | Spring Boot |
+| --- | --- | --- |
+| 注解定义 | `@Controller`、`@RequestMapping` | `@Controller`、`@RestController`、`@RequestMapping` |
+| 路由映射 | 基于方法的 `@RequestMapping` | 支持 `@GetMapping`、`@PostMapping` 等 HTTP 方法特定注解 |
+| 参数处理 | 自动类型转换，支持 HttpRequest、HttpResponse 等原生对象 | 使用 `@RequestParam`、`@PathVariable`、`@RequestBody` 等注解 |
+| 异步处理 | 通过 `@Controller(async=true)` 配置 | 使用 `@Async` 或返回 `CompletableFuture`、`DeferredResult` |
+| 依赖注入 | 支持构造器注入和字段注入 | 支持构造器注入、字段注入和 setter 注入 |
+| 编译时处理 | 编译时静态转码，无运行时反射 | 运行时反射和动态代理 |
+
+<Aside type="note">
+  Feat Cloud 的 Controller 在编译时完成静态转码，相比 Spring Boot 的运行时反射机制，具有更高的性能优势。
+</Aside>
+
+## 3.4.2 Controller 基本使用
+
+### 3.4.2.1 定义 Controller
+
+在 Feat Cloud 中，使用 `@Controller` 注解标记一个类为控制器：
+
+```java
+import tech.smartboot.feat.cloud.annotation.Controller;
+import tech.smartboot.feat.cloud.annotation.RequestMapping;
+
+@Controller
+public class HelloController {
+    
+    @RequestMapping("/hello")
+    public String hello() {
+        return "Hello, Feat Cloud!";
+    }
+}
+```
+
+### 3.4.2.2 请求映射
+
+使用 `@RequestMapping` 注解将 HTTP 请求映射到控制器的方法：
+
+```java
+@Controller
+public class UserController {
+    
+    @RequestMapping("/users")
+    public List<User> getUsers() {
+        // 返回用户列表
+        return userService.findAll();
+    }
+    
+    @RequestMapping("/users/{id}")
+    public User getUser(String id) {
+        // 根据ID返回用户
+        return userService.findById(id);
+    }
+}
+```
+
+## 3.4.3 请求处理
+
+### 3.4.3.1 参数绑定
+
+Feat Cloud 支持多种参数类型的自动绑定：
+
+```java
+@Controller
+public class OrderController {
+    
+    // 基本类型参数自动绑定
+    @RequestMapping("/orders")
+    public List<Order> getOrders(int page, int size) {
+        return orderService.findByPage(page, size);
+    }
+    
+    // 对象参数自动绑定
+    @RequestMapping("/orders/create")
+    public Order createOrder(Order order) {
+        return orderService.create(order);
+    }
+    
+    // 原生请求/响应对象
+    @RequestMapping("/orders/download")
+    public void downloadOrders(HttpRequest request, HttpResponse response) {
+        // 处理文件下载
+        response.setContentType(HeaderValue.ContentType.APPLICATION_OCTET_STREAM);
+        // ...
+    }
+}
+```
+
+### 3.4.3.2 实际案例分析
+
+以下是一个实际的 Controller 示例，展示了如何处理不同类型的请求和响应：
+
+<Tabs>
+    <TabItem label="FeatController.java">
+    ```java
+    @Controller
+    public class FeatController {
+        static byte[] body = "Hello, World!".getBytes();
+
+        @RequestMapping("/plaintext")
+        public byte[] plaintext(HttpResponse response) {
+            response.setContentType(HeaderValue.ContentType.TEXT_PLAIN_UTF8);
+            return body;
+        }
+
+        @RequestMapping("/json")
+        public Message json(HttpResponse response) {
+            response.setContentType(HeaderValue.ContentType.APPLICATION_JSON_UTF8);
+            return new Message("Hello, World!");
+        }
+    }
+    ```
+    </TabItem>
+    <TabItem label="Message.java">
+    ```java
+    public class Message {
+        private String message;
+
+        public Message(String message) {
+            this.message = message;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        public void setMessage(String message) {
+            this.message = message;
+        }
+    }
+    ```
+    </TabItem>
+</Tabs>
+
+## 3.4.4 高级特性
+
+### 3.4.4.1 异步处理
+
+Feat Cloud 支持异步 Controller，通过设置 `@Controller` 的 `async` 属性为 `true` 启用：
+
+```java
+@Controller(async = true)
+public class AsyncController {
+    
+    @RequestMapping("/async/data")
+    public CompletableFuture<Data> getAsyncData() {
+        return CompletableFuture.supplyAsync(() -> {
+            // 执行耗时操作
+            return new Data("Async result");
+        });
+    }
+}
+```
+
+### 3.4.4.2 跨域支持
+
+使用 `@CrossOrigin` 注解支持跨域请求：
+
+```java
+@Controller
+public class ApiController {
+    
+    @CrossOrigin
+    @RequestMapping("/api/data")
+    public Data getData() {
+        return new Data("Cross-origin data");
+    }
+}
+```
+
+### 3.4.4.3 依赖注入
+
+Feat Cloud 支持在 Controller 中注入其他服务：
+
+```java
+@Controller
+public class ProductController {
+    
+    private final ProductService productService;
+    
+    // 构造器注入
+    public ProductController(ProductService productService) {
+        this.productService = productService;
+    }
+    
+    @RequestMapping("/products")
+    public List<Product> getProducts() {
+        return productService.findAll();
+    }
+}
+```
+
+## 3.4.5 最佳实践
+
+### 3.4.5.1 Controller 设计原则
+
+1. **职责单一**：Controller 只负责请求的接收和响应的返回，业务逻辑应当放在 Service 层。
+2. **参数校验**：对输入参数进行必要的校验，确保数据的合法性。
+3. **异常处理**：合理处理异常，避免将异常直接暴露给客户端。
+4. **RESTful 设计**：遵循 RESTful API 设计规范，使 API 更加直观和易用。
+
+### 3.4.5.2 性能优化
+
+1. **使用异步处理**：对于耗时操作，考虑使用异步 Controller。
+2. **合理设置响应类型**：根据实际需求设置合适的 Content-Type。
+3. **避免大对象传输**：对于大数据量的响应，考虑分页或流式处理。
+
+<Aside type="tip">
+  Feat Cloud 的 Controller 在编译时完成静态转码，无需运行时反射，因此具有更高的性能。在高并发场景下，这一优势尤为明显。
+</Aside>

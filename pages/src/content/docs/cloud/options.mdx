@@ -6,21 +6,164 @@ sidebar:
 ---
 
 import CheckAuthorize from '../../../components/CheckAuthorize.astro'
+import {Aside, TabItem, Tabs} from "@astrojs/starlight/components";
 
 <CheckAuthorize/>
 
-CloudOptions 定义了 Feat Cloud 服务的配置信息。
+# CloudOptions 配置
 
-## packages
-**类型**: `string[]`
+CloudOptions 定义了 Feat Cloud 服务的配置信息，它继承自 ServerOptions，因此除了自身特有的配置项外，还可以使用 ServerOptions 中的所有配置项。
+
+## CloudOptions 特有配置项
+
+### packages
+**类型**: `String[]`
 
 **默认值**: `null`
 
 定义了 Feat Cloud 启动时加载的实例包路径，默认扫描 classpath 下的所有实例包。
 
-## externalBeans
+**使用示例**:
+```java
+FeatCloud.cloudServer(options -> {
+    options.setPackages("com.example.controller", "com.example.service");
+});
+```
+
+**最佳实践**:
+- 明确指定包路径可以提高应用启动速度，减少不必要的类扫描
+- 在大型项目中，建议按功能模块划分包，并只加载需要的包
+
+### externalBeans
 **类型**: `Map<String, Object>`
 
-**默认值**: `null`
+**默认值**: `空Map`
 
-定义了 Feat Cloud 启动时加载的外部 Bean 配置。
+定义了 Feat Cloud 启动时加载的外部 Bean 配置，可以通过 `addExternalBean` 方法添加外部 Bean。
+
+**使用示例**:
+```java
+FeatCloud.cloudServer(options -> {
+    options.addExternalBean("dataSource", createDataSource());
+    options.addExternalBean("redisClient", createRedisClient());
+});
+```
+
+**最佳实践**:
+- 使用有意义的键名，便于在应用中引用
+- 外部Bean通常用于注入第三方服务或资源，如数据库连接池、缓存客户端等
+- 注意避免Bean名称冲突，否则会抛出异常
+
+## 从 ServerOptions 继承的重要配置项
+
+### serverName
+**类型**: `String`
+
+**默认值**: `"feat"`
+
+设置服务器名称，会在HTTP响应头的Server字段中显示。
+
+**使用示例**:
+```java
+FeatCloud.cloudServer(options -> {
+    options.serverName("my-application-v1.0");
+});
+```
+
+### threadNum
+**类型**: `int`
+
+**默认值**: `可用处理器数量（至少为2）`
+
+设置服务线程数，影响服务器处理请求的并发能力。
+
+**使用示例**:
+```java
+FeatCloud.cloudServer(options -> {
+    options.threadNum(16);
+});
+```
+
+**最佳实践**:
+- 对于IO密集型应用，可以适当增加线程数
+- 对于CPU密集型应用，建议设置为CPU核心数的1-2倍
+
+### idleTimeout
+**类型**: `long`
+
+**默认值**: `60000`（毫秒，即1分钟）
+
+设置连接空闲超时时间，超过该时间未收到数据的连接将被关闭。
+
+**使用示例**:
+```java
+FeatCloud.cloudServer(options -> {
+    // 设置为30秒
+    options.setIdleTimeout(30000);
+});
+```
+
+### debug
+**类型**: `boolean`
+
+**默认值**: `false`
+
+启用调试模式，会打印请求和响应的码流信息，便于排查问题。
+
+**使用示例**:
+```java
+FeatCloud.cloudServer(options -> {
+    options.debug(true);
+});
+```
+
+<Aside type="caution">
+  调试模式会影响性能，建议仅在开发环境中启用。
+</Aside>
+
+## 完整配置示例
+
+以下是一个综合使用 CloudOptions 配置的示例：
+
+```java
+import tech.smartboot.feat.cloud.FeatCloud;
+import tech.smartboot.feat.core.server.HttpServer;
+
+public class Application {
+    public static void main(String[] args) {
+        HttpServer server = FeatCloud.cloudServer(options -> {
+            // CloudOptions 特有配置
+            options.setPackages("com.example.controller");
+            options.addExternalBean("dataSource", createDataSource());
+            
+            // 从 ServerOptions 继承的配置
+            options.serverName("example-app");
+            options.threadNum(8);
+            options.setIdleTimeout(30000);
+            options.debug(false);
+        });
+        
+        server.start();
+    }
+    
+    private static Object createDataSource() {
+        // 创建数据源的代码
+        return new Object();
+    }
+}
+```
+
+## 配置最佳实践
+
+1. **性能优化**
+   - 根据应用特性合理设置线程数
+   - 明确指定包路径，避免全局扫描
+   - 在生产环境关闭调试模式
+
+2. **资源管理**
+   - 合理设置空闲超时时间，避免资源浪费
+   - 使用外部Bean管理共享资源，如数据库连接池
+
+3. **安全性**
+   - 在生产环境中，考虑修改默认的服务器名称，减少信息泄露
+   - 设置合理的请求大小限制，防止恶意大请求攻击
