@@ -31,10 +31,13 @@ import java.io.IOException;
 import java.util.function.Consumer;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 public class Feat {
+    /**
+     * 对标 vert.x
+     */
     public static HttpServer httpServer() {
         return httpServer(new ServerOptions());
     }
@@ -49,6 +52,9 @@ public class Feat {
         return httpServer(opt);
     }
 
+    /**
+     * 对标nginx
+     */
     public static HttpServer fileServer(Consumer<FileServerOptions> options) {
         FileServerOptions opt = new FileServerOptions();
         options.accept(opt);
