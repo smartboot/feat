@@ -96,6 +96,7 @@ class StaticResourceHandler implements HttpHandler {
         try (InputStream inputStream = StaticResourceHandler.class.getClassLoader().getResourceAsStream("static" + fileName)) {
             if (inputStream == null) {
                 response.setHttpStatus(HttpStatus.NOT_FOUND);
+                completableFuture.complete(null);
                 return;
             }
             String contentType = Mimetypes.getInstance().getMimetype(fileName);
