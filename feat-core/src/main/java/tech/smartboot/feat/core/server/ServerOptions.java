@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀
  * @version v1.0.0
  */
 public class ServerOptions {
@@ -120,7 +120,7 @@ public class ServerOptions {
         return this;
     }
 
-    int getWriteBufferSize() {
+    protected int getWriteBufferSize() {
         return writeBufferSize;
     }
 

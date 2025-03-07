@@ -6,6 +6,7 @@ sidebar:
 ---
 import file_server_1 from './img/file_server_1.png';
 import file_server_2 from './img/file_server_2.png';
+import file_server_principle from './img/file_server_principle.svg';
 import {Steps} from "@astrojs/starlight/components";
 import Mermaid from '../../../components/Mermaid.astro';
 
@@ -28,27 +29,11 @@ FileServer模块是一个轻量级的静态资源服务器，支持以下功能�
 - 提供文件下载服务
 - 替代Nginx作为静态资源服务器
 
-<Mermaid code={`
-graph TD
-    A[用户请求] --> B[Bootstrap初始化]
-    B --> C[配置FileServerOptions]
-    C --> D[HttpStaticResourceHandler处理请求]
-    D --> E[解析请求URI]
-    E --> F{文件/目录检查}
-    F --> G[文件存在]
-    G --> H[读取文件内容]
-    H --> I[发送响应]
-    F --> J[文件不存在]
-    J --> K[返回404错误]
-    D --> L[处理目录索引]
-    L --> M[生成目录列表]
-    M --> I
-    D --> N[处理缓存]
-    N --> O{缓存检查}
-    O --> P[返回304未修改]
-    O --> Q[返回文件内容]
-    Q --> I
-    `}/>
+### 工作原理
+
+下图展示了FileServer模块的工作原理：
+
+<img src={file_server_principle.src} alt="FileServer工作原理" width="100%" className="shadow"/>
 
 基本用法：
 ```java "baseDir(\"./\")" "fileServer"

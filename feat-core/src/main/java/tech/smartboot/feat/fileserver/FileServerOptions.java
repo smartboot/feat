@@ -13,10 +13,11 @@ package tech.smartboot.feat.fileserver;
 import tech.smartboot.feat.core.server.ServerOptions;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀
  * @version v1.0.0
  */
 public class FileServerOptions extends ServerOptions {
+
     private String baseDir = "./";
     /**
      * 若设置为true，则允许以目录列表的形式展现
@@ -25,7 +26,7 @@ public class FileServerOptions extends ServerOptions {
     /**
      * 代理配置
      */
-    private ProxyOptions proxyOptions = new ProxyOptions();
+    private final ProxyOptions proxyOptions = new ProxyOptions();
 
     public String baseDir() {
         return baseDir;
@@ -43,6 +44,10 @@ public class FileServerOptions extends ServerOptions {
     public FileServerOptions autoIndex(boolean autoIndex) {
         this.autoIndex = autoIndex;
         return this;
+    }
+
+    int writeBufferSize() {
+        return super.getWriteBufferSize();
     }
 
     public ProxyOptions proxyOptions() {
