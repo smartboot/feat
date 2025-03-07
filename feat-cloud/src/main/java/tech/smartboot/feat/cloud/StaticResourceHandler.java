@@ -30,7 +30,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀
  * @version v1.0.0
  */
 class StaticResourceHandler implements HttpHandler {
@@ -93,8 +93,9 @@ class StaticResourceHandler implements HttpHandler {
             LOGGER.error("exception", e);
         }
         response.setHeader(HeaderNameEnum.LAST_MODIFIED.getName(), lastModifyDateFormat);
-
-        try (InputStream inputStream = StaticResourceHandler.class.getClassLoader().getResourceAsStream("static" + fileName)) {
+        InputStream inputStream = null;
+        try {
+            inputStream = StaticResourceHandler.class.getClassLoader().getResourceAsStream("static" + fileName);
             if (inputStream == null) {
                 response.setHttpStatus(HttpStatus.NOT_FOUND);
                 completableFuture.complete(null);
@@ -106,22 +107,32 @@ class StaticResourceHandler implements HttpHandler {
             byte[] bytes = new byte[1024];
             int length;
             if ((length = inputStream.read(bytes)) > 0) {
+                InputStream finalInputStream = inputStream;
                 response.getOutputStream().write(bytes, 0, length, new Consumer<FeatOutputStream>() {
 
                     @Override
                     public void accept(FeatOutputStream featOutputStream) {
                         int length;
                         try {
-                            if ((length = inputStream.read(bytes)) > 0) {
+                            if ((length = finalInputStream.read(bytes)) > 0) {
                                 response.getOutputStream().write(bytes, 0, length, this);
                             } else {
                                 completableFuture.complete(null);
+                                finalInputStream.close();
                             }
                         } catch (Throwable throwable) {
+                            try {
+                                finalInputStream.close();
+                            } catch (IOException ignored) {
+                            }
                             completableFuture.completeExceptionally(throwable);
                         }
                     }
                 });
+            }
+        } catch (Throwable throwable) {
+            if (inputStream != null) {
+                inputStream.close();
             }
         }
     }
