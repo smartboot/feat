@@ -29,7 +29,7 @@ import java.util.List;
  * @version v1.0.0
  */
 public class ServerOptions {
-    public static final String VERSION = "v0.8";
+    public static final String VERSION = "v0.8.1";
 
     /**
      * 缓存
