@@ -11,6 +11,9 @@ export default defineConfig({
     integrations: [
         starlight({
             title: 'FEAT',
+            logo:{
+                src:'./src/assets/feat_logo.svg',
+            },
             customCss: [
                 // 你的自定义 CSS 文件的相对路径
                 './src/styles/custom.css',
