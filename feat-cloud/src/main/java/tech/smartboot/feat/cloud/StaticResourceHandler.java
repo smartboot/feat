@@ -86,6 +86,7 @@ class StaticResourceHandler implements HttpHandler {
             String requestModified = request.getHeader(HeaderNameEnum.IF_MODIFIED_SINCE.getName());
             if (StringUtils.isNotBlank(requestModified) && lastModifyDate.getTime() <= DateUtils.parseRFC1123(requestModified).getTime()) {
                 response.setHttpStatus(HttpStatus.NOT_MODIFIED);
+                completableFuture.complete(null);
                 return;
             }
         } catch (Exception e) {
