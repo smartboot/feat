@@ -11,8 +11,8 @@
 package tech.smartboot.feat.demo.router;
 
 import tech.smartboot.feat.Feat;
+import tech.smartboot.feat.core.server.Session;
 import tech.smartboot.feat.router.Router;
-import tech.smartboot.feat.router.Session;
 
 /**
  * @author 三刀(zhengjunweimail @ 163.com)
@@ -35,7 +35,7 @@ public class RouterSessionDemo {
                 })
                 .route("/createSession", (ctx) -> {
                     ctx.Response.write("createSession: " + ctx.session().getSessionId());
-                    ctx.session().put("flag","aa");
+                    ctx.session().put("flag", "aa");
                 })
                 .route("/session/check", (ctx) -> {
                     ctx.Response.write("sessionId: " + ctx.session().getSessionId());

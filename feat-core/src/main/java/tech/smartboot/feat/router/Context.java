@@ -12,6 +12,7 @@ package tech.smartboot.feat.router;
 
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
+import tech.smartboot.feat.core.server.Session;
 
 import java.util.Map;
 

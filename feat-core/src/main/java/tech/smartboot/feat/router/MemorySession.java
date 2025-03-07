@@ -17,6 +17,7 @@ import tech.smartboot.feat.core.common.utils.CollectionUtils;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.ServerOptions;
+import tech.smartboot.feat.core.server.Session;
 
 import java.util.Base64;
 import java.util.Collection;
@@ -28,8 +29,8 @@ import java.util.Random;
  * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0
  */
-public class Session {
-    public static final String DEFAULT_SESSION_COOKIE_NAME = "FEAT_SESSION";
+class MemorySession implements Session {
+
     private final static byte[] DEFAULT_BYTES = ("feat:" + ServerOptions.VERSION).getBytes();
     private final static int maskLength = 4;
     private static final String MAGIC_NUMBER = "sf";
@@ -42,7 +43,7 @@ public class Session {
      */
     private boolean invalid = false;
 
-    Session(HttpRequest request) {
+    MemorySession(HttpRequest request) {
         this.sessionId = createSessionId();
         this.request = request;
         removeSessionCookie();

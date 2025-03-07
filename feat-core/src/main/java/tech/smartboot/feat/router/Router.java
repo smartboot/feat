@@ -19,6 +19,7 @@ import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpRequest;
+import tech.smartboot.feat.core.server.Session;
 import tech.smartboot.feat.core.server.impl.HttpEndpoint;
 
 import java.io.IOException;
@@ -215,7 +216,7 @@ public final class Router implements HttpHandler {
             return null;
         }
         SessionUnit unit = new SessionUnit();
-        Session session = new Session(request) {
+        Session session = new MemorySession(request) {
             @Override
             public void invalidate() {
                 sessions.remove(getSessionId());

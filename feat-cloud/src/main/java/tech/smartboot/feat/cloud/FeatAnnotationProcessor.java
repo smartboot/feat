@@ -25,6 +25,7 @@ import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
+import tech.smartboot.feat.core.server.Session;
 import tech.smartboot.feat.router.Router;
 
 import javax.annotation.processing.AbstractProcessor;
@@ -290,6 +291,8 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                             params.append("ctx.Request");
                         } else if (param.asType().toString().equals(HttpResponse.class.getName())) {
                             params.append("ctx.Response");
+                        } else if (param.asType().toString().equals(Session.class.getName())) {
+                            params.append("ctx.session()");
                         } else {
                             if (i == 0) {
                                 newParams.append("JSONObject jsonObject=getParams(ctx.Request);\n");
