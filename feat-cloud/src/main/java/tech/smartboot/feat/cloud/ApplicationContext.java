@@ -30,7 +30,7 @@ public class ApplicationContext {
     private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationContext.class);
     private final Map<String, Object> namedBeans = new HashMap<>();
 
-    private final Router router = new Router(new HttpStaticResourceHandler(new FileServerOptions().baseDir("classpath:/static")));
+    private final Router router = new Router(new HttpStaticResourceHandler(new FileServerOptions().baseDir("classpath:static")));
     private final CloudOptions options;
 
     private final List<CloudService> services = new ArrayList<>();
