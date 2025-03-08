@@ -6,9 +6,7 @@ sidebar:
 ---
 import file_server_1 from './img/file_server_1.png';
 import file_server_2 from './img/file_server_2.png';
-import file_server_principle from './img/file_server_principle.svg';
 import {Steps} from "@astrojs/starlight/components";
-import Mermaid from '../../../components/Mermaid.astro';
 
 Feat框架内置了一个高性能的静态文件服务模块（FileServer），它可以作为Nginx的替代方案，用于托管静态资源。
 
@@ -31,9 +29,6 @@ FileServer模块是一个轻量级的静态资源服务器，支持以下功能�
 
 ### 工作原理
 
-下图展示了FileServer模块的工作原理：
-
-<img src={file_server_principle.src} alt="FileServer工作原理" width="100%" className="shadow"/>
 
 基本用法：
 ```java "baseDir(\"./\")" "fileServer"
