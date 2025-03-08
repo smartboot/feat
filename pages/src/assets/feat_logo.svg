@@ -6,8 +6,25 @@
       <stop offset="0%" stop-color="#2563EB" />
       <stop offset="100%" stop-color="#3B82F6" />
     </linearGradient>
+
+    <!-- 新增光晕滤镜 -->
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feColorMatrix in="blur" type="matrix"
+                     values="0 0 0 0 1
+                0 0 0 0 0.5
+                0 0 0 0 1
+                0 0 0 1 0"/>
+    </filter>
   </defs>
-  
+
+  <circle cx="100" cy="100" r="90" filter="url(#glow)" opacity="0.7">
+    <animate attributeName="r"
+             values="80;95;90"
+             dur="2s"
+             repeatCount="indefinite"/>
+  </circle>
+
   <!-- 主体圆形 -->
   <circle cx="100" cy="100" r="90" fill="url(#gradient)" />
   
