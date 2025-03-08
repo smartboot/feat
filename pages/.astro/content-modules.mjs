@@ -23,5 +23,6 @@ export default new Map([
 ["src/content/docs/server/upgrade_ws.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fserver%2Fupgrade_ws.mdx&astroContentModuleFlag=true")],
 ["src/content/docs/server/serveroptions.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fserver%2Fserveroptions.mdx&astroContentModuleFlag=true")],
 ["src/content/docs/server/upgrade_http2.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fserver%2Fupgrade_http2.mdx&astroContentModuleFlag=true")],
-["src/content/docs/cloud/static_transcoding.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fcloud%2Fstatic_transcoding.mdx&astroContentModuleFlag=true")]]);
+["src/content/docs/cloud/static_transcoding.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fcloud%2Fstatic_transcoding.mdx&astroContentModuleFlag=true")],
+["src/content/docs/appendix/static_transcoding.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fappendix%2Fstatic_transcoding.mdx&astroContentModuleFlag=true")]]);
 		
