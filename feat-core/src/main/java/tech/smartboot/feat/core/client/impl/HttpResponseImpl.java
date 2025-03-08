@@ -22,13 +22,12 @@ import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.utils.Constant;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
@@ -152,7 +151,8 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
                 }
                 break;
                 case STATE_FINISH:
-                    finishDecode();
+                    streaming.stream(this, new byte[0], true);
+                    future.complete(this);
                     break;
                 default:
                     throw new IllegalStateException();
@@ -160,11 +160,6 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
         } catch (Exception e) {
             throw new FeatException(e);
         }
-    }
-
-    private void finishDecode() throws IOException {
-        streaming.stream(this, new byte[0], true);
-        getFuture().complete(this);
     }
 
 

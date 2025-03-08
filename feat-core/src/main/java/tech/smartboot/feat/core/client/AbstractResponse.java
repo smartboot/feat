@@ -17,7 +17,6 @@ import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
 import tech.smartboot.feat.core.common.utils.NumberUtils;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -28,7 +27,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀
  * @version v1.0.0
  */
 public abstract class AbstractResponse implements Response, Reset {
@@ -57,7 +56,7 @@ public abstract class AbstractResponse implements Response, Reset {
      */
     private String reasonPhrase;
     private String encoding;
-    private final CompletableFuture<AbstractResponse> future;
+    protected final CompletableFuture<AbstractResponse> future;
 
     public AbstractResponse(AioSession session, CompletableFuture<AbstractResponse> future) {
         this.session = session;
@@ -162,11 +161,6 @@ public abstract class AbstractResponse implements Response, Reset {
 
     public void setReasonPhrase(String reasonPhrase) {
         this.reasonPhrase = reasonPhrase;
-    }
-
-
-    public CompletableFuture<AbstractResponse> getFuture() {
-        return future;
     }
 
     /**

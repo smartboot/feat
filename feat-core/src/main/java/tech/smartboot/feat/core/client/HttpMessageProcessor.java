@@ -22,22 +22,12 @@ import tech.smartboot.feat.core.common.utils.Constant;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 
 import java.nio.ByteBuffer;
-import java.util.concurrent.ExecutorService;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 final class HttpMessageProcessor extends AbstractMessageProcessor<AbstractResponse> implements Protocol<AbstractResponse> {
-    private final ExecutorService executorService;
-
-    public HttpMessageProcessor() {
-        this(null);
-    }
-
-    public HttpMessageProcessor(ExecutorService executorService) {
-        this.executorService = executorService;
-    }
 
     @Override
     public AbstractResponse decode(ByteBuffer buffer, AioSession session) {
@@ -143,27 +133,13 @@ final class HttpMessageProcessor extends AbstractMessageProcessor<AbstractRespon
     @Override
     public void process0(AioSession session, AbstractResponse response) {
         DecoderUnit decoderUnit = session.getAttachment();
-
-        switch (decoderUnit.getState()) {
-            case DecodeState.STATE_HEADER_CALLBACK:
-                response.onHeaderComplete();
-                decoderUnit.setState(DecoderUnit.STATE_BODY);
-                response.onBodyStream(session.readBuffer());
-                return;
-            case DecodeState.STATE_FINISH:
-                if (executorService == null) {
-                    response.getFuture().complete(response);
-                } else {
-                    session.awaitRead();
-                    executorService.execute(() -> {
-                        response.getFuture().complete(response);
-                        session.signalRead();
-                    });
-                }
-                break;
-            default:
-                throw new RuntimeException("unreachable");
+        if (decoderUnit.getState() == DecodeState.STATE_HEADER_CALLBACK) {
+            response.onHeaderComplete();
+            decoderUnit.setState(DecoderUnit.STATE_BODY);
+            response.onBodyStream(session.readBuffer());
+            return;
         }
+        throw new RuntimeException("unreachable");
     }
 
 

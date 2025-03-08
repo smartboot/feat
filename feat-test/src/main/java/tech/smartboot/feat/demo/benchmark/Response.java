@@ -10,15 +10,13 @@
 
 package tech.smartboot.feat.demo.benchmark;
 
-/**
- * @author 三刀(zhengjunweimail@163.com)
- * @version v1.0.0
- */
-public class Message {
+public class Response {
     private String message;
+    private String value;
 
-    public Message(String message) {
+    public Response(String message, String value) {
         this.message = message;
+        this.value = value;
     }
 
     public String getMessage() {
@@ -27,5 +25,13 @@ public class Message {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    public void setValue(String value) {
+        this.value = value;
     }
 }
