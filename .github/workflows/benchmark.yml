@@ -60,27 +60,27 @@ jobs:
           mkdir -p target/ab-results
           
           # 测试Feat Hello World接口
-          ab -n 10000 -c 100 -k http://localhost:8082/hello > target/ab-results/feat-hello.txt
+          ab -n 1000000 -c 100 -k http://localhost:8082/hello > target/ab-results/feat-hello.txt
           echo "Feat Hello World测试完成"
           
           # 测试Feat JSON接口
-          ab -n 10000 -c 100 -k http://localhost:8082/json > target/ab-results/feat-json.txt
+          ab -n 1000000 -c 100 -k http://localhost:8082/json > target/ab-results/feat-json.txt
           echo "Feat JSON测试完成"
           
           # 测试Vert.x Hello World接口
-          ab -n 10000 -c 100 -k http://localhost:8081/hello > target/ab-results/vertx-hello.txt
+          ab -n 1000000 -c 100 -k http://localhost:8081/hello > target/ab-results/vertx-hello.txt
           echo "Vert.x Hello World测试完成"
           
           # 测试Vert.x JSON接口
-          ab -n 10000 -c 100 -k http://localhost:8081/json > target/ab-results/vertx-json.txt
+          ab -n 1000000 -c 100 -k http://localhost:8081/json > target/ab-results/vertx-json.txt
           echo "Vert.x JSON测试完成"
           
           # 测试Spring Boot Hello World接口
-          ab -n 10000 -c 100 -k http://localhost:8080/hello > target/ab-results/springboot-hello.txt
+          ab -n 1000000 -c 100 -k http://localhost:8080/hello > target/ab-results/springboot-hello.txt
           echo "Spring Boot Hello World测试完成"
           
           # 测试Spring Boot JSON接口
-          ab -n 10000 -c 100 -k http://localhost:8080/json > target/ab-results/springboot-json.txt
+          ab -n 1000000 -c 100 -k http://localhost:8080/json > target/ab-results/springboot-json.txt
           echo "Spring Boot JSON测试完成"
       
       - name: 安装Python依赖
