@@ -245,7 +245,7 @@ public class WebSocketClient {
                 Decoder decoder = getDecoder().decode(buffer, this);
                 setDecoder(decoder);
                 if (decoder == WebSocket.PAYLOAD_FINISH) {
-                    future.complete(this);
+                    getFuture().complete(this);
                 }
             }
         };
