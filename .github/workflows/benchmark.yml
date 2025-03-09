@@ -107,4 +107,4 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./feat-test/target/benchmark-report
-          destination_dir: feat/benchmark-report
+          destination_dir: feat-benchmark-report
