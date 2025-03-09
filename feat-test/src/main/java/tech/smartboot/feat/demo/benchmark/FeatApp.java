@@ -10,8 +10,6 @@
 
 package tech.smartboot.feat.demo.benchmark;
 
-import org.smartboot.socket.extension.plugins.MonitorPlugin;
-import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
 import tech.smartboot.feat.cloud.FeatCloud;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
@@ -38,17 +36,10 @@ public class FeatApp {
     }
 
     public static void main(String[] args) {
-        int cpuNum = Runtime.getRuntime().availableProcessors();
         // 定义服务器接受的消息类型以及各类消息对应的处理器
         FeatCloud.cloudServer(options -> {
             options
-                    .setPackages("tech.smartboot.feat.demo.benchmark")
-                    .threadNum(cpuNum + 1)
-                    .addPlugin(new MonitorPlugin<>(5))
-//                    .headerLimiter(0)
-//                    .debug(true)
-                    .readBufferSize(1024 * 4)
-                    .writeBufferSize(1024 * 4);
+                    .setPackages("tech.smartboot.feat.demo.benchmark");
         }).listen(8082);
     }
 }

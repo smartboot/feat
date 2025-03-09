@@ -58,7 +58,7 @@ public class ServerOptions {
     /**
      * write缓冲区大小
      */
-    private int writeBufferSize = 1024;
+    private int writeBufferSize = 8 * 1024;
     /**
      * 服务线程数
      */

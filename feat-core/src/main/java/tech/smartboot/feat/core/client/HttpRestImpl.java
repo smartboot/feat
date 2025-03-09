@@ -152,6 +152,7 @@ class HttpRestImpl implements HttpRest {
             request.getOutputStream().close();
             request.getOutputStream().flush();
         } catch (Throwable e) {
+            e.printStackTrace();
 //            completableFuture.completeExceptionally(e);
         }
         return new Future<HttpResponse>() {
