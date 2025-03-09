@@ -182,7 +182,7 @@ def generate_html_report(results):
 
         <h2>测试概述</h2>
         <p>本报告比较了三个Java Web框架的性能：Feat、Vert.x和Spring Boot。测试使用Apache Benchmark (ab)工具，针对每个框架的Hello World和JSON响应接口进行了性能测试。</p>
-        <p>测试参数：10,000个请求，并发数100，启用HTTP Keep-Alive。</p>
+        <p>测试参数：1,000,000个请求，并发数100，启用HTTP Keep-Alive。</p>
 
         <h2>性能对比图表</h2>
 """
