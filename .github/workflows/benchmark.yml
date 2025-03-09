@@ -102,9 +102,8 @@ jobs:
           retention-days: 30
      
       # 如果需要将报告发布到GitHub Pages，可以取消下面的注释
-      # - name: 部署报告到GitHub Pages
-      #   uses: peaceiris/actions-gh-pages@v3
-      #   with:
-      #     github_token: ${{ secrets.GITHUB_TOKEN }}
-      #     publish_dir: ./feat-test/target/benchmark-report
-      #     destination_dir: benchmark-report
+      - name: 部署报告到GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          publish_dir: ./feat-test/target/benchmark-report
+          destination_dir: feat/benchmark-report
