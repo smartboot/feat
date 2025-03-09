@@ -94,13 +94,6 @@ jobs:
           python generate_benchmark_report.py
           echo "性能报告生成完成"
       
-      - name: 上传性能报告
-        uses: actions/upload-artifact@v4
-        with:
-          name: benchmark-report
-          path: feat-test/target/benchmark-report/
-          retention-days: 30
-     
       # 如果需要将报告发布到GitHub Pages，可以取消下面的注释
       - name: 部署报告到GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
@@ -108,3 +101,10 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: feat-test/target/benchmark-report/
           destination_dir: feat-benchmark-report
+
+      - name: 上传性能报告
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-report
+          path: feat-test/target/benchmark-report/
+          retention-days: 30
