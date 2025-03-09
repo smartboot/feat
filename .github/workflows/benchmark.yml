@@ -1,0 +1,110 @@
+name: 框架性能基准测试
+
+on:
+  # 在master分支的推送和PR时触发
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+  # 允许手动触发工作流
+  workflow_dispatch:
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+      
+      - name: 设置JDK 8
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '8'
+      
+      - name: 设置Maven
+        uses: stCarolas/setup-maven@v5
+      
+      - name: 安装Apache Benchmark
+        run: sudo apt-get update && sudo apt-get install -y apache2-utils
+      
+      - name: 构建项目
+        run: mvn -B install --file pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
+      
+      - name: 启动框架服务
+        run: |
+          cd feat-test
+          # 启动Feat服务（端口8082）
+          nohup mvn exec:java -Dexec.mainClass="tech.smartboot.feat.demo.benchmark.FeatApp" > feat.log 2>&1 &
+          echo "Feat服务已启动，等待5秒..."
+          sleep 5
+          
+          # 启动Vert.x服务（端口8081）
+          nohup mvn exec:java -Dexec.mainClass="tech.smartboot.feat.demo.benchmark.VertxApp" > vertx.log 2>&1 &
+          echo "Vert.x服务已启动，等待5秒..."
+          sleep 5
+          
+          # 启动Spring Boot服务（端口8080）
+          nohup mvn exec:java -Dexec.mainClass="tech.smartboot.feat.demo.benchmark.SpringBootApp" > springboot.log 2>&1 &
+          echo "Spring Boot服务已启动，等待5秒..."
+          sleep 5
+          
+          # 创建测试结果目录
+          mkdir -p target/ab-results
+      
+      - name: 运行Apache Benchmark测试
+        run: |
+          cd feat-test
+          
+          # 创建测试结果目录
+          mkdir -p target/ab-results
+          
+          # 测试Feat Hello World接口
+          ab -n 10000 -c 100 -k http://localhost:8082/hello > target/ab-results/feat-hello.txt
+          echo "Feat Hello World测试完成"
+          
+          # 测试Feat JSON接口
+          ab -n 10000 -c 100 -k http://localhost:8082/json > target/ab-results/feat-json.txt
+          echo "Feat JSON测试完成"
+          
+          # 测试Vert.x Hello World接口
+          ab -n 10000 -c 100 -k http://localhost:8081/hello > target/ab-results/vertx-hello.txt
+          echo "Vert.x Hello World测试完成"
+          
+          # 测试Vert.x JSON接口
+          ab -n 10000 -c 100 -k http://localhost:8081/json > target/ab-results/vertx-json.txt
+          echo "Vert.x JSON测试完成"
+          
+          # 测试Spring Boot Hello World接口
+          ab -n 10000 -c 100 -k http://localhost:8080/hello > target/ab-results/springboot-hello.txt
+          echo "Spring Boot Hello World测试完成"
+          
+          # 测试Spring Boot JSON接口
+          ab -n 10000 -c 100 -k http://localhost:8080/json > target/ab-results/springboot-json.txt
+          echo "Spring Boot JSON测试完成"
+      
+      - name: 安装Python依赖
+        run: |
+          python -m pip install --upgrade pip
+          pip install matplotlib pandas
+      
+      - name: 生成性能报告
+        run: |
+          cd feat-test
+          python generate_benchmark_report.py
+          echo "性能报告生成完成"
+      
+      - name: 上传性能报告
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-report
+          path: feat-test/target/benchmark-report/
+          retention-days: 30
+     
+      # 如果需要将报告发布到GitHub Pages，可以取消下面的注释
+      # - name: 部署报告到GitHub Pages
+      #   uses: peaceiris/actions-gh-pages@v3
+      #   with:
+      #     github_token: ${{ secrets.GITHUB_TOKEN }}
+      #     publish_dir: ./feat-test/target/benchmark-report
+      #     destination_dir: benchmark-report
