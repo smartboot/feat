@@ -60,7 +60,7 @@ jobs:
           mkdir -p target/ab-results
           
           # 测试Feat Hello World接口
-          ab -n 10000 -c 100 -k http://localhost:8082/hello > target/ab-results/feat-hello.txt
+          ab -n 1000000 -c 100 -k http://localhost:8082/hello > target/ab-results/feat-hello.txt
           echo "Feat Hello World测试完成"
           
           # 测试Feat JSON接口
