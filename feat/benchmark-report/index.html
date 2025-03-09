@@ -1,0 +1,265 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>框架性能基准测试报告</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Arial', sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h1, h2, h3 { color: #333; }
+        .header { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #eee; }
+        .chart-container { display: flex; flex-wrap: wrap; justify-content: space-between; margin-bottom: 30px; }
+        .chart { width: 48%; margin-bottom: 20px; background-color: white; padding: 15px; border-radius: 8px; box-shadow: 0 0 5px rgba(0,0,0,0.05); }
+        .summary { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #f8f8f8; }
+        tr:hover { background-color: #f1f1f1; }
+        .footer { text-align: center; margin-top: 30px; color: #777; font-size: 14px; }
+        @media (max-width: 768px) { .chart { width: 100%; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>框架性能基准测试报告</h1>
+            <p>生成时间: 2025-03-09 09:32:12</p>
+        </div>
+
+        <h2>测试概述</h2>
+        <p>本报告比较了三个Java Web框架的性能：Feat、Vert.x和Spring Boot。测试使用Apache Benchmark (ab)工具，针对每个框架的Hello World和JSON响应接口进行了性能测试。</p>
+        <p>测试参数：1,000,000个请求，并发数100，启用HTTP Keep-Alive。</p>
+
+        <h2>性能对比图表</h2>
+
+        <h3>Hello World接口测试</h3>
+        <div class="chart-container">
+            <div class="chart">
+                <canvas id="rps-chart-hello"></canvas>
+            </div>
+            <div class="chart">
+                <canvas id="latency-chart-hello"></canvas>
+            </div>
+        </div>
+
+        <h3>JSON响应接口测试</h3>
+        <div class="chart-container">
+            <div class="chart">
+                <canvas id="rps-chart-json"></canvas>
+            </div>
+            <div class="chart">
+                <canvas id="latency-chart-json"></canvas>
+            </div>
+        </div>
+
+        <h2>详细测试数据</h2>
+        <table>
+            <tr>
+                <th>测试类型</th>
+                <th>框架</th>
+                <th>每秒请求数</th>
+                <th>平均响应时间 (ms)</th>
+                <th>错误率 (%)</th>
+            </tr>
+
+            <tr>
+                <td>Hello World</td>
+                <td>Feat</td>
+                <td>37710.09</td>
+                <td>0.03</td>
+                <td>0.00</td>
+            </tr>
+
+            <tr>
+                <td>Hello World</td>
+                <td>Spring Boot</td>
+                <td>5206.64</td>
+                <td>0.19</td>
+                <td>0.00</td>
+            </tr>
+
+            <tr>
+                <td>Hello World</td>
+                <td>Vert.x</td>
+                <td>11178.21</td>
+                <td>0.09</td>
+                <td>0.00</td>
+            </tr>
+
+            <tr>
+                <td>JSON响应</td>
+                <td>Feat</td>
+                <td>55846.58</td>
+                <td>0.02</td>
+                <td>0.00</td>
+            </tr>
+
+            <tr>
+                <td>JSON响应</td>
+                <td>Spring Boot</td>
+                <td>6638.50</td>
+                <td>0.15</td>
+                <td>0.00</td>
+            </tr>
+
+            <tr>
+                <td>JSON响应</td>
+                <td>Vert.x</td>
+                <td>15888.02</td>
+                <td>0.06</td>
+                <td>0.00</td>
+            </tr>
+
+        </table>
+
+        <div class="summary">
+            <h2>测试结论</h2>
+            <p>根据测试结果，可以得出以下结论：</p>
+            <ul>
+<li>在Hello World接口测试中，Feat框架表现最佳，每秒处理请求数最多。</li>
+<li>在JSON响应接口测试中，Feat框架表现最佳，每秒处理请求数最多。</li>
+
+            </ul>
+        </div>
+
+        <div class="footer">
+            <p>此报告由自动化基准测试工作流生成</p>
+        </div>
+    </div>
+
+    <script>
+
+        // Hello World RPS Chart
+        new Chart(document.getElementById('rps-chart-hello'), {
+            type: 'bar',
+            data: {
+                labels: ['Feat', 'Spring Boot', 'Vert.x'],
+                datasets: [{
+                    label: '每秒请求数',
+                    data: [37710.09, 5206.64, 11178.21],
+                    backgroundColor: ['rgba(54, 162, 235, 0.8)', 'rgba(75, 192, 192, 0.8)', 'rgba(255, 99, 132, 0.8)'],
+                    borderColor: ['rgba(54, 162, 235, 0.8)', 'rgba(75, 192, 192, 0.8)', 'rgba(255, 99, 132, 0.8)'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '每秒请求数 (RPS) - 越高越好'
+                    },
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Hello World Latency Chart
+        new Chart(document.getElementById('latency-chart-hello'), {
+            type: 'bar',
+            data: {
+                labels: ['Feat', 'Spring Boot', 'Vert.x'],
+                datasets: [{
+                    label: '平均响应时间 (ms)',
+                    data: [0.027, 0.192, 0.089],
+                    backgroundColor: ['rgba(54, 162, 235, 0.8)', 'rgba(75, 192, 192, 0.8)', 'rgba(255, 99, 132, 0.8)'],
+                    borderColor: ['rgba(54, 162, 235, 0.8)', 'rgba(75, 192, 192, 0.8)', 'rgba(255, 99, 132, 0.8)'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '平均响应时间 (ms) - 越低越好'
+                    },
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // JSON响应 RPS Chart
+        new Chart(document.getElementById('rps-chart-json'), {
+            type: 'bar',
+            data: {
+                labels: ['Feat', 'Spring Boot', 'Vert.x'],
+                datasets: [{
+                    label: '每秒请求数',
+                    data: [55846.58, 6638.5, 15888.02],
+                    backgroundColor: ['rgba(54, 162, 235, 0.8)', 'rgba(75, 192, 192, 0.8)', 'rgba(255, 99, 132, 0.8)'],
+                    borderColor: ['rgba(54, 162, 235, 0.8)', 'rgba(75, 192, 192, 0.8)', 'rgba(255, 99, 132, 0.8)'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '每秒请求数 (RPS) - 越高越好'
+                    },
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // JSON响应 Latency Chart
+        new Chart(document.getElementById('latency-chart-json'), {
+            type: 'bar',
+            data: {
+                labels: ['Feat', 'Spring Boot', 'Vert.x'],
+                datasets: [{
+                    label: '平均响应时间 (ms)',
+                    data: [0.018, 0.151, 0.063],
+                    backgroundColor: ['rgba(54, 162, 235, 0.8)', 'rgba(75, 192, 192, 0.8)', 'rgba(255, 99, 132, 0.8)'],
+                    borderColor: ['rgba(54, 162, 235, 0.8)', 'rgba(75, 192, 192, 0.8)', 'rgba(255, 99, 132, 0.8)'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '平均响应时间 (ms) - 越低越好'
+                    },
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+    </script>
+</body>
+</html>
