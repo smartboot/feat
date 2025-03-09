@@ -105,5 +105,6 @@ jobs:
       - name: 部署报告到GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./feat-test/target/benchmark-report
           destination_dir: feat/benchmark-report
