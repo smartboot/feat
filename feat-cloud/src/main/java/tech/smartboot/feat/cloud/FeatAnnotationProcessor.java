@@ -18,6 +18,7 @@ import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.InterceptorMapping;
 import tech.smartboot.feat.cloud.annotation.JSONField;
 import tech.smartboot.feat.cloud.annotation.Param;
+import tech.smartboot.feat.cloud.annotation.PathParam;
 import tech.smartboot.feat.cloud.annotation.PostConstruct;
 import tech.smartboot.feat.cloud.annotation.PreDestroy;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
@@ -293,6 +294,9 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                             params.append("ctx.Response");
                         } else if (param.asType().toString().equals(Session.class.getName())) {
                             params.append("ctx.session()");
+                        } else if (param.getAnnotation(PathParam.class) != null) {
+                            PathParam pathParam = param.getAnnotation(PathParam.class);
+                            params.append("ctx.pathParam(\"" + pathParam.value() + "\")");
                         } else {
                             if (i == 0) {
                                 newParams.append("JSONObject jsonObject=getParams(ctx.Request);\n");
