@@ -11,7 +11,8 @@
 package tech.smartboot.feat.demo.controller;
 
 
-import tech.smartboot.feat.cloud.annotation.JSONField;
+
+import com.alibaba.fastjson2.annotation.JSONField;
 
 import java.util.Date;
 

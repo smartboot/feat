@@ -23,7 +23,7 @@ import tech.smartboot.feat.cloud.annotation.RequestMethod;
 @Controller
 public class RestfulDemo {
 
-    @RequestMapping(value = "/hello", method = RequestMethod.GET)
+    @RequestMapping(value = "/hello1", method = RequestMethod.GET)
     public String helloworld() {
         return "hello world";
     }

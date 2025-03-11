@@ -12,6 +12,7 @@ package tech.smartboot.feat.demo.controller;
 
 
 import tech.smartboot.feat.cloud.annotation.Controller;
+import tech.smartboot.feat.cloud.annotation.PathParam;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.core.server.Session;
 
@@ -30,5 +31,10 @@ public class Controller2 {
     @RequestMapping("/session")
     public String helloworld2(Session session) {
         return "hello " + session.getSessionId();
+    }
+
+    @RequestMapping("/session/:abc")
+    public String helloworld3(@PathParam("abc") String a, Session session) {
+        return "hello " + a;
     }
 }
