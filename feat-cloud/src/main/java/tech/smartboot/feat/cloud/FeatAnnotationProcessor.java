@@ -11,12 +11,12 @@
 package tech.smartboot.feat.cloud;
 
 import com.alibaba.fastjson2.JSONObject;
+import com.alibaba.fastjson2.annotation.JSONField;
 import org.apache.ibatis.annotations.Mapper;
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Bean;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.InterceptorMapping;
-import tech.smartboot.feat.cloud.annotation.JSONField;
 import tech.smartboot.feat.cloud.annotation.Param;
 import tech.smartboot.feat.cloud.annotation.PathParam;
 import tech.smartboot.feat.cloud.annotation.PostConstruct;
@@ -520,6 +520,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                 writer.write("os.write(s.substring(i,j).getBytes());\n");
                 writer.write("os.write('\\\\');\n");
                 writer.write("os.write('\\\"');\n");
+                writer.write("i=j+1;\n");
                 writer.write("}\n");
                 writer.write("}\n");
                 writer.append("os.write('\"');\n");
