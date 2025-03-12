@@ -5,136 +5,193 @@ sidebar:
     order: 1
 ---
 
-## debug
-**类型:** `boolean`
 
-**默认值:** `false`
+## 2.1.1. 基础配置
 
-是否开启调试模式。
-
-```java "debug(true)"
-Feat.httpServer(options -> options.debug(true))
-        .listen();
-```
-开启 debug 模式后，会在控制台输出 HTTP 请求/响应的详细信息。
-适用于调试和排查问题，建议生产环境下关闭。
-
-## bannerEnabled
-**类型:** `boolean`
-
-**默认值:** `true`
-
-是否开启 banner。
-```java "bannerEnabled(false)"
-Feat.httpServer(options -> options.bannerEnabled(false))
-       .listen();
-```
-开启 banner 后，启动时会在控制台输出 Feat HTTP 服务器的版本信息。
-
-## threadNum
-**类型:** `int`
-
-**默认值:** `CPU 核数`,至少为 2。
-
-设置 HTTP 服务器的线程数。
-```java "threadNum(4)"
-Feat.httpServer(options -> options.threadNum(4))
-    .listen();
-```
-合理设置线程数可以充分利用系统资源，提高服务器性能。建议根据实际业务负载和系统资源情况进行调整。
-
-## setMaxRequestSize
-**类型:** `long`
-
-**默认值:** `Integer.MAX_VALUE`
-
-设置最大请求大小。
-```java "setMaxRequestSize(1024 * 1024 * 1024)"
-Feat.httpServer(options -> options.setMaxRequestSize(1024 * 1024 * 1024))
-       .listen();
-```
-HTTP 请求报文的大小不能超过这个值，否则会返回 **413(Payload Too Large)** 错误。建议根据业务需求设置合适的值，避免恶意的大请求消耗服务器资源。
-
-## readBufferSize
-**类型:** `int`
-
-**默认值:** `8 * 1024`
-
-设置单个 TCP 连接的读取缓冲区大小。
-```java "readBufferSize(16 * 1024)"
-Feat.httpServer(options -> options.readBufferSize(16 * 1024))
-      .listen();
-```
-读缓冲区的大小至少要能容纳一个完整的 URL 或 Header value，否则会触发异常。合理设置这个值可以提高性能和减少内存占用。
-
-## writeBufferSize
-**类型:** `int`
-
-**默认值:** `1024`
-
-设置单个 TCP 连接的写入缓冲区大小。
-```java "writeBufferSize(16 * 1024)"
-Feat.httpServer(options -> options.writeBufferSize(16 * 1024))
-     .listen();
-```
-合理设置写缓冲区大小可以优化响应数据的传输效率。
-
-## headerLimiter
-**类型:** `int`
-
-**默认值:** `100`
-
-设置 HTTP 请求头的限制。
-```java "headerLimiter(10)"
-Feat.httpServer(options -> options.headerLimiter(10))
-    .listen();
-```
-若解析出的 HTTP 请求头数量超过这个值，会忽略后续的请求头。这个限制可以防止恶意请求携带过多的请求头消耗服务器资源。
-
-## idleTimeout
-**类型:** `long`
-
-**默认值:** `60000`
-
-设置连接空闲超时时间，单位为毫秒。
-```java "setIdleTimeout(30000)"
-Feat.httpServer(options -> options.setIdleTimeout(30000))
-    .listen();
-```
-当连接在指定时间内没有数据传输时，服务器会主动关闭该连接。合理设置超时时间可以及时释放空闲连接占用的资源。
-
-## serverName
+### serverName
 **类型:** `String`
 
 **默认值:** `"feat"`
 
-设置服务器名称。
-```java "serverName(\"my-server\")"
-Feat.httpServer(options -> options.serverName("my-server"))
-    .listen();
-```
-服务器名称会在响应头中的 Server 字段中显示。设置自定义的服务器名称有助于区分不同的服务实例。
+设置服务器名称，会在 HTTP 响应头的 Server 字段中显示。
 
-## secure
-**类型:** `boolean`
-
-**默认值:** `false`
-
-是否启用 HTTPS。
 ```java
-Feat.httpServer(options -> options.addPlugin(new SslPlugin(sslConfig)))
+Feat.httpServer(options -> options.serverName("my-app-v1.0"))
     .listen();
 ```
-通过添加 SslPlugin 插件来启用 HTTPS，建议在生产环境中使用 HTTPS 来保证数据传输的安全性。
 
-## lowMemory
+**使用场景：**
+- 在多服务部署环境中区分不同服务
+- 自定义服务器标识，增强安全性
+- 便于日志分析和问题追踪
+
+### bannerEnabled
+**类型:** `boolean`
+
+**默认值:** `true`
+
+是否在启动时显示 Feat HTTP 服务器的版本信息。
+
+```java
+Feat.httpServer(options -> options.bannerEnabled(false))
+    .listen();
+```
+
+**使用场景：**
+- 在生产环境中隐藏版本信息
+- 保持控制台输出简洁
+
+## 2.2.2. 性能调优
+
+### threadNum
+**类型:** `int`
+
+**默认值:** `CPU 核数（至少为 2）`
+
+设置 HTTP 服务器的工作线程数。
+
+```java
+Feat.httpServer(options -> options.threadNum(4))
+    .listen();
+```
+
+**最佳实践：**
+- IO 密集型应用：线程数可以设置为 CPU 核数的 2-4 倍
+- CPU 密集型应用：线程数建议设置为 CPU 核数的 1-2 倍
+- 建议通过压测确定最优线程数
+- 考虑服务器内存资源，避免设置过大的线程数
+
+### readBufferSize
+**类型:** `int`
+
+**默认值:** `8192`（字节）
+
+设置读缓冲区大小。
+
+```java
+Feat.httpServer(options -> options.readBufferSize(16384))
+    .listen();
+```
+
+**最佳实践：**
+- 缓冲区大小至少要能容纳一个完整的 URL 或 Header 值
+- 对于大量小请求的场景，保持默认值即可
+- 处理大请求时可适当增加缓冲区大小
+- 需要平衡内存使用和性能
+
+### writeBufferSize
+**类型:** `int`
+
+**默认值:** `8192`（字节）
+
+设置写缓冲区大小。
+
+```java
+Feat.httpServer(options -> options.writeBufferSize(16384))
+    .listen();
+```
+
+**最佳实践：**
+- 响应大文件时可适当增加缓冲区大小
+- 注意内存资源的合理分配
+- 可通过性能测试工具找到最优配置
+
+## 2.2.3. 安全设置
+
+### maxRequestSize
+**类型:** `long`
+
+**默认值:** `Integer.MAX_VALUE`
+
+设置允许的最大请求大小。
+
+```java
+Feat.httpServer(options -> options.setMaxRequestSize(10 * 1024 * 1024)) // 10MB
+    .listen();
+```
+
+**最佳实践：**
+- 根据业务需求设置合理的请求大小限制
+- 防止恶意大请求攻击
+- 文件上传场景需要适当调大此值
+- 建议在网关层面也设置相应的限制
+
+### headerLimiter
+**类型:** `int`
+
+**默认值:** `100`
+
+设置请求头的最大数量限制。超过此限制的请求头将被忽略。
+
+```java
+Feat.httpServer(options -> options.headerLimiter(50))
+    .listen();
+```
+
+**使用场景：**
+- 防止 HTTP 头部攻击
+- 限制异常请求
+- 保护服务器资源
+
+## 2.2.4 调试功能
+
+### debug
 **类型:** `boolean`
 
 **默认值:** `false`
 
-是否启用低内存模式。
-```java "setLowMemory(true)"
-Feat.httpServer(options -> options.setLowMemory(true))
+是否开启调试模式。开启后会在控制台打印请求和响应的详细信息。
+
+```java
+Feat.httpServer(options -> options.debug(true))
     .listen();
 ```
-在内存资源受限的环境下，可以启用低内存模式来优化内存使用。
+
+**使用场景：**
+- 开发环境调试请求/响应内容
+- 排查 HTTP 通信问题
+- 分析请求处理流程
+
+**注意事项：**
+- 生产环境建议关闭 debug 模式
+- debug 模式会影响服务性能
+
+## 2.2.5. 完整配置示例
+
+```java
+Feat.httpServer(options -> {
+    // 基础配置
+    options.serverName("my-app-v1.0");
+    options.bannerEnabled(true);
+    
+    // 性能调优
+    options.threadNum(Runtime.getRuntime().availableProcessors() * 2);
+    options.readBufferSize(16384);
+    options.writeBufferSize(16384);
+    
+    // 安全设置
+    options.setMaxRequestSize(10 * 1024 * 1024); // 10MB
+    options.headerLimiter(50);
+    
+    // 调试功能（仅开发环境）
+    options.debug(false);
+})
+.listen();
+```
+
+## 2.2.6. 配置最佳实践
+
+1. **性能优化**
+   - 根据应用特性和硬件资源合理设置线程数
+   - 通过压测确定最优的缓冲区大小
+   - 在生产环境关闭调试功能
+
+2. **安全防护**
+   - 设置合理的请求大小限制和请求头数量限制
+   - 修改默认的服务器名称，避免暴露版本信息
+   - 在生产环境禁用 banner 显示
+
+3. **资源管理**
+   - 避免设置过大的缓冲区，合理使用内存资源
+   - 定期检查服务器性能指标，及时调整配置
+   - 结合监控系统，观察配置变更对性能的影响
