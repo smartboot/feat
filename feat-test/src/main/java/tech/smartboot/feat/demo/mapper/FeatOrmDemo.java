@@ -12,6 +12,7 @@ package tech.smartboot.feat.demo.mapper;
 
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.jdbc.ScriptRunner;
+import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import tech.smartboot.feat.cloud.FeatCloud;
@@ -19,10 +20,10 @@ import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Bean;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.Param;
+import tech.smartboot.feat.cloud.annotation.PostConstruct;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 
 import java.io.IOException;
-import java.io.InputStream;
 
 /**
  * @author 三刀
@@ -31,27 +32,34 @@ import java.io.InputStream;
 @Controller
 public class FeatOrmDemo {
 
-    @Bean("sessionFactory")
-    public SqlSessionFactory sessionFactory() throws IOException {
-        InputStream inputStream = Resources.getResourceAsStream("mybatis/mybatis-config.xml");
-        SqlSessionFactory sessionFactory = new SqlSessionFactoryBuilder().build(inputStream);
-        // 初始化数据库(可选)
-        ScriptRunner runner = new ScriptRunner(sessionFactory.openSession().getConnection());
-        runner.setLogWriter(null);
-        runner.runScript(Resources.getResourceAsReader("mybatis/ddl/schema.sql"));
-        return sessionFactory;
-    }
+    @Autowired
+    private SqlSessionFactory sessionFactory;
 
     @Autowired
     private DemoMapper demoMapper;
 
-    @RequestMapping("/test")
-    public User test(@Param(value = "name") String username) {
-        return demoMapper.selectById(username);
+    @Bean("sessionFactory")
+    public SqlSessionFactory sessionFactory() throws IOException {
+        return new SqlSessionFactoryBuilder().build(Resources.getResourceAsStream("mybatis/mybatis-config.xml"));
     }
 
-    public DemoMapper getDemoMapper() {
-        return demoMapper;
+    @PostConstruct
+    public void init() throws IOException {
+        // 初始化数据库
+        try (SqlSession session = sessionFactory.openSession()) {
+            ScriptRunner runner = new ScriptRunner(session.getConnection());
+            runner.setLogWriter(null);
+            runner.runScript(Resources.getResourceAsReader("mybatis/ddl/schema.sql"));
+        }
+    }
+
+    @RequestMapping("/getUser")
+    public User test(@Param(value = "username") String username) {
+        return demoMapper.selectByUsername(username);
+    }
+
+    public void setSessionFactory(SqlSessionFactory sessionFactory) {
+        this.sessionFactory = sessionFactory;
     }
 
     public void setDemoMapper(DemoMapper demoMapper) {

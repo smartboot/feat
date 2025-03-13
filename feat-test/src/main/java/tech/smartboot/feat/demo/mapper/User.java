@@ -10,12 +10,16 @@
 
 package tech.smartboot.feat.demo.mapper;
 
+
+import com.alibaba.fastjson2.annotation.JSONField;
+
 /**
  * @author 三刀
  * @version v1.0 3/10/25
  */
 public class User {
     private String username;
+    @JSONField(serialize = false)
     private String password;
     private String email;
     private String phone;
