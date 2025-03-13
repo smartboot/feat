@@ -498,7 +498,8 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                 writer.write("byte[] b" + j + "=" + s1 + ";\n");
                 writer.write("os.write(b" + j + ");\n");
                 writer.write("}\n");
-            } else if (Arrays.asList("int", "short", "byte", "long", "float", "double").contains(type.toString())) {
+            } else if (Arrays.asList("int", "short", "byte", "long", "float", "double", "java.lang.Integer", "java.lang.Short", "java.lang.Byte",
+                    "java.lang.Long", "java.lang.Float", "java.lang.Double").contains(type.toString())) {
                 String s = toBytesStr("\"" + fieldName + "\":");
                 writer.write("byte[] b" + j + "=" + s + ";\n");
                 writer.write("os.write(b" + j + ");\n");
