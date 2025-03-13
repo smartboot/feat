@@ -52,6 +52,7 @@ import javax.tools.StandardLocation;
 import java.io.IOException;
 import java.io.Writer;
 import java.lang.annotation.Annotation;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -454,7 +455,6 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             writer.write("}\n");
             return;
         }
-
         writer.append("os.write('{');\n");
 
         //获取泛型参数
@@ -528,20 +528,20 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                 writer.write("byte[] bnull={'n','u','l','l'};\n");
                 writer.append("os.write(bnull);");
                 writer.append("}\n");
-            } else if (Date.class.getName().equals(type.toString())) {
+            } else if (Date.class.getName().equals(type.toString()) || Timestamp.class.getName().equals(type.toString())) {
                 String s = toBytesStr("\"" + fieldName + "\":");
                 writer.write("byte[] b" + j + "=" + s + ";\n");
                 writer.write("os.write(b" + j + ");\n");
-                writer.append("java.util.Date date=").append(obj).append(".get").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).append("();");
-                writer.append("if(date!=null){\n");
+                writer.append("java.util.Date " + fieldName + "=").append(obj).append(".get").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).append("();");
+                writer.append("if(" + fieldName + "!=null){\n");
 //                writer.append("os.write('\"');\n");
                 if (jsonField != null && StringUtils.isNotBlank(jsonField.format())) {
                     writer.append("java.text.SimpleDateFormat sdf=new java.text.SimpleDateFormat(\"" + jsonField.format() + "\");\n");
                     writer.append("os.write('\"');\n");
-                    writer.append("os.write(sdf.format(date).getBytes());\n");
+                    writer.append("os.write(sdf.format(" + fieldName + ").getBytes());\n");
                     writer.append("os.write('\"');\n");
                 } else {
-                    writer.append("os.write(String.valueOf(date.getTime()).getBytes());\n");
+                    writer.append("os.write(String.valueOf(" + fieldName + ".getTime()).getBytes());\n");
                 }
 
 //                writer.append("os.write('\"');\n");
