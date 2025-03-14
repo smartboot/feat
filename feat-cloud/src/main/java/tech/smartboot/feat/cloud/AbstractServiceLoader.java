@@ -16,10 +16,12 @@ import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.server.HttpRequest;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀
  * @version v1.0.0
  */
 public abstract class AbstractServiceLoader implements CloudService {
@@ -43,6 +45,22 @@ public abstract class AbstractServiceLoader implements CloudService {
             }
         } catch (Exception e) {
             throw new FeatException(e);
+        }
+    }
+
+    protected void writeJsonValue(OutputStream os, String value) throws IOException {
+        byte[] bytes = value.getBytes();
+        int start = 0;
+        for (int i = 0; i < bytes.length; i++) {
+            if (bytes[i] == '"') {
+                os.write(bytes, start, i - start);
+                os.write('\\');
+                os.write('\"');
+                start = i + 1;
+            }
+        }
+        if (start < bytes.length) {
+            os.write(bytes, start, bytes.length - start);
         }
     }
 }

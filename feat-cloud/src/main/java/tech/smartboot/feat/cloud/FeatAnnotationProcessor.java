@@ -208,13 +208,19 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             writer.write("    }\n");
 
             writer.write("public void router(" + Router.class.getSimpleName() + " router){\n");
+            Map<String, String> bytesCache = new HashMap<>();
             if (annotation instanceof Controller) {
-                createController(element, (Controller) annotation, writer);
+                createController(element, (Controller) annotation, writer, bytesCache);
             }
             //扫描拦截器
             addInterceptor(element, writer);
 
             writer.write("}\n");
+            if (!bytesCache.isEmpty()) {
+                for (Map.Entry<String, String> entry : bytesCache.entrySet()) {
+                    writer.write(entry.getValue());
+                }
+            }
             writer.write("    public void destroy() throws Throwable{\n");
             for (Element se : element.getEnclosedElements()) {
                 for (AnnotationMirror mirror : se.getAnnotationMirrors()) {
@@ -243,14 +249,13 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         }
     }
 
-    private static <T extends Annotation> void createController(Element element, Controller annotation, Writer writer) throws IOException {
+    private static <T extends Annotation> void createController(Element element, Controller annotation, Writer writer, Map<String, String> bytesCache) throws IOException {
         Controller controller = annotation;
         //遍历所有方法,获得RequestMapping注解
         String basePath = controller.value();
         if (!StringUtils.startsWith(basePath, "/")) {
             basePath = "/" + basePath;
         }
-
         for (Element se : element.getEnclosedElements()) {
             for (AnnotationMirror mirror : se.getAnnotationMirrors()) {
                 if (RequestMapping.class.getName().equals(mirror.getAnnotationType().toString())) {
@@ -371,7 +376,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                             break;
                         case RETURN_TYPE_OBJECT:
                             writer.write("java.io.ByteArrayOutputStream os=new java.io.ByteArrayOutputStream();");
-                            writeJsonObject(writer, returnType, "rst", 0, new HashMap<>());
+                            writeJsonObject(writer, returnType, "rst", 0, new HashMap<>(), bytesCache);
                             writer.write("        byte[] bytes=os.toByteArray();\n ");
                             writer.write("        ctx.Response.setContentLength(bytes.length);\n");
                             writer.write("        ctx.Response.write(bytes);\n");
@@ -395,16 +400,19 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         }
     }
 
-    int paramIndex = 0;
+    private static void toBytesPool(Writer writer, Map<String, String> map, String value) throws IOException {
+        String key = ("b_" + value.hashCode()).replace("-", "$");
+        map.put(key, "private static final byte[] " + key + "=" + toBytesStr(value) + ";\n");
+        writer.append("os.write(").append(key).append(");");
+    }
 
-    public static void writeJsonObject(Writer writer, TypeMirror typeMirror, String obj, int i, Map<TypeMirror, TypeMirror> typeMap0) throws IOException {
+    public static void writeJsonObject(Writer writer, TypeMirror typeMirror, String obj, int i, Map<TypeMirror, TypeMirror> typeMap0, Map<String, String> byteCache) throws IOException {
         //深层级采用JSON框架序列化，防止循环引用
         if (i > 4) {
             writer.write("if(" + obj + "!=null){\n");
             writer.write("os.write(JSON.toJSONBytes(" + obj + "));\n");
             writer.write("}else{\n");
-            writer.write("byte[] bnull={'n','u','l','l'};\n");
-            writer.append("os.write(bnull);");
+            toBytesPool(writer, byteCache, "null");
             writer.write("}\n");
             return;
         }
@@ -433,14 +441,13 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                 writer.append("os.write(p" + i + ".getBytes());");
                 writer.append("os.write('\"');\n");
             } else {
-                writeJsonObject(writer, type, "p" + i, i + 1, typeMap0);
+                writeJsonObject(writer, type, "p" + i, i + 1, typeMap0, byteCache);
             }
 
             writer.append("}\n");
             writer.append("os.write(']');\n");
             writer.write("}else{\n");
-            writer.write("byte[] bnull={'n','u','l','l'};\n");
-            writer.append("os.write(bnull);");
+            toBytesPool(writer, byteCache, "null");
             writer.write("}\n");
             return;
         } else if (typeMirror.toString().startsWith("java.util.Map")) {
@@ -450,8 +457,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             writer.write("if(" + obj + "!=null){\n");
             writer.write("os.write(" + obj + ".toString().getBytes());\n");
             writer.write("}else{\n");
-            writer.write("byte[] bnull={'n','u','l','l'};\n");
-            writer.append("os.write(bnull);");
+            toBytesPool(writer, byteCache, "null");
             writer.write("}\n");
             return;
         }
@@ -490,49 +496,31 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             }
             if (type.toString().equals(boolean.class.getName())) {
                 writer.append("if(" + obj + ".is").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).append("()){\n");
-                String s = toBytesStr("\"" + fieldName + "\":true");
-                writer.write("byte[] b" + j + "=" + s + ";\n");
-                writer.write("os.write(b" + j + ");\n");
+
+                toBytesPool(writer, byteCache, "\"" + fieldName + "\":true");
+
                 writer.write("}else{\n");
-                String s1 = toBytesStr("\"" + fieldName + "\":false");
-                writer.write("byte[] b" + j + "=" + s1 + ";\n");
-                writer.write("os.write(b" + j + ");\n");
+
+                toBytesPool(writer, byteCache, "\"" + fieldName + "\":false");
+
                 writer.write("}\n");
-            } else if (Arrays.asList("int", "short", "byte", "long", "float", "double", "java.lang.Integer", "java.lang.Short", "java.lang.Byte",
-                    "java.lang.Long", "java.lang.Float", "java.lang.Double").contains(type.toString())) {
-                String s = toBytesStr("\"" + fieldName + "\":");
-                writer.write("byte[] b" + j + "=" + s + ";\n");
-                writer.write("os.write(b" + j + ");\n");
+            } else if (Arrays.asList("int", "short", "byte", "long", "float", "double", "java.lang.Integer", "java.lang.Short", "java.lang.Byte", "java.lang.Long", "java.lang.Float", "java.lang.Double").contains(type.toString())) {
+                toBytesPool(writer, byteCache, "\"" + fieldName + "\":");
+
                 writer.append("os.write(String.valueOf(").append(obj).append(".get").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).append("()).getBytes());");
             } else if (String.class.getName().equals(type.toString())) {
-                String s = toBytesStr("\"" + fieldName + "\":");
-                writer.write("byte[] b" + j + "=" + s + ";\n");
-                writer.write("os.write(b" + j + ");\n");
+                toBytesPool(writer, byteCache, "\"" + fieldName + "\":");
+
                 writer.append("if(").append(obj).append(".get").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).append("()" + "!=null){\n");
                 writer.append("os.write('\"');\n");
                 writer.write("String s=" + obj + ".get" + se.getSimpleName().toString().substring(0, 1).toUpperCase() + se.getSimpleName().toString().substring(1) + "();\n");
-                writer.write("int i=0;\n");
-                writer.write("while(true){\n");
-                writer.write("int j=s.indexOf(\"\\\"\",i);\n");
-                writer.write("if (j == -1) {\n");
-                writer.write("os.write(s.substring(i).getBytes());\n");
-                writer.write("break;\n");
-                writer.write("}else{\n");
-                writer.write("os.write(s.substring(i,j).getBytes());\n");
-                writer.write("os.write('\\\\');\n");
-                writer.write("os.write('\\\"');\n");
-                writer.write("i=j+1;\n");
-                writer.write("}\n");
-                writer.write("}\n");
+                writer.write("writeJsonValue(os,s);\n");
                 writer.append("os.write('\"');\n");
                 writer.append("}else{\n");
-                writer.write("byte[] bnull={'n','u','l','l'};\n");
-                writer.append("os.write(bnull);");
+                toBytesPool(writer, byteCache, "null");
                 writer.append("}\n");
             } else if (Date.class.getName().equals(type.toString()) || Timestamp.class.getName().equals(type.toString())) {
-                String s = toBytesStr("\"" + fieldName + "\":");
-                writer.write("byte[] b" + j + "=" + s + ";\n");
-                writer.write("os.write(b" + j + ");\n");
+                toBytesPool(writer, byteCache, "\"" + fieldName + "\":");
                 writer.append("java.util.Date " + fieldName + "=").append(obj).append(".get").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).append("();");
                 writer.append("if(" + fieldName + "!=null){\n");
 //                writer.append("os.write('\"');\n");
@@ -547,14 +535,11 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
 
 //                writer.append("os.write('\"');\n");
                 writer.append("}else{\n");
-                writer.write("byte[] bnull={'n','u','l','l'};\n");
-                writer.append("os.write(bnull);");
+                toBytesPool(writer, byteCache, "null");
                 writer.append("}\n");
             } else {
-                String s = toBytesStr("\"" + fieldName + "\":");
-                writer.write("byte[] b" + j + "=" + s + ";\n");
-                writer.write("os.write(b" + j + ");\n");
-                writeJsonObject(writer, type, obj + ".get" + se.getSimpleName().toString().substring(0, 1).toUpperCase() + se.getSimpleName().toString().substring(1) + "()", i + 1, typeMap);
+                toBytesPool(writer, byteCache, "\"" + fieldName + "\":");
+                writeJsonObject(writer, type, obj + ".get" + se.getSimpleName().toString().substring(0, 1).toUpperCase() + se.getSimpleName().toString().substring(1) + "()", i + 1, typeMap, byteCache);
             }
         }
         writer.append(";\n");

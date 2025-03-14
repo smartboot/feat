@@ -10,14 +10,13 @@
 
 package tech.smartboot.feat.demo;
 
-import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.cloud.FeatCloud;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.PreDestroy;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀
  * @version v1.0.0
  */
 @Controller
@@ -27,12 +26,31 @@ public class FeatCloudDemo {
         return "hello Feat Cloud";
     }
 
+    @RequestMapping("/cloud2")
+    public A helloWorld2() {
+        A a = new A();
+        a.setA("123\"adf\"");
+        return a;
+    }
+
     @PreDestroy
-    public void destroy(){
+    public void destroy() {
         System.out.println("destroy...");
     }
 
     public static void main(String[] args) {
         FeatCloud.cloudServer().listen();
+    }
+
+    public class A {
+        String a;
+
+        public String getA() {
+            return a;
+        }
+
+        public void setA(String a) {
+            this.a = a;
+        }
     }
 }
