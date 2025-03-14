@@ -25,6 +25,8 @@ import java.io.OutputStream;
  * @version v1.0.0
  */
 public abstract class AbstractServiceLoader implements CloudService {
+    protected ThreadLocal<ByteArrayOutputStream> outputStream = ThreadLocal.withInitial(() -> new ByteArrayOutputStream(1024));
+
     protected JSONObject getParams(HttpRequest request) {
         try {
             if (request.getContentType() != null && request.getContentType().startsWith("application/json")) {
@@ -62,5 +64,15 @@ public abstract class AbstractServiceLoader implements CloudService {
         if (start < bytes.length) {
             os.write(bytes, start, bytes.length - start);
         }
+    }
+
+    protected ByteArrayOutputStream getOutputStream() {
+        ByteArrayOutputStream os = outputStream.get();
+        if (os.size() > 1024) {
+            os = new ByteArrayOutputStream(1024);
+            outputStream.set(os);
+        }
+        os.reset();
+        return os;
     }
 }

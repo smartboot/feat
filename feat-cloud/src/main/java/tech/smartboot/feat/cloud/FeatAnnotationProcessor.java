@@ -375,7 +375,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                             writer.write("        ctx.Response.write(bytes);\n");
                             break;
                         case RETURN_TYPE_OBJECT:
-                            writer.write("java.io.ByteArrayOutputStream os=new java.io.ByteArrayOutputStream();");
+                            writer.write("java.io.ByteArrayOutputStream os=getOutputStream();\n");
                             writeJsonObject(writer, returnType, "rst", 0, new HashMap<>(), bytesCache);
                             writer.write("        byte[] bytes=os.toByteArray();\n ");
                             writer.write("        ctx.Response.setContentLength(bytes.length);\n");
