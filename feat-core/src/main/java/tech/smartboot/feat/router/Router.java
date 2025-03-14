@@ -135,6 +135,9 @@ public final class Router implements HttpHandler {
         if (httpHandler == null) {
             httpHandler = defaultHandler;
         }
+        if (interceptors.isEmpty()) {
+            return httpHandler;
+        }
         // 检查是否存在匹配的拦截器
         List<Interceptor> list = interceptors.stream().filter(interceptor -> interceptor.path.stream().anyMatch(pattern -> pattern.match(uri) != null)).map(InterceptorUnit::getInterceptor).collect(Collectors.toList());
         if (list.isEmpty()) {
