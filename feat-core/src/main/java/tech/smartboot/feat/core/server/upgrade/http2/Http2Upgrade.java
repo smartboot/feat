@@ -19,10 +19,10 @@ import tech.smartboot.feat.core.common.codec.h2.codec.ResetStreamFrame;
 import tech.smartboot.feat.core.common.codec.h2.codec.SettingsFrame;
 import tech.smartboot.feat.core.common.codec.h2.codec.WindowUpdateFrame;
 import tech.smartboot.feat.core.common.codec.h2.hpack.DecodingCallback;
-import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
+import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HttpMethod;
-import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
-import tech.smartboot.feat.core.common.enums.HttpStatus;
+import tech.smartboot.feat.core.common.HttpProtocol;
+import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.impl.AbstractResponse;
@@ -50,14 +50,14 @@ public class Http2Upgrade extends Upgrade {
     @Override
     public final void init(HttpRequest req, HttpResponse response) throws IOException {
         session = new Http2Session(request);
-        if (HttpProtocolEnum.HTTP_2 == request.getProtocol()) {
+        if (HttpProtocol.HTTP_2 == request.getProtocol()) {
             if (!"PRI".equals(request.getMethod()) || !"*".equals(request.getUri()) || request.getHeaderSize() > 0) {
                 throw new IllegalStateException();
             }
             session.setState(Http2Session.STATE_PREFACE_SM);
         } else {
             //解析 Header 中的 setting
-            String http2Settings = request.getHeader(HeaderNameEnum.HTTP2_SETTINGS);
+            String http2Settings = request.getHeader(HeaderName.HTTP2_SETTINGS);
             byte[] bytes = Base64.getUrlDecoder().decode(http2Settings);
             ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
             SettingsFrame settingsFrame = new SettingsFrame(0, 0, bytes.length);
@@ -68,8 +68,8 @@ public class Http2Upgrade extends Upgrade {
 
             response.setHttpStatus(HttpStatus.SWITCHING_PROTOCOLS);
             response.setContentType(null);
-            response.setHeader(HeaderNameEnum.UPGRADE.getName(), HeaderValue.Upgrade.H2C);
-            response.setHeader(HeaderNameEnum.CONNECTION.getName(), HeaderValue.Connection.UPGRADE);
+            response.setHeader(HeaderName.UPGRADE.getName(), HeaderValue.Upgrade.H2C);
+            response.setHeader(HeaderName.CONNECTION.getName(), HeaderValue.Connection.UPGRADE);
             OutputStream outputStream = response.getOutputStream();
             outputStream.flush();
 

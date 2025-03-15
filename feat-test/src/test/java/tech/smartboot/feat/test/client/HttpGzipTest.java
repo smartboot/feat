@@ -16,7 +16,7 @@ import org.junit.Before;
 import org.junit.Test;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpResponse;
-import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
+import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.utils.NumberUtils;
 import tech.smartboot.feat.core.server.HttpServer;
@@ -42,7 +42,7 @@ public class HttpGzipTest {
         routeHandle.route("/test", ctx -> {
             tech.smartboot.feat.core.server.HttpResponse response = ctx.Response;
             int count = NumberUtils.toInt(ctx.Request.getParameter("count"), 1);
-            response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValue.ContentEncoding.GZIP);
+            response.setHeader(HeaderName.CONTENT_ENCODING.getName(), HeaderValue.ContentEncoding.GZIP);
             GZIPOutputStream outputStream = new GZIPOutputStream(response.getOutputStream());
             while (count-- > 0) {
                 outputStream.write(new byte[chunk]);
@@ -52,7 +52,7 @@ public class HttpGzipTest {
 
         routeHandle.route("/html", ctx -> {
             tech.smartboot.feat.core.server.HttpResponse response = ctx.Response;
-            response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValue.ContentEncoding.GZIP);
+            response.setHeader(HeaderName.CONTENT_ENCODING.getName(), HeaderValue.ContentEncoding.GZIP);
             GZIPOutputStream outputStream = new GZIPOutputStream(response.getOutputStream());
             outputStream.write("<html>".getBytes());
             outputStream.write("<body>".getBytes());
@@ -91,7 +91,7 @@ public class HttpGzipTest {
                 .onFailure(t -> {
                     System.out.println(t.getMessage());
                 }).submit();
-        Assert.assertEquals(HeaderValue.ContentEncoding.GZIP, future.get().getHeader(HeaderNameEnum.CONTENT_ENCODING.getName()));
+        Assert.assertEquals(HeaderValue.ContentEncoding.GZIP, future.get().getHeader(HeaderName.CONTENT_ENCODING.getName()));
 //        Assert.assertEquals(count * chunk, future.get().body().length());
     }
 
@@ -106,7 +106,7 @@ public class HttpGzipTest {
                 .onFailure(t -> {
                     System.out.println(t.getMessage());
                 }).submit();
-        Assert.assertEquals(HeaderValue.ContentEncoding.GZIP, future.get().getHeader(HeaderNameEnum.CONTENT_ENCODING.getName()));
+        Assert.assertEquals(HeaderValue.ContentEncoding.GZIP, future.get().getHeader(HeaderName.CONTENT_ENCODING.getName()));
         Assert.assertEquals(count * chunk, future.get().body().length());
     }
 

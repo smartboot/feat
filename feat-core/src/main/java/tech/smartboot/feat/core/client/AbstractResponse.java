@@ -13,7 +13,7 @@ package tech.smartboot.feat.core.client;
 import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.Reset;
-import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
+import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.utils.NumberUtils;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 
@@ -119,7 +119,7 @@ public abstract class AbstractResponse implements Response, Reset {
         if (contentType != null) {
             return contentType;
         }
-        contentType = getHeader(HeaderNameEnum.CONTENT_TYPE.getName());
+        contentType = getHeader(HeaderName.CONTENT_TYPE.getName());
         return contentType;
     }
 
@@ -128,7 +128,7 @@ public abstract class AbstractResponse implements Response, Reset {
             return contentLength;
         }
         //不包含content-length,则为：-1
-        contentLength = NumberUtils.toLong(getHeader(HeaderNameEnum.CONTENT_LENGTH.getName()), NONE_CONTENT_LENGTH);
+        contentLength = NumberUtils.toLong(getHeader(HeaderName.CONTENT_LENGTH.getName()), NONE_CONTENT_LENGTH);
         return contentLength;
     }
 

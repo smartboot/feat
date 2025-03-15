@@ -10,8 +10,8 @@
 
 package tech.smartboot.feat.core.server.impl;
 
-import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
-import tech.smartboot.feat.core.common.enums.HttpStatus;
+import tech.smartboot.feat.core.common.HeaderName;
+import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.common.multipart.MultipartConfig;
 import tech.smartboot.feat.core.common.multipart.PartImpl;
@@ -105,13 +105,13 @@ class MultipartFormDecoder {
                 }
                 byteBuffer.reset();
                 //Header name解码
-                ByteTree<HeaderNameEnum> name = StringUtils.scanByteTree(byteBuffer, ByteTree.COLON_END_MATCHER, request.getOptions().getHeaderNameByteTree());
+                ByteTree<HeaderName> name = StringUtils.scanByteTree(byteBuffer, ByteTree.COLON_END_MATCHER, request.getOptions().getHeaderNameByteTree());
                 if (name == null) {
                     return false;
                 }
                 //todo:System.out.println("headerName: " + name.getStringValue());
                 currentPart.setHeaderTemp(name.getStringValue());
-                if (HeaderNameEnum.CONTENT_DISPOSITION.getName().equals(name.getStringValue())) {
+                if (HeaderName.CONTENT_DISPOSITION.getName().equals(name.getStringValue())) {
                     state = STATE_CONTENT_DISPOSITION_DECODER;
                 } else {
                     state = STATE_PART_HEADER_VALUE;

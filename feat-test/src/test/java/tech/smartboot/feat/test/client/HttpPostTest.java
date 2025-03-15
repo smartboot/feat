@@ -21,7 +21,7 @@ import org.smartboot.socket.extension.ssl.factory.ServerSSLContextFactory;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.common.HeaderValue;
-import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
+import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpServer;
@@ -173,8 +173,8 @@ public class HttpPostTest {
                         System.out.println(t.getMessage());
                     }).submit();
             JSONObject jsonObject = JSONObject.parseObject(future.get().body());
-            Assert.assertNull(jsonObject.getString(HeaderNameEnum.TRANSFER_ENCODING.getName()));
-            Assert.assertEquals(jsonObject.getString(HeaderNameEnum.CONTENT_LENGTH.getName()),
+            Assert.assertNull(jsonObject.getString(HeaderName.TRANSFER_ENCODING.getName()));
+            Assert.assertEquals(jsonObject.getString(HeaderName.CONTENT_LENGTH.getName()),
                     String.valueOf(body.getBytes().length));
         };
         doRequest(new HttpClient("http://127.0.0.1:8080"), consumer);

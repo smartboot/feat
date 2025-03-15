@@ -13,7 +13,7 @@ package tech.smartboot.feat.core.client.impl;
 import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.common.Cookie;
 import tech.smartboot.feat.core.common.HeaderValue;
-import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
+import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.io.FeatOutputStream;
 import tech.smartboot.feat.core.common.utils.Constant;
 
@@ -52,19 +52,19 @@ abstract class AbstractOutputStream extends FeatOutputStream {
         convertCookieToHeader(request);
 
         if (request.getContentType() != null) {
-            writeString(HeaderNameEnum.CONTENT_TYPE.getName());
+            writeString(HeaderName.CONTENT_TYPE.getName());
             writeBuffer.writeByte((byte) ':');
             writeBuffer.write(getBytes(String.valueOf(request.getContentType())));
             writeBuffer.write(Constant.CRLF_BYTES);
         }
 
         if (request.getContentLength() >= 0) {
-            writeString(HeaderNameEnum.CONTENT_LENGTH.getName());
+            writeString(HeaderName.CONTENT_LENGTH.getName());
             writeBuffer.writeByte((byte) ':');
             writeBuffer.write(getBytes(String.valueOf(request.getContentLength())));
             writeBuffer.write(Constant.CRLF_BYTES);
         } else if (chunkedSupport) {
-            request.addHeader(HeaderNameEnum.TRANSFER_ENCODING.getName(), HeaderValue.TransferEncoding.CHUNKED);
+            request.addHeader(HeaderName.TRANSFER_ENCODING.getName(), HeaderValue.TransferEncoding.CHUNKED);
         }
 
         //输出Header部分
@@ -90,7 +90,7 @@ abstract class AbstractOutputStream extends FeatOutputStream {
         if (cookies == null || cookies.size() == 0) {
             return;
         }
-        cookies.forEach(cookie -> request.addHeader(HeaderNameEnum.SET_COOKIE.getName(), cookie.toString()));
+        cookies.forEach(cookie -> request.addHeader(HeaderName.SET_COOKIE.getName(), cookie.toString()));
 
     }
 }

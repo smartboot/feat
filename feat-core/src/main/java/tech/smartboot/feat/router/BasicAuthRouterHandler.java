@@ -10,8 +10,8 @@
 
 package tech.smartboot.feat.router;
 
-import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
-import tech.smartboot.feat.core.common.enums.HttpStatus;
+import tech.smartboot.feat.core.common.HeaderName;
+import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.impl.HttpEndpoint;
@@ -35,12 +35,12 @@ public final class BasicAuthRouterHandler implements RouterHandler {
 
     @Override
     public void onHeaderComplete(HttpEndpoint request) throws IOException {
-        String clientBasic = request.getHeader(HeaderNameEnum.AUTHORIZATION.getName());
+        String clientBasic = request.getHeader(HeaderName.AUTHORIZATION.getName());
         if (StringUtils.equals(clientBasic, this.basic)) {
             httpServerHandler.onHeaderComplete(request);
         } else {
             HttpResponse response = request.getResponse();
-            response.setHeader(HeaderNameEnum.WWW_AUTHENTICATE.getName(), "Basic realm=\"feat\"");
+            response.setHeader(HeaderName.WWW_AUTHENTICATE.getName(), "Basic realm=\"feat\"");
             response.setHttpStatus(HttpStatus.UNAUTHORIZED);
             response.close();
         }

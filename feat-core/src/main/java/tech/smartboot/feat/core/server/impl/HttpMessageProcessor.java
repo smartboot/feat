@@ -15,9 +15,9 @@ import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
 import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.common.DecodeState;
 import tech.smartboot.feat.core.common.HeaderValue;
-import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
-import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
-import tech.smartboot.feat.core.common.enums.HttpStatus;
+import tech.smartboot.feat.core.common.HeaderName;
+import tech.smartboot.feat.core.common.HttpProtocol;
+import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.common.io.FeatOutputStream;
 import tech.smartboot.feat.core.common.io.ReadListener;
@@ -315,10 +315,10 @@ public final class HttpMessageProcessor extends AbstractMessageProcessor<HttpEnd
         String connection = abstractRequest.getConnection();
         boolean keepAlive = !HeaderValue.Connection.CLOSE.equals(connection);
         // http/1.0默认短连接，http/1.1默认长连接。此处用 == 性能更高
-        if (keepAlive && HttpProtocolEnum.HTTP_10 == abstractRequest.getProtocol()) {
+        if (keepAlive && HttpProtocol.HTTP_10 == abstractRequest.getProtocol()) {
             keepAlive = HeaderValue.Connection.KEEPALIVE.equalsIgnoreCase(connection);
             if (keepAlive) {
-                response.setHeader(HeaderNameEnum.CONNECTION.getName(), HeaderValue.Connection.KEEPALIVE);
+                response.setHeader(HeaderName.CONNECTION.getName(), HeaderValue.Connection.KEEPALIVE);
             }
         }
         return keepAlive;

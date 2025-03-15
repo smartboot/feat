@@ -13,9 +13,9 @@ package tech.smartboot.feat.core.server.impl;
 import org.smartboot.socket.Protocol;
 import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.common.DecodeState;
-import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
-import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
-import tech.smartboot.feat.core.common.enums.HttpStatus;
+import tech.smartboot.feat.core.common.HeaderName;
+import tech.smartboot.feat.core.common.HttpProtocol;
+import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.common.utils.ByteTree;
 import tech.smartboot.feat.core.common.utils.Constant;
@@ -100,17 +100,17 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
                 }
                 byte major = byteBuffer.get(byteBuffer.position() + 5);
                 if (major == '2') {
-                    request.setProtocol(HttpProtocolEnum.HTTP_2);
+                    request.setProtocol(HttpProtocol.HTTP_2);
                 } else if (major != '1') {
                     throw new HttpException(HttpStatus.BAD_REQUEST);
                 } else {
                     byte minor = byteBuffer.get(byteBuffer.position() + 7);
                     switch (minor) {
                         case '0':
-                            request.setProtocol(HttpProtocolEnum.HTTP_10);
+                            request.setProtocol(HttpProtocol.HTTP_10);
                             break;
                         case '1':
-                            request.setProtocol(HttpProtocolEnum.HTTP_11);
+                            request.setProtocol(HttpProtocol.HTTP_11);
                             break;
                         default:
                             throw new HttpException(HttpStatus.BAD_REQUEST);
@@ -153,7 +153,7 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
             }
             // header name解析
             case DecodeState.STATE_HEADER_NAME: {
-                ByteTree<HeaderNameEnum> name = StringUtils.scanByteTree(byteBuffer, ByteTree.COLON_END_MATCHER, options.getHeaderNameByteTree());
+                ByteTree<HeaderName> name = StringUtils.scanByteTree(byteBuffer, ByteTree.COLON_END_MATCHER, options.getHeaderNameByteTree());
                 if (name == null) {
                     break;
                 }
@@ -169,7 +169,7 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
                     }
                     break;
                 }
-                HeaderNameEnum headerName = decodeState.getDecodeHeaderName().getAttach();
+                HeaderName headerName = decodeState.getDecodeHeaderName().getAttach();
                 if (headerName != null) {
                     request.addHeader(headerName.getLowCaseName(), decodeState.getDecodeHeaderName().getStringValue(), value.getStringValue());
                 } else {

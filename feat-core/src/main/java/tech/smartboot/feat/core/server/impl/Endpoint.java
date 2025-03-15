@@ -14,9 +14,9 @@ import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.common.Cookie;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.Reset;
-import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
-import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
-import tech.smartboot.feat.core.common.enums.HttpStatus;
+import tech.smartboot.feat.core.common.HeaderName;
+import tech.smartboot.feat.core.common.HttpProtocol;
+import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.common.io.BodyInputStream;
 import tech.smartboot.feat.core.common.logging.Logger;
@@ -78,7 +78,7 @@ public abstract class Endpoint implements Reset {
     /**
      * Http协议版本
      */
-    protected HttpProtocolEnum protocol = HttpProtocolEnum.HTTP_11;
+    protected HttpProtocol protocol = HttpProtocol.HTTP_11;
     protected String requestUri;
     protected String requestUrl;
     protected String contentType;
@@ -117,7 +117,7 @@ public abstract class Endpoint implements Reset {
 
     public final String getHost() {
         if (hostHeader == null) {
-            hostHeader = getHeader(HeaderNameEnum.HOST);
+            hostHeader = getHeader(HeaderName.HOST);
         }
         return hostHeader;
     }
@@ -128,8 +128,8 @@ public abstract class Endpoint implements Reset {
         return headerValue == null ? null : headerValue.getValue();
     }
 
-    public final String getHeader(HeaderNameEnum headerNameEnum) {
-        return getInnerHeader(headerNameEnum.getLowCaseName());
+    public final String getHeader(HeaderName headerName) {
+        return getInnerHeader(headerName.getLowCaseName());
     }
 
     public final String getHeader(String headName) {
@@ -233,11 +233,11 @@ public abstract class Endpoint implements Reset {
     }
 
 
-    public final HttpProtocolEnum getProtocol() {
+    public final HttpProtocol getProtocol() {
         return protocol;
     }
 
-    public final void setProtocol(HttpProtocolEnum protocol) {
+    public final void setProtocol(HttpProtocol protocol) {
         this.protocol = protocol;
     }
 
@@ -291,7 +291,7 @@ public abstract class Endpoint implements Reset {
         if (contentType != null) {
             return contentType;
         }
-        contentType = getHeader(HeaderNameEnum.CONTENT_TYPE);
+        contentType = getHeader(HeaderName.CONTENT_TYPE);
         return contentType;
     }
 
@@ -299,7 +299,7 @@ public abstract class Endpoint implements Reset {
         if (connection != null) {
             return connection;
         }
-        connection = getHeader(HeaderNameEnum.CONNECTION);
+        connection = getHeader(HeaderName.CONNECTION);
         return connection;
     }
 
@@ -309,7 +309,7 @@ public abstract class Endpoint implements Reset {
             return contentLength;
         }
         //不包含content-length,则为：-1
-        contentLength = NumberUtils.toLong(getHeader(HeaderNameEnum.CONTENT_LENGTH), NONE_CONTENT_LENGTH);
+        contentLength = NumberUtils.toLong(getHeader(HeaderName.CONTENT_LENGTH), NONE_CONTENT_LENGTH);
 
         return contentLength;
     }
@@ -403,7 +403,7 @@ public abstract class Endpoint implements Reset {
 
 
     public final Enumeration<Locale> getLocales() {
-        Collection<String> acceptLanguage = getHeaders(HeaderNameEnum.ACCEPT_LANGUAGE.getName());
+        Collection<String> acceptLanguage = getHeaders(HeaderName.ACCEPT_LANGUAGE.getName());
         if (acceptLanguage.isEmpty()) {
             return Collections.enumeration(Collections.singletonList(defaultLocale));
         }
@@ -427,7 +427,7 @@ public abstract class Endpoint implements Reset {
             return cookies;
         }
 
-        HeaderValue headerValue = headers.get(HeaderNameEnum.COOKIE.getLowCaseName());
+        HeaderValue headerValue = headers.get(HeaderName.COOKIE.getLowCaseName());
         if (headerValue == null) {
             return new Cookie[0];
         }

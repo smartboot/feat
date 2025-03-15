@@ -13,7 +13,7 @@ package tech.smartboot.feat.core.server.upgrade.http2;
 import tech.smartboot.feat.core.common.codec.h2.codec.ContinuationFrame;
 import tech.smartboot.feat.core.common.codec.h2.codec.Http2Frame;
 import tech.smartboot.feat.core.common.codec.h2.codec.PushPromiseFrame;
-import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
+import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HttpMethod;
 import tech.smartboot.feat.core.common.utils.HttpUtils;
 import tech.smartboot.feat.core.common.utils.StringUtils;
@@ -45,8 +45,8 @@ public class PushBuilderImpl implements PushBuilder {
     public PushBuilderImpl(int streamId, Http2ResponseImpl response, Http2Session session) {
         this.streamId = streamId;
         this.pushRequest = new Http2Endpoint(session.getPushStreamId().addAndGet(2), session, true);
-        response.getCookies().forEach(cookie -> pushRequest.addHeader(HeaderNameEnum.COOKIE.getLowCaseName(),
-                HeaderNameEnum.COOKIE.getName(), cookie.getName() + "=" + cookie.getValue()));
+        response.getCookies().forEach(cookie -> pushRequest.addHeader(HeaderName.COOKIE.getLowCaseName(),
+                HeaderName.COOKIE.getName(), cookie.getName() + "=" + cookie.getValue()));
 
         method(HttpMethod.GET);
     }

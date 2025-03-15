@@ -11,8 +11,8 @@
 package tech.smartboot.feat.fileserver;
 
 import tech.smartboot.feat.core.common.HttpMethod;
-import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
-import tech.smartboot.feat.core.common.enums.HttpStatus;
+import tech.smartboot.feat.core.common.HeaderName;
+import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.common.io.FeatOutputStream;
@@ -89,7 +89,7 @@ public class HttpStaticResourceHandler implements HttpHandler {
         HttpResponse response = request.getResponse();
 
         //304 命中缓存
-        String requestModified = request.getHeader(HeaderNameEnum.IF_MODIFIED_SINCE.getName());
+        String requestModified = request.getHeader(HeaderName.IF_MODIFIED_SINCE.getName());
         if (StringUtils.isNotBlank(requestModified) && lastModifyDate.getTime() <= DateUtils.parseRFC1123(requestModified).getTime()) {
             response.setHttpStatus(HttpStatus.NOT_MODIFIED);
             completableFuture.complete(null);
@@ -109,8 +109,8 @@ public class HttpStaticResourceHandler implements HttpHandler {
             } catch (IOException ignored) {
             }
         });
-        response.setHeader(HeaderNameEnum.LAST_MODIFIED.getName(), lastModifyDateFormat);
-        response.setHeader(HeaderNameEnum.CONTENT_TYPE.getName(), Mimetypes.getInstance().getMimetype(fileName) + "; charset=utf-8");
+        response.setHeader(HeaderName.LAST_MODIFIED.getName(), lastModifyDateFormat);
+        response.setHeader(HeaderName.CONTENT_TYPE.getName(), Mimetypes.getInstance().getMimetype(fileName) + "; charset=utf-8");
 
         Consumer<FeatOutputStream> consumer = new Consumer<FeatOutputStream>() {
             final byte[] bytes = new byte[options.writeBufferSize()];
@@ -173,7 +173,7 @@ public class HttpStaticResourceHandler implements HttpHandler {
         }
         //304
         Date lastModifyDate = new Date(file.lastModified() / 1000 * 1000);
-        String requestModified = request.getHeader(HeaderNameEnum.IF_MODIFIED_SINCE.getName());
+        String requestModified = request.getHeader(HeaderName.IF_MODIFIED_SINCE.getName());
         if (StringUtils.isNotBlank(requestModified) && lastModifyDate.getTime() <= DateUtils.parseRFC1123(requestModified).getTime()) {
             response.setHttpStatus(HttpStatus.NOT_MODIFIED);
             completableFuture.complete(null);
@@ -181,8 +181,8 @@ public class HttpStaticResourceHandler implements HttpHandler {
         }
 
 
-        response.setHeader(HeaderNameEnum.LAST_MODIFIED.getName(), DateUtils.formatRFC1123(lastModifyDate));
-        response.setHeader(HeaderNameEnum.CONTENT_TYPE.getName(), Mimetypes.getInstance().getMimetype(file) + "; charset=utf-8");
+        response.setHeader(HeaderName.LAST_MODIFIED.getName(), DateUtils.formatRFC1123(lastModifyDate));
+        response.setHeader(HeaderName.CONTENT_TYPE.getName(), Mimetypes.getInstance().getMimetype(file) + "; charset=utf-8");
         //HEAD不输出内容
         if (HttpMethod.HEAD.equals(request.getMethod())) {
             completableFuture.complete(null);
@@ -239,7 +239,7 @@ public class HttpStaticResourceHandler implements HttpHandler {
                     return;
                 }
                 String contentType = Mimetypes.getInstance().getMimetype("favicon.ico");
-                response.setHeader(HeaderNameEnum.CONTENT_TYPE.getName(), contentType + "; charset=utf-8");
+                response.setHeader(HeaderName.CONTENT_TYPE.getName(), contentType + "; charset=utf-8");
                 byte[] bytes = new byte[4094];
                 int length;
                 while ((length = inputStream.read(bytes)) != -1) {
@@ -250,7 +250,7 @@ public class HttpStaticResourceHandler implements HttpHandler {
         }
         LOGGER.warn("file: {} not found!", request.getRequestURI());
         response.setHttpStatus(HttpStatus.NOT_FOUND);
-        response.setHeader(HeaderNameEnum.CONTENT_TYPE.getName(), "text/html; charset=utf-8");
+        response.setHeader(HeaderName.CONTENT_TYPE.getName(), "text/html; charset=utf-8");
 
         if (!HttpMethod.HEAD.equals(request.getMethod())) {
             throw new HttpException(HttpStatus.NOT_FOUND);

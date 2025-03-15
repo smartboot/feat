@@ -17,7 +17,7 @@ import tech.smartboot.feat.core.client.stream.GzipStream;
 import tech.smartboot.feat.core.client.stream.Stream;
 import tech.smartboot.feat.core.client.stream.StringStream;
 import tech.smartboot.feat.core.common.HeaderValue;
-import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
+import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.utils.Constant;
 import tech.smartboot.feat.core.common.utils.StringUtils;
@@ -70,7 +70,7 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
 
     @Override
     public void onHeaderComplete() {
-        String transferEncoding = getHeader(HeaderNameEnum.TRANSFER_ENCODING.getName());
+        String transferEncoding = getHeader(HeaderName.TRANSFER_ENCODING.getName());
         if (StringUtils.equals(transferEncoding, HeaderValue.TransferEncoding.CHUNKED)) {
             state = STATE_CHUNK_LENGTH;
         } else if (getContentLength() > 0) {
@@ -79,7 +79,7 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
         } else {
             state = STATE_FINISH;
         }
-        if (StringUtils.equals(HeaderValue.ContentEncoding.GZIP, getHeader(HeaderNameEnum.CONTENT_ENCODING.getName()))) {
+        if (StringUtils.equals(HeaderValue.ContentEncoding.GZIP, getHeader(HeaderName.CONTENT_ENCODING.getName()))) {
             state = STATE_GZIP | state;
             streaming = new GzipStream(streaming);
         }

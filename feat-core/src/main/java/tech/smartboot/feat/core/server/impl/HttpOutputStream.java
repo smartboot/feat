@@ -11,10 +11,10 @@
 package tech.smartboot.feat.core.server.impl;
 
 import tech.smartboot.feat.core.common.HeaderValue;
-import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
+import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HttpMethod;
-import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
-import tech.smartboot.feat.core.common.enums.HttpStatus;
+import tech.smartboot.feat.core.common.HttpProtocol;
+import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.io.FeatOutputStream;
 import tech.smartboot.feat.core.common.utils.Constant;
 import tech.smartboot.feat.core.common.utils.DateUtils;
@@ -48,9 +48,9 @@ final class HttpOutputStream extends FeatOutputStream {
         this.response = response;
         this.options = request.getOptions();
         if (SERVER_LINE == null) {
-            String serverLine = HeaderNameEnum.SERVER.getName() + ':' + options.serverName() + "\r\n";
+            String serverLine = HeaderName.SERVER.getName() + ':' + options.serverName() + "\r\n";
             SERVER_LINE = serverLine.getBytes();
-            HEAD_PART_BYTES = (HttpProtocolEnum.HTTP_11.getProtocol() + " 200 OK\r\n" + serverLine + "Date:" + DateUtils.RFC1123_FORMAT).getBytes();
+            HEAD_PART_BYTES = (HttpProtocol.HTTP_11.getProtocol() + " 200 OK\r\n" + serverLine + "Date:" + DateUtils.RFC1123_FORMAT).getBytes();
             flushDate();
         }
     }
@@ -125,7 +125,7 @@ final class HttpOutputStream extends FeatOutputStream {
 
         HttpStatus httpStatus = response.getHttpStatus();
         boolean fastWrite =
-                request.getProtocol() == HttpProtocolEnum.HTTP_11 && httpStatus == HttpStatus.OK && options.serverName() != null && response.getHeader(HeaderNameEnum.SERVER.getName()) == null;
+                request.getProtocol() == HttpProtocol.HTTP_11 && httpStatus == HttpStatus.OK && options.serverName() != null && response.getHeader(HeaderName.SERVER.getName()) == null;
         // HTTP/1.1
         if (fastWrite) {
             writeBuffer.write(HEAD_PART_BYTES);
@@ -133,7 +133,7 @@ final class HttpOutputStream extends FeatOutputStream {
             writeString(request.getProtocol().getProtocol());
             writeBuffer.writeByte(Constant.SP);
             httpStatus.write(writeBuffer);
-            if (options.serverName() != null && response.getHeader(HeaderNameEnum.SERVER.getName()) == null) {
+            if (options.serverName() != null && response.getHeader(HeaderName.SERVER.getName()) == null) {
                 writeBuffer.write(SERVER_LINE);
             }
             // Date
@@ -182,7 +182,7 @@ final class HttpOutputStream extends FeatOutputStream {
             disableChunked();
         } else if (HttpMethod.HEAD.equals(request.getMethod())) {
             disableChunked();
-        } else if (HttpProtocolEnum.HTTP_11 != request.getProtocol()) {
+        } else if (HttpProtocol.HTTP_11 != request.getProtocol()) {
             disableChunked();
         } else if (response.getContentType().startsWith(HeaderValue.ContentType.EVENT_STREAM)) {
             disableChunked();

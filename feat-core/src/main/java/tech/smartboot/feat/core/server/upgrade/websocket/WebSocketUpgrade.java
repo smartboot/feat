@@ -18,8 +18,8 @@ import tech.smartboot.feat.core.common.codec.websocket.BasicFrameDecoder;
 import tech.smartboot.feat.core.common.codec.websocket.CloseReason;
 import tech.smartboot.feat.core.common.codec.websocket.Decoder;
 import tech.smartboot.feat.core.common.codec.websocket.WebSocket;
-import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
-import tech.smartboot.feat.core.common.enums.HttpStatus;
+import tech.smartboot.feat.core.common.HeaderName;
+import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.utils.SHA1;
@@ -67,13 +67,13 @@ public class WebSocketUpgrade extends Upgrade {
     public final void init(HttpRequest req, HttpResponse response) throws IOException {
         webSocketRequest = new WebSocketRequestImpl();
         webSocketResponse = new WebSocketResponseImpl(response);
-        String acceptSeed = request.getHeader(HeaderNameEnum.Sec_WebSocket_Key) + WEBSOCKET_13_ACCEPT_GUID;
+        String acceptSeed = request.getHeader(HeaderName.Sec_WebSocket_Key) + WEBSOCKET_13_ACCEPT_GUID;
         byte[] sha1 = SHA1.encode(acceptSeed);
         String accept = Base64.getEncoder().encodeToString(sha1);
         response.setHttpStatus(HttpStatus.SWITCHING_PROTOCOLS);
-        response.setHeader(HeaderNameEnum.UPGRADE.getName(), HeaderValue.Upgrade.WEBSOCKET);
-        response.setHeader(HeaderNameEnum.CONNECTION.getName(), HeaderValue.Connection.UPGRADE);
-        response.setHeader(HeaderNameEnum.Sec_WebSocket_Accept.getName(), accept);
+        response.setHeader(HeaderName.UPGRADE.getName(), HeaderValue.Upgrade.WEBSOCKET);
+        response.setHeader(HeaderName.CONNECTION.getName(), HeaderValue.Connection.UPGRADE);
+        response.setHeader(HeaderName.Sec_WebSocket_Accept.getName(), accept);
         OutputStream outputStream = response.getOutputStream();
         outputStream.flush();
 

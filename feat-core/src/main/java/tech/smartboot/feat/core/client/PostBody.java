@@ -12,7 +12,7 @@ package tech.smartboot.feat.core.client;
 
 import tech.smartboot.feat.core.client.impl.HttpRequestImpl;
 import tech.smartboot.feat.core.common.HeaderValue;
-import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
+import tech.smartboot.feat.core.common.HeaderName;
 
 import java.net.URLEncoder;
 import java.util.Iterator;
@@ -51,7 +51,7 @@ public final class PostBody extends CommonBody {
             // 设置 Header
             HttpRequestImpl request = httpPost.rest.getRequest();
             request.setContentLength(bytes.length);
-            request.addHeader(HeaderNameEnum.CONTENT_TYPE.getName(), HeaderValue.ContentType.X_WWW_FORM_URLENCODED);
+            request.addHeader(HeaderName.CONTENT_TYPE.getName(), HeaderValue.ContentType.X_WWW_FORM_URLENCODED);
             //输出数据
             request.write(bytes);
             request.getOutputStream().flush();
@@ -72,7 +72,7 @@ public final class PostBody extends CommonBody {
 
             String boundary = "---" + System.currentTimeMillis();
 
-            httpPost.rest.getRequest().addHeader(HeaderNameEnum.CONTENT_TYPE.getName(), HeaderValue.ContentType.MULTIPART_FORM_DATA + "; boundary=" + boundary);
+            httpPost.rest.getRequest().addHeader(HeaderName.CONTENT_TYPE.getName(), HeaderValue.ContentType.MULTIPART_FORM_DATA + "; boundary=" + boundary);
             for (Multipart multipart : multiparts) {
                 write("--" + boundary + "\r\n");
                 multipart.write(this);

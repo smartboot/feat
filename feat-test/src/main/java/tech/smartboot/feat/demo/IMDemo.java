@@ -13,7 +13,7 @@ package tech.smartboot.feat.demo;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.core.common.codec.websocket.CloseReason;
-import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
+import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.WebSocketRequest;
@@ -36,7 +36,7 @@ public class IMDemo {
         Router routeHandle = new Router();
         routeHandle.route("/", ctx -> {
             HttpRequest request = ctx.Request;
-            if (request.getHeader(HeaderNameEnum.UPGRADE.getName()).equalsIgnoreCase("websocket")) {
+            if (request.getHeader(HeaderName.UPGRADE.getName()).equalsIgnoreCase("websocket")) {
                 request.upgrade(new WebSocketUpgrade() {
                     private Map<WebSocketRequest, WebSocketResponse> sessionMap = new ConcurrentHashMap<>();
 

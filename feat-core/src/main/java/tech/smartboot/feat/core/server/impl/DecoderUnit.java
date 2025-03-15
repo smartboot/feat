@@ -11,7 +11,7 @@
 package tech.smartboot.feat.core.server.impl;
 
 import tech.smartboot.feat.core.common.DecodeState;
-import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
+import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.utils.ByteTree;
 
 /**
@@ -19,17 +19,17 @@ import tech.smartboot.feat.core.common.utils.ByteTree;
  * @version v1.0.0
  */
 public class DecoderUnit extends DecodeState {
-    private ByteTree<HeaderNameEnum> decodeHeaderName;
+    private ByteTree<HeaderName> decodeHeaderName;
 
     public DecoderUnit() {
         super(DecodeState.STATE_METHOD);
     }
 
-    public ByteTree<HeaderNameEnum> getDecodeHeaderName() {
+    public ByteTree<HeaderName> getDecodeHeaderName() {
         return decodeHeaderName;
     }
 
-    public void setDecodeHeaderName(ByteTree<HeaderNameEnum> decodeHeaderName) {
+    public void setDecodeHeaderName(ByteTree<HeaderName> decodeHeaderName) {
         this.decodeHeaderName = decodeHeaderName;
     }
 }

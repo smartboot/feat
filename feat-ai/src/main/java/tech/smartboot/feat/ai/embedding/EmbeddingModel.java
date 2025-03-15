@@ -18,7 +18,7 @@ import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpPost;
 import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.client.HttpRest;
-import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
+import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 
@@ -45,9 +45,9 @@ public class EmbeddingModel {
         });
         HttpPost httpPost = httpClient.post("/v1/embeddings").header(header -> {
             if (StringUtils.isNotBlank(options.getApiKey())) {
-                header.add(HeaderNameEnum.AUTHORIZATION.getName(), "Bearer " + options.getApiKey());
+                header.add(HeaderName.AUTHORIZATION.getName(), "Bearer " + options.getApiKey());
             }
-            header.add(HeaderNameEnum.CONTENT_TYPE.getName(), "application/json").add(HeaderNameEnum.CONTENT_LENGTH.getName(), bytes.length);
+            header.add(HeaderName.CONTENT_TYPE.getName(), "application/json").add(HeaderName.CONTENT_LENGTH.getName(), bytes.length);
         });
 
         httpPost.body().write(bytes);

@@ -13,16 +13,17 @@ package tech.smartboot.feat.core.server;
 import org.smartboot.socket.buffer.BufferPagePool;
 import org.smartboot.socket.transport.AioQuickServer;
 import tech.smartboot.feat.core.common.FeatUtils;
+import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpMethod;
-import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
-import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
+import tech.smartboot.feat.core.common.HttpProtocol;
+import tech.smartboot.feat.core.common.utils.ByteTree;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.impl.HttpMessageProcessor;
 import tech.smartboot.feat.core.server.impl.HttpRequestProtocol;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 public class HttpServer {
@@ -110,12 +111,23 @@ public class HttpServer {
     private void initByteCache() {
         options.getByteCache().addNode(HttpMethod.GET);
         options.getByteCache().addNode(HttpMethod.POST);
-        for (HttpProtocolEnum httpProtocolEnum : HttpProtocolEnum.values()) {
-            options.getByteCache().addNode(httpProtocolEnum.getProtocol(), httpProtocolEnum);
-        }
-        for (HeaderNameEnum headerNameEnum : HeaderNameEnum.values()) {
-            options.getHeaderNameByteTree().addNode(headerNameEnum.getName(), headerNameEnum);
-        }
+        options.getByteCache().addNode(HttpProtocol.HTTP_11.getProtocol(), HttpProtocol.HTTP_11);
+        // 缓存一些常用HeaderName
+        ByteTree<HeaderName> headerNameByteTree = options.getHeaderNameByteTree();
+        headerNameByteTree.addNode(HeaderName.CONTENT_TYPE.getName(), HeaderName.CONTENT_TYPE);
+        headerNameByteTree.addNode(HeaderName.CONTENT_LENGTH.getName(), HeaderName.CONTENT_LENGTH);
+        headerNameByteTree.addNode(HeaderName.CONNECTION.getName(), HeaderName.CONNECTION);
+        headerNameByteTree.addNode(HeaderName.SERVER.getName(), HeaderName.SERVER);
+        headerNameByteTree.addNode(HeaderName.DATE.getName(), HeaderName.DATE);
+        headerNameByteTree.addNode(HeaderName.ACCEPT.getName(), HeaderName.ACCEPT);
+        headerNameByteTree.addNode(HeaderName.ACCEPT_ENCODING.getName(), HeaderName.ACCEPT_ENCODING);
+        headerNameByteTree.addNode(HeaderName.ACCEPT_LANGUAGE.getName(), HeaderName.ACCEPT_LANGUAGE);
+        headerNameByteTree.addNode(HeaderName.ACCEPT_CHARSET.getName(), HeaderName.ACCEPT_CHARSET);
+        headerNameByteTree.addNode(HeaderName.CACHE_CONTROL.getName(), HeaderName.CACHE_CONTROL);
+        headerNameByteTree.addNode(HeaderName.CONTENT_ENCODING.getName(), HeaderName.CONTENT_ENCODING);
+        headerNameByteTree.addNode(HeaderName.CONTENT_LANGUAGE.getName(), HeaderName.CONTENT_LANGUAGE);
+        headerNameByteTree.addNode(HeaderName.CONTENT_LOCATION.getName(), HeaderName.CONTENT_LOCATION);
+        headerNameByteTree.addNode(HeaderName.CONTENT_DISPOSITION.getName(), HeaderName.CONTENT_DISPOSITION);
         // 缓存一些常用字符串
         options.getByteCache().addNode(HeaderValue.TransferEncoding.CHUNKED);
         options.getByteCache().addNode(HeaderValue.ContentEncoding.GZIP);

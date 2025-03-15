@@ -10,7 +10,7 @@
 
 package tech.smartboot.feat.core.server.impl;
 
-import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
+import tech.smartboot.feat.core.common.HttpProtocol;
 
 import java.io.IOException;
 import java.util.Map;
@@ -33,9 +33,9 @@ class HttpResponseImpl extends AbstractResponse {
         if (outputStream.isCommitted()) {
             throw new IllegalStateException();
         }
-        if (request.getProtocol() == HttpProtocolEnum.HTTP_10) {
+        if (request.getProtocol() == HttpProtocol.HTTP_10) {
             throw new IllegalStateException("HTTP/1.0 request");
-        } else if (request.getProtocol() == HttpProtocolEnum.HTTP_11 && !outputStream.isChunkedSupport()) {
+        } else if (request.getProtocol() == HttpProtocol.HTTP_11 && !outputStream.isChunkedSupport()) {
             throw new IllegalStateException("unSupport trailer");
         }
         outputStream.setTrailerFields(supplier);

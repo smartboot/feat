@@ -11,7 +11,7 @@
 package tech.smartboot.feat.demo;
 
 import tech.smartboot.feat.core.common.HeaderValue;
-import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
+import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.router.Router;
@@ -35,11 +35,11 @@ public class GzipHttpDemo {
             response.write(data);
         }).route("/b", ctx -> {
             HttpResponse response = ctx.Response;
-            response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValue.ContentEncoding.GZIP);
+            response.setHeader(HeaderName.CONTENT_ENCODING.getName(), HeaderValue.ContentEncoding.GZIP);
             response.write(text.getBytes());
         }).route("/c", ctx -> {
             HttpResponse response = ctx.Response;
-            response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValue.ContentEncoding.GZIP);
+            response.setHeader(HeaderName.CONTENT_ENCODING.getName(), HeaderValue.ContentEncoding.GZIP);
             GZIPOutputStream gzipOutputStream = new GZIPOutputStream(response.getOutputStream());
             gzipOutputStream.write(("<html><body>hello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello " +
                     "worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello world").getBytes());
@@ -55,7 +55,7 @@ public class GzipHttpDemo {
             gzipOutputStream.close();
 
             byte[] data = outputStream.toByteArray();
-            response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValue.ContentEncoding.GZIP);
+            response.setHeader(HeaderName.CONTENT_ENCODING.getName(), HeaderValue.ContentEncoding.GZIP);
             response.setContentLength(data.length);
             response.write(data);
         });

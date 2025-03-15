@@ -11,7 +11,7 @@
 package tech.smartboot.feat.core.client;
 
 import tech.smartboot.feat.core.common.HeaderValue;
-import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
+import tech.smartboot.feat.core.common.HeaderName;
 
 /**
  * @author 三刀(zhengjunweimail@163.com)
@@ -69,6 +69,6 @@ public interface Header {
     }
 
     default Header keepalive(String headerValue) {
-        return set(HeaderNameEnum.CONNECTION.getName(), headerValue);
+        return set(HeaderName.CONNECTION.getName(), headerValue);
     }
 }

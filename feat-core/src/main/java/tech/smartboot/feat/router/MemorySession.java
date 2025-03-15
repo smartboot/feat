@@ -11,7 +11,7 @@
 package tech.smartboot.feat.router;
 
 import tech.smartboot.feat.core.common.Cookie;
-import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
+import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.utils.CollectionUtils;
 import tech.smartboot.feat.core.common.utils.StringUtils;
@@ -98,13 +98,13 @@ class MemorySession implements Session {
     }
 
     private void removeSessionCookie() {
-        Collection<String> preValues = request.getResponse().getHeaders(HeaderNameEnum.SET_COOKIE.getName());
+        Collection<String> preValues = request.getResponse().getHeaders(HeaderName.SET_COOKIE.getName());
         //如果在本次请求中已经为session设置过Cookie了，那么需要将本次设置的Cookie移除掉
         if (CollectionUtils.isNotEmpty(preValues)) {
-            request.getResponse().setHeader(HeaderNameEnum.SET_COOKIE.getName(), null);
+            request.getResponse().setHeader(HeaderName.SET_COOKIE.getName(), null);
             preValues.forEach(preValue -> {
                 if (!StringUtils.startsWith(preValue, DEFAULT_SESSION_COOKIE_NAME + "=")) {
-                    request.getResponse().addHeader(HeaderNameEnum.SET_COOKIE.getName(), preValue);
+                    request.getResponse().addHeader(HeaderName.SET_COOKIE.getName(), preValue);
                 }
             });
         }

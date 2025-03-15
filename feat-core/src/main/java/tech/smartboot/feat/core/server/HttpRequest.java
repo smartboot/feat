@@ -11,7 +11,7 @@
 package tech.smartboot.feat.core.server;
 
 import tech.smartboot.feat.core.common.Cookie;
-import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
+import tech.smartboot.feat.core.common.HttpProtocol;
 import tech.smartboot.feat.core.common.io.BodyInputStream;
 import tech.smartboot.feat.core.common.multipart.MultipartConfig;
 import tech.smartboot.feat.core.common.multipart.Part;
@@ -57,7 +57,7 @@ public interface HttpRequest {
 
     String getRequestURI();
 
-    HttpProtocolEnum getProtocol();
+    HttpProtocol getProtocol();
 
     /**
      * Returns the name of the HTTP method with which this

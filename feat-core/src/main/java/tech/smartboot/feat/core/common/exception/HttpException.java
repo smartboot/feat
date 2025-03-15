@@ -10,7 +10,7 @@
 
 package tech.smartboot.feat.core.common.exception;
 
-import tech.smartboot.feat.core.common.enums.HttpStatus;
+import tech.smartboot.feat.core.common.HttpStatus;
 
 /**
  * @author 三刀(zhengjunweimail@163.com)

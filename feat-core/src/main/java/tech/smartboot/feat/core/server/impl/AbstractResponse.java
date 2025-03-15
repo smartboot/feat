@@ -13,8 +13,8 @@ package tech.smartboot.feat.core.server.impl;
 import tech.smartboot.feat.core.common.Cookie;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.Reset;
-import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
-import tech.smartboot.feat.core.common.enums.HttpStatus;
+import tech.smartboot.feat.core.common.HeaderName;
+import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.io.FeatOutputStream;
 import tech.smartboot.feat.core.server.HttpResponse;
 
@@ -148,10 +148,10 @@ public abstract class AbstractResponse implements HttpResponse, Reset {
      * 部分header需要特殊处理
      */
     private boolean checkSpecialHeader(String name, String value) {
-        if (name.equalsIgnoreCase(HeaderNameEnum.CONTENT_TYPE.getName())) {
+        if (name.equalsIgnoreCase(HeaderName.CONTENT_TYPE.getName())) {
             setContentType(value);
             return true;
-        } else if (name.equalsIgnoreCase(HeaderNameEnum.CONTENT_LENGTH.getName())) {
+        } else if (name.equalsIgnoreCase(HeaderName.CONTENT_LENGTH.getName())) {
             setContentLength(Long.parseLong(value));
             return true;
         }
@@ -160,7 +160,7 @@ public abstract class AbstractResponse implements HttpResponse, Reset {
 
     @Override
     public void addCookie(Cookie cookie) {
-        addHeader(HeaderNameEnum.SET_COOKIE.getName(), cookie.toString());
+        addHeader(HeaderName.SET_COOKIE.getName(), cookie.toString());
     }
 
     @Override

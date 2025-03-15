@@ -17,9 +17,9 @@ import org.junit.Test;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpMethod;
-import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
-import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
-import tech.smartboot.feat.core.common.enums.HttpStatus;
+import tech.smartboot.feat.core.common.HeaderName;
+import tech.smartboot.feat.core.common.HttpProtocol;
+import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.test.BastTest;
@@ -60,22 +60,22 @@ public class HttpServer2Test extends BastTest {
         });
         tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.get("/").submit().get();
         Assert.assertEquals(httpResponse.getContentType(), "test");
-        Assert.assertEquals(httpResponse.getHeader(HeaderNameEnum.TRANSFER_ENCODING.getName()), HeaderValue.TransferEncoding.CHUNKED);
+        Assert.assertEquals(httpResponse.getHeader(HeaderName.TRANSFER_ENCODING.getName()), HeaderValue.TransferEncoding.CHUNKED);
     }
 
     @Test
     public void test2() throws ExecutionException, InterruptedException {
         bootstrap.httpHandler(request -> request.getResponse().write("Hello World".getBytes(StandardCharsets.UTF_8)));
         tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.get("/").submit().get();
-        Assert.assertEquals(httpResponse.getProtocol(), HttpProtocolEnum.HTTP_11.getProtocol());
-        Assert.assertEquals(httpResponse.getHeader(HeaderNameEnum.TRANSFER_ENCODING.getName()), HeaderValue.TransferEncoding.CHUNKED);
+        Assert.assertEquals(httpResponse.getProtocol(), HttpProtocol.HTTP_11.getProtocol());
+        Assert.assertEquals(httpResponse.getHeader(HeaderName.TRANSFER_ENCODING.getName()), HeaderValue.TransferEncoding.CHUNKED);
     }
 
     @Test
     public void testPut() throws ExecutionException, InterruptedException {
         bootstrap.httpHandler(request -> request.getResponse().write("Hello World".getBytes(StandardCharsets.UTF_8)));
         tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.rest(HttpMethod.PUT, "/").submit().get();
-        Assert.assertEquals(httpResponse.getProtocol(), HttpProtocolEnum.HTTP_11.getProtocol());
+        Assert.assertEquals(httpResponse.getProtocol(), HttpProtocol.HTTP_11.getProtocol());
         Assert.assertEquals(httpResponse.statusCode(), HttpStatus.OK.value());
     }
 
@@ -88,7 +88,7 @@ public class HttpServer2Test extends BastTest {
         for (int i = 0; i < 10; i++) {
             String body = "hello" + i;
             tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.post("/").header(h -> h.setContentLength(body.length())).body(b -> b.write(body)).submit().get();
-            Assert.assertEquals(httpResponse.getProtocol(), HttpProtocolEnum.HTTP_11.getProtocol());
+            Assert.assertEquals(httpResponse.getProtocol(), HttpProtocol.HTTP_11.getProtocol());
             Assert.assertEquals(httpResponse.statusCode(), HttpStatus.OK.value());
             Assert.assertEquals(httpResponse.body(), "Hello World");
         }
@@ -106,7 +106,7 @@ public class HttpServer2Test extends BastTest {
         for (int i = 0; i < 10; i++) {
             String body = "hello" + i;
             tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.post("/").header(h -> h.keepalive(true).setContentLength(body.length())).body(b -> b.write(body)).submit().get();
-            Assert.assertEquals(httpResponse.getProtocol(), HttpProtocolEnum.HTTP_11.getProtocol());
+            Assert.assertEquals(httpResponse.getProtocol(), HttpProtocol.HTTP_11.getProtocol());
             Assert.assertEquals(httpResponse.statusCode(), HttpStatus.OK.value());
             Assert.assertEquals(httpResponse.body(), body);
         }
@@ -133,7 +133,7 @@ public class HttpServer2Test extends BastTest {
         });
 
         tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.post("/").header(h -> h.keepalive(true)).body().formUrlencoded(param).submit().get();
-        Assert.assertEquals(httpResponse.getProtocol(), HttpProtocolEnum.HTTP_11.getProtocol());
+        Assert.assertEquals(httpResponse.getProtocol(), HttpProtocol.HTTP_11.getProtocol());
         Assert.assertEquals(httpResponse.statusCode(), HttpStatus.OK.value());
         Assert.assertEquals("ok", httpResponse.body());
     }

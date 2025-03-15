@@ -18,8 +18,8 @@ import org.smartboot.socket.transport.AioQuickClient;
 import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.client.impl.HttpRequestImpl;
 import tech.smartboot.feat.core.common.HeaderValue;
-import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
-import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
+import tech.smartboot.feat.core.common.HeaderName;
+import tech.smartboot.feat.core.common.HttpProtocol;
 import tech.smartboot.feat.core.common.utils.Constant;
 import tech.smartboot.feat.core.common.utils.NumberUtils;
 import tech.smartboot.feat.core.common.utils.StringUtils;
@@ -128,7 +128,7 @@ public final class HttpClient {
                 try {
                     return super.submit();
                 } finally {
-                    if (HeaderValue.Connection.KEEPALIVE.equals(getRequest().getHeader(HeaderNameEnum.CONNECTION.getName()))) {
+                    if (HeaderValue.Connection.KEEPALIVE.equals(getRequest().getHeader(HeaderName.CONNECTION.getName()))) {
                         semaphore.release();
                     }
                 }
@@ -155,12 +155,12 @@ public final class HttpClient {
     private void initRest(HttpRestImpl httpRestImpl, String uri) {
         HttpRequestImpl request = httpRestImpl.getRequest();
         if (options.getProxy() != null && StringUtils.isNotBlank(options.getProxy().getProxyUserName())) {
-            request.addHeader(HeaderNameEnum.PROXY_AUTHORIZATION.getName(),
+            request.addHeader(HeaderName.PROXY_AUTHORIZATION.getName(),
                     "Basic " + Base64.getEncoder().encodeToString((options.getProxy().getProxyUserName() + ":" + options.getProxy().getProxyPassword()).getBytes()));
         }
         request.setUri(uri);
-        request.addHeader(HeaderNameEnum.HOST.getName(), hostHeader);
-        request.setProtocol(HttpProtocolEnum.HTTP_11.getProtocol());
+        request.addHeader(HeaderName.HOST.getName(), hostHeader);
+        request.setProtocol(HttpProtocol.HTTP_11.getProtocol());
 
         httpRestImpl.getCompletableFuture().thenAccept(httpResponse -> {
             AioSession session = client.getSession();
@@ -171,7 +171,7 @@ public final class HttpClient {
                 attachment.setResponse(queue.poll());
             }
             //request标注为keep-alive，response不包含该header,默认保持连接.
-            if (HeaderValue.Connection.KEEPALIVE.equalsIgnoreCase(request.getHeader(HeaderNameEnum.CONNECTION.getName())) && httpResponse.getHeader(HeaderNameEnum.CONNECTION.getName()) == null) {
+            if (HeaderValue.Connection.KEEPALIVE.equalsIgnoreCase(request.getHeader(HeaderName.CONNECTION.getName())) && httpResponse.getHeader(HeaderName.CONNECTION.getName()) == null) {
                 return;
             }
             //存在链路复用情况
@@ -179,9 +179,9 @@ public final class HttpClient {
                 return;
             }
             //非keep-alive,主动断开连接
-            if (!HeaderValue.Connection.KEEPALIVE.equalsIgnoreCase(httpResponse.getHeader(HeaderNameEnum.CONNECTION.getName()))) {
+            if (!HeaderValue.Connection.KEEPALIVE.equalsIgnoreCase(httpResponse.getHeader(HeaderName.CONNECTION.getName()))) {
                 close();
-            } else if (!HeaderValue.Connection.KEEPALIVE.equalsIgnoreCase(request.getHeader(HeaderNameEnum.CONNECTION.getName()))) {
+            } else if (!HeaderValue.Connection.KEEPALIVE.equalsIgnoreCase(request.getHeader(HeaderName.CONNECTION.getName()))) {
                 close();
             }
         });

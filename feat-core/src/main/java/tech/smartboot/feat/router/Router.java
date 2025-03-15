@@ -13,8 +13,8 @@ package tech.smartboot.feat.router;
 import org.smartboot.socket.timer.HashedWheelTimer;
 import org.smartboot.socket.timer.TimerTask;
 import tech.smartboot.feat.core.common.Cookie;
-import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
-import tech.smartboot.feat.core.common.enums.HttpStatus;
+import tech.smartboot.feat.core.common.HttpProtocol;
+import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.server.HttpHandler;
@@ -105,7 +105,7 @@ public final class Router implements HttpHandler {
 
     @Override
     public void handle(HttpRequest request, CompletableFuture<Object> completableFuture) throws Throwable {
-        if (request.getProtocol() == HttpProtocolEnum.HTTP_2) {
+        if (request.getProtocol() == HttpProtocol.HTTP_2) {
             HttpHandler httpServerHandler = matchHandler(request.getRequestURI());
             httpServerHandler.handle(request, completableFuture);
         } else {

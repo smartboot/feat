@@ -13,7 +13,7 @@ package tech.smartboot.feat.core.server.upgrade.http2;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.Reset;
 import tech.smartboot.feat.core.common.HttpMethod;
-import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
+import tech.smartboot.feat.core.common.HttpProtocol;
 import tech.smartboot.feat.core.common.io.BodyInputStream;
 import tech.smartboot.feat.core.common.io.ReadListener;
 import tech.smartboot.feat.core.common.multipart.MultipartConfig;
@@ -53,7 +53,7 @@ public class Http2Endpoint extends Endpoint implements HttpRequest, Reset {
         this.streamId = streamId;
         this.session = session;
         response = new Http2ResponseImpl(streamId, this, push);
-        setProtocol(HttpProtocolEnum.HTTP_2);
+        setProtocol(HttpProtocol.HTTP_2);
     }
 
 

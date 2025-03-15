@@ -29,7 +29,7 @@ import tech.smartboot.feat.core.client.HttpPost;
 import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.client.stream.ServerSentEventStream;
 import tech.smartboot.feat.core.client.stream.Stream;
-import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
+import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 
 import java.io.ByteArrayOutputStream;
@@ -224,7 +224,7 @@ public class ChatModel {
             opts.debug(options.isDebug());
         }, header -> {
             if (StringUtils.isNotBlank(options.getApiKey())) {
-                header.add(HeaderNameEnum.AUTHORIZATION.getName(), "Bearer " + options.getApiKey());
+                header.add(HeaderName.AUTHORIZATION.getName(), "Bearer " + options.getApiKey());
             }
             options.getHeaders().forEach(header::add);
         }, request);

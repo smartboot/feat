@@ -18,7 +18,7 @@ import org.junit.Test;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.common.HeaderValue;
-import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
+import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.router.Router;
@@ -45,7 +45,7 @@ public class HttpRestTest {
         routeHandler.route("/post", ctx -> {
             HttpRequest request = ctx.Request;
             tech.smartboot.feat.core.server.HttpResponse response = request.getResponse();
-            response.setHeader(HeaderNameEnum.CONNECTION.getName(), HeaderValue.Connection.keepalive);
+            response.setHeader(HeaderName.CONNECTION.getName(), HeaderValue.Connection.keepalive);
             JSONObject jsonObject = new JSONObject();
             for (String key : request.getParameters().keySet()) {
                 jsonObject.put(key, request.getParameter(key));

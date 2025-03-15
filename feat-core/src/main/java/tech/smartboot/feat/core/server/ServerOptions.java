@@ -14,7 +14,7 @@ import org.smartboot.socket.extension.plugins.Plugin;
 import org.smartboot.socket.extension.plugins.ProxyProtocolPlugin;
 import org.smartboot.socket.extension.plugins.SslPlugin;
 import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
-import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
+import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.utils.ByteTree;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.impl.HttpEndpoint;
@@ -40,7 +40,7 @@ public class ServerOptions {
      */
     private final ByteTree<HttpHandler> uriByteTree = new ByteTree<>(16 * 1024);
 
-    private final ByteTree<HeaderNameEnum> headerNameByteTree = new ByteTree<>(16 * 1024);
+    private final ByteTree<HeaderName> headerNameByteTree = new ByteTree<>(16 * 1024);
 
     /**
      * smart-socket 插件
@@ -193,7 +193,7 @@ public class ServerOptions {
         return byteCache;
     }
 
-    public ByteTree<HeaderNameEnum> getHeaderNameByteTree() {
+    public ByteTree<HeaderName> getHeaderNameByteTree() {
         return headerNameByteTree;
     }
 

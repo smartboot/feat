@@ -8,7 +8,7 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.core.common.enums;
+package tech.smartboot.feat.core.common;
 
 import org.smartboot.socket.transport.WriteBuffer;
 import tech.smartboot.feat.core.common.utils.Constant;

@@ -11,7 +11,7 @@
 package tech.smartboot.feat.core.common.multipart;
 
 import tech.smartboot.feat.core.common.HeaderValue;
-import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
+import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 
 import java.io.File;
@@ -81,7 +81,7 @@ public class PartImpl implements Part {
         if (contentType != null) {
             return contentType;
         }
-        contentType = getHeader(HeaderNameEnum.CONTENT_TYPE.getName());
+        contentType = getHeader(HeaderName.CONTENT_TYPE.getName());
         return contentType;
     }
 

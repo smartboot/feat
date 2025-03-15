@@ -8,20 +8,20 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.core.common.enums;
+package tech.smartboot.feat.core.common;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
-public enum HttpProtocolEnum {
-    HTTP_11("HTTP/1.1"),
-    HTTP_10("HTTP/1.0"),
-    HTTP_2("HTTP/2.0");
+public class HttpProtocol {
+    public static final HttpProtocol HTTP_11 = new HttpProtocol("HTTP/1.1");
+    public static final HttpProtocol HTTP_10 = new HttpProtocol("HTTP/1.0");
+    public static final HttpProtocol HTTP_2 = new HttpProtocol("HTTP/2.0");
 
     private final String protocol;
 
-    HttpProtocolEnum(String protocol) {
+    HttpProtocol(String protocol) {
         this.protocol = protocol;
     }
 

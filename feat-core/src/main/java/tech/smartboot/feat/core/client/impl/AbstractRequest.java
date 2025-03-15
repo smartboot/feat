@@ -13,9 +13,9 @@ package tech.smartboot.feat.core.client.impl;
 import tech.smartboot.feat.core.client.HttpRequest;
 import tech.smartboot.feat.core.common.Cookie;
 import tech.smartboot.feat.core.common.HeaderValue;
-import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
+import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HttpMethod;
-import tech.smartboot.feat.core.common.enums.HttpProtocolEnum;
+import tech.smartboot.feat.core.common.HttpProtocol;
 import tech.smartboot.feat.core.common.io.FeatOutputStream;
 
 import java.io.IOException;
@@ -124,10 +124,10 @@ class AbstractRequest implements HttpRequest {
      * 部分header需要特殊处理
      */
     private boolean checkSpecialHeader(String name, String value) {
-        if (name.equalsIgnoreCase(HeaderNameEnum.CONTENT_TYPE.getName())) {
+        if (name.equalsIgnoreCase(HeaderName.CONTENT_TYPE.getName())) {
             setContentType(value);
             return true;
-        } else if (name.equalsIgnoreCase(HeaderNameEnum.CONTENT_LENGTH.getName())) {
+        } else if (name.equalsIgnoreCase(HeaderName.CONTENT_LENGTH.getName())) {
             setContentLength(Integer.parseInt(value));
             return true;
         }
@@ -232,7 +232,7 @@ class AbstractRequest implements HttpRequest {
 
     public void setProtocol(String protocol) {
         this.protocol = protocol;
-        if (!HttpProtocolEnum.HTTP_11.getProtocol().equals(protocol)) {
+        if (!HttpProtocol.HTTP_11.getProtocol().equals(protocol)) {
             outputStream.disableChunked();
         }
     }

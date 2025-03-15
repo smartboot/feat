@@ -20,7 +20,7 @@ import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpPost;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpMethod;
-import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
+import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.test.BastTest;
@@ -54,7 +54,7 @@ public class HttpServer3Test extends BastTest {
             //随机启用GZIP
             OutputStream outputStream;
             if (System.currentTimeMillis() % 2 == 0) {
-                response.setHeader(HeaderNameEnum.CONTENT_ENCODING.getName(), HeaderValue.ContentEncoding.GZIP);
+                response.setHeader(HeaderName.CONTENT_ENCODING.getName(), HeaderValue.ContentEncoding.GZIP);
                 outputStream = new GZIPOutputStream(response.getOutputStream());
             } else {
                 outputStream = response.getOutputStream();

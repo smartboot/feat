@@ -14,7 +14,7 @@ import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.client.impl.HttpRequestImpl;
 import tech.smartboot.feat.core.client.impl.HttpResponseImpl;
 import tech.smartboot.feat.core.client.stream.Stream;
-import tech.smartboot.feat.core.common.enums.HeaderNameEnum;
+import tech.smartboot.feat.core.common.HeaderName;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -59,8 +59,8 @@ class HttpRestImpl implements HttpRest {
         commit = true;
         resetUri();
         Collection<String> headers = request.getHeaderNames();
-        if (!headers.contains(HeaderNameEnum.USER_AGENT.getName())) {
-            request.addHeader(HeaderNameEnum.USER_AGENT.getName(), DEFAULT_USER_AGENT);
+        if (!headers.contains(HeaderName.USER_AGENT.getName())) {
+            request.addHeader(HeaderName.USER_AGENT.getName(), DEFAULT_USER_AGENT);
         }
         AioSession session = response.getSession();
         DecoderUnit attachment = session.getAttachment();
