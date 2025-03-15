@@ -79,7 +79,7 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
         } else {
             state = STATE_FINISH;
         }
-        if (StringUtils.equals(HeaderValue.ContentEncoding.GZIP, getHeader(HeaderName.CONTENT_ENCODING.getName()))) {
+        if (StringUtils.equals(HeaderValue.ContentEncoding.GZIP, getHeader(HeaderName.CONTENT_ENCODING))) {
             state = STATE_GZIP | state;
             streaming = new GzipStream(streaming);
         }
