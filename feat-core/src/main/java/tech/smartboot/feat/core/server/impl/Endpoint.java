@@ -12,11 +12,11 @@ package tech.smartboot.feat.core.server.impl;
 
 import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.common.Cookie;
-import tech.smartboot.feat.core.common.HeaderValue;
-import tech.smartboot.feat.core.common.Reset;
 import tech.smartboot.feat.core.common.HeaderName;
+import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpProtocol;
 import tech.smartboot.feat.core.common.HttpStatus;
+import tech.smartboot.feat.core.common.Reset;
 import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.common.io.BodyInputStream;
 import tech.smartboot.feat.core.common.logging.Logger;
@@ -403,7 +403,7 @@ public abstract class Endpoint implements Reset {
 
 
     public final Enumeration<Locale> getLocales() {
-        Collection<String> acceptLanguage = getHeaders(HeaderName.ACCEPT_LANGUAGE);
+        Collection<String> acceptLanguage = getHeaders(HeaderName.ACCEPT_LANGUAGE.getName());
         if (acceptLanguage.isEmpty()) {
             return Collections.enumeration(Collections.singletonList(defaultLocale));
         }
