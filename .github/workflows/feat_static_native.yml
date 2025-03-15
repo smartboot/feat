@@ -34,13 +34,13 @@ jobs:
       - name: Set up Maven 3.9
         uses: stCarolas/setup-maven@v5
       - name: Build Feat
-        run: mvn -B install --file pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
+        run: mvn -B install --file pom.xml -DskipTests
       - name: Build Feat Static
-        run: mvn -B install --file deploy/feat_static/pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
+        run: mvn -B install --file deploy/feat_static/pom.xml -DskipTests
 
       - uses: graalvm/setup-graalvm@v1
         with:
-          java-version: '23'
+          java-version: '8'
           distribution: 'graalvm'
           github-token: ${{ secrets.GITHUB_TOKEN }}
           native-image-job-reports: 'true'
