@@ -11,6 +11,7 @@
 package tech.smartboot.feat.core.server;
 
 import tech.smartboot.feat.core.common.Cookie;
+import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HttpProtocol;
 import tech.smartboot.feat.core.common.io.BodyInputStream;
 import tech.smartboot.feat.core.common.multipart.MultipartConfig;
@@ -27,7 +28,7 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 public interface HttpRequest {
@@ -47,6 +48,10 @@ public interface HttpRequest {
      * @return
      */
     String getHeader(String headName);
+
+    default String getHeader(HeaderName headName) {
+        return getHeader(headName.getName());
+    }
 
 
     Collection<String> getHeaders(String name);

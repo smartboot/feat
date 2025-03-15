@@ -403,7 +403,7 @@ public abstract class Endpoint implements Reset {
 
 
     public final Enumeration<Locale> getLocales() {
-        Collection<String> acceptLanguage = getHeaders(HeaderName.ACCEPT_LANGUAGE.getName());
+        Collection<String> acceptLanguage = getHeaders(HeaderName.ACCEPT_LANGUAGE);
         if (acceptLanguage.isEmpty()) {
             return Collections.enumeration(Collections.singletonList(defaultLocale));
         }

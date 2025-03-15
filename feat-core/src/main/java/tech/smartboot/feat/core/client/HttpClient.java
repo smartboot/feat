@@ -17,8 +17,8 @@ import org.smartboot.socket.extension.ssl.factory.ClientSSLContextFactory;
 import org.smartboot.socket.transport.AioQuickClient;
 import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.client.impl.HttpRequestImpl;
-import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HeaderName;
+import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpProtocol;
 import tech.smartboot.feat.core.common.utils.Constant;
 import tech.smartboot.feat.core.common.utils.NumberUtils;
@@ -30,7 +30,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 public final class HttpClient {
@@ -128,7 +128,7 @@ public final class HttpClient {
                 try {
                     return super.submit();
                 } finally {
-                    if (HeaderValue.Connection.KEEPALIVE.equals(getRequest().getHeader(HeaderName.CONNECTION.getName()))) {
+                    if (HeaderValue.Connection.KEEPALIVE.equals(getRequest().getHeader(HeaderName.CONNECTION))) {
                         semaphore.release();
                     }
                 }
@@ -155,11 +155,11 @@ public final class HttpClient {
     private void initRest(HttpRestImpl httpRestImpl, String uri) {
         HttpRequestImpl request = httpRestImpl.getRequest();
         if (options.getProxy() != null && StringUtils.isNotBlank(options.getProxy().getProxyUserName())) {
-            request.addHeader(HeaderName.PROXY_AUTHORIZATION.getName(),
+            request.addHeader(HeaderName.PROXY_AUTHORIZATION,
                     "Basic " + Base64.getEncoder().encodeToString((options.getProxy().getProxyUserName() + ":" + options.getProxy().getProxyPassword()).getBytes()));
         }
         request.setUri(uri);
-        request.addHeader(HeaderName.HOST.getName(), hostHeader);
+        request.addHeader(HeaderName.HOST, hostHeader);
         request.setProtocol(HttpProtocol.HTTP_11.getProtocol());
 
         httpRestImpl.getCompletableFuture().thenAccept(httpResponse -> {
@@ -171,7 +171,7 @@ public final class HttpClient {
                 attachment.setResponse(queue.poll());
             }
             //request标注为keep-alive，response不包含该header,默认保持连接.
-            if (HeaderValue.Connection.KEEPALIVE.equalsIgnoreCase(request.getHeader(HeaderName.CONNECTION.getName())) && httpResponse.getHeader(HeaderName.CONNECTION.getName()) == null) {
+            if (HeaderValue.Connection.KEEPALIVE.equalsIgnoreCase(request.getHeader(HeaderName.CONNECTION)) && httpResponse.getHeader(HeaderName.CONNECTION) == null) {
                 return;
             }
             //存在链路复用情况
@@ -179,9 +179,9 @@ public final class HttpClient {
                 return;
             }
             //非keep-alive,主动断开连接
-            if (!HeaderValue.Connection.KEEPALIVE.equalsIgnoreCase(httpResponse.getHeader(HeaderName.CONNECTION.getName()))) {
+            if (!HeaderValue.Connection.KEEPALIVE.equalsIgnoreCase(httpResponse.getHeader(HeaderName.CONNECTION))) {
                 close();
-            } else if (!HeaderValue.Connection.KEEPALIVE.equalsIgnoreCase(request.getHeader(HeaderName.CONNECTION.getName()))) {
+            } else if (!HeaderValue.Connection.KEEPALIVE.equalsIgnoreCase(request.getHeader(HeaderName.CONNECTION))) {
                 close();
             }
         });

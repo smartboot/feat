@@ -60,7 +60,7 @@ public class HttpServer2Test extends BastTest {
         });
         tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.get("/").submit().get();
         Assert.assertEquals(httpResponse.getContentType(), "test");
-        Assert.assertEquals(httpResponse.getHeader(HeaderName.TRANSFER_ENCODING.getName()), HeaderValue.TransferEncoding.CHUNKED);
+        Assert.assertEquals(httpResponse.getHeader(HeaderName.TRANSFER_ENCODING), HeaderValue.TransferEncoding.CHUNKED);
     }
 
     @Test
@@ -68,7 +68,7 @@ public class HttpServer2Test extends BastTest {
         bootstrap.httpHandler(request -> request.getResponse().write("Hello World".getBytes(StandardCharsets.UTF_8)));
         tech.smartboot.feat.core.client.HttpResponse httpResponse = httpClient.get("/").submit().get();
         Assert.assertEquals(httpResponse.getProtocol(), HttpProtocol.HTTP_11.getProtocol());
-        Assert.assertEquals(httpResponse.getHeader(HeaderName.TRANSFER_ENCODING.getName()), HeaderValue.TransferEncoding.CHUNKED);
+        Assert.assertEquals(httpResponse.getHeader(HeaderName.TRANSFER_ENCODING), HeaderValue.TransferEncoding.CHUNKED);
     }
 
     @Test

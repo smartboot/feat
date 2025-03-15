@@ -318,7 +318,7 @@ public final class HttpMessageProcessor extends AbstractMessageProcessor<HttpEnd
         if (keepAlive && HttpProtocol.HTTP_10 == abstractRequest.getProtocol()) {
             keepAlive = HeaderValue.Connection.KEEPALIVE.equalsIgnoreCase(connection);
             if (keepAlive) {
-                response.setHeader(HeaderName.CONNECTION.getName(), HeaderValue.Connection.KEEPALIVE);
+                response.setHeader(HeaderName.CONNECTION, HeaderValue.Connection.KEEPALIVE);
             }
         }
         return keepAlive;

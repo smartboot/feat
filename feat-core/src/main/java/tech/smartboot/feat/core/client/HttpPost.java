@@ -36,7 +36,7 @@ public final class HttpPost extends HttpRestWrapper {
 
     public HttpPost postJson(Object object) {
         byte[] bytes = JSON.toJSONBytes(object);
-        header().set(HeaderName.CONTENT_TYPE.getName(), HeaderValue.ContentType.APPLICATION_JSON_UTF8).set(HeaderName.CONTENT_LENGTH.getName(), bytes.length);
+        header().set(HeaderName.CONTENT_TYPE, HeaderValue.ContentType.APPLICATION_JSON_UTF8).set(HeaderName.CONTENT_LENGTH, bytes.length);
         body().write(bytes);
         return this;
     }

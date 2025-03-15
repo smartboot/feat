@@ -11,12 +11,13 @@
 package tech.smartboot.feat.core.client;
 
 import tech.smartboot.feat.core.common.Cookie;
+import tech.smartboot.feat.core.common.HeaderName;
 
 import java.io.IOException;
 import java.util.Collection;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 public interface HttpRequest {
@@ -40,6 +41,10 @@ public interface HttpRequest {
      */
     void setHeader(String name, String value);
 
+    default void setHeader(HeaderName name, String value) {
+        setHeader(name.getName(), value);
+    }
+
     /**
      * Adds a response header with the given name and value. This method allows
      * response headers to have multiple values.
@@ -51,6 +56,14 @@ public interface HttpRequest {
      * @see #setHeader
      */
     void addHeader(String name, String value);
+
+    default void addHeader(HeaderName name, String value) {
+        addHeader(name.getName(), value);
+    }
+
+    default String getHeader(HeaderName name) {
+        return getHeader(name.getName());
+    }
 
     String getHeader(String name);
 

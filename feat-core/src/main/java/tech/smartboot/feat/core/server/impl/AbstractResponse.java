@@ -160,7 +160,7 @@ public abstract class AbstractResponse implements HttpResponse, Reset {
 
     @Override
     public void addCookie(Cookie cookie) {
-        addHeader(HeaderName.SET_COOKIE.getName(), cookie.toString());
+        addHeader(HeaderName.SET_COOKIE, cookie.toString());
     }
 
     @Override

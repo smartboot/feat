@@ -71,9 +71,9 @@ public class WebSocketUpgrade extends Upgrade {
         byte[] sha1 = SHA1.encode(acceptSeed);
         String accept = Base64.getEncoder().encodeToString(sha1);
         response.setHttpStatus(HttpStatus.SWITCHING_PROTOCOLS);
-        response.setHeader(HeaderName.UPGRADE.getName(), HeaderValue.Upgrade.WEBSOCKET);
-        response.setHeader(HeaderName.CONNECTION.getName(), HeaderValue.Connection.UPGRADE);
-        response.setHeader(HeaderName.Sec_WebSocket_Accept.getName(), accept);
+        response.setHeader(HeaderName.UPGRADE, HeaderValue.Upgrade.WEBSOCKET);
+        response.setHeader(HeaderName.CONNECTION, HeaderValue.Connection.UPGRADE);
+        response.setHeader(HeaderName.Sec_WebSocket_Accept, accept);
         OutputStream outputStream = response.getOutputStream();
         outputStream.flush();
 

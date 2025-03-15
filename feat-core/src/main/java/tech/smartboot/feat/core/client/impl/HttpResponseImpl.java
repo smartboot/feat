@@ -70,7 +70,7 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
 
     @Override
     public void onHeaderComplete() {
-        String transferEncoding = getHeader(HeaderName.TRANSFER_ENCODING.getName());
+        String transferEncoding = getHeader(HeaderName.TRANSFER_ENCODING);
         if (StringUtils.equals(transferEncoding, HeaderValue.TransferEncoding.CHUNKED)) {
             state = STATE_CHUNK_LENGTH;
         } else if (getContentLength() > 0) {

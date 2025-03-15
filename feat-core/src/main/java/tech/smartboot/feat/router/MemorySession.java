@@ -98,13 +98,13 @@ class MemorySession implements Session {
     }
 
     private void removeSessionCookie() {
-        Collection<String> preValues = request.getResponse().getHeaders(HeaderName.SET_COOKIE.getName());
+        Collection<String> preValues = request.getResponse().getHeaders(HeaderName.SET_COOKIE);
         //如果在本次请求中已经为session设置过Cookie了，那么需要将本次设置的Cookie移除掉
         if (CollectionUtils.isNotEmpty(preValues)) {
-            request.getResponse().setHeader(HeaderName.SET_COOKIE.getName(), null);
+            request.getResponse().setHeader(HeaderName.SET_COOKIE, null);
             preValues.forEach(preValue -> {
                 if (!StringUtils.startsWith(preValue, DEFAULT_SESSION_COOKIE_NAME + "=")) {
-                    request.getResponse().addHeader(HeaderName.SET_COOKIE.getName(), preValue);
+                    request.getResponse().addHeader(HeaderName.SET_COOKIE, preValue);
                 }
             });
         }

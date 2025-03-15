@@ -46,7 +46,7 @@ public class Test {
                 System.out.println(new String(body, 0, len, StandardCharsets.UTF_8));
                 System.out.println(inputStream.read(body));
             }
-            response.setHeader(HeaderName.CONNECTION.getName(), HeaderValue.Connection.KEEPALIVE);
+            response.setHeader(HeaderName.CONNECTION, HeaderValue.Connection.KEEPALIVE);
             response.write("success".getBytes());
         });
         bootstrap

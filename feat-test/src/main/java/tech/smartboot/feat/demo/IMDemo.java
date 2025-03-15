@@ -36,7 +36,7 @@ public class IMDemo {
         Router routeHandle = new Router();
         routeHandle.route("/", ctx -> {
             HttpRequest request = ctx.Request;
-            if (request.getHeader(HeaderName.UPGRADE.getName()).equalsIgnoreCase("websocket")) {
+            if (request.getHeader(HeaderName.UPGRADE).equalsIgnoreCase("websocket")) {
                 request.upgrade(new WebSocketUpgrade() {
                     private Map<WebSocketRequest, WebSocketResponse> sessionMap = new ConcurrentHashMap<>();
 

@@ -10,13 +10,15 @@
 
 package tech.smartboot.feat.core.common.multipart;
 
+import tech.smartboot.feat.core.common.HeaderName;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 public interface Part {
@@ -40,6 +42,9 @@ public interface Part {
 
     void delete() throws IOException;
 
+    default String getHeader(HeaderName name) {
+        return getHeader(name.getName());
+    }
 
     String getHeader(String name);
 

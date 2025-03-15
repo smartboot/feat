@@ -27,7 +27,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 public class EmbeddingModel {
@@ -45,9 +45,9 @@ public class EmbeddingModel {
         });
         HttpPost httpPost = httpClient.post("/v1/embeddings").header(header -> {
             if (StringUtils.isNotBlank(options.getApiKey())) {
-                header.add(HeaderName.AUTHORIZATION.getName(), "Bearer " + options.getApiKey());
+                header.add(HeaderName.AUTHORIZATION, "Bearer " + options.getApiKey());
             }
-            header.add(HeaderName.CONTENT_TYPE.getName(), "application/json").add(HeaderName.CONTENT_LENGTH.getName(), bytes.length);
+            header.add(HeaderName.CONTENT_TYPE, "application/json").add(HeaderName.CONTENT_LENGTH, bytes.length);
         });
 
         httpPost.body().write(bytes);

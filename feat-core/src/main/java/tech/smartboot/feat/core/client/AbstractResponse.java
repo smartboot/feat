@@ -119,7 +119,7 @@ public abstract class AbstractResponse implements Response, Reset {
         if (contentType != null) {
             return contentType;
         }
-        contentType = getHeader(HeaderName.CONTENT_TYPE.getName());
+        contentType = getHeader(HeaderName.CONTENT_TYPE);
         return contentType;
     }
 
@@ -128,7 +128,7 @@ public abstract class AbstractResponse implements Response, Reset {
             return contentLength;
         }
         //不包含content-length,则为：-1
-        contentLength = NumberUtils.toLong(getHeader(HeaderName.CONTENT_LENGTH.getName()), NONE_CONTENT_LENGTH);
+        contentLength = NumberUtils.toLong(getHeader(HeaderName.CONTENT_LENGTH), NONE_CONTENT_LENGTH);
         return contentLength;
     }
 

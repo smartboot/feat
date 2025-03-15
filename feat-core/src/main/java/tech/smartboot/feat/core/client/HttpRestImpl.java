@@ -32,7 +32,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 class HttpRestImpl implements HttpRest {
@@ -60,7 +60,7 @@ class HttpRestImpl implements HttpRest {
         resetUri();
         Collection<String> headers = request.getHeaderNames();
         if (!headers.contains(HeaderName.USER_AGENT.getName())) {
-            request.addHeader(HeaderName.USER_AGENT.getName(), DEFAULT_USER_AGENT);
+            request.addHeader(HeaderName.USER_AGENT, DEFAULT_USER_AGENT);
         }
         AioSession session = response.getSession();
         DecoderUnit attachment = session.getAttachment();

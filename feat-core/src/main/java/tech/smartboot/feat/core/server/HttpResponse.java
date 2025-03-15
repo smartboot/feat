@@ -11,6 +11,7 @@
 package tech.smartboot.feat.core.server;
 
 import tech.smartboot.feat.core.common.Cookie;
+import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.io.FeatOutputStream;
 
@@ -20,7 +21,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 public interface HttpResponse {
@@ -68,6 +69,10 @@ public interface HttpResponse {
      */
     void setHeader(String name, String value);
 
+    default void setHeader(HeaderName name, String value) {
+        setHeader(name.getName(), value);
+    }
+
     /**
      * Adds a response header with the given name and value. This method allows
      * response headers to have multiple values.
@@ -79,6 +84,14 @@ public interface HttpResponse {
      * @see #setHeader
      */
     void addHeader(String name, String value);
+
+    default void addHeader(HeaderName name, String value) {
+        addHeader(name.getName(), value);
+    }
+
+    default String getHeader(HeaderName name) {
+        return getHeader(name.getName());
+    }
 
     String getHeader(String name);
 
@@ -93,6 +106,10 @@ public interface HttpResponse {
      * @since Servlet 3.0
      */
     Collection<String> getHeaders(String name);
+
+    default Collection<String> getHeaders(HeaderName name) {
+        return getHeaders(name.getName());
+    }
 
     /**
      * Get the header names set for this HTTP response.

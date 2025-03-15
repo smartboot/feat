@@ -35,11 +35,11 @@ public class GzipHttpDemo {
             response.write(data);
         }).route("/b", ctx -> {
             HttpResponse response = ctx.Response;
-            response.setHeader(HeaderName.CONTENT_ENCODING.getName(), HeaderValue.ContentEncoding.GZIP);
+            response.setHeader(HeaderName.CONTENT_ENCODING, HeaderValue.ContentEncoding.GZIP);
             response.write(text.getBytes());
         }).route("/c", ctx -> {
             HttpResponse response = ctx.Response;
-            response.setHeader(HeaderName.CONTENT_ENCODING.getName(), HeaderValue.ContentEncoding.GZIP);
+            response.setHeader(HeaderName.CONTENT_ENCODING, HeaderValue.ContentEncoding.GZIP);
             GZIPOutputStream gzipOutputStream = new GZIPOutputStream(response.getOutputStream());
             gzipOutputStream.write(("<html><body>hello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello " +
                     "worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello world").getBytes());
@@ -55,7 +55,7 @@ public class GzipHttpDemo {
             gzipOutputStream.close();
 
             byte[] data = outputStream.toByteArray();
-            response.setHeader(HeaderName.CONTENT_ENCODING.getName(), HeaderValue.ContentEncoding.GZIP);
+            response.setHeader(HeaderName.CONTENT_ENCODING, HeaderValue.ContentEncoding.GZIP);
             response.setContentLength(data.length);
             response.write(data);
         });

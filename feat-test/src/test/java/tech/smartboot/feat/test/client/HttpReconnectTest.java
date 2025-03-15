@@ -42,7 +42,7 @@ public class HttpReconnectTest {
         routeHandler.route("/post", ctx -> {
             HttpRequest request = ctx.Request;
             tech.smartboot.feat.core.server.HttpResponse response = ctx.Response;
-            response.setHeader(HeaderName.CONNECTION.getName(), HeaderValue.Connection.keepalive);
+            response.setHeader(HeaderName.CONNECTION, HeaderValue.Connection.keepalive);
             JSONObject jsonObject = new JSONObject();
             for (String key : request.getParameters().keySet()) {
                 jsonObject.put(key, request.getParameter(key));

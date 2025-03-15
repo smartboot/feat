@@ -36,12 +36,12 @@ public final class BasicAuthServerHandler implements HttpHandler {
 
     @Override
     public void onHeaderComplete(HttpEndpoint request) throws IOException {
-        String clientBasic = request.getHeader(HeaderName.AUTHORIZATION.getName());
+        String clientBasic = request.getHeader(HeaderName.AUTHORIZATION);
         if (StringUtils.equals(clientBasic, this.basic)) {
             httpServerHandler.onHeaderComplete(request);
         } else {
             HttpResponse response = request.getResponse();
-            response.setHeader(HeaderName.WWW_AUTHENTICATE.getName(), "Basic realm=\"feat\"");
+            response.setHeader(HeaderName.WWW_AUTHENTICATE, "Basic realm=\"feat\"");
             response.setHttpStatus(HttpStatus.UNAUTHORIZED);
             response.close();
         }

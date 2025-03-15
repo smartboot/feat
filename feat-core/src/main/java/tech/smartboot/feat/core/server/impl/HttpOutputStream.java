@@ -125,7 +125,7 @@ final class HttpOutputStream extends FeatOutputStream {
 
         HttpStatus httpStatus = response.getHttpStatus();
         boolean fastWrite =
-                request.getProtocol() == HttpProtocol.HTTP_11 && httpStatus == HttpStatus.OK && options.serverName() != null && response.getHeader(HeaderName.SERVER.getName()) == null;
+                request.getProtocol() == HttpProtocol.HTTP_11 && httpStatus == HttpStatus.OK && options.serverName() != null && response.getHeader(HeaderName.SERVER) == null;
         // HTTP/1.1
         if (fastWrite) {
             writeBuffer.write(HEAD_PART_BYTES);
@@ -133,7 +133,7 @@ final class HttpOutputStream extends FeatOutputStream {
             writeString(request.getProtocol().getProtocol());
             writeBuffer.writeByte(Constant.SP);
             httpStatus.write(writeBuffer);
-            if (options.serverName() != null && response.getHeader(HeaderName.SERVER.getName()) == null) {
+            if (options.serverName() != null && response.getHeader(HeaderName.SERVER) == null) {
                 writeBuffer.write(SERVER_LINE);
             }
             // Date

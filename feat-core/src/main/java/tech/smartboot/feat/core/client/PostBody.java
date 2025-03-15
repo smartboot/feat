@@ -51,7 +51,7 @@ public final class PostBody extends CommonBody {
             // 设置 Header
             HttpRequestImpl request = httpPost.rest.getRequest();
             request.setContentLength(bytes.length);
-            request.addHeader(HeaderName.CONTENT_TYPE.getName(), HeaderValue.ContentType.X_WWW_FORM_URLENCODED);
+            request.addHeader(HeaderName.CONTENT_TYPE, HeaderValue.ContentType.X_WWW_FORM_URLENCODED);
             //输出数据
             request.write(bytes);
             request.getOutputStream().flush();
@@ -72,7 +72,7 @@ public final class PostBody extends CommonBody {
 
             String boundary = "---" + System.currentTimeMillis();
 
-            httpPost.rest.getRequest().addHeader(HeaderName.CONTENT_TYPE.getName(), HeaderValue.ContentType.MULTIPART_FORM_DATA + "; boundary=" + boundary);
+            httpPost.rest.getRequest().addHeader(HeaderName.CONTENT_TYPE, HeaderValue.ContentType.MULTIPART_FORM_DATA + "; boundary=" + boundary);
             for (Multipart multipart : multiparts) {
                 write("--" + boundary + "\r\n");
                 multipart.write(this);

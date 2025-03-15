@@ -68,8 +68,8 @@ public class Http2Upgrade extends Upgrade {
 
             response.setHttpStatus(HttpStatus.SWITCHING_PROTOCOLS);
             response.setContentType(null);
-            response.setHeader(HeaderName.UPGRADE.getName(), HeaderValue.Upgrade.H2C);
-            response.setHeader(HeaderName.CONNECTION.getName(), HeaderValue.Connection.UPGRADE);
+            response.setHeader(HeaderName.UPGRADE, HeaderValue.Upgrade.H2C);
+            response.setHeader(HeaderName.CONNECTION, HeaderValue.Connection.UPGRADE);
             OutputStream outputStream = response.getOutputStream();
             outputStream.flush();
 

@@ -10,14 +10,31 @@
 
 package tech.smartboot.feat.core.client;
 
-import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HeaderName;
+import tech.smartboot.feat.core.common.HeaderValue;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 public interface Header {
+    /**
+     * 添加 header，支持同名追加
+     *
+     * @param headerName  header名
+     * @param headerValue header值
+     * @return 当前Header对象
+     */
+    default Header add(HeaderName headerName, String headerValue) {
+        add(headerName.getName(), headerValue);
+        return this;
+    }
+
+    default Header add(HeaderName headerName, int headerValue) {
+        add(headerName.getName(), headerValue);
+        return this;
+    }
+
     /**
      * 添加 header，支持同名追加
      *
@@ -46,7 +63,24 @@ public interface Header {
      * @param headerValue header值
      * @return 当前Header对象
      */
+    default Header set(HeaderName headerName, String headerValue) {
+        set(headerName.getName(), headerValue);
+        return this;
+    }
+
+    /**
+     * 设置header，覆盖同名header
+     *
+     * @param headerName  header名
+     * @param headerValue header值
+     * @return 当前Header对象
+     */
     Header set(String headerName, String headerValue);
+
+    default Header set(HeaderName headerName, int headerValue) {
+        set(headerName.getName(), headerValue);
+        return this;
+    }
 
     /**
      * 设置header，覆盖同名header
@@ -69,6 +103,6 @@ public interface Header {
     }
 
     default Header keepalive(String headerValue) {
-        return set(HeaderName.CONNECTION.getName(), headerValue);
+        return set(HeaderName.CONNECTION, headerValue);
     }
 }

@@ -81,7 +81,7 @@ public class PartImpl implements Part {
         if (contentType != null) {
             return contentType;
         }
-        contentType = getHeader(HeaderName.CONTENT_TYPE.getName());
+        contentType = getHeader(HeaderName.CONTENT_TYPE);
         return contentType;
     }
 

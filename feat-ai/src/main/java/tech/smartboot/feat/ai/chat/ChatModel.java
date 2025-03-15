@@ -43,7 +43,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 public class ChatModel {
@@ -224,7 +224,7 @@ public class ChatModel {
             opts.debug(options.isDebug());
         }, header -> {
             if (StringUtils.isNotBlank(options.getApiKey())) {
-                header.add(HeaderName.AUTHORIZATION.getName(), "Bearer " + options.getApiKey());
+                header.add(HeaderName.AUTHORIZATION, "Bearer " + options.getApiKey());
             }
             options.getHeaders().forEach(header::add);
         }, request);

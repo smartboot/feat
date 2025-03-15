@@ -64,7 +64,7 @@ abstract class AbstractOutputStream extends FeatOutputStream {
             writeBuffer.write(getBytes(String.valueOf(request.getContentLength())));
             writeBuffer.write(Constant.CRLF_BYTES);
         } else if (chunkedSupport) {
-            request.addHeader(HeaderName.TRANSFER_ENCODING.getName(), HeaderValue.TransferEncoding.CHUNKED);
+            request.addHeader(HeaderName.TRANSFER_ENCODING, HeaderValue.TransferEncoding.CHUNKED);
         }
 
         //输出Header部分
@@ -90,7 +90,7 @@ abstract class AbstractOutputStream extends FeatOutputStream {
         if (cookies == null || cookies.size() == 0) {
             return;
         }
-        cookies.forEach(cookie -> request.addHeader(HeaderName.SET_COOKIE.getName(), cookie.toString()));
+        cookies.forEach(cookie -> request.addHeader(HeaderName.SET_COOKIE, cookie.toString()));
 
     }
 }
