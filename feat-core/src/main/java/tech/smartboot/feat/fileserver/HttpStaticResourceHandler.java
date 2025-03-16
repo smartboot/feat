@@ -137,11 +137,15 @@ public class HttpStaticResourceHandler implements HttpHandler {
         File file = new File(baseDir, fileName);
 
         if (options.autoIndex() && file.isDirectory()) {
-            String path = file.getParentFile().getAbsolutePath().substring(baseDir.getAbsolutePath().length());
+            int index = fileName.lastIndexOf('/');
+            String path = fileName;
+            if (index != -1) {
+                path = fileName.substring(0, index);
+            }
             if (StringUtils.length(path) <= 1) {
                 path = "/";
             }
-            response.write("返回上一级：<a href='" + path + "'>&gt;" + path + "</a>");
+            response.write("返回上一级：<a href='" + path + "'>&gt;" + fileName + "</a>");
             response.write("<ul>");
             for (File f : Objects.requireNonNull(file.listFiles(File::isDirectory))) {
                 if (request.getRequestURI().endsWith("/")) {
