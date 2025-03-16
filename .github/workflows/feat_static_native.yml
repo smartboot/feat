@@ -33,6 +33,14 @@ jobs:
           java-version: '8'
       - name: Set up Maven 3.9
         uses: stCarolas/setup-maven@v5
+      - name: Update smart-socket version
+        shell: bash
+        run: |
+          if [ "${{ runner.os }}" == "Windows" ]; then
+            powershell -Command "(Get-Content pom.xml) -replace '<smartsocket.version>1.5.57</smartsocket.version>', '<smartsocket.version>1.6.55</smartsocket.version>' | Set-Content pom.xml"
+          else
+            sed -i.bak 's/<smartsocket.version>1.5.57<\/smartsocket.version>/<smartsocket.version>1.6.55<\/smartsocket.version>/g' pom.xml
+          fi
       - name: Build Feat
         run: mvn -B install --file pom.xml -DskipTests
       - name: Build Feat Static
