@@ -30,7 +30,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
-          java-version: '8'
+          java-version: '17'
       - name: Set up Maven 3.9
         uses: stCarolas/setup-maven@v5
       - name: Update smart-socket version
