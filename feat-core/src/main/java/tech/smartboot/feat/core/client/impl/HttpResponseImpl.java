@@ -16,12 +16,13 @@ import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.client.stream.GzipStream;
 import tech.smartboot.feat.core.client.stream.Stream;
 import tech.smartboot.feat.core.client.stream.StringStream;
-import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HeaderName;
+import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.utils.Constant;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -35,7 +36,8 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
     private static final int STATE_CHUNK_CONTENT = 1 << 1;
     private static final int STATE_CHUNK_END = 1 << 2;
     private static final int STATE_CONTENT_LENGTH = 1 << 3;
-    private static final int STATE_FINISH = 1 << 4;
+    private static final int STATE_CONNECTION_CLOSE = 1 << 4;
+    private static final int STATE_FINISH = 1 << 5;
     private static final int STATE_GZIP = 0x80;
     private Stream streaming = new StringStream();
     private int state;
@@ -76,6 +78,9 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
         } else if (getContentLength() > 0) {
             state = STATE_CONTENT_LENGTH;
             remaining = getContentLength();
+        } else if (HeaderValue.Connection.CLOSE.equals(getHeader(HeaderName.CONNECTION))) {
+            state = STATE_CONNECTION_CLOSE;
+            remaining = Long.MAX_VALUE;
         } else {
             state = STATE_FINISH;
         }
@@ -135,6 +140,7 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
                     }
                 }
                 break;
+                case STATE_CONNECTION_CLOSE:
                 case STATE_CONTENT_LENGTH: {
                     int length = Integer.min(buffer.remaining(), (int) remaining);
                     if (length == 0) {
@@ -167,4 +173,15 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
         this.streaming = streaming;
     }
 
+    @Override
+    protected void onClose() {
+        if ((state & ~STATE_GZIP) == STATE_CONNECTION_CLOSE) {
+            try {
+                streaming.stream(this, new byte[0], true);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            future.complete(this);
+        }
+    }
 }

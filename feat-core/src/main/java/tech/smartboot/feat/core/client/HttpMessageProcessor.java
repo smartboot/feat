@@ -160,11 +160,11 @@ final class HttpMessageProcessor extends AbstractMessageProcessor<AbstractRespon
             case DECODE_EXCEPTION:
                 throwable.printStackTrace();
                 break;
-            case SESSION_CLOSED:
-//                ResponseAttachment attachment = session.getAttachment();
-//                attachment.getResponse().getFuture().is
-//                System.out.println("closed");
+            case SESSION_CLOSED: {
+                DecoderUnit attachment = new DecoderUnit();
+                attachment.getResponse().onClose();
                 break;
+            }
         }
     }
 
