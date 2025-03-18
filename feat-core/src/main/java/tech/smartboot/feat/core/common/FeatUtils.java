@@ -24,6 +24,7 @@ import java.io.InputStream;
  */
 public class FeatUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(FeatUtils.class);
+    public static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
 
     public static String getResourceAsString(String fileName) {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();

@@ -11,6 +11,7 @@
 package tech.smartboot.feat.core.common.codec.h2.codec;
 
 import org.smartboot.socket.transport.WriteBuffer;
+import tech.smartboot.feat.core.common.FeatUtils;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -25,7 +26,7 @@ public class HeadersFrame extends Http2Frame {
     private int weight;
     private boolean exclusive;
     private ByteBuffer fragment = EMPTY_BUFFER;
-    private byte[] padding = EMPTY_PADDING;
+    private byte[] padding = FeatUtils.EMPTY_BYTE_ARRAY;
 
     public HeadersFrame(int streamId, int flags, int remaining) {
         super(streamId, flags, remaining);

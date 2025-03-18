@@ -33,7 +33,6 @@ public abstract class Http2Frame {
     public static final int FRAME_TYPE_WINDOW_UPDATE = 0x8;
     public static final int FRAME_TYPE_CONTINUATION = 0x9;
 
-    protected static final byte[] EMPTY_PADDING = new byte[0];
     public static final int FLAG_END_STREAM = 0x1;
     public static final int FLAG_END_HEADERS = 0x4;
     public static final int FLAG_PADDED = 0x8;

@@ -10,6 +10,8 @@
 
 package tech.smartboot.feat.core.common.codec.h2.codec;
 
+import tech.smartboot.feat.core.common.FeatUtils;
+
 import java.nio.ByteBuffer;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -53,7 +55,7 @@ public class GoAwayFrame extends Http2Frame {
                     debugData = new byte[remaining];
                     buffer.get(debugData);
                 } else {
-                    debugData = new byte[0];
+                    debugData = FeatUtils.EMPTY_BYTE_ARRAY;
                 }
                 remaining = 0;
                 break;

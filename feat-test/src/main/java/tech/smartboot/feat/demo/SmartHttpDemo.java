@@ -18,17 +18,17 @@ import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.WebSocketRequest;
 import tech.smartboot.feat.core.server.WebSocketResponse;
 import tech.smartboot.feat.core.server.upgrade.websocket.WebSocketUpgrade;
-import tech.smartboot.feat.router.BasicAuthRouterHandler;
 import tech.smartboot.feat.router.Context;
 import tech.smartboot.feat.router.Router;
 import tech.smartboot.feat.router.RouterHandler;
+import tech.smartboot.feat.router.interceptor.BasicAuthInterceptor;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 public class SmartHttpDemo {
@@ -38,7 +38,8 @@ public class SmartHttpDemo {
         System.setProperty("smartHttp.server.alias", "SANDAO base on ");
 
         Router routeHandle = new Router();
-        routeHandle.route("/basic", new BasicAuthRouterHandler("admin", "admin1", ctx -> ctx.Response.write("success".getBytes())));
+        routeHandle.addInterceptor("/basic", new BasicAuthInterceptor("admin", "admin1"));
+        routeHandle.route("/basic", ctx -> ctx.Response.write("success".getBytes()));
         routeHandle.route("/", new RouterHandler() {
             byte[] body = ("<html>" + "<head><title>feat demo</title></head>" + "<body>" + "GET 表单提交<form action='/get' method='get'><input type='text' name='text'/><input type='submit'/></form></br>" + "POST 表单提交<form action='/post' method='post'><input type='text' name='text'/><input type='submit'/></form></br>" + "文件上传<form action='/upload' method='post' enctype='multipart/form-data'><input type='file' name='text'/><input type='submit'/></form></br>" + "</body></html>").getBytes();
 

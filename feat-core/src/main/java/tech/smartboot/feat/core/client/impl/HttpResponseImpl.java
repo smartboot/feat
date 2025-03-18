@@ -16,6 +16,7 @@ import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.client.stream.GzipStream;
 import tech.smartboot.feat.core.client.stream.Stream;
 import tech.smartboot.feat.core.client.stream.StringStream;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.exception.FeatException;
@@ -140,7 +141,6 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
                     }
                 }
                 break;
-                case STATE_CONNECTION_CLOSE:
                 case STATE_CONTENT_LENGTH: {
                     int length = Integer.min(buffer.remaining(), (int) remaining);
                     if (length == 0) {
@@ -156,8 +156,19 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
                     onBodyStream(buffer);
                 }
                 break;
+                case STATE_CONNECTION_CLOSE: {
+                    int length = buffer.remaining();
+                    if (length == 0) {
+                        return;
+                    }
+                    byte[] bytes = new byte[length];
+                    buffer.get(bytes);
+                    streaming.stream(this, bytes, false);
+                    onBodyStream(buffer);
+                }
+                break;
                 case STATE_FINISH:
-                    streaming.stream(this, new byte[0], true);
+                    streaming.stream(this, FeatUtils.EMPTY_BYTE_ARRAY, true);
                     future.complete(this);
                     break;
                 default:
@@ -175,13 +186,16 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
 
     @Override
     protected void onClose() {
-        if ((state & ~STATE_GZIP) == STATE_CONNECTION_CLOSE) {
+        //对于 Connection: close 的请求，需要待服务端关闭连接后，再视为完成
+        if ((state & STATE_CONNECTION_CLOSE) == STATE_CONNECTION_CLOSE) {
+            state = STATE_FINISH;
             try {
-                streaming.stream(this, new byte[0], true);
+                streaming.stream(this, FeatUtils.EMPTY_BYTE_ARRAY, true);
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                throw new FeatException(e);
+            } finally {
+                future.complete(this);
             }
-            future.complete(this);
         }
     }
 }

@@ -24,7 +24,7 @@ import tech.smartboot.feat.core.common.utils.StringUtils;
 import java.nio.ByteBuffer;
 
 /**
- * @author 三刀(zhengjunweimail @ 163.com)
+ * @author 三刀(zhengjunweimail@163.com)
  * @version v1.0.0
  */
 final class HttpMessageProcessor extends AbstractMessageProcessor<AbstractResponse> implements Protocol<AbstractResponse> {
@@ -161,7 +161,7 @@ final class HttpMessageProcessor extends AbstractMessageProcessor<AbstractRespon
                 throwable.printStackTrace();
                 break;
             case SESSION_CLOSED: {
-                DecoderUnit attachment = new DecoderUnit();
+                DecoderUnit attachment = session.getAttachment();
                 attachment.getResponse().onClose();
                 break;
             }

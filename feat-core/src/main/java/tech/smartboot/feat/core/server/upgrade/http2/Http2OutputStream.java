@@ -10,6 +10,7 @@
 
 package tech.smartboot.feat.core.server.upgrade.http2;
 
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.codec.h2.codec.ContinuationFrame;
 import tech.smartboot.feat.core.common.codec.h2.codec.DataFrame;
 import tech.smartboot.feat.core.common.codec.h2.codec.HeadersFrame;
@@ -47,7 +48,7 @@ public final class Http2OutputStream extends FeatOutputStream {
             if (source == HeaderWriteSource.CLOSE && !closed) {
 //                writeBuffer.flush();
                 DataFrame dataFrame1 = new DataFrame(streamId, DataFrame.FLAG_END_STREAM, 0);
-                dataFrame1.writeTo(writeBuffer, new byte[0], 0, 0);
+                dataFrame1.writeTo(writeBuffer, FeatUtils.EMPTY_BYTE_ARRAY, 0, 0);
 
 //                writeBuffer.flush();
             }

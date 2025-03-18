@@ -12,6 +12,7 @@ package tech.smartboot.feat.core.common.codec.h2.codec;
 
 
 import org.smartboot.socket.transport.WriteBuffer;
+import tech.smartboot.feat.core.common.FeatUtils;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -30,7 +31,7 @@ public class DataFrame extends Http2Frame {
 
     private int padLength = 0;
     private ByteBuffer dataBuffer = ByteBuffer.allocate(0);
-    private byte[] padding = EMPTY_PADDING;
+    private byte[] padding = FeatUtils.EMPTY_BYTE_ARRAY;
 
 
     public DataFrame(int streamId, int flags, int remaining) {
