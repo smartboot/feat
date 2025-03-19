@@ -1,5 +1,5 @@
 ---
-title: 5.3 向量数据库-Chroma
+title: 向量数据库-Chroma
 description: Feat AI
 sidebar:
     order: 3
@@ -12,9 +12,9 @@ Chroma 是一个开源的向量数据库，支持高效存储和检索高维向�
 ---
 
 
-## 1. 安装和配置
+## 安装和配置
 
-### 1.1 安装 Chroma 服务
+### 安装 Chroma 服务
 
 首先，需要安装并运行 Chroma 服务。你可以通过以下命令启动 Chroma：
 
@@ -24,7 +24,7 @@ docker run -p 8000:8000 -p 8001:8001 chromaai/chroma:latest
 
 启动后，Chroma 服务将运行在 `http://localhost:8000`。
 
-### 1.2 配置 Feat 连接 Chroma
+### 配置 Feat 连接 Chroma
 
 在 Feat 中，通过 `ChromaVectorStore` 类连接到 Chroma 服务。以下是一个基本配置示例：
 
@@ -58,9 +58,9 @@ public class ChromaConfig {
 
 ---
 
-## 2. 创建和管理数据库
+## 创建和管理数据库
 
-### 2.1 创建数据库
+### 创建数据库
 
 在 Chroma 中，数据库是数据存储的顶层单位。以下是如何通过 Feat 创建数据库的示例：
 
@@ -76,7 +76,7 @@ public class CreateDatabase {
 }
 ```
 
-### 2.2 获取数据库信息
+### 获取数据库信息
 
 ```java
 import tech.smartboot.feat.ai.vector.chroma.Chroma;
@@ -90,7 +90,7 @@ public class GetDatabase {
 }
 ```
 
-### 2.3 删除数据库
+### 删除数据库
 
 ```java
 import tech.smartboot.feat.ai.vector.chroma.Chroma;
@@ -106,9 +106,9 @@ public class DeleteDatabase {
 
 ---
 
-## 3. 创建和管理集合
+## 创建和管理集合
 
-### 3.1 创建集合
+### 创建集合
 
 在 Chroma 中，集合是存储向量数据的基本单位。以下是如何创建集合的示例：
 
@@ -129,7 +129,7 @@ public class CreateCollection {
 }
 ```
 
-### 3.2 获取集合信息
+### 获取集合信息
 
 ```java
 import tech.smartboot.feat.ai.vector.chroma.Chroma;
@@ -143,7 +143,7 @@ public class GetCollection {
 }
 ```
 
-### 3.3 删除集合
+### 删除集合
 
 ```java
 import tech.smartboot.feat.ai.vector.chroma.Chroma;
@@ -160,9 +160,9 @@ public class DeleteCollection {
 
 ---
 
-## 4. 添加和删除文档
+## 添加和删除文档
 
-### 4.1 添加文档
+### 添加文档
 
 ```java
 import tech.smartboot.feat.ai.vector.Document;
@@ -192,7 +192,7 @@ public class AddDocument {
 }
 ```
 
-### 4.2 删除文档
+### 删除文档
 
 ```java
 import tech.smartboot.feat.ai.vector.Document;
@@ -218,9 +218,9 @@ public class DeleteDocument {
 
 ---
 
-## 5. 查询和搜索
+## 查询和搜索
 
-### 5.1 基于内容的相似性搜索
+### 基于内容的相似性搜索
 
 ```java
 import tech.smartboot.feat.ai.vector.SearchRequest;
@@ -249,7 +249,7 @@ public class SimilaritySearch {
 }
 ```
 
-### 5.2 基于元数据的过滤搜索
+### 基于元数据的过滤搜索
 
 ```java
 import tech.smartboot.feat.ai.vector.SearchRequest;
@@ -283,7 +283,7 @@ public class MetadataSearch {
 
 ---
 
-## 6. 总结
+## 总结
 
 通过本教程，你已经掌握了在 Feat 中使用 Chroma 进行向量数据管理的基本方法，包括：
 

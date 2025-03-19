@@ -1,5 +1,5 @@
 ---
-title: 1.2 入门指南 📌
+title: 入门指南 📌
 description: 一款企业级 Web 服务开发框架
 sidebar:
     order: 2
@@ -19,7 +19,7 @@ import helloWorld from './img/1_2_hello_world.png';
 - IDE（本教程示例基于 IntelliJ IDEA）
 - [curl](https://curl.se/) 或者 **浏览器** 用于 HTTP 请求测试。
 
-## 1.2.1 引入 Feat
+## 引入 Feat
 在您的 Maven 工程 pom.xml 文件中添加以下配置，即可完成 Feat 的引入：
 
 ```xml title="pom.xml"
@@ -33,7 +33,7 @@ import helloWorld from './img/1_2_hello_world.png';
     `${feat.version}` 需根据实际情况设置，建议使用[最新版本](https://central.sonatype.com/artifact/tech.smartboot.feat/feat-core)。
 </Aside>
 
-## 1.2.2 快速启动
+## 快速启动
 下面通过一个简单的示例，以检验 Feat 是否成功引入，并演示如何快速启动一个 Web 服务。
 ```java title="HelloFeat.java" {3}
 public class HelloFeat {
@@ -76,7 +76,7 @@ public class HelloFeat {
 
 
 
-## 1.2.3 编写自定义响应
+## 编写自定义响应
 现在我们再来写一个自定义的响应的服务，并指定服务端端口为 8081。
 ```java title="HelloWorld.java" {3,4,5}
 public class HelloWorld {
@@ -115,6 +115,6 @@ public class HelloWorld {
     </TabItem>
 </Tabs>
 
-## 1.2.4 建议&反馈
+## 建议&反馈
 希望这篇教程能够帮助您对 Feat 有一个初步的了解。
 如果您在使用过程中遇到任何问题，欢迎随时向我们提交 [Issue](https://gitee.com/smartboot/feat/issues/new/)。

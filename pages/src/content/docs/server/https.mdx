@@ -1,5 +1,5 @@
 ---
-title: 2.4 Https 服务 🌐
+title: Https 服务 🌐
 description: Feat Https
 sidebar:
     order: 4
@@ -12,7 +12,7 @@ import CheckAuthorize from '../../../components/CheckAuthorize.astro'
 
 下文演示所使用的证书是通过 [mkcert](https://github.com/FiloSottile/mkcert) 生成的自签名证书。
 
-## 2.4.1 生成 PEM 证书
+## 生成 PEM 证书
 执行以下命令生成证书：
 ```shell
 mkcert example.com "*.example.com" example.test localhost 127.0.0.1 ::1
@@ -33,7 +33,7 @@ The certificate is at "./example.com+5.pem" and the key at "./example.com+5-key.
 
 It will expire on 30 April 2027
 ```
-## 2.4.2 启动Https服务
+## 启动Https服务
 将证书文件 `example.com+5.pem` 和 `example.com+5-key.pem` 拷贝到项目的 `src/main/resources` 目录下。
 
 使用 smart-socket 提供的 SslPlugin 插件启动 Https 服务。
@@ -53,7 +53,7 @@ public class HttpsPemDemo {
 <img src={https_1.src} alt="hello world" width="60%" className="shadow"/>
 
 
-## 2.4.3 SSLEngine 传递
+## SSLEngine 传递
 HttpRequest 中提供了 `getSslEngine()` 方法，用于获取 SSLEngine。
 
 但是，SSLEngine 是在底层的网络通信层创建的，应用层无法感知底层是否使用了 SSL 协议。

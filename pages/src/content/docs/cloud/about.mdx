@@ -1,5 +1,5 @@
 ---
-title: 3.1 关于
+title: 关于
 description: 一款企业级 Web 服务开发框架
 sidebar:
     order: 1
@@ -16,9 +16,9 @@ Feat Cloud 提供了一种面向企业级应用开发的解决方案，它的定
 
 技术方面，Feat Cloud 在编译期对代码进行静态分析，最大化提升服务运行性能，降低资源消耗。
 
-## 3.1.1 准备工作
+## 准备工作
 
-### 3.1.1.2 引入 Maven 依赖
+### 引入 Maven 依赖
 创建一个 Maven 项目，在 `pom.xml` 文件中添加以下依赖：
 ```xml title=pom.xml
 <dependency>
@@ -32,7 +32,7 @@ Feat Cloud 提供了一种面向企业级应用开发的解决方案，它的定
     需根据实际情况设置，建议使用[最新版本](https://central.sonatype.com/artifact/tech.smartboot.feat/feat-cloud-starter)。
 </Aside>
 
-### 3.1.1.3 配置 IDEA
+### 配置 IDEA
 调整 IDEA 编译配置，以启用 Feat Cloud 的静态优化功能，**否则请求将无法正常路由**。
 
 设置路径为：`Preferences -> Build, Execution, Deployment -> Build Tools -> Maven -> Runner`，
@@ -40,7 +40,7 @@ Feat Cloud 提供了一种面向企业级应用开发的解决方案，它的定
 
 <img src={idea_setting.src} alt="hello world" width="60%" className="shadow"/>
 
-## 3.1.2 快速启动
+## 快速启动
 在 Maven 工程中创建一个 `FeatCloudDemo.java` 文件，添加以下代码：
 ``` java title=FeatCloudDemo.java
 @Controller
@@ -59,7 +59,7 @@ public class FeatCloudDemo {
 <img src={demo.src} alt="hello world" width="60%" className="shadow"/>
 
 
-## 3.1.3 工作原理
+## 工作原理
 从上面的代码可以看出，Feat Cloud 是基于注解的方式进行服务开发的。
 通常来说，框架会在运行时解析注解并生成对应的服务。
 
@@ -67,7 +67,7 @@ public class FeatCloudDemo {
 其核心原理是**运用了 APT（Annotation Processing Tool）技术，并结合 ServiceLoader 实现了 0 反射的服务加载机制**。
 
 
-### 3.1.3.1 静态转码
+### 静态转码
 以 FeatCloudDemo 为例，开发人员编写的源代码在编译时经过一次静态转码，生成了一个新的 java 文件 `FeatCloudDemoBeanAptLoader.java`。
 <Tabs>
     <TabItem label="源代码">
@@ -124,7 +124,7 @@ public class FeatCloudDemo {
 
 因此，**Feat Cloud 可以在提供优雅的开发体验的同时，也极大地保留了 Feat Server 框架的性能优势。**
 
-### 3.1.3.2 服务载入
+### 服务载入
 Controller 在编译时完成转码后，下一步便是需要在程序启动后能够被正确加载，此处需要用到的技术便是 `java.util.ServiceLoader`。
 
 Controller 静态转码所生成的类文件默认实现了 `tech.smartboot.feat.cloud.service.CloudService` 接口，同时会自动生成一个 service 文件：
@@ -189,7 +189,7 @@ Controller 静态转码所生成的类文件默认实现了 `tech.smartboot.feat
     </TabItem>
 </Tabs>
 
-### 3.1.3.3 启动服务
+### 启动服务
 在这个步骤中，由于 `ApplicationContext@start` 中已经完成了所有服务的实例化、依赖注入、初始化、路由配置等工作，因此，最后一步便是将 Router 实例设置到 HttpServer 中，启动服务。
 
 ```java title=Feat.java "application.start();" "application.destroy();" "application::destroy" "application.getRouter()"

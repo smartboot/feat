@@ -1,12 +1,12 @@
 ---
-title: 2.1 ServerOptions 配置说明
+title: ServerOptions 配置说明
 description: Feat ServerOptions 配置说明
 sidebar:
     order: 1
 ---
 
 
-## 2.1.1. 基础配置
+## 基础配置
 
 ### serverName
 **类型:** `String`
@@ -41,7 +41,7 @@ Feat.httpServer(options -> options.bannerEnabled(false))
 - 在生产环境中隐藏版本信息
 - 保持控制台输出简洁
 
-## 2.2.2. 性能调优
+## 性能调优
 
 ### threadNum
 **类型:** `int`
@@ -96,7 +96,7 @@ Feat.httpServer(options -> options.writeBufferSize(16384))
 - 注意内存资源的合理分配
 - 可通过性能测试工具找到最优配置
 
-## 2.2.3. 安全设置
+## 安全设置
 
 ### maxRequestSize
 **类型:** `long`
@@ -133,7 +133,7 @@ Feat.httpServer(options -> options.headerLimiter(50))
 - 限制异常请求
 - 保护服务器资源
 
-## 2.2.4 调试功能
+## 调试功能
 
 ### debug
 **类型:** `boolean`
@@ -156,7 +156,7 @@ Feat.httpServer(options -> options.debug(true))
 - 生产环境建议关闭 debug 模式
 - debug 模式会影响服务性能
 
-## 2.2.5. 完整配置示例
+## 完整配置示例
 
 ```java
 Feat.httpServer(options -> {
@@ -179,7 +179,7 @@ Feat.httpServer(options -> {
 .listen();
 ```
 
-## 2.2.6. 配置最佳实践
+## 配置最佳实践
 
 1. **性能优化**
    - 根据应用特性和硬件资源合理设置线程数

@@ -1,5 +1,5 @@
 ---
-title: 5.2 Embedding
+title: Embedding
 description: Feat AI
 sidebar:
     order: 2
@@ -13,7 +13,7 @@ Feat 提供了强大的嵌入式（Embedding）功能，支持多种预训练模
 
 ---
 
-## 5.2.1 基本使用
+## 基本使用
 
 ### 1. 单句嵌入
 
@@ -54,7 +54,7 @@ embeddings.forEach(embed -> System.out.println(Arrays.toString(embed)));
 - 返回结果为 `List<float[]>` 类型，每个元素对应一个句子的向量表示
 
 
-## 5.2.2 模型选择
+## 模型选择
 
 Feat 支持多种预训练嵌入模型，用户可以根据需求选择合适的模型：
 
@@ -106,7 +106,7 @@ EmbeddingModel customModel = FeatAI.embedding(opt -> {
 });
 ```
 
-## 5.2.3 使用示例
+##  使用示例
 ### 1. 与 Chroma 集成
 ```java
 // 使用 Chroma 进行向量存储和检索
@@ -219,7 +219,7 @@ public class TextClassificationExample {
 }
 ```
 
-## 5.2.4 注意事项
+## 注意事项
 
 1. **模型选择**：
 - 不同模型的性能和适用场景不同，需根据具体需求选择

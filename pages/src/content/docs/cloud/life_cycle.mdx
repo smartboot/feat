@@ -1,5 +1,5 @@
 ---
-title: 3.2 生命周期
+title: 生命周期
 description: 一款企业级 Web 服务开发框架
 sidebar:
     order: 2
@@ -12,9 +12,9 @@ import lifecycle from './img/lifecycle.svg';
 <img src={lifecycle.src} alt="Feat Cloud 生命周期" width="100%" className="shadow"/>
 
 
-## 3.2.1 创建实例
+## 创建实例
 Feat Cloud 通过 **@Bean** 和 **@Controller** 注解来定义实例对象。
-### 3.2.1.1 方式1
+### 方式1
 在某个 class 上添加注解 `@Bean`。Feat Cloud 启动时会自动创建该 Bean，bean 的名称默认为类名首字母小写。
 ```java {1}
 @Bean
@@ -40,7 +40,7 @@ public class ControllerDemo{
 }
 ```
 
-### 3.2.1.2 方式2
+### 方式2
 在 Bean/Controller 的中通过 `@Bean` 注解定义 Bean 方法。
 若未在 @Bean 中指定 bean 的名称，则默认为方法名。
 ```java {3}
@@ -52,7 +52,7 @@ public class BeanDemo{
     }
 }
 ```
-### 3.2.1.3 方式3
+### 方式3
 服务启动时通过`addExternalBean`方法添加外部 Bean。
 ```java "addExternalBean"
 public class FeatCloudDemo {
@@ -65,7 +65,7 @@ public class FeatCloudDemo {
 ```
 **注意：@Autowired、@PostConstruct、@PreDestroy 等注解的相关特性不在此类 Bean 中生效。**
 
-## 3.2.2 @Autowired：属性填充
+## @Autowired：属性填充
 
 该注解用于填充 Bean 或者 Controller 的属性，类似于 Spring 中的 `@Autowired`。
 
@@ -85,7 +85,7 @@ public class FeatBeanDemo {
     }
 }
 ```
-## 3.2.3 @PostConstruct：初始化
+## @PostConstruct：初始化
 
 同 Spring 中的 `@PostConstruct` 注解，在 Bean 完成实例化和属性填充后被调用。
 ```java "@PostConstruct"
@@ -108,7 +108,7 @@ public class FeatBeanDemo {
     }
 }
 ```
-## 3.2.4 使用 Bean
+## 使用 Bean
 
 在 Feat Cloud 中，可以通过 `@Autowired` 注解来注入和使用其他 Bean。Bean 之间可以相互依赖，形成依赖关系图。
 
@@ -136,7 +136,7 @@ public class OtherBean {
 }
 ```
 
-### 3.2.4.1 循环依赖
+### 循环依赖
 
 Feat Cloud 支持 Bean 之间的循环依赖。当两个或多个 Bean 相互依赖时，Feat Cloud 能够正确处理这种情况，确保所有 Bean 都能正确初始化。
 
@@ -162,11 +162,11 @@ public class BeanB {
 }
 ```
 
-### 3.2.4.2 Bean 的作用域
+### Bean 的作用域
 
 目前 Feat Cloud 中的 Bean 默认都是单例的，即在整个应用中只有一个实例。这意味着无论在哪里注入这个 Bean，获取到的都是同一个实例。
 
-## 3.2.5 @PreDestroy：销毁
+## @PreDestroy：销毁
 
 @PreDestroy 作用于 Bean 或者 Controller 内部 public 方法上，类似于 Spring 中的 `@PreDestroy`。当应用关闭时，Feat Cloud 会调用标记了 @PreDestroy 注解的方法，以便 Bean 可以释放资源或执行其他清理操作。
 
@@ -200,7 +200,7 @@ public class ResourceBean {
 }
 ```
 
-### 3.2.5.1 销毁时机
+### 销毁时机
 
 当以下情况发生时，@PreDestroy 注解的方法会被调用：
 

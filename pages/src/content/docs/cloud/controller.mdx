@@ -1,5 +1,5 @@
 ---
-title: 3.4 Controller 开发 🌐
+title: Controller 开发 🌐
 description: 一款企业级 Web 服务开发框架
 sidebar:
     order: 4
@@ -9,7 +9,7 @@ import {TabItem, Tabs, Aside} from "@astrojs/starlight/components";
 
 <CheckAuthorize/>
 
-## 3.4.1 Feat Cloud 与 Spring Boot 的对比
+## Feat Cloud 与 Spring Boot 的对比
 
 Feat Cloud 和 Spring Boot 都提供了便捷的 Web 开发体验，但在 Controller 的实现方式上有一些区别。下面我们对比两者的主要差异：
 
@@ -26,9 +26,9 @@ Feat Cloud 和 Spring Boot 都提供了便捷的 Web 开发体验，但在 Contr
   Feat Cloud 的 Controller 在编译时完成静态转码，相比 Spring Boot 的运行时反射机制，具有更高的性能优势。
 </Aside>
 
-## 3.4.2 Controller 基本使用
+## Controller 基本使用
 
-### 3.4.2.1 定义 Controller
+### 定义 Controller
 
 在 Feat Cloud 中，使用 `@Controller` 注解标记一个类为控制器：
 
@@ -46,7 +46,7 @@ public class HelloController {
 }
 ```
 
-### 3.4.2.2 请求映射
+### 请求映射
 
 使用 `@RequestMapping` 注解将 HTTP 请求映射到控制器的方法：
 
@@ -68,9 +68,9 @@ public class UserController {
 }
 ```
 
-## 3.4.3 请求处理
+## 请求处理
 
-### 3.4.3.1 参数绑定
+### 参数绑定
 
 Feat Cloud 支持多种参数类型的自动绑定：
 
@@ -100,7 +100,7 @@ public class OrderController {
 }
 ```
 
-### 3.4.3.2 实际案例分析
+### 实际案例分析
 
 以下是一个实际的 Controller 示例，展示了如何处理不同类型的请求和响应：
 
@@ -146,9 +146,9 @@ public class OrderController {
     </TabItem>
 </Tabs>
 
-## 3.4.4 高级特性
+## 高级特性
 
-### 3.4.4.1 异步处理
+### 异步处理
 
 Feat Cloud 支持异步 Controller，通过设置 `@Controller` 的 `async` 属性为 `true` 启用：
 
@@ -166,7 +166,7 @@ public class AsyncController {
 }
 ```
 
-### 3.4.4.2 跨域支持
+### 跨域支持
 
 使用 `@CrossOrigin` 注解支持跨域请求：
 
@@ -182,7 +182,7 @@ public class ApiController {
 }
 ```
 
-### 3.4.4.3 依赖注入
+### 依赖注入
 
 Feat Cloud 支持在 Controller 中注入其他服务：
 
@@ -204,16 +204,16 @@ public class ProductController {
 }
 ```
 
-## 3.4.5 最佳实践
+## 最佳实践
 
-### 3.4.5.1 Controller 设计原则
+### Controller 设计原则
 
 1. **职责单一**：Controller 只负责请求的接收和响应的返回，业务逻辑应当放在 Service 层。
 2. **参数校验**：对输入参数进行必要的校验，确保数据的合法性。
 3. **异常处理**：合理处理异常，避免将异常直接暴露给客户端。
 4. **RESTful 设计**：遵循 RESTful API 设计规范，使 API 更加直观和易用。
 
-### 3.4.5.2 性能优化
+### 性能优化
 
 1. **使用异步处理**：对于耗时操作，考虑使用异步 Controller。
 2. **合理设置响应类型**：根据实际需求设置合适的 Content-Type。

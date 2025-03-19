@@ -1,5 +1,5 @@
 ---
-title: 2.6 升级 Http2 🌐
+title: 升级 Http2 🌐
 description: Feat Http2
 sidebar:
     order: 6
@@ -12,7 +12,8 @@ import CheckAuthorize from '../../../components/CheckAuthorize.astro'
 
 Feat 支持通过 **HttpRequest.upgrade** 方法将 HTTP/1.1 连接升级到 HTTP/2 协议。
 <img src={http2_architecture.src} alt="HTTP/2协议栈" width="80%"/>
-## 2.6.1 快速开始
+
+## 快速开始
 操作示例如下：
 ```java title=Http2Demo.java
 public class Http2Demo {
@@ -31,13 +32,13 @@ public class Http2Demo {
 }
 ```
 
-## 2.6.2 核心机制
+## 核心机制
 1. **协议协商**：通过`Connection: Upgrade`和`Upgrade: h2c`头部完成握手
 2. **多路复用**：基于Stream ID实现请求并发处理
 3. **头部压缩**：采用HPACK算法压缩请求头
 4. **服务端推送**：通过PushBuilder实现资源预推送
 
-## 2.6.3 配置参数
+## 配置参数
 Http2Upgrade 提供以下构造方法：
 ```java
 public Http2Upgrade() {
@@ -49,7 +50,7 @@ public Http2Upgrade(long idleTimeout) {
 }
 ```
 
-## 2.6.4 性能优化
+## 性能优化
 1. 启用HPACK压缩：初始化时设置`enableHeaderCompression=true`
 2. 调整流控窗口：通过`Http2Settings.initialWindowSize(1048576)`
 3. 服务端推送配置：

@@ -1,5 +1,5 @@
 ---
-title: 2.2 Router 路由组件 📌
+title: Router 路由组件 📌
 description: Feat Router
 sidebar:
     order: 2
@@ -7,7 +7,7 @@ sidebar:
 
 Feat中的`Router`组件是一个功能强大的HTTP请求分发器，用于将HTTP请求分发到对应的处理程序（Handler）。它是基于`NodePath`树状结构实现的，支持多种路由匹配方式，包括精确匹配、通配符匹配、路径参数匹配等。同时提供了Session管理和请求拦截等高级功能。
 
-## 2.2.1 主要功能
+## 主要功能
 
 ### 1. 基础功能
 
@@ -22,7 +22,7 @@ Feat中的`Router`组件是一个功能强大的HTTP请求分发器，用于将H
 - **请求拦截**：支持配置拦截器，实现请求的前置和后置处理
 - **灵活配置**：支持链式调用，简化路由配置
 
-## 2.2.2 路由匹配原理
+## 路由匹配原理
 
 ![Router原理图](./img/router.svg)
 
@@ -43,7 +43,7 @@ Feat中的`Router`组件是一个功能强大的HTTP请求分发器，用于将H
 3. **参数提取**：如果匹配到路径参数（如`:id`），将其提取到`Context`中
 4. **处理程序调用**：调用匹配到的处理程序，如未匹配则使用默认处理程序
 
-## 2.2.3 Session管理
+## Session管理
 
 ### 1. Session配置
 ![Session管理机制](./img/session.svg)
@@ -71,7 +71,7 @@ router.route("/session/demo", ctx -> {
 });
 ```
 
-## 2.2.4 拦截器使用
+## 拦截器使用
 
 ![拦截器执行流程](./img/interceptor.svg)
 
@@ -103,7 +103,7 @@ List<String> patterns = Arrays.asList("/user/*", "/order/*");
 router.addInterceptors(patterns, new LogInterceptor());
 ```
 
-## 2.2.5 路由配置示例
+## 路由配置示例
 
 ### 1. 基础路由
 
@@ -219,6 +219,6 @@ public class RouterDemo {
 }
 ```
 
-## 2.2.6 总结
+## 总结
 
 Feat中的`Router`组件不仅提供了强大的路由匹配功能，还集成了Session管理和请求拦截等高级特性。通过树状的路由匹配结构，实现了高效的请求分发。同时，其链式调用的API设计，使得路由配置更加简洁直观。开发者可以根据实际需求，灵活运用这些功能，构建功能丰富的Web应用。

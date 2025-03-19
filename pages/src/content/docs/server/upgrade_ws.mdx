@@ -1,5 +1,5 @@
 ---
-title: 2.5 升级 WebSocket 🌐
+title: 升级 WebSocket 🌐
 description: Feat WebSocket
 sidebar:
     order: 5
@@ -32,7 +32,7 @@ public class WebSocketDemo {
 
 <img src={upgrade_ws_1.src} alt="hello world" width="80%" className="shadow"/>
 
-## 2.5.1 构造方法
+## 构造方法
 WebSocketUpgrade 提供了两个构造方法，分别如下：
 
 ```java
@@ -49,7 +49,7 @@ public WebSocketUpgrade(long idleTimeout) {
 
 当 WebSocket 连接空闲时间超过 **idleTimeout** 时，Feat 会主动关闭该连接。
 
-## 2.5.2 消息处理
+## 消息处理
 WebSocketUpgrade 提供了两个消息处理方法，分别如下：
 ```java
 public void handle(WebSocketRequest request, WebSocketResponse response, CompletableFuture<Object> completableFuture) throws Throwable {
@@ -106,7 +106,7 @@ public void handle(WebSocketRequest request, WebSocketResponse response) throws 
 }
 ```
 
-## 2.5.3 请求路由
+## 请求路由
 在实际场景下，用户可能需要将不同的 WebSocket 消息路由到不同的处理方法，
 以及存在 Http 请求和 WebSocket 请求共存的情况。
 

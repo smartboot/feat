@@ -1,5 +1,5 @@
 ---
-title: 3.5 数据库开发 🌐
+title: 数据库开发 🌐
 description: 一款企业级 Web 服务开发框架
 sidebar:
     order: 5
@@ -11,7 +11,7 @@ import CheckAuthorize from '../../../components/CheckAuthorize.astro'
 
 Feat Cloud 已同 Mybatis 做了一定程度的集成，你可以直接使用 Mybatis 提供的 Mapper 接口来进行数据库的操作。本章将介绍如何在 Feat Cloud 中使用 Mybatis 进行数据库开发。
 
-## 3.5.1 配置 mybatis-config.xml
+## 配置 mybatis-config.xml
 在 `src/main/resources` 目录下创建 `mybatis-config.xml`， 文件内容如下：
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -66,7 +66,7 @@ Feat Cloud 已同 Mybatis 做了一定程度的集成，你可以直接使用 My
 配置文件可以放置在任意子目录下，例如 `src/main/resources/mybatis/mybatis-config.xml`。建议将配置文件放在专门的目录中以便管理。
 </Aside>
 
-## 3.5.2 实例化 SqlSessionFactory
+## 实例化 SqlSessionFactory
 Feat Cloud 提供了两种方式来实例化 SqlSessionFactory：
 
 <Tabs>
@@ -103,7 +103,7 @@ Feat Cloud 提供了两种方式来实例化 SqlSessionFactory：
    生成的 SqlSessionFactory 对象 bean 名称必须为 **sessionFactory**。这是 Feat Cloud 约定的固定名称。
 </Aside>
 
-## 3.5.3 定义@Mapper接口
+## 定义@Mapper接口
 @Mapper 接口的定义方式与 Spring 基本一致。以下是一个完整的示例，展示了常用的 SQL 操作和动态 SQL 的使用：
 
 ```java title="UserMapper.java"
@@ -148,7 +148,7 @@ public interface UserMapper {
 }
 ```
 
-## 3.5.4 使用@Mapper和事务管理
+## 使用@Mapper和事务管理
 Mapper 接口可以通过 `@Autowired` 注解注入到其他 Bean 中使用。同时，Feat Cloud 也支持使用 `@Transactional` 注解进行事务管理：
 
 ```java title="UserService.java"

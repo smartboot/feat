@@ -12,7 +12,7 @@ export default defineConfig({
         starlight({
             title: 'FEAT',
             logo:{
-                src:'./src/assets/feat_logo.svg',
+                src:'./src/assets/feat_logo_v2.svg',
             },
             customCss: [
                 // 你的自定义 CSS 文件的相对路径
@@ -77,27 +77,27 @@ export default defineConfig({
             },
             sidebar: [
                 {
-                    label: '1. 关于',
+                    label: '关于',
                     autogenerate: {directory: 'guides'},
                 },
                 {
-                    label: '2. Feat Server开发',
+                    label: 'Feat Server开发',
                     autogenerate: {directory: 'server'},
                 },
                 {
-                    label: '3. Feat Cloud开发',
+                    label: 'Feat Cloud开发',
                     autogenerate: {directory: 'cloud'},
                 },
                 {
-                    label: '4. Feat Client开发',
+                    label: 'Feat Client开发',
                     autogenerate: {directory: 'client'},
                 },
                 {
-                    label: '5. Feat AI开发',
+                    label: 'Feat AI开发',
                     autogenerate: {directory: 'ai'},
                 },
                 {
-                    label: '6. 附录',
+                    label: '附录',
                     autogenerate: {directory: 'appendix'},
                 },
             ],
