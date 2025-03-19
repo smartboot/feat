@@ -10,6 +10,7 @@
 
 package tech.smartboot.feat.core.server;
 
+import com.alibaba.fastjson2.JSON;
 import tech.smartboot.feat.core.common.Cookie;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HttpStatus;
@@ -21,51 +22,84 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 /**
- * @author 三刀(zhengjunweimail @ 163.com)
+ * HTTP响应处理的核心接口，提供了完整的HTTP响应操作能力。
+ * <p>
+ * 该接口封装了HTTP响应的所有核心功能，包括：
+ * <ul>
+ *   <li>响应状态码的设置与获取</li>
+ *   <li>响应头的操作(添加、设置、获取)</li>
+ *   <li>响应体内容的写入</li>
+ *   <li>Cookie的处理</li>
+ *   <li>响应流的控制</li>
+ * </ul>
+ * </p>
+ * 
+ * <p>典型使用示例:</p>
+ * <pre>
+ * httpResponse.setHttpStatus(HttpStatus.OK);
+ * httpResponse.setContentType("text/plain;charset=utf-8");
+ * httpResponse.write("Hello World".getBytes());
+ * httpResponse.close();
+ * </pre>
+ * 
+ * @author 三刀(zhengjunweimail@163.com)
  * @version v1.0.0
  */
 public interface HttpResponse {
 
     /**
-     * 响应消息输出流
+     * 获取响应消息的输出流。
+     * <p>
+     * 通过该输出流可以直接写入响应体内容。使用完成后需要调用{@link #close()}方法关闭流。
+     * </p>
      *
-     * @return
+     * @return {@link FeatOutputStream} 用于写入响应内容的输出流
      */
     FeatOutputStream getOutputStream();
 
     /**
-     * 获取Http响应状态
+     * 获取当前设置的HTTP响应状态码。
+     * <p>
+     * 如果未显式设置状态码，默认返回{@link HttpStatus#OK} (200 OK)。
+     * </p>
      *
-     * @return
+     * @return {@link HttpStatus} 当前的HTTP响应状态
      */
     HttpStatus getHttpStatus();
 
     /**
-     * 设置Http响应状态,若不设置默认{@link HttpStatus#OK}
+     * 设置HTTP响应状态码。
+     * <p>
+     * 通过该方法可以设置标准的HTTP状态码，例如200(OK)、404(Not Found)等。
+     * 如果不设置，默认使用{@link HttpStatus#OK}。
+     * </p>
      *
-     * @param httpStatus
+     * @param httpStatus 要设置的HTTP状态码，不能为null
      */
     void setHttpStatus(HttpStatus httpStatus);
 
     /**
-     * 设置Http响应状态,若不设置默认{@link HttpStatus#OK}
+     * 设置自定义的HTTP响应状态码和原因短语。
+     * <p>
+     * 当需要使用非标准HTTP状态码时，可以通过该方法设置状态码和对应的原因短语。
+     * 如果不设置，默认使用{@link HttpStatus#OK}。
+     * </p>
      *
-     * @param httpStatus
+     * @param httpStatus 自定义的HTTP状态码
+     * @param reasonPhrase 状态码对应的原因短语
      */
     void setHttpStatus(int httpStatus, String reasonPhrase);
 
 
     /**
-     * Sets a response header with the given name and value. If the header had
-     * already been set, the new value overwrites the previous one. The
-     * <code>containsHeader</code> method can be used to test for the presence
-     * of a header before setting its value.
+     * 设置HTTP响应头。
+     * <p>
+     * 如果指定名称的响应头已存在，新的值将覆盖原有值。
+     * 响应头的值如果包含非ASCII字符，应按照RFC 2047进行编码。
+     * </p>
      *
-     * @param name  the name of the header
-     * @param value the header value If it contains octet string, it should be
-     *              encoded according to RFC 2047
-     *              (http://www.ietf.org/rfc/rfc2047.txt)
-     * @see #addHeader
+     * @param name 响应头名称
+     * @param value 响应头的值
      */
     void setHeader(String name, String value);
 
@@ -74,14 +108,14 @@ public interface HttpResponse {
     }
 
     /**
-     * Adds a response header with the given name and value. This method allows
-     * response headers to have multiple values.
+     * 添加HTTP响应头。
+     * <p>
+     * 该方法允许为同一个响应头名称添加多个值，而不是覆盖已有的值。
+     * 响应头的值如果包含非ASCII字符，应按照RFC 2047进行编码。
+     * </p>
      *
-     * @param name  the name of the header
-     * @param value the additional header value If it contains octet string, it
-     *              should be encoded according to RFC 2047
-     *              (http://www.ietf.org/rfc/rfc2047.txt)
-     * @see #setHeader
+     * @param name 响应头名称
+     * @param value 要添加的响应头值
      */
     void addHeader(String name, String value);
 
@@ -93,36 +127,48 @@ public interface HttpResponse {
         return getHeader(name.getName());
     }
 
+    /**
+     * 获取指定名称的响应头的值。
+     * <p>
+     * 如果该响应头有多个值，则返回第一个值。
+     * 如果该响应头不存在，则返回null。
+     * </p>
+     *
+     * @param name 要获取的响应头名称
+     * @return 响应头的值，如果不存在则返回null
+     */
     String getHeader(String name);
 
-    /**
-     * Return a Collection of all the header values associated with the
-     * specified header name.
-     *
-     * @param name Header name to look up
-     * @return The values for the specified header. These are the raw values so
-     * if multiple values are specified in a single header that will be
-     * returned as a single header value.
-     * @since Servlet 3.0
-     */
     Collection<String> getHeaders(String name);
 
     default Collection<String> getHeaders(HeaderName name) {
         return getHeaders(name.getName());
     }
 
-    /**
-     * Get the header names set for this HTTP response.
-     *
-     * @return The header names set for this HTTP response.
-     * @since Servlet 3.0
-     */
     Collection<String> getHeaderNames();
 
+    /**
+     * 设置响应体的内容长度。
+     * <p>
+     * 设置Content-Length响应头，告知客户端响应体的字节数。
+     * 在发送固定长度的响应时应当设置此值。
+     * </p>
+     *
+     * @param contentLength 响应体的字节数
+     */
     void setContentLength(long contentLength);
 
     long getContentLength();
 
+    /**
+     * 设置响应的内容类型。
+     * <p>
+     * 设置Content-Type响应头，指定响应体的MIME类型和字符编码。
+     * 例如："text/html;charset=utf-8"、"application/json;charset=utf-8"等。
+     * </p>
+     *
+     * @param contentType 内容类型，包含MIME类型和可选的字符编码
+     */
     void setContentType(String contentType);
 
     String getContentType();
@@ -131,16 +177,54 @@ public interface HttpResponse {
         write(data.getBytes());
     }
 
+    default void writeJson(Object data) throws IOException {
+        byte[] bytes = JSON.toJSONBytes(data);
+        setContentLength(bytes.length);
+        setContentType("application/json;charset=utf-8");
+        write(bytes);
+    }
+
+    /**
+     * 写入字节数组的指定部分到响应体。
+     * <p>
+     * 该方法允许写入字节数组的一个子序列到响应体中。
+     * </p>
+     *
+     * @param data 要写入的字节数组
+     * @param offset 开始位置的偏移量
+     * @param length 要写入的字节数
+     * @throws IOException 如果写入过程中发生I/O错误
+     */
     void write(byte[] data, int offset, int length) throws IOException;
 
+    /**
+     * 写入字节数组到响应体。
+     * <p>
+     * 该方法将整个字节数组写入到响应体中。
+     * </p>
+     *
+     * @param data 要写入的字节数组
+     * @throws IOException 如果写入过程中发生I/O错误
+     */
     void write(byte[] data) throws IOException;
 
+    /**
+     * 关闭响应。
+     * <p>
+     * 完成响应内容的写入后，应当调用此方法关闭响应。
+     * 这将确保所有缓冲的内容被刷新并发送到客户端。
+     * </p>
+     */
     void close();
 
     /**
-     * 添加Cookie信息
+     * 添加Cookie到响应中。
+     * <p>
+     * 通过该方法可以向客户端设置Cookie。添加的Cookie将通过Set-Cookie响应头发送给客户端。
+     * Cookie可以包含名称、值、过期时间、路径等属性。
+     * </p>
      *
-     * @param cookie
+     * @param cookie 要添加的Cookie对象，包含Cookie的所有属性
      */
     void addCookie(Cookie cookie);
 
