@@ -8,7 +8,7 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.ai.prompt;
+package tech.smartboot.feat.ai.chat.prompt;
 
 import tech.smartboot.feat.ai.ModelMeta;
 import tech.smartboot.feat.core.common.FeatUtils;

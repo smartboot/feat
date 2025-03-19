@@ -16,22 +16,55 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 public class Options {
+    /**
+     * Gitee AI服务的基础URL
+     */
     public static final String AI_VENDOR_GITEE = "https://ai.gitee.com/v1/";
+
+    /**
+     * AI服务的基础URL，优先从环境变量FEATAI_BASE_URL获取，默认使用Gitee AI服务
+     */
     private String baseUrl = System.getenv("FEATAI_BASE_URL") != null ? System.getenv("FEAT_AI_BASE_URL") : AI_VENDOR_GITEE;
+
+    /**
+     * AI模型名称
+     */
     private String model;
+
+    /**
+     * API密钥，优先从环境变量FEATAI_API_KEY获取
+     */
     private String apiKey = System.getenv("FEATAI_API_KEY");
+
+    /**
+     * 系统提示信息
+     */
     private String system;
+
+    /**
+     * 是否启用调试模式
+     */
     private boolean debug;
+
     /**
      * 是否忽略不支持的工具
+     * 当设置为true时，遇到不支持的工具会跳过而不是抛出异常
      */
     private boolean ignoreUnSupportedTool = false;
+
+    /**
+     * 请求头信息映射
+     */
     private final Map<String, String> headers = new HashMap<>();
-    private Map<String, Function> functions = new HashMap<>();
+
+    /**
+     * 功能函数映射，用于存储可用的AI功能函数
+     */
+    private final Map<String, Function> functions = new HashMap<>();
 
 
     public String baseUrl() {

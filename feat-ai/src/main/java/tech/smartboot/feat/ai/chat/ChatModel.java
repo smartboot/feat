@@ -24,7 +24,7 @@ import tech.smartboot.feat.ai.chat.entity.StreamChoice;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
 import tech.smartboot.feat.ai.chat.entity.Tool;
 import tech.smartboot.feat.ai.chat.entity.ToolCall;
-import tech.smartboot.feat.ai.prompt.Prompt;
+import tech.smartboot.feat.ai.chat.prompt.Prompt;
 import tech.smartboot.feat.core.client.HttpPost;
 import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.client.stream.ServerSentEventStream;
