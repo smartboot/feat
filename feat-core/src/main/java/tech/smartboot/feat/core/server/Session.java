@@ -15,7 +15,7 @@ package tech.smartboot.feat.core.server;
  * @version v1.0 3/7/25
  */
 public interface Session {
-    public static final String DEFAULT_SESSION_COOKIE_NAME = "FEAT_SESSION";
+    String DEFAULT_SESSION_COOKIE_NAME = "FEAT_SESSION";
 
     String getSessionId();
 
