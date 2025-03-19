@@ -3,6 +3,7 @@ title: 授权提示
 description: Feat unAuth
 
 ---
+import { LinkCard, CardGrid } from '@astrojs/starlight/components';
 
 本文仅面向 Feat 授权企业开放，授权企业可免费获得 **5** 个名额的文档永久访问权限。
 
@@ -11,4 +12,10 @@ description: Feat unAuth
 
 如需申请企业授权，请添加微信（备注：`Feat咨询`）
 
-<img src="https://smartboot.tech/img/qrcode/personal_wx.png" alt="hello world" width="40%" className="shadow"/>
+<img src="https://smartboot.tech/img/qrcode/personal_wx.png" alt="hello world" width="30%" className="shadow"/>
+
+
+<CardGrid>
+    <LinkCard title="企业扶持计划" description="成立 3 年以内的初创企业，可申请免费使用 Feat 产品。" href="https://gitee.com/smartboot/feat/issues/new/choose" />
+    <LinkCard title="高校助力计划" description="对于在校大学生，可申请免费开通 Feat 文档访问权限。" href="https://gitee.com/smartboot/feat/issues/new/choose" />
+</CardGrid>
