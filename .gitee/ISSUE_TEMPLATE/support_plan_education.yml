@@ -1,0 +1,43 @@
+name: ✴️参与高校助力计划
+description: 对于在校大学生，可申请免费使用 Feat 产品直至毕业。
+title: 高校助力计划申请-[学校名称]
+labels: [ "support" ]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        注意事项：
+        - 请将 issue 标题中的 `[学校名称]` 替换为真实学校名称。
+        - 申请高校助力计划，需要提供 **准确、完整** 的学校名称、学校Logo、申请理由及预计毕业时间。
+        - 授权有效期：申请通过之日至申请者毕业。
+        - 审核结果将由 Feat 团队在此 issue 中回复。
+  - type: input
+    id: school
+    validations:
+      required: true
+    attributes:
+      label: 学校名称
+      description: 请填写您所在的学校全称。
+  - type: textarea
+    attributes:
+      label: 学校Logo
+      description: 上传学校Logo。
+      placeholder: |
+        可在此处进行图片粘贴上传。
+    validations:
+      required: true
+  - type: input
+    id: graduation
+    validations:
+      required: true
+    attributes:
+      label: 预计毕业时间
+      description: 请填写您的预计毕业时间（格式：YYYY-MM）。
+  - type: textarea
+    validations:
+      required: true
+    attributes:
+      label: 申请理由
+      description: 请说明您申请使用 Feat 的原因和计划。
+      placeholder: |
+        例如：课程学习、毕业设计、创新项目等。
