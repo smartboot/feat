@@ -48,15 +48,30 @@ public class ByteTree<T> {
      */
     private T attach;
 
+    /**
+     * 创建一个默认的字节树，容量限制为16K
+     */
     ByteTree() {
         this(16 * 1024);
     }
 
+    /**
+     * 创建一个指定容量限制的字节树
+     *
+     * @param limit 容量上限
+     */
     public ByteTree(int limit) {
         this(null, Byte.MIN_VALUE);
         this.limit = limit;
     }
 
+    /**
+     * 创建一个字节树节点
+     *
+     * @param parent 父节点
+     * @param value  节点值
+     * @throws IllegalStateException 如果节点深度超过最大深度限制
+     */
     ByteTree(ByteTree<T> parent, byte value) {
         this.parent = parent;
         this.value = value;
@@ -181,12 +196,20 @@ public class ByteTree<T> {
 
     }
 
+    /**
+     * 添加一个带附件的节点
+     *
+     * @param value  节点值
+     * @param attach 附件对象
+     */
     public void addNode(String value, T attach) {
         byte[] bytes = value.getBytes();
+        // 获取根节点
         ByteTree<T> tree = this;
         while (tree.depth > 0) {
             tree = tree.parent;
         }
+        // 添加节点并设置附件
         ByteTree<T> leafNode = tree.addNode(bytes, 0, bytes.length, NULL_END_MATCHER);
         leafNode.stringValue = value;
         leafNode.attach = attach;
@@ -194,82 +217,120 @@ public class ByteTree<T> {
 
     /**
      * 从根节点开始，为入参字符串创建节点
+     *
+     * @param value 节点值
      */
     public void addNode(String value) {
         addNode(value, null);
     }
 
+    /**
+     * 递归添加节点
+     *
+     * @param value      字节数组
+     * @param offset     当前处理的偏移量
+     * @param limit      字节数组的长度限制
+     * @param endMatcher 结束匹配器
+     * @return 添加的叶子节点
+     */
     private ByteTree<T> addNode(byte[] value, int offset, int limit, EndMatcher endMatcher) {
-        if (offset == limit) {
-            return this;
-        }
-        if (this.depth >= MAX_DEPTH) {
+        // 已处理完所有字节或达到最大深度，返回当前节点
+        if (offset == limit || this.depth >= MAX_DEPTH) {
             return this;
         }
 
         byte b = value[offset];
+        // 如果遇到结束字符，返回当前节点
         if (endMatcher.match(b)) {
             return this;
         }
-//        System.out.println("add Node");
+        
+        // 初始化shift值
         if (shift == -1) {
             shift = b;
         }
+        
+        // 确保数组有足够空间
         if (b - shift < 0) {
             increase(b - shift);
         } else {
             increase(b + 1 - shift);
         }
 
+        // 获取或创建下一级节点
         ByteTree<T> nextTree = nodes[b - shift];
         if (nextTree == null) {
             nextTree = nodes[b - shift] = new ByteTree<T>(this, b);
             nodeCount++;
             updateCounter(this);
         }
+        
+        // 递归处理下一个字节
         return nextTree.addNode(value, offset + 1, limit, endMatcher);
     }
 
+    /**
+     * 从ByteBuffer递归添加节点
+     *
+     * @param value      字节缓冲区
+     * @param endMatcher 结束匹配器
+     * @return 添加的叶子节点
+     */
     private synchronized ByteTree<T> addNode(ByteBuffer value, EndMatcher endMatcher) {
-        if (!value.hasRemaining()) {
-            return this;
-        }
-        if (this.depth >= MAX_DEPTH) {
+        // 已处理完所有字节或达到最大深度，返回当前节点
+        if (!value.hasRemaining() || this.depth >= MAX_DEPTH) {
             return this;
         }
 
         byte b = value.get();
+        // 如果遇到结束字符，返回当前节点
         if (endMatcher.match(b)) {
             return this;
         }
-//        System.out.println("add Node");
+        
+        // 初始化shift值
         if (shift == -1) {
             shift = b;
         }
+        
+        // 确保数组有足够空间
         if (b - shift < 0) {
             increase(b - shift);
         } else {
             increase(b + 1 - shift);
         }
 
+        // 获取或创建下一级节点
         ByteTree<T> nextTree = nodes[b - shift];
         if (nextTree == null) {
             nextTree = nodes[b - shift] = new ByteTree<T>(this, b);
             nodeCount++;
             updateCounter(this);
         }
+        
+        // 递归处理下一个字节
         return nextTree.addNode(value, endMatcher);
     }
 
+    /**
+     * 更新节点及其所有父节点的计数器
+     *
+     * @param node 要更新的节点
+     */
     private static <T> void updateCounter(ByteTree<T> node) {
+        // 重置当前节点的计数
         node.totalCount = node.nodeCount;
         node.capacity = node.nodes.length;
+        
+        // 累加所有子节点的计数
         for (ByteTree<T> child : node.nodes) {
             if (child != null) {
                 node.capacity += child.capacity;
                 node.totalCount += child.totalCount;
             }
         }
+        
+        // 递归更新父节点
         if (node.parent != null) {
             updateCounter(node.parent);
         }
@@ -289,8 +350,15 @@ public class ByteTree<T> {
         }
     }
 
+    /**
+     * 获取节点的字符串值
+     * 如果字符串值未缓存，则从节点路径构建字符串
+     *
+     * @return 节点的字符串值
+     */
     public String getStringValue() {
         if (stringValue == null) {
+            // 从节点路径构建字符串
             byte[] b = new byte[depth];
             ByteTree<T> tree = this;
             while (tree.depth != 0) {
@@ -302,24 +370,57 @@ public class ByteTree<T> {
         return stringValue;
     }
 
+    /**
+     * 获取节点附加的对象
+     *
+     * @return 附加对象
+     */
     public T getAttach() {
         return attach;
     }
 
+    /**
+     * 结束匹配器接口，用于确定何时结束字节序列的处理
+     */
     public interface EndMatcher {
+        /**
+         * 判断当前字节是否为结束字符
+         *
+         * @param endByte 要检查的字节
+         * @return 如果是结束字符则返回true，否则返回false
+         */
         boolean match(byte endByte);
     }
 
+    /**
+     * 获取字节树的容量上限
+     *
+     * @return 容量上限
+     */
     public int getLimit() {
         return limit;
     }
 
+    /**
+     * 获取字节树当前的容量
+     *
+     * @return 当前容量
+     */
     public int getCapacity() {
         return capacity;
     }
 
+    /**
+     * 虚拟字节树节点，用于临时存储字符串值
+     * 不会添加到实际的树结构中，由JVM回收
+     */
     private class VirtualByteTree extends ByteTree<T> {
 
+        /**
+         * 创建一个虚拟字节树节点
+         *
+         * @param value 节点的字符串值
+         */
         public VirtualByteTree(String value) {
             super();
             this.stringValue = value;
