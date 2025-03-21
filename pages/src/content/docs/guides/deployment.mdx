@@ -1,0 +1,177 @@
+---
+title: 应用发布指南 🌐
+description: 从打包到部署的最佳实践
+sidebar:
+    order: 5
+---
+
+import {Aside} from '@astrojs/starlight/components';
+import CheckAuthorize from '../../../components/CheckAuthorize.astro'
+
+<CheckAuthorize/>
+
+本章节将指导您如何将 Feat 应用打包并部署到生产环境。我们将介绍从构建可执行 jar 包到容器化部署的完整流程。
+
+## 构建可执行 jar
+
+Feat 应用可以通过 Maven 的 `maven-shade-plugin` 插件打包成一个包含所有依赖的可执行 jar 包（也称为 fat jar）。
+
+在 `pom.xml` 中添加以下配置：
+
+```xml title="pom.xml"
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-shade-plugin</artifactId>
+            <version>3.5.0</version>
+            <executions>
+                <execution>
+                    <phase>package</phase>
+                    <goals>
+                        <goal>shade</goal>
+                    </goals>
+                    <configuration>
+                        <transformers>
+                            <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                <mainClass>your.package.MainClass</mainClass>
+                            </transformer>
+                        </transformers>
+                    </configuration>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
+```
+
+<Aside>
+    请将 `your.package.MainClass` 替换为您的主类的完整类名。
+</Aside>
+
+执行以下命令进行打包：
+
+```bash
+mvn clean package
+```
+
+## 构建 Docker 镜像
+
+### 编写 Dockerfile
+
+创建 `Dockerfile` 文件，内容如下：
+
+```dockerfile title="Dockerfile"
+# 使用 JRE 基础镜像
+FROM eclipse-temurin:8-jre
+
+# 设置工作目录
+WORKDOME /app
+
+# 复制 jar 包
+COPY target/your-application.jar app.jar
+
+# 设置环境变量
+ENV JAVA_OPTS=""
+
+# 暴露端口
+EXPOSE 8080
+
+# 启动命令
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+```
+
+### 构建镜像
+
+执行以下命令构建 Docker 镜像：
+
+```bash
+docker build -t your-application:latest .
+```
+
+## 多环境配置管理
+
+Feat 支持通过环境变量进行配置管理，这在容器化部署时特别有用。
+
+### 配置优先级
+
+1. 命令行参数
+2. 环境变量
+3. 配置文件
+
+### 环境变量配置示例
+
+```bash
+# 设置服务端口
+export FEAT_SERVER_PORT=8080
+
+# 设置数据库连接
+export FEAT_DB_URL=jdbc:mysql://localhost:3306/db_name
+export FEAT_DB_USERNAME=root
+export FEAT_DB_PASSWORD=password
+```
+
+## 容器化部署优化
+
+### JVM 调优
+
+在容器环境中运行 Java 应用时，建议添加以下 JVM 参数：
+
+```bash
+JAVA_OPTS="\
+    -XX:+UseContainerSupport \
+    -XX:InitialRAMPercentage=70.0 \
+    -XX:MaxRAMPercentage=70.0 \
+    -XX:+HeapDumpOnOutOfMemoryError"
+```
+
+### 镜像优化
+
+1. 使用多阶段构建减小镜像大小
+2. 合理设置 JVM 堆内存
+3. 使用 Alpine 基础镜像进一步减小体积
+
+### 健康检查
+
+在 Docker 运行时添加健康检查：
+
+```bash
+docker run -d \
+    --health-cmd="curl -f http://localhost:8080/health || exit 1" \
+    --health-interval=5s \
+    --health-retries=3 \
+    your-application:latest
+```
+
+## 部署示例
+
+### 使用 Docker Compose
+
+创建 `docker-compose.yml` 文件：
+
+```yaml title="docker-compose.yml"
+version: '3'
+services:
+  app:
+    image: your-application:latest
+    ports:
+      - "8080:8080"
+    environment:
+      - FEAT_SERVER_PORT=8080
+      - JAVA_OPTS=-XX:+UseContainerSupport -XX:MaxRAMPercentage=70.0
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+```
+
+启动服务：
+
+```bash
+docker-compose up -d
+```
+
+<Aside>
+    在生产环境中，建议使用容器编排工具（如 Kubernetes）进行部署和管理。
+</Aside>
