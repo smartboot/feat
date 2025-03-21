@@ -17,14 +17,14 @@ import java.nio.charset.StandardCharsets;
  * 字节树(ByteTree)是一种高效的字节序列查找树数据结构，用于快速匹配和检索字节序列。
  * 它通过树形结构组织字节数据，支持快速查找、添加节点，并可以为节点绑定附加对象。
  * 主要应用于HTTP头部解析、URL路由匹配等需要高效字符串匹配的场景。
- * 
+ * <p>
  * 特点：
  * 1. 支持动态添加节点，构建字节序列查找树
  * 2. 提供高效的字节序列查找功能
  * 3. 支持为节点绑定附加对象
  * 4. 具有容量管理机制，防止内存过度使用
  * 5. 支持虚拟节点，用于临时匹配结果
- * 
+ *
  * @author 三刀(zhengjunweimail@163.com)
  * @version v1.0.0
  */
@@ -33,84 +33,84 @@ public class ByteTree<T> {
      * 默认字节树实例，可用于通用场景
      */
     public final static ByteTree<?> DEFAULT = new ByteTree<>();
-    
+
     /**
      * 空格字符结束匹配器，当遇到空格字符(ASCII 32)时返回true
      */
     public final static EndMatcher SP_END_MATCHER = endByte -> endByte == Constant.SP;
-    
+
     /**
      * 冒号结束匹配器，当遇到冒号字符(':')时返回true
      */
     public final static EndMatcher COLON_END_MATCHER = endByte -> endByte == ':';
-    
+
     /**
      * 回车符结束匹配器，当遇到回车符(ASCII 13)时返回true
      */
     public final static EndMatcher CR_END_MATCHER = endByte -> endByte == Constant.CR;
-    
+
     /**
      * 字节树的最大深度限制，防止无限递归和栈溢出
      */
-    private static final int MAX_DEPTH = 128;
-    
+    private static final int MAX_DEPTH = 32;
+
     /**
      * 空结束匹配器，永远返回false，用于构建完整字节序列的节点
      */
     private static final EndMatcher NULL_END_MATCHER = endByte -> false;
-    
+
     /**
      * 当前节点的字节值
      */
     private final byte value;
-    
+
     /**
      * 当前节点在树中的深度，根节点深度为0
      */
     private final int depth;
-    
+
     /**
      * 当前节点的父节点引用
      */
     private final ByteTree<T> parent;
-    
+
     /**
      * 节点的字符串值缓存，避免重复计算
      */
     protected String stringValue;
-    
+
     /**
      * 子节点数组的偏移量，用于优化数组空间
      * 初始值为-1表示尚未初始化
      */
     private int shift = -1;
-    
+
     /**
      * 子节点数组，存储当前节点的所有子节点
      * 初始容量为1，会根据需要动态扩容
      */
     private ByteTree<T>[] nodes = new ByteTree[1];
-    
+
     /**
      * 当前节点的直接子节点数量
      */
     private int nodeCount;
-    
+
     /**
      * 有效节点总数，包括当前节点及其所有子孙节点
      */
     private int totalCount;
-    
+
     /**
      * 节点数总容量，包括当前节点及其所有子孙节点的数组容量总和
      */
     private int capacity;
-    
+
     /**
      * 总容量上限，限制字节树的最大内存使用
      */
     private int limit;
-    
+
     /**
      * 绑定到当前节点的附件对象
      */
@@ -170,7 +170,7 @@ public class ByteTree<T> {
         int markPosition = buffer.position();
         // 从当前节点开始搜索
         ByteTree<T> byteTree = this;
-        
+
         // 遍历字节缓冲区
         while (buffer.hasRemaining()) {
             byte v = buffer.get();
@@ -207,13 +207,13 @@ public class ByteTree<T> {
                 break;
             }
         }
-        
+
         // 缓冲区已读完，未匹配到，重置position
         if (!buffer.hasRemaining()) {
             buffer.position(markPosition);
             return null;
         }
-        
+
         // ByteTree已遍历结束，但缓冲区还有数据
         if (cache && byteTree.depth < MAX_DEPTH) {
             // 启用缓存模式：在当前节点上追加子节点
@@ -254,7 +254,7 @@ public class ByteTree<T> {
         if (releaseCount <= 1) {
             return;
         }
-        
+
         // 查找使用效率最低的子节点
         int index = -1;
         for (int i = 0; i < byteTree.nodes.length; i++) {
@@ -265,13 +265,13 @@ public class ByteTree<T> {
             // 初始化索引或找到容量为0的节点
             if (index == -1 || child.capacity == 0 || byteTree.nodes[index].capacity == 0) {
                 index = i;
-            } 
+            }
             // 比较节点的使用效率(节点数/容量比)，选择效率较低的节点
             else if ((child.totalCount / child.capacity) < (byteTree.nodes[index].totalCount / byteTree.nodes[index].capacity)) {
                 index = i;
             }
         }
-        
+
         // 如果没有找到合适的子节点，尝试在父节点中释放容量
         if (index == -1) {
             if (byteTree.parent != null) {
@@ -279,10 +279,10 @@ public class ByteTree<T> {
             }
             return;
         }
-        
+
         // 获取要移除的节点
         ByteTree<?> removed = byteTree.nodes[index];
-        
+
         // 如果节点容量小于需要释放的容量，直接移除该节点
         if (removed.capacity < releaseCount) {
             // 更新剩余需要释放的容量
@@ -290,7 +290,7 @@ public class ByteTree<T> {
             // 移除节点
             byteTree.nodes[index] = null;
             byteTree.nodeCount--;
-            
+
             // 如果移除的是第一个节点，需要调整数组和偏移量
             if (index == 0) {
                 // 找到第一个非空节点的位置
@@ -303,7 +303,7 @@ public class ByteTree<T> {
                 byteTree.nodes = newNodes;
                 // 调整偏移量
                 byteTree.shift++;
-            } 
+            }
             // 如果移除的是最后一个节点，缩小数组大小
             else if (index == byteTree.nodes.length - 1) {
                 // 找到最后一个非空节点的位置
@@ -315,16 +315,16 @@ public class ByteTree<T> {
                 System.arraycopy(byteTree.nodes, 0, newNodes, 0, newNodes.length);
                 byteTree.nodes = newNodes;
             }
-            
+
             System.out.println("remove node " + removed);
             // 更新节点计数器
             updateCounter(byteTree);
-            
+
             // 如果还需要释放更多容量，递归调用
             if (releaseCount > 0) {
                 reduceCapacity(byteTree, releaseCount);
             }
-        } 
+        }
         // 如果节点容量大于需要释放的容量，在该节点的子树中继续释放
         else {
             System.out.println("continue node " + removed.capacity + " " + releaseCount);
@@ -384,18 +384,18 @@ public class ByteTree<T> {
         if (endMatcher.match(b)) {
             return this;
         }
-        
+
         // 初始化shift值，用于优化子节点数组的空间
         // 首次添加子节点时，将shift设置为该字节的值
         if (shift == -1) {
             shift = b;
         }
-        
+
         // 确保子节点数组有足够空间
         // 如果当前字节小于shift，需要扩展数组并调整shift
         if (b - shift < 0) {
             increase(b - shift);
-        } 
+        }
         // 如果当前字节大于等于shift+数组长度，需要扩展数组
         else {
             increase(b + 1 - shift);
@@ -409,7 +409,7 @@ public class ByteTree<T> {
             nodeCount++;
             updateCounter(this);
         }
-        
+
         // 递归处理下一个字节
         return nextTree.addNode(value, offset + 1, limit, endMatcher);
     }
@@ -435,12 +435,12 @@ public class ByteTree<T> {
         if (endMatcher.match(b)) {
             return this;
         }
-        
+
         // 初始化shift值，用于优化子节点数组的空间
         if (shift == -1) {
             shift = b;
         }
-        
+
         // 确保子节点数组有足够空间
         if (b - shift < 0) {
             increase(b - shift);
@@ -456,7 +456,7 @@ public class ByteTree<T> {
             nodeCount++;
             updateCounter(this);
         }
-        
+
         // 递归处理下一个字节
         return nextTree.addNode(value, endMatcher);
     }
@@ -475,7 +475,7 @@ public class ByteTree<T> {
         node.totalCount = node.nodeCount;
         // 当前节点的容量初始化为子节点数组的长度
         node.capacity = node.nodes.length;
-        
+
         // 累加所有子节点的计数
         for (ByteTree<T> child : node.nodes) {
             if (child != null) {
@@ -485,7 +485,7 @@ public class ByteTree<T> {
                 node.totalCount += child.totalCount;
             }
         }
-        
+
         // 递归更新父节点，确保变更传播到树的根部
         if (node.parent != null) {
             updateCounter(node.parent);
@@ -501,7 +501,7 @@ public class ByteTree<T> {
     private void increase(int size) {
         // 特殊情况处理：如果size为0，将其设为-1
         if (size == 0) size = -1;
-        
+
         // 处理负值情况：需要在数组前面添加空间
         if (size < 0) {
             // 创建更大的数组
@@ -512,7 +512,7 @@ public class ByteTree<T> {
             nodes = temp;
             // 调整shift值，使索引计算保持正确
             shift += size;
-        } 
+        }
         // 处理正值情况：需要扩展数组大小
         else if (nodes.length < size) {
             // 创建更大的数组
