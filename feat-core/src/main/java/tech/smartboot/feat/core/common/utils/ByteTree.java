@@ -127,7 +127,7 @@ public class ByteTree<T> {
     }
 
     public static <T> void reduceCapacity(ByteTree<T> byteTree, int releaseCount) {
-        if (releaseCount <= 0) {
+        if (releaseCount <= 1) {
             return;
         }
         int index = -1;
@@ -175,7 +175,7 @@ public class ByteTree<T> {
                 reduceCapacity(byteTree, releaseCount);
             }
         } else {
-            System.out.println("continue node " + removed);
+            System.out.println("continue node " + removed.capacity + " " + releaseCount);
             reduceCapacity(removed, releaseCount);
         }
 
@@ -230,7 +230,7 @@ public class ByteTree<T> {
         return nextTree.addNode(value, offset + 1, limit, endMatcher);
     }
 
-    private ByteTree<T> addNode(ByteBuffer value, EndMatcher endMatcher) {
+    private synchronized ByteTree<T> addNode(ByteBuffer value, EndMatcher endMatcher) {
         if (!value.hasRemaining()) {
             return this;
         }
