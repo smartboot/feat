@@ -14,10 +14,11 @@ import org.smartboot.socket.timer.HashedWheelTimer;
 import org.smartboot.socket.timer.TimerTask;
 import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.common.DecodeState;
-import tech.smartboot.feat.core.common.HeaderValue;
-import tech.smartboot.feat.core.common.Reset;
 import tech.smartboot.feat.core.common.HeaderName;
+import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpStatus;
+import tech.smartboot.feat.core.common.Reset;
+import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.common.io.BodyInputStream;
 import tech.smartboot.feat.core.common.io.ChunkedInputStream;
@@ -26,6 +27,7 @@ import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.multipart.MultipartConfig;
 import tech.smartboot.feat.core.common.multipart.Part;
+import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.ServerOptions;
@@ -41,7 +43,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 public final class HttpEndpoint extends Endpoint implements HttpRequest, Reset {
@@ -274,6 +276,9 @@ public final class HttpEndpoint extends Endpoint implements HttpRequest, Reset {
 
     public Collection<Part> getParts(MultipartConfig configElement) throws IOException {
         if (!multipartParsed) {
+            if (StringUtils.isBlank(getContentType()) || !getContentType().startsWith(HeaderValue.ContentType.MULTIPART_FORM_DATA)) {
+                throw new FeatException("Multipart is not supported for content type " + getContentType());
+            }
             MultipartFormDecoder multipartFormDecoder = new MultipartFormDecoder(this, configElement);
             long remaining = getContentLength();
             if (configElement.getMaxRequestSize() > 0 && configElement.getMaxRequestSize() < remaining) {

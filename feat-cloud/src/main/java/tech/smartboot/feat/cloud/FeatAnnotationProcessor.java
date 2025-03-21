@@ -352,7 +352,6 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                             writer.write("      byte[] bytes = bean." + se.getSimpleName() + "(");
                             break;
                         case RETURN_TYPE_OBJECT:
-                            writer.write("ctx.Response.setContentType(\"application/json\");");
                             writer.write("      " + returnType + " rst = bean." + se.getSimpleName() + "(");
                             break;
                         default:
@@ -377,6 +376,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                         case RETURN_TYPE_OBJECT:
                             writer.write("java.io.ByteArrayOutputStream os=getOutputStream();\n");
                             writeJsonObject(writer, returnType, "rst", 0, new HashMap<>(), bytesCache);
+                            writer.write("ctx.Response.setContentType(\"application/json\");");
                             writer.write("        ctx.Response.setContentLength(os.size());\n");
                             writer.write("        os.writeTo(ctx.Response.getOutputStream());\n");
 //                            System.out.println("typeMirror:" + stringBuilder);
