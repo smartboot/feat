@@ -67,16 +67,16 @@ public class ByteTree<T> {
     }
 
     public ByteTree<T> search(ByteBuffer buffer, EndMatcher endMatcher, boolean cache) {
-        boolean trimSate = true;
+        boolean trimState = true;
         int markPosition = buffer.position();
         ByteTree<T> byteTree = this;
         while (buffer.hasRemaining()) {
             byte v = buffer.get();
-            if (trimSate) {
+            if (trimState) {
                 if (v == Constant.SP) {
                     continue;
                 } else {
-                    trimSate = false;
+                    trimState = false;
                     markPosition = buffer.position() - 1;
                 }
             }
