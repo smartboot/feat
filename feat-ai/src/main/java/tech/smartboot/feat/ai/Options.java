@@ -11,6 +11,8 @@
 package tech.smartboot.feat.ai;
 
 import tech.smartboot.feat.ai.chat.entity.Function;
+import tech.smartboot.feat.ai.chat.entity.ResponseFormat;
+import tech.smartboot.feat.ai.vendor.GiteeAI;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -20,15 +22,16 @@ import java.util.Map;
  * @version v1.0.0
  */
 public class Options {
+    public static final String ENV_API_KEY = "FEATAI_API_KEY";
     /**
      * Gitee AI服务的基础URL
      */
-    public static final String AI_VENDOR_GITEE = "https://ai.gitee.com/v1/";
+    public static final String AI_VENDOR_GITEE = GiteeAI.BASE_URL;
 
     /**
      * AI服务的基础URL，优先从环境变量FEATAI_BASE_URL获取，默认使用Gitee AI服务
      */
-    private String baseUrl = System.getenv("FEATAI_BASE_URL") != null ? System.getenv("FEAT_AI_BASE_URL") : AI_VENDOR_GITEE;
+    private String baseUrl = System.getenv("FEATAI_BASE_URL") != null ? System.getenv("FEAT_AI_BASE_URL") : GiteeAI.BASE_URL;
 
     /**
      * AI模型名称
@@ -38,7 +41,7 @@ public class Options {
     /**
      * API密钥，优先从环境变量FEATAI_API_KEY获取
      */
-    private String apiKey = System.getenv("FEATAI_API_KEY");
+    private String apiKey = System.getenv(ENV_API_KEY);
 
     /**
      * 系统提示信息
@@ -65,6 +68,8 @@ public class Options {
      * 功能函数映射，用于存储可用的AI功能函数
      */
     private final Map<String, Function> functions = new HashMap<>();
+
+    private ResponseFormat responseFormat;
 
 
     public String baseUrl() {
@@ -141,5 +146,14 @@ public class Options {
     public Options addHeader(String key, String value) {
         this.headers.put(key, value);
         return this;
+    }
+
+    public Options responseFormat(ResponseFormat responseFormat) {
+        this.responseFormat = responseFormat;
+        return this;
+    }
+
+    public ResponseFormat responseFormat() {
+        return responseFormat;
     }
 }

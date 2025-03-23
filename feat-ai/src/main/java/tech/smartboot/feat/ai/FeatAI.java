@@ -13,6 +13,7 @@ package tech.smartboot.feat.ai;
 import tech.smartboot.feat.ai.chat.ChatModel;
 import tech.smartboot.feat.ai.embedding.EmbeddingModel;
 import tech.smartboot.feat.ai.embedding.EmbeddingOptions;
+import tech.smartboot.feat.ai.vendor.GiteeAI;
 
 import java.util.function.Consumer;
 
@@ -31,5 +32,13 @@ public class FeatAI {
         EmbeddingModel embeddingModel = new EmbeddingModel();
         consumer.accept(embeddingModel.options());
         return embeddingModel;
+    }
+
+    public static GiteeAI giteeAI() {
+        return giteeAI(System.getenv(Options.ENV_API_KEY));
+    }
+
+    public static GiteeAI giteeAI(String apiKey) {
+        return new GiteeAI(apiKey);
     }
 }

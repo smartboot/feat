@@ -203,6 +203,7 @@ public class ChatModel {
         message.setRole("user");
         history.add(message);
         request.setMessages(history);
+        request.setResponseFormat(options.responseFormat());
 
         List<Tool> toolList = new ArrayList<>();
         for (String tool : tools) {

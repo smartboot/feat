@@ -32,6 +32,9 @@ public class ChatRequest {
     @JSONField(name = "tool_choice", serializeFeatures = JSONWriter.Feature.IgnoreNoneSerializable)
     private String toolChoice;
 
+    @JSONField(name = "response_format")
+    private ResponseFormat responseFormat;
+
     public String getModel() {
         return model;
     }
@@ -70,5 +73,13 @@ public class ChatRequest {
 
     public void setToolChoice(String toolChoice) {
         this.toolChoice = toolChoice;
+    }
+
+    public ResponseFormat getResponseFormat() {
+        return responseFormat;
+    }
+
+    public void setResponseFormat(ResponseFormat responseFormat) {
+        this.responseFormat = responseFormat;
     }
 }

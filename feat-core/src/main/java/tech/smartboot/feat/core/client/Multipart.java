@@ -10,6 +10,8 @@
 
 package tech.smartboot.feat.core.client;
 
+import java.io.File;
+
 /**
  * @author 三刀(zhengjunweimail@163.com)
  * @version v1.0.0
@@ -17,6 +19,10 @@ package tech.smartboot.feat.core.client;
 public abstract class Multipart {
     public static FormItemMultipart newFormMultipart(String name, String value) {
         return new FormItemMultipart(name, value);
+    }
+
+    public static FileItemMultipart newFileMultipart(String name, File file) {
+        return new FileItemMultipart(name,file);
     }
 
     abstract void write(PostBody post);

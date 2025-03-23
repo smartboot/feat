@@ -63,10 +63,6 @@ public final class PostBody extends CommonBody {
     }
 
     public HttpPost multipart(List<Multipart> multiparts) {
-//                if (params == null || params.isEmpty()) {
-//                    HttpPost.this.done();
-//                    return HttpPost.this;
-//                }
         try {
             httpPost.rest.willSendRequest();
 
