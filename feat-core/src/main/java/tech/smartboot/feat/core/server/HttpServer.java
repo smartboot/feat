@@ -79,7 +79,7 @@ public class HttpServer {
             throw new RuntimeException("server is running");
         }
         started = true;
-        bufferPagePool = new BufferPagePool(options.getThreadNum(), true);
+        bufferPagePool = new BufferPagePool(options.getThreadNum(), options.isDirectBufferEnable());
         initByteCache();
 
         options.getPlugins().forEach(processor::addPlugin);

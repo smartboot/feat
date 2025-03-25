@@ -89,6 +89,10 @@ public class ServerOptions {
     private long maxRequestSize = Integer.MAX_VALUE;
 
     private boolean lowMemory = false;
+    /**
+     * 是否启用direct buffer
+     */
+    private boolean directBufferEnable = false;
     private AsynchronousChannelGroup group;
 
     private final WafOptions wafOptions = new WafOptions();
@@ -263,6 +267,15 @@ public class ServerOptions {
 
     public ServerOptions shutdownHook(Runnable shutdownHook) {
         this.shutdownHook = shutdownHook;
+        return this;
+    }
+
+    public boolean isDirectBufferEnable() {
+        return directBufferEnable;
+    }
+
+    public ServerOptions setDirectBufferEnable(boolean directBufferEnable) {
+        this.directBufferEnable = directBufferEnable;
         return this;
     }
 }
