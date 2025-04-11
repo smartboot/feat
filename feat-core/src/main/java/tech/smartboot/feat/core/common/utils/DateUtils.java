@@ -20,7 +20,7 @@ import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 public class DateUtils {
@@ -45,9 +45,14 @@ public class DateUtils {
      * 当前时间
      */
     private static final Date currentTime = new Date();
+    private static byte[] rfc1123Bytes;
 
     static {
-        HashedWheelTimer.DEFAULT_TIMER.scheduleWithFixedDelay(() -> currentTime.setTime(System.currentTimeMillis()), 1, TimeUnit.SECONDS);
+        HashedWheelTimer.DEFAULT_TIMER.scheduleWithFixedDelay(() -> {
+            currentTime.setTime(System.currentTimeMillis());
+            String date = DateUtils.formatRFC1123(currentTime);
+            rfc1123Bytes = date.getBytes();
+        }, 1, TimeUnit.SECONDS);
     }
 
     public static Date currentTime() {
@@ -60,6 +65,10 @@ public class DateUtils {
 
     public static String formatRFC1123(Date date) {
         return RFC1123_DATE_FORMAT.get().format(date);
+    }
+
+    public static byte[] currentTimeFormatRFC1123() {
+        return rfc1123Bytes;
     }
 
     public static String formatCookieExpire(Date date) {
