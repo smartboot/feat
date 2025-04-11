@@ -10,8 +10,9 @@
 
 package tech.smartboot.feat.core.server.impl;
 
-import tech.smartboot.feat.core.common.HeaderValue;
+import org.smartboot.socket.timer.HashedWheelTimer;
 import tech.smartboot.feat.core.common.HeaderName;
+import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpMethod;
 import tech.smartboot.feat.core.common.HttpProtocol;
 import tech.smartboot.feat.core.common.HttpStatus;
@@ -21,12 +22,11 @@ import tech.smartboot.feat.core.common.utils.DateUtils;
 import tech.smartboot.feat.core.server.ServerOptions;
 
 import java.io.IOException;
-import java.util.Date;
 import java.util.Map;
-import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 final class HttpOutputStream extends FeatOutputStream {
@@ -34,9 +34,7 @@ final class HttpOutputStream extends FeatOutputStream {
     private static final byte[] Content_Type_JSON_Bytes = ("\r\nContent-Type:" + HeaderValue.ContentType.APPLICATION_JSON).getBytes();
     private static final byte[] Content_Length_Bytes = "\r\nContent-Length:".getBytes();
     private static final byte[] CHUNKED = "\r\nTransfer-Encoding: chunked\r\n\r\n".getBytes();
-    private static final Semaphore flushDateSemaphore = new Semaphore(1);
     private static byte[] SERVER_LINE = null;
-    private static long expireTime;
     private static byte[] HEAD_PART_BYTES;
     private final HttpEndpoint request;
     private final ServerOptions options;
@@ -51,21 +49,10 @@ final class HttpOutputStream extends FeatOutputStream {
             String serverLine = HeaderName.SERVER.getName() + ':' + options.serverName() + "\r\n";
             SERVER_LINE = serverLine.getBytes();
             HEAD_PART_BYTES = (HttpProtocol.HTTP_11.getProtocol() + " 200 OK\r\n" + serverLine + "Date:" + DateUtils.RFC1123_FORMAT).getBytes();
-            flushDate();
-        }
-    }
-
-    private void flushDate() {
-        Date currentTime = DateUtils.currentTime();
-        if (currentTime.getTime() > expireTime && flushDateSemaphore.tryAcquire()) {
-            try {
-                expireTime = currentTime.getTime() + 1000;
-                String date = DateUtils.formatRFC1123(currentTime);
-                byte[] bytes = date.getBytes();
+            HashedWheelTimer.DEFAULT_TIMER.scheduleWithFixedDelay(() -> {
+                byte[] bytes = DateUtils.currentTimeFormatRFC1123();
                 System.arraycopy(bytes, 0, HEAD_PART_BYTES, HEAD_PART_BYTES.length - bytes.length, bytes.length);
-            } finally {
-                flushDateSemaphore.release();
-            }
+            }, 800, TimeUnit.MILLISECONDS);
         }
     }
 
@@ -119,9 +106,6 @@ final class HttpOutputStream extends FeatOutputStream {
         if (contentLength > 0) {
             remaining = contentLength;
         }
-
-        flushDate();
-
 
         HttpStatus httpStatus = response.getHttpStatus();
         boolean fastWrite =
