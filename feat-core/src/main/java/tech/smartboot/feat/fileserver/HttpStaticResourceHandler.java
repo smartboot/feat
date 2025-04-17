@@ -50,10 +50,12 @@ public class HttpStaticResourceHandler implements HttpHandler {
     private final File baseDir;
     private final FileServerOptions options;
     private String classPath;
+    private final ClassLoader classLoader;
 
     public HttpStaticResourceHandler(FileServerOptions options) {
         try {
             this.options = options;
+            this.classLoader = Thread.currentThread().getContextClassLoader();
             if (options.baseDir().startsWith("classpath:")) {
                 this.classPath = options.baseDir().substring("classpath:".length());
                 this.baseDir = null;
@@ -97,7 +99,7 @@ public class HttpStaticResourceHandler implements HttpHandler {
         }
 
 
-        InputStream inputStream = HttpStaticResourceHandler.class.getClassLoader().getResourceAsStream(classPath + fileName);
+        InputStream inputStream = classLoader.getResourceAsStream(classPath + fileName);
         if (inputStream == null) {
             fileNotFound(request, response);
             completableFuture.complete(null);
@@ -237,7 +239,7 @@ public class HttpStaticResourceHandler implements HttpHandler {
 
     private void fileNotFound(HttpRequest request, HttpResponse response) throws IOException {
         if (request.getRequestURI().equals("/favicon.ico")) {
-            try (InputStream inputStream = HttpStaticResourceHandler.class.getClassLoader().getResourceAsStream("favicon.ico")) {
+            try (InputStream inputStream = classLoader.getResourceAsStream("favicon.ico")) {
                 if (inputStream == null) {
                     response.setHttpStatus(HttpStatus.NOT_FOUND);
                     return;
