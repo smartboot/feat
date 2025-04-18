@@ -50,6 +50,7 @@ import javax.tools.FileObject;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.Writer;
 import java.lang.annotation.Annotation;
 import java.sql.Timestamp;
@@ -69,7 +70,6 @@ import java.util.Set;
  * @version v1.0.0
  */
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
-//@SupportedAnnotationTypes({"tech.smartboot.feat.core.apt.annotation.Bean", "tech.smartboot.feat.core.apt.annotation.Controller", "org.apache.ibatis.annotations.Mapper"})
 public class FeatAnnotationProcessor extends AbstractProcessor {
     private static final int RETURN_TYPE_VOID = 0;
     private static final int RETURN_TYPE_STRING = 1;
@@ -87,14 +87,14 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
     }
 
     FileObject serviceFile;
-    Writer serviceWrite;
+    PrintWriter serviceWrite;
 
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
         try {
             serviceFile = processingEnv.getFiler().createResource(StandardLocation.CLASS_OUTPUT, "", "META-INF/services/" + CloudService.class.getName());
-            serviceWrite = serviceFile.openWriter();
+            serviceWrite = new PrintWriter(serviceFile.openWriter());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -118,14 +118,10 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             createAptLoader(element, controller, services);
         }
         // 如果不希望后续的处理器继续处理这些注解，返回 true，否则返回 false
-        try {
-            for (String service : services) {
-                serviceWrite.append(service).append("\n");
-            }
-            serviceWrite.flush();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        for (String service : services) {
+            serviceWrite.println(service);
         }
+        serviceWrite.flush();
 
         return false;
     }
@@ -141,105 +137,110 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                 }
             }
 //            //element增加setter方法
-            if (!autowiredFields.isEmpty()) {
-                FileObject origFileObject = processingEnv.getFiler().getResource(StandardLocation.SOURCE_PATH, element.getEnclosingElement().toString(), element.getSimpleName() + ".java");
-                String origContent = origFileObject.getCharContent(false).toString();
-                int lastIndex = origContent.lastIndexOf("}");
-                StringBuilder writer = new StringBuilder();
-                writer.append(origContent.substring(0, lastIndex));
-                for (Element field : autowiredFields) {
-                    writer.append("    public void set" + field.getSimpleName() + "(" + field.asType() + " " + field.getSimpleName() + ") {\n");
-                    writer.append("        this." + field.getSimpleName() + " = " + field.getSimpleName() + ";\n");
-                    writer.append("    }\n");
-                }
-                writer.append("}");
-                writer.append("}");
-
-            }
+//            if (!autowiredFields.isEmpty()) {
+//                FileObject origFileObject = processingEnv.getFiler().getResource(StandardLocation.SOURCE_PATH, element.getEnclosingElement().toString(), element.getSimpleName() + ".java");
+//                String origContent = origFileObject.getCharContent(false).toString();
+//                int lastIndex = origContent.lastIndexOf("}");
+//                StringBuilder writer = new StringBuilder();
+//                writer.append(origContent.substring(0, lastIndex));
+//                for (Element field : autowiredFields) {
+//                    writer.append("    public void set" + field.getSimpleName() + "(" + field.asType() + " " + field.getSimpleName() + ") {");
+//                    writer.append("        this." + field.getSimpleName() + " = " + field.getSimpleName() + ";");
+//                    writer.append("    }");
+//                }
+//                writer.append("}");
+//                writer.append("}");
+//
+//            }
 
 
             String loaderName = element.getSimpleName() + "BeanAptLoader";
             JavaFileObject javaFileObject = processingEnv.getFiler().createSourceFile(loaderName);
             Writer writer = javaFileObject.openWriter();
-            writer.write("package " + element.getEnclosingElement().toString() + ";\n");
-            writer.write("import " + CloudService.class.getName() + ";\n");
-            writer.write("import " + Router.class.getName() + ";\n");
-            writer.write("import " + ApplicationContext.class.getName() + ";\n");
+            PrintWriter printWriter = new PrintWriter(writer);
+            printWriter.println("package " + element.getEnclosingElement().toString() + ";");
+            printWriter.println();
+            printWriter.println("import " + AbstractServiceLoader.class.getName() + ";");
+            printWriter.println("import " + ApplicationContext.class.getName() + ";");
+            printWriter.println("import " + Router.class.getName() + ";");
             writer.write("import " + JSONObject.class.getName() + ";\n");
-            writer.write("import " + AbstractServiceLoader.class.getName() + ";\n");
             writer.write("import com.alibaba.fastjson2.JSON;\n");
-            writer.write("public class " + loaderName + "  extends  " + AbstractServiceLoader.class.getSimpleName() + "{\n");
-            writer.write("    private " + element.getSimpleName() + " bean;\n");
+            printWriter.println();
+            printWriter.println("public class " + loaderName + "  extends  " + AbstractServiceLoader.class.getSimpleName() + "{");
+            printWriter.println();
+            printWriter.println("    private " + element.getSimpleName() + " bean;");
             if (annotation instanceof Mapper) {
-                writer.write("    private org.apache.ibatis.session.SqlSessionFactory factory;\n");
+                printWriter.println("    private org.apache.ibatis.session.SqlSessionFactory factory;");
             }
-            writer.write("    public void loadBean(ApplicationContext applicationContext) throws Throwable{\n");
+            printWriter.println();
+            printWriter.println("\tpublic void loadBean(ApplicationContext applicationContext) throws Throwable {");
             if (annotation instanceof Mapper) {
-                createMapperBean(element, (Mapper) annotation, writer);
+                createMapperBean(element, (Mapper) annotation, printWriter);
             } else {
-                writer.write("         bean=new " + element.getSimpleName() + "(); \n");
+                printWriter.println("\t\tbean = new " + element.getSimpleName() + "(); ");
             }
 
             String beanName = element.getSimpleName().toString().substring(0, 1).toLowerCase() + element.getSimpleName().toString().substring(1);
             if (annotation instanceof Bean && !((Bean) annotation).value().isEmpty()) {
                 beanName = ((Bean) annotation).value();
             }
-            writer.write("    applicationContext.addBean(\"" + beanName + "\", bean);\n");
+            printWriter.println("\t\tapplicationContext.addBean(\"" + beanName + "\", bean);");
             for (Element se : element.getEnclosedElements()) {
                 for (AnnotationMirror mirror : se.getAnnotationMirrors()) {
                     if (Bean.class.getName().equals(mirror.getAnnotationType().toString())) {
-                        writer.write("    applicationContext.addBean(\"" + se.getSimpleName() + "\", bean." + se.getSimpleName() + "());\n");
+                        printWriter.println("\t\tapplicationContext.addBean(\"" + se.getSimpleName() + "\", bean." + se.getSimpleName() + "());");
                     }
                 }
             }
-            writer.write("          \n");
-            writer.write("    }\n");
-
-            writer.write("    public void autowired(ApplicationContext applicationContext) {\n");
+            printWriter.println("\t}");
+            printWriter.println();
+            printWriter.println("\tpublic void autowired(ApplicationContext applicationContext) {");
             for (Element field : autowiredFields) {
                 String name = field.getSimpleName().toString();
                 name = name.substring(0, 1).toUpperCase() + name.substring(1);
-                writer.write("    bean.set" + name + "(applicationContext.getBean(\"" + field.getSimpleName() + "\"))" + ";\n");
+                printWriter.println("\t\tbean.set" + name + "(applicationContext.getBean(\"" + field.getSimpleName() + "\"))" + ";");
             }
             if (annotation instanceof Mapper) {
-                writer.write("    factory=applicationContext.getBean(\"sessionFactory\");\n");
+                printWriter.println("\t\tfactory=applicationContext.getBean(\"sessionFactory\");");
             }
-            writer.write("          \n");
-            writer.write("    }\n");
-
-            writer.write("public void router(" + Router.class.getSimpleName() + " router){\n");
+            printWriter.println("\t}");
+            printWriter.println();
+            printWriter.println("\tpublic void router(" + Router.class.getSimpleName() + " router) {");
             Map<String, String> bytesCache = new HashMap<>();
             if (annotation instanceof Controller) {
-                createController(element, (Controller) annotation, writer, bytesCache);
+                createController(element, (Controller) annotation, printWriter, bytesCache);
             }
             //扫描拦截器
-            addInterceptor(element, writer);
+            addInterceptor(element, printWriter);
 
-            writer.write("}\n");
+            printWriter.println("\t}");
+            printWriter.println();
             if (!bytesCache.isEmpty()) {
                 for (Map.Entry<String, String> entry : bytesCache.entrySet()) {
-                    writer.write(entry.getValue());
+                    printWriter.println("\t" + entry.getValue());
                 }
             }
-            writer.write("    public void destroy() throws Throwable{\n");
+            printWriter.println();
+            printWriter.println("\tpublic void destroy() throws Throwable {");
             for (Element se : element.getEnclosedElements()) {
                 for (AnnotationMirror mirror : se.getAnnotationMirrors()) {
                     if (PreDestroy.class.getName().equals(mirror.getAnnotationType().toString())) {
-                        writer.write("    bean." + se.getSimpleName() + "();\n");
+                        printWriter.println("\t\tbean." + se.getSimpleName() + "();");
                     }
                 }
             }
-            writer.write("    }\n");
-            writer.write("    public void postConstruct(ApplicationContext applicationContext) throws Throwable{\n");
+            printWriter.println("\t}");
+            printWriter.println();
+            printWriter.println("\tpublic void postConstruct(ApplicationContext applicationContext) throws Throwable {");
             for (Element se : element.getEnclosedElements()) {
                 for (AnnotationMirror mirror : se.getAnnotationMirrors()) {
                     if (PostConstruct.class.getName().equals(mirror.getAnnotationType().toString())) {
-                        writer.write("    bean." + se.getSimpleName() + "();\n");
+                        printWriter.println("\t\tbean." + se.getSimpleName() + "();");
                     }
                 }
             }
-            writer.write("    }\n");
-            writer.write("}");
+            printWriter.println("\t}");
+            printWriter.println("}");
             writer.close();
 
             //生成service配置
@@ -249,7 +250,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         }
     }
 
-    private static <T extends Annotation> void createController(Element element, Controller annotation, Writer writer, Map<String, String> bytesCache) throws IOException {
+    private static <T extends Annotation> void createController(Element element, Controller annotation, PrintWriter printWriter, Map<String, String> bytesCache) throws IOException {
         Controller controller = annotation;
         //遍历所有方法,获得RequestMapping注解
         String basePath = controller.value();
@@ -275,14 +276,14 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                             }
                         } else if ("method".equals(k.getSimpleName().toString())) {
                             System.out.println(v.getValue());
-//                                    writer.write(v.getValue().toString());
+//                                    printWriter.println(v.getValue().toString());
                         }
                     }
                     if (StringUtils.isBlank(requestURL)) {
                         throw new FeatException("the value of RequestMapping on " + element.getSimpleName() + "@" + se.getSimpleName() + " is not allowed to be empty.");
                     }
-                    writer.write("    System.out.println(\" \\u001B[32m|->\\u001B[0m " + requestURL + " ==> " + element.getSimpleName() + "@" + se.getSimpleName() + "\");\n");
-                    writer.write("    router.route(\"" + requestURL + "\", ctx->{\n");
+                    printWriter.println("\t\tSystem.out.println(\" \\u001B[32m|->\\u001B[0m " + requestURL + " ==> " + element.getSimpleName() + "@" + se.getSimpleName() + "\");");
+                    printWriter.println("\t\trouter.route(\"" + requestURL + "\", ctx -> {");
 
                     boolean first = true;
                     StringBuilder newParams = new StringBuilder();
@@ -305,7 +306,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                             params.append("ctx.pathParam(\"" + pathParam.value() + "\")");
                         } else {
                             if (i == 0) {
-                                newParams.append("JSONObject jsonObject=getParams(ctx.Request);\n");
+                                newParams.append("JSONObject jsonObject=getParams(ctx.Request);");
                             }
                             Param paramAnnotation = param.getAnnotation(Param.class);
                             if (paramAnnotation == null && param.asType().toString().startsWith("java")) {
@@ -313,21 +314,21 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                             }
                             if (paramAnnotation != null) {
                                 if (param.asType().toString().startsWith(List.class.getName())) {
-                                    newParams.append(param.asType().toString()).append(" param").append(i).append("=jsonObject.getObject(\"").append(paramAnnotation.value()).append("\",java.util" + ".List.class);\n");
+                                    newParams.append(param.asType().toString()).append(" param").append(i).append("=jsonObject.getObject(\"").append(paramAnnotation.value()).append("\",java.util" + ".List.class);");
                                 } else {
-                                    newParams.append(param.asType().toString()).append(" param").append(i).append("=jsonObject.getObject(\"").append(paramAnnotation.value()).append("\",").append(param.asType().toString()).append(".class);\n");
+                                    newParams.append(param.asType().toString()).append(" param").append(i).append("=jsonObject.getObject(\"").append(paramAnnotation.value()).append("\",").append(param.asType().toString()).append(".class);");
                                 }
                             } else {
-                                newParams.append(param.asType().toString()).append(" param").append(i).append("=jsonObject.to(").append(param.asType().toString()).append(".class);\n");
+                                newParams.append(param.asType().toString()).append(" param").append(i).append("=jsonObject.to(").append(param.asType().toString()).append(".class);");
                             }
-//                                    newParams.append(param.asType().toString()).append(" param").append(i).append("=jsonObject.getObject(").append(param.asType().toString()).append(".class);\n");
+//                                    newParams.append(param.asType().toString()).append(" param").append(i).append("=jsonObject.getObject(").append(param.asType().toString()).append(".class);");
                             params.append("param").append(i);
                             i++;
                         }
-//                                writer.write("req.getParam(\"" + param.getSimpleName() + "\")");
+//                                printWriter.println("req.getParam(\"" + param.getSimpleName() + "\")");
                     }
                     if (newParams.length() > 0) {
-                        writer.write(newParams.toString());
+                        printWriter.println(newParams);
                     }
 
                     TypeMirror returnType = ((ExecutableElement) se).getReturnType();
@@ -343,124 +344,129 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                     }
                     switch (returnTypeInt) {
                         case RETURN_TYPE_VOID:
-                            writer.write("        bean." + se.getSimpleName() + "(");
+                            printWriter.print("\t\t\tbean." + se.getSimpleName() + "(");
                             break;
                         case RETURN_TYPE_STRING:
-                            writer.write("      String rst = bean." + se.getSimpleName() + "(");
+                            printWriter.print("\t\t\tString rst = bean." + se.getSimpleName() + "(");
                             break;
                         case RETURN_TYPE_BYTE_ARRAY:
-                            writer.write("      byte[] bytes = bean." + se.getSimpleName() + "(");
+                            printWriter.print("\t\t\tbyte[] bytes = bean." + se.getSimpleName() + "(");
                             break;
                         case RETURN_TYPE_OBJECT:
-                            writer.write("      " + returnType + " rst = bean." + se.getSimpleName() + "(");
+                            printWriter.print("\t\t\t" + returnType + " rst = bean." + se.getSimpleName() + "(");
                             break;
                         default:
                             throw new RuntimeException("不支持的返回类型");
                     }
-                    writer.write(params.toString());
-
-                    writer.write(");\n");
+                    printWriter.append(params).println(");");
 
                     switch (returnTypeInt) {
                         case RETURN_TYPE_VOID:
                             break;
                         case RETURN_TYPE_STRING:
-                            writer.write("        byte[] bytes=rst.getBytes(\"UTF-8\");\n ");
-                            writer.write("        ctx.Response.setContentLength(bytes.length);\n");
-                            writer.write("        ctx.Response.write(bytes);\n");
+                            printWriter.println("\t\t\tbyte[] bytes = rst.getBytes(\"UTF-8\"); ");
+                            printWriter.println("\t\t\tctx.Response.setContentLength(bytes.length);");
+                            printWriter.println("\t\t\tctx.Response.write(bytes);");
                             break;
                         case RETURN_TYPE_BYTE_ARRAY:
-                            writer.write("        ctx.Response.setContentLength(bytes.length);\n");
-                            writer.write("        ctx.Response.write(bytes);\n");
+                            printWriter.println("\t\t\tctx.Response.setContentLength(bytes.length);");
+                            printWriter.println("\t\t\tctx.Response.write(bytes);");
                             break;
                         case RETURN_TYPE_OBJECT:
-                            writer.write("java.io.ByteArrayOutputStream os=getOutputStream();\n");
-                            writeJsonObject(writer, returnType, "rst", 0, new HashMap<>(), bytesCache);
-                            writer.write("ctx.Response.setContentType(\"application/json\");");
-                            writer.write("        ctx.Response.setContentLength(os.size());\n");
-                            writer.write("        os.writeTo(ctx.Response.getOutputStream());\n");
+                            printWriter.println("\t\t\tjava.io.ByteArrayOutputStream os = getOutputStream();");
+                            writeJsonObject(printWriter, returnType, "rst", 0, new HashMap<>(), bytesCache);
+                            printWriter.println("\t\t\tctx.Response.setContentType(\"application/json\");");
+                            printWriter.println("\t\t\tctx.Response.setContentLength(os.size());");
+                            printWriter.println("\t\t\tos.writeTo(ctx.Response.getOutputStream());");
 //                            System.out.println("typeMirror:" + stringBuilder);
-//                            writer.write("        byte[] bytes=JSON.toJSONBytes(rst);\n ");
-//                            writer.write("        ctx.Response.setContentLength(bytes.length);\n");
-//                            writer.write("        ctx.Response.write(bytes);\n");
+//                            printWriter.println("        byte[] bytes=JSON.toJSONBytes(rst); ");
+//                            printWriter.println("        ctx.Response.setContentLength(bytes.length);");
+//                            printWriter.println("        ctx.Response.write(bytes);");
                             break;
 //                        case RETURN_TYPE_OBJECT:
 //                            writeJsonObject(writer,returnType);
-//                            writer.write("        byte[] bytes=JSON.toJSONBytes(rst);\n ");
-//                            writer.write("        ctx.Response.setContentLength(bytes.length);\n");
-//                            writer.write("        ctx.Response.write(bytes);\n");
+//                            printWriter.println("        byte[] bytes=JSON.toJSONBytes(rst); ");
+//                            printWriter.println("        ctx.Response.setContentLength(bytes.length);");
+//                            printWriter.println("        ctx.Response.write(bytes);");
 //                            break;
                         default:
                             throw new RuntimeException("不支持的返回类型");
                     }
-                    writer.write("    });\n");
+                    printWriter.println("\t\t});");
                 }
             }
         }
     }
 
-    private static void toBytesPool(Writer writer, Map<String, String> map, String value) throws IOException {
+    private static void toBytesPool(PrintWriter printWriter, Map<String, String> map, String value) throws IOException {
         String key = ("b_" + value.hashCode()).replace("-", "$");
-        map.put(key, "private static final byte[] " + key + "=" + toBytesStr(value) + ";\n");
-        writer.append("os.write(").append(key).append(");");
+        map.put(key, "private static final byte[] " + key + " = " + toBytesStr(value) + ";");
+        printWriter.append("os.write(").append(key).println(");");
     }
 
-    public static void writeJsonObject(Writer writer, TypeMirror typeMirror, String obj, int i, Map<TypeMirror, TypeMirror> typeMap0, Map<String, String> byteCache) throws IOException {
+    private static String headBlank(int i) {
+        StringBuilder sb = new StringBuilder("\t\t");
+        do {
+            sb.append("\t");
+        } while (i-- > 0);
+        return sb.toString();
+    }
+
+    public static void writeJsonObject(PrintWriter printWriter, TypeMirror typeMirror, String obj, int i, Map<TypeMirror, TypeMirror> typeMap0, Map<String, String> byteCache) throws IOException {
         //深层级采用JSON框架序列化，防止循环引用
         if (i > 4) {
-            writer.write("if(" + obj + "!=null){\n");
-            writer.write("os.write(JSON.toJSONBytes(" + obj + "));\n");
-            writer.write("}else{\n");
-            toBytesPool(writer, byteCache, "null");
-            writer.write("}\n");
+            printWriter.println(headBlank(i) + "if (" + obj + " != null) {");
+            printWriter.println(headBlank(i + 1) + "os.write(JSON.toJSONBytes(" + obj + "));");
+            printWriter.println(headBlank(i) + "} else {");
+            toBytesPool(printWriter, byteCache, "null");
+            printWriter.println(headBlank(i) + "}");
             return;
         }
         if (typeMirror instanceof ArrayType) {
-            writer.append("os.write('[');\n");
-            writer.append("for(" + typeMirror + ")");
-            writer.append("os.write(']');\n");
+            printWriter.append("os.write('[');");
+            printWriter.append("for (" + typeMirror + ")");
+            printWriter.append("os.write(']');");
             return;
         } else if (typeMirror.toString().startsWith("java.util.List") || typeMirror.toString().startsWith("java.util.Collection")) {
-            writer.append(" if(" + obj + "!=null){\n");
-            writer.append("os.write('[');\n");
+            printWriter.append(headBlank(i)).println("if (" + obj + " != null) {");
+            printWriter.append(headBlank(i + 1)).println("os.write('[');");
             TypeMirror type = ((DeclaredType) typeMirror).getTypeArguments().get(0);
             if (typeMap0.containsKey(type)) {
                 type = typeMap0.get(type);
             }
-            writer.append("boolean first" + i + "=true;\n");
-            writer.append("for(" + type + " p" + i + " : " + obj + " ){\n");
-            writer.append("if(first" + i + "){\n");
-            writer.append("first" + i + "=false;\n");
-            writer.append("}\n");
-            writer.append("else{\n");
-            writer.append("os.write(',');\n");
-            writer.append("}\n");
+            printWriter.append(headBlank(i + 1)).println("boolean first" + i + " = true;");
+            printWriter.append(headBlank(i + 1)).println("for (" + type + " p" + i + " : " + obj + " ) {");
+            printWriter.append(headBlank(i + 2)).println("if (first" + i + ") {");
+            printWriter.append(headBlank(i + 3)).println("first" + i + " = false;");
+            printWriter.append(headBlank(i + 2)).println("} else {");
+            printWriter.append(headBlank(i + 3)).println("os.write(',');");
+            printWriter.append(headBlank(i + 2)).println("}");
             if (String.class.getName().equals(type.toString())) {
-                writer.append("os.write('\"');");
-                writer.append("os.write(p" + i + ".getBytes());");
-                writer.append("os.write('\"');\n");
+                printWriter.append(headBlank(i + 2)).println("os.write('\"');");
+                printWriter.append(headBlank(i + 2)).println("os.write(p" + i + ".getBytes());");
+                printWriter.append(headBlank(i + 2)).println("os.write('\"');");
             } else {
-                writeJsonObject(writer, type, "p" + i, i + 1, typeMap0, byteCache);
+                writeJsonObject(printWriter, type, "p" + i, i + 2, typeMap0, byteCache);
             }
 
-            writer.append("}\n");
-            writer.append("os.write(']');\n");
-            writer.write("}else{\n");
-            toBytesPool(writer, byteCache, "null");
-            writer.write("}\n");
+            printWriter.append(headBlank(i)).println("}");
+            printWriter.append(headBlank(i)).println("os.write(']');");
+            printWriter.append(headBlank(i)).println("} else {");
+            toBytesPool(printWriter, byteCache, "null");
+            printWriter.append(headBlank(i)).println("}");
             return;
         } else if (typeMirror.toString().startsWith("java.util.Map")) {
-            writer.append("os.write(new JSONObject(" + obj + ").toString().getBytes());\n");
+            printWriter.println("os.write(new JSONObject(" + obj + ").toString().getBytes());");
             return;
         } else if (typeMirror.toString().endsWith(".JSONObject")) {
-            writer.write("if(" + obj + "!=null){\n");
-            writer.write("os.write(" + obj + ".toString().getBytes());\n");
-            writer.write("}else{\n");
-            toBytesPool(writer, byteCache, "null");
-            writer.write("}\n");
+            printWriter.println("if (" + obj + " != null) {");
+            printWriter.println("os.write(" + obj + ".toString().getBytes());");
+            printWriter.println("} else {");
+            toBytesPool(printWriter, byteCache, "null");
+            printWriter.println("}");
             return;
         }
-        writer.append("os.write('{');\n");
+        printWriter.println(headBlank(i) + "os.write('{');");
 
         //获取泛型参数
         List<? extends TypeMirror> typeKey = ((DeclaredType) (((DeclaredType) typeMirror).asElement().asType())).getTypeArguments();
@@ -482,7 +488,8 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                 continue;
             }
             if (j++ > i * 10) {
-                writer.append("os.write(',');\n");
+                printWriter.append(headBlank(i));
+                printWriter.println("os.write(',');");
             }
 
             TypeMirror type = se.asType();
@@ -494,60 +501,71 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                 fieldName = jsonField.name();
             }
             if (type.toString().equals(boolean.class.getName())) {
-                writer.append("if(" + obj + ".is").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).append("()){\n");
+                printWriter.append(headBlank(i) + "if (" + obj + ".is").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).println("()) {");
+                printWriter.append(headBlank(i + 1));
+                toBytesPool(printWriter, byteCache, "\"" + fieldName + "\":true");
 
-                toBytesPool(writer, byteCache, "\"" + fieldName + "\":true");
+                printWriter.println(headBlank(i) + "} else {");
+                printWriter.append(headBlank(i + 1));
+                toBytesPool(printWriter, byteCache, "\"" + fieldName + "\":false");
 
-                writer.write("}else{\n");
-
-                toBytesPool(writer, byteCache, "\"" + fieldName + "\":false");
-
-                writer.write("}\n");
+                printWriter.println(headBlank(i) + "}");
             } else if (Arrays.asList("int", "short", "byte", "long", "float", "double", "java.lang.Integer", "java.lang.Short", "java.lang.Byte", "java.lang.Long", "java.lang.Float", "java.lang.Double").contains(type.toString())) {
-                toBytesPool(writer, byteCache, "\"" + fieldName + "\":");
-
-                writer.append("os.write(String.valueOf(").append(obj).append(".get").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).append("()).getBytes());");
+                printWriter.append(headBlank(i));
+                toBytesPool(printWriter, byteCache, "\"" + fieldName + "\":");
+                printWriter.append(headBlank(i));
+                printWriter.append("os.write(String.valueOf(").append(obj).append(".get").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).println("()).getBytes());");
             } else if (String.class.getName().equals(type.toString())) {
-                toBytesPool(writer, byteCache, "\"" + fieldName + "\":");
+                printWriter.append(headBlank(i));
+                toBytesPool(printWriter, byteCache, "\"" + fieldName + "\":");
 
-                writer.append("if(").append(obj).append(".get").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).append("()" + "!=null){\n");
-                writer.append("os.write('\"');\n");
-                writer.write("String s=" + obj + ".get" + se.getSimpleName().toString().substring(0, 1).toUpperCase() + se.getSimpleName().toString().substring(1) + "();\n");
-                writer.write("writeJsonValue(os,s);\n");
-                writer.append("os.write('\"');\n");
-                writer.append("}else{\n");
-                toBytesPool(writer, byteCache, "null");
-                writer.append("}\n");
+                printWriter.append(headBlank(i));
+                printWriter.append("if (").append(obj).append(".get").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).println("()" + " != null) {");
+                printWriter.append(headBlank(i + 1));
+                printWriter.println("os.write('\"');");
+                printWriter.append(headBlank(i + 1));
+                printWriter.println("String s = " + obj + ".get" + se.getSimpleName().toString().substring(0, 1).toUpperCase() + se.getSimpleName().toString().substring(1) + "();");
+                printWriter.append(headBlank(i + 1));
+                printWriter.println("writeJsonValue(os, s);");
+                printWriter.append(headBlank(i + 1));
+                printWriter.println("os.write('\"');");
+                printWriter.append(headBlank(i));
+                printWriter.println("} else {");
+                printWriter.append(headBlank(i + 1));
+                toBytesPool(printWriter, byteCache, "null");
+                printWriter.append(headBlank(i)).println("}");
             } else if (Date.class.getName().equals(type.toString()) || Timestamp.class.getName().equals(type.toString())) {
-                toBytesPool(writer, byteCache, "\"" + fieldName + "\":");
-                writer.append("java.util.Date " + fieldName + "=").append(obj).append(".get").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).append("();");
-                writer.append("if(" + fieldName + "!=null){\n");
-//                writer.append("os.write('\"');\n");
+                printWriter.append(headBlank(i));
+                toBytesPool(printWriter, byteCache, "\"" + fieldName + "\":");
+                printWriter.append("java.util.Date " + fieldName + " = ").append(obj).append(".get").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).append("();");
+                printWriter.println("if (" + fieldName + " != null) {");
+//                printWriter.println("os.write('\"');");
                 if (jsonField != null && StringUtils.isNotBlank(jsonField.format())) {
-                    writer.append("java.text.SimpleDateFormat sdf=new java.text.SimpleDateFormat(\"" + jsonField.format() + "\");\n");
-                    writer.append("os.write('\"');\n");
-                    writer.append("os.write(sdf.format(" + fieldName + ").getBytes());\n");
-                    writer.append("os.write('\"');\n");
+                    printWriter.println("java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat(\"" + jsonField.format() + "\");");
+                    printWriter.println("os.write('\"');");
+                    printWriter.println("os.write(sdf.format(" + fieldName + ").getBytes());");
+                    printWriter.println("os.write('\"');");
                 } else {
-                    writer.append("os.write(String.valueOf(" + fieldName + ".getTime()).getBytes());\n");
+                    printWriter.println("os.write(String.valueOf(" + fieldName + ".getTime()).getBytes());");
                 }
 
-//                writer.append("os.write('\"');\n");
-                writer.append("}else{\n");
-                toBytesPool(writer, byteCache, "null");
-                writer.append("}\n");
+//                printWriter.println("os.write('\"');");
+                printWriter.println("} else {");
+                toBytesPool(printWriter, byteCache, "null");
+                printWriter.println("}");
             } else {
-                toBytesPool(writer, byteCache, "\"" + fieldName + "\":");
+                printWriter.append(headBlank(i));
+                toBytesPool(printWriter, byteCache, "\"" + fieldName + "\":");
                 String filedName = obj + ".get" + se.getSimpleName().toString().substring(0, 1).toUpperCase() + se.getSimpleName().toString().substring(1) + "()";
-                writer.append("if(" + filedName + "==null){\n");
-                toBytesPool(writer, byteCache, "null");
-                writer.write("}else{\n");
-                writeJsonObject(writer, type, filedName, i + 1, typeMap, byteCache);
-                writer.write("}");
+                printWriter.append(headBlank(i)).println("if (" + filedName + " == null) {");
+                printWriter.append(headBlank(i + 1));
+                toBytesPool(printWriter, byteCache, "null");
+                printWriter.append(headBlank(i)).println("} else {");
+                writeJsonObject(printWriter, type, filedName, i + 1, typeMap, byteCache);
+                printWriter.append(headBlank(i)).println("}");
             }
         }
-        writer.append(";\n");
-        writer.append("os.write('}');\n");
+        printWriter.append(headBlank(i)).println("os.write('}');");
     }
 
     private static String toBytesStr(String str) {
@@ -555,14 +573,14 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
 
         for (int i = 0; i < str.length(); i++) {
             if (i > 0) {
-                s.append(",");
+                s.append(", ");
             }
             s.append('\'').append(str.charAt(i)).append('\'');
         }
         return s + "}";
     }
 
-    private static <T extends Annotation> void addInterceptor(Element element, Writer writer) throws IOException {
+    private static <T extends Annotation> void addInterceptor(Element element, PrintWriter printWriter) throws IOException {
         for (Element se : element.getEnclosedElements()) {
             for (AnnotationMirror mirror : se.getAnnotationMirrors()) {
                 if (!InterceptorMapping.class.getName().equals(mirror.getAnnotationType().toString())) {
@@ -577,56 +595,47 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                         patterns = v.getValue().toString();
                     }
                 }
-                writer.write("    router.addInterceptors(java.util.Arrays.asList(" + patterns + ")");
-                writer.write(",bean." + se.getSimpleName() + "()");
-                writer.write(");\n");
+                printWriter.println("    router.addInterceptors(java.util.Arrays.asList(" + patterns + ")");
+                printWriter.println(",bean." + se.getSimpleName() + "()");
+                printWriter.println(");");
             }
         }
     }
 
-    private static <T extends Annotation> void createMapperBean(Element element, Mapper annotation, Writer writer) throws IOException {
-        writer.write("         bean=new " + element.getSimpleName() + "(){ \n");
+    private static <T extends Annotation> void createMapperBean(Element element, Mapper annotation, PrintWriter printWriter) throws IOException {
+        printWriter.println("\t\tbean = new " + element.getSimpleName() + "() { ");
         for (Element se : element.getEnclosedElements()) {
             String returnType = ((ExecutableElement) se).getReturnType().toString();
-            writer.write("         public " + returnType + " " + se.getSimpleName() + "(");
+            printWriter.println("         public " + returnType + " " + se.getSimpleName() + "(");
             boolean first = true;
             for (VariableElement param : ((ExecutableElement) se).getParameters()) {
                 if (first) {
                     first = false;
                 } else {
-                    writer.write(",");
+                    printWriter.println(",");
                 }
-                writer.write(param.asType().toString() + " " + param.getSimpleName());
+                printWriter.println(param.asType().toString() + " " + param.getSimpleName());
             }
-            writer.write("){\n");
-            writer.write("             try (org.apache.ibatis.session.SqlSession session = factory.openSession(true)) {\n");
-            writer.write("                 ");
+            printWriter.println(") {");
+            printWriter.println("             try (org.apache.ibatis.session.SqlSession session = factory.openSession(true)) {");
+            printWriter.println("                 ");
             if (!"void".equals(returnType)) {
-                writer.write("return ");
+                printWriter.println("return ");
             }
-            writer.write("session.getMapper(" + element.getSimpleName() + ".class)." + se.getSimpleName() + "(");
+            printWriter.println("session.getMapper(" + element.getSimpleName() + ".class)." + se.getSimpleName() + "(");
             first = true;
             for (VariableElement param : ((ExecutableElement) se).getParameters()) {
                 if (first) {
                     first = false;
                 } else {
-                    writer.write(",");
+                    printWriter.println(",");
                 }
-                writer.write(param.getSimpleName().toString());
+                printWriter.println(param.getSimpleName().toString());
             }
-            writer.write(");\n");
-            writer.write("             }\n");
-            writer.write("         }\n");
+            printWriter.println(");");
+            printWriter.println("             }");
+            printWriter.println("         }");
         }
-        writer.write("};\n");
-    }
-
-    public static String getElementPath(Element element) {
-        List<String> pathElements = new ArrayList<>();
-        while (element != null) {
-            pathElements.add(0, element.getSimpleName().toString());
-            element = element.getEnclosingElement();
-        }
-        return String.join(".", pathElements);
+        printWriter.println("};");
     }
 }
