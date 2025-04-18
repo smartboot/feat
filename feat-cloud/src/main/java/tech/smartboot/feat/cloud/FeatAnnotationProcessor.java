@@ -201,7 +201,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                 printWriter.println("\t\tbean.set" + name + "(applicationContext.getBean(\"" + field.getSimpleName() + "\"))" + ";");
             }
             if (annotation instanceof Mapper) {
-                printWriter.println("\t\tfactory=applicationContext.getBean(\"sessionFactory\");");
+                printWriter.println("\t\tfactory = applicationContext.getBean(\"sessionFactory\");");
             }
             printWriter.println("\t}");
             printWriter.println();
@@ -306,20 +306,21 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                             params.append("ctx.pathParam(\"" + pathParam.value() + "\")");
                         } else {
                             if (i == 0) {
-                                newParams.append("JSONObject jsonObject=getParams(ctx.Request);");
+                                newParams.append("\t\t\tJSONObject jsonObject = getParams(ctx.Request);\n");
                             }
                             Param paramAnnotation = param.getAnnotation(Param.class);
                             if (paramAnnotation == null && param.asType().toString().startsWith("java")) {
                                 throw new FeatException("the param of " + element.getSimpleName() + "@" + se.getSimpleName() + " is not allowed to be empty.");
                             }
+                            newParams.append("\t\t\t");
                             if (paramAnnotation != null) {
                                 if (param.asType().toString().startsWith(List.class.getName())) {
-                                    newParams.append(param.asType().toString()).append(" param").append(i).append("=jsonObject.getObject(\"").append(paramAnnotation.value()).append("\",java.util" + ".List.class);");
+                                    newParams.append(param.asType().toString()).append(" param").append(i).append(" = jsonObject.getObject(\"").append(paramAnnotation.value()).append("\",java.util" + ".List.class);");
                                 } else {
-                                    newParams.append(param.asType().toString()).append(" param").append(i).append("=jsonObject.getObject(\"").append(paramAnnotation.value()).append("\",").append(param.asType().toString()).append(".class);");
+                                    newParams.append(param.asType().toString()).append(" param").append(i).append(" = jsonObject.getObject(\"").append(paramAnnotation.value()).append("\",").append(param.asType().toString()).append(".class);");
                                 }
                             } else {
-                                newParams.append(param.asType().toString()).append(" param").append(i).append("=jsonObject.to(").append(param.asType().toString()).append(".class);");
+                                newParams.append(param.asType().toString()).append(" param").append(i).append(" = jsonObject.to(").append(param.asType().toString()).append(".class);");
                             }
 //                                    newParams.append(param.asType().toString()).append(" param").append(i).append("=jsonObject.getObject(").append(param.asType().toString()).append(".class);");
                             params.append("param").append(i);
@@ -449,9 +450,10 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                 writeJsonObject(printWriter, type, "p" + i, i + 2, typeMap0, byteCache);
             }
 
-            printWriter.append(headBlank(i)).println("}");
-            printWriter.append(headBlank(i)).println("os.write(']');");
+            printWriter.append(headBlank(i + 1)).println("}");
+            printWriter.append(headBlank(i + 1)).println("os.write(']');");
             printWriter.append(headBlank(i)).println("} else {");
+            printWriter.append(headBlank(i + 1));
             toBytesPool(printWriter, byteCache, "null");
             printWriter.append(headBlank(i)).println("}");
             return;
@@ -606,36 +608,36 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         printWriter.println("\t\tbean = new " + element.getSimpleName() + "() { ");
         for (Element se : element.getEnclosedElements()) {
             String returnType = ((ExecutableElement) se).getReturnType().toString();
-            printWriter.println("         public " + returnType + " " + se.getSimpleName() + "(");
+            printWriter.print("\t\t\tpublic " + returnType + " " + se.getSimpleName() + "(");
             boolean first = true;
             for (VariableElement param : ((ExecutableElement) se).getParameters()) {
                 if (first) {
                     first = false;
                 } else {
-                    printWriter.println(",");
+                    printWriter.print(",");
                 }
-                printWriter.println(param.asType().toString() + " " + param.getSimpleName());
+                printWriter.print(param.asType().toString() + " " + param.getSimpleName());
             }
             printWriter.println(") {");
-            printWriter.println("             try (org.apache.ibatis.session.SqlSession session = factory.openSession(true)) {");
-            printWriter.println("                 ");
+            printWriter.append(headBlank(1)).println("try (org.apache.ibatis.session.SqlSession session = factory.openSession(true)) {");
             if (!"void".equals(returnType)) {
-                printWriter.println("return ");
+                printWriter.append(headBlank(2)).print("return ");
             }
-            printWriter.println("session.getMapper(" + element.getSimpleName() + ".class)." + se.getSimpleName() + "(");
+            printWriter.print("session.getMapper(" + element.getSimpleName() + ".class)." + se.getSimpleName() + "(");
             first = true;
             for (VariableElement param : ((ExecutableElement) se).getParameters()) {
                 if (first) {
                     first = false;
                 } else {
-                    printWriter.println(",");
+                    printWriter.print(", ");
                 }
-                printWriter.println(param.getSimpleName().toString());
+                printWriter.print(param.getSimpleName().toString());
             }
             printWriter.println(");");
-            printWriter.println("             }");
-            printWriter.println("         }");
+            printWriter.append(headBlank(1)).println("}");
+            printWriter.println("\t\t\t}");
+            printWriter.println();
         }
-        printWriter.println("};");
+        printWriter.println("\t\t};");
     }
 }
