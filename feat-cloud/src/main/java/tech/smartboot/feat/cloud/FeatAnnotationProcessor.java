@@ -315,9 +315,9 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                             newParams.append("\t\t\t");
                             if (paramAnnotation != null) {
                                 if (param.asType().toString().startsWith(List.class.getName())) {
-                                    newParams.append(param.asType().toString()).append(" param").append(i).append(" = jsonObject.getObject(\"").append(paramAnnotation.value()).append("\",java.util" + ".List.class);");
+                                    newParams.append(param.asType().toString()).append(" param").append(i).append(" = jsonObject.getObject(\"").append(paramAnnotation.value()).append("\", java.util" + ".List.class);");
                                 } else {
-                                    newParams.append(param.asType().toString()).append(" param").append(i).append(" = jsonObject.getObject(\"").append(paramAnnotation.value()).append("\",").append(param.asType().toString()).append(".class);");
+                                    newParams.append(param.asType().toString()).append(" param").append(i).append(" = jsonObject.getObject(\"").append(paramAnnotation.value()).append("\", ").append(param.asType().toString()).append(".class);");
                                 }
                             } else {
                                 newParams.append(param.asType().toString()).append(" param").append(i).append(" = jsonObject.to(").append(param.asType().toString()).append(".class);");
