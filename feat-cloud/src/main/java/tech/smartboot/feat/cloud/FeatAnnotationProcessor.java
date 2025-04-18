@@ -538,7 +538,12 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                 writer.append("}\n");
             } else {
                 toBytesPool(writer, byteCache, "\"" + fieldName + "\":");
-                writeJsonObject(writer, type, obj + ".get" + se.getSimpleName().toString().substring(0, 1).toUpperCase() + se.getSimpleName().toString().substring(1) + "()", i + 1, typeMap, byteCache);
+                String filedName = obj + ".get" + se.getSimpleName().toString().substring(0, 1).toUpperCase() + se.getSimpleName().toString().substring(1) + "()";
+                writer.append("if(" + filedName + "==null){\n");
+                toBytesPool(writer, byteCache, "null");
+                writer.write("}else{\n");
+                writeJsonObject(writer, type, filedName, i + 1, typeMap, byteCache);
+                writer.write("}");
             }
         }
         writer.append(";\n");
