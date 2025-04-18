@@ -166,7 +166,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             writer.write("import " + JSONObject.class.getName() + ";\n");
             writer.write("import com.alibaba.fastjson2.JSON;\n");
             printWriter.println();
-            printWriter.println("public class " + loaderName + "  extends  " + AbstractServiceLoader.class.getSimpleName() + "{");
+            printWriter.println("public class " + loaderName + " extends " + AbstractServiceLoader.class.getSimpleName() + "{");
             printWriter.println();
             printWriter.println("    private " + element.getSimpleName() + " bean;");
             if (annotation instanceof Mapper) {
@@ -620,8 +620,9 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             }
             printWriter.println(") {");
             printWriter.append(headBlank(1)).println("try (org.apache.ibatis.session.SqlSession session = factory.openSession(true)) {");
+            printWriter.print(headBlank(2));
             if (!"void".equals(returnType)) {
-                printWriter.append(headBlank(2)).print("return ");
+                printWriter.print("return ");
             }
             printWriter.print("session.getMapper(" + element.getSimpleName() + ".class)." + se.getSimpleName() + "(");
             first = true;
