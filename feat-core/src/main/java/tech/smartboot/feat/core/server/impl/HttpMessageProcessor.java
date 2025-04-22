@@ -14,8 +14,8 @@ import org.smartboot.socket.StateMachineEnum;
 import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
 import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.common.DecodeState;
-import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HeaderName;
+import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpProtocol;
 import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.exception.HttpException;
@@ -246,7 +246,12 @@ public final class HttpMessageProcessor extends AbstractMessageProcessor<HttpEnd
 
     private void finishHttpHandle(HttpEndpoint abstractRequest, CompletableFuture<Object> future) throws IOException {
         if (future.isDone()) {
-            if (keepConnection(abstractRequest)) {
+            if (future.isCompletedExceptionally()) {
+                future.exceptionally(throwable -> {
+                    HttpMessageProcessor.responseError(abstractRequest.getResponse(), throwable);
+                    return null;
+                });
+            } else if (keepConnection(abstractRequest)) {
                 finishResponse(abstractRequest);
             }
             return;
