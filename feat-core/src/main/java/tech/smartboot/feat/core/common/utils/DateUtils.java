@@ -48,6 +48,7 @@ public class DateUtils {
     private static byte[] rfc1123Bytes;
 
     static {
+        rfc1123Bytes = DateUtils.formatRFC1123(currentTime).getBytes();
         HashedWheelTimer.DEFAULT_TIMER.scheduleWithFixedDelay(() -> {
             currentTime.setTime(System.currentTimeMillis());
             String date = DateUtils.formatRFC1123(currentTime);
