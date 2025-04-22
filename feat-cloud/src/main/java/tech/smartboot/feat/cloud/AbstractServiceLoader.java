@@ -14,6 +14,7 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.server.HttpRequest;
+import tech.smartboot.feat.router.Context;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -46,6 +47,16 @@ public abstract class AbstractServiceLoader implements CloudService {
                 return jsonObject;
             }
         } catch (Exception e) {
+            throw new FeatException(e);
+        }
+    }
+
+    protected void response(Context ctx, RestResult result) {
+        try {
+            byte[] bytes = JSONObject.toJSONString(result).getBytes();
+            ctx.Response.setContentLength(bytes.length);
+            ctx.Response.write(bytes);
+        } catch (IOException e) {
             throw new FeatException(e);
         }
     }

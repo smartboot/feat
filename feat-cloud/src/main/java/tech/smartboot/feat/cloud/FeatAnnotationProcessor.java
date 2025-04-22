@@ -27,7 +27,9 @@ import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.Session;
+import tech.smartboot.feat.router.Context;
 import tech.smartboot.feat.router.Router;
+import tech.smartboot.feat.router.RouterHandler;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -62,6 +64,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 // 该注解表示该处理器支持的 Java 源代码版本
 
@@ -282,8 +285,34 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                     if (StringUtils.isBlank(requestURL)) {
                         throw new FeatException("the value of RequestMapping on " + element.getSimpleName() + "@" + se.getSimpleName() + " is not allowed to be empty.");
                     }
+
+                    TypeMirror returnType = ((ExecutableElement) se).getReturnType();
+                    int returnTypeInt = -1;
+                    if (returnType.toString().equals("void")) {
+                        returnTypeInt = RETURN_TYPE_VOID;
+                    } else if (String.class.getName().equals(returnType.toString())) {
+                        returnTypeInt = RETURN_TYPE_STRING;
+                    } else if ("byte[]".equals(returnType.toString())) {
+                        returnTypeInt = RETURN_TYPE_BYTE_ARRAY;
+                    } else {
+                        returnTypeInt = RETURN_TYPE_OBJECT;
+                    }
+
                     printWriter.println("\t\tSystem.out.println(\" \\u001B[32m|->\\u001B[0m " + requestURL + " ==> " + element.getSimpleName() + "@" + se.getSimpleName() + "\");");
-                    printWriter.println("\t\trouter.route(\"" + requestURL + "\", ctx -> {");
+                    boolean async = returnTypeInt == RETURN_TYPE_OBJECT && AsyncResponse.class.getName().equals(returnType.toString());
+                    if (async) {
+                        printWriter.println("\t\trouter.route(\"" + requestURL + "\", new " + RouterHandler.class.getName() + "()  {");
+                        printWriter.println("\t\t\t@Override");
+                        printWriter.println("\t\t\tpublic void handle(" + Context.class.getName() + " ctx) throws Throwable {");
+                        printWriter.println();
+                        printWriter.println("\t\t\t}");
+                        printWriter.println();
+                        printWriter.println("\t\t\t@Override");
+                        printWriter.println("\t\t\tpublic void handle(" + Context.class.getName() + " ctx, " + CompletableFuture.class.getName() + "<Object> completableFuture) throws Throwable {");
+                    } else {
+                        printWriter.println("\t\trouter.route(\"" + requestURL + "\", ctx -> {");
+                    }
+
 
                     boolean first = true;
                     StringBuilder newParams = new StringBuilder();
@@ -332,17 +361,6 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                         printWriter.println(newParams);
                     }
 
-                    TypeMirror returnType = ((ExecutableElement) se).getReturnType();
-                    int returnTypeInt = -1;
-                    if (returnType.toString().equals("void")) {
-                        returnTypeInt = RETURN_TYPE_VOID;
-                    } else if (String.class.getName().equals(returnType.toString())) {
-                        returnTypeInt = RETURN_TYPE_STRING;
-                    } else if ("byte[]".equals(returnType.toString())) {
-                        returnTypeInt = RETURN_TYPE_BYTE_ARRAY;
-                    } else {
-                        returnTypeInt = RETURN_TYPE_OBJECT;
-                    }
                     switch (returnTypeInt) {
                         case RETURN_TYPE_VOID:
                             printWriter.print("\t\t\tbean." + se.getSimpleName() + "(");
@@ -354,6 +372,9 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                             printWriter.print("\t\t\tbyte[] bytes = bean." + se.getSimpleName() + "(");
                             break;
                         case RETURN_TYPE_OBJECT:
+                            if (async) {
+                                printWriter.print("\t");
+                            }
                             printWriter.print("\t\t\t" + returnType + " rst = bean." + se.getSimpleName() + "(");
                             break;
                         default:
@@ -374,11 +395,21 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                             printWriter.println("\t\t\tctx.Response.write(bytes);");
                             break;
                         case RETURN_TYPE_OBJECT:
-                            printWriter.println("\t\t\tjava.io.ByteArrayOutputStream os = getOutputStream();");
-                            writeJsonObject(printWriter, returnType, "rst", 0, new HashMap<>(), bytesCache);
-                            printWriter.println("\t\t\tctx.Response.setContentType(\"application/json\");");
-                            printWriter.println("\t\t\tctx.Response.setContentLength(os.size());");
-                            printWriter.println("\t\t\tos.writeTo(ctx.Response.getOutputStream());");
+
+                            if (AsyncResponse.class.getName().equals(returnType.toString())) {
+                                printWriter.println("\t\t\t\trst.getFuture().thenAccept(c -> {");
+                                printWriter.println("\t\t\t\t\tresponse(ctx, c);");
+                                printWriter.println("\t\t\t\t\tcompletableFuture.complete(c);");
+                                printWriter.println("\t\t\t\t});");
+                                printWriter.println("\t\t\t}");
+                            } else {
+                                printWriter.println("\t\t\tjava.io.ByteArrayOutputStream os = getOutputStream();");
+                                writeJsonObject(printWriter, returnType, "rst", 0, new HashMap<>(), bytesCache);
+                                printWriter.println("\t\t\tctx.Response.setContentType(\"application/json\");");
+                                printWriter.println("\t\t\tctx.Response.setContentLength(os.size());");
+                                printWriter.println("\t\t\tos.writeTo(ctx.Response.getOutputStream());");
+                            }
+
 //                            System.out.println("typeMirror:" + stringBuilder);
 //                            printWriter.println("        byte[] bytes=JSON.toJSONBytes(rst); ");
 //                            printWriter.println("        ctx.Response.setContentLength(bytes.length);");
