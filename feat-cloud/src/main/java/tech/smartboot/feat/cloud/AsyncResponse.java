@@ -26,4 +26,8 @@ public final class AsyncResponse {
     public void complete(RestResult result) {
         future.complete(result);
     }
+
+    public void complete() {
+        complete(null);
+    }
 }

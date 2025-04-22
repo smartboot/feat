@@ -397,10 +397,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                         case RETURN_TYPE_OBJECT:
 
                             if (AsyncResponse.class.getName().equals(returnType.toString())) {
-                                printWriter.println("\t\t\t\trst.getFuture().thenAccept(c -> {");
-                                printWriter.println("\t\t\t\t\tresponse(ctx, c);");
-                                printWriter.println("\t\t\t\t\tcompletableFuture.complete(c);");
-                                printWriter.println("\t\t\t\t});");
+                                printWriter.println("\t\t\t\tresponse(rst, ctx, completableFuture);");
                                 printWriter.println("\t\t\t}");
                             } else {
                                 printWriter.println("\t\t\tjava.io.ByteArrayOutputStream os = getOutputStream();");

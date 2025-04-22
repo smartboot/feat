@@ -37,5 +37,5 @@ public @interface Param {
      *
      * @return 参数提取范围
      */
-    Scope scope() default Scope.URL;
+    Scope scope() default Scope.URL_PARAM;
 }

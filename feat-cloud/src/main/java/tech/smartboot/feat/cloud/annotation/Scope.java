@@ -11,10 +11,10 @@
 package tech.smartboot.feat.cloud.annotation;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 public enum Scope {
 
-    BODY, URL, HEADER
+    URL_PATH, URL_PARAM, BODY, HEADER
 }

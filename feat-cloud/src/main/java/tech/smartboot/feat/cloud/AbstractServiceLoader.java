@@ -20,6 +20,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * @author 三刀
@@ -51,14 +52,24 @@ public abstract class AbstractServiceLoader implements CloudService {
         }
     }
 
-    protected void response(Context ctx, RestResult result) {
-        try {
-            byte[] bytes = JSONObject.toJSONString(result).getBytes();
-            ctx.Response.setContentLength(bytes.length);
-            ctx.Response.write(bytes);
-        } catch (IOException e) {
-            throw new FeatException(e);
-        }
+    protected void response(AsyncResponse response, Context ctx, CompletableFuture<Object> completableFuture) {
+        response.getFuture().exceptionally(throwable -> {
+            completableFuture.completeExceptionally(throwable);
+            return null;
+        }).thenAccept(result -> {
+            if (result == null) {
+                return;
+            }
+            try {
+                byte[] bytes = JSONObject.toJSONString(result).getBytes();
+                ctx.Response.setContentLength(bytes.length);
+                ctx.Response.write(bytes);
+                completableFuture.complete(result);
+            } catch (IOException e) {
+                completableFuture.completeExceptionally(e);
+            }
+        });
+
     }
 
     protected void writeJsonValue(OutputStream os, String value) throws IOException {
