@@ -45,14 +45,10 @@ public class DateUtils {
      * 当前时间
      */
     private static final Date currentTime = new Date();
-    private static byte[] rfc1123Bytes;
 
     static {
-        rfc1123Bytes = DateUtils.formatRFC1123(currentTime).getBytes();
         HashedWheelTimer.DEFAULT_TIMER.scheduleWithFixedDelay(() -> {
             currentTime.setTime(System.currentTimeMillis());
-            String date = DateUtils.formatRFC1123(currentTime);
-            rfc1123Bytes = date.getBytes();
         }, 1, TimeUnit.SECONDS);
     }
 
@@ -68,9 +64,6 @@ public class DateUtils {
         return RFC1123_DATE_FORMAT.get().format(date);
     }
 
-    public static byte[] currentTimeFormatRFC1123() {
-        return rfc1123Bytes;
-    }
 
     public static String formatCookieExpire(Date date) {
         return COOKIE_FORMAT.get().format(date);
