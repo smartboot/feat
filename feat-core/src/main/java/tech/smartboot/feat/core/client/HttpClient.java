@@ -25,8 +25,8 @@ import tech.smartboot.feat.core.common.utils.NumberUtils;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 
 import java.util.Base64;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
 
 /**
@@ -124,7 +124,7 @@ public final class HttpClient {
         connect();
         HttpRestImpl httpRestImpl = new HttpRestImpl(client.getSession(), queue) {
             @Override
-            public Future<HttpResponse> submit() {
+            public CompletableFuture<HttpResponse> submit() {
                 try {
                     return super.submit();
                 } finally {

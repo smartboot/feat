@@ -12,7 +12,7 @@ package tech.smartboot.feat.core.client;
 
 import tech.smartboot.feat.core.client.stream.Stream;
 
-import java.util.concurrent.Future;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 /**
@@ -36,7 +36,7 @@ public interface HttpRest {
      *
      * @return Future
      */
-    Future<HttpResponse> submit();
+    CompletableFuture<HttpResponse> submit();
 
     /**
      * 当响应头接收完毕时触发

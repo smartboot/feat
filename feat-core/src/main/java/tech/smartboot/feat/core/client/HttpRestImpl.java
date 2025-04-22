@@ -25,10 +25,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
 /**
@@ -146,7 +142,7 @@ class HttpRestImpl implements HttpRest {
         return body;
     }
 
-    public Future<HttpResponse> submit() {
+    public CompletableFuture<HttpResponse> submit() {
         try {
             willSendRequest();
             request.getOutputStream().close();
@@ -155,33 +151,8 @@ class HttpRestImpl implements HttpRest {
             e.printStackTrace();
 //            completableFuture.completeExceptionally(e);
         }
-        return new Future<HttpResponse>() {
-            @Override
-            public boolean cancel(boolean mayInterruptIfRunning) {
-                return completableFuture.cancel(mayInterruptIfRunning);
-            }
-
-            @Override
-            public boolean isCancelled() {
-                return completableFuture.isCancelled();
-            }
-
-            @Override
-            public boolean isDone() {
-                return completableFuture.isDone();
-            }
-
-            @Override
-            public HttpResponse get() throws InterruptedException, ExecutionException {
-                return completableFuture.get();
-            }
-
-            @Override
-            public HttpResponse get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-                return completableFuture.get(timeout, unit);
-            }
-
-        };
+        CompletableFuture future = completableFuture;
+        return future;
 
     }
 

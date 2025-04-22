@@ -12,11 +12,11 @@ package tech.smartboot.feat.core.client;
 
 import tech.smartboot.feat.core.client.stream.Stream;
 
-import java.util.concurrent.Future;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 class HttpRestWrapper implements HttpRest {
@@ -37,7 +37,7 @@ class HttpRestWrapper implements HttpRest {
     }
 
     @Override
-    public Future<HttpResponse> submit() {
+    public CompletableFuture<HttpResponse> submit() {
         return rest.submit();
     }
 
