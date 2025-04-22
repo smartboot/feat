@@ -41,14 +41,14 @@ import java.util.Map;
  *   <li>协议升级支持</li>
  * </ul>
  * </p>
- * 
+ *
  * <p>典型使用示例:</p>
  * <pre>
  * String userAgent = httpRequest.getHeader("User-Agent");
  * String paramValue = httpRequest.getParameter("paramName");
  * BodyInputStream inputStream = httpRequest.getInputStream();
  * </pre>
- * 
+ *
  * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
@@ -274,6 +274,10 @@ public interface HttpRequest {
      */
     Collection<Part> getParts(MultipartConfig configElement) throws IOException;
 
+    default Part getPart(String name) throws IOException {
+        return getParts().stream().filter(part -> part.getName().equals(name)).findFirst().orElse(null);
+    }
+
     /**
      * 获取HTTP尾部字段。
      * <p>
@@ -393,7 +397,7 @@ public interface HttpRequest {
      * <p>
      * 如果请求通过HTTPS发送，此
 
-    /**
+     /**
      * 获取与当前请求关联的SSL引擎。
      * <p>
      * 如果请求通过HTTPS发送，此方法返回用于处理SSL/TLS通信的引擎。
@@ -403,7 +407,7 @@ public interface HttpRequest {
      * @return {@link SSLEngine} SSL引擎实例，如果不是HTTPS请求则可能为null
      */
     SSLEngine getSslEngine();
-    
+
     /**
      * 创建一个新的PushBuilder实例，用于HTTP/2服务器推送。
      * <p>
