@@ -53,11 +53,9 @@ public abstract class AbstractServiceLoader implements CloudService {
     }
 
     protected void response(AsyncResponse response, Context ctx, CompletableFuture<Object> completableFuture) {
-        response.getFuture().exceptionally(throwable -> {
-            completableFuture.completeExceptionally(throwable);
-            return null;
-        }).thenAccept(result -> {
+        response.getFuture().thenAccept(result -> {
             if (result == null) {
+                completableFuture.complete(result);
                 return;
             }
             try {
@@ -68,6 +66,9 @@ public abstract class AbstractServiceLoader implements CloudService {
             } catch (IOException e) {
                 completableFuture.completeExceptionally(e);
             }
+        }).exceptionally(throwable -> {
+            completableFuture.completeExceptionally(throwable);
+            return null;
         });
 
     }
