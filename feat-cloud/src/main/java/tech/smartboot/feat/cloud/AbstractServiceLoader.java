@@ -12,6 +12,7 @@ package tech.smartboot.feat.cloud;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
+import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.router.Context;
@@ -60,6 +61,7 @@ public abstract class AbstractServiceLoader implements CloudService {
             }
             try {
                 byte[] bytes = JSONObject.toJSONString(result).getBytes();
+                ctx.Response.setContentType(HeaderValue.ContentType.APPLICATION_JSON);
                 ctx.Response.setContentLength(bytes.length);
                 ctx.Response.write(bytes);
                 completableFuture.complete(result);
