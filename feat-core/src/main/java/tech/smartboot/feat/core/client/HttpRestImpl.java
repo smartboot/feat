@@ -169,11 +169,23 @@ class HttpRestImpl implements HttpRest {
     }
 
     public HttpRestImpl onSuccess(Consumer<HttpResponse> consumer) {
-        completableFuture.thenAccept(consumer);
+        completableFuture.thenAccept(httpResponse -> {
+            try {
+                consumer.accept(httpResponse);
+            } catch (Throwable e) {
+                if (throwableConsumer != null) {
+                    throwableConsumer.accept(e);
+                }
+            }
+        });
         return this;
     }
 
+    private Consumer<Throwable> throwableConsumer;
+
+    @Override
     public HttpRestImpl onFailure(Consumer<Throwable> consumer) {
+        throwableConsumer = consumer;
         completableFuture.exceptionally(throwable -> {
             consumer.accept(throwable);
             return null;
