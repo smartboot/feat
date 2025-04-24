@@ -506,7 +506,23 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             typeMap.put(typeKey.get(z), typeArgs.get(z));
         }
         int j = i * 10;
-        for (Element se : ((DeclaredType) typeMirror).asElement().getEnclosedElements()) {
+
+        List<Element> elements = new ArrayList<>(((DeclaredType) typeMirror).asElement().getEnclosedElements());
+        //提取父类的字段
+        TypeMirror temp = typeMirror;
+        while (!temp.toString().startsWith("java.")) {
+            Element element = ((DeclaredType) temp).asElement();
+            TypeElement typeElement = (TypeElement) element;
+            TypeMirror superType = typeElement.getSuperclass();
+            if (!superType.toString().startsWith("java")) {
+                elements.addAll(((DeclaredType) superType).asElement().getEnclosedElements());
+                temp = superType;
+            } else {
+                break;
+            }
+        }
+
+        for (Element se : elements) {
             if (se.getKind() != ElementKind.FIELD) {
                 continue;
             }
