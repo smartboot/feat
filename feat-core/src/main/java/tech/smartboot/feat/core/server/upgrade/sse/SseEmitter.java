@@ -10,6 +10,7 @@
 
 package tech.smartboot.feat.core.server.upgrade.sse;
 
+import com.alibaba.fastjson2.JSON;
 import org.smartboot.socket.transport.AioSession;
 
 import java.io.IOException;
@@ -33,6 +34,40 @@ public class SseEmitter {
 
     public void send(String data) throws IOException {
         send(event().data(data));
+    }
+
+    public void send(String data, Consumer<Throwable> consumer) {
+        try {
+            send(event().data(data));
+        } catch (Throwable e) {
+            try {
+                consumer.accept(e);
+            } finally {
+                complete();
+            }
+        }
+    }
+
+    public void sendAsJson(Object data) {
+        sendAsJson(data, throwable -> {
+
+        });
+    }
+
+    public void sendAsJson(Object data, Consumer<Throwable> consumer) {
+        try {
+            if (data instanceof String) {
+                send((String) data);
+            } else {
+                send(event().data(JSON.toJSONString(data)));
+            }
+        } catch (Throwable e) {
+            try {
+                consumer.accept(e);
+            } finally {
+                complete();
+            }
+        }
     }
 
     public synchronized void onTimeout(Runnable callback) {

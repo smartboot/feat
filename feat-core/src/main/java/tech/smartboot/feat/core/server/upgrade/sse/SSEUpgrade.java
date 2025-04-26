@@ -41,7 +41,7 @@ public abstract class SSEUpgrade extends Upgrade {
 
     }
 
-    public abstract void onOpen(SseEmitter sseEmitter);
+    public abstract void onOpen(SseEmitter sseEmitter) throws IOException;
 
     @Override
     public void destroy() {
