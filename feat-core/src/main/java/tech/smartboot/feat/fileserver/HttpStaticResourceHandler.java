@@ -11,6 +11,7 @@
 package tech.smartboot.feat.fileserver;
 
 import tech.smartboot.feat.core.common.HeaderName;
+import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpMethod;
 import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.exception.FeatException;
@@ -25,6 +26,7 @@ import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -37,6 +39,7 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * @author 三刀
@@ -113,17 +116,30 @@ public class HttpStaticResourceHandler implements HttpHandler {
         });
         response.setHeader(HeaderName.LAST_MODIFIED, lastModifyDateFormat);
         response.setHeader(HeaderName.CONTENT_TYPE, Mimetypes.getInstance().getMimetype(fileName) + "; charset=utf-8");
+        response.setHeader(HeaderName.CONTENT_ENCODING, HeaderValue.ContentEncoding.GZIP);
 
         Consumer<FeatOutputStream> consumer = new Consumer<FeatOutputStream>() {
             final byte[] bytes = new byte[options.writeBufferSize()];
+            final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            final GZIPOutputStream outputStream = new GZIPOutputStream(byteArrayOutputStream);
 
             @Override
             public void accept(FeatOutputStream featOutputStream) {
                 int length;
                 try {
-                    if ((length = inputStream.read(bytes)) > 0) {
-                        featOutputStream.write(bytes, 0, length, this);
+                    if ((length = inputStream.read(bytes)) >= 0) {
+                        outputStream.write(bytes, 0, length);
+                        byte[] gzipBytes = byteArrayOutputStream.toByteArray();
+                        byteArrayOutputStream.reset();
+                        featOutputStream.write(gzipBytes, 0, gzipBytes.length, this);
                     } else {
+                        outputStream.close();
+                        byte[] gzipBytes = byteArrayOutputStream.toByteArray();
+                        byteArrayOutputStream.reset();
+                        if (gzipBytes.length > 0) {
+                            featOutputStream.write(gzipBytes, 0, gzipBytes.length);
+                        }
+                        featOutputStream.flush();
                         completableFuture.complete(null);
                     }
                 } catch (Throwable throwable) {
