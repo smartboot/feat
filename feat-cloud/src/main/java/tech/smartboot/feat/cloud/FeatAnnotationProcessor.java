@@ -152,7 +152,6 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
 //                    writer.append("    }");
 //                }
 //                writer.append("}");
-//                writer.append("}");
 //
 //            }
 
