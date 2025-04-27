@@ -88,6 +88,10 @@ public abstract class FeatOutputStream extends OutputStream implements Reset {
 
     public final void write(byte[] b, int off, int len, Consumer<FeatOutputStream> consumer) throws IOException {
         writeHeader(HeaderWriteSource.WRITE);
+        if (len == 0) {
+            consumer.accept(this);
+            return;
+        }
         if (chunkedSupport) {
             byte[] start = (Integer.toHexString(len) + "\r\n").getBytes();
             writeBuffer.write(start);
