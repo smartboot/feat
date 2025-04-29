@@ -13,13 +13,13 @@ package tech.smartboot.feat.core.server.upgrade.websocket;
 import org.smartboot.socket.timer.HashedWheelTimer;
 import org.smartboot.socket.timer.TimerTask;
 import org.smartboot.socket.util.StringUtils;
+import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
+import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.codec.websocket.BasicFrameDecoder;
 import tech.smartboot.feat.core.common.codec.websocket.CloseReason;
 import tech.smartboot.feat.core.common.codec.websocket.Decoder;
 import tech.smartboot.feat.core.common.codec.websocket.WebSocket;
-import tech.smartboot.feat.core.common.HeaderName;
-import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.utils.SHA1;
@@ -39,7 +39,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 public class WebSocketUpgrade extends Upgrade {
@@ -86,6 +86,7 @@ public class WebSocketUpgrade extends Upgrade {
                 }
             }, idleTimeout, TimeUnit.MILLISECONDS);
         }
+        onHandShake(webSocketRequest, webSocketResponse);
     }
 
     @Override
