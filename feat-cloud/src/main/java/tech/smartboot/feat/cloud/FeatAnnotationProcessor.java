@@ -506,19 +506,27 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         }
         int j = i * 10;
 
-        List<Element> elements = new ArrayList<>(((DeclaredType) typeMirror).asElement().getEnclosedElements());
+        List<Element> elements = new ArrayList<>();
+        //当子类存在相同字段时，子类的字段会覆盖父类的字段
+        Set<String> fields = new HashSet<>();
+
         //提取父类的字段
         TypeMirror temp = typeMirror;
         while (!temp.toString().startsWith("java.")) {
-            Element element = ((DeclaredType) temp).asElement();
-            TypeElement typeElement = (TypeElement) element;
-            TypeMirror superType = typeElement.getSuperclass();
-            if (!superType.toString().startsWith("java")) {
-                elements.addAll(((DeclaredType) superType).asElement().getEnclosedElements());
-                temp = superType;
-            } else {
-                break;
+            for (Element element : ((DeclaredType) temp).asElement().getEnclosedElements()) {
+                if (element.getKind() != ElementKind.FIELD) {
+                    continue;
+                }
+                if (element.getModifiers().contains(Modifier.STATIC)) {
+                    continue;
+                }
+                if (fields.contains(element.getSimpleName().toString())) {
+                    continue;
+                }
+                fields.add(element.getSimpleName().toString());
+                elements.add(element);
             }
+            temp = ((TypeElement) ((DeclaredType) temp).asElement()).getSuperclass();
         }
 
         for (Element se : elements) {
@@ -582,22 +590,24 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             } else if (Date.class.getName().equals(type.toString()) || Timestamp.class.getName().equals(type.toString())) {
                 printWriter.append(headBlank(i));
                 toBytesPool(printWriter, byteCache, "\"" + fieldName + "\":");
-                printWriter.append("java.util.Date " + fieldName + " = ").append(obj).append(".get").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).append("();");
+                printWriter.append(headBlank(i));
+                printWriter.append("java.util.Date " + fieldName + " = ").append(obj).append(".get").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).println("();");
+                printWriter.append(headBlank(i));
                 printWriter.println("if (" + fieldName + " != null) {");
-//                printWriter.println("os.write('\"');");
                 if (jsonField != null && StringUtils.isNotBlank(jsonField.format())) {
-                    printWriter.println("java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat(\"" + jsonField.format() + "\");");
-                    printWriter.println("os.write('\"');");
-                    printWriter.println("os.write(sdf.format(" + fieldName + ").getBytes());");
-                    printWriter.println("os.write('\"');");
+                    printWriter.append(headBlank(i + 1)).println("java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat(\"" + jsonField.format() + "\");");
+                    printWriter.append(headBlank(i + 1)).println("os.write('\"');");
+                    printWriter.append(headBlank(i + 1)).println("os.write(sdf.format(" + fieldName + ").getBytes());");
+                    printWriter.append(headBlank(i + 1)).println("os.write('\"');");
                 } else {
-                    printWriter.println("os.write(String.valueOf(" + fieldName + ".getTime()).getBytes());");
+                    printWriter.append(headBlank(i + 1)).println("os.write(String.valueOf(" + fieldName + ".getTime()).getBytes());");
                 }
 
 //                printWriter.println("os.write('\"');");
-                printWriter.println("} else {");
+                printWriter.append(headBlank(i)).println("} else {");
+                printWriter.append(headBlank(i + 1));
                 toBytesPool(printWriter, byteCache, "null");
-                printWriter.println("}");
+                printWriter.append(headBlank(i)).println("}");
             } else {
                 printWriter.append(headBlank(i));
                 toBytesPool(printWriter, byteCache, "\"" + fieldName + "\":");
