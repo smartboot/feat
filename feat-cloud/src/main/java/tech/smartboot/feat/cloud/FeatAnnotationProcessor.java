@@ -524,22 +524,18 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                     continue;
                 }
                 fields.add(element.getSimpleName().toString());
+
+                JSONField jsonField = element.getAnnotation(JSONField.class);
+                if (jsonField != null && !jsonField.serialize()) {
+                    continue;
+                }
+
                 elements.add(element);
             }
             temp = ((TypeElement) ((DeclaredType) temp).asElement()).getSuperclass();
         }
 
         for (Element se : elements) {
-            if (se.getKind() != ElementKind.FIELD) {
-                continue;
-            }
-            if (se.getModifiers().contains(Modifier.STATIC)) {
-                continue;
-            }
-            JSONField jsonField = se.getAnnotation(JSONField.class);
-            if (jsonField != null && !jsonField.serialize()) {
-                continue;
-            }
             if (j++ > i * 10) {
                 printWriter.append(headBlank(i));
                 printWriter.println("os.write(',');");
@@ -550,6 +546,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                 type = ((DeclaredType) typeMirror).getTypeArguments().get(0);
             }
             String fieldName = se.getSimpleName().toString();
+            JSONField jsonField = se.getAnnotation(JSONField.class);
             if (jsonField != null && StringUtils.isNotBlank(jsonField.name())) {
                 fieldName = jsonField.name();
             }
