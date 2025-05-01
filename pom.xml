@@ -5,12 +5,12 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>tech.smartboot.feat</groupId>
     <artifactId>feat-parent</artifactId>
-    <version>0.8.9</version>
+    <version>0.8.10</version>
     <packaging>pom</packaging>
 
     <properties>
-        <smartsocket.version>1.5.60</smartsocket.version>
-        <feat.version>0.8.9</feat.version>
+        <smartsocket.version>1.5.61</smartsocket.version>
+        <feat.version>0.8.10</feat.version>
     </properties>
 
     <dependencyManagement>

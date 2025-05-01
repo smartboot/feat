@@ -16,7 +16,7 @@
     <parent>
         <groupId>tech.smartboot.feat</groupId>
         <artifactId>feat-parent</artifactId>
-        <version>0.8.9</version>
+        <version>0.8.10</version>
     </parent>
 
     <artifactId>feat-cloud</artifactId>
