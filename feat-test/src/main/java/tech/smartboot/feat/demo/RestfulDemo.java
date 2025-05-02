@@ -39,7 +39,7 @@ public class RestfulDemo {
                 "</body></html>");
     }
 
-    @RequestMapping(value = "/async", async = true)
+    @RequestMapping(value = "/async")
     public String async() throws InterruptedException {
         int sleep = (int) (Math.random() * 5000);
         Thread.sleep(sleep);
