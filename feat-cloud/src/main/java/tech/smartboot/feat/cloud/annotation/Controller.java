@@ -25,6 +25,4 @@ import java.lang.annotation.Target;
 @Documented
 public @interface Controller {
     String value() default "";
-
-    boolean async() default false;
 }

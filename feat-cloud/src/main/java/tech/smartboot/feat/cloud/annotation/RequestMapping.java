@@ -28,6 +28,4 @@ public @interface RequestMapping {
     String value() default "";
 
     RequestMethod[] method() default {};
-
-    boolean async() default false;
 }
