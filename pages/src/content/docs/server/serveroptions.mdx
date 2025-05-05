@@ -1,197 +1,276 @@
 ---
-title: ServerOptions 配置说明
-description: Feat ServerOptions 配置说明
+title: ServerOptions 配置详解
+description: Feat HTTP 服务器配置选项指南
 sidebar:
     order: 1
 ---
 
+# ServerOptions 配置详解
+
+Feat HTTP 服务器配置类，用于配置服务器的各项参数，包括基础配置、性能调优、安全设置和调试功能等。
 
 ## 基础配置
 
 ### serverName
-**类型:** `String`
-
-**默认值:** `"feat"`
+**类型:** `String` **默认值:** `"feat"`
 
 设置服务器名称，会在 HTTP 响应头的 Server 字段中显示。
 
 ```java
-Feat.httpServer(options -> options.serverName("my-app-v1.0"))
-    .listen();
+options.serverName("my-app-v1.0");
 ```
 
-**使用场景：**
-- 在多服务部署环境中区分不同服务
-- 自定义服务器标识，增强安全性
-- 便于日志分析和问题追踪
+**使用场景：** 区分不同服务、自定义服务器标识、便于日志分析
+
+**注意：** 自动移除回车和换行符，防止 HTTP 响应头注入攻击
 
 ### bannerEnabled
-**类型:** `boolean`
-
-**默认值:** `true`
+**类型:** `boolean` **默认值:** `true`
 
 是否在启动时显示 Feat HTTP 服务器的版本信息。
 
 ```java
-Feat.httpServer(options -> options.bannerEnabled(false))
-    .listen();
+options.bannerEnabled(false);
 ```
 
-**使用场景：**
-- 在生产环境中隐藏版本信息
-- 保持控制台输出简洁
+**使用场景：** 生产环境隐藏版本信息、保持控制台输出简洁
+
+### idleTimeout
+**类型:** `long` **默认值:** `60000`（毫秒）
+
+设置连接闲置超时时间。当客户端连接在指定时间内没有数据交互时，服务器将关闭该连接。
+
+```java
+options.setIdleTimeout(120000); // 2分钟
+```
+
+**使用场景：** 防止空闲连接占用资源、优化连接管理、长连接超时控制
+
+### shutdownHook
+**类型:** `Runnable` **默认值:** `null`
+
+设置服务器关闭钩子。当服务器关闭时，会执行该钩子函数。
+
+```java
+options.shutdownHook(() -> {
+    System.out.println("服务器关闭，执行资源清理...");
+    // 执行资源清理、状态保存等操作
+});
+```
+
+**使用场景：** 资源清理、状态保存、关闭通知、优雅停机
 
 ## 性能调优
 
 ### threadNum
-**类型:** `int`
-
-**默认值:** `CPU 核数（至少为 2）`
+**类型:** `int` **默认值:** `Math.max(Runtime.getRuntime().availableProcessors(), 2)`
 
 设置 HTTP 服务器的工作线程数。
 
 ```java
-Feat.httpServer(options -> options.threadNum(4))
-    .listen();
+options.threadNum(8);
 ```
 
 **最佳实践：**
-- IO 密集型应用：线程数可以设置为 CPU 核数的 2-4 倍
-- CPU 密集型应用：线程数建议设置为 CPU 核数的 1-2 倍
-- 建议通过压测确定最优线程数
-- 考虑服务器内存资源，避免设置过大的线程数
+- IO 密集型应用：CPU 核数的 2-4 倍
+- CPU 密集型应用：CPU 核数的 1-2 倍
 
 ### readBufferSize
-**类型:** `int`
+**类型:** `int` **默认值:** `8 * 1024`（8KB）
 
-**默认值:** `8192`（字节）
-
-设置读缓冲区大小。
+设置读缓冲区大小。用于存储客户端发送的 HTTP 请求数据。
 
 ```java
-Feat.httpServer(options -> options.readBufferSize(16384))
-    .listen();
+options.readBufferSize(16 * 1024); // 16KB
 ```
 
-**最佳实践：**
-- 缓冲区大小至少要能容纳一个完整的 URL 或 Header 值
-- 对于大量小请求的场景，保持默认值即可
-- 处理大请求时可适当增加缓冲区大小
-- 需要平衡内存使用和性能
+**最佳实践：** 缓冲区至少要能容纳一个完整的 URL 或 Header 值，文件上传场景适当增加
 
 ### writeBufferSize
-**类型:** `int`
+**类型:** `int` **默认值:** `8 * 1024`（8KB）
 
-**默认值:** `8192`（字节）
-
-设置写缓冲区大小。
+设置写缓冲区大小。用于存储发送给客户端的 HTTP 响应数据。
 
 ```java
-Feat.httpServer(options -> options.writeBufferSize(16384))
-    .listen();
+options.writeBufferSize(16 * 1024); // 16KB
 ```
 
-**最佳实践：**
-- 响应大文件时可适当增加缓冲区大小
-- 注意内存资源的合理分配
-- 可通过性能测试工具找到最优配置
+**最佳实践：** 响应大文件时适当增加，注意内存资源平衡
+
+### lowMemory
+**类型:** `boolean` **默认值:** `false`
+
+是否启用低内存模式。在资源受限环境中可减少内存占用。
+
+```java
+options.setLowMemory(true);
+```
+
+**使用场景：** 嵌入式设备、容器化部署、资源受限环境
+
+### group
+**类型:** `AsynchronousChannelGroup` **默认值:** `null`
+
+设置异步通道组，用于管理异步 IO 操作的线程组。
+
+```java
+AsynchronousChannelGroup channelGroup = AsynchronousChannelGroup.withFixedThreadPool(
+    4, Executors.defaultThreadFactory());
+    
+options.group(channelGroup);
+```
+
+**使用场景：** 自定义异步 IO 线程池、多服务共享线程池资源
 
 ## 安全设置
 
 ### maxRequestSize
-**类型:** `long`
+**类型:** `long` **默认值:** `Integer.MAX_VALUE`
 
-**默认值:** `Integer.MAX_VALUE`
-
-设置允许的最大请求大小。
+设置允许的最大请求报文大小。防止恶意大请求攻击。
 
 ```java
-Feat.httpServer(options -> options.setMaxRequestSize(10 * 1024 * 1024)) // 10MB
-    .listen();
+options.setMaxRequestSize(10 * 1024 * 1024); // 10MB
 ```
 
-**最佳实践：**
-- 根据业务需求设置合理的请求大小限制
-- 防止恶意大请求攻击
-- 文件上传场景需要适当调大此值
-- 建议在网关层面也设置相应的限制
+**最佳实践：** 根据业务需求设置合理限制，文件上传场景适当调大
 
 ### headerLimiter
-**类型:** `int`
-
-**默认值:** `100`
+**类型:** `int` **默认值:** `100`
 
 设置请求头的最大数量限制。超过此限制的请求头将被忽略。
 
 ```java
-Feat.httpServer(options -> options.headerLimiter(50))
-    .listen();
+options.headerLimiter(50);
 ```
 
-**使用场景：**
-- 防止 HTTP 头部攻击
-- 限制异常请求
-- 保护服务器资源
+**使用场景：** 防止 HTTP 头部攻击、限制异常请求、保护服务器资源
+
+### secure
+**类型:** `boolean` **默认值:** `false`
+
+是否启用加密通信（HTTPS）。添加 SslPlugin 插件时自动设置为 true。
+
+```java
+// 添加 SSL 插件后，secure 会自动设置为 true
+options.addPlugin(new SslPlugin<>("keystore.jks", "password", "JKS"));
+```
+
+**使用场景：** 保护敏感数据传输、提高服务安全性、满足合规要求
+
+### proxyProtocolSupport
+**类型:** `方法`
+
+启用代理协议支持。当服务器部署在代理后面时，可获取客户端真实 IP。
+
+```java
+options.proxyProtocolSupport();
+```
+
+**使用场景：** 负载均衡环境、获取客户端真实 IP、与代理服务器集成
 
 ## 调试功能
 
 ### debug
-**类型:** `boolean`
+**类型:** `boolean` **默认值:** `false`
 
-**默认值:** `false`
-
-是否开启调试模式。开启后会在控制台打印请求和响应的详细信息。
+是否开启调试模式。开启后会打印请求和响应的详细信息。
 
 ```java
-Feat.httpServer(options -> options.debug(true))
-    .listen();
+options.debug(true);
 ```
 
-**使用场景：**
-- 开发环境调试请求/响应内容
-- 排查 HTTP 通信问题
-- 分析请求处理流程
+**使用场景：** 开发环境调试、排查通信问题、分析请求处理流程
 
-**注意事项：**
-- 生产环境建议关闭 debug 模式
-- debug 模式会影响服务性能
+**注意：** 生产环境必须关闭，避免性能下降和信息泄露
 
-## 完整配置示例
+## 插件系统
+
+### addPlugin
+**类型:** `方法`
+
+添加服务器插件。扩展服务器功能，如 SSL 支持、代理协议支持、流量监控等。
+
+```java
+// 添加单个插件
+options.addPlugin(new SslPlugin<>("keystore.jks", "password", "JKS"));
+    
+// 批量添加插件
+List<Plugin<HttpEndpoint>> pluginList = new ArrayList<>();
+pluginList.add(new SslPlugin<>("keystore.jks", "password", "JKS"));
+pluginList.add(new CustomPlugin<>());
+options.addPlugin(pluginList);
+```
+
+**常用插件：** SslPlugin（HTTPS）、ProxyProtocolPlugin（代理协议）、StreamMonitorPlugin（流量监控）
+
+## 配置示例
+
+### 开发环境配置
 
 ```java
 Feat.httpServer(options -> {
     // 基础配置
-    options.serverName("my-app-v1.0");
+    options.serverName("dev-app-v1.0");
     options.bannerEnabled(true);
+    options.setIdleTimeout(300000); // 5分钟
     
     // 性能调优
     options.threadNum(Runtime.getRuntime().availableProcessors() * 2);
-    options.readBufferSize(16384);
-    options.writeBufferSize(16384);
+    options.readBufferSize(16 * 1024);
+    options.writeBufferSize(16 * 1024);
+    
+    // 安全设置
+    options.setMaxRequestSize(50 * 1024 * 1024); // 50MB
+    options.headerLimiter(100);
+    
+    // 调试功能
+    options.debug(true); // 开发环境启用调试
+})
+.listen(8080);
+```
+
+### 生产环境配置
+
+```java
+Feat.httpServer(options -> {
+    // 基础配置
+    options.serverName("prod-app"); // 隐藏版本信息
+    options.bannerEnabled(false); // 关闭 banner
+    options.setIdleTimeout(60000); // 1分钟
+    
+    // 性能调优
+    options.threadNum(Runtime.getRuntime().availableProcessors() * 2);
+    options.readBufferSize(8 * 1024);
+    options.writeBufferSize(8 * 1024);
     
     // 安全设置
     options.setMaxRequestSize(10 * 1024 * 1024); // 10MB
     options.headerLimiter(50);
+    options.addPlugin(new SslPlugin<>("/path/to/keystore.jks", "password", "JKS"));
+    options.proxyProtocolSupport();
     
-    // 调试功能（仅开发环境）
-    options.debug(false);
+    // 调试功能
+    options.debug(false); // 禁用调试
 })
-.listen();
+.listen(443);
 ```
 
-## 配置最佳实践
+## 最佳实践
 
-1. **性能优化**
-   - 根据应用特性和硬件资源合理设置线程数
-   - 通过压测确定最优的缓冲区大小
-   - 在生产环境关闭调试功能
+### 性能优化
+- 根据应用特性和硬件资源合理设置线程数
+- 通过压测确定最优缓冲区大小
+- 生产环境关闭调试功能
+- 容器环境适当降低线程数和缓冲区大小
 
-2. **安全防护**
-   - 设置合理的请求大小限制和请求头数量限制
-   - 修改默认的服务器名称，避免暴露版本信息
-   - 在生产环境禁用 banner 显示
+### 安全防护
+- 设置合理的请求大小限制和请求头数量限制
+- 修改默认服务器名称，避免暴露版本信息
+- 生产环境禁用 banner 显示
+- 敏感数据传输启用 HTTPS
 
-3. **资源管理**
-   - 避免设置过大的缓冲区，合理使用内存资源
-   - 定期检查服务器性能指标，及时调整配置
-   - 结合监控系统，观察配置变更对性能的影响
+### 环境差异化配置
+- 开发环境：启用调试功能，放宽资源限制
+- 测试环境：模拟生产配置，进行性能测试
+- 生产环境：关闭调试功能，加强安全限制
