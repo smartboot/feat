@@ -53,10 +53,10 @@ public abstract class AbstractServiceLoader implements CloudService {
         }
     }
 
-    protected void response(AsyncResponse response, Context ctx, CompletableFuture<Object> completableFuture) {
+    protected void response(AsyncResponse response, Context ctx, CompletableFuture<Void> completableFuture) {
         response.getFuture().thenAccept(result -> {
             if (result == null) {
-                completableFuture.complete(result);
+                completableFuture.complete(null);
                 return;
             }
             try {
@@ -64,7 +64,7 @@ public abstract class AbstractServiceLoader implements CloudService {
                 ctx.Response.setContentType(HeaderValue.ContentType.APPLICATION_JSON);
                 ctx.Response.setContentLength(bytes.length);
                 ctx.Response.write(bytes);
-                completableFuture.complete(result);
+                completableFuture.complete(null);
             } catch (IOException e) {
                 completableFuture.completeExceptionally(e);
             }

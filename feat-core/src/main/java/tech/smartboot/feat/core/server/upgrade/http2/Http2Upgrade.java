@@ -273,7 +273,7 @@ public class Http2Upgrade extends Upgrade {
 
     public final void handleHttpRequest(Http2Endpoint abstractRequest) {
         AbstractResponse response = abstractRequest.getResponse();
-        CompletableFuture<Object> future = new CompletableFuture<>();
+        CompletableFuture<Void> future = new CompletableFuture<>();
         try {
             handle(abstractRequest, future);
             abstractRequest.getResponse().close();
@@ -285,7 +285,7 @@ public class Http2Upgrade extends Upgrade {
     public void handle(HttpRequest request) throws Throwable {
     }
 
-    public void handle(HttpRequest request, CompletableFuture<Object> completableFuture) throws Throwable {
+    public void handle(HttpRequest request, CompletableFuture<Void> completableFuture) throws Throwable {
         try {
             handle(request);
         } finally {

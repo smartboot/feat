@@ -35,7 +35,7 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 public final class HttpMessageProcessor extends AbstractMessageProcessor<HttpEndpoint> {
@@ -232,7 +232,7 @@ public final class HttpMessageProcessor extends AbstractMessageProcessor<HttpEnd
                 }
                 return;
             }
-            CompletableFuture<Object> future = new CompletableFuture<>();
+            CompletableFuture<Void> future = new CompletableFuture<>();
             boolean keepAlive = isKeepAlive(request, response);
             request.setKeepAlive(keepAlive);
             request.getServerHandler().handle(request, future);
@@ -244,7 +244,7 @@ public final class HttpMessageProcessor extends AbstractMessageProcessor<HttpEnd
         }
     }
 
-    private void finishHttpHandle(HttpEndpoint abstractRequest, CompletableFuture<Object> future) throws IOException {
+    private void finishHttpHandle(HttpEndpoint abstractRequest, CompletableFuture<Void> future) throws IOException {
         if (future.isDone()) {
             if (future.isCompletedExceptionally()) {
                 future.exceptionally(throwable -> {

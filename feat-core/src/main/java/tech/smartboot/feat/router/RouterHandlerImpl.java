@@ -52,7 +52,7 @@ final class RouterHandlerImpl implements HttpHandler {
     }
 
     @Override
-    public void handle(HttpRequest request, CompletableFuture<Object> completableFuture) throws Throwable {
+    public void handle(HttpRequest request, CompletableFuture<Void> completableFuture) throws Throwable {
         Context context = getContext(request);
         routerHandler.handle(context, completableFuture);
     }

@@ -19,6 +19,7 @@ import java.lang.annotation.Target;
 
 /**
  * 拦截器映射
+ *
  * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
@@ -26,6 +27,11 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.SOURCE)
 @Documented
 public @interface InterceptorMapping {
+    /**
+     * 拦截器映射路径
+     *
+     * @return
+     */
     String[] value() default "";
 
 }

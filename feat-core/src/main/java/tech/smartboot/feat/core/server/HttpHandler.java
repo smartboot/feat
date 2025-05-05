@@ -26,8 +26,8 @@ import java.util.concurrent.CompletableFuture;
  * 异步处理模式：重写{@link #handle(HttpRequest, CompletableFuture)}方法，将请求处理逻辑放在独立线程中执行，
  * 并在处理完成后手动完成CompletableFuture。
  * </p>
- * 
- * @author 三刀(zhengjunweimail@163.com)
+ *
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 public interface HttpHandler {
@@ -42,7 +42,7 @@ public interface HttpHandler {
      *   <li>记录请求信息</li>
      * </ul>
      * </p>
-     * 
+     *
      * @param request HTTP端点对象，包含请求的详细信息
      * @throws IOException 如果在处理过程中发生I/O错误
      */
@@ -68,7 +68,7 @@ public interface HttpHandler {
      * <pre>
      * {@code
      * ExecutorService executorService = Executors.newFixedThreadPool(10);
-     * 
+     *
      * @Override
      * public void handle(HttpRequest request, CompletableFuture<Object> future) throws Throwable {
      *     executorService.execute(() -> {
@@ -86,12 +86,12 @@ public interface HttpHandler {
      * }
      * </pre>
      * </p>
-     * 
-     * @param request HTTP请求对象
+     *
+     * @param request           HTTP请求对象
      * @param completableFuture 用于异步处理的CompletableFuture对象，处理完成后需要手动完成
      * @throws Throwable 如果在处理过程中发生任何异常
      */
-    default void handle(HttpRequest request, CompletableFuture<Object> completableFuture) throws Throwable {
+    default void handle(HttpRequest request, CompletableFuture<Void> completableFuture) throws Throwable {
         try {
             handle(request);
         } finally {
@@ -108,7 +108,7 @@ public interface HttpHandler {
      * <p>
      * 对于需要执行耗时操作的场景，建议使用异步处理方法{@link #handle(HttpRequest, CompletableFuture)}。
      * </p>
-     * 
+     *
      * @param request HTTP请求对象，包含请求的详细信息和响应对象
      * @throws Throwable 如果在处理过程中发生任何异常
      */
@@ -125,7 +125,7 @@ public interface HttpHandler {
      *   <li>执行统计或监控操作</li>
      * </ul>
      * </p>
-     * 
+     *
      * @param request HTTP端点对象，包含已关闭连接的详细信息
      */
     default void onClose(HttpEndpoint request) {

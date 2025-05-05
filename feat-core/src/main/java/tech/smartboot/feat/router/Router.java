@@ -70,7 +70,7 @@ public final class Router implements HttpHandler {
             }
 
             @Override
-            public void handle(Context request, CompletableFuture<Object> completableFuture) throws Throwable {
+            public void handle(Context request, CompletableFuture<Void> completableFuture) throws Throwable {
                 httpHandler.handle(request.Request, completableFuture);
             }
 
@@ -104,7 +104,7 @@ public final class Router implements HttpHandler {
     }
 
     @Override
-    public void handle(HttpRequest request, CompletableFuture<Object> completableFuture) throws Throwable {
+    public void handle(HttpRequest request, CompletableFuture<Void> completableFuture) throws Throwable {
         if (request.getProtocol() == HttpProtocol.HTTP_2) {
             HttpHandler httpServerHandler = matchHandler(request.getRequestURI());
             httpServerHandler.handle(request, completableFuture);
@@ -147,7 +147,7 @@ public final class Router implements HttpHandler {
         return new HttpHandler() {
 
             @Override
-            public void handle(HttpRequest request, CompletableFuture<Object> completableFuture) throws Throwable {
+            public void handle(HttpRequest request, CompletableFuture<Void> completableFuture) throws Throwable {
                 SessionUnit session = getSession(request, false);
                 if (session != null) {
                     session.updateTimeoutTask();

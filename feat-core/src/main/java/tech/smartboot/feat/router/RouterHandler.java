@@ -23,7 +23,7 @@ public interface RouterHandler {
     default void onHeaderComplete(HttpEndpoint request) throws IOException {
     }
 
-    default void handle(Context context, CompletableFuture<Object> completableFuture) throws Throwable {
+    default void handle(Context context, CompletableFuture<Void> completableFuture) throws Throwable {
         try {
             handle(context);
         } finally {

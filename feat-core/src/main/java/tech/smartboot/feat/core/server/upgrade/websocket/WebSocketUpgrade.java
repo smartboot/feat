@@ -97,7 +97,7 @@ public class WebSocketUpgrade extends Upgrade {
         }
         decoder = basicFrameDecoder;
         try {
-            CompletableFuture<Object> future = new CompletableFuture<>();
+            CompletableFuture<Void> future = new CompletableFuture<>();
             handle(webSocketRequest, webSocketResponse, future);
             if (future.isDone()) {
                 finishResponse(webSocketRequest);
@@ -169,7 +169,7 @@ public class WebSocketUpgrade extends Upgrade {
         }
     }
 
-    public void handle(WebSocketRequest request, WebSocketResponse response, CompletableFuture<Object> completableFuture) throws Throwable {
+    public void handle(WebSocketRequest request, WebSocketResponse response, CompletableFuture<Void> completableFuture) throws Throwable {
         try {
             handle(request, response);
         } finally {

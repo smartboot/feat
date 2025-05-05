@@ -307,7 +307,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                         printWriter.println("\t\t\t}");
                         printWriter.println();
                         printWriter.println("\t\t\t@Override");
-                        printWriter.println("\t\t\tpublic void handle(" + Context.class.getName() + " ctx, " + CompletableFuture.class.getName() + "<Object> completableFuture) throws Throwable {");
+                        printWriter.println("\t\t\tpublic void handle(" + Context.class.getName() + " ctx, " + CompletableFuture.class.getName() + "<Void> completableFuture) throws Throwable {");
                     } else {
                         printWriter.println("\t\trouter.route(\"" + requestURL + "\", ctx -> {");
                     }
@@ -647,8 +647,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                         patterns = v.getValue().toString();
                     }
                 }
-                printWriter.println("    router.addInterceptors(java.util.Arrays.asList(" + patterns + ")");
-                printWriter.println(",bean." + se.getSimpleName() + "()");
+                printWriter.append("\t\trouter.addInterceptors(java.util.Arrays.asList(" + patterns + ")").append(", bean." + se.getSimpleName() + "()");
                 printWriter.println(");");
             }
         }

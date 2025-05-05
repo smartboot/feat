@@ -33,7 +33,7 @@ public class BasicAuthInterceptor implements Interceptor {
     }
 
     @Override
-    public void intercept(Context context, CompletableFuture<Object> completableFuture, Chain chain) throws Throwable {
+    public void intercept(Context context, CompletableFuture<Void> completableFuture, Chain chain) throws Throwable {
         String clientBasic = context.Request.getHeader(HeaderName.AUTHORIZATION);
         if (StringUtils.equals(clientBasic, this.basic)) {
             chain.proceed(context, completableFuture);

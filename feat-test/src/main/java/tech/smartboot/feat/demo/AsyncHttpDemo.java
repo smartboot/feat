@@ -31,7 +31,7 @@ public class AsyncHttpDemo {
         bootstrap.httpHandler(new HttpHandler() {
 
             @Override
-            public void handle(HttpRequest request, CompletableFuture<Object> future) throws IOException {
+            public void handle(HttpRequest request, CompletableFuture<Void> future) throws IOException {
 //                response.write((new Date() + " currentThread:" + Thread.currentThread()).getBytes());
 //                response.getOutputStream().flush();
                 executorService.execute(() -> {
@@ -42,7 +42,7 @@ public class AsyncHttpDemo {
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                    future.complete(this);
+                    future.complete(null);
                 });
 
             }

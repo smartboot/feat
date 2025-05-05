@@ -76,7 +76,7 @@ public class HttpStaticResourceHandler implements HttpHandler {
         }
     }
 
-    public void handle(HttpRequest request, CompletableFuture<Object> completableFuture) throws Throwable {
+    public void handle(HttpRequest request, CompletableFuture<Void> completableFuture) throws Throwable {
         String fileName = request.getRequestURI();
         if (StringUtils.endsWith(fileName, "/") && !options.autoIndex()) {
             fileName += "index.html";
@@ -90,7 +90,7 @@ public class HttpStaticResourceHandler implements HttpHandler {
         }
     }
 
-    public void handleClassPath(HttpRequest request, CompletableFuture<Object> completableFuture, String fileName) throws Throwable {
+    public void handleClassPath(HttpRequest request, CompletableFuture<Void> completableFuture, String fileName) throws Throwable {
         HttpResponse response = request.getResponse();
 
         //304 命中缓存
@@ -150,7 +150,7 @@ public class HttpStaticResourceHandler implements HttpHandler {
         consumer.accept(response.getOutputStream());
     }
 
-    private void handleFilePath(HttpRequest request, CompletableFuture<Object> completableFuture, String fileName) throws Throwable {
+    private void handleFilePath(HttpRequest request, CompletableFuture<Void> completableFuture, String fileName) throws Throwable {
         HttpResponse response = request.getResponse();
         File file = new File(baseDir, fileName);
 

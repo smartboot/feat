@@ -24,7 +24,7 @@ public interface Interceptor {
      * @param completableFuture 完成回调
      * @param chain 链
      */
-    void intercept(Context context, CompletableFuture<Object> completableFuture, Chain chain) throws Throwable;
+    void intercept(Context context, CompletableFuture<Void> completableFuture, Chain chain) throws Throwable;
 
 
 }

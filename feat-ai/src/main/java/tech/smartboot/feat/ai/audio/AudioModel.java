@@ -24,7 +24,7 @@ public class AudioModel {
     public static void main(String[] args) throws FileNotFoundException {
         Feat.httpServer().httpHandler(new HttpHandler() {
             @Override
-            public void handle(HttpRequest request, CompletableFuture<Object> completableFuture) throws Throwable {
+            public void handle(HttpRequest request, CompletableFuture<Void> completableFuture) throws Throwable {
                 Map<String, String> params = new HashMap<>();
                 params.put("model", "ChatTTS");
                 params.put("input", request.getParameter("content"));

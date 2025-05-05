@@ -28,7 +28,7 @@ public class Chain {
         this.handler = handler;
     }
 
-    public void proceed(Context context, CompletableFuture<Object> completableFuture) throws Throwable {
+    public void proceed(Context context, CompletableFuture<Void> completableFuture) throws Throwable {
         if (index < interceptors.size()) {
             interceptors.get(index++).intercept(context, completableFuture, this);
         } else {
