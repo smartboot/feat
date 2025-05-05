@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>颜色匹配游戏 - 适合3岁小朋友</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background-color: #f0f8ff;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #ff6b6b;
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+        .game-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+        .color-target {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            margin: 20px auto;
+            border: 5px solid #333;
+            transition: all 0.3s;
+        }
+        .color-options {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .color-button {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+        }
+        .color-button:hover {
+            transform: scale(1.1);
+        }
+        .feedback {
+            font-size: 24px;
+            margin-top: 20px;
+            height: 30px;
+        }
+        .success-animation {
+            animation: success 1s;
+        }
+        .word-display {
+            font-size: 24px;
+            margin-top: 20px;
+            color: #333;
+            font-weight: bold;
+        }
+        @keyframes success {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>颜色匹配游戏</h1>
+        <div class="language-toggle">
+            <button onclick="setLanguage('zh')">中文</button>
+            <button onclick="setLanguage('en')">English</button>
+        </div>
+        <p id="instruction">请选择与上面圆圈相同的颜色！</p>
+        
+        <div id="colorTarget" class="color-target"></div>
+        
+        <div class="color-options" id="colorOptions">
+            <!-- 颜色按钮将通过JavaScript动态生成 -->
+        </div>
+        
+        <div class="feedback" id="feedback"></div>
+        <div class="word-display" id="wordDisplay"></div>
+    </div>
+    
+    <script>
+        // 语音合成API
+        function speak(text, lang) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = lang;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+        
+        // 定义游戏中使用的颜色
+        const colors = [
+            { name: '红色', value: '#ff6b6b', enName: 'red' },
+            { name: '蓝色', value: '#4d96ff', enName: 'blue' },
+            { name: '绿色', value: '#6bff6b', enName: 'green' },
+            { name: '黄色', value: '#ffff6b', enName: 'yellow' },
+            { name: '紫色', value: '#b96bff', enName: 'purple' },
+            { name: '橙色', value: '#ffb56b', enName: 'orange' }
+        ];
+        
+        let currentLanguage = 'zh';
+        
+        function setLanguage(lang) {
+            currentLanguage = lang;
+            updateUI();
+        }
+        
+        let targetColor;
+        const colorTarget = document.getElementById('colorTarget');
+        const colorOptions = document.getElementById('colorOptions');
+        const feedback = document.getElementById('feedback');
+        
+        // 初始化游戏
+        function initGame() {
+            // 清空颜色选项区域
+            colorOptions.innerHTML = '';
+            
+            // 随机选择目标颜色
+            targetColor = colors[Math.floor(Math.random() * colors.length)];
+            colorTarget.style.backgroundColor = targetColor.value;
+            
+            // 创建颜色按钮
+            // 打乱颜色顺序
+            const shuffledColors = [...colors].sort(() => Math.random() - 0.5);
+            
+            shuffledColors.forEach(color => {
+                const button = document.createElement('button');
+                button.className = 'color-button';
+                button.style.backgroundColor = color.value;
+                button.setAttribute('data-color', color.value);
+                button.setAttribute('aria-label', color.name);
+                
+                button.onclick = function() {
+                    checkAnswer(color);
+                };
+                
+                colorOptions.appendChild(button);
+            });
+            
+            // 清空反馈信息
+            feedback.textContent = '';
+        }
+        
+        // 检查答案
+        function checkAnswer(selectedColor) {
+            if (selectedColor.value === targetColor.value) {
+                feedback.textContent = currentLanguage === 'zh' ? '太棒了！颜色匹配成功！' : `Great! It's ${targetColor.enName}!`;
+                feedback.style.color = '#4CAF50';
+                speak(currentLanguage === 'zh' ? `${targetColor.name} 匹配成功` : `Great! It's ${targetColor.enName}`, currentLanguage === 'zh' ? 'zh-CN' : 'en-US');
+                
+                // 添加成功动画
+                colorTarget.classList.add('success-animation');
+                
+                // 移除动画类，以便下次可以再次触发
+                setTimeout(() => {
+                    colorTarget.classList.remove('success-animation');
+                    // 短暂延迟后开始新一轮游戏
+                    setTimeout(initGame, 1000);
+                }, 1000);
+            } else {
+                feedback.textContent = currentLanguage === 'zh' ? '再试一次！' : 'Try again!';
+                feedback.style.color = '#FF5252';
+                speak(currentLanguage === 'zh' ? '再试一次' : 'Try again', currentLanguage === 'zh' ? 'zh-CN' : 'en-US');
+            }
+        }
+        
+        function updateUI() {
+            document.getElementById('instruction').textContent = 
+                currentLanguage === 'zh' ? '请选择与上面圆圈相同的颜色！' : 'Match the color above!';
+            
+            if(targetColor) {
+                feedback.textContent = '';
+                initGame();
+            }
+            
+            // 切换语言时播报提示
+            speak(currentLanguage === 'zh' ? '中文模式' : 'English mode', currentLanguage === 'zh' ? 'zh-CN' : 'en-US');
+        }
+        
+        // 启动游戏
+        initGame();
+        
+        // 显示英文单词
+        function updateWordDisplay() {
+            const wordDisplay = document.getElementById('wordDisplay');
+            if(targetColor) {
+                wordDisplay.textContent = currentLanguage === 'zh' ? 
+                    `${targetColor.name} (${targetColor.enName})` : 
+                    targetColor.enName;
+            }
+        }
+        
+        // 修改initGame函数
+        function initGame() {
+            // 清空颜色选项区域
+            colorOptions.innerHTML = '';
+            
+            // 随机选择目标颜色
+            targetColor = colors[Math.floor(Math.random() * colors.length)];
+            colorTarget.style.backgroundColor = targetColor.value;
+            updateWordDisplay();
+            
+            // 创建颜色按钮
+            // 打乱颜色顺序
+            const shuffledColors = [...colors].sort(() => Math.random() - 0.5);
+            
+            shuffledColors.forEach(color => {
+                const button = document.createElement('button');
+                button.className = 'color-button';
+                button.style.backgroundColor = color.value;
+                button.setAttribute('data-color', color.value);
+                button.setAttribute('aria-label', color.name);
+                
+                button.onclick = function() {
+                    checkAnswer(color);
+                };
+                
+                colorOptions.appendChild(button);
+            });
+            
+            // 清空反馈信息
+            feedback.textContent = '';
+        }
+    </script>
+</body>
+</html>
