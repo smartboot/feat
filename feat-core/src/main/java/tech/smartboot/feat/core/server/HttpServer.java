@@ -145,19 +145,22 @@ public class HttpServer {
      * 停止服务
      */
     public void shutdown() {
-        if (server != null) {
-            Runnable runnable = options.shutdownHook();
-            if (runnable != null) {
-                try {
-                    runnable.run();
-                } catch (Throwable e) {
-                    e.printStackTrace();
-                }
-            }
-            server.shutdown();
-            server = null;
-            bufferPagePool.release();
-            bufferPagePool = null;
+        if (server == null) {
+            return;
         }
+        //提前将server设置为null，避免在shutdownHook中再次调用shutdown方法
+        HttpServer thisServer = this;
+        server = null;
+        Runnable runnable = options.shutdownHook();
+        if (runnable != null) {
+            try {
+                runnable.run();
+            } catch (Throwable e) {
+                e.printStackTrace();
+            }
+        }
+        thisServer.shutdown();
+        bufferPagePool.release();
+        bufferPagePool = null;
     }
 }
