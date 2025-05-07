@@ -21,6 +21,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Field;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -113,5 +114,11 @@ public abstract class AbstractServiceLoader implements CloudService {
             throw new FeatException("bean[" + beanName + "] not ready, please check it's @Bean.order");
         }
         return result;
+    }
+
+    protected void reflectAutowired(Object bean, String fieldName, ApplicationContext context) throws NoSuchFieldException, IllegalAccessException {
+        Field field = bean.getClass().getDeclaredField(fieldName);
+        field.setAccessible(true);
+        field.set(bean, loadBean(fieldName, context));
     }
 }

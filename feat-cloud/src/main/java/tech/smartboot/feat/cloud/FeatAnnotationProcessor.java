@@ -215,11 +215,33 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
 
             printWriter.println("\t}");
             printWriter.println();
-            printWriter.println("\tpublic void autowired(ApplicationContext applicationContext) {");
+            printWriter.println("\tpublic void autowired(ApplicationContext applicationContext) throws Throwable {");
             for (Element field : autowiredFields) {
                 String name = field.getSimpleName().toString();
                 name = name.substring(0, 1).toUpperCase() + name.substring(1);
-                printWriter.println("\t\tbean.set" + name + "(loadBean(\"" + field.getSimpleName() + "\", applicationContext));");
+
+                //判断是否存在setter方法
+                boolean hasSetter = false;
+                for (Element se : element.getEnclosedElements()) {
+                    if (!("set" + name).equals(se.getSimpleName().toString())) {
+                        continue;
+                    }
+                    List<? extends VariableElement> list = ((ExecutableElement) se).getParameters();
+                    if (list.size() != 1) {
+                        continue;
+                    }
+                    VariableElement param = list.get(0);
+                    if (!param.asType().toString().equals(field.asType().toString())) {
+                        continue;
+                    }
+                    hasSetter = true;
+                }
+                if (hasSetter) {
+                    printWriter.println("\t\tbean.set" + name + "(loadBean(\"" + field.getSimpleName() + "\", applicationContext));");
+                } else {
+                    printWriter.println("\t\treflectAutowired(bean, \"" + field.getSimpleName().toString() + "\", applicationContext);");
+                }
+
             }
             if (annotation instanceof Mapper) {
                 printWriter.println("\t\tfactory = applicationContext.getBean(\"sessionFactory\");");

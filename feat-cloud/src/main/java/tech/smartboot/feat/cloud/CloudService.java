@@ -20,7 +20,7 @@ import tech.smartboot.feat.router.Router;
 public interface CloudService {
     void loadBean(ApplicationContext context) throws Throwable;
 
-    void autowired(ApplicationContext context);
+    void autowired(ApplicationContext context) throws Throwable;
 
     void postConstruct(ApplicationContext context) throws Throwable;
 
