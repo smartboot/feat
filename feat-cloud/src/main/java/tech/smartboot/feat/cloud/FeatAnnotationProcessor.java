@@ -165,8 +165,8 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             printWriter.println("import " + AbstractServiceLoader.class.getName() + ";");
             printWriter.println("import " + ApplicationContext.class.getName() + ";");
             printWriter.println("import " + Router.class.getName() + ";");
-            writer.write("import " + JSONObject.class.getName() + ";\n");
-            writer.write("import com.alibaba.fastjson2.JSON;\n");
+            printWriter.println("import " + JSONObject.class.getName() + ";");
+            printWriter.println("import com.alibaba.fastjson2.JSON;");
             printWriter.println();
             printWriter.println("public class " + loaderName + " extends " + AbstractServiceLoader.class.getSimpleName() + " {");
             printWriter.println();
@@ -181,73 +181,21 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                 printWriter.println("\t}");
             }
             printWriter.println();
+
             printWriter.println("\tpublic void loadBean(ApplicationContext applicationContext) throws Throwable {");
             if (annotation instanceof Mapper) {
-                createMapperBean(element, (Mapper) annotation, printWriter);
+                createMapperBean(element, printWriter);
             } else {
-                printWriter.println("\t\tbean = new " + element.getSimpleName() + "(); ");
+                generateBeanOrController(element, annotation, printWriter);
             }
-
-            String beanName = element.getSimpleName().toString().substring(0, 1).toLowerCase() + element.getSimpleName().toString().substring(1);
-            if (annotation instanceof Bean && !((Bean) annotation).value().isEmpty()) {
-                beanName = ((Bean) annotation).value();
-            }
-            printWriter.println("\t\tapplicationContext.addBean(\"" + beanName + "\", bean);");
-
-            for (Element se : element.getEnclosedElements()) {
-                for (AnnotationMirror mirror : se.getAnnotationMirrors()) {
-                    if (!Bean.class.getName().equals(mirror.getAnnotationType().toString())) {
-                        continue;
-                    }
-                    printWriter.print("\t\tapplicationContext.addBean(\"" + se.getSimpleName() + "\", bean." + se.getSimpleName() + "(");
-                    boolean first = true;
-                    for (VariableElement param : ((ExecutableElement) se).getParameters()) {
-                        if (first) {
-                            first = false;
-                        } else {
-                            printWriter.print(", ");
-                        }
-                        printWriter.print("loadBean(\"" + param.getSimpleName() + "\", applicationContext)");
-                    }
-                    printWriter.println("));");
-                }
-            }
-
             printWriter.println("\t}");
+
             printWriter.println();
             printWriter.println("\tpublic void autowired(ApplicationContext applicationContext) throws Throwable {");
-            for (Element field : autowiredFields) {
-                String name = field.getSimpleName().toString();
-                name = name.substring(0, 1).toUpperCase() + name.substring(1);
-
-                //判断是否存在setter方法
-                boolean hasSetter = false;
-                for (Element se : element.getEnclosedElements()) {
-                    if (!("set" + name).equals(se.getSimpleName().toString())) {
-                        continue;
-                    }
-                    List<? extends VariableElement> list = ((ExecutableElement) se).getParameters();
-                    if (list.size() != 1) {
-                        continue;
-                    }
-                    VariableElement param = list.get(0);
-                    if (!param.asType().toString().equals(field.asType().toString())) {
-                        continue;
-                    }
-                    hasSetter = true;
-                }
-                if (hasSetter) {
-                    printWriter.println("\t\tbean.set" + name + "(loadBean(\"" + field.getSimpleName() + "\", applicationContext));");
-                } else {
-                    printWriter.println("\t\treflectAutowired(bean, \"" + field.getSimpleName().toString() + "\", applicationContext);");
-                }
-
-            }
-            if (annotation instanceof Mapper) {
-                printWriter.println("\t\tfactory = applicationContext.getBean(\"sessionFactory\");");
-            }
+            printWriter.append(generateAutoWriedMethod(element, annotation));
             printWriter.println("\t}");
             printWriter.println();
+
             printWriter.println("\tpublic void router(" + Router.class.getSimpleName() + " router) {");
             Map<String, String> bytesCache = new HashMap<>();
             if (annotation instanceof Controller) {
@@ -291,6 +239,78 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private <T extends Annotation> void generateBeanOrController(Element element, T annotation, PrintWriter printWriter) {
+        printWriter.println("\t\tbean = new " + element.getSimpleName() + "(); ");
+        String beanName = element.getSimpleName().toString().substring(0, 1).toLowerCase() + element.getSimpleName().toString().substring(1);
+        if (annotation instanceof Bean && !((Bean) annotation).value().isEmpty()) {
+            beanName = ((Bean) annotation).value();
+        }
+        printWriter.println("\t\tapplicationContext.addBean(\"" + beanName + "\", bean);");
+
+        //初始化通过方法实例化的bean
+        for (Element se : element.getEnclosedElements()) {
+            for (AnnotationMirror mirror : se.getAnnotationMirrors()) {
+                if (!Bean.class.getName().equals(mirror.getAnnotationType().toString())) {
+                    continue;
+                }
+                printWriter.print("\t\tapplicationContext.addBean(\"" + se.getSimpleName() + "\", bean." + se.getSimpleName() + "(");
+                boolean first = true;
+                for (VariableElement param : ((ExecutableElement) se).getParameters()) {
+                    if (first) {
+                        first = false;
+                    } else {
+                        printWriter.print(", ");
+                    }
+                    printWriter.print("loadBean(\"" + param.getSimpleName() + "\", applicationContext)");
+                }
+                printWriter.println("));");
+            }
+        }
+    }
+
+    /**
+     * 生成自动注入方法
+     */
+    private <T extends Annotation> String generateAutoWriedMethod(Element element, T annotation) {
+        StringBuilder stringBuilder = new StringBuilder();
+        List<Element> autowiredFields = new ArrayList<>();
+        for (Element field : element.getEnclosedElements()) {
+            if (field.getAnnotation(Autowired.class) != null) {
+                autowiredFields.add(field);
+            }
+        }
+        for (Element field : autowiredFields) {
+            String name = field.getSimpleName().toString();
+            name = name.substring(0, 1).toUpperCase() + name.substring(1);
+
+            //判断是否存在setter方法
+            boolean hasSetter = false;
+            for (Element se : element.getEnclosedElements()) {
+                if (!("set" + name).equals(se.getSimpleName().toString())) {
+                    continue;
+                }
+                List<? extends VariableElement> list = ((ExecutableElement) se).getParameters();
+                if (list.size() != 1) {
+                    continue;
+                }
+                VariableElement param = list.get(0);
+                if (!param.asType().toString().equals(field.asType().toString())) {
+                    continue;
+                }
+                hasSetter = true;
+            }
+            if (hasSetter) {
+                stringBuilder.append("\t\tbean.set").append(name).append("(loadBean(\"").append(field.getSimpleName()).append("\", applicationContext));\n");
+            } else {
+                stringBuilder.append("\t\treflectAutowired(bean, \"").append(field.getSimpleName().toString()).append("\", applicationContext);\n");
+            }
+        }
+        if (annotation instanceof Mapper) {
+            stringBuilder.append("\t\tfactory = applicationContext.getBean(\"sessionFactory\");\n");
+        }
+        return stringBuilder.toString();
     }
 
     private static <T extends Annotation> void createController(Element element, Controller annotation, PrintWriter printWriter, Map<String, String> bytesCache) throws IOException {
@@ -467,7 +487,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         }
     }
 
-    private static void toBytesPool(PrintWriter printWriter, Map<String, String> map, String value) throws IOException {
+    private static void toBytesPool(PrintWriter printWriter, Map<String, String> map, String value) {
         String key = ("b_" + value.hashCode()).replace("-", "$");
         map.put(key, "private static final byte[] " + key + " = " + toBytesStr(value) + ";");
         printWriter.append("os.write(").append(key).println(");");
@@ -694,7 +714,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         }
     }
 
-    private static <T extends Annotation> void createMapperBean(Element element, Mapper annotation, PrintWriter printWriter) throws IOException {
+    private static <T extends Annotation> void createMapperBean(Element element, PrintWriter printWriter) throws IOException {
         printWriter.println("\t\tbean = new " + element.getSimpleName() + "() { ");
         for (Element se : element.getEnclosedElements()) {
             String returnType = ((ExecutableElement) se).getReturnType().toString();
