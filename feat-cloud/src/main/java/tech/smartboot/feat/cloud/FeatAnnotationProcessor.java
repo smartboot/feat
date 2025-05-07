@@ -188,6 +188,11 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             } else {
                 generateBeanOrController(element, annotation, printWriter);
             }
+            String beanName = element.getSimpleName().toString().substring(0, 1).toLowerCase() + element.getSimpleName().toString().substring(1);
+            if (annotation instanceof Bean && !((Bean) annotation).value().isEmpty()) {
+                beanName = ((Bean) annotation).value();
+            }
+            printWriter.println("\t\tapplicationContext.addBean(\"" + beanName + "\", bean);");
             printWriter.println("\t}");
 
             printWriter.println();
@@ -243,12 +248,6 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
 
     private <T extends Annotation> void generateBeanOrController(Element element, T annotation, PrintWriter printWriter) {
         printWriter.println("\t\tbean = new " + element.getSimpleName() + "(); ");
-        String beanName = element.getSimpleName().toString().substring(0, 1).toLowerCase() + element.getSimpleName().toString().substring(1);
-        if (annotation instanceof Bean && !((Bean) annotation).value().isEmpty()) {
-            beanName = ((Bean) annotation).value();
-        }
-        printWriter.println("\t\tapplicationContext.addBean(\"" + beanName + "\", bean);");
-
         //初始化通过方法实例化的bean
         for (Element se : element.getEnclosedElements()) {
             for (AnnotationMirror mirror : se.getAnnotationMirrors()) {
