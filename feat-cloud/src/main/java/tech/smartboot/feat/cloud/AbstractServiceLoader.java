@@ -106,4 +106,12 @@ public abstract class AbstractServiceLoader implements CloudService {
         os.reset();
         return os;
     }
+
+    protected <T> T loadBean(String beanName, ApplicationContext context) {
+        T result = context.getBean(beanName);
+        if (result == null) {
+            throw new FeatException("bean[" + beanName + "] not ready, please check it's @Bean.order");
+        }
+        return result;
+    }
 }

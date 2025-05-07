@@ -17,6 +17,7 @@ import tech.smartboot.feat.fileserver.HttpStaticResourceHandler;
 import tech.smartboot.feat.router.Router;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,6 +47,7 @@ public class ApplicationContext {
             }
             services.add(service);
         }
+        services.sort(Comparator.comparingInt(CloudService::order));
         for (CloudService service : services) {
             service.loadBean(this);
         }

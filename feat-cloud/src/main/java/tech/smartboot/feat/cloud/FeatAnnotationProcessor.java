@@ -168,11 +168,17 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             writer.write("import " + JSONObject.class.getName() + ";\n");
             writer.write("import com.alibaba.fastjson2.JSON;\n");
             printWriter.println();
-            printWriter.println("public class " + loaderName + " extends " + AbstractServiceLoader.class.getSimpleName() + "{");
+            printWriter.println("public class " + loaderName + " extends " + AbstractServiceLoader.class.getSimpleName() + " {");
             printWriter.println();
             printWriter.println("    private " + element.getSimpleName() + " bean;");
             if (annotation instanceof Mapper) {
                 printWriter.println("    private org.apache.ibatis.session.SqlSessionFactory factory;");
+            }
+            if (annotation instanceof Bean) {
+                printWriter.println();
+                printWriter.println("\tpublic int order() {");
+                printWriter.println("\t\treturn " + ((Bean) annotation).order() + ";");
+                printWriter.println("\t}");
             }
             printWriter.println();
             printWriter.println("\tpublic void loadBean(ApplicationContext applicationContext) throws Throwable {");
@@ -187,20 +193,33 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                 beanName = ((Bean) annotation).value();
             }
             printWriter.println("\t\tapplicationContext.addBean(\"" + beanName + "\", bean);");
+
             for (Element se : element.getEnclosedElements()) {
                 for (AnnotationMirror mirror : se.getAnnotationMirrors()) {
-                    if (Bean.class.getName().equals(mirror.getAnnotationType().toString())) {
-                        printWriter.println("\t\tapplicationContext.addBean(\"" + se.getSimpleName() + "\", bean." + se.getSimpleName() + "());");
+                    if (!Bean.class.getName().equals(mirror.getAnnotationType().toString())) {
+                        continue;
                     }
+                    printWriter.print("\t\tapplicationContext.addBean(\"" + se.getSimpleName() + "\", bean." + se.getSimpleName() + "(");
+                    boolean first = true;
+                    for (VariableElement param : ((ExecutableElement) se).getParameters()) {
+                        if (first) {
+                            first = false;
+                        } else {
+                            printWriter.print(", ");
+                        }
+                        printWriter.print("loadBean(\"" + param.getSimpleName() + "\", applicationContext)");
+                    }
+                    printWriter.println("));");
                 }
             }
+
             printWriter.println("\t}");
             printWriter.println();
             printWriter.println("\tpublic void autowired(ApplicationContext applicationContext) {");
             for (Element field : autowiredFields) {
                 String name = field.getSimpleName().toString();
                 name = name.substring(0, 1).toUpperCase() + name.substring(1);
-                printWriter.println("\t\tbean.set" + name + "(applicationContext.getBean(\"" + field.getSimpleName() + "\"))" + ";");
+                printWriter.println("\t\tbean.set" + name + "(loadBean(\"" + field.getSimpleName() + "\", applicationContext));");
             }
             if (annotation instanceof Mapper) {
                 printWriter.println("\t\tfactory = applicationContext.getBean(\"sessionFactory\");");

@@ -24,5 +24,13 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.SOURCE)
 @Documented
 public @interface Bean {
+    /**
+     * @return Bean的名称标识
+     */
     String value() default "";
+
+    /**
+     * @return Bean的加载顺序
+     */
+    int order() default 0;
 }

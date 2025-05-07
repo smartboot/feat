@@ -27,4 +27,8 @@ public interface CloudService {
     void destroy() throws Throwable;
 
     void router(Router router);
+
+    default int order() {
+        return 0;
+    }
 }
