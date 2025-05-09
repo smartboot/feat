@@ -51,7 +51,7 @@ public class ServerOptions {
     /**
      * 当前 Feat 框架版本号
      */
-    public static final String VERSION = "v0.9.1";
+    public static final String VERSION = "v0.9.2";
 
     /**
      * 字节缓存树，用于缓存字符串以提高性能
