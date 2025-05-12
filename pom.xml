@@ -10,7 +10,6 @@
 
     <properties>
         <smartsocket.version>1.5.62</smartsocket.version>
-        <feat.version>0.9.2</feat.version>
     </properties>
 
     <dependencyManagement>
@@ -23,27 +22,27 @@
             <dependency>
                 <groupId>tech.smartboot.feat</groupId>
                 <artifactId>feat-core</artifactId>
-                <version>${feat.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>tech.smartboot.feat</groupId>
                 <artifactId>feat-ai</artifactId>
-                <version>${feat.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>tech.smartboot.feat</groupId>
                 <artifactId>feat-cloud</artifactId>
-                <version>${feat.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>tech.smartboot.feat</groupId>
                 <artifactId>feat-cloud-starter</artifactId>
-                <version>${feat.version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>tech.smartboot.feat</groupId>
                 <artifactId>feat-test</artifactId>
-                <version>${feat.version}</version>
+                <version>${project.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
