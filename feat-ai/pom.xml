@@ -16,7 +16,7 @@
     <parent>
         <groupId>tech.smartboot.feat</groupId>
         <artifactId>feat-parent</artifactId>
-        <version>0.9.2</version>
+        <version>0.9.3</version>
     </parent>
 
     <artifactId>feat-ai</artifactId>
