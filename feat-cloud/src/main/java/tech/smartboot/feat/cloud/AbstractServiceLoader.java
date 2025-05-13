@@ -76,6 +76,36 @@ public abstract class AbstractServiceLoader implements CloudService {
 
     }
 
+    protected void writeInt(OutputStream out, int value) throws IOException {
+        // 处理特殊情况 0
+        if (value == 0) {
+            out.write('0');
+            return;
+        } else if (value == Integer.MIN_VALUE) {
+            out.write(new byte[]{'-', '2', '1', '4', '7', '4', '8', '3', '6', '4', '8'});
+            return;
+        } else if (value < 0) {
+            out.write('-');
+            value = -value;
+        }
+
+        if (value < 10) {
+            out.write('0' + value);
+        } else if (value < 100) {
+            out.write('0' + value / 10);
+            out.write('0' + value % 10);
+        } else {
+            // 用于存储转换后的数字字符
+            byte[] buffer = new byte[10]; // 最大的 int 有 10 位
+            int pos = 10;
+            while (value != 0) {
+                buffer[--pos] = (byte) ('0' + (value % 10));
+                value /= 10;
+            }
+            out.write(buffer, pos, buffer.length - pos);
+        }
+    }
+
     protected void writeJsonValue(OutputStream os, String value) throws IOException {
         byte[] bytes = value.getBytes();
         int start = 0;

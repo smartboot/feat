@@ -22,6 +22,10 @@ import tech.smartboot.feat.cloud.annotation.PathParam;
 import tech.smartboot.feat.cloud.annotation.PostConstruct;
 import tech.smartboot.feat.cloud.annotation.PreDestroy;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
+import tech.smartboot.feat.cloud.serializer.BooleanSerializer;
+import tech.smartboot.feat.cloud.serializer.DateSerializer;
+import tech.smartboot.feat.cloud.serializer.JsonFieldSerializer;
+import tech.smartboot.feat.cloud.serializer.StringSerializer;
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.HttpRequest;
@@ -78,6 +82,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
     private static final int RETURN_TYPE_STRING = 1;
     private static final int RETURN_TYPE_OBJECT = 2;
     private static final int RETURN_TYPE_BYTE_ARRAY = 3;
+    private Map<String, JsonFieldSerializer> jsonFieldSerializerMap = new HashMap<>();
 
     @Override
     public Set<String> getSupportedAnnotationTypes() {
@@ -101,6 +106,10 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        jsonFieldSerializerMap.put(boolean.class.getName(), new BooleanSerializer());
+        jsonFieldSerializerMap.put(String.class.getName(), new StringSerializer());
+        jsonFieldSerializerMap.put(Date.class.getName(), new DateSerializer());
+        jsonFieldSerializerMap.put(Timestamp.class.getName(), new DateSerializer());
     }
 
     @Override
@@ -312,7 +321,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         return stringBuilder.toString();
     }
 
-    private static <T extends Annotation> void createController(Element element, Controller annotation, PrintWriter printWriter, Map<String, String> bytesCache) throws IOException {
+    private <T extends Annotation> void createController(Element element, Controller annotation, PrintWriter printWriter, Map<String, String> bytesCache) throws IOException {
         Controller controller = annotation;
         //遍历所有方法,获得RequestMapping注解
         String basePath = controller.value();
@@ -500,7 +509,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         return sb.toString();
     }
 
-    public static void writeJsonObject(PrintWriter printWriter, TypeMirror typeMirror, String obj, int i, Map<TypeMirror, TypeMirror> typeMap0, Map<String, String> byteCache) throws IOException {
+    public void writeJsonObject(PrintWriter printWriter, TypeMirror typeMirror, String obj, int i, Map<TypeMirror, TypeMirror> typeMap0, Map<String, String> byteCache) throws IOException {
         //深层级采用JSON框架序列化，防止循环引用
         if (i > 4) {
             printWriter.println(headBlank(i) + "if (" + obj + " != null) {");
@@ -610,61 +619,14 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             if (jsonField != null && StringUtils.isNotBlank(jsonField.name())) {
                 fieldName = jsonField.name();
             }
-            if (type.toString().equals(boolean.class.getName())) {
-                printWriter.append(headBlank(i) + "if (" + obj + ".is").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).println("()) {");
-                printWriter.append(headBlank(i + 1));
-                toBytesPool(printWriter, byteCache, "\"" + fieldName + "\":true");
-
-                printWriter.println(headBlank(i) + "} else {");
-                printWriter.append(headBlank(i + 1));
-                toBytesPool(printWriter, byteCache, "\"" + fieldName + "\":false");
-
-                printWriter.println(headBlank(i) + "}");
+            JsonFieldSerializer serializer = jsonFieldSerializerMap.get(type.toString());
+            if (serializer != null) {
+                serializer.serialize(printWriter, se, obj, i, byteCache);
             } else if (Arrays.asList("int", "short", "byte", "long", "float", "double", "java.lang.Integer", "java.lang.Short", "java.lang.Byte", "java.lang.Long", "java.lang.Float", "java.lang.Double").contains(type.toString())) {
                 printWriter.append(headBlank(i));
                 toBytesPool(printWriter, byteCache, "\"" + fieldName + "\":");
                 printWriter.append(headBlank(i));
                 printWriter.append("os.write(String.valueOf(").append(obj).append(".get").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).println("()).getBytes());");
-            } else if (String.class.getName().equals(type.toString())) {
-                printWriter.append(headBlank(i));
-                toBytesPool(printWriter, byteCache, "\"" + fieldName + "\":");
-
-                printWriter.append(headBlank(i));
-                printWriter.append("if (").append(obj).append(".get").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).println("()" + " != null) {");
-                printWriter.append(headBlank(i + 1));
-                printWriter.println("os.write('\"');");
-                printWriter.append(headBlank(i + 1));
-                printWriter.println("String s = " + obj + ".get" + se.getSimpleName().toString().substring(0, 1).toUpperCase() + se.getSimpleName().toString().substring(1) + "();");
-                printWriter.append(headBlank(i + 1));
-                printWriter.println("writeJsonValue(os, s);");
-                printWriter.append(headBlank(i + 1));
-                printWriter.println("os.write('\"');");
-                printWriter.append(headBlank(i));
-                printWriter.println("} else {");
-                printWriter.append(headBlank(i + 1));
-                toBytesPool(printWriter, byteCache, "null");
-                printWriter.append(headBlank(i)).println("}");
-            } else if (Date.class.getName().equals(type.toString()) || Timestamp.class.getName().equals(type.toString())) {
-                printWriter.append(headBlank(i));
-                toBytesPool(printWriter, byteCache, "\"" + fieldName + "\":");
-                printWriter.append(headBlank(i));
-                printWriter.append("java.util.Date " + fieldName + " = ").append(obj).append(".get").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).println("();");
-                printWriter.append(headBlank(i));
-                printWriter.println("if (" + fieldName + " != null) {");
-                if (jsonField != null && StringUtils.isNotBlank(jsonField.format())) {
-                    printWriter.append(headBlank(i + 1)).println("java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat(\"" + jsonField.format() + "\");");
-                    printWriter.append(headBlank(i + 1)).println("os.write('\"');");
-                    printWriter.append(headBlank(i + 1)).println("os.write(sdf.format(" + fieldName + ").getBytes());");
-                    printWriter.append(headBlank(i + 1)).println("os.write('\"');");
-                } else {
-                    printWriter.append(headBlank(i + 1)).println("os.write(String.valueOf(" + fieldName + ".getTime()).getBytes());");
-                }
-
-//                printWriter.println("os.write('\"');");
-                printWriter.append(headBlank(i)).println("} else {");
-                printWriter.append(headBlank(i + 1));
-                toBytesPool(printWriter, byteCache, "null");
-                printWriter.append(headBlank(i)).println("}");
             } else {
                 printWriter.append(headBlank(i));
                 toBytesPool(printWriter, byteCache, "\"" + fieldName + "\":");
@@ -679,6 +641,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         }
         printWriter.append(headBlank(i)).println("os.write('}');");
     }
+
 
     private static String toBytesStr(String str) {
         StringBuilder s = new StringBuilder("{");
