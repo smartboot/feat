@@ -234,7 +234,8 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
 
             //生成service配置
             services.add(element.getEnclosingElement().toString() + "." + loaderName);
-        } catch (IOException e) {
+        } catch (Throwable e) {
+            e.printStackTrace();
             throw new RuntimeException(e);
         }
     }

@@ -19,6 +19,22 @@ import java.util.List;
 public class TestParam0<T, K> {
     private T param1;
     private List<K> param2;
+    private int param3;
+    private byte param4;
+    private short param5;
+    private long param6;
+    private float param7;
+    private double param8;
+    private boolean param9;
+    private char param10;
+    private Integer param11;
+    private Byte param12;
+    private Short param13;
+    private Long param14;
+    private Float param15;
+    private Double param16;
+    private Boolean param17;
+    private Character param18;
 
     public T getParam1() {
         return param1;
@@ -34,5 +50,133 @@ public class TestParam0<T, K> {
 
     public void setParam2(List<K> param2) {
         this.param2 = param2;
+    }
+
+    public int getParam3() {
+        return param3;
+    }
+
+    public void setParam3(int param3) {
+        this.param3 = param3;
+    }
+
+    public byte getParam4() {
+        return param4;
+    }
+
+    public void setParam4(byte param4) {
+        this.param4 = param4;
+    }
+
+    public short getParam5() {
+        return param5;
+    }
+
+    public void setParam5(short param5) {
+        this.param5 = param5;
+    }
+
+    public long getParam6() {
+        return param6;
+    }
+
+    public void setParam6(long param6) {
+        this.param6 = param6;
+    }
+
+    public float getParam7() {
+        return param7;
+    }
+
+    public void setParam7(float param7) {
+        this.param7 = param7;
+    }
+
+    public double getParam8() {
+        return param8;
+    }
+
+    public void setParam8(double param8) {
+        this.param8 = param8;
+    }
+
+    public boolean isParam9() {
+        return param9;
+    }
+
+    public void setParam9(boolean param9) {
+        this.param9 = param9;
+    }
+
+    public char getParam10() {
+        return param10;
+    }
+
+    public void setParam10(char param10) {
+        this.param10 = param10;
+    }
+
+    public Integer getParam11() {
+        return param11;
+    }
+
+    public void setParam11(Integer param11) {
+        this.param11 = param11;
+    }
+
+    public Byte getParam12() {
+        return param12;
+    }
+
+    public void setParam12(Byte param12) {
+        this.param12 = param12;
+    }
+
+    public Short getParam13() {
+        return param13;
+    }
+
+    public void setParam13(Short param13) {
+        this.param13 = param13;
+    }
+
+    public Long getParam14() {
+        return param14;
+    }
+
+    public void setParam14(Long param14) {
+        this.param14 = param14;
+    }
+
+    public Float getParam15() {
+        return param15;
+    }
+
+    public void setParam15(Float param15) {
+        this.param15 = param15;
+    }
+
+    public Double getParam16() {
+        return param16;
+    }
+
+    public void setParam16(Double param16) {
+        this.param16 = param16;
+    }
+
+    public Boolean getParam17() {
+        return param17;
+    }
+
+    public void setParam17(Boolean param17) {
+        this.param17 = param17;
+    }
+
+    public Character getParam18() {
+        return param18;
+    }
+
+    public void setParam18(Character param18) {
+        this.param18 = param18;
     }
 }

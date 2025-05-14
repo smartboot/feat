@@ -33,7 +33,7 @@ public abstract class AbstractSerializer {
         this.jsonSerializer = jsonSerializer;
     }
 
-    protected String getFieldName(Element se) {
+    protected final String getFieldName(Element se) {
         String fieldName = se.getSimpleName().toString();
         JSONField jsonField = se.getAnnotation(JSONField.class);
         if (jsonField != null && StringUtils.isNotBlank(jsonField.name())) {

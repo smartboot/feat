@@ -48,6 +48,11 @@ public class JsonSerializer {
         jsonFieldSerializerMap.put(String.class.getName(), new StringSerializer(this));
         jsonFieldSerializerMap.put(Date.class.getName(), new DateSerializer(this));
         jsonFieldSerializerMap.put(Timestamp.class.getName(), new DateSerializer(this));
+        jsonFieldSerializerMap.put(int.class.getName(), new IntSerializer(this, IntSerializer.TYPE_INT));
+        jsonFieldSerializerMap.put(long.class.getName(), new IntSerializer(this, IntSerializer.TYPE_LONG));
+        jsonFieldSerializerMap.put(short.class.getName(), new IntSerializer(this, IntSerializer.TYPE_SHORT));
+        jsonFieldSerializerMap.put(byte.class.getName(), new IntSerializer(this, IntSerializer.TYPE_BYTE));
+        jsonFieldSerializerMap.put(long.class.getName(), new IntSerializer(this, IntSerializer.TYPE_LONG));
         this.printWriter = printWriter;
     }
 
@@ -133,7 +138,7 @@ public class JsonSerializer {
             AbstractSerializer serializer = jsonFieldSerializerMap.get(type.toString());
             if (serializer != null) {
                 serializer.serialize(se, obj, i);
-            } else if (Arrays.asList("int", "short", "byte", "long", "float", "double", "java.lang.Integer", "java.lang.Short", "java.lang.Byte", "java.lang.Long", "java.lang.Float", "java.lang.Double").contains(type.toString())) {
+            } else if (Arrays.asList("int", "short", "byte", "long", "float", "double", "char", "java.lang.Integer", "java.lang.Short", "java.lang.Byte", "java.lang.Long", "java.lang.Float", "java.lang.Double").contains(type.toString())) {
                 printWriter.append(headBlank(i));
                 toBytesPool("\"" + fieldName + "\":");
                 printWriter.append(headBlank(i));
