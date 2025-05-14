@@ -86,7 +86,24 @@ public abstract class AbstractServiceLoader implements CloudService {
     }
 
     protected void writeByte(OutputStream out, byte value) throws IOException {
-        writeInt(out, value);
+        if (value == 0) {
+            out.write('0');
+        } else if (value == Byte.MIN_VALUE) {
+            out.write(new byte[]{'-', '1', '2', '8'});
+        } else if (value < 0) {
+            out.write('-');
+            value = (byte) -value;
+        }
+        if (value < 10) {
+            out.write('0' + value);
+        } else if (value < 100) {
+            out.write('0' + value / 10);
+            out.write('0' + value % 10);
+        } else {
+            out.write('0' + value / 100);
+            out.write('0' + value / 10 % 10);
+            out.write('0' + value % 10);
+        }
     }
 
     protected void writeInt(OutputStream out, int value) throws IOException {
