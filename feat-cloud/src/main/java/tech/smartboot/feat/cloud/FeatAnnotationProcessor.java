@@ -11,7 +11,6 @@
 package tech.smartboot.feat.cloud;
 
 import com.alibaba.fastjson2.JSONObject;
-import com.alibaba.fastjson2.annotation.JSONField;
 import org.apache.ibatis.annotations.Mapper;
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Bean;
@@ -22,10 +21,7 @@ import tech.smartboot.feat.cloud.annotation.PathParam;
 import tech.smartboot.feat.cloud.annotation.PostConstruct;
 import tech.smartboot.feat.cloud.annotation.PreDestroy;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
-import tech.smartboot.feat.cloud.serializer.BooleanSerializer;
-import tech.smartboot.feat.cloud.serializer.DateSerializer;
-import tech.smartboot.feat.cloud.serializer.JsonFieldSerializer;
-import tech.smartboot.feat.cloud.serializer.StringSerializer;
+import tech.smartboot.feat.cloud.serializer.JsonSerializer;
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.HttpRequest;
@@ -45,12 +41,8 @@ import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.ArrayType;
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.FileObject;
 import javax.tools.JavaFileObject;
@@ -59,10 +51,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.lang.annotation.Annotation;
-import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -82,7 +71,6 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
     private static final int RETURN_TYPE_STRING = 1;
     private static final int RETURN_TYPE_OBJECT = 2;
     private static final int RETURN_TYPE_BYTE_ARRAY = 3;
-    private Map<String, JsonFieldSerializer> jsonFieldSerializerMap = new HashMap<>();
 
     @Override
     public Set<String> getSupportedAnnotationTypes() {
@@ -106,10 +94,6 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        jsonFieldSerializerMap.put(boolean.class.getName(), new BooleanSerializer());
-        jsonFieldSerializerMap.put(String.class.getName(), new StringSerializer());
-        jsonFieldSerializerMap.put(Date.class.getName(), new DateSerializer());
-        jsonFieldSerializerMap.put(Timestamp.class.getName(), new DateSerializer());
     }
 
     @Override
@@ -469,7 +453,9 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                                 printWriter.println("\t\t\t}");
                             } else {
                                 printWriter.println("\t\t\tjava.io.ByteArrayOutputStream os = getOutputStream();");
-                                writeJsonObject(printWriter, returnType, "rst", 0, new HashMap<>(), bytesCache);
+                                JsonSerializer jsonSerializer = new JsonSerializer(printWriter);
+                                jsonSerializer.serialize(returnType, "rst", 0, null);
+                                bytesCache.putAll(jsonSerializer.getByteCache());
                                 printWriter.println("\t\t\tctx.Response.setContentType(\"application/json\");");
                                 printWriter.println("\t\t\tctx.Response.setContentLength(os.size());");
                                 printWriter.println("\t\t\tos.writeTo(ctx.Response.getOutputStream());");
@@ -495,167 +481,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         }
     }
 
-    private static void toBytesPool(PrintWriter printWriter, Map<String, String> map, String value) {
-        String key = ("b_" + value.hashCode()).replace("-", "$");
-        map.put(key, "private static final byte[] " + key + " = " + toBytesStr(value) + ";");
-        printWriter.append("os.write(").append(key).println(");");
-    }
-
-    private static String headBlank(int i) {
-        StringBuilder sb = new StringBuilder("\t\t");
-        do {
-            sb.append("\t");
-        } while (i-- > 0);
-        return sb.toString();
-    }
-
-    public void writeJsonObject(PrintWriter printWriter, TypeMirror typeMirror, String obj, int i, Map<TypeMirror, TypeMirror> typeMap0, Map<String, String> byteCache) throws IOException {
-        //深层级采用JSON框架序列化，防止循环引用
-        if (i > 4) {
-            printWriter.println(headBlank(i) + "if (" + obj + " != null) {");
-            printWriter.println(headBlank(i + 1) + "os.write(JSON.toJSONBytes(" + obj + "));");
-            printWriter.println(headBlank(i) + "} else {");
-            toBytesPool(printWriter, byteCache, "null");
-            printWriter.println(headBlank(i) + "}");
-            return;
-        }
-        if (typeMirror instanceof ArrayType) {
-            printWriter.append("os.write('[');");
-            printWriter.append("for (" + typeMirror + ")");
-            printWriter.append("os.write(']');");
-            return;
-        } else if (typeMirror.toString().startsWith("java.util.List") || typeMirror.toString().startsWith("java.util.Collection")) {
-            printWriter.append(headBlank(i)).println("if (" + obj + " != null) {");
-            printWriter.append(headBlank(i + 1)).println("os.write('[');");
-            TypeMirror type = ((DeclaredType) typeMirror).getTypeArguments().get(0);
-            if (typeMap0.containsKey(type)) {
-                type = typeMap0.get(type);
-            }
-            printWriter.append(headBlank(i + 1)).println("boolean first" + i + " = true;");
-            printWriter.append(headBlank(i + 1)).println("for (" + type + " p" + i + " : " + obj + " ) {");
-            printWriter.append(headBlank(i + 2)).println("if (first" + i + ") {");
-            printWriter.append(headBlank(i + 3)).println("first" + i + " = false;");
-            printWriter.append(headBlank(i + 2)).println("} else {");
-            printWriter.append(headBlank(i + 3)).println("os.write(',');");
-            printWriter.append(headBlank(i + 2)).println("}");
-            if (String.class.getName().equals(type.toString())) {
-                printWriter.append(headBlank(i + 2)).println("os.write('\"');");
-                printWriter.append(headBlank(i + 2)).println("os.write(p" + i + ".getBytes());");
-                printWriter.append(headBlank(i + 2)).println("os.write('\"');");
-            } else {
-                writeJsonObject(printWriter, type, "p" + i, i + 2, typeMap0, byteCache);
-            }
-
-            printWriter.append(headBlank(i + 1)).println("}");
-            printWriter.append(headBlank(i + 1)).println("os.write(']');");
-            printWriter.append(headBlank(i)).println("} else {");
-            printWriter.append(headBlank(i + 1));
-            toBytesPool(printWriter, byteCache, "null");
-            printWriter.append(headBlank(i)).println("}");
-            return;
-        } else if (typeMirror.toString().startsWith("java.util.Map")) {
-            printWriter.println("os.write(new JSONObject(" + obj + ").toString().getBytes());");
-            return;
-        } else if (typeMirror.toString().endsWith(".JSONObject")) {
-            printWriter.println("if (" + obj + " != null) {");
-            printWriter.println("os.write(" + obj + ".toString().getBytes());");
-            printWriter.println("} else {");
-            toBytesPool(printWriter, byteCache, "null");
-            printWriter.println("}");
-            return;
-        }
-        printWriter.println(headBlank(i) + "os.write('{');");
-
-        //获取泛型参数
-        List<? extends TypeMirror> typeKey = ((DeclaredType) (((DeclaredType) typeMirror).asElement().asType())).getTypeArguments();
-        List<? extends TypeMirror> typeArgs = ((DeclaredType) typeMirror).getTypeArguments();
-        Map<TypeMirror, TypeMirror> typeMap = new HashMap<>();
-        for (int z = 0; z < typeArgs.size(); z++) {
-            typeMap.put(typeKey.get(z), typeArgs.get(z));
-        }
-        int j = i * 10;
-
-        List<Element> elements = new ArrayList<>();
-        //当子类存在相同字段时，子类的字段会覆盖父类的字段
-        Set<String> fields = new HashSet<>();
-
-        //提取父类的字段
-        TypeMirror temp = typeMirror;
-        while (!temp.toString().startsWith("java.")) {
-            for (Element element : ((DeclaredType) temp).asElement().getEnclosedElements()) {
-                if (element.getKind() != ElementKind.FIELD) {
-                    continue;
-                }
-                if (element.getModifiers().contains(Modifier.STATIC)) {
-                    continue;
-                }
-                if (fields.contains(element.getSimpleName().toString())) {
-                    continue;
-                }
-                fields.add(element.getSimpleName().toString());
-
-                JSONField jsonField = element.getAnnotation(JSONField.class);
-                if (jsonField != null && !jsonField.serialize()) {
-                    continue;
-                }
-
-                elements.add(element);
-            }
-            temp = ((TypeElement) ((DeclaredType) temp).asElement()).getSuperclass();
-        }
-
-        for (Element se : elements) {
-            if (j++ > i * 10) {
-                printWriter.append(headBlank(i));
-                printWriter.println("os.write(',');");
-            }
-
-            TypeMirror type = se.asType();
-            if (se.asType().getKind() == TypeKind.TYPEVAR) {
-                type = ((DeclaredType) typeMirror).getTypeArguments().get(0);
-            }
-            String fieldName = se.getSimpleName().toString();
-            JSONField jsonField = se.getAnnotation(JSONField.class);
-            if (jsonField != null && StringUtils.isNotBlank(jsonField.name())) {
-                fieldName = jsonField.name();
-            }
-            JsonFieldSerializer serializer = jsonFieldSerializerMap.get(type.toString());
-            if (serializer != null) {
-                serializer.serialize(printWriter, se, obj, i, byteCache);
-            } else if (Arrays.asList("int", "short", "byte", "long", "float", "double", "java.lang.Integer", "java.lang.Short", "java.lang.Byte", "java.lang.Long", "java.lang.Float", "java.lang.Double").contains(type.toString())) {
-                printWriter.append(headBlank(i));
-                toBytesPool(printWriter, byteCache, "\"" + fieldName + "\":");
-                printWriter.append(headBlank(i));
-                printWriter.append("os.write(String.valueOf(").append(obj).append(".get").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).println("()).getBytes());");
-            } else {
-                printWriter.append(headBlank(i));
-                toBytesPool(printWriter, byteCache, "\"" + fieldName + "\":");
-                String filedName = obj + ".get" + se.getSimpleName().toString().substring(0, 1).toUpperCase() + se.getSimpleName().toString().substring(1) + "()";
-                printWriter.append(headBlank(i)).println("if (" + filedName + " == null) {");
-                printWriter.append(headBlank(i + 1));
-                toBytesPool(printWriter, byteCache, "null");
-                printWriter.append(headBlank(i)).println("} else {");
-                writeJsonObject(printWriter, type, filedName, i + 1, typeMap, byteCache);
-                printWriter.append(headBlank(i)).println("}");
-            }
-        }
-        printWriter.append(headBlank(i)).println("os.write('}');");
-    }
-
-
-    private static String toBytesStr(String str) {
-        StringBuilder s = new StringBuilder("{");
-
-        for (int i = 0; i < str.length(); i++) {
-            if (i > 0) {
-                s.append(", ");
-            }
-            s.append('\'').append(str.charAt(i)).append('\'');
-        }
-        return s + "}";
-    }
-
-    private static <T extends Annotation> void addInterceptor(Element element, PrintWriter printWriter) throws IOException {
+    private <T extends Annotation> void addInterceptor(Element element, PrintWriter printWriter) throws IOException {
         for (Element se : element.getEnclosedElements()) {
             for (AnnotationMirror mirror : se.getAnnotationMirrors()) {
                 if (!InterceptorMapping.class.getName().equals(mirror.getAnnotationType().toString())) {
@@ -676,7 +502,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         }
     }
 
-    private static <T extends Annotation> void createMapperBean(Element element, PrintWriter printWriter) throws IOException {
+    private <T extends Annotation> void createMapperBean(Element element, PrintWriter printWriter) throws IOException {
         printWriter.println("\t\tbean = new " + element.getSimpleName() + "() { ");
         for (Element se : element.getEnclosedElements()) {
             String returnType = ((ExecutableElement) se).getReturnType().toString();
@@ -691,8 +517,8 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                 printWriter.print(param.asType().toString() + " " + param.getSimpleName());
             }
             printWriter.println(") {");
-            printWriter.append(headBlank(1)).println("try (org.apache.ibatis.session.SqlSession session = factory.openSession(true)) {");
-            printWriter.print(headBlank(2));
+            printWriter.append(JsonSerializer.headBlank(1)).println("try (org.apache.ibatis.session.SqlSession session = factory.openSession(true)) {");
+            printWriter.print(JsonSerializer.headBlank(2));
             if (!"void".equals(returnType)) {
                 printWriter.print("return ");
             }
@@ -707,7 +533,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                 printWriter.print(param.getSimpleName().toString());
             }
             printWriter.println(");");
-            printWriter.append(headBlank(1)).println("}");
+            printWriter.append(JsonSerializer.headBlank(1)).println("}");
             printWriter.println("\t\t\t}");
             printWriter.println();
         }

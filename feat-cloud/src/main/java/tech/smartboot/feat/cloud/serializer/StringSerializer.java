@@ -12,30 +12,34 @@ package tech.smartboot.feat.cloud.serializer;
 
 import javax.lang.model.element.Element;
 import java.io.PrintWriter;
-import java.util.Map;
 
-public class StringSerializer extends JsonFieldSerializer {
+class StringSerializer extends AbstractSerializer {
+
+    public StringSerializer(JsonSerializer printWriter) {
+        super(printWriter);
+    }
 
     @Override
-    public void serialize(PrintWriter printWriter, Element se, String obj, int deep, Map<String, String> byteCache) {
+    public void serialize(Element se, String obj, int deep) {
+        PrintWriter printWriter = jsonSerializer.getPrintWriter();
         String fieldName = getFieldName(se);
-        printWriter.append(headBlank(deep));
-        toBytesPool(printWriter, byteCache, "\"" + fieldName + "\":");
+        printWriter.append(JsonSerializer.headBlank(deep));
+        jsonSerializer.toBytesPool("\"" + fieldName + "\":");
 
-        printWriter.append(headBlank(deep));
+        printWriter.append(JsonSerializer.headBlank(deep));
         printWriter.append("if (").append(obj).append(".get").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).println("()" + " != null) {");
-        printWriter.append(headBlank(deep + 1));
+        printWriter.append(JsonSerializer.headBlank(deep + 1));
         printWriter.println("os.write('\"');");
-        printWriter.append(headBlank(deep + 1));
+        printWriter.append(JsonSerializer.headBlank(deep + 1));
         printWriter.println("String s = " + obj + ".get" + se.getSimpleName().toString().substring(0, 1).toUpperCase() + se.getSimpleName().toString().substring(1) + "();");
-        printWriter.append(headBlank(deep + 1));
+        printWriter.append(JsonSerializer.headBlank(deep + 1));
         printWriter.println("writeJsonValue(os, s);");
-        printWriter.append(headBlank(deep + 1));
+        printWriter.append(JsonSerializer.headBlank(deep + 1));
         printWriter.println("os.write('\"');");
-        printWriter.append(headBlank(deep));
+        printWriter.append(JsonSerializer.headBlank(deep));
         printWriter.println("} else {");
-        printWriter.append(headBlank(deep + 1));
-        toBytesPool(printWriter, byteCache, "null");
-        printWriter.append(headBlank(deep)).println("}");
+        printWriter.append(JsonSerializer.headBlank(deep + 1));
+        jsonSerializer.toBytesPool("null");
+        printWriter.append(JsonSerializer.headBlank(deep)).println("}");
     }
 }

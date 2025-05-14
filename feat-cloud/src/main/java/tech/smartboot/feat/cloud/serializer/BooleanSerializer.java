@@ -12,21 +12,25 @@ package tech.smartboot.feat.cloud.serializer;
 
 import javax.lang.model.element.Element;
 import java.io.PrintWriter;
-import java.util.Map;
 
-public class BooleanSerializer extends JsonFieldSerializer {
+class BooleanSerializer extends AbstractSerializer {
+
+    public BooleanSerializer(JsonSerializer jsonSerializer) {
+        super(jsonSerializer);
+    }
 
     @Override
-    public void serialize(PrintWriter printWriter, Element se, String obj, int deep, Map<String, String> byteCache) {
+    public void serialize(Element se, String obj, int deep) {
+        PrintWriter printWriter = jsonSerializer.getPrintWriter();
         String fieldName = getFieldName(se);
-        printWriter.append(headBlank(deep) + "if (" + obj + ".is").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).println("()) {");
-        printWriter.append(headBlank(deep + 1));
-        toBytesPool(printWriter, byteCache, "\"" + fieldName + "\":true");
+        printWriter.append(JsonSerializer.headBlank(deep) + "if (" + obj + ".is").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).println("()) {");
+        printWriter.append(JsonSerializer.headBlank(deep + 1));
+        jsonSerializer.toBytesPool("\"" + fieldName + "\":true");
 
-        printWriter.println(headBlank(deep) + "} else {");
-        printWriter.append(headBlank(deep + 1));
-        toBytesPool(printWriter, byteCache, "\"" + fieldName + "\":false");
+        printWriter.println(JsonSerializer.headBlank(deep) + "} else {");
+        printWriter.append(JsonSerializer.headBlank(deep + 1));
+        jsonSerializer.toBytesPool("\"" + fieldName + "\":false");
 
-        printWriter.println(headBlank(deep) + "}");
+        printWriter.println(JsonSerializer.headBlank(deep) + "}");
     }
 }

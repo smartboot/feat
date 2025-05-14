@@ -15,32 +15,36 @@ import tech.smartboot.feat.core.common.utils.StringUtils;
 
 import javax.lang.model.element.Element;
 import java.io.PrintWriter;
-import java.util.Map;
 
-public class DateSerializer extends JsonFieldSerializer {
+class DateSerializer extends AbstractSerializer {
+    public DateSerializer(JsonSerializer serializer) {
+        super(serializer);
+    }
+
     @Override
-    public void serialize(PrintWriter printWriter, Element se, String obj, int deep, Map<String, String> byteCache) {
+    public void serialize(Element se, String obj, int deep) {
+        PrintWriter printWriter = jsonSerializer.getPrintWriter();
         String fieldName = getFieldName(se);
         JSONField jsonField = se.getAnnotation(JSONField.class);
-        printWriter.append(headBlank(deep));
-        toBytesPool(printWriter, byteCache, "\"" + fieldName + "\":");
-        printWriter.append(headBlank(deep));
+        printWriter.append(JsonSerializer.headBlank(deep));
+        jsonSerializer.toBytesPool("\"" + fieldName + "\":");
+        printWriter.append(JsonSerializer.headBlank(deep));
         printWriter.append("java.util.Date " + fieldName + " = ").append(obj).append(".get").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).println("();");
-        printWriter.append(headBlank(deep));
+        printWriter.append(JsonSerializer.headBlank(deep));
         printWriter.println("if (" + fieldName + " != null) {");
         if (jsonField != null && StringUtils.isNotBlank(jsonField.format())) {
-            printWriter.append(headBlank(deep + 1)).println("java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat(\"" + jsonField.format() + "\");");
-            printWriter.append(headBlank(deep + 1)).println("os.write('\"');");
-            printWriter.append(headBlank(deep + 1)).println("os.write(sdf.format(" + fieldName + ").getBytes());");
-            printWriter.append(headBlank(deep + 1)).println("os.write('\"');");
+            printWriter.append(JsonSerializer.headBlank(deep + 1)).println("java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat(\"" + jsonField.format() + "\");");
+            printWriter.append(JsonSerializer.headBlank(deep + 1)).println("os.write('\"');");
+            printWriter.append(JsonSerializer.headBlank(deep + 1)).println("os.write(sdf.format(" + fieldName + ").getBytes());");
+            printWriter.append(JsonSerializer.headBlank(deep + 1)).println("os.write('\"');");
         } else {
-            printWriter.append(headBlank(deep + 1)).println("os.write(String.valueOf(" + fieldName + ".getTime()).getBytes());");
+            printWriter.append(JsonSerializer.headBlank(deep + 1)).println("os.write(String.valueOf(" + fieldName + ".getTime()).getBytes());");
         }
 
 //                printWriter.println("os.write('\"');");
-        printWriter.append(headBlank(deep)).println("} else {");
-        printWriter.append(headBlank(deep + 1));
-        toBytesPool(printWriter, byteCache, "null");
-        printWriter.append(headBlank(deep)).println("}");
+        printWriter.append(JsonSerializer.headBlank(deep)).println("} else {");
+        printWriter.append(JsonSerializer.headBlank(deep + 1));
+        jsonSerializer.toBytesPool("null");
+        printWriter.append(JsonSerializer.headBlank(deep)).println("}");
     }
 }
