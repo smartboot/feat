@@ -44,6 +44,7 @@ public class IntSerializer extends AbstractSerializer {
                 break;
             case TYPE_INT:
                 printWriter.append("writeInt(os, ").append(obj).append(".get").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).println("());");
+                break;
             case TYPE_LONG:
                 printWriter.append("writeLong(os, ").append(obj).append(".get").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).println("());");
                 break;
