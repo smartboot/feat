@@ -54,12 +54,10 @@
                       "not": {}
                     }
                   ]
-                },
-                "default": {}
+                }
               },
               "content": {
-                "type": "string",
-                "default": ""
+                "type": "string"
               }
             },
             "required": [
@@ -195,6 +193,9 @@
                           "up-caret",
                           "down-caret",
                           "right-caret",
+                          "left-caret",
+                          "up-arrow",
+                          "down-arrow",
                           "right-arrow",
                           "left-arrow",
                           "bars",
@@ -205,6 +206,8 @@
                           "add-document",
                           "setting",
                           "external",
+                          "download",
+                          "cloud-download",
                           "moon",
                           "sun",
                           "laptop",
@@ -281,6 +284,18 @@
                           "jsr",
                           "nostr",
                           "backstage",
+                          "confluence",
+                          "jira",
+                          "storybook",
+                          "vscode",
+                          "jetbrains",
+                          "zed",
+                          "vim",
+                          "figma",
+                          "sketch",
+                          "npm",
+                          "sourcehut",
+                          "substack",
                           "seti:folder",
                           "seti:bsl",
                           "seti:mdo",

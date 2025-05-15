@@ -11,8 +11,8 @@ export default defineConfig({
     integrations: [
         starlight({
             title: 'FEAT',
-            logo:{
-                src:'./src/assets/feat_logo_v2.svg',
+            logo: {
+                src: './src/assets/feat_logo_v2.svg',
             },
             customCss: [
                 // 你的自定义 CSS 文件的相对路径
@@ -33,7 +33,7 @@ export default defineConfig({
                     }
                 },
                 {
-                    tag:'script',
+                    tag: 'script',
                     attrs: {
                         src: 'https://smartboot.tech/js/gitee.js'
                     }
@@ -58,9 +58,7 @@ export default defineConfig({
           `
                 }
             ],
-            social: {
-                github: 'https://github.com/smartboot/feat',
-            },
+            social: [{icon: 'github', label: 'GitHub', href: 'https://github.com/smartboot/feat'},],
             plugins: [starlightImageZoomPlugin()],
             // 为此网站设置英语为默认语言。
             defaultLocale: 'root',
