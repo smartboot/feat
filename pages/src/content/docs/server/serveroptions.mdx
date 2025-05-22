@@ -11,19 +11,6 @@ Feat HTTP 服务器配置类，用于配置服务器的各项参数，包括基�
 
 ## 基础配置
 
-### serverName
-**类型:** `String` **默认值:** `"feat"`
-
-设置服务器名称，会在 HTTP 响应头的 Server 字段中显示。
-
-```java
-options.serverName("my-app-v1.0");
-```
-
-**使用场景：** 区分不同服务、自定义服务器标识、便于日志分析
-
-**注意：** 自动移除回车和换行符，防止 HTTP 响应头注入攻击
-
 ### bannerEnabled
 **类型:** `boolean` **默认值:** `true`
 
