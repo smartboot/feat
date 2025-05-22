@@ -102,7 +102,7 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
                 if (major == '2') {
                     request.setProtocol(HttpProtocol.HTTP_2);
                 } else if (major != '1') {
-                    throw new HttpException(HttpStatus.BAD_REQUEST);
+                    throw new HttpException(HttpStatus.BAD_REQUEST, "Unsupported HTTP version: " + major + "." + byteBuffer.get(byteBuffer.position() + 7));
                 } else {
                     byte minor = byteBuffer.get(byteBuffer.position() + 7);
                     switch (minor) {
