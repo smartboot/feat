@@ -1,0 +1,285 @@
+---
+title: 协议升级
+description: Feat upgrade
+sidebar:
+    order: 6
+---
+
+import http2_architecture from './img/http2_architecture.svg';
+import upgrade_ws_1 from './img/upgrade_ws_1.png';
+import CheckAuthorize from '../../../components/CheckAuthorize.astro'
+
+<CheckAuthorize/>
+
+## WebSocket 升级
+Feat 支持通过 **HttpRequest.upgrade** 方法将 HTTP 请求升级为 WebSocket。
+
+### 示例代码
+以下是如何使用 WebSocket 升级的示例代码：
+```java title=WebSocketDemo.java "upgrade"
+public class WebSocketDemo {
+    public static void main(String[] args) {
+        Feat.httpServer().httpHandler(request -> {
+            request.upgrade(new WebSocketUpgrade() {
+                @Override
+                public void handleTextMessage(WebSocketRequest request, WebSocketResponse response, String message) {
+                    response.sendTextMessage("接受到客户端消息：" + message);
+                }
+            });
+        }).listen();
+    }
+}
+```
+
+启动程序后，可访问：<a target="_blank" href="http://www.websocket-test.com/">WebSocket 在线测试</a> 验证运行效果。
+
+<img src={upgrade_ws_1.src} alt="hello world" width="80%" className="shadow"/>
+
+### 构造方法
+WebSocketUpgrade 提供了两个构造方法：
+```java
+public WebSocketUpgrade() {
+    this(120000);
+}
+
+public WebSocketUpgrade(long idleTimeout) {
+    this.idleTimeout = idleTimeout;
+}
+```
+用户可在进行 WebSocket 升级时，通过构造方法传入 **idleTimeout** 参数，设置 WebSocket 连接的空闲超时时间。
+
+### 消息处理
+WebSocketUpgrade 提供了两个消息处理方法：
+```java
+public void handle(WebSocketRequest request, WebSocketResponse response, CompletableFuture<Object> completableFuture) throws Throwable {
+    try {
+        handle(request, response);
+    } finally {
+        completableFuture.complete(null);
+    }
+}
+
+public void handle(WebSocketRequest request, WebSocketResponse response) throws Throwable {
+    ...
+}
+```
+如果用户需要采用异步方式处理 WebSocket 消息，可重写带 `CompletableFuture<Object>` 入参的 **handle** 方法，并在异步处理完成后，调用 `completableFuture.complete(null)` 方法。
+
+若需要同步处理 WebSocket 消息，可重写 `handle(WebSocketRequest request, WebSocketResponse response) ` 方法。
+
+为便于开发人员使用，WebSocketUpgrade 已经默认实现了 `handle(WebSocketRequest request, WebSocketResponse response)` 方法，用户可按需重写相应的方法。
+
+```java "handleTextMessage" "handleBinaryMessage" "onClose" "onError" "handlePing" "handlePong" "handleContinueMessage"
+public void handle(WebSocketRequest request, WebSocketResponse response) throws Throwable {
+    try {
+        switch (request.getFrameOpcode()) {
+            case WebSocketUtil.OPCODE_TEXT:
+                handleTextMessage(request, response, new String(request.getPayload(), StandardCharsets.UTF_8));
+                break;
+            case WebSocketUtil.OPCODE_BINARY:
+                handleBinaryMessage(request, response, request.getPayload());
+                break;
+            case WebSocketUtil.OPCODE_CLOSE:
+                try {
+                    onClose(request, response, new CloseReason(request.getPayload()));
+                } finally {
+                    response.close();
+                }
+                break;
+            case WebSocketUtil.OPCODE_PING:
+                handlePing(request, response);
+                break;
+            case WebSocketUtil.OPCODE_PONG:
+                handlePong(request, response);
+                break;
+            case WebSocketUtil.OPCODE_CONTINUE:
+                handleContinueMessage(request, response, request.getPayload());
+                break;
+            default:
+                throw new UnsupportedOperationException();
+        }
+    } catch (Throwable throwable) {
+        onError(request, throwable);
+    }
+}
+```
+
+### 请求路由
+在实际场景下，用户可能需要将不同的 WebSocket 消息路由到不同的处理方法，
+以及存在 Http 请求和 WebSocket 请求共存的情况。
+
+此时可以采用 `Router` 来实现请求路由，示例如下：
+```java title=WebSocketRouterDemo.java 'route("/ws1"' 'route("/ws2"' 'route("/http"'
+public class WebSocketRouterDemo {
+    public static void main(String[] args) {
+        Router router = new Router();
+        router.route("/ws1", request -> {
+            request.upgrade(new WebSocketUpgrade() {
+                @Override
+                public void handleTextMessage(WebSocketRequest request, WebSocketResponse response, String message) {
+                    response.sendTextMessage("ws1接受到客户端消息：" + message);
+                }
+            });
+        }).route("/ws2", request -> {
+            request.upgrade(new WebSocketUpgrade() {
+                @Override
+                public void handleTextMessage(WebSocketRequest request, WebSocketResponse response, String message) {
+                    response.sendTextMessage("ws2接受到客户端消息：" + message);
+                }
+            });
+        }).route("/http", request -> {
+            request.getResponse().write("http".getBytes());
+        });
+        Feat.httpServer().httpHandler(router).listen();
+    }
+}
+```
+
+
+## Upgrade Http2
+Feat 支持通过 **HttpRequest.upgrade** 方法将 HTTP/1.1 连接升级到 HTTP/2 协议。
+<img src={http2_architecture.src} alt="HTTP/2协议栈" width="80%"/>
+
+### 快速开始
+操作示例如下：
+```java title=Http2Demo.java
+public class Http2Demo {
+    public static void main(String[] args) {
+        Feat.httpServer().httpHandler(request -> {
+            request.upgrade(new Http2Upgrade() {
+                @Override
+                public void handle(HttpRequest http2Request) {
+                    HttpResponse response = http2Request.response();
+                    response.setStatus(200);
+                    response.send("HTTP/2响应");
+                }
+            });
+        }).listen();
+    }
+}
+```
+
+### 核心机制
+1. **协议协商**：通过`Connection: Upgrade`和`Upgrade: h2c`头部完成握手
+2. **多路复用**：基于Stream ID实现请求并发处理
+3. **头部压缩**：采用HPACK算法压缩请求头
+4. **服务端推送**：通过PushBuilder实现资源预推送
+
+### 配置参数
+Http2Upgrade 提供以下构造方法：
+```java
+public Http2Upgrade() {
+    this(120000); // 默认空闲超时120秒
+}
+
+public Http2Upgrade(long idleTimeout) {
+    this.idleTimeout = idleTimeout;
+}
+```
+
+### 性能优化
+1. 启用HPACK压缩：初始化时设置`enableHeaderCompression=true`
+2. 调整流控窗口：通过`Http2Settings.initialWindowSize(1048576)`
+3. 服务端推送配置：
+```java
+http2Request.push()
+    .path("/static/style.css")
+    .send();
+```
+4. 保持长连接：设置合理的`idleTimeout`值
+
+
+
+## Upgrade SSE
+
+Server-Sent Events (SSE) 是一种基于HTTP协议的服务器推送技术，它允许服务器向客户端发送事件流。与WebSocket不同，SSE是单向通信机制，专注于服务器到客户端的数据推送。
+
+**SSE 特点**
+
+- **单向通信**：服务器向客户端推送数据，不支持客户端发送数据
+- **基于HTTP**：无需额外协议，复用HTTP连接
+- **自动重连**：浏览器原生支持断线重连
+- **消息格式化**：支持事件类型、ID和数据的结构化传输
+
+**SSE 工作原理**
+
+![SSE工作原理示意图](./img/sse_principle.svg)
+
+上图展示了SSE的工作原理：服务器通过HTTP连接向客户端建立单向的事件流通道，客户端使用EventSource API接收服务器推送的实时数据。
+
+**适用场景**
+
+- 实时数据流更新（如股票行情、比赛比分）
+- AI大语言模型流式输出
+- 系统通知和实时提醒
+- 日志实时监控
+- 进度状态更新
+
+### 消息处理
+
+在Feat框架中使用SSE非常简单，只需通过`SSEUpgrade`类来处理SSE连接：
+
+```java
+public class SSEDemo {
+    public static void main(String[] args) throws Exception {
+        Feat.httpServer(serverOptions -> serverOptions.debug(true)).httpHandler(req -> {
+            req.upgrade(new SSEUpgrade() {
+                public void onOpen(SseEmitter sseEmitter) {
+                    // 创建定时任务，每秒发送一条消息
+                    Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> {
+                        try {
+                            sseEmitter.send(SseEmitter.event()
+                                .name("update")  // 设置事件名称
+                                .id(String.valueOf(i++))  // 设置事件ID
+                                .data("hello world"));  // 设置事件数据
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }, 1, 1, TimeUnit.SECONDS);
+                }
+            });
+        }).listen(8080);
+    }
+}
+```
+
+### 客户端实现
+
+在浏览器端，使用标准的`EventSource` API来接收SSE事件：
+
+```javascript
+// 创建EventSource实例
+const eventSource = new EventSource('/sse-endpoint');
+
+// 监听指定类型的事件
+eventSource.addEventListener('update', (event) => {
+    console.log('收到更新:', event.data);
+    console.log('事件ID:', event.lastEventId);
+});
+
+// 监听连接打开
+eventSource.onopen = () => {
+    console.log('SSE连接已建立');
+};
+
+// 监听错误
+eventSource.onerror = (error) => {
+    console.error('SSE连接错误:', error);
+};
+```
+
+### 注意事项
+
+1. SSE连接数限制：浏览器对同一域名的SSE连接数有限制，通常为6个
+2. 超时处理：建议在服务端定期发送心跳消息保持连接
+3. 错误处理：实现完善的错误处理机制，包括重连策略
+4. 资源释放：不再需要SSE连接时，调用`eventSource.close()`关闭连接
+5. 跨域支持：服务端需要正确配置CORS头信息
+
+### 最佳实践
+1. 合理使用事件类型：通过event字段区分不同类型的消息
+2. 消息去重：利用事件ID实现消息去重和断点续传
+3. 数据压缩：对大量数据考虑使用压缩算法
+4. 连接管理：实现连接池管理，避免资源泄露
+5. 监控告警：对SSE连接状态进行监控，及时发现异常
+
