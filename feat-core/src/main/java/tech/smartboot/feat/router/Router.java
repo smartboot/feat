@@ -33,7 +33,26 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
- * @author 三刀(zhengjunweimail @ 163.com)
+ * 路由管理器类，负责HTTP请求的路由分发和拦截器管理。
+ * 该类采用前缀树（Trie）结构存储路由规则，支持动态路径参数和通配符匹配。
+ * 主要功能包括：
+ * <ul>
+ *   <li>路由注册：支持GET、POST、PUT、DELETE等HTTP方法的注册</li>
+ *   <li>路径匹配：支持动态路径参数和通配符匹配</li>
+ *   <li>拦截器：支持全局和局部拦截器，可控制请求的生命周期</li>
+ *   <li>会话管理：支持基于Cookie的会话管理</li>
+ * </ul>
+ * 
+ * <p>使用示例：
+ * <pre>
+ * Router router = new Router();
+ * router.get("/user/:id", ctx -> {
+ *     String userId = ctx.pathParam("id");
+ *     // 处理逻辑
+ * });
+ * </pre>
+ * 
+ * @author 三刀(zhengjunweimail@163.com)
  * @version v1.0.0
  */
 public final class Router implements HttpHandler {

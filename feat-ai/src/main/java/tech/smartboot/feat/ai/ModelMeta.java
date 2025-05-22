@@ -23,6 +23,7 @@ public class ModelMeta {
     public static final ModelMeta GITEE_AI_DeepSeek_R1_Distill_Qwen_32B = new ModelMeta(Options.AI_VENDOR_GITEE, "DeepSeek-R1-Distill-Qwen-32B", false);
     public static final ModelMeta GITEE_AI_Qwen2_5_72B_Instruct = new ModelMeta(Options.AI_VENDOR_GITEE, "Qwen2.5-72B-Instruct", true);
     public static final ModelMeta GITEE_AI_Qwen2_5_32B_Instruct = new ModelMeta(Options.AI_VENDOR_GITEE, "Qwen2.5-32B-Instruct", false);
+    public static final ModelMeta GITEE_AI_Qwen3_4B = new ModelMeta(Options.AI_VENDOR_GITEE, "Qwen3-4B", false);
 
     /**
      * 服务商

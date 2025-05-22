@@ -46,7 +46,7 @@ final class HttpOutputStream extends FeatOutputStream {
         this.response = response;
         this.options = request.getOptions();
         if (SERVER_LINE == null) {
-            String serverLine = HeaderName.SERVER.getName() + ':' + options.serverName() + "\r\n";
+            String serverLine = HeaderName.SERVER.getName() + ":feat\r\n";
             SERVER_LINE = serverLine.getBytes();
             HEAD_PART_BYTES = (HttpProtocol.HTTP_11.getProtocol() + " 200 OK\r\n" + serverLine + "Date:" + DateUtils.formatRFC1123(DateUtils.currentTime())).getBytes();
             HashedWheelTimer.DEFAULT_TIMER.scheduleWithFixedDelay(() -> {
@@ -108,7 +108,7 @@ final class HttpOutputStream extends FeatOutputStream {
         }
 
         HttpStatus httpStatus = response.getHttpStatus();
-        boolean fastWrite = request.getProtocol() == HttpProtocol.HTTP_11 && httpStatus == HttpStatus.OK && options.serverName() != null && response.getHeader(HeaderName.SERVER) == null;
+        boolean fastWrite = request.getProtocol() == HttpProtocol.HTTP_11 && httpStatus == HttpStatus.OK && response.getHeader(HeaderName.SERVER) == null;
         // HTTP/1.1
         if (fastWrite) {
             writeBuffer.write(HEAD_PART_BYTES);
@@ -116,7 +116,7 @@ final class HttpOutputStream extends FeatOutputStream {
             writeString(request.getProtocol().getProtocol());
             writeBuffer.writeByte(Constant.SP);
             httpStatus.write(writeBuffer);
-            if (options.serverName() != null && response.getHeader(HeaderName.SERVER) == null) {
+            if (response.getHeader(HeaderName.SERVER) == null) {
                 writeBuffer.write(SERVER_LINE);
             }
             // Date

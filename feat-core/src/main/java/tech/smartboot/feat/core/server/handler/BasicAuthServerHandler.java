@@ -22,24 +22,51 @@ import java.io.IOException;
 import java.util.Base64;
 
 /**
+ * Basic认证服务处理器
+ * 
+ * <p>实现HTTP Basic认证机制，验证客户端请求的Authorization头信息</p>
+ * 
  * @author 三刀(zhengjunweimail@163.com)
  * @version v1.0.0
+ * @since 1.0.0
  */
 public final class BasicAuthServerHandler implements HttpHandler {
+    /**
+     * 实际业务处理器
+     */
     private final HttpHandler httpServerHandler;
+    
+    /**
+     * 预计算的Basic认证字符串
+     */
     private final String basic;
 
+    /**
+     * 构造函数
+     * 
+     * @param username Basic认证用户名
+     * @param password Basic认证密码
+     * @param httpServerHandler 认证通过后实际执行的业务处理器
+     */
     public BasicAuthServerHandler(String username, String password, HttpHandler httpServerHandler) {
         this.httpServerHandler = httpServerHandler;
         basic = "Basic " + Base64.getEncoder().encodeToString((username + ":" + password).getBytes());
     }
 
+    /**
+     * 处理HTTP请求头完成事件
+     * 
+     * @param request HTTP请求对象
+     * @throws IOException 如果发生I/O错误
+     */
     @Override
     public void onHeaderComplete(HttpEndpoint request) throws IOException {
         String clientBasic = request.getHeader(HeaderName.AUTHORIZATION);
         if (StringUtils.equals(clientBasic, this.basic)) {
+            // 认证通过，执行实际业务处理
             httpServerHandler.onHeaderComplete(request);
         } else {
+            // 认证失败，返回401 Unauthorized
             HttpResponse response = request.getResponse();
             response.setHeader(HeaderName.WWW_AUTHENTICATE, "Basic realm=\"feat\"");
             response.setHttpStatus(HttpStatus.UNAUTHORIZED);

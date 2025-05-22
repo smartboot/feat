@@ -16,7 +16,6 @@ import org.smartboot.socket.extension.plugins.SslPlugin;
 import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.utils.ByteTree;
-import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.impl.HttpEndpoint;
 import tech.smartboot.feat.core.server.waf.WafOptions;
 
@@ -60,7 +59,7 @@ public class ServerOptions {
      * 适用范围包括：URL、HeaderName、HeaderValue 等。
      */
     private final ByteTree<Object> byteCache = new ByteTree<>(16 * 1024);
-    
+
     /**
      * URI 路由缓存树
      * <p>
@@ -89,7 +88,7 @@ public class ServerOptions {
      * 在生产环境中，建议关闭此选项以避免暴露版本信息。
      */
     private boolean bannerEnabled = true;
-    
+
     /**
      * 读缓冲区大小（字节）
      * <p>
@@ -100,7 +99,7 @@ public class ServerOptions {
      * 对于需要处理大请求体的场景，可适当增加缓冲区大小。
      */
     private int readBufferSize = 8 * 1024;
-    
+
     /**
      * 写缓冲区大小（字节）
      * <p>
@@ -108,7 +107,7 @@ public class ServerOptions {
      * 对于需要响应大文件或大数据集的场景，可适当增加缓冲区大小。
      */
     private int writeBufferSize = 8 * 1024;
-    
+
     /**
      * 服务线程数
      * <p>
@@ -121,7 +120,7 @@ public class ServerOptions {
      * </ul>
      */
     private int threadNum = Math.max(Runtime.getRuntime().availableProcessors(), 2);
-    
+
     /**
      * HTTP 请求头数量上限
      * <p>
@@ -139,19 +138,12 @@ public class ServerOptions {
     private long idleTimeout = 60000;
 
     /**
-     * 服务器名称
-     * <p>
-     * 该名称会在 HTTP 响应头的 Server 字段中显示。
-     */
-    private String serverName = "feat";
-
-    /**
      * 是否启用加密通信（HTTPS）
      * <p>
      * 当添加 SslPlugin 插件时，该值会自动设置为 true。
      */
     private boolean secure;
-    
+
     /**
      * 最大请求报文大小（字节）
      * <p>
@@ -166,7 +158,7 @@ public class ServerOptions {
      * 在资源受限的环境中（如嵌入式设备），可启用此模式以减少内存占用。
      */
     private boolean lowMemory = false;
-    
+
     /**
      * 异步通道组
      * <p>
@@ -332,35 +324,6 @@ public class ServerOptions {
         plugins.removeIf(plugin -> plugin instanceof StreamMonitorPlugin);
         if (debug) {
             addPlugin(new StreamMonitorPlugin<>(StreamMonitorPlugin.BLUE_TEXT_INPUT_STREAM, StreamMonitorPlugin.RED_TEXT_OUTPUT_STREAM));
-        }
-        return this;
-    }
-
-    /**
-     * 获取服务器名称
-     *
-     * @return 服务器名称
-     */
-    public String serverName() {
-        return serverName;
-    }
-
-    /**
-     * 设置服务器名称
-     * <p>
-     * 该名称会在 HTTP 响应头的 Server 字段中显示。
-     * 出于安全考虑，建议在生产环境中修改默认名称。
-     * <p>
-     * 注意：服务器名称会自动移除回车和换行符，以防止 HTTP 响应头注入攻击。
-     *
-     * @param server 服务器名称
-     * @return 当前 ServerOptions 实例，支持链式调用
-     */
-    public ServerOptions serverName(String server) {
-        if (server == null) {
-            this.serverName = null;
-        } else {
-            this.serverName = StringUtils.trim(server).replaceAll("\r", "").replaceAll("\n", "");
         }
         return this;
     }

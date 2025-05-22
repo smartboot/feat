@@ -31,7 +31,6 @@ public class FeatCloud {
     public static HttpServer cloudServer(Consumer<CloudOptions> options) {
         CloudOptions opt = new CloudOptions();
         options.accept(opt);
-        opt.serverName("feat-cloud");
         ApplicationContext application = new ApplicationContext(opt);
         opt.getExternalBeans().forEach(application::addBean);
         try {
