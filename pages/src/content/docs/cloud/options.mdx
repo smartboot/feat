@@ -56,20 +56,6 @@ FeatCloud.cloudServer(options -> {
 
 ## 从 ServerOptions 继承的重要配置项
 
-### serverName
-**类型**: `String`
-
-**默认值**: `"feat"`
-
-设置服务器名称，会在HTTP响应头的Server字段中显示。
-
-**使用示例**:
-```java
-FeatCloud.cloudServer(options -> {
-    options.serverName("my-application-v1.0");
-});
-```
-
 ### threadNum
 **类型**: `int`
 
