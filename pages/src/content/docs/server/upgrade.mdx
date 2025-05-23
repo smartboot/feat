@@ -17,13 +17,15 @@ Feat 框架支持通过 `request.upgrade(new WebSocketUpgrade())` 实现 HTTP �
 ```java
 // WebSocketDemo.java
 public class WebSocketDemo {
-    public void handle(Request request, Response response) {
-        request.upgrade(new WebSocketUpgrade() {
-            @Override
-            public void onText(WebSocketContext ctx, String message) {
-                ctx.send("Echo: " + message);
-            }
-        });
+    public static void main(String[] args) {
+        Feat.httpServer().httpHandler(request -> {
+            request.upgrade(new WebSocketUpgrade() {
+                @Override
+                public void handleTextMessage(WebSocketRequest request, WebSocketResponse response, String message) {
+                    response.sendTextMessage("接受到客户端消息：" + message);
+                }
+            });
+        }).listen();
     }
 }
 ```
@@ -34,11 +36,19 @@ public class WebSocketDemo {
 
 Feat 框架原生支持 HTTP/1.0、HTTP/1.1 和 HTTP/2.0，无需手动升级，框架会自动协商协议。若需自定义 HTTP/2 行为，可参考如下示例：
 
-```java
-// Http2Demo.java
+```java title=Http2Demo.java
 public class Http2Demo {
-    public void handle(Request request, Response response) {
-        response.write("Hello HTTP/2");
+    public static void main(String[] args) {
+        Feat.httpServer().httpHandler(request -> {
+            request.upgrade(new Http2Upgrade() {
+                @Override
+                public void handle(HttpRequest http2Request) {
+                    HttpResponse response = http2Request.response();
+                    response.setStatus(200);
+                    response.send("HTTP/2响应");
+                }
+            });
+        }).listen();
     }
 }
 ```
@@ -51,15 +61,25 @@ public class Http2Demo {
 Feat 框架通过 `request.upgrade(new SSEUpgrade())` 实现 SSE 协议升级，支持服务端主动推送事件流。以下为服务端实现示例：
 
 ```java
-// SSEDemo.java
 public class SSEDemo {
-    public void handle(Request request, Response response) {
-        request.upgrade(new SSEUpgrade() {
-            @Override
-            public void onConnect(SseEmitter emitter) {
-                emitter.send("data: hello\n\n");
-            }
-        });
+    public static void main(String[] args) throws Exception {
+        Feat.httpServer(serverOptions -> serverOptions.debug(true)).httpHandler(req -> {
+            req.upgrade(new SSEUpgrade() {
+                public void onOpen(SseEmitter sseEmitter) {
+                    // 创建定时任务，每秒发送一条消息
+                    Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> {
+                        try {
+                            sseEmitter.send(SseEmitter.event()
+                                .name("update")  // 设置事件名称
+                                .id(String.valueOf(i++))  // 设置事件ID
+                                .data("hello world"));  // 设置事件数据
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }, 1, 1, TimeUnit.SECONDS);
+                }
+            });
+        }).listen(8080);
     }
 }
 ```

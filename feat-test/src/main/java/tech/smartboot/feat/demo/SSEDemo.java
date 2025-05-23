@@ -24,28 +24,27 @@ import java.util.concurrent.TimeUnit;
  */
 public class SSEDemo {
     public static void main(String[] args) throws Exception {
-        Feat.httpServer(serverOptions -> serverOptions.debug(true)).httpHandler(req -> {
-            req.upgrade(new SSEUpgrade() {
-                public void onOpen(SseEmitter sseEmitter) {
-                    SSEUpgrade handler = this;
-//                System.out.println("receive...:" + uid);
-                    Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(new Runnable() {
-                        int i = 0;
+        Feat.httpServer(serverOptions -> serverOptions.debug(true))
+                .httpHandler(req -> {
+                    req.upgrade(new SSEUpgrade() {
+                        public void onOpen(SseEmitter sseEmitter) {
+                            Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(new Runnable() {
+                                int i = 0;
 
-                        @Override
-                        public void run() {
-                            try {
-                                sseEmitter.send(SseEmitter.event().name("update").comment("aaa").id(String.valueOf(i++)).data("hello world"));
-                                if (i == 10) {
-                                    sseEmitter.complete();
+                                @Override
+                                public void run() {
+                                    try {
+                                        sseEmitter.send(SseEmitter.event().name("update").comment("aaa").id(String.valueOf(i++)).data("hello world"));
+                                        if (i == 10) {
+                                            sseEmitter.complete();
+                                        }
+                                    } catch (IOException e) {
+                                        throw new RuntimeException(e);
+                                    }
                                 }
-                            } catch (IOException e) {
-                                throw new RuntimeException(e);
-                            }
+                            }, 1, 1, TimeUnit.SECONDS);
                         }
-                    }, 1, 1, TimeUnit.SECONDS);
-                }
-            });
-        }).listen(8080);
+                    });
+                }).listen(8080);
     }
 }
