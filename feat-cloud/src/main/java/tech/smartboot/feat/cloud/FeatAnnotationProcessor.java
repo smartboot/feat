@@ -407,6 +407,8 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                 }
                 stringBuilder.append("\t\tbean.set").append(name).append("(").append(stringValue).append(");\n");
             } else {
+                System.err.println("compiler err: no setter method found for field[ " + field.getSimpleName() + " ] in class[ " + element + " ]");
+                exception = true;
 //                stringBuilder.append("\t\treflectAutowired(bean, \"").append(field.getSimpleName().toString()).append("\", applicationContext);\n");
             }
         });
@@ -556,10 +558,11 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                             printWriter.println("\t\t\tctx.Response.write(bytes);");
                             break;
                         case RETURN_TYPE_OBJECT:
-
                             if (AsyncResponse.class.getName().equals(returnType.toString())) {
                                 printWriter.println("\t\t\t\tresponse(rst, ctx, completableFuture);");
                                 printWriter.println("\t\t\t}");
+                            } else if (int.class.getName().equals(returnType.toString())) {
+                                printWriter.println("\t\t\twriteInt(ctx.Response.getOutputStream(), rst);");
                             } else {
                                 printWriter.println("\t\t\tjava.io.ByteArrayOutputStream os = getOutputStream();");
                                 JsonSerializer jsonSerializer = new JsonSerializer(printWriter);
