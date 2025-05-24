@@ -11,7 +11,9 @@
 package tech.smartboot.feat.cloud;
 
 import com.alibaba.fastjson2.JSONObject;
+import com.alibaba.fastjson2.JSONPath;
 import org.apache.ibatis.annotations.Mapper;
+import org.yaml.snakeyaml.Yaml;
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Bean;
 import tech.smartboot.feat.cloud.annotation.Controller;
@@ -21,6 +23,7 @@ import tech.smartboot.feat.cloud.annotation.PathParam;
 import tech.smartboot.feat.cloud.annotation.PostConstruct;
 import tech.smartboot.feat.cloud.annotation.PreDestroy;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
+import tech.smartboot.feat.cloud.annotation.Value;
 import tech.smartboot.feat.cloud.serializer.JsonSerializer;
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.utils.StringUtils;
@@ -84,6 +87,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
 
     FileObject serviceFile;
     PrintWriter serviceWrite;
+    private String config;
 
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
@@ -92,12 +96,35 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             serviceFile = processingEnv.getFiler().createResource(StandardLocation.CLASS_OUTPUT, "", "META-INF/services/" + CloudService.class.getName());
             serviceWrite = new PrintWriter(serviceFile.openWriter());
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new FeatException(e);
         }
     }
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+        if (config == null) {
+            FileObject featYaml = null;
+            try {
+                featYaml = processingEnv.getFiler().getResource(StandardLocation.CLASS_OUTPUT, "", "feat.yml");
+            } catch (IOException ignored) {
+                try {
+                    featYaml = processingEnv.getFiler().getResource(StandardLocation.CLASS_OUTPUT, "", "feat.yaml");
+                } catch (IOException i) {
+                }
+            }
+
+            if (featYaml != null) {
+                try {
+                    Yaml yaml = new Yaml();
+                    config = JSONObject.from(yaml.load(featYaml.openInputStream())).toJSONString();
+                } catch (Throwable e) {
+//                    throw new FeatException(e);
+                }
+            } else {
+                config = "{}";
+            }
+        }
+
         List<String> services = new ArrayList<>();
         for (Element element : roundEnv.getElementsAnnotatedWith(Bean.class)) {
             Bean bean = element.getAnnotation(Bean.class);
@@ -191,6 +218,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             printWriter.println();
             printWriter.println("\tpublic void autowired(ApplicationContext applicationContext) throws Throwable {");
             printWriter.append(generateAutoWriedMethod(element, annotation));
+            printWriter.append(generateValueSetter(element));
             printWriter.println("\t}");
             printWriter.println();
 
@@ -305,6 +333,69 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         }
         return stringBuilder.toString();
     }
+
+    /**
+     * 生成自动注入方法
+     */
+    private <T extends Annotation> String generateValueSetter(Element element) {
+        StringBuilder stringBuilder = new StringBuilder();
+        element.getEnclosedElements().stream().filter(e -> e.getAnnotation(Value.class) != null).forEach(field -> {
+            Value value = field.getAnnotation(Value.class);
+            String paramName = value.value();
+            String defaultValue = null;
+            if (StringUtils.isBlank(paramName)) {
+                paramName = field.getSimpleName().toString();
+            } else if (StringUtils.startsWith(paramName, "${") && StringUtils.endsWith(paramName, "}")) {
+                paramName = paramName.substring(2, paramName.length() - 1);
+                int index = paramName.indexOf(":");
+                if (index != -1) {
+                    defaultValue = paramName.substring(index + 1);
+                    paramName = paramName.substring(0, index);
+                }
+            } else {
+                throw new FeatException("the value of Value on " + element.getSimpleName() + "@" + field.getSimpleName() + " is not allowed to be empty.");
+            }
+
+
+            String name = field.getSimpleName().toString();
+            String fieldType = field.asType().toString();
+            name = name.substring(0, 1).toUpperCase() + name.substring(1);
+
+            //判断是否存在setter方法
+            boolean hasSetter = false;
+            for (Element se : element.getEnclosedElements()) {
+                if (!("set" + name).equals(se.getSimpleName().toString())) {
+                    continue;
+                }
+                List<? extends VariableElement> list = ((ExecutableElement) se).getParameters();
+                if (list.size() != 1) {
+                    continue;
+                }
+                VariableElement param = list.get(0);
+                if (!param.asType().toString().equals(fieldType)) {
+                    continue;
+                }
+                hasSetter = true;
+            }
+            Object paramValue = JSONPath.eval(config, "$." + paramName);
+
+            if (hasSetter) {
+                if (String.class.getName().equals(fieldType)) {
+                    String stringValue = paramValue == null ? defaultValue : paramValue.toString();
+                    if (stringValue != null) {
+                        stringBuilder.append("\t\tbean.set").append(name).append("(\"").append(stringValue.replace("\\", "\\\\").replace("\n", "\\n").replace("\"", "\\\"")).append("\");\n");
+                    }
+                } else {
+                    throw new UnsupportedOperationException("不支持的类型：" + fieldType);
+                }
+
+            } else {
+//                stringBuilder.append("\t\treflectAutowired(bean, \"").append(field.getSimpleName().toString()).append("\", applicationContext);\n");
+            }
+        });
+        return stringBuilder.toString();
+    }
+
 
     private <T extends Annotation> void createController(Element element, Controller annotation, PrintWriter printWriter, Map<String, String> bytesCache) throws IOException {
         Controller controller = annotation;
