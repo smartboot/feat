@@ -149,7 +149,7 @@ public class HttpServer {
             return;
         }
         //提前将server设置为null，避免在shutdownHook中再次调用shutdown方法
-        HttpServer thisServer = this;
+        AioQuickServer thisServer = server;
         server = null;
         Runnable runnable = options.shutdownHook();
         if (runnable != null) {
