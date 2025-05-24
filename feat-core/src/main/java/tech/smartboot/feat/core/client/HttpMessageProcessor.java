@@ -162,7 +162,10 @@ final class HttpMessageProcessor extends AbstractMessageProcessor<AbstractRespon
                 break;
             case SESSION_CLOSED: {
                 DecoderUnit attachment = session.getAttachment();
-                attachment.getResponse().onClose();
+                AbstractResponse response = attachment.getResponse();
+                if (response != null) {
+                    response.onClose();
+                }
                 break;
             }
         }
