@@ -10,33 +10,25 @@
 
 package tech.smartboot.feat.demo.apt;
 
-import tech.smartboot.feat.cloud.RestResult;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.PostConstruct;
 import tech.smartboot.feat.cloud.annotation.PreDestroy;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.cloud.annotation.RequestMethod;
-import tech.smartboot.feat.cloud.annotation.Value;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
+import tech.smartboot.feat.cloud.RestResult;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 /**
- * @author 三刀(zhengjunweimail @ 163.com)
+ * @author 三刀(zhengjunweimail@163.com)
  * @version v1.0.0
  */
 @Controller("abc")
 public class ControllerDemo {
-
-    @Value("${a}")
-    private String a;
-
-    @Value("${b:abc}")
-    private String b;
-
     @RequestMapping(value = "/test", method = {RequestMethod.GET, RequestMethod.POST})
     public void hello(HttpRequest request, HttpResponse response) {
         System.out.println("aaa");
@@ -112,14 +104,6 @@ public class ControllerDemo {
     @PostConstruct
     public void init() {
 
-    }
-
-    public void setA(String a) {
-        this.a = a;
-    }
-
-    public void setB(String b) {
-        this.b = b;
     }
 
     @PreDestroy
