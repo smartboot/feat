@@ -50,6 +50,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.tools.FileObject;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
@@ -88,6 +89,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
     FileObject serviceFile;
     PrintWriter serviceWrite;
     private String config;
+    private boolean exception = false;
 
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
@@ -109,16 +111,16 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             } catch (IOException ignored) {
                 try {
                     featYaml = processingEnv.getFiler().getResource(StandardLocation.CLASS_OUTPUT, "", "feat.yaml");
-                } catch (IOException i) {
+                } catch (IOException ignored1) {
                 }
             }
 
-            if (featYaml != null) {
+            if (featYaml != null && new File(featYaml.toUri()).exists()) {
                 try {
                     Yaml yaml = new Yaml();
                     config = JSONObject.from(yaml.load(featYaml.openInputStream())).toJSONString();
                 } catch (Throwable e) {
-//                    throw new FeatException(e);
+                    throw new FeatException(e);
                 }
             } else {
                 config = "{}";
@@ -145,7 +147,9 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             serviceWrite.println(service);
         }
         serviceWrite.flush();
-
+        if (exception) {
+            throw new FeatException("编译失败！请根据提示修复错误，或者联系开发者：https://gitee.com/smartboot/feat/issues");
+        }
         return false;
     }
 
@@ -353,6 +357,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                     paramName = paramName.substring(0, index);
                 }
             } else {
+
                 throw new FeatException("the value of Value on " + element.getSimpleName() + "@" + field.getSimpleName() + " is not allowed to be empty.");
             }
 
@@ -380,15 +385,27 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             Object paramValue = JSONPath.eval(config, "$." + paramName);
 
             if (hasSetter) {
+                String stringValue = paramValue == null ? defaultValue : paramValue.toString();
+                if (stringValue == null) {
+                    return;
+                }
                 if (String.class.getName().equals(fieldType)) {
-                    String stringValue = paramValue == null ? defaultValue : paramValue.toString();
-                    if (stringValue != null) {
-                        stringBuilder.append("\t\tbean.set").append(name).append("(\"").append(stringValue.replace("\\", "\\\\").replace("\n", "\\n").replace("\"", "\\\"")).append("\");\n");
+                    stringValue = "\"" + stringValue.replace("\\", "\\\\").replace("\n", "\\n").replace("\"", "\\\"") + "\"";
+                } else if (int.class.getName().equals(fieldType)) {
+                    try {
+                        stringValue = String.valueOf(Integer.parseInt(stringValue));
+                    } catch (NumberFormatException e) {
+                        System.err.println("compiler err: invalid value [ " + stringValue + " ] for field[ " + field.getSimpleName() + " ] in class[ " + element + " ]");
+                        exception = true;
                     }
                 } else {
-                    throw new UnsupportedOperationException("不支持的类型：" + fieldType);
+                    System.err.println("compiler err: unsupported type [ " + fieldType + " ] for field[ " + field.getSimpleName() + " ] in class[ " + element + " ]");
+                    exception = true;
                 }
-
+                if (exception) {
+                    return;
+                }
+                stringBuilder.append("\t\tbean.set").append(name).append("(").append(stringValue).append(");\n");
             } else {
 //                stringBuilder.append("\t\treflectAutowired(bean, \"").append(field.getSimpleName().toString()).append("\", applicationContext);\n");
             }
@@ -422,7 +439,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                                 requestURL = basePath + "/" + requestURL;
                             }
                         } else if ("method".equals(k.getSimpleName().toString())) {
-                            System.out.println(v.getValue());
+//                            System.out.println(v.getValue());
 //                                    printWriter.println(v.getValue().toString());
                         }
                     }

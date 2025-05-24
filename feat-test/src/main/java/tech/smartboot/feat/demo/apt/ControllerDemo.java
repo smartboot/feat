@@ -36,6 +36,8 @@ public class ControllerDemo {
 
     @Value("${b:abc}")
     private String b;
+    @Value("${c.d}")
+    private int c;
 
     @RequestMapping(value = "/test", method = {RequestMethod.GET, RequestMethod.POST})
     public void hello(HttpRequest request, HttpResponse response) {
@@ -120,6 +122,10 @@ public class ControllerDemo {
 
     public void setB(String b) {
         this.b = b;
+    }
+
+    public void setC(int c) {
+        this.c = c;
     }
 
     @PreDestroy
