@@ -35,7 +35,7 @@ public class ValueControllerTest extends BastTest {
     private int param1;
 
     @Value
-    private String param2;
+    private int[] param2;
 
     @RequestMapping("/param1")
     public int param1() {
@@ -65,7 +65,7 @@ public class ValueControllerTest extends BastTest {
         this.param1 = param1;
     }
 
-    public void setParam2(String param2) {
+    public void setParam2(int[] param2) {
         this.param2 = param2;
     }
 

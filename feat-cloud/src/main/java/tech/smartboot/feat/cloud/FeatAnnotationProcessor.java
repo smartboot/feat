@@ -10,6 +10,7 @@
 
 package tech.smartboot.feat.cloud;
 
+import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.JSONPath;
 import org.apache.ibatis.annotations.Mapper;
@@ -383,21 +384,39 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                 hasSetter = true;
             }
             Object paramValue = JSONPath.eval(config, "$." + paramName);
-
+            if (defaultValue == null && paramValue == null) {
+                return;
+            }
+            String stringValue = null;
             if (hasSetter) {
-                String stringValue = paramValue == null ? defaultValue : paramValue.toString();
-                if (stringValue == null) {
-                    return;
-                }
                 if (String.class.getName().equals(fieldType)) {
+                    stringValue = paramValue == null ? defaultValue : paramValue.toString();
                     stringValue = "\"" + stringValue.replace("\\", "\\\\").replace("\n", "\\n").replace("\"", "\\\"") + "\"";
                 } else if (int.class.getName().equals(fieldType)) {
                     try {
+                        stringValue = paramValue == null ? defaultValue : paramValue.toString();
                         stringValue = String.valueOf(Integer.parseInt(stringValue));
                     } catch (NumberFormatException e) {
                         System.err.println("compiler err: invalid value [ " + stringValue + " ] for field[ " + field.getSimpleName() + " ] in class[ " + element + " ]");
                         exception = true;
                     }
+                } else if ("int[]".equals(fieldType)) {
+                    System.out.println(paramValue);
+                    JSONArray array = (JSONArray) paramValue;
+                    stringValue = "new int[]{";
+                    for (int i = 0; i < array.size(); i++) {
+                        if (i != 0) {
+                            stringValue += ", ";
+                        }
+                        Object o = array.get(i);
+                        if (!(o instanceof Integer)) {
+                            System.err.println("compiler err: invalid value [ " + o + " ] for field[ " + field.getSimpleName() + " ] in class[ " + element + " ]");
+                            exception = true;
+                            break;
+                        }
+                        stringValue += o.toString();
+                    }
+                    stringValue += "}";
                 } else {
                     System.err.println("compiler err: unsupported type [ " + fieldType + " ] for field[ " + field.getSimpleName() + " ] in class[ " + element + " ]");
                     exception = true;

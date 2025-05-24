@@ -1,4 +1,8 @@
 param1: 100
+param2:
+  - 100
+  - 200
+  - 300
 #b: |
 #  afa
 #  dfaf
