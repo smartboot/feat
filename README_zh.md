@@ -87,49 +87,41 @@ public class WebSocketDemo {
 }
 ```
 
-### 配置HTTPS安全通信
-
-简单几步配置SSL/TLS，保障通信安全：
-
-```java
-public class HttpsPemDemo {
-    public static void main(String[] args) {
-        // 加载PEM格式证书
-        InputStream certPem = HttpsPemDemo.class.getClassLoader().getResourceAsStream("example.org.pem");
-        InputStream keyPem = HttpsPemDemo.class.getClassLoader().getResourceAsStream("example.org-key.pem");
-        
-        // 创建SSL插件
-        SslPlugin sslPlugin = new SslPlugin(new PemServerSSLContextFactory(certPem, keyPem));
-        
-        // 配置HTTPS服务器
-        Feat.httpServer(opt -> opt.addPlugin(sslPlugin))
-            .httpHandler(req -> req.getResponse().write("Hello Feat Https"))
-            .listen(8443);
-            
-        System.out.println("HTTPS服务已启动，访问 https://localhost:8443");
-    }
-}
-```
-
 ### 构建RESTful API
 
-结合Feat Cloud，轻松构建现代化RESTful API：
+结合Feat Cloud，轻松构建现代化RESTful API。Feat Cloud 在编译时完成静态转码，相比传统框架的运行时反射机制，具有更高的性能优势：
 
 ```java
-@RestController
-@RequestMapping("/api/users")
+@Controller("userApi")
 public class UserController {
     
-    @GetMapping("/{id}")
-    public User getUser(@PathVariable("id") Long id) {
-        // 获取用户信息
-        return userService.findById(id);
+    // 支持路径参数
+    @RequestMapping("/users/:id")
+    public String getUser(@PathParam("id") String id) {
+        return "User: " + id;
     }
     
-    @PostMapping
-    public User createUser(@RequestBody User user) {
-        // 创建新用户
-        return userService.save(user);
+    // 支持查询参数
+    @RequestMapping("/users/search")
+    public String searchUsers(@Param("name") String name, @Param("age") int age) {
+        return "Search users with name: " + name + ", age: " + age;
+    }
+    
+    // 支持对象参数绑定
+    @RequestMapping("/users/create")
+    public RestResult<Map<String, String>> createUser(UserParam param) {
+        RestResult<Map<String, String>> result = new RestResult<>();
+        result.setData(Collections.singletonMap("id", "123"));
+        return result;
+    }
+    
+    // 支持拦截器
+    @InterceptorMapping({"/users/*"})
+    public Interceptor userApiInterceptor() {
+        return (context, completableFuture, chain) -> {
+            System.out.println("Intercepting user API request...");
+            chain.proceed(context, completableFuture);
+        };
     }
 }
 ```
