@@ -164,12 +164,11 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             JavaFileObject javaFileObject = processingEnv.getFiler().createSourceFile(loaderName);
             Writer writer = javaFileObject.openWriter();
             PrintWriter printWriter = new PrintWriter(writer);
+            printWriter.println("package tech.smartboot.feat.sandao;");
             printWriter.println();
             printWriter.println("import " + AbstractServiceLoader.class.getName() + ";");
             printWriter.println("import " + ApplicationContext.class.getName() + ";");
             printWriter.println("import " + Router.class.getName() + ";");
-            printWriter.println("import " + JSONObject.class.getName() + ";");
-            printWriter.println("import com.alibaba.fastjson2.JSON;");
             printWriter.println();
             printWriter.println("public class " + loaderName + " extends " + AbstractServiceLoader.class.getSimpleName() + " {");
             printWriter.println();
@@ -209,7 +208,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             writer.close();
 
             //生成service配置
-            services.add(loaderName);
+            services.add("tech.smartboot.feat.sandao." + loaderName);
         } catch (Throwable e) {
             e.printStackTrace();
             exception = true;
