@@ -28,7 +28,7 @@ import tech.smartboot.feat.core.server.impl.HttpRequestProtocol;
  */
 public class HttpServer {
 
-
+    private static boolean bannerEnabled = true;
     /**
      * http消息解码器
      */
@@ -96,7 +96,8 @@ public class HttpServer {
                 server.start(options.group());
             }
 
-            if (options.isBannerEnabled()) {
+            if (options.isBannerEnabled() && bannerEnabled) {
+                bannerEnabled = false;
                 System.out.println(FeatUtils.getResourceAsString("feat-banner.txt") + "\r\n :: Feat :: (" + ServerOptions.VERSION + ")");
                 System.out.println(FeatUtils.getResourceAsString("feat-support.txt"));
                 System.out.println("\u001B[32m\uD83C\uDF89Congratulations, the feat startup is successful" + ".\u001B[0m");
