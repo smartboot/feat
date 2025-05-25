@@ -52,6 +52,10 @@ public class ServerOptions {
      */
     public static final String VERSION = "v1.0.0";
 
+    private int port = 8080;
+
+    private String host = "0.0.0.0";
+
     /**
      * 字节缓存树，用于缓存字符串以提高性能
      * <p>
@@ -520,6 +524,24 @@ public class ServerOptions {
      */
     public ServerOptions shutdownHook(Runnable shutdownHook) {
         this.shutdownHook = shutdownHook;
+        return this;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public ServerOptions setPort(int port) {
+        this.port = port;
+        return this;
+    }
+
+    public String getHost() {
+        return host;
+    }
+
+    public ServerOptions setHost(String host) {
+        this.host = host;
         return this;
     }
 }

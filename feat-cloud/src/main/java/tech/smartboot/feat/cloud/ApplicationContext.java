@@ -40,6 +40,10 @@ public class ApplicationContext {
         this.options = options;
     }
 
+    public CloudOptions getOptions() {
+        return options;
+    }
+
     public void start() throws Throwable {
         for (CloudService service : ServiceLoader.load(CloudService.class)) {
             if (isIgnore(service)) {

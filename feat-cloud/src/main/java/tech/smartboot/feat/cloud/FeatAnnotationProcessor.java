@@ -105,6 +105,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+        List<String> services = new ArrayList<>();
         if (config == null) {
             FileObject featYaml = null;
             try {
@@ -126,9 +127,12 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             } else {
                 config = "{}";
             }
+
+            //如果存在 server 配置
+            createServerOptionsBean(services);
         }
 
-        List<String> services = new ArrayList<>();
+
         for (Element element : roundEnv.getElementsAnnotatedWith(Bean.class)) {
             Bean bean = element.getAnnotation(Bean.class);
             if (element.getKind() == ElementKind.CLASS) {
@@ -152,6 +156,64 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             throw new FeatException("编译失败！请根据提示修复错误，或者联系开发者：https://gitee.com/smartboot/feat/issues");
         }
         return false;
+    }
+
+    private void createServerOptionsBean(List<String> services) {
+        try {
+            String loaderName = "FeatCloudOptionsBeanAptLoader";
+            JavaFileObject javaFileObject = processingEnv.getFiler().createSourceFile(loaderName);
+            Writer writer = javaFileObject.openWriter();
+            PrintWriter printWriter = new PrintWriter(writer);
+            printWriter.println();
+            printWriter.println("import " + AbstractServiceLoader.class.getName() + ";");
+            printWriter.println("import " + ApplicationContext.class.getName() + ";");
+            printWriter.println("import " + Router.class.getName() + ";");
+            printWriter.println("import " + JSONObject.class.getName() + ";");
+            printWriter.println("import com.alibaba.fastjson2.JSON;");
+            printWriter.println();
+            printWriter.println("public class " + loaderName + " extends " + AbstractServiceLoader.class.getSimpleName() + " {");
+            printWriter.println();
+
+
+            printWriter.println("\tpublic void loadBean(ApplicationContext applicationContext) throws Throwable {");
+            Object obj = JSONPath.eval(config, "$.server.port");
+            if (obj != null) {
+                printWriter.println("\t\tapplicationContext.getOptions().setPort(" + obj + ");");
+            }
+            obj = JSONPath.eval(config, "$.server.host");
+            if (obj != null) {
+                printWriter.println("\t\tapplicationContext.getOptions().setHost(" + obj + ");");
+            }
+            printWriter.println("\t}");
+
+            printWriter.println();
+            printWriter.println("\tpublic void autowired(ApplicationContext applicationContext) throws Throwable {");
+
+            printWriter.println("\t}");
+            printWriter.println();
+
+            printWriter.println("\tpublic void router(" + Router.class.getSimpleName() + " router) {");
+
+            printWriter.println("\t}");
+            printWriter.println();
+
+            printWriter.println();
+            printWriter.println("\tpublic void destroy() throws Throwable {");
+
+            printWriter.println("\t}");
+            printWriter.println();
+            printWriter.println("\tpublic void postConstruct(ApplicationContext applicationContext) throws Throwable {");
+
+            printWriter.println("\t}");
+            printWriter.println("}");
+            writer.close();
+
+            //生成service配置
+            services.add(loaderName);
+        } catch (Throwable e) {
+            e.printStackTrace();
+            exception = true;
+        }
     }
 
     private <T extends Annotation> void createAptLoader(Element element, T annotation, List<String> services) {

@@ -63,11 +63,11 @@ public class HttpServer {
     }
 
     public final HttpServer listen() {
-        return listen(8080);
+        return listen(options.getPort());
     }
 
     public final HttpServer listen(int port) {
-        listen(null, port);
+        listen(options.getHost(), port);
         return this;
     }
 

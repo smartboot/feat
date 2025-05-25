@@ -1,3 +1,5 @@
+server:
+  port: 8081
 param1: 100
 param2:
   - 100
