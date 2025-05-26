@@ -106,13 +106,23 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             throw new FeatException(e);
         }
         System.out.println("processor init: " + this);
-        FileObject featYaml = null;
+        parseFeatYaml();
+    }
+
+    private FileObject loadFeatYaml(String filename) {
         try {
-            featYaml = processingEnv.getFiler().getResource(StandardLocation.CLASS_OUTPUT, "", "feat.yml");
+            return processingEnv.getFiler().getResource(StandardLocation.CLASS_OUTPUT, "", filename);
         } catch (IOException ignored) {
-            try {
-                featYaml = processingEnv.getFiler().getResource(StandardLocation.CLASS_OUTPUT, "", "feat.yaml");
-            } catch (IOException ignored1) {
+        }
+        return null;
+    }
+
+    private void parseFeatYaml() {
+        FileObject featYaml = null;
+        for (String filename : Arrays.asList("feat.yml", "feat.yaml")) {
+            featYaml = loadFeatYaml(filename);
+            if (featYaml != null) {
+                break;
             }
         }
 
@@ -475,6 +485,54 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                         stringValue += o.toString();
                     }
                     stringValue += "}";
+                } else if ("java.util.List<java.lang.Integer>".equals(fieldType)) {
+                    JSONArray array = (JSONArray) paramValue;
+                    stringValue = "java.util.Arrays.asList(";
+                    for (int i = 0; i < array.size(); i++) {
+                        if (i != 0) {
+                            stringValue += ", ";
+                        }
+                        Object o = array.get(i);
+                        if (!(o instanceof Integer)) {
+                            System.err.println("compiler err: invalid value [ " + o + " ] for field[ " + field.getSimpleName() + " ] in class[ " + element + " ]");
+                            exception = true;
+                            break;
+                        }
+                        stringValue += o.toString();
+                    }
+                    stringValue += ")";
+                } else if ("java.lang.String[]".equals(fieldType)) {
+                    JSONArray array = (JSONArray) paramValue;
+                    stringValue = "new String[]{";
+                    for (int i = 0; i < array.size(); i++) {
+                        if (i != 0) {
+                            stringValue += ", ";
+                        }
+                        Object o = array.get(i);
+                        if (!(o instanceof String)) {
+                            System.err.println("compiler err: invalid value [ " + o + " ] for field[ " + field.getSimpleName() + " ] in class[ " + element + " ]");
+                            exception = true;
+                            break;
+                        }
+                        stringValue += toString(o.toString());
+                    }
+                    stringValue += "}";
+                } else if ("java.util.List<java.lang.String>".equals(fieldType)) {
+                    JSONArray array = (JSONArray) paramValue;
+                    stringValue = "java.util.Arrays.asList(";
+                    for (int i = 0; i < array.size(); i++) {
+                        if (i != 0) {
+                            stringValue += ", ";
+                        }
+                        Object o = array.get(i);
+                        if (!(o instanceof String)) {
+                            System.err.println("compiler err: invalid value [ " + o + " ] for field[ " + field.getSimpleName() + " ] in class[ " + element + " ]");
+                            exception = true;
+                            break;
+                        }
+                        stringValue += toString(o.toString());
+                    }
+                    stringValue += ")";
                 } else {
                     System.err.println("compiler err: unsupported type [ " + fieldType + " ] for field[ " + field.getSimpleName() + " ] in class[ " + element + " ]");
                     exception = true;
@@ -492,6 +550,9 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         return stringBuilder.toString();
     }
 
+    private String toString(String str) {
+        return "\"" + str.replace("\\", "\\\\").replace("\n", "\\n").replace("\"", "\\\"") + "\"";
+    }
 
     private <T extends Annotation> void createController(Element element, Controller annotation, PrintWriter printWriter, Map<String, String> bytesCache) throws IOException {
         Controller controller = annotation;

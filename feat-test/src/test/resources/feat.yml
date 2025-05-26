@@ -5,9 +5,14 @@ param2:
   - 100
   - 200
   - 300
-#b: |
-#  afa
-#  dfaf
-#  adf
+array:
+  - 1
+  - 2
+  - 3
+
+array2:
+  - a
+  - b
+  - c
 c:
   d: 1

@@ -23,6 +23,8 @@ import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.test.BastTest;
 
+import java.util.List;
+
 /**
  * @author 三刀
  * @version v1.0 5/24/25
@@ -36,6 +38,19 @@ public class ValueControllerTest extends BastTest {
 
     @Value
     private int[] param2;
+
+    @Value
+    private int[] array;
+
+    @Value("${array}")
+    private List<Integer> arrayList;
+
+    @Value
+    private String[] array2;
+
+    @Value("${array2}")
+    private List<String> array2List;
+
 
     @RequestMapping("/param1")
     public int param1() {
@@ -67,6 +82,22 @@ public class ValueControllerTest extends BastTest {
 
     public void setParam2(int[] param2) {
         this.param2 = param2;
+    }
+
+    public void setArray(int[] array) {
+        this.array = array;
+    }
+
+    public void setArrayList(List<Integer> arrayList) {
+        this.arrayList = arrayList;
+    }
+
+    public void setArray2(String[] array2) {
+        this.array2 = array2;
+    }
+
+    public void setArray2List(List<String> array2List) {
+        this.array2List = array2List;
     }
 
     @After
