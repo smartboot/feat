@@ -30,6 +30,7 @@ import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
+import tech.smartboot.feat.core.server.ServerOptions;
 import tech.smartboot.feat.core.server.Session;
 import tech.smartboot.feat.router.Context;
 import tech.smartboot.feat.router.Router;
@@ -56,7 +57,9 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -91,6 +94,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
     PrintWriter serviceWrite;
     private String config;
     private boolean exception = false;
+    private final List<String> services = new ArrayList<>();
 
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
@@ -101,51 +105,71 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         } catch (IOException e) {
             throw new FeatException(e);
         }
+        System.out.println("processor init: " + this);
+        FileObject featYaml = null;
+        try {
+            featYaml = processingEnv.getFiler().getResource(StandardLocation.CLASS_OUTPUT, "", "feat.yml");
+        } catch (IOException ignored) {
+            try {
+                featYaml = processingEnv.getFiler().getResource(StandardLocation.CLASS_OUTPUT, "", "feat.yaml");
+            } catch (IOException ignored1) {
+            }
+        }
+
+        if (featYaml != null && new File(featYaml.toUri()).exists()) {
+            try {
+                Yaml yaml = new Yaml();
+                config = JSONObject.from(yaml.load(featYaml.openInputStream())).toJSONString();
+            } catch (Throwable e) {
+                throw new FeatException(e);
+            }
+        } else {
+            config = "{}";
+        }
+
+        //如果存在 server 配置
+        try {
+            createServerOptionsBean();
+        } catch (Throwable e) {
+            e.printStackTrace();
+            exception = true;
+        }
     }
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-        List<String> services = new ArrayList<>();
-        if (config == null) {
-            FileObject featYaml = null;
-            try {
-                featYaml = processingEnv.getFiler().getResource(StandardLocation.CLASS_OUTPUT, "", "feat.yml");
-            } catch (IOException ignored) {
-                try {
-                    featYaml = processingEnv.getFiler().getResource(StandardLocation.CLASS_OUTPUT, "", "feat.yaml");
-                } catch (IOException ignored1) {
-                }
-            }
-
-            if (featYaml != null && new File(featYaml.toUri()).exists()) {
-                try {
-                    Yaml yaml = new Yaml();
-                    config = JSONObject.from(yaml.load(featYaml.openInputStream())).toJSONString();
-                } catch (Throwable e) {
-                    throw new FeatException(e);
-                }
-            } else {
-                config = "{}";
-            }
-
-            //如果存在 server 配置
-            createServerOptionsBean(services);
+        if (annotations.isEmpty()) {
+            return false;
         }
-
-
+        System.out.println("annotation process: " + this + " ,annotations: " + annotations);
         for (Element element : roundEnv.getElementsAnnotatedWith(Bean.class)) {
             Bean bean = element.getAnnotation(Bean.class);
             if (element.getKind() == ElementKind.CLASS) {
-                createAptLoader(element, bean, services);
+                try {
+                    createAptLoader(element, bean);
+                } catch (Throwable e) {
+                    System.err.println("createAptLoader error: " + element.getSimpleName() + " " + e.getMessage());
+                    exception = true;
+                }
             }
         }
         for (Element element : roundEnv.getElementsAnnotatedWith(Controller.class)) {
             Controller controller = element.getAnnotation(Controller.class);
-            createAptLoader(element, controller, services);
+            try {
+                createAptLoader(element, controller);
+            } catch (Throwable e) {
+                System.err.println("createAptLoader error: " + element.getSimpleName() + " " + e.getMessage());
+                exception = true;
+            }
         }
         for (Element element : roundEnv.getElementsAnnotatedWith(Mapper.class)) {
-            Mapper controller = element.getAnnotation(Mapper.class);
-            createAptLoader(element, controller, services);
+            Mapper mapper = element.getAnnotation(Mapper.class);
+            try {
+                createAptLoader(element, mapper);
+            } catch (Throwable e) {
+                System.err.println("createAptLoader error: " + element.getSimpleName() + " " + e.getMessage());
+                exception = true;
+            }
         }
         // 如果不希望后续的处理器继续处理这些注解，返回 true，否则返回 false
         for (String service : services) {
@@ -158,183 +182,156 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         return false;
     }
 
-    private void createServerOptionsBean(List<String> services) {
-        try {
-            String loaderName = "FeatCloudOptionsBeanAptLoader";
-            JavaFileObject javaFileObject = processingEnv.getFiler().createSourceFile(loaderName);
-            Writer writer = javaFileObject.openWriter();
-            PrintWriter printWriter = new PrintWriter(writer);
-            printWriter.println("package tech.smartboot.feat.sandao;");
-            printWriter.println();
-            printWriter.println("import " + AbstractServiceLoader.class.getName() + ";");
-            printWriter.println("import " + ApplicationContext.class.getName() + ";");
-            printWriter.println("import " + Router.class.getName() + ";");
-            printWriter.println();
-            printWriter.println("public class " + loaderName + " extends " + AbstractServiceLoader.class.getSimpleName() + " {");
-            printWriter.println();
+    private final Set<String> availableTypes = new HashSet<>(Arrays.asList(String.class.getName(), int.class.getName()));
+
+    private void createServerOptionsBean() throws Throwable {
+        String loaderName = "FeatCloudOptionsBeanAptLoader";
+        JavaFileObject javaFileObject = processingEnv.getFiler().createSourceFile(loaderName);
+        Writer writer = javaFileObject.openWriter();
+        PrintWriter printWriter = new PrintWriter(writer);
+        printWriter.println("package tech.smartboot.feat.sandao;");
+        printWriter.println();
+        printWriter.println("import " + AbstractServiceLoader.class.getName() + ";");
+        printWriter.println("import " + ApplicationContext.class.getName() + ";");
+        printWriter.println("import " + Router.class.getName() + ";");
+        printWriter.println();
+        printWriter.println("public class " + loaderName + " extends " + AbstractServiceLoader.class.getSimpleName() + " {");
+        printWriter.println();
 
 
-            printWriter.println("\tpublic void loadBean(ApplicationContext applicationContext) throws Throwable {");
-            Object obj = JSONPath.eval(config, "$.server.port");
-            if (obj != null) {
-                printWriter.println("\t\tapplicationContext.getOptions().setPort(" + obj + ");");
+        printWriter.println("\tpublic void loadBean(ApplicationContext applicationContext) throws Throwable {");
+        for (Field field : ServerOptions.class.getDeclaredFields()) {
+            Class<?> type = field.getType();
+            if (type.isArray()) {
+                type = type.getComponentType();
             }
-            obj = JSONPath.eval(config, "$.server.host");
-            if (obj != null) {
-                printWriter.println("\t\tapplicationContext.getOptions().setHost(" + obj + ");");
+            if (!availableTypes.contains(type.getName())) {
+                continue;
             }
-            printWriter.println("\t}");
-
-            printWriter.println();
-            printWriter.println("\tpublic void autowired(ApplicationContext applicationContext) throws Throwable {");
-
-            printWriter.println("\t}");
-            printWriter.println();
-
-            printWriter.println("\tpublic void router(" + Router.class.getSimpleName() + " router) {");
-
-            printWriter.println("\t}");
-            printWriter.println();
-
-            printWriter.println();
-            printWriter.println("\tpublic void destroy() throws Throwable {");
-
-            printWriter.println("\t}");
-            printWriter.println();
-            printWriter.println("\tpublic void postConstruct(ApplicationContext applicationContext) throws Throwable {");
-
-            printWriter.println("\t}");
-            printWriter.println("}");
-            writer.close();
-
-            //生成service配置
-            services.add("tech.smartboot.feat.sandao." + loaderName);
-        } catch (Throwable e) {
-            e.printStackTrace();
-            exception = true;
+            Object obj = JSONPath.eval(config, "$.server." + field.getName());
+            if (obj == null) {
+                continue;
+            }
+            printWriter.println("\t\tapplicationContext.getOptions()." + field.getName() + "(" + obj + ");");
         }
+        printWriter.println("\t}");
+
+        printWriter.println();
+        printWriter.println("\tpublic void autowired(ApplicationContext applicationContext) throws Throwable {");
+
+        printWriter.println("\t}");
+        printWriter.println();
+
+        printWriter.println("\tpublic void router(" + Router.class.getSimpleName() + " router) {");
+
+        printWriter.println("\t}");
+        printWriter.println();
+
+        printWriter.println();
+        printWriter.println("\tpublic void destroy() throws Throwable {");
+
+        printWriter.println("\t}");
+        printWriter.println();
+        printWriter.println("\tpublic void postConstruct(ApplicationContext applicationContext) throws Throwable {");
+
+        printWriter.println("\t}");
+        printWriter.println("}");
+        writer.close();
+
+        //生成service配置
+        services.add("tech.smartboot.feat.sandao." + loaderName);
     }
 
-    private <T extends Annotation> void createAptLoader(Element element, T annotation, List<String> services) {
-        try {
-
-            //获取所有包含Autowired注解的字段
-            List<Element> autowiredFields = new ArrayList<>();
-            for (Element field : element.getEnclosedElements()) {
-                if (field.getAnnotation(Autowired.class) != null) {
-                    autowiredFields.add(field);
-                }
-            }
-//            //element增加setter方法
-//            if (!autowiredFields.isEmpty()) {
-//                FileObject origFileObject = processingEnv.getFiler().getResource(StandardLocation.SOURCE_PATH, element.getEnclosingElement().toString(), element.getSimpleName() + ".java");
-//                String origContent = origFileObject.getCharContent(false).toString();
-//                int lastIndex = origContent.lastIndexOf("}");
-//                StringBuilder writer = new StringBuilder();
-//                writer.append(origContent.substring(0, lastIndex));
-//                for (Element field : autowiredFields) {
-//                    writer.append("    public void set" + field.getSimpleName() + "(" + field.asType() + " " + field.getSimpleName() + ") {");
-//                    writer.append("        this." + field.getSimpleName() + " = " + field.getSimpleName() + ";");
-//                    writer.append("    }");
-//                }
-//                writer.append("}");
-//
-//            }
-
-
-            String loaderName = element.getSimpleName() + "BeanAptLoader";
-            JavaFileObject javaFileObject = processingEnv.getFiler().createSourceFile(loaderName);
-            Writer writer = javaFileObject.openWriter();
-            PrintWriter printWriter = new PrintWriter(writer);
-            printWriter.println("package " + element.getEnclosingElement().toString() + ";");
-            printWriter.println();
-            printWriter.println("import " + AbstractServiceLoader.class.getName() + ";");
-            printWriter.println("import " + ApplicationContext.class.getName() + ";");
-            printWriter.println("import " + Router.class.getName() + ";");
-            printWriter.println("import " + JSONObject.class.getName() + ";");
-            printWriter.println("import com.alibaba.fastjson2.JSON;");
-            printWriter.println();
-            printWriter.println("public class " + loaderName + " extends " + AbstractServiceLoader.class.getSimpleName() + " {");
-            printWriter.println();
-            printWriter.println("    private " + element.getSimpleName() + " bean;");
-            if (annotation instanceof Mapper) {
-                printWriter.println("    private org.apache.ibatis.session.SqlSessionFactory factory;");
-            }
-            if (annotation instanceof Bean) {
-                printWriter.println();
-                printWriter.println("\tpublic int order() {");
-                printWriter.println("\t\treturn " + ((Bean) annotation).order() + ";");
-                printWriter.println("\t}");
-            }
-            printWriter.println();
-
-            printWriter.println("\tpublic void loadBean(ApplicationContext applicationContext) throws Throwable {");
-            if (annotation instanceof Mapper) {
-                createMapperBean(element, printWriter);
-            } else {
-                generateBeanOrController(element, annotation, printWriter);
-            }
-            String beanName = element.getSimpleName().toString().substring(0, 1).toLowerCase() + element.getSimpleName().toString().substring(1);
-            if (annotation instanceof Bean && !((Bean) annotation).value().isEmpty()) {
-                beanName = ((Bean) annotation).value();
-            }
-            printWriter.println("\t\tapplicationContext.addBean(\"" + beanName + "\", bean);");
-            printWriter.println("\t}");
-
-            printWriter.println();
-            printWriter.println("\tpublic void autowired(ApplicationContext applicationContext) throws Throwable {");
-            printWriter.append(generateAutoWriedMethod(element, annotation));
-            printWriter.append(generateValueSetter(element));
-            printWriter.println("\t}");
-            printWriter.println();
-
-            printWriter.println("\tpublic void router(" + Router.class.getSimpleName() + " router) {");
-            Map<String, String> bytesCache = new HashMap<>();
-            if (annotation instanceof Controller) {
-                createController(element, (Controller) annotation, printWriter, bytesCache);
-            }
-            //扫描拦截器
-            addInterceptor(element, printWriter);
-
-            printWriter.println("\t}");
-            printWriter.println();
-            if (!bytesCache.isEmpty()) {
-                for (Map.Entry<String, String> entry : bytesCache.entrySet()) {
-                    printWriter.println("\t" + entry.getValue());
-                }
-            }
-            printWriter.println();
-            printWriter.println("\tpublic void destroy() throws Throwable {");
-            for (Element se : element.getEnclosedElements()) {
-                for (AnnotationMirror mirror : se.getAnnotationMirrors()) {
-                    if (PreDestroy.class.getName().equals(mirror.getAnnotationType().toString())) {
-                        printWriter.println("\t\tbean." + se.getSimpleName() + "();");
-                    }
-                }
-            }
-            printWriter.println("\t}");
-            printWriter.println();
-            printWriter.println("\tpublic void postConstruct(ApplicationContext applicationContext) throws Throwable {");
-            for (Element se : element.getEnclosedElements()) {
-                for (AnnotationMirror mirror : se.getAnnotationMirrors()) {
-                    if (PostConstruct.class.getName().equals(mirror.getAnnotationType().toString())) {
-                        printWriter.println("\t\tbean." + se.getSimpleName() + "();");
-                    }
-                }
-            }
-            printWriter.println("\t}");
-            printWriter.println("}");
-            writer.close();
-
-            //生成service配置
-            services.add(element.getEnclosingElement().toString() + "." + loaderName);
-        } catch (Throwable e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
+    private <T extends Annotation> void createAptLoader(Element element, T annotation) throws IOException {
+        String loaderName = element.getSimpleName() + "BeanAptLoader";
+        JavaFileObject javaFileObject = processingEnv.getFiler().createSourceFile(loaderName);
+        Writer writer = javaFileObject.openWriter();
+        PrintWriter printWriter = new PrintWriter(writer);
+        printWriter.println("package " + element.getEnclosingElement().toString() + ";");
+        printWriter.println();
+        printWriter.println("import " + AbstractServiceLoader.class.getName() + ";");
+        printWriter.println("import " + ApplicationContext.class.getName() + ";");
+        printWriter.println("import " + Router.class.getName() + ";");
+        printWriter.println("import " + JSONObject.class.getName() + ";");
+        printWriter.println("import com.alibaba.fastjson2.JSON;");
+        printWriter.println();
+        printWriter.println("public class " + loaderName + " extends " + AbstractServiceLoader.class.getSimpleName() + " {");
+        printWriter.println();
+        printWriter.println("    private " + element.getSimpleName() + " bean;");
+        if (annotation instanceof Mapper) {
+            printWriter.println("    private org.apache.ibatis.session.SqlSessionFactory factory;");
         }
+        if (annotation instanceof Bean) {
+            printWriter.println();
+            printWriter.println("\tpublic int order() {");
+            printWriter.println("\t\treturn " + ((Bean) annotation).order() + ";");
+            printWriter.println("\t}");
+        }
+        printWriter.println();
+
+        printWriter.println("\tpublic void loadBean(ApplicationContext applicationContext) throws Throwable {");
+        if (annotation instanceof Mapper) {
+            createMapperBean(element, printWriter);
+        } else {
+            generateBeanOrController(element, printWriter);
+        }
+        String beanName = element.getSimpleName().toString().substring(0, 1).toLowerCase() + element.getSimpleName().toString().substring(1);
+        if (annotation instanceof Bean && !((Bean) annotation).value().isEmpty()) {
+            beanName = ((Bean) annotation).value();
+        }
+        printWriter.println("\t\tapplicationContext.addBean(\"" + beanName + "\", bean);");
+        printWriter.println("\t}");
+
+        printWriter.println();
+        printWriter.println("\tpublic void autowired(ApplicationContext applicationContext) throws Throwable {");
+        printWriter.append(generateAutoWriedMethod(element, annotation));
+        printWriter.append(generateValueSetter(element));
+        printWriter.println("\t}");
+        printWriter.println();
+
+        printWriter.println("\tpublic void router(" + Router.class.getSimpleName() + " router) {");
+        Map<String, String> bytesCache = new HashMap<>();
+        if (annotation instanceof Controller) {
+            createController(element, (Controller) annotation, printWriter, bytesCache);
+        }
+        //扫描拦截器
+        addInterceptor(element, printWriter);
+
+        printWriter.println("\t}");
+        printWriter.println();
+        if (!bytesCache.isEmpty()) {
+            for (Map.Entry<String, String> entry : bytesCache.entrySet()) {
+                printWriter.println("\t" + entry.getValue());
+            }
+        }
+        printWriter.println();
+        printWriter.println("\tpublic void destroy() throws Throwable {");
+        for (Element se : element.getEnclosedElements()) {
+            for (AnnotationMirror mirror : se.getAnnotationMirrors()) {
+                if (PreDestroy.class.getName().equals(mirror.getAnnotationType().toString())) {
+                    printWriter.println("\t\tbean." + se.getSimpleName() + "();");
+                }
+            }
+        }
+        printWriter.println("\t}");
+        printWriter.println();
+        printWriter.println("\tpublic void postConstruct(ApplicationContext applicationContext) throws Throwable {");
+        for (Element se : element.getEnclosedElements()) {
+            for (AnnotationMirror mirror : se.getAnnotationMirrors()) {
+                if (PostConstruct.class.getName().equals(mirror.getAnnotationType().toString())) {
+                    printWriter.println("\t\tbean." + se.getSimpleName() + "();");
+                }
+            }
+        }
+        printWriter.println("\t}");
+        printWriter.println("}");
+        writer.close();
+
+        //生成service配置
+        services.add(element.getEnclosingElement().toString() + "." + loaderName);
     }
 
-    private <T extends Annotation> void generateBeanOrController(Element element, T annotation, PrintWriter printWriter) {
+    private <T extends Annotation> void generateBeanOrController(Element element, PrintWriter printWriter) {
         printWriter.println("\t\tbean = new " + element.getSimpleName() + "(); ");
         //初始化通过方法实例化的bean
         for (Element se : element.getEnclosedElements()) {
@@ -673,7 +670,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         }
     }
 
-    private <T extends Annotation> void addInterceptor(Element element, PrintWriter printWriter) throws IOException {
+    private <T extends Annotation> void addInterceptor(Element element, PrintWriter printWriter) {
         for (Element se : element.getEnclosedElements()) {
             for (AnnotationMirror mirror : se.getAnnotationMirrors()) {
                 if (!InterceptorMapping.class.getName().equals(mirror.getAnnotationType().toString())) {
@@ -694,7 +691,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         }
     }
 
-    private <T extends Annotation> void createMapperBean(Element element, PrintWriter printWriter) throws IOException {
+    private <T extends Annotation> void createMapperBean(Element element, PrintWriter printWriter) {
         printWriter.println("\t\tbean = new " + element.getSimpleName() + "() { ");
         for (Element se : element.getEnclosedElements()) {
             String returnType = ((ExecutableElement) se).getReturnType().toString();

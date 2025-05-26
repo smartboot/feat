@@ -531,7 +531,7 @@ public class ServerOptions {
         return port;
     }
 
-    public ServerOptions setPort(int port) {
+    public ServerOptions port(int port) {
         this.port = port;
         return this;
     }
@@ -540,7 +540,7 @@ public class ServerOptions {
         return host;
     }
 
-    public ServerOptions setHost(String host) {
+    public ServerOptions host(String host) {
         this.host = host;
         return this;
     }
