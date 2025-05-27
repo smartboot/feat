@@ -8,9 +8,8 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.cloud.serializer;
+package tech.smartboot.feat.cloud.serializer.value;
 
-import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.JSONPath;
 import org.yaml.snakeyaml.Yaml;
@@ -35,8 +34,10 @@ import java.io.PrintWriter;
 import java.io.Writer;
 import java.lang.reflect.Field;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -46,8 +47,18 @@ import java.util.Set;
 public class FeatYamlValueSerializer {
     private final String config;
     private boolean exception = false;
-    private ProcessingEnvironment processingEnv;
+    private final ProcessingEnvironment processingEnv;
     private final Set<String> availableTypes = new HashSet<>(Arrays.asList(String.class.getName(), int.class.getName()));
+    private final Map<String, AbstractSerializer> serializers = new HashMap<>();
+
+    {
+        serializers.put(int.class.getName(), new IntegerSerializer());
+        serializers.put(String.class.getName(), new StringValueSerializer());
+        serializers.put("int[]", new IntegerArraySerializer());
+        serializers.put("java.util.List<java.lang.Integer>", new IntegerListSerializer());
+        serializers.put("java.lang.String[]", new StringArraySerializer());
+        serializers.put("java.util.List<java.lang.String>", new StringListSerializer());
+    }
 
     public FeatYamlValueSerializer(ProcessingEnvironment processingEnv) {
         this.processingEnv = processingEnv;
@@ -148,6 +159,7 @@ public class FeatYamlValueSerializer {
     public String generateValueSetter(Element element) {
         StringBuilder stringBuilder = new StringBuilder();
         element.getEnclosedElements().stream().filter(e -> e.getAnnotation(Value.class) != null).forEach(field -> {
+
             Value value = field.getAnnotation(Value.class);
             String paramName = value.value();
             String defaultValue = null;
@@ -161,18 +173,21 @@ public class FeatYamlValueSerializer {
                     paramName = paramName.substring(0, index);
                 }
             } else {
-
-                throw new FeatException("the value of Value on " + element.getSimpleName() + "@" + field.getSimpleName() + " is not allowed to be empty.");
+                throw new FeatException("the value of Value on " + field.getEnclosingElement().getSimpleName() + "@" + field.getSimpleName() + " is not allowed to be empty.");
             }
+            Object paramValue = JSONPath.eval(config, "$." + paramName);
+            if (defaultValue == null && paramValue == null) {
+                return;
+            }
+            paramValue = paramValue == null ? defaultValue : paramValue;
 
-
-            String name = field.getSimpleName().toString();
             String fieldType = field.asType().toString();
-            name = name.substring(0, 1).toUpperCase() + name.substring(1);
+            String name = field.getSimpleName().toString();
 
             //判断是否存在setter方法
             boolean hasSetter = false;
-            for (Element se : element.getEnclosedElements()) {
+            name = name.substring(0, 1).toUpperCase() + name.substring(1);
+            for (Element se : field.getEnclosingElement().getEnclosedElements()) {
                 if (!("set" + name).equals(se.getSimpleName().toString())) {
                     continue;
                 }
@@ -181,112 +196,35 @@ public class FeatYamlValueSerializer {
                     continue;
                 }
                 VariableElement param = list.get(0);
-                if (!param.asType().toString().equals(fieldType)) {
+                if (!param.asType().toString().equals(field.asType().toString())) {
                     continue;
                 }
                 hasSetter = true;
             }
-            Object paramValue = JSONPath.eval(config, "$." + paramName);
-            if (defaultValue == null && paramValue == null) {
+            if (!hasSetter) {
+                System.err.println("compiler err: no setter method for field[ " + field.getSimpleName() + " ] in class[ " + field.getEnclosingElement() + " ]");
+                exception = true;
                 return;
             }
-            String stringValue = null;
-            if (hasSetter) {
-                if (String.class.getName().equals(fieldType)) {
-                    stringValue = paramValue == null ? defaultValue : paramValue.toString();
-                    stringValue = "\"" + stringValue.replace("\\", "\\\\").replace("\n", "\\n").replace("\"", "\\\"") + "\"";
-                } else if (int.class.getName().equals(fieldType)) {
-                    try {
-                        stringValue = paramValue == null ? defaultValue : paramValue.toString();
-                        stringValue = String.valueOf(Integer.parseInt(stringValue));
-                    } catch (NumberFormatException e) {
-                        System.err.println("compiler err: invalid value [ " + stringValue + " ] for field[ " + field.getSimpleName() + " ] in class[ " + element + " ]");
-                        exception = true;
-                    }
-                } else if ("int[]".equals(fieldType)) {
-                    System.out.println(paramValue);
-                    JSONArray array = (JSONArray) paramValue;
-                    stringValue = "new int[]{";
-                    for (int i = 0; i < array.size(); i++) {
-                        if (i != 0) {
-                            stringValue += ", ";
-                        }
-                        Object o = array.get(i);
-                        if (!(o instanceof Integer)) {
-                            System.err.println("compiler err: invalid value [ " + o + " ] for field[ " + field.getSimpleName() + " ] in class[ " + element + " ]");
-                            exception = true;
-                            break;
-                        }
-                        stringValue += o.toString();
-                    }
-                    stringValue += "}";
-                } else if ("java.util.List<java.lang.Integer>".equals(fieldType)) {
-                    JSONArray array = (JSONArray) paramValue;
-                    stringValue = "java.util.Arrays.asList(";
-                    for (int i = 0; i < array.size(); i++) {
-                        if (i != 0) {
-                            stringValue += ", ";
-                        }
-                        Object o = array.get(i);
-                        if (!(o instanceof Integer)) {
-                            System.err.println("compiler err: invalid value [ " + o + " ] for field[ " + field.getSimpleName() + " ] in class[ " + element + " ]");
-                            exception = true;
-                            break;
-                        }
-                        stringValue += o.toString();
-                    }
-                    stringValue += ")";
-                } else if ("java.lang.String[]".equals(fieldType)) {
-                    JSONArray array = (JSONArray) paramValue;
-                    stringValue = "new String[]{";
-                    for (int i = 0; i < array.size(); i++) {
-                        if (i != 0) {
-                            stringValue += ", ";
-                        }
-                        Object o = array.get(i);
-                        if (!(o instanceof String)) {
-                            System.err.println("compiler err: invalid value [ " + o + " ] for field[ " + field.getSimpleName() + " ] in class[ " + element + " ]");
-                            exception = true;
-                            break;
-                        }
-                        stringValue += toString(o.toString());
-                    }
-                    stringValue += "}";
-                } else if ("java.util.List<java.lang.String>".equals(fieldType)) {
-                    JSONArray array = (JSONArray) paramValue;
-                    stringValue = "java.util.Arrays.asList(";
-                    for (int i = 0; i < array.size(); i++) {
-                        if (i != 0) {
-                            stringValue += ", ";
-                        }
-                        Object o = array.get(i);
-                        if (!(o instanceof String)) {
-                            System.err.println("compiler err: invalid value [ " + o + " ] for field[ " + field.getSimpleName() + " ] in class[ " + element + " ]");
-                            exception = true;
-                            break;
-                        }
-                        stringValue += toString(o.toString());
-                    }
-                    stringValue += ")";
-                } else {
-                    System.err.println("compiler err: unsupported type [ " + fieldType + " ] for field[ " + field.getSimpleName() + " ] in class[ " + element + " ]");
+
+            AbstractSerializer serializer = serializers.get(fieldType);
+            if (serializer != null) {
+                try {
+                    appendSetter(stringBuilder, name, serializer.serialize(field, paramValue));
+                } catch (Throwable e) {
+                    System.err.println(e.getMessage());
                     exception = true;
                 }
-                if (exception) {
-                    return;
-                }
-                stringBuilder.append("\t\tbean.set").append(name).append("(").append(stringValue).append(");\n");
             } else {
-                System.err.println("compiler err: no setter method found for field[ " + field.getSimpleName() + " ] in class[ " + element + " ]");
+                System.err.println("compiler err: unsupported type [ " + fieldType + " ] for field[ " + field.getSimpleName() + " ] in class[ " + field.getEnclosingElement() + " ]");
                 exception = true;
-//                stringBuilder.append("\t\treflectAutowired(bean, \"").append(field.getSimpleName().toString()).append("\", applicationContext);\n");
             }
         });
         return stringBuilder.toString();
     }
 
-    private String toString(String str) {
-        return "\"" + str.replace("\\", "\\\\").replace("\n", "\\n").replace("\"", "\\\"") + "\"";
+    private void appendSetter(StringBuilder stringBuilder, String name, String stringValue) {
+        stringBuilder.append("\t\tbean.set").append(name).append("(").append(stringValue).append(");\n");
     }
 
     public boolean isException() {
