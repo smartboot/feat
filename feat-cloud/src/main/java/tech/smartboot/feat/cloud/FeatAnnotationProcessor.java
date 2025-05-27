@@ -21,8 +21,8 @@ import tech.smartboot.feat.cloud.annotation.PathParam;
 import tech.smartboot.feat.cloud.annotation.PostConstruct;
 import tech.smartboot.feat.cloud.annotation.PreDestroy;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
-import tech.smartboot.feat.cloud.serializer.value.FeatYamlValueSerializer;
 import tech.smartboot.feat.cloud.serializer.JsonSerializer;
+import tech.smartboot.feat.cloud.serializer.value.FeatYamlValueSerializer;
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.HttpRequest;
@@ -100,7 +100,9 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         }
         System.out.println("processor init: " + this);
         yamlValueSerializer = new FeatYamlValueSerializer(processingEnv);
-        services.add(yamlValueSerializer.getServiceName());
+        if (yamlValueSerializer.isException()) {
+            services.add(FeatYamlValueSerializer.SERVICE_NAME);
+        }
     }
 
     @Override

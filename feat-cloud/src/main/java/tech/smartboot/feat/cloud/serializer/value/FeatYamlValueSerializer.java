@@ -17,6 +17,8 @@ import tech.smartboot.feat.cloud.AbstractServiceLoader;
 import tech.smartboot.feat.cloud.ApplicationContext;
 import tech.smartboot.feat.cloud.annotation.Value;
 import tech.smartboot.feat.core.common.exception.FeatException;
+import tech.smartboot.feat.core.common.logging.Logger;
+import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.ServerOptions;
 import tech.smartboot.feat.router.Router;
@@ -45,6 +47,8 @@ import java.util.Set;
  * @version v1.0 5/27/25
  */
 public class FeatYamlValueSerializer {
+    private static final Logger logger = LoggerFactory.getLogger(FeatYamlValueSerializer.class);
+    public static final String SERVICE_NAME = "tech.smartboot.feat.sandao.FeatCloudOptionsBeanAptLoader";
     private final String config;
     private boolean exception = false;
     private final ProcessingEnvironment processingEnv;
@@ -83,7 +87,7 @@ public class FeatYamlValueSerializer {
         try {
             createServerOptionsBean();
         } catch (Throwable e) {
-            System.err.println("FeatYamlValueSerializer create server options bean failed");
+            logger.error("FeatYamlValueSerializer create server options bean failed", e);
             exception = true;
         }
 
@@ -144,9 +148,6 @@ public class FeatYamlValueSerializer {
         writer.close();
     }
 
-    public String getServiceName() {
-        return "tech.smartboot.feat.sandao.FeatCloudOptionsBeanAptLoader";
-    }
 
     private FileObject loadFeatYaml(String filename) {
         try {

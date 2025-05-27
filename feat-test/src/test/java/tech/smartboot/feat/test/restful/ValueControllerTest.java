@@ -52,9 +52,20 @@ public class ValueControllerTest extends BastTest {
     private List<String> array2List;
 
 
-    @RequestMapping("/param1")
-    public int param1() {
-        return param1;
+    @RequestMapping("/test")
+    public String param1() {
+        Assert.assertEquals(100, param1);
+        Assert.assertArrayEquals(new int[]{100, 200, 300}, param2);
+        Assert.assertArrayEquals(new int[]{1, 2, 3}, array);
+        for (int i = 0; i < array.length; i++) {
+            Assert.assertEquals(array[i] + "", arrayList.get(i) + "");
+        }
+        Assert.assertArrayEquals(new String[]{"a", "b", "c"}, array2);
+        for (int i = 0; i < array2.length; i++) {
+            Assert.assertEquals(array2[i], array2List.get(i));
+        }
+
+        return "ok";
     }
 
     @Before
@@ -69,7 +80,7 @@ public class ValueControllerTest extends BastTest {
     @Test
     public void testParam1() throws Exception {
         HttpClient httpClient = getHttpClient();
-        Assert.assertEquals(httpClient.post("/values/param1").submit().get().body(), "100");
+        Assert.assertEquals(httpClient.post("/values/test").submit().get().body(), "ok");
     }
 
     public void setBootstrap(HttpServer bootstrap) {
