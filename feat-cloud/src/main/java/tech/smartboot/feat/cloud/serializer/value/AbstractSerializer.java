@@ -16,7 +16,7 @@ import javax.lang.model.element.Element;
  * @author 三刀
  * @version v1.0 5/27/25
  */
-public abstract class AbstractSerializer {
+abstract class AbstractSerializer {
     abstract String serialize(Element field, Object paramValue) throws Exception;
 
 

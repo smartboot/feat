@@ -210,7 +210,7 @@ public class FeatYamlValueSerializer {
             AbstractSerializer serializer = serializers.get(fieldType);
             if (serializer != null) {
                 try {
-                    appendSetter(stringBuilder, name, serializer.serialize(field, paramValue));
+                    stringBuilder.append("\t\tbean.set").append(name).append("(").append(serializer.serialize(field, paramValue)).append(");\n");
                 } catch (Throwable e) {
                     System.err.println(e.getMessage());
                     exception = true;
@@ -221,10 +221,6 @@ public class FeatYamlValueSerializer {
             }
         });
         return stringBuilder.toString();
-    }
-
-    private void appendSetter(StringBuilder stringBuilder, String name, String stringValue) {
-        stringBuilder.append("\t\tbean.set").append(name).append("(").append(stringValue).append(");\n");
     }
 
     public boolean isException() {
