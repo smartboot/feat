@@ -100,7 +100,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         }
         System.out.println("processor init: " + this);
         yamlValueSerializer = new FeatYamlValueSerializer(processingEnv);
-        if (yamlValueSerializer.isException()) {
+        if (!yamlValueSerializer.isException()) {
             services.add(FeatYamlValueSerializer.SERVICE_NAME);
         }
     }
