@@ -98,7 +98,7 @@ final class RouterHandlerImpl implements HttpHandler {
         return new Context(router, request, pathParams);
     }
 
-    public final void handle(HttpRequest request) {
+    public void handle(HttpRequest request) {
         throw new UnsupportedOperationException();
     }
 
