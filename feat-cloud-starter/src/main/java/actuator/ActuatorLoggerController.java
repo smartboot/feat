@@ -13,6 +13,7 @@ package actuator;
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.cloud.RestResult;
 import tech.smartboot.feat.cloud.annotation.Controller;
+import tech.smartboot.feat.cloud.annotation.Param;
 import tech.smartboot.feat.cloud.annotation.PathParam;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.cloud.annotation.RequestMethod;
@@ -42,11 +43,32 @@ public class ActuatorLoggerController {
      *
      * @return 返回包含所有日志级别配置的JSON对象，key为logger名称，value为对应的日志级别
      */
-    @RequestMapping("/level")
+    @RequestMapping(value = "/level", method = RequestMethod.GET)
     public RestResult<JSONObject> getLogger() {
         JSONObject jsonObject = new JSONObject();
         System.getProperties().stringPropertyNames().stream().filter(key -> key.startsWith(LoggerFactory.SYSTEM_PROPERTY_LOG_LEVEL)).forEach(key -> jsonObject.put(key, reverseLevel(System.getProperty(key))));
         return RestResult.ok(jsonObject);
+    }
+
+    /**
+     * 设置全局默认日志级别
+     * <p>
+     * 设置系统的全局默认日志级别，并清除所有特定logger的自定义日志级别配置。
+     * 这个操作会影响到所有没有特定配置的logger。
+     * </p>
+     *
+     * @param level 要设置的全局日志级别，如：DEBUG、INFO、WARN、ERROR等
+     * @return 设置成功返回true，如果日志级别参数为空则返回失败结果
+     */
+    @RequestMapping(value = "/level", method = RequestMethod.POST)
+    public RestResult<Boolean> setLogger(@Param("level") String level) {
+        if (StringUtils.isBlank(level)) {
+            return RestResult.fail("level is empty");
+        }
+        level = convertLevel(level);
+        System.setProperty(LoggerFactory.SYSTEM_PROPERTY_LOG_LEVEL, level);
+        System.getProperties().stringPropertyNames().stream().filter(key -> key.startsWith(LoggerFactory.SYSTEM_PROPERTY_LOG_LEVEL + ".")).forEach(System::clearProperty);
+        return RestResult.ok(true);
     }
 
     /**
@@ -77,8 +99,8 @@ public class ActuatorLoggerController {
      * @param level      要设置的日志级别，如：DEBUG、INFO、WARN、ERROR等
      * @return 设置成功返回true，如果参数为空则返回失败结果
      */
-    @RequestMapping(value = "/level/set/:loggerName/:level")
-    public RestResult<Boolean> setLogger(@PathParam("loggerName") String loggerName, @PathParam("level") String level) {
+    @RequestMapping(value = "/level/:loggerName", method = RequestMethod.POST)
+    public RestResult<Boolean> setLogger(@PathParam("loggerName") String loggerName, @Param("level") String level) {
         if (StringUtils.isBlank(loggerName)) {
             return RestResult.fail("loggerName is empty");
         }
@@ -119,27 +141,6 @@ public class ActuatorLoggerController {
             level = "off";
         }
         return level;
-    }
-
-    /**
-     * 设置全局默认日志级别
-     * <p>
-     * 设置系统的全局默认日志级别，并清除所有特定logger的自定义日志级别配置。
-     * 这个操作会影响到所有没有特定配置的logger。
-     * </p>
-     *
-     * @param level 要设置的全局日志级别，如：DEBUG、INFO、WARN、ERROR等
-     * @return 设置成功返回true，如果日志级别参数为空则返回失败结果
-     */
-    @RequestMapping(value = "/level/set/:level")
-    public RestResult<Boolean> setLogger(@PathParam("level") String level) {
-        if (StringUtils.isBlank(level)) {
-            return RestResult.fail("level is empty");
-        }
-        level = convertLevel(level);
-        System.setProperty(LoggerFactory.SYSTEM_PROPERTY_LOG_LEVEL, level);
-        System.getProperties().stringPropertyNames().stream().filter(key -> key.startsWith(LoggerFactory.SYSTEM_PROPERTY_LOG_LEVEL + ".")).forEach(System::clearProperty);
-        return RestResult.ok(true);
     }
 
 

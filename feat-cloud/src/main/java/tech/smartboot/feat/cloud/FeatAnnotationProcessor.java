@@ -329,7 +329,6 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                     requestURL = basePath + "/" + requestURL;
                 }
 
-                System.out.println("aaaaa: " + requestMapping.method());
                 if (StringUtils.isBlank(requestURL)) {
                     throw new FeatException("the value of RequestMapping on " + element.getSimpleName() + "@" + se.getSimpleName() + " is not allowed to be empty.");
                 }
