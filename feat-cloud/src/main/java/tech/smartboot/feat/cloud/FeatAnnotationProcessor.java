@@ -21,6 +21,7 @@ import tech.smartboot.feat.cloud.annotation.PathParam;
 import tech.smartboot.feat.cloud.annotation.PostConstruct;
 import tech.smartboot.feat.cloud.annotation.PreDestroy;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
+import tech.smartboot.feat.cloud.annotation.RequestMethod;
 import tech.smartboot.feat.cloud.serializer.JsonSerializer;
 import tech.smartboot.feat.cloud.serializer.value.FeatYamlValueSerializer;
 import tech.smartboot.feat.core.common.exception.FeatException;
@@ -317,171 +318,172 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             basePath = "/" + basePath;
         }
         for (Element se : element.getEnclosedElements()) {
-            for (AnnotationMirror mirror : se.getAnnotationMirrors()) {
-                if (RequestMapping.class.getName().equals(mirror.getAnnotationType().toString())) {
-                    String requestURL = basePath;
+            RequestMapping requestMapping = se.getAnnotation(RequestMapping.class);
+            if (requestMapping != null) {
+                String requestURL = requestMapping.value();
+                if (basePath.endsWith("/") && requestURL.startsWith("/")) {
+                    requestURL = basePath + requestURL.substring(1);
+                } else if (basePath.endsWith("/") && !requestURL.startsWith("/") || !basePath.endsWith("/") && requestURL.startsWith("/") || requestURL.isEmpty()) {
+                    requestURL = basePath + requestURL;
+                } else {
+                    requestURL = basePath + "/" + requestURL;
+                }
 
-                    for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry : mirror.getElementValues().entrySet()) {
-                        ExecutableElement k = entry.getKey();
-                        AnnotationValue v = entry.getValue();
-                        if ("value".equals(k.getSimpleName().toString())) {
-                            requestURL = v.getValue().toString();
-                            if (basePath.endsWith("/") && requestURL.startsWith("/")) {
-                                requestURL = basePath + requestURL.substring(1);
-                            } else if (basePath.endsWith("/") && !requestURL.startsWith("/") || !basePath.endsWith("/") && requestURL.startsWith("/") || requestURL.isEmpty()) {
-                                requestURL = basePath + requestURL;
-                            } else {
-                                requestURL = basePath + "/" + requestURL;
-                            }
-                        } else if ("method".equals(k.getSimpleName().toString())) {
-//                            System.out.println(v.getValue());
-//                                    printWriter.println(v.getValue().toString());
-                        }
-                    }
-                    if (StringUtils.isBlank(requestURL)) {
-                        throw new FeatException("the value of RequestMapping on " + element.getSimpleName() + "@" + se.getSimpleName() + " is not allowed to be empty.");
-                    }
+                System.out.println("aaaaa: " + requestMapping.method());
+                if (StringUtils.isBlank(requestURL)) {
+                    throw new FeatException("the value of RequestMapping on " + element.getSimpleName() + "@" + se.getSimpleName() + " is not allowed to be empty.");
+                }
 
-                    TypeMirror returnType = ((ExecutableElement) se).getReturnType();
-                    int returnTypeInt = -1;
-                    if (returnType.toString().equals("void")) {
-                        returnTypeInt = RETURN_TYPE_VOID;
-                    } else if (String.class.getName().equals(returnType.toString())) {
-                        returnTypeInt = RETURN_TYPE_STRING;
-                    } else if ("byte[]".equals(returnType.toString())) {
-                        returnTypeInt = RETURN_TYPE_BYTE_ARRAY;
+                StringBuilder routeMethods = new StringBuilder(", new String[]{");
+                for (RequestMethod httpMethod : requestMapping.method()) {
+                    routeMethods.append("\"").append(httpMethod.name()).append("\", ");
+                }
+                if (requestMapping.method().length > 0) {
+                    routeMethods.setCharAt(routeMethods.length() - 2, '}');
+                    routeMethods.setLength(routeMethods.length() - 1);
+                } else {
+                    routeMethods.setLength(0);
+                }
+
+                TypeMirror returnType = ((ExecutableElement) se).getReturnType();
+                int returnTypeInt = -1;
+                if (returnType.toString().equals("void")) {
+                    returnTypeInt = RETURN_TYPE_VOID;
+                } else if (String.class.getName().equals(returnType.toString())) {
+                    returnTypeInt = RETURN_TYPE_STRING;
+                } else if ("byte[]".equals(returnType.toString())) {
+                    returnTypeInt = RETURN_TYPE_BYTE_ARRAY;
+                } else {
+                    returnTypeInt = RETURN_TYPE_OBJECT;
+                }
+
+                printWriter.println("\t\tSystem.out.println(\" \\u001B[32m|->\\u001B[0m " + requestURL + " ==> " + element.getSimpleName() + "@" + se.getSimpleName() + "\");");
+                boolean async = returnTypeInt == RETURN_TYPE_OBJECT && AsyncResponse.class.getName().equals(returnType.toString());
+                if (async) {
+                    printWriter.println("\t\trouter.route(\"" + requestURL + "\"" + routeMethods + ", new " + RouterHandler.class.getName() + "()  {");
+                    printWriter.println("\t\t\t@Override");
+                    printWriter.println("\t\t\tpublic void handle(" + Context.class.getName() + " ctx) throws Throwable {");
+                    printWriter.println();
+                    printWriter.println("\t\t\t}");
+                    printWriter.println();
+                    printWriter.println("\t\t\t@Override");
+                    printWriter.println("\t\t\tpublic void handle(" + Context.class.getName() + " ctx, " + CompletableFuture.class.getName() + "<Void> completableFuture) throws Throwable {");
+                } else {
+                    printWriter.println("\t\trouter.route(\"" + requestURL + "\"" + routeMethods + ", ctx -> {");
+                }
+
+
+                boolean first = true;
+                StringBuilder newParams = new StringBuilder();
+                StringBuilder params = new StringBuilder();
+                int i = 0;
+                for (VariableElement param : ((ExecutableElement) se).getParameters()) {
+                    if (first) {
+                        first = false;
                     } else {
-                        returnTypeInt = RETURN_TYPE_OBJECT;
+                        params.append(", ");
                     }
-
-                    printWriter.println("\t\tSystem.out.println(\" \\u001B[32m|->\\u001B[0m " + requestURL + " ==> " + element.getSimpleName() + "@" + se.getSimpleName() + "\");");
-                    boolean async = returnTypeInt == RETURN_TYPE_OBJECT && AsyncResponse.class.getName().equals(returnType.toString());
-                    if (async) {
-                        printWriter.println("\t\trouter.route(\"" + requestURL + "\", new " + RouterHandler.class.getName() + "()  {");
-                        printWriter.println("\t\t\t@Override");
-                        printWriter.println("\t\t\tpublic void handle(" + Context.class.getName() + " ctx) throws Throwable {");
-                        printWriter.println();
-                        printWriter.println("\t\t\t}");
-                        printWriter.println();
-                        printWriter.println("\t\t\t@Override");
-                        printWriter.println("\t\t\tpublic void handle(" + Context.class.getName() + " ctx, " + CompletableFuture.class.getName() + "<Void> completableFuture) throws Throwable {");
+                    if (param.asType().toString().equals(HttpRequest.class.getName())) {
+                        params.append("ctx.Request");
+                    } else if (param.asType().toString().equals(HttpResponse.class.getName())) {
+                        params.append("ctx.Response");
+                    } else if (param.asType().toString().equals(Session.class.getName())) {
+                        params.append("ctx.session()");
+                    } else if (param.getAnnotation(PathParam.class) != null) {
+                        PathParam pathParam = param.getAnnotation(PathParam.class);
+                        params.append("ctx.pathParam(\"" + pathParam.value() + "\")");
                     } else {
-                        printWriter.println("\t\trouter.route(\"" + requestURL + "\", ctx -> {");
-                    }
-
-
-                    boolean first = true;
-                    StringBuilder newParams = new StringBuilder();
-                    StringBuilder params = new StringBuilder();
-                    int i = 0;
-                    for (VariableElement param : ((ExecutableElement) se).getParameters()) {
-                        if (first) {
-                            first = false;
-                        } else {
-                            params.append(",");
+                        if (i == 0) {
+                            newParams.append("\t\t\tJSONObject jsonObject = getParams(ctx.Request);\n");
                         }
-                        if (param.asType().toString().equals(HttpRequest.class.getName())) {
-                            params.append("ctx.Request");
-                        } else if (param.asType().toString().equals(HttpResponse.class.getName())) {
-                            params.append("ctx.Response");
-                        } else if (param.asType().toString().equals(Session.class.getName())) {
-                            params.append("ctx.session()");
-                        } else if (param.getAnnotation(PathParam.class) != null) {
-                            PathParam pathParam = param.getAnnotation(PathParam.class);
-                            params.append("ctx.pathParam(\"" + pathParam.value() + "\")");
-                        } else {
-                            if (i == 0) {
-                                newParams.append("\t\t\tJSONObject jsonObject = getParams(ctx.Request);\n");
-                            }
-                            Param paramAnnotation = param.getAnnotation(Param.class);
-                            if (paramAnnotation == null && param.asType().toString().startsWith("java")) {
-                                throw new FeatException("the param of " + element.getSimpleName() + "@" + se.getSimpleName() + " is not allowed to be empty.");
-                            }
-                            newParams.append("\t\t\t");
-                            if (paramAnnotation != null) {
-                                if (param.asType().toString().startsWith(List.class.getName())) {
-                                    newParams.append(param.asType().toString()).append(" param").append(i).append(" = jsonObject.getObject(\"").append(paramAnnotation.value()).append("\", java.util" + ".List.class);");
-                                } else {
-                                    newParams.append(param.asType().toString()).append(" param").append(i).append(" = jsonObject.getObject(\"").append(paramAnnotation.value()).append("\", ").append(param.asType().toString()).append(".class);");
-                                }
+                        Param paramAnnotation = param.getAnnotation(Param.class);
+                        if (paramAnnotation == null && param.asType().toString().startsWith("java")) {
+                            throw new FeatException("the param of " + element.getSimpleName() + "@" + se.getSimpleName() + " is not allowed to be empty.");
+                        }
+                        newParams.append("\t\t\t");
+                        if (paramAnnotation != null) {
+                            if (param.asType().toString().startsWith(List.class.getName())) {
+                                newParams.append(param.asType().toString()).append(" param").append(i).append(" = jsonObject.getObject(\"").append(paramAnnotation.value()).append("\", java.util" + ".List.class);");
                             } else {
-                                newParams.append(param.asType().toString()).append(" param").append(i).append(" = jsonObject.to(").append(param.asType().toString()).append(".class);");
+                                newParams.append(param.asType().toString()).append(" param").append(i).append(" = jsonObject.getObject(\"").append(paramAnnotation.value()).append("\", ").append(param.asType().toString()).append(".class);");
                             }
+                        } else {
+                            newParams.append(param.asType().toString()).append(" param").append(i).append(" = jsonObject.to(").append(param.asType().toString()).append(".class);");
+                        }
 //                                    newParams.append(param.asType().toString()).append(" param").append(i).append("=jsonObject.getObject(").append(param.asType().toString()).append(".class);");
-                            params.append("param").append(i);
-                            i++;
-                        }
+                        params.append("param").append(i);
+                        i++;
+                    }
 //                                printWriter.println("req.getParam(\"" + param.getSimpleName() + "\")");
-                    }
-                    if (newParams.length() > 0) {
-                        printWriter.println(newParams);
-                    }
+                }
+                if (newParams.length() > 0) {
+                    printWriter.println(newParams);
+                }
 
-                    switch (returnTypeInt) {
-                        case RETURN_TYPE_VOID:
-                            printWriter.print("\t\t\tbean." + se.getSimpleName() + "(");
-                            break;
-                        case RETURN_TYPE_STRING:
-                            printWriter.print("\t\t\tString rst = bean." + se.getSimpleName() + "(");
-                            break;
-                        case RETURN_TYPE_BYTE_ARRAY:
-                            printWriter.print("\t\t\tbyte[] bytes = bean." + se.getSimpleName() + "(");
-                            break;
-                        case RETURN_TYPE_OBJECT:
-                            if (async) {
-                                printWriter.print("\t");
-                            }
-                            printWriter.print("\t\t\t" + returnType + " rst = bean." + se.getSimpleName() + "(");
-                            break;
-                        default:
-                            throw new RuntimeException("不支持的返回类型");
-                    }
-                    printWriter.append(params).println(");");
+                switch (returnTypeInt) {
+                    case RETURN_TYPE_VOID:
+                        printWriter.print("\t\t\tbean." + se.getSimpleName() + "(");
+                        break;
+                    case RETURN_TYPE_STRING:
+                        printWriter.print("\t\t\tString rst = bean." + se.getSimpleName() + "(");
+                        break;
+                    case RETURN_TYPE_BYTE_ARRAY:
+                        printWriter.print("\t\t\tbyte[] bytes = bean." + se.getSimpleName() + "(");
+                        break;
+                    case RETURN_TYPE_OBJECT:
+                        if (async) {
+                            printWriter.print("\t");
+                        }
+                        printWriter.print("\t\t\t" + returnType + " rst = bean." + se.getSimpleName() + "(");
+                        break;
+                    default:
+                        throw new RuntimeException("不支持的返回类型");
+                }
+                printWriter.append(params).println(");");
 
-                    switch (returnTypeInt) {
-                        case RETURN_TYPE_VOID:
-                            break;
-                        case RETURN_TYPE_STRING:
-                            printWriter.println("\t\t\tbyte[] bytes = rst.getBytes(\"UTF-8\"); ");
-                            printWriter.println("\t\t\tctx.Response.setContentLength(bytes.length);");
-                            printWriter.println("\t\t\tctx.Response.write(bytes);");
-                            break;
-                        case RETURN_TYPE_BYTE_ARRAY:
-                            printWriter.println("\t\t\tctx.Response.setContentLength(bytes.length);");
-                            printWriter.println("\t\t\tctx.Response.write(bytes);");
-                            break;
-                        case RETURN_TYPE_OBJECT:
-                            if (AsyncResponse.class.getName().equals(returnType.toString())) {
-                                printWriter.println("\t\t\t\tresponse(rst, ctx, completableFuture);");
-                                printWriter.println("\t\t\t}");
-                            } else if (int.class.getName().equals(returnType.toString())) {
-                                printWriter.println("\t\t\twriteInt(ctx.Response.getOutputStream(), rst);");
-                            } else {
-                                printWriter.println("\t\t\tjava.io.ByteArrayOutputStream os = getOutputStream();");
-                                JsonSerializer jsonSerializer = new JsonSerializer(printWriter);
-                                jsonSerializer.serialize(returnType, "rst", 0, null);
-                                bytesCache.putAll(jsonSerializer.getByteCache());
-                                printWriter.println("\t\t\tctx.Response.setContentType(\"application/json\");");
-                                printWriter.println("\t\t\tctx.Response.setContentLength(os.size());");
-                                printWriter.println("\t\t\tos.writeTo(ctx.Response.getOutputStream());");
-                            }
+                switch (returnTypeInt) {
+                    case RETURN_TYPE_VOID:
+                        break;
+                    case RETURN_TYPE_STRING:
+                        printWriter.println("\t\t\tbyte[] bytes = rst.getBytes(\"UTF-8\"); ");
+                        printWriter.println("\t\t\tctx.Response.setContentLength(bytes.length);");
+                        printWriter.println("\t\t\tctx.Response.write(bytes);");
+                        break;
+                    case RETURN_TYPE_BYTE_ARRAY:
+                        printWriter.println("\t\t\tctx.Response.setContentLength(bytes.length);");
+                        printWriter.println("\t\t\tctx.Response.write(bytes);");
+                        break;
+                    case RETURN_TYPE_OBJECT:
+                        if (AsyncResponse.class.getName().equals(returnType.toString())) {
+                            printWriter.println("\t\t\t\tresponse(rst, ctx, completableFuture);");
+                            printWriter.println("\t\t\t}");
+                        } else if (int.class.getName().equals(returnType.toString())) {
+                            printWriter.println("\t\t\twriteInt(ctx.Response.getOutputStream(), rst);");
+                        } else {
+                            printWriter.println("\t\t\tjava.io.ByteArrayOutputStream os = getOutputStream();");
+                            JsonSerializer jsonSerializer = new JsonSerializer(printWriter);
+                            jsonSerializer.serialize(returnType, "rst", 0, null);
+                            bytesCache.putAll(jsonSerializer.getByteCache());
+                            printWriter.println("\t\t\tctx.Response.setContentType(\"application/json\");");
+                            printWriter.println("\t\t\tctx.Response.setContentLength(os.size());");
+                            printWriter.println("\t\t\tos.writeTo(ctx.Response.getOutputStream());");
+                        }
 
 //                            System.out.println("typeMirror:" + stringBuilder);
 //                            printWriter.println("        byte[] bytes=JSON.toJSONBytes(rst); ");
 //                            printWriter.println("        ctx.Response.setContentLength(bytes.length);");
 //                            printWriter.println("        ctx.Response.write(bytes);");
-                            break;
+                        break;
 //                        case RETURN_TYPE_OBJECT:
 //                            writeJsonObject(writer,returnType);
 //                            printWriter.println("        byte[] bytes=JSON.toJSONBytes(rst); ");
 //                            printWriter.println("        ctx.Response.setContentLength(bytes.length);");
 //                            printWriter.println("        ctx.Response.write(bytes);");
 //                            break;
-                        default:
-                            throw new RuntimeException("不支持的返回类型");
-                    }
-                    printWriter.println("\t\t});");
+                    default:
+                        throw new RuntimeException("不支持的返回类型");
                 }
+                printWriter.println("\t\t});");
             }
         }
     }
