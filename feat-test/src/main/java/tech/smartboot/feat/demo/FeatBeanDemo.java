@@ -30,7 +30,7 @@ public class FeatBeanDemo {
     }
 
     public static void main(String[] args) {
-        FeatCloud.cloudServer(opts -> opts.addExternalBean("hello", "你好~")).listen();
+        FeatCloud.cloudServer(opts -> opts.registerBean("hello", "你好~").debug(false)).listen();
     }
 
 }

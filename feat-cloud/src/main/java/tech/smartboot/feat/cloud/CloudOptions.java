@@ -37,7 +37,7 @@ public class CloudOptions extends ServerOptions {
         return externalBeans;
     }
 
-    public CloudOptions addExternalBean(String key, Object value) {
+    public CloudOptions registerBean(String key, Object value) {
         if (externalBeans.containsKey(key)) {
             throw new FeatException("bean " + key + " already exists");
         }

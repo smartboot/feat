@@ -49,7 +49,7 @@ import java.util.Set;
 public class FeatYamlValueSerializer {
     private static final Logger logger = LoggerFactory.getLogger(FeatYamlValueSerializer.class);
     public static final String SERVICE_NAME = "tech.smartboot.feat.sandao.FeatCloudOptionsBeanAptLoader";
-    private final String config;
+    private String config;
     private boolean exception = false;
     private final ProcessingEnvironment processingEnv;
     private final Set<String> availableTypes = new HashSet<>(Arrays.asList(String.class.getName(), int.class.getName()));
@@ -78,19 +78,14 @@ public class FeatYamlValueSerializer {
             try {
                 Yaml yaml = new Yaml();
                 config = JSONObject.from(yaml.load(featYaml.openInputStream())).toJSONString();
+                createServerOptionsBean();
             } catch (Throwable e) {
-                throw new FeatException(e);
+                logger.error("FeatYamlValueSerializer create server options bean failed", e);
+                exception = true;
             }
         } else {
             config = "{}";
         }
-        try {
-            createServerOptionsBean();
-        } catch (Throwable e) {
-            logger.error("FeatYamlValueSerializer create server options bean failed", e);
-            exception = true;
-        }
-
     }
 
     private void createServerOptionsBean() throws Throwable {

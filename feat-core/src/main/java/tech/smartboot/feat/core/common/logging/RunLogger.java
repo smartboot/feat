@@ -10,6 +10,8 @@
 
 package tech.smartboot.feat.core.common.logging;
 
+import tech.smartboot.feat.core.common.utils.StringUtils;
+
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -17,13 +19,14 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 class RunLogger implements tech.smartboot.feat.core.common.logging.Logger {
-
     private final String loggerName;
-    private Logger logger = null;
+    private final Logger logger;
+    private long latestCheckTime = 0;
+
 
     RunLogger(String name) {
         this.loggerName = name;
@@ -42,7 +45,11 @@ class RunLogger implements tech.smartboot.feat.core.common.logging.Logger {
                 }
             }
 
-            logger.setLevel(Level.parse(System.getProperty("smarthttp.log.level", "INFO")));
+            if (StringUtils.isBlank(System.getProperty(LoggerFactory.SYSTEM_PROPERTY_LOG_LEVEL))) {
+                System.setProperty(LoggerFactory.SYSTEM_PROPERTY_LOG_LEVEL, "INFO");
+            }
+
+            logger.setLevel(Level.parse(System.getProperty(LoggerFactory.SYSTEM_PROPERTY_LOG_LEVEL)));
 
 
             // 设置控制台日志Handler
@@ -61,6 +68,17 @@ class RunLogger implements tech.smartboot.feat.core.common.logging.Logger {
     }
 
     private void log(Level level, String msg, Object... arguments) {
+        // 检查是否需要更新日志级别
+        if (latestCheckTime + 5000 < System.currentTimeMillis()) {
+            String newLevel = System.getProperty(LoggerFactory.SYSTEM_PROPERTY_LOG_LEVEL + "." + loggerName);
+            if (StringUtils.isBlank(newLevel)) {
+                newLevel = System.getProperty(LoggerFactory.SYSTEM_PROPERTY_LOG_LEVEL, "INFO");
+            }
+            if (!logger.getLevel().getName().equals(newLevel)) {
+                logger.setLevel(Level.parse(newLevel));
+            }
+            latestCheckTime = System.currentTimeMillis();
+        }
         LogRecord record = new LogRecord(level, null);
         // 处理{}占位符并格式化消息
         record.setMessage(format(msg, arguments));

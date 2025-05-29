@@ -19,6 +19,7 @@ import java.util.Map;
  */
 public final class LoggerFactory {
     private static final Map<String, Logger> loggerMap = new HashMap<>();
+    public static final String SYSTEM_PROPERTY_LOG_LEVEL = "feat.log.level";
 
     public static Logger getLogger(Class<?> clazz) {
         return getLogger(clazz.getName());
