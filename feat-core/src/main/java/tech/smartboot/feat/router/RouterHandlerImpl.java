@@ -147,7 +147,7 @@ final class RouterHandlerImpl implements HttpHandler {
         if (methodHandlers == null) {
             methodHandlers = new HashMap<>();
         }
-        if (methodHandlers.containsKey(methodHandler.routerUnit.method)) {
+        if (StringUtils.equals(routerUnit.method, methodHandler.routerUnit.method) || methodHandlers.containsKey(methodHandler.routerUnit.method)) {
             throw new FeatException("urlPattern:[" + urlPattern + "],method:[" + routerUnit.method + "] is duplicate");
         }
         methodHandlers.put(methodHandler.routerUnit.method, methodHandler.routerUnit);
