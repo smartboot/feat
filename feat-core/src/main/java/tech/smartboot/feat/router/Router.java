@@ -145,7 +145,25 @@ public final class Router implements HttpHandler {
      * @return
      */
     public Router route(String urlPattern, RouterHandler handler) {
-        rootPath.add(urlPattern, new RouterHandlerImpl(this, urlPattern, handler));
+        return route(urlPattern, "", handler);
+    }
+
+    /**
+     * 配置URL路由
+     *
+     * @param urlPattern url匹配
+     * @param handler    处理handler
+     * @return
+     */
+    public Router route(String urlPattern, String method, RouterHandler handler) {
+        rootPath.add(urlPattern, new RouterHandlerImpl(this, urlPattern, method, handler, defaultHandler));
+        return this;
+    }
+
+    public Router route(String urlPattern, String[] method, RouterHandler handler) {
+        for (String s : method) {
+            route(urlPattern, s, handler);
+        }
         return this;
     }
 
@@ -177,7 +195,7 @@ public final class Router implements HttpHandler {
                         session0.updateTimeoutTask();
                     }
                 });
-                Chain chain = new Chain(routerHandler.getRouterHandler(), list);
+                Chain chain = new Chain(routerHandler.getRouterHandler(request), list);
                 chain.proceed(routerHandler.getContext(request), completableFuture);
                 if (chain.isInterrupted()) {
                     completableFuture.complete(null);

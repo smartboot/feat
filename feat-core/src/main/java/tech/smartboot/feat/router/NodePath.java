@@ -38,7 +38,7 @@ final class NodePath {
 
     //后缀匹配
     private final Map<String, NodePath> patternPaths;
-    private final HttpHandler handler;
+    private RouterHandlerImpl handler;
 
     public NodePath(String path) {
         this(path, TYPE_EXACT_PATH_NODE, 0);
@@ -54,7 +54,7 @@ final class NodePath {
         patternPaths = new HashMap<>();
     }
 
-    public NodePath(String path, int type, HttpHandler handler, int depth) {
+    public NodePath(String path, int type, RouterHandlerImpl handler, int depth) {
         this.handler = handler;
         this.path = path;
         this.type = type;
@@ -129,7 +129,7 @@ final class NodePath {
         return path;
     }
 
-    private void add(final String subPath, int offset, HttpHandler handler) {
+    private void add(final String subPath, int offset, RouterHandlerImpl handler) {
         int nextIndex;
         //尾部匹配
         if (subPath.charAt(offset) != '/') {
@@ -171,7 +171,8 @@ final class NodePath {
             curNode = exactPaths.get(nodePath);
         }
         if (curNode != null) {
-            throw new IllegalArgumentException("subPath: " + nodePath + " is illegal");
+            curNode.handler.addMethodHandler(handler);
+            return;
         }
 
         switch (type) {

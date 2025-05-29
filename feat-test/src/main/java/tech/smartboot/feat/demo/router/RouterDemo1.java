@@ -37,6 +37,17 @@ public class RouterDemo1 {
                 .route("/route4/:key/:value", (ctx) -> {
                     ctx.Response.write(ctx.pathParam("key") + ":" + ctx.pathParam("value"));
                 });
+
+        router.route("/route5", (ctx) -> {
+            ctx.Response.write("route5: " + ctx.Request.getMethod());
+        });
+        router.route("/route5", "GET", (ctx) -> {
+            ctx.Response.write("route5 get: " + ctx.Request.getMethod());
+        });
+
+        router.route("/route5", "POST", (ctx) -> {
+            ctx.Response.write("route5 post: " + ctx.Request.getMethod());
+        });
         Feat.httpServer().httpHandler(router).listen();
     }
 }

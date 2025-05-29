@@ -10,6 +10,8 @@
 
 package tech.smartboot.feat.router;
 
+import tech.smartboot.feat.core.common.exception.FeatException;
+import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.impl.HttpEndpoint;
@@ -23,19 +25,26 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 final class RouterHandlerImpl implements HttpHandler {
-    private List<PathIndex> pathIndexes;
-    private final RouterHandler routerHandler;
-    private Router router;
+    private final Router router;
+    private final String urlPattern;
+    private Map<String, RouterUnit> methodHandlers;
+    private RouterUnit routerUnit;
+    private final RouterHandlerImpl routerDefaultHandler;
 
     public RouterHandlerImpl(Router router, String urlPattern, RouterHandler routerHandler) {
+        this(router, urlPattern, null, routerHandler, null);
+    }
+
+    public RouterHandlerImpl(Router router, String urlPattern, String method, RouterHandler routerHandler, RouterHandlerImpl routerDefaultHandler) {
         this.router = router;
-        this.routerHandler = routerHandler;
+        this.urlPattern = urlPattern;
+        this.routerDefaultHandler = routerDefaultHandler;
         String[] path = urlPattern.split("/");
-        pathIndexes = new ArrayList<>();
+        List<PathIndex> pathIndexes = new ArrayList<>();
         for (int i = 0; i < path.length; i++) {
             if (path[i].startsWith(":")) {
                 pathIndexes.add(new PathIndex(path[i], i));
@@ -44,24 +53,31 @@ final class RouterHandlerImpl implements HttpHandler {
         if (pathIndexes.isEmpty()) {
             pathIndexes = Collections.emptyList();
         }
+        this.routerUnit = new RouterUnit(method, pathIndexes, routerHandler);
     }
 
     @Override
     public void onHeaderComplete(HttpEndpoint request) throws IOException {
-        routerHandler.onHeaderComplete(request);
+        RouterHandler handler = getRouterHandler(request);
+        handler.onHeaderComplete(request);
     }
 
     @Override
     public void handle(HttpRequest request, CompletableFuture<Void> completableFuture) throws Throwable {
-        Context context = getContext(request);
-        routerHandler.handle(context, completableFuture);
+        RouterUnit handler = getRouterUnit(request);
+        handler.routerHandler.handle(getContext(request, handler.pathIndexes), completableFuture);
     }
 
-    public RouterHandler getRouterHandler() {
-        return routerHandler;
+    public RouterHandler getRouterHandler(HttpRequest request) {
+        return getRouterUnit(request).routerHandler;
     }
 
     public Context getContext(HttpRequest request) {
+        RouterUnit handler = getRouterUnit(request);
+        return getContext(request, handler.pathIndexes);
+    }
+
+    public Context getContext(HttpRequest request, List<PathIndex> pathIndexes) {
         Map<String, String> pathParams;
         if (pathIndexes.isEmpty()) {
             pathParams = Collections.emptyMap();
@@ -79,16 +95,27 @@ final class RouterHandlerImpl implements HttpHandler {
             }
             pathParams = Collections.unmodifiableMap(params);
         }
-        return new Context(router,request, pathParams);
+        return new Context(router, request, pathParams);
     }
 
-    public void handle(HttpRequest request) {
+    public final void handle(HttpRequest request) {
         throw new UnsupportedOperationException();
     }
 
     @Override
     public void onClose(HttpEndpoint request) {
-        routerHandler.onClose(request);
+        getRouterUnit(request).routerHandler.onClose(request);
+    }
+
+    private RouterUnit getRouterUnit(HttpRequest request) {
+        RouterUnit handler = methodHandlers == null ? null : methodHandlers.get(request.getMethod());
+        if (handler != null) {
+            return handler;
+        }
+        if (StringUtils.isBlank(routerUnit.method) || StringUtils.equals(routerUnit.method, request.getMethod())) {
+            return routerUnit;
+        }
+        return routerDefaultHandler.routerUnit;
     }
 
     static class PathIndex {
@@ -98,6 +125,43 @@ final class RouterHandlerImpl implements HttpHandler {
         public PathIndex(String path, int index) {
             this.path = path;
             this.index = index;
+        }
+    }
+
+    public void addMethodHandler(RouterHandlerImpl methodHandler) {
+        if (StringUtils.isBlank(methodHandler.routerUnit.method)) {
+            if (StringUtils.isBlank(routerUnit.method)) {
+                throw new FeatException("urlPattern:[" + urlPattern + "] is duplicate");
+            }
+            if (methodHandlers == null) {
+                methodHandlers = new HashMap<>();
+            }
+            if (methodHandlers.containsKey(routerUnit.method)) {
+                throw new FeatException("urlPattern:[" + urlPattern + "],method:[" + routerUnit.method + "] is duplicate");
+            }
+            //将原始的迁移到map中
+            methodHandlers.put(routerUnit.method, routerUnit);
+            this.routerUnit = methodHandler.routerUnit;
+            return;
+        }
+        if (methodHandlers == null) {
+            methodHandlers = new HashMap<>();
+        }
+        if (methodHandlers.containsKey(methodHandler.routerUnit.method)) {
+            throw new FeatException("urlPattern:[" + urlPattern + "],method:[" + routerUnit.method + "] is duplicate");
+        }
+        methodHandlers.put(methodHandler.routerUnit.method, methodHandler.routerUnit);
+    }
+
+    static class RouterUnit {
+        private final String method;
+        private final List<PathIndex> pathIndexes;
+        private final RouterHandler routerHandler;
+
+        public RouterUnit(String method, List<PathIndex> pathIndexes, RouterHandler routerHandler) {
+            this.method = method;
+            this.pathIndexes = pathIndexes;
+            this.routerHandler = routerHandler;
         }
     }
 }
