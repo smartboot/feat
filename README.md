@@ -2,6 +2,7 @@
 ![Logo](feat_rect_logo.svg)
 
 [![AGPL License](https://img.shields.io/badge/license-AGPL-blue.svg)](http://www.gnu.org/licenses/agpl-3.0)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/smartboot/feat)
 
 # Feat - High-Performance Java Web Service Framework
 
@@ -30,6 +31,53 @@ Feat focuses on ultimate performance and minimal resource consumption, making it
 - **Container Optimization**: K8s-friendly, elastic scaling
 - **Observability**: Complete monitoring and logging coverage
 - **Development Framework**: Spring Boot-style development
+
+### 📦 Third-party Dependencies
+
+Feat framework's main third-party dependencies by module:
+
+<table>
+<thead>
+<tr>
+<th>Module</th>
+<th>Dependency</th>
+<th>Scope</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td rowspan="2">Feat Core</td>
+<td><a href="https://gitee.com/smartboot/smart-socket" target="_blank">smart-socket</a></td>
+<td>Runtime</td>
+<td>Java AIO based network communication framework</td>
+</tr>
+<tr>
+<td><a href="https://gitee.com/alibaba/fastjson2" target="_blank">fastjson2</a></td>
+<td>Runtime</td>
+<td>Alibaba's JSON processing library</td>
+</tr>
+<tr>
+<td rowspan="2">Feat Cloud</td>
+<td><a href="https://github.com/mybatis/mybatis-3" target="_blank">mybatis</a></td>
+<td>Compile</td>
+<td>Excellent persistence layer framework</td>
+</tr>
+<tr>
+<td><a href="https://github.com/snakeyaml/snakeyaml" target="_blank">snakeyaml</a></td>
+<td>Compile</td>
+<td>YAML configuration parsing library</td>
+</tr>
+<tr>
+<td>Feat AI</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+
+All dependencies use the latest stable versions to ensure optimal security and performance.
 
 ## Quick Start
 
