@@ -49,7 +49,6 @@ import javax.lang.model.type.TypeMirror;
 import javax.tools.FileObject;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
@@ -157,24 +156,8 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
 
     private <T extends Annotation> void createAptLoader(Element element, T annotation) throws IOException {
         String loaderName = element.getSimpleName() + "BeanAptLoader";
-
-        // 检查是否需要重新生成文件,提升编译速度
-        try {
-            FileObject preFileObject = processingEnv.getFiler().getResource(StandardLocation.SOURCE_OUTPUT, "", loaderName + ".java");
-            File preFile = new File(preFileObject.toUri());
-            if (preFile.exists()) {
-                FileObject sourceFileObject = processingEnv.getFiler().getResource(StandardLocation.SOURCE_PATH, element.getEnclosingElement().toString(), element.getSimpleName().toString() + ".java");
-                if (new File(sourceFileObject.toUri()).lastModified() > preFile.lastModified()) {
-                    boolean deleteSuccess = preFile.delete();
-                    System.out.println("源文件已更新，删除旧的生成文件: " + preFile + ", 删除" + (deleteSuccess ? "成功" : "失败"));
-                } else {
-                    System.out.println("源文件未更新，保留现有生成文件: " + preFile);
-                    return;
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        //生成service配置
+        services.add(element.getEnclosingElement().toString() + "." + loaderName);
 
         JavaFileObject javaFileObject = processingEnv.getFiler().createSourceFile(loaderName);
         Writer writer = javaFileObject.openWriter();
@@ -258,9 +241,6 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         printWriter.println("\t}");
         printWriter.println("}");
         writer.close();
-
-        //生成service配置
-        services.add(element.getEnclosingElement().toString() + "." + loaderName);
     }
 
     private <T extends Annotation> void generateBeanOrController(Element element, PrintWriter printWriter) {
