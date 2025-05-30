@@ -70,7 +70,7 @@ Feat 框架各模块的主要三方包依赖如下：
 </tr>
 <tr>
 <td rowspan="2">Feat AI</td>
-<td>Feat</td>
+<td>Feat Core</td>
 <td>运行时</td>
 <td>继承核心功能</td>
 </tr>
