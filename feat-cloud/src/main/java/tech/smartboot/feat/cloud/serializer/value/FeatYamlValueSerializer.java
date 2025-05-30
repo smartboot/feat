@@ -78,7 +78,16 @@ public class FeatYamlValueSerializer {
             try {
                 Yaml yaml = new Yaml();
                 config = JSONObject.from(yaml.load(featYaml.openInputStream())).toJSONString();
-                createServerOptionsBean();
+
+                // 检查是否需要重新生成，如果feat配置文件发生变化，重新生成
+                FileObject preFileObject = processingEnv.getFiler().getResource(StandardLocation.SOURCE_OUTPUT, "", "FeatCloudOptionsBeanAptLoader.java");
+                File preFile = new File(preFileObject.toUri());
+                if (!preFile.exists() || preFile.lastModified() < new File(featYaml.toUri()).lastModified()) {
+                    preFile.delete();
+                    createServerOptionsBean();
+                } else {
+                    System.out.println("feat配置文件未发生变化，跳过重新生成");
+                }
             } catch (Throwable e) {
                 logger.error("FeatYamlValueSerializer create server options bean failed", e);
                 exception = true;
