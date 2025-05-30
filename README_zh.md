@@ -48,29 +48,29 @@ Feat 框架各模块的主要三方包依赖如下：
 <tbody>
 <tr>
 <td rowspan="2">Feat Core</td>
-<td>[smart-socket](https://gitee.com/smartboot/smart-socket)</td>
+<td><a href="https://gitee.com/smartboot/smart-socket" target="_blank">smart-socket</a></td>
 <td>运行时</td>
 <td>基于Java AIO的网络通信框架</td>
 </tr>
 <tr>
-<td>[fastjson2](https://gitee.com/alibaba/fastjson2)</td>
+<td><a href="https://gitee.com/alibaba/fastjson2" target="_blank">fastjson2</a></td>
 <td>运行时</td>
 <td>阿里巴巴的JSON处理库</td>
 </tr>
 <tr>
 <td rowspan="2">Feat Cloud</td>
-<td>[mybatis](https://github.com/mybatis/mybatis-3)</td>
+<td><a href="https://github.com/mybatis/mybatis-3" target="_blank">mybatis</a></td>
 <td>编译时</td>
 <td>优秀的持久层框架</td>
 </tr>
 <tr>
-<td>[snakeyaml](https://github.com/snakeyaml/snakeyaml)</td>
+<td><a href="https://github.com/snakeyaml/snakeyaml" target="_blank">snakeyaml</a></td>
 <td>编译时</td>
 <td>YAML配置文件解析库</td>
 </tr>
 <tr>
 <td rowspan="2">Feat AI</td>
-<td>feat-core</td>
+<td>Feat</td>
 <td>运行时</td>
 <td>继承核心功能</td>
 </tr>
