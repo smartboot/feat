@@ -99,6 +99,13 @@ public class FeatYamlValueSerializer {
 
     private void createServerOptionsBean() throws Throwable {
         String loaderName = "FeatCloudOptionsBeanAptLoader";
+
+        FileObject preFileObject = processingEnv.getFiler().getResource(StandardLocation.SOURCE_OUTPUT, "", loaderName + ".java");
+        File f = new File(preFileObject.toUri());
+        if (f.exists()) {
+            f.delete();
+        }
+
         JavaFileObject javaFileObject = processingEnv.getFiler().createSourceFile(loaderName);
         Writer writer = javaFileObject.openWriter();
         PrintWriter printWriter = new PrintWriter(writer);

@@ -49,6 +49,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.tools.FileObject;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
@@ -158,6 +159,12 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         String loaderName = element.getSimpleName() + "BeanAptLoader";
         //生成service配置
         services.add(element.getEnclosingElement().toString() + "." + loaderName);
+
+        FileObject preFileObject = processingEnv.getFiler().getResource(StandardLocation.SOURCE_OUTPUT, "", loaderName + ".java");
+        File f = new File(preFileObject.toUri());
+        if (f.exists()) {
+            f.delete();
+        }
 
         JavaFileObject javaFileObject = processingEnv.getFiler().createSourceFile(loaderName);
         Writer writer = javaFileObject.openWriter();
