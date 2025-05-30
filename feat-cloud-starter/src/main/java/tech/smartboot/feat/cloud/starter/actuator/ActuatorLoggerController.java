@@ -8,7 +8,7 @@
  *  without special permission from the smartboot organization.
  */
 
-package actuator;
+package tech.smartboot.feat.cloud.starter.actuator;
 
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.cloud.RestResult;
