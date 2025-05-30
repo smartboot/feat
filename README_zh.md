@@ -32,6 +32,54 @@ Feat专注于极致性能和最小资源占用，使其成为构建微服务、A
 - **可观测性**：监控、日志全覆盖
 - **开发框架**：Spring Boot风格开发
 
+### 三方包依赖
+
+Feat 框架各模块的主要三方包依赖如下：
+
+<table>
+<thead>
+<tr>
+<th>模块</th>
+<th>依赖包</th>
+<th>依赖形式</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td rowspan="2">Feat Core</td>
+<td>[smart-socket](https://gitee.com/smartboot/smart-socket)</td>
+<td>运行时</td>
+<td>基于Java AIO的网络通信框架</td>
+</tr>
+<tr>
+<td>[fastjson2](https://gitee.com/alibaba/fastjson2)</td>
+<td>运行时</td>
+<td>阿里巴巴的JSON处理库</td>
+</tr>
+<tr>
+<td rowspan="2">Feat Cloud</td>
+<td>[mybatis](https://github.com/mybatis/mybatis-3)</td>
+<td>编译时</td>
+<td>优秀的持久层框架</td>
+</tr>
+<tr>
+<td>[snakeyaml](https://github.com/snakeyaml/snakeyaml)</td>
+<td>编译时</td>
+<td>YAML配置文件解析库</td>
+</tr>
+<tr>
+<td rowspan="2">Feat AI</td>
+<td>feat-core</td>
+<td>运行时</td>
+<td>继承核心功能</td>
+<td>1.1.0-SNAPSHOT</td>
+</tr>
+</tbody>
+</table>
+
+所有依赖均采用最新稳定版本，确保安全性和性能的最优表现。
+
 
 ## 快速上手
 
