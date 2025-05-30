@@ -73,7 +73,6 @@ Feat 框架各模块的主要三方包依赖如下：
 <td>feat-core</td>
 <td>运行时</td>
 <td>继承核心功能</td>
-<td>1.1.0-SNAPSHOT</td>
 </tr>
 </tbody>
 </table>
