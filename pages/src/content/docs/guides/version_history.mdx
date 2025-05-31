@@ -23,8 +23,20 @@ import { Image } from '@astrojs/starlight/components';
   - ApplicationContext 新增 getOptions 方法用于获 Feat Cloud 配置。
   - Annotation Processor 重构，简化代码复杂度，提升扩展性。
 
+---
+
 ### 升级指南
-无
+
+#### pom升级
+tech.smartboot.feat:
+    - feat-core：`1.0.0` => `1.1.0`
+    - feat-cloud-starter：`1.0.0` => `1.1.0`
+    - feat-ai：`1.0.0` => `1.1.0`
+
+#### 代码升级
+参见下述**兼容性说明**
+
+----
 ### 兼容性说明
 - CloudOptions@addExternalBean 方法重命名为 registerBean，用于注册外部 Bean。
 
