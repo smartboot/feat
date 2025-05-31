@@ -7,6 +7,27 @@ sidebar:
 
 import { Image } from '@astrojs/starlight/components';
 
+## v1.1.0 (孵化中)
+
+### 版本特性
+
+- **Feat Core：**
+    - 限制单进程内 Feat Banner 最多输出一次。
+    - **`Router`** 支持定义相同 URL、不同 HTTP Method 的接口服务，提升 API 设计的灵活性。
+    - RunLogger 自动感应日志级别变化，支持动态调整日志级别。
+    - 日志级别环境变量由 `smarthttp.log.level` 调整为 `feat.log.level` 。
+    - 升级 smart-socket 至 1.5.64。
+- **Feat Cloud**
+  - 新增 `feat.yaml`/`feat.yml` 配置文件解析，并通过`@Value`注入 Bean 或 Controller中。(类似 Spring 的 `application.yaml`)
+  - 支持运行时动态调整指定 `loggerName` 的日志级别，便于灵活监控与调试。
+  - ApplicationContext 新增 getOptions 方法用于获 Feat Cloud 配置。
+  - Annotation Processor 重构，简化代码复杂度，提升扩展性。
+
+### 升级指南
+无
+### 兼容性说明
+- CloudOptions@addExternalBean 方法重命名为 registerBean，用于注册外部 Bean。
+
 ## v1.0.0 (2025-05-24)
 
 Feat v1.0.0 是首个正式发布版本，提供了完整的企业级 Web 服务开发框架功能。

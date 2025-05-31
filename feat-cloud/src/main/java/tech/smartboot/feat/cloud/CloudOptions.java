@@ -24,7 +24,7 @@ public class CloudOptions extends ServerOptions {
     private String[] packages;
     private final Map<String, Object> externalBeans = new HashMap<>();
 
-    public String[] getPackages() {
+    String[] getPackages() {
         return packages;
     }
 
@@ -33,7 +33,7 @@ public class CloudOptions extends ServerOptions {
         return this;
     }
 
-    public Map<String, Object> getExternalBeans() {
+    Map<String, Object> getExternalBeans() {
         return externalBeans;
     }
 
