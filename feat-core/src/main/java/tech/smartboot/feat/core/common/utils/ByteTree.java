@@ -154,6 +154,37 @@ public class ByteTree<T> {
         }
     }
 
+    public ByteTree<T> search(ByteBuffer buffer, EndMatcher endMatcher) {
+        // 回退一个字节，准备构建虚拟节点
+        int markPosition = buffer.position();
+        // 是否处于前导空格修剪状态
+        boolean trimState = true;
+        // 构建临时虚拟节点，用完由JVM回收
+        while (buffer.hasRemaining()) {
+            byte v = buffer.get();
+            // 跳过前导空格
+            if (trimState) {
+                if (v == Constant.SP) {
+                    continue;
+                } else {
+                    trimState = false;
+                    // 记录第一个非空格字符的位置
+                    markPosition = buffer.position() - 1;
+                }
+            }
+            if (endMatcher.match(v)) {
+                // 找到结束字符，构建虚拟节点
+                int length = buffer.position() - markPosition;
+                byte[] data = new byte[length];
+                buffer.position(buffer.position() - length);
+                buffer.get(data, 0, length);
+                return new VirtualByteTree(new String(data, 0, length - 1, StandardCharsets.US_ASCII));
+            }
+        }
+        buffer.position(markPosition);
+        return null;
+    }
+
     /**
      * 在字节树中搜索匹配的字节序列
      * 该方法是ByteTree的核心功能，用于在字节缓冲区中查找匹配的字节序列
