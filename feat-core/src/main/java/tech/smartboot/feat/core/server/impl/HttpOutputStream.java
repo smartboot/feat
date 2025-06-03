@@ -37,14 +37,12 @@ final class HttpOutputStream extends FeatOutputStream {
     private static byte[] SERVER_LINE = null;
     private static byte[] HEAD_PART_BYTES;
     private final HttpEndpoint request;
-    private final ServerOptions options;
     private final AbstractResponse response;
 
     public HttpOutputStream(HttpEndpoint httpRequest, AbstractResponse response) {
         super(httpRequest.getAioSession().writeBuffer());
         this.request = httpRequest;
         this.response = response;
-        this.options = request.getOptions();
         if (SERVER_LINE == null) {
             String serverLine = HeaderName.SERVER.getName() + ":feat\r\n";
             SERVER_LINE = serverLine.getBytes();

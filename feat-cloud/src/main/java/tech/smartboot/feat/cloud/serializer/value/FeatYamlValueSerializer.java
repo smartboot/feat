@@ -64,7 +64,7 @@ public class FeatYamlValueSerializer {
         serializers.put("java.util.List<java.lang.String>", new StringListSerializer());
     }
 
-    public FeatYamlValueSerializer(ProcessingEnvironment processingEnv) {
+    public FeatYamlValueSerializer(ProcessingEnvironment processingEnv, List<String> services) {
         this.processingEnv = processingEnv;
         FileObject featYaml = null;
         for (String filename : Arrays.asList("feat.yml", "feat.yaml")) {
@@ -89,6 +89,7 @@ public class FeatYamlValueSerializer {
             Yaml yaml = new Yaml();
             config = JSONObject.from(yaml.load(featYaml.openInputStream())).toJSONString();
             createServerOptionsBean();
+            services.add(SERVICE_NAME);
         } catch (Throwable e) {
             logger.error("FeatYamlValueSerializer create server options bean failed", e);
             exception = true;

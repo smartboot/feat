@@ -226,7 +226,7 @@ public final class HttpEndpoint extends Endpoint implements HttpRequest, Reset {
         try {
             remoteHost = aioSession.getRemoteAddress().getHostString();
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error("getRemoteHost error", e);
         }
         return remoteHost;
     }
