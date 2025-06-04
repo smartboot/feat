@@ -19,6 +19,7 @@ import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.io.FeatOutputStream;
 import tech.smartboot.feat.core.common.utils.Constant;
 import tech.smartboot.feat.core.common.utils.DateUtils;
+import tech.smartboot.feat.core.server.ServerOptions;
 
 import java.io.IOException;
 import java.util.Map;
@@ -29,18 +30,27 @@ import java.util.concurrent.TimeUnit;
  * @version v1.0.0
  */
 final class HttpOutputStream extends FeatOutputStream {
-    private static final byte[] TEXT_PLAIN_CONTENT_LENGTH_FAST_WRITE = (HttpProtocol.HTTP_11.getProtocol() + " 200 OK\r\n" + HeaderName.SERVER.getName() + ":feat\r\nDate:" + DateUtils.formatRFC1123(DateUtils.currentTime()) + "\r\nContent-Type:" + HeaderValue.ContentType.TEXT_PLAIN_UTF8 + "\r\nContent-Length:").getBytes();
+    private static final String TEXT_PLAIN_FAST_WRITE = HttpProtocol.HTTP_11.getProtocol() + " 200 OK\r\n" + HeaderName.SERVER.getName() + ":feat/" + ServerOptions.VERSION + "\r\nDate:" + DateUtils.formatRFC1123(DateUtils.currentTime()) + "\r\nContent-Type:" + HeaderValue.ContentType.TEXT_PLAIN_UTF8 + "\r\nContent-Length:";
+    private static final int SERVER_INDEX = TEXT_PLAIN_FAST_WRITE.indexOf(HeaderName.SERVER.getName());
+    private static final int DATE_INDEX = TEXT_PLAIN_FAST_WRITE.indexOf("Date:");
+    private static final int SERVER_INDEX_LENGTH = TEXT_PLAIN_FAST_WRITE.indexOf(HeaderName.DATE.getName()) - 2 - SERVER_INDEX;
+    private static final int PLAIN_CONTENT_TYPE_INDEX = TEXT_PLAIN_FAST_WRITE.indexOf(HeaderName.CONTENT_TYPE.getName()) - 2;
+    private static final int PLAIN_CONTENT_LENGTH_INDEX = TEXT_PLAIN_FAST_WRITE.indexOf(HeaderName.CONTENT_LENGTH.getName()) - 2;
+    private static final byte[] TEXT_PLAIN_FAST_WRITE_BYTES = TEXT_PLAIN_FAST_WRITE.getBytes();
 
-    private static final byte[] APPLICATION_JSON_FAST_WRITE = (HttpProtocol.HTTP_11.getProtocol() + " 200 OK\r\n" + HeaderName.SERVER.getName() + ":feat\r\nDate:" + DateUtils.formatRFC1123(DateUtils.currentTime()) + "\r\nContent-Type:" + HeaderValue.ContentType.APPLICATION_JSON + "\r\nContent-Length:").getBytes();
+    private static final String APPLICATION_JSON = HttpProtocol.HTTP_11.getProtocol() + " 200 OK\r\n" + HeaderName.SERVER.getName() + ":feat/" + ServerOptions.VERSION + "\r\nDate:" + DateUtils.formatRFC1123(DateUtils.currentTime()) + "\r\nContent-Type:" + HeaderValue.ContentType.APPLICATION_JSON + "\r\nContent-Length:";
+    private static final int JSON_CONTENT_LENGTH_INDEX = APPLICATION_JSON.indexOf(HeaderName.CONTENT_LENGTH.getName()) - 2;
+    private static final byte[] APPLICATION_JSON_FAST_WRITE_BYTES = APPLICATION_JSON.getBytes();
     private static final byte[] CHUNKED = "\r\nTransfer-Encoding: chunked\r\n\r\n".getBytes();
     private final HttpEndpoint request;
     private final HttpResponseImpl response;
 
     static {
+
         HashedWheelTimer.DEFAULT_TIMER.scheduleWithFixedDelay(() -> {
             byte[] bytes = DateUtils.formatRFC1123(DateUtils.currentTime()).getBytes();
-            System.arraycopy(bytes, 0, TEXT_PLAIN_CONTENT_LENGTH_FAST_WRITE, 35, bytes.length);
-            System.arraycopy(bytes, 0, APPLICATION_JSON_FAST_WRITE, 35, bytes.length);
+            System.arraycopy(bytes, 0, TEXT_PLAIN_FAST_WRITE_BYTES, DATE_INDEX + 5, bytes.length);
+            System.arraycopy(bytes, 0, APPLICATION_JSON_FAST_WRITE_BYTES, DATE_INDEX + 5, bytes.length);
         }, 800, TimeUnit.MILLISECONDS);
     }
 
@@ -115,18 +125,18 @@ final class HttpOutputStream extends FeatOutputStream {
         response.getHttpStatus().write(writeBuffer);
         // Server
         if (response.getHeader(HeaderName.SERVER) == null) {
-            writeBuffer.write(TEXT_PLAIN_CONTENT_LENGTH_FAST_WRITE, 17, 13);
+            writeBuffer.write(TEXT_PLAIN_FAST_WRITE_BYTES, SERVER_INDEX, SERVER_INDEX_LENGTH);
         }
         // Date
-        writeBuffer.write(TEXT_PLAIN_CONTENT_LENGTH_FAST_WRITE, 30, 34);
+        writeBuffer.write(TEXT_PLAIN_FAST_WRITE_BYTES, DATE_INDEX, 34);
 
         if (contentType != null) {
-            writeBuffer.write(TEXT_PLAIN_CONTENT_LENGTH_FAST_WRITE, 64, 15);
+            writeBuffer.write(TEXT_PLAIN_FAST_WRITE_BYTES, PLAIN_CONTENT_TYPE_INDEX, 15);
             writeString(contentType);
         }
 
         if (contentLength >= 0) {
-            writeBuffer.write(TEXT_PLAIN_CONTENT_LENGTH_FAST_WRITE, 104, 17);
+            writeBuffer.write(TEXT_PLAIN_FAST_WRITE_BYTES, PLAIN_CONTENT_LENGTH_INDEX, 17);
             writeLongString(contentLength);
             if (hasHeader) {
                 writeBuffer.write(Constant.CRLF_BYTES);
@@ -148,7 +158,7 @@ final class HttpOutputStream extends FeatOutputStream {
 
     private void writeApplicationJsonHeadPart(boolean hasHeader, long contentLength) throws IOException {
         if (chunkedSupport) {
-            writeBuffer.write(APPLICATION_JSON_FAST_WRITE, 0, 95);
+            writeBuffer.write(APPLICATION_JSON_FAST_WRITE_BYTES, 0, JSON_CONTENT_LENGTH_INDEX);
             if (hasHeader) {
                 writeBuffer.write(CHUNKED, 0, CHUNKED.length - 2);
             } else {
@@ -156,10 +166,10 @@ final class HttpOutputStream extends FeatOutputStream {
             }
         } else {
             if (contentLength >= 0) {
-                writeBuffer.write(APPLICATION_JSON_FAST_WRITE);
+                writeBuffer.write(APPLICATION_JSON_FAST_WRITE_BYTES);
                 writeLongString(contentLength);
             } else {
-                writeBuffer.write(APPLICATION_JSON_FAST_WRITE, 0, 95);
+                writeBuffer.write(APPLICATION_JSON_FAST_WRITE_BYTES, 0, JSON_CONTENT_LENGTH_INDEX);
             }
             if (hasHeader) {
                 writeBuffer.write(Constant.CRLF_BYTES);
@@ -171,7 +181,7 @@ final class HttpOutputStream extends FeatOutputStream {
 
     private void writeTextPlainHeadPart(boolean hasHeader, long contentLength) throws IOException {
         if (chunkedSupport) {
-            writeBuffer.write(TEXT_PLAIN_CONTENT_LENGTH_FAST_WRITE, 0, 104);
+            writeBuffer.write(TEXT_PLAIN_FAST_WRITE_BYTES, 0, PLAIN_CONTENT_LENGTH_INDEX);
             if (hasHeader) {
                 writeBuffer.write(CHUNKED, 0, CHUNKED.length - 2);
             } else {
@@ -181,10 +191,10 @@ final class HttpOutputStream extends FeatOutputStream {
         }
 
         if (contentLength >= 0) {
-            writeBuffer.write(TEXT_PLAIN_CONTENT_LENGTH_FAST_WRITE);
+            writeBuffer.write(TEXT_PLAIN_FAST_WRITE_BYTES);
             writeLongString(contentLength);
         } else {
-            writeBuffer.write(TEXT_PLAIN_CONTENT_LENGTH_FAST_WRITE, 0, 104);
+            writeBuffer.write(TEXT_PLAIN_FAST_WRITE_BYTES, 0, PLAIN_CONTENT_LENGTH_INDEX);
         }
         if (hasHeader) {
             writeBuffer.write(Constant.CRLF_BYTES);

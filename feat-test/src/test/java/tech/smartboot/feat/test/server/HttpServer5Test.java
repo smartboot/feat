@@ -20,6 +20,7 @@ import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServer;
+import tech.smartboot.feat.core.server.ServerOptions;
 import tech.smartboot.feat.test.BastTest;
 
 import java.nio.charset.StandardCharsets;
@@ -31,6 +32,7 @@ import java.nio.charset.StandardCharsets;
 public class HttpServer5Test extends BastTest {
     HttpClient httpClient;
     HttpServer bootstrap;
+    private String serverName = "feat/" + ServerOptions.VERSION;
 
     @Before
     public void init() {
@@ -59,7 +61,7 @@ public class HttpServer5Test extends BastTest {
         Assert.assertEquals(HttpStatus.OK.value(), response.statusCode());
         Assert.assertEquals(HeaderValue.ContentType.TEXT_PLAIN_UTF8, response.getHeader(HeaderName.CONTENT_TYPE));
         Assert.assertEquals("11", response.getHeader(HeaderName.CONTENT_LENGTH));
-        Assert.assertEquals("feat", response.getHeader(HeaderName.SERVER));
+        Assert.assertEquals(serverName, response.getHeader(HeaderName.SERVER));
         Assert.assertEquals(4, response.getHeaderNames().size());
     }
 
@@ -77,7 +79,7 @@ public class HttpServer5Test extends BastTest {
         Assert.assertEquals(HttpStatus.OK.value(), response.statusCode());
         Assert.assertEquals(HeaderValue.ContentType.TEXT_PLAIN_UTF8, response.getHeader(HeaderName.CONTENT_TYPE));
         Assert.assertEquals("11", response.getHeader(HeaderName.CONTENT_LENGTH));
-        Assert.assertEquals("feat", response.getHeader(HeaderName.SERVER));
+        Assert.assertEquals(serverName, response.getHeader(HeaderName.SERVER));
         Assert.assertEquals("bb", response.getHeader("aa"));
         Assert.assertEquals(5, response.getHeaderNames().size());
     }
@@ -95,7 +97,7 @@ public class HttpServer5Test extends BastTest {
         Assert.assertEquals(HttpStatus.OK.value(), response.statusCode());
         Assert.assertEquals(HeaderValue.ContentType.TEXT_PLAIN_UTF8, response.getHeader(HeaderName.CONTENT_TYPE));
         Assert.assertEquals("chunked", response.getHeader(HeaderName.TRANSFER_ENCODING));
-        Assert.assertEquals("feat", response.getHeader(HeaderName.SERVER));
+        Assert.assertEquals(serverName, response.getHeader(HeaderName.SERVER));
         Assert.assertEquals("bb", response.getHeader("aa"));
         Assert.assertEquals(5, response.getHeaderNames().size());
     }
@@ -112,7 +114,7 @@ public class HttpServer5Test extends BastTest {
         Assert.assertEquals(HttpStatus.OK.value(), response.statusCode());
         Assert.assertEquals(HeaderValue.ContentType.TEXT_PLAIN_UTF8, response.getHeader(HeaderName.CONTENT_TYPE));
         Assert.assertEquals("chunked", response.getHeader(HeaderName.TRANSFER_ENCODING));
-        Assert.assertEquals("feat", response.getHeader(HeaderName.SERVER));
+        Assert.assertEquals(serverName, response.getHeader(HeaderName.SERVER));
         Assert.assertEquals(4, response.getHeaderNames().size());
     }
 
@@ -127,7 +129,7 @@ public class HttpServer5Test extends BastTest {
         tech.smartboot.feat.core.client.HttpResponse response = httpClient.rest("HEAD", "http://localhost:" + SERVER_PORT + "/hello").submit().get();
         Assert.assertEquals(HttpStatus.OK.value(), response.statusCode());
         Assert.assertEquals(HeaderValue.ContentType.TEXT_PLAIN_UTF8, response.getHeader(HeaderName.CONTENT_TYPE));
-        Assert.assertEquals("feat", response.getHeader(HeaderName.SERVER));
+        Assert.assertEquals(serverName, response.getHeader(HeaderName.SERVER));
         Assert.assertEquals(3, response.getHeaderNames().size());
     }
 
@@ -143,7 +145,7 @@ public class HttpServer5Test extends BastTest {
         tech.smartboot.feat.core.client.HttpResponse response = httpClient.rest("HEAD", "http://localhost:" + SERVER_PORT + "/hello").submit().get();
         Assert.assertEquals(HttpStatus.OK.value(), response.statusCode());
         Assert.assertEquals(HeaderValue.ContentType.TEXT_PLAIN_UTF8, response.getHeader(HeaderName.CONTENT_TYPE));
-        Assert.assertEquals("feat", response.getHeader(HeaderName.SERVER));
+        Assert.assertEquals(serverName, response.getHeader(HeaderName.SERVER));
         Assert.assertEquals("bb", response.getHeader("aa"));
         Assert.assertEquals(4, response.getHeaderNames().size());
     }
@@ -162,7 +164,7 @@ public class HttpServer5Test extends BastTest {
         Assert.assertEquals(HttpStatus.OK.value(), response.statusCode());
         Assert.assertEquals(HeaderValue.ContentType.APPLICATION_JSON, response.getHeader(HeaderName.CONTENT_TYPE));
         Assert.assertEquals("11", response.getHeader(HeaderName.CONTENT_LENGTH));
-        Assert.assertEquals("feat", response.getHeader(HeaderName.SERVER));
+        Assert.assertEquals(serverName, response.getHeader(HeaderName.SERVER));
         Assert.assertEquals(4, response.getHeaderNames().size());
     }
 
@@ -180,7 +182,7 @@ public class HttpServer5Test extends BastTest {
         Assert.assertEquals(HttpStatus.OK.value(), response.statusCode());
         Assert.assertEquals(HeaderValue.ContentType.APPLICATION_JSON, response.getHeader(HeaderName.CONTENT_TYPE));
         Assert.assertEquals("11", response.getHeader(HeaderName.CONTENT_LENGTH));
-        Assert.assertEquals("feat", response.getHeader(HeaderName.SERVER));
+        Assert.assertEquals(serverName, response.getHeader(HeaderName.SERVER));
         Assert.assertEquals("bb", response.getHeader("aa"));
         Assert.assertEquals(5, response.getHeaderNames().size());
     }
@@ -198,7 +200,7 @@ public class HttpServer5Test extends BastTest {
         Assert.assertEquals(HttpStatus.OK.value(), response.statusCode());
         Assert.assertEquals(HeaderValue.ContentType.APPLICATION_JSON, response.getHeader(HeaderName.CONTENT_TYPE));
         Assert.assertEquals("chunked", response.getHeader(HeaderName.TRANSFER_ENCODING));
-        Assert.assertEquals("feat", response.getHeader(HeaderName.SERVER));
+        Assert.assertEquals(serverName, response.getHeader(HeaderName.SERVER));
         Assert.assertEquals("bb", response.getHeader("aa"));
         Assert.assertEquals(5, response.getHeaderNames().size());
     }
@@ -215,7 +217,7 @@ public class HttpServer5Test extends BastTest {
         Assert.assertEquals(HttpStatus.OK.value(), response.statusCode());
         Assert.assertEquals(HeaderValue.ContentType.APPLICATION_JSON, response.getHeader(HeaderName.CONTENT_TYPE));
         Assert.assertEquals("chunked", response.getHeader(HeaderName.TRANSFER_ENCODING));
-        Assert.assertEquals("feat", response.getHeader(HeaderName.SERVER));
+        Assert.assertEquals(serverName, response.getHeader(HeaderName.SERVER));
         Assert.assertEquals(4, response.getHeaderNames().size());
     }
 
@@ -230,7 +232,7 @@ public class HttpServer5Test extends BastTest {
         tech.smartboot.feat.core.client.HttpResponse response = httpClient.rest("HEAD", "http://localhost:" + SERVER_PORT + "/hello").submit().get();
         Assert.assertEquals(HttpStatus.OK.value(), response.statusCode());
         Assert.assertEquals(HeaderValue.ContentType.APPLICATION_JSON, response.getHeader(HeaderName.CONTENT_TYPE));
-        Assert.assertEquals("feat", response.getHeader(HeaderName.SERVER));
+        Assert.assertEquals(serverName, response.getHeader(HeaderName.SERVER));
         Assert.assertEquals(3, response.getHeaderNames().size());
     }
 
@@ -246,7 +248,7 @@ public class HttpServer5Test extends BastTest {
         tech.smartboot.feat.core.client.HttpResponse response = httpClient.rest("HEAD", "http://localhost:" + SERVER_PORT + "/hello").submit().get();
         Assert.assertEquals(HttpStatus.OK.value(), response.statusCode());
         Assert.assertEquals(HeaderValue.ContentType.APPLICATION_JSON, response.getHeader(HeaderName.CONTENT_TYPE));
-        Assert.assertEquals("feat", response.getHeader(HeaderName.SERVER));
+        Assert.assertEquals(serverName, response.getHeader(HeaderName.SERVER));
         Assert.assertEquals("bb", response.getHeader("aa"));
         Assert.assertEquals(4, response.getHeaderNames().size());
     }
