@@ -19,7 +19,6 @@ import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.io.FeatOutputStream;
 import tech.smartboot.feat.core.common.utils.Constant;
 import tech.smartboot.feat.core.common.utils.DateUtils;
-import tech.smartboot.feat.core.server.ServerOptions;
 
 import java.io.IOException;
 import java.util.Map;
@@ -30,28 +29,25 @@ import java.util.concurrent.TimeUnit;
  * @version v1.0.0
  */
 final class HttpOutputStream extends FeatOutputStream {
-    private static final byte[] Content_Type_TEXT_Bytes = ("\r\nContent-Type:" + HeaderValue.ContentType.TEXT_PLAIN_UTF8).getBytes();
-    private static final byte[] Content_Type_JSON_Bytes = ("\r\nContent-Type:" + HeaderValue.ContentType.APPLICATION_JSON).getBytes();
-    private static final byte[] Content_Length_Bytes = "\r\nContent-Length:".getBytes();
-    private static final byte[] CHUNKED = "\r\nTransfer-Encoding: chunked\r\n\r\n".getBytes();
-    private static byte[] SERVER_LINE = null;
-    private static byte[] HEAD_PART_BYTES;
-    private final HttpEndpoint request;
-    private final AbstractResponse response;
+    private static final byte[] TEXT_PLAIN_CONTENT_LENGTH_FAST_WRITE = (HttpProtocol.HTTP_11.getProtocol() + " 200 OK\r\n" + HeaderName.SERVER.getName() + ":feat\r\nDate:" + DateUtils.formatRFC1123(DateUtils.currentTime()) + "\r\nContent-Type:" + HeaderValue.ContentType.TEXT_PLAIN_UTF8 + "\r\nContent-Length:").getBytes();
 
-    public HttpOutputStream(HttpEndpoint httpRequest, AbstractResponse response) {
+    private static final byte[] APPLICATION_JSON_FAST_WRITE = (HttpProtocol.HTTP_11.getProtocol() + " 200 OK\r\n" + HeaderName.SERVER.getName() + ":feat\r\nDate:" + DateUtils.formatRFC1123(DateUtils.currentTime()) + "\r\nContent-Type:" + HeaderValue.ContentType.APPLICATION_JSON + "\r\nContent-Length:").getBytes();
+    private static final byte[] CHUNKED = "\r\nTransfer-Encoding: chunked\r\n\r\n".getBytes();
+    private final HttpEndpoint request;
+    private final HttpResponseImpl response;
+
+    static {
+        HashedWheelTimer.DEFAULT_TIMER.scheduleWithFixedDelay(() -> {
+            byte[] bytes = DateUtils.formatRFC1123(DateUtils.currentTime()).getBytes();
+            System.arraycopy(bytes, 0, TEXT_PLAIN_CONTENT_LENGTH_FAST_WRITE, 35, bytes.length);
+            System.arraycopy(bytes, 0, APPLICATION_JSON_FAST_WRITE, 35, bytes.length);
+        }, 800, TimeUnit.MILLISECONDS);
+    }
+
+    public HttpOutputStream(HttpEndpoint httpRequest, HttpResponseImpl response) {
         super(httpRequest.getAioSession().writeBuffer());
         this.request = httpRequest;
         this.response = response;
-        if (SERVER_LINE == null) {
-            String serverLine = HeaderName.SERVER.getName() + ":feat\r\n";
-            SERVER_LINE = serverLine.getBytes();
-            HEAD_PART_BYTES = (HttpProtocol.HTTP_11.getProtocol() + " 200 OK\r\n" + serverLine + "Date:" + DateUtils.formatRFC1123(DateUtils.currentTime())).getBytes();
-            HashedWheelTimer.DEFAULT_TIMER.scheduleWithFixedDelay(() -> {
-                byte[] bytes = DateUtils.formatRFC1123(DateUtils.currentTime()).getBytes();
-                System.arraycopy(bytes, 0, HEAD_PART_BYTES, HEAD_PART_BYTES.length - bytes.length, bytes.length);
-            }, 800, TimeUnit.MILLISECONDS);
-        }
     }
 
     @Override
@@ -98,42 +94,39 @@ final class HttpOutputStream extends FeatOutputStream {
 
     private void writeHeadPart(boolean hasHeader) throws IOException {
         checkChunked();
-
         long contentLength = response.getContentLength();
         String contentType = response.getContentType();
         if (contentLength > 0) {
             remaining = contentLength;
         }
-
-        HttpStatus httpStatus = response.getHttpStatus();
-        boolean fastWrite = request.getProtocol() == HttpProtocol.HTTP_11 && httpStatus == HttpStatus.OK && response.getHeader(HeaderName.SERVER) == null;
-        // HTTP/1.1
-        if (fastWrite) {
-            writeBuffer.write(HEAD_PART_BYTES);
+        boolean fastWrite = request.getProtocol() == HttpProtocol.HTTP_11 && response.isFastFlag() && contentType != null;
+        if (fastWrite && HeaderValue.ContentType.TEXT_PLAIN_UTF8.equals(contentType)) {
+            writeTextPlainHeadPart(hasHeader, contentLength);
+        } else if (fastWrite && HeaderValue.ContentType.APPLICATION_JSON.equals(contentType)) {
+            writeApplicationJsonHeadPart(hasHeader, contentLength);
         } else {
-            writeString(request.getProtocol().getProtocol());
-            writeBuffer.writeByte(Constant.SP);
-            httpStatus.write(writeBuffer);
-            if (response.getHeader(HeaderName.SERVER) == null) {
-                writeBuffer.write(SERVER_LINE);
-            }
-            // Date
-            writeBuffer.write(HEAD_PART_BYTES, HEAD_PART_BYTES.length - 34, 34);
+            writeCommonHeadPart(hasHeader, contentType, contentLength);
         }
+    }
+
+    private void writeCommonHeadPart(boolean hasHeader, String contentType, long contentLength) throws IOException {
+        writeString(request.getProtocol().getProtocol());
+        writeBuffer.writeByte(Constant.SP);
+        response.getHttpStatus().write(writeBuffer);
+        // Server
+        if (response.getHeader(HeaderName.SERVER) == null) {
+            writeBuffer.write(TEXT_PLAIN_CONTENT_LENGTH_FAST_WRITE, 17, 13);
+        }
+        // Date
+        writeBuffer.write(TEXT_PLAIN_CONTENT_LENGTH_FAST_WRITE, 30, 34);
 
         if (contentType != null) {
-            if (contentType.equals(HeaderValue.ContentType.TEXT_PLAIN_UTF8)) {
-                writeBuffer.write(Content_Type_TEXT_Bytes);
-            } else if (contentType.equals(HeaderValue.ContentType.APPLICATION_JSON)) {
-                writeBuffer.write(Content_Type_JSON_Bytes);
-            } else {
-                writeBuffer.write(Content_Type_TEXT_Bytes, 0, 15);
-                writeString(contentType);
-            }
+            writeBuffer.write(TEXT_PLAIN_CONTENT_LENGTH_FAST_WRITE, 64, 15);
+            writeString(contentType);
         }
 
         if (contentLength >= 0) {
-            writeBuffer.write(Content_Length_Bytes);
+            writeBuffer.write(TEXT_PLAIN_CONTENT_LENGTH_FAST_WRITE, 104, 17);
             writeLongString(contentLength);
             if (hasHeader) {
                 writeBuffer.write(Constant.CRLF_BYTES);
@@ -147,6 +140,53 @@ final class HttpOutputStream extends FeatOutputStream {
                 writeBuffer.write(CHUNKED);
             }
         } else if (hasHeader) {
+            writeBuffer.write(Constant.CRLF_BYTES);
+        } else {
+            writeBuffer.write(Constant.CRLF_CRLF_BYTES);
+        }
+    }
+
+    private void writeApplicationJsonHeadPart(boolean hasHeader, long contentLength) throws IOException {
+        if (chunkedSupport) {
+            writeBuffer.write(APPLICATION_JSON_FAST_WRITE, 0, 95);
+            if (hasHeader) {
+                writeBuffer.write(CHUNKED, 0, CHUNKED.length - 2);
+            } else {
+                writeBuffer.write(CHUNKED);
+            }
+        } else {
+            if (contentLength >= 0) {
+                writeBuffer.write(APPLICATION_JSON_FAST_WRITE);
+                writeLongString(contentLength);
+            } else {
+                writeBuffer.write(APPLICATION_JSON_FAST_WRITE, 0, 95);
+            }
+            if (hasHeader) {
+                writeBuffer.write(Constant.CRLF_BYTES);
+            } else {
+                writeBuffer.write(Constant.CRLF_CRLF_BYTES);
+            }
+        }
+    }
+
+    private void writeTextPlainHeadPart(boolean hasHeader, long contentLength) throws IOException {
+        if (chunkedSupport) {
+            writeBuffer.write(TEXT_PLAIN_CONTENT_LENGTH_FAST_WRITE, 0, 104);
+            if (hasHeader) {
+                writeBuffer.write(CHUNKED, 0, CHUNKED.length - 2);
+            } else {
+                writeBuffer.write(CHUNKED);
+            }
+            return;
+        }
+
+        if (contentLength >= 0) {
+            writeBuffer.write(TEXT_PLAIN_CONTENT_LENGTH_FAST_WRITE);
+            writeLongString(contentLength);
+        } else {
+            writeBuffer.write(TEXT_PLAIN_CONTENT_LENGTH_FAST_WRITE, 0, 104);
+        }
+        if (hasHeader) {
             writeBuffer.write(Constant.CRLF_BYTES);
         } else {
             writeBuffer.write(Constant.CRLF_CRLF_BYTES);

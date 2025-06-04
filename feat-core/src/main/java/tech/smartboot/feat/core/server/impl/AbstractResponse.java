@@ -11,10 +11,10 @@
 package tech.smartboot.feat.core.server.impl;
 
 import tech.smartboot.feat.core.common.Cookie;
-import tech.smartboot.feat.core.common.HeaderValue;
-import tech.smartboot.feat.core.common.Reset;
 import tech.smartboot.feat.core.common.HeaderName;
+import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpStatus;
+import tech.smartboot.feat.core.common.Reset;
 import tech.smartboot.feat.core.common.io.FeatOutputStream;
 import tech.smartboot.feat.core.server.HttpResponse;
 
@@ -61,6 +61,7 @@ public abstract class AbstractResponse implements HttpResponse, Reset {
      * 是否关闭Socket连接通道
      */
     protected boolean closed = false;
+    private boolean fastFlag = true;
 
 
     public final void reset() {
@@ -70,6 +71,7 @@ public abstract class AbstractResponse implements HttpResponse, Reset {
         contentType = HeaderValue.ContentType.TEXT_HTML_UTF8;
         contentLength = -1;
         this.closed = false;
+        this.fastFlag = true;
     }
 
 
@@ -82,12 +84,15 @@ public abstract class AbstractResponse implements HttpResponse, Reset {
         return httpStatus;
     }
 
-    public final void setHttpStatus(HttpStatus httpStatus) {
+    public void setHttpStatus(HttpStatus httpStatus) {
         Objects.requireNonNull(httpStatus);
         if (httpStatus.value() < 100 || httpStatus.value() > 1000) {
             throw new IllegalArgumentException("httpStatus must between 100 and 1000");
         }
         this.httpStatus = httpStatus;
+        if (httpStatus.value() != HttpStatus.OK.value()) {
+            fastFlag = false;
+        }
     }
 
 
@@ -119,6 +124,9 @@ public abstract class AbstractResponse implements HttpResponse, Reset {
         Map<String, HeaderValue> emptyHeaders = Collections.emptyMap();
         if (headers == emptyHeaders) {
             headers = new HashMap<>();
+        }
+        if (HeaderName.SERVER.getName().equals(name)) {
+            fastFlag = false;
         }
         if (replace) {
             if (value == null) {
@@ -235,5 +243,9 @@ public abstract class AbstractResponse implements HttpResponse, Reset {
     @Override
     public Supplier<Map<String, String>> getTrailerFields() {
         return outputStream.getTrailerFields();
+    }
+
+    boolean isFastFlag() {
+        return fastFlag;
     }
 }
