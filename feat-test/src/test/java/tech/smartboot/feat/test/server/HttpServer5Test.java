@@ -250,4 +250,113 @@ public class HttpServer5Test extends BastTest {
         Assert.assertEquals("bb", response.getHeader("aa"));
         Assert.assertEquals(4, response.getHeaderNames().size());
     }
+
+
+    @Test
+    public void test111() throws Throwable {
+        bootstrap.httpHandler(request -> {
+            HttpResponse response = request.getResponse();
+            response.setContentType(HeaderValue.ContentType.APPLICATION_JSON);
+            response.setHeader(HeaderName.SERVER, "feat11");
+            byte[] bytes = "Hello World".getBytes(StandardCharsets.UTF_8);
+            response.setContentLength(bytes.length);
+            response.getOutputStream().write(bytes);
+        });
+        tech.smartboot.feat.core.client.HttpResponse response = httpClient.get("http://localhost:" + SERVER_PORT + "/hello").submit().get();
+        Assert.assertEquals(HttpStatus.OK.value(), response.statusCode());
+        Assert.assertEquals(HeaderValue.ContentType.APPLICATION_JSON, response.getHeader(HeaderName.CONTENT_TYPE));
+        Assert.assertEquals("11", response.getHeader(HeaderName.CONTENT_LENGTH));
+        Assert.assertEquals("feat11", response.getHeader(HeaderName.SERVER));
+        Assert.assertEquals(4, response.getHeaderNames().size());
+    }
+
+    @Test
+    public void test112() throws Throwable {
+        bootstrap.httpHandler(request -> {
+            HttpResponse response = request.getResponse();
+            response.setContentType(HeaderValue.ContentType.APPLICATION_JSON);
+            response.setHeader("aa", "bb");
+            response.setHeader(HeaderName.SERVER, "feat11");
+            byte[] bytes = "Hello World".getBytes(StandardCharsets.UTF_8);
+            response.setContentLength(bytes.length);
+            response.getOutputStream().write(bytes);
+        });
+        tech.smartboot.feat.core.client.HttpResponse response = httpClient.get("http://localhost:" + SERVER_PORT + "/hello").submit().get();
+        Assert.assertEquals(HttpStatus.OK.value(), response.statusCode());
+        Assert.assertEquals(HeaderValue.ContentType.APPLICATION_JSON, response.getHeader(HeaderName.CONTENT_TYPE));
+        Assert.assertEquals("11", response.getHeader(HeaderName.CONTENT_LENGTH));
+        Assert.assertEquals("feat11", response.getHeader(HeaderName.SERVER));
+        Assert.assertEquals("bb", response.getHeader("aa"));
+        Assert.assertEquals(5, response.getHeaderNames().size());
+    }
+
+    @Test
+    public void test113() throws Throwable {
+        bootstrap.httpHandler(request -> {
+            HttpResponse response = request.getResponse();
+            response.setContentType(HeaderValue.ContentType.APPLICATION_JSON);
+            response.setHeader("aa", "bb");
+            response.setHeader(HeaderName.SERVER, "feat11");
+            byte[] bytes = "Hello World".getBytes(StandardCharsets.UTF_8);
+            response.getOutputStream().write(bytes);
+        });
+        tech.smartboot.feat.core.client.HttpResponse response = httpClient.get("http://localhost:" + SERVER_PORT + "/hello").submit().get();
+        Assert.assertEquals(HttpStatus.OK.value(), response.statusCode());
+        Assert.assertEquals(HeaderValue.ContentType.APPLICATION_JSON, response.getHeader(HeaderName.CONTENT_TYPE));
+        Assert.assertEquals("chunked", response.getHeader(HeaderName.TRANSFER_ENCODING));
+        Assert.assertEquals("feat11", response.getHeader(HeaderName.SERVER));
+        Assert.assertEquals("bb", response.getHeader("aa"));
+        Assert.assertEquals(5, response.getHeaderNames().size());
+    }
+
+    @Test
+    public void test114() throws Throwable {
+        bootstrap.httpHandler(request -> {
+            HttpResponse response = request.getResponse();
+            response.setContentType(HeaderValue.ContentType.APPLICATION_JSON);
+            response.setHeader(HeaderName.SERVER, "feat11");
+            byte[] bytes = "Hello World".getBytes(StandardCharsets.UTF_8);
+            response.getOutputStream().write(bytes);
+        });
+        tech.smartboot.feat.core.client.HttpResponse response = httpClient.get("http://localhost:" + SERVER_PORT + "/hello").submit().get();
+        Assert.assertEquals(HttpStatus.OK.value(), response.statusCode());
+        Assert.assertEquals(HeaderValue.ContentType.APPLICATION_JSON, response.getHeader(HeaderName.CONTENT_TYPE));
+        Assert.assertEquals("chunked", response.getHeader(HeaderName.TRANSFER_ENCODING));
+        Assert.assertEquals("feat11", response.getHeader(HeaderName.SERVER));
+        Assert.assertEquals(4, response.getHeaderNames().size());
+    }
+
+    @Test
+    public void test115() throws Throwable {
+        bootstrap.httpHandler(request -> {
+            HttpResponse response = request.getResponse();
+            response.setContentType(HeaderValue.ContentType.APPLICATION_JSON);
+            response.setHeader(HeaderName.SERVER, "feat11");
+            byte[] bytes = "Hello World".getBytes(StandardCharsets.UTF_8);
+            response.getOutputStream().write(bytes);
+        });
+        tech.smartboot.feat.core.client.HttpResponse response = httpClient.rest("HEAD", "http://localhost:" + SERVER_PORT + "/hello").submit().get();
+        Assert.assertEquals(HttpStatus.OK.value(), response.statusCode());
+        Assert.assertEquals(HeaderValue.ContentType.APPLICATION_JSON, response.getHeader(HeaderName.CONTENT_TYPE));
+        Assert.assertEquals("feat11", response.getHeader(HeaderName.SERVER));
+        Assert.assertEquals(3, response.getHeaderNames().size());
+    }
+
+    @Test
+    public void test116() throws Throwable {
+        bootstrap.httpHandler(request -> {
+            HttpResponse response = request.getResponse();
+            response.setContentType(HeaderValue.ContentType.APPLICATION_JSON);
+            response.setHeader(HeaderName.SERVER, "feat11");
+            response.setHeader("aa", "bb");
+            byte[] bytes = "Hello World".getBytes(StandardCharsets.UTF_8);
+            response.getOutputStream().write(bytes);
+        });
+        tech.smartboot.feat.core.client.HttpResponse response = httpClient.rest("HEAD", "http://localhost:" + SERVER_PORT + "/hello").submit().get();
+        Assert.assertEquals(HttpStatus.OK.value(), response.statusCode());
+        Assert.assertEquals(HeaderValue.ContentType.APPLICATION_JSON, response.getHeader(HeaderName.CONTENT_TYPE));
+        Assert.assertEquals("feat11", response.getHeader(HeaderName.SERVER));
+        Assert.assertEquals("bb", response.getHeader("aa"));
+        Assert.assertEquals(4, response.getHeaderNames().size());
+    }
 }
