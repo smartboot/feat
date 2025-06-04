@@ -18,9 +18,9 @@ import org.junit.Test;
 import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpPost;
+import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpMethod;
-import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.test.BastTest;
@@ -34,7 +34,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.zip.GZIPOutputStream;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 public class HttpServer3Test extends BastTest {
@@ -102,9 +102,9 @@ public class HttpServer3Test extends BastTest {
         HttpPost httpPost = httpClient.post(requestUnit.getUri());
         requestUnit.getHeaders().forEach((name, value) -> httpPost.header(h -> h.add(name, value)));
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("author").append("=").append("三刀");
+        stringBuilder.append("author").append("=").append("sandao");
         for (int i = 0; i < 10000; i++) {
-            stringBuilder.append("&").append("author").append(i).append("=").append("三刀").append(i);
+            stringBuilder.append("&").append("author").append(i + '0').append("=").append("sandao").append(i + '0');
         }
         httpPost.header(h -> h.add("longText", stringBuilder.toString()));
         httpPost.body().formUrlencoded(requestUnit.getParameters());
