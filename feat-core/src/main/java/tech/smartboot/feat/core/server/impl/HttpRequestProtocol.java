@@ -17,6 +17,8 @@ import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HttpProtocol;
 import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.exception.HttpException;
+import tech.smartboot.feat.core.common.logging.Logger;
+import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.utils.ByteTree;
 import tech.smartboot.feat.core.common.utils.Constant;
 import tech.smartboot.feat.core.common.utils.StringUtils;
@@ -27,10 +29,11 @@ import tech.smartboot.feat.core.server.waf.WAF;
 import java.nio.ByteBuffer;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(HttpRequestProtocol.class);
     private final ServerOptions options;
     private static final ByteTree.EndMatcher URI_END_MATCHER = endByte -> (endByte == ' ' || endByte == '?');
 
@@ -102,7 +105,11 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
                 if (major == '2') {
                     request.setProtocol(HttpProtocol.HTTP_2);
                 } else if (major != '1') {
-                    throw new HttpException(HttpStatus.BAD_REQUEST, "Unsupported HTTP version: " + major + "." + byteBuffer.get(byteBuffer.position() + 7));
+                    byte[] bytes = new byte[byteBuffer.limit()];
+                    byteBuffer.position(0);
+                    byteBuffer.get(bytes);
+                    LOGGER.error("Unsupported HTTP version, data: " + org.smartboot.socket.util.StringUtils.toHexString(bytes));
+                    throw new HttpException(HttpStatus.BAD_REQUEST, "Unsupported HTTP version");
                 } else {
                     byte minor = byteBuffer.get(byteBuffer.position() + 7);
                     switch (minor) {
