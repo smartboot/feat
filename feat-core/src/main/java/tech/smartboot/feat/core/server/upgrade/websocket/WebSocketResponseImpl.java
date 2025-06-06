@@ -11,9 +11,9 @@
 package tech.smartboot.feat.core.server.upgrade.websocket;
 
 import tech.smartboot.feat.core.common.codec.websocket.CloseReason;
+import tech.smartboot.feat.core.common.codec.websocket.WebSocket;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
-import tech.smartboot.feat.core.common.utils.WebSocketUtil;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.WebSocketResponse;
 
@@ -22,7 +22,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 class WebSocketResponseImpl implements WebSocketResponse {
@@ -39,7 +39,7 @@ class WebSocketResponseImpl implements WebSocketResponse {
         if (LOGGER.isInfoEnabled()) LOGGER.info("发送字符串消息: " + text);
         byte[] bytes = text.getBytes(StandardCharsets.UTF_8);
         try {
-            WebSocketUtil.send(httpResponse.getOutputStream(), WebSocketUtil.OPCODE_TEXT, bytes, 0, bytes.length);
+            WebSocket.send(httpResponse.getOutputStream(), WebSocket.OPCODE_TEXT, bytes, 0, bytes.length);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -49,7 +49,7 @@ class WebSocketResponseImpl implements WebSocketResponse {
     public void sendBinaryMessage(byte[] bytes) {
         if (LOGGER.isInfoEnabled()) LOGGER.info("发送二进制消息: " + Arrays.toString(bytes));
         try {
-            WebSocketUtil.send(httpResponse.getOutputStream(), WebSocketUtil.OPCODE_BINARY, bytes, 0, bytes.length);
+            WebSocket.send(httpResponse.getOutputStream(), WebSocket.OPCODE_BINARY, bytes, 0, bytes.length);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -58,7 +58,7 @@ class WebSocketResponseImpl implements WebSocketResponse {
     @Override
     public void sendBinaryMessage(byte[] bytes, int offset, int length) {
         try {
-            WebSocketUtil.send(httpResponse.getOutputStream(), WebSocketUtil.OPCODE_BINARY, bytes, offset, length);
+            WebSocket.send(httpResponse.getOutputStream(), WebSocket.OPCODE_BINARY, bytes, offset, length);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -67,7 +67,7 @@ class WebSocketResponseImpl implements WebSocketResponse {
     @Override
     public void pong(byte[] bytes) {
         try {
-            WebSocketUtil.send(httpResponse.getOutputStream(), WebSocketUtil.OPCODE_PONG, bytes, 0, bytes.length);
+            WebSocket.send(httpResponse.getOutputStream(), WebSocket.OPCODE_PONG, bytes, 0, bytes.length);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -85,7 +85,7 @@ class WebSocketResponseImpl implements WebSocketResponse {
         }
         closed = true;
         try {
-            WebSocketUtil.send(httpResponse.getOutputStream(), WebSocketUtil.OPCODE_CLOSE, new CloseReason(code, reason).toBytes());
+            WebSocket.send(httpResponse.getOutputStream(), WebSocket.OPCODE_CLOSE, new CloseReason(code, reason).toBytes());
         } catch (IOException e) {
             throw new RuntimeException(e);
         } finally {
@@ -96,7 +96,7 @@ class WebSocketResponseImpl implements WebSocketResponse {
     @Override
     public void ping(byte[] bytes) {
         try {
-            WebSocketUtil.send(httpResponse.getOutputStream(), WebSocketUtil.OPCODE_PING, bytes);
+            WebSocket.send(httpResponse.getOutputStream(), WebSocket.OPCODE_PING, bytes);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

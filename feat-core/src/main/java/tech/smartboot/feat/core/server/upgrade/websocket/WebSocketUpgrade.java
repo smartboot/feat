@@ -22,7 +22,6 @@ import tech.smartboot.feat.core.common.codec.websocket.Decoder;
 import tech.smartboot.feat.core.common.codec.websocket.WebSocket;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
-import tech.smartboot.feat.core.common.utils.WebSocketUtil;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.WebSocketRequest;
@@ -151,26 +150,26 @@ public class WebSocketUpgrade extends Upgrade {
     public void handle(WebSocketRequest request, WebSocketResponse response) throws Throwable {
         try {
             switch (request.getFrameOpcode()) {
-                case WebSocketUtil.OPCODE_TEXT:
+                case WebSocket.OPCODE_TEXT:
                     handleTextMessage(request, response, new String(request.getPayload(), StandardCharsets.UTF_8));
                     break;
-                case WebSocketUtil.OPCODE_BINARY:
+                case WebSocket.OPCODE_BINARY:
                     handleBinaryMessage(request, response, request.getPayload());
                     break;
-                case WebSocketUtil.OPCODE_CLOSE:
+                case WebSocket.OPCODE_CLOSE:
                     try {
                         onClose(request, response, new CloseReason(request.getPayload()));
                     } finally {
                         response.close();
                     }
                     break;
-                case WebSocketUtil.OPCODE_PING:
+                case WebSocket.OPCODE_PING:
                     handlePing(request, response);
                     break;
-                case WebSocketUtil.OPCODE_PONG:
+                case WebSocket.OPCODE_PONG:
                     handlePong(request, response);
                     break;
-                case WebSocketUtil.OPCODE_CONTINUE:
+                case WebSocket.OPCODE_CONTINUE:
                     handleContinueMessage(request, response, request.getPayload());
                     break;
                 default:

@@ -17,7 +17,6 @@ import tech.smartboot.feat.core.common.codec.websocket.BasicFrameDecoder;
 import tech.smartboot.feat.core.common.codec.websocket.Decoder;
 import tech.smartboot.feat.core.common.codec.websocket.WebSocket;
 import tech.smartboot.feat.core.common.utils.SmartDecoder;
-import tech.smartboot.feat.core.common.utils.WebSocketUtil;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -52,7 +51,7 @@ public abstract class WebSocketResponseImpl extends AbstractResponse implements 
 
 
     public void reset() {
-        if (frameOpcode != WebSocketUtil.OPCODE_CONTINUE) {
+        if (frameOpcode != WebSocket.OPCODE_CONTINUE) {
             payload.reset();
         }
         decoder = basicFrameDecoder;

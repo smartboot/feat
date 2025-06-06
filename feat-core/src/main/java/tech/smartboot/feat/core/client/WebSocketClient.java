@@ -30,9 +30,9 @@ import tech.smartboot.feat.core.common.codec.websocket.WebSocket;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.utils.Constant;
-import tech.smartboot.feat.core.common.utils.WebSocketUtil;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
@@ -48,6 +48,12 @@ import java.util.function.Consumer;
  */
 public class WebSocketClient {
     private static final Logger LOGGER = LoggerFactory.getLogger(WebSocketClient.class);
+    private static final byte[] maskKey = new byte[4];
+    private static final SecureRandom secureRandom = new SecureRandom();
+
+    static {
+        secureRandom.nextBytes(maskKey);
+    }
 
     private final WebSocketOptions options;
 
@@ -169,8 +175,7 @@ public class WebSocketClient {
                 firstConnected = false;
             }
             connected = true;
-            client = options.getProxy() == null ? new AioQuickClient(options.getHost(), options.getPort(), processor, processor) :
-                    new AioQuickClient(options.getProxy().getProxyHost(), options.getProxy().getProxyPort(), processor, processor);
+            client = options.getProxy() == null ? new AioQuickClient(options.getHost(), options.getPort(), processor, processor) : new AioQuickClient(options.getProxy().getProxyHost(), options.getProxy().getProxyPort(), processor, processor);
             client.setReadBufferSize(options.readBufferSize());
             if (options.getConnectTimeout() > 0) {
                 client.connectTimeout(options.getConnectTimeout());
@@ -191,28 +196,28 @@ public class WebSocketClient {
             public void accept(WebSocketResponseImpl webSocketResponse) {
                 try {
                     switch (webSocketResponse.getFrameOpcode()) {
-                        case WebSocketUtil.OPCODE_TEXT:
+                        case WebSocket.OPCODE_TEXT:
                             listener.onMessage(WebSocketClient.this, new String(webSocketResponse.getPayload(), StandardCharsets.UTF_8));
                             break;
-                        case WebSocketUtil.OPCODE_BINARY:
+                        case WebSocket.OPCODE_BINARY:
                             listener.onMessage(WebSocketClient.this, webSocketResponse.getPayload());
                             break;
-                        case WebSocketUtil.OPCODE_CLOSE:
+                        case WebSocket.OPCODE_CLOSE:
                             try {
                                 listener.onClose(WebSocketClient.this, webSocketResponse, new CloseReason(webSocketResponse.getPayload()));
                             } finally {
                                 WebSocketClient.this.close();
                             }
                             break;
-                        case WebSocketUtil.OPCODE_PING:
+                        case WebSocket.OPCODE_PING:
                             System.out.println("ping...");
-                            WebSocketUtil.send(request.getOutputStream(), WebSocketUtil.OPCODE_PONG, webSocketResponse.getPayload(), 0, webSocketResponse.getPayload().length);
+                            WebSocket.send(request.getOutputStream(), WebSocket.OPCODE_PONG, webSocketResponse.getPayload(), 0, webSocketResponse.getPayload().length);
 //                        webSocketResponse.pong(webSocketResponse.getPayload());
                             break;
-                        case WebSocketUtil.OPCODE_PONG:
+                        case WebSocket.OPCODE_PONG:
 //                                handlePong(request, response);
                             break;
-                        case WebSocketUtil.OPCODE_CONTINUE:
+                        case WebSocket.OPCODE_CONTINUE:
                             LOGGER.warn("unSupport OPCODE_CONTINUE now,ignore payload: {}", StringUtils.toHexString(webSocketResponse.getPayload()));
                             break;
                         default:
@@ -287,7 +292,7 @@ public class WebSocketClient {
     public void sendMessage(String message) throws IOException {
         // 发送消息到服务器
         byte[] bytes = message.getBytes(StandardCharsets.UTF_8);
-        WebSocketUtil.sendMask(request.getOutputStream(), WebSocketUtil.OPCODE_TEXT, bytes, 0, bytes.length);
+        sendMask(request.getOutputStream(), WebSocket.OPCODE_TEXT, bytes, 0, bytes.length);
         request.getOutputStream().flush();
     }
 
@@ -299,7 +304,7 @@ public class WebSocketClient {
      */
     public void sendBinary(byte[] bytes) throws IOException {
         // 发送二进制消息到服务器
-        WebSocketUtil.sendMask(request.getOutputStream(), WebSocketUtil.OPCODE_BINARY, bytes, 0, bytes.length);
+        sendMask(request.getOutputStream(), WebSocket.OPCODE_BINARY, bytes, 0, bytes.length);
         request.getOutputStream().flush();
     }
 
@@ -308,7 +313,7 @@ public class WebSocketClient {
             return;
         }
         try {
-            WebSocketUtil.sendMask(request.getOutputStream(), WebSocketUtil.OPCODE_CLOSE, new CloseReason(CloseReason.NORMAL_CLOSURE, "").toBytes());
+            sendMask(request.getOutputStream(), WebSocket.OPCODE_CLOSE, new CloseReason(CloseReason.NORMAL_CLOSURE, "").toBytes());
         } catch (IOException e) {
             throw new RuntimeException(e);
         } finally {
@@ -317,4 +322,55 @@ public class WebSocketClient {
         }
     }
 
+
+    private void sendMask(OutputStream outputStream, byte opCode, byte[] bytes) throws IOException {
+        sendMask(outputStream, opCode, bytes, 0, bytes.length);
+    }
+
+    private void sendMask(OutputStream outputStream, byte opCode, byte[] bytes, int offset, int len) throws IOException {
+//        // 生成掩码密钥值
+//        byte[] maskKey = new byte[4];
+//        Random random = new Random();
+//        random.nextBytes(maskKey);
+
+        int maxlength;
+        if (len < Constant.WS_PLAY_LOAD_126) {
+            maxlength = 6 + len;
+        } else {
+            maxlength = 8 + Math.min(Constant.WS_DEFAULT_MAX_FRAME_SIZE, len);
+        }
+        byte[] writBytes = new byte[maxlength];
+        do {
+            int payloadLength = len - offset;
+            if (payloadLength > Constant.WS_DEFAULT_MAX_FRAME_SIZE) {
+                payloadLength = Constant.WS_DEFAULT_MAX_FRAME_SIZE;
+            }
+            byte firstByte = offset + payloadLength < len ? (byte) 0x00 : (byte) 0x80;
+            if (offset == 0) {
+                firstByte |= opCode;
+            } else {
+                firstByte |= WebSocket.OPCODE_CONTINUE;
+            }
+            byte secondByte = payloadLength < Constant.WS_PLAY_LOAD_126 ? (byte) payloadLength : Constant.WS_PLAY_LOAD_126;
+            writBytes[0] = firstByte;
+            writBytes[1] = (byte) (secondByte | 0x80);
+            if (secondByte == Constant.WS_PLAY_LOAD_126) {
+                writBytes[2] = (byte) (payloadLength >> 8 & 0xff);
+                writBytes[3] = (byte) (payloadLength & 0xff);
+                System.arraycopy(maskKey, 0, writBytes, 4, maskKey.length);
+                // 对消息进行掩码处理
+                for (int i = 0; i < payloadLength; i++) {
+                    writBytes[8 + i] = (byte) (bytes[i] ^ maskKey[i % 4]);
+                }
+            } else {
+                System.arraycopy(maskKey, 0, writBytes, 2, maskKey.length);
+                // 对消息进行掩码处理
+                for (int i = 0; i < payloadLength; i++) {
+                    writBytes[6 + i] = (byte) (bytes[i] ^ maskKey[i % 4]);
+                }
+            }
+            outputStream.write(writBytes, 0, payloadLength < Constant.WS_PLAY_LOAD_126 ? 6 + payloadLength : 8 + payloadLength);
+            offset += payloadLength;
+        } while (offset < len);
+    }
 }

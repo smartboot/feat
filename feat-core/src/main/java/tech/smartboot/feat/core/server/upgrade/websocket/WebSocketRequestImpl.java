@@ -13,14 +13,13 @@ package tech.smartboot.feat.core.server.upgrade.websocket;
 import tech.smartboot.feat.core.common.Reset;
 import tech.smartboot.feat.core.common.codec.websocket.WebSocket;
 import tech.smartboot.feat.core.common.utils.SmartDecoder;
-import tech.smartboot.feat.core.common.utils.WebSocketUtil;
 import tech.smartboot.feat.core.server.WebSocketRequest;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 class WebSocketRequestImpl implements WebSocketRequest, WebSocket, Reset {
@@ -39,7 +38,7 @@ class WebSocketRequestImpl implements WebSocketRequest, WebSocket, Reset {
 
     @Override
     public void reset() {
-        if (frameOpcode != WebSocketUtil.OPCODE_CONTINUE) {
+        if (frameOpcode != WebSocket.OPCODE_CONTINUE) {
             payload.reset();
         }
     }
