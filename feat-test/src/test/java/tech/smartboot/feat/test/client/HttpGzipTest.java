@@ -16,9 +16,9 @@ import org.junit.Before;
 import org.junit.Test;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpResponse;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
-import tech.smartboot.feat.core.common.utils.NumberUtils;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.router.Router;
 
@@ -41,7 +41,7 @@ public class HttpGzipTest {
         Router routeHandle = new Router();
         routeHandle.route("/test", ctx -> {
             tech.smartboot.feat.core.server.HttpResponse response = ctx.Response;
-            int count = NumberUtils.toInt(ctx.Request.getParameter("count"), 1);
+            int count = FeatUtils.toInt(ctx.Request.getParameter("count"), 1);
             response.setHeader(HeaderName.CONTENT_ENCODING, HeaderValue.ContentEncoding.GZIP);
             GZIPOutputStream outputStream = new GZIPOutputStream(response.getOutputStream());
             while (count-- > 0) {

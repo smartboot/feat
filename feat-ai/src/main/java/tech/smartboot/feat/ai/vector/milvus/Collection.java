@@ -18,7 +18,6 @@ import tech.smartboot.feat.ai.vector.expression.Expression;
 import tech.smartboot.feat.ai.vector.milvus.collection.HybridSearch;
 import tech.smartboot.feat.ai.vector.milvus.response.CollectionInsertResponse;
 import tech.smartboot.feat.core.client.HttpPost;
-import tech.smartboot.feat.core.common.utils.CollectionUtils;
 
 import java.util.Collections;
 import java.util.HashMap;

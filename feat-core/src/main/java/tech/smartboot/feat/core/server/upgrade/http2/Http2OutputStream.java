@@ -16,8 +16,6 @@ import tech.smartboot.feat.core.common.codec.h2.codec.DataFrame;
 import tech.smartboot.feat.core.common.codec.h2.codec.HeadersFrame;
 import tech.smartboot.feat.core.common.codec.h2.codec.Http2Frame;
 import tech.smartboot.feat.core.common.io.FeatOutputStream;
-import tech.smartboot.feat.core.common.utils.DateUtils;
-import tech.smartboot.feat.core.common.utils.HttpUtils;
 import tech.smartboot.feat.core.server.impl.AbstractResponse;
 
 import java.io.IOException;
@@ -57,7 +55,7 @@ public final class Http2OutputStream extends FeatOutputStream {
         // Create HEADERS frame
         response.setHeader(":status", String.valueOf(response.getHttpStatus().value()));
 
-        List<ByteBuffer> buffers = HttpUtils.HPackEncoder(http2Session.getHpackEncoder(), response.getHeaders());
+        List<ByteBuffer> buffers = FeatUtils.HPackEncoder(http2Session.getHpackEncoder(), response.getHeaders());
 
         boolean multipleHeaders = buffers.size() > 1;
 
@@ -87,7 +85,7 @@ public final class Http2OutputStream extends FeatOutputStream {
         }
         DataFrame dataFrame = new DataFrame(streamId, 0, len);
         dataFrame.writeTo(writeBuffer, b, off, len);
-        httpRequest.setLatestIo(DateUtils.currentTime().getTime());
+        httpRequest.setLatestIo(FeatUtils.currentTime().getTime());
     }
 
 }

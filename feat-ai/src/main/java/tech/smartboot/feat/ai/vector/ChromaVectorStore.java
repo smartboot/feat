@@ -18,8 +18,8 @@ import tech.smartboot.feat.ai.vector.chroma.collection.Query;
 import tech.smartboot.feat.ai.vector.expression.Convert;
 import tech.smartboot.feat.ai.vector.expression.Expression;
 import tech.smartboot.feat.ai.vector.expression.SimpleExpression;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.exception.FeatException;
-import tech.smartboot.feat.core.common.utils.CollectionUtils;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 
 import java.util.ArrayList;
@@ -127,7 +127,7 @@ public class ChromaVectorStore implements VectorStore {
             include.add("metadatas");
         }
         query.setQueryText(request.getQuery());
-        if (CollectionUtils.isNotEmpty(include)) {
+        if (FeatUtils.isNotEmpty(include)) {
             query.setInclude(include);
         }
         collection.query(query);

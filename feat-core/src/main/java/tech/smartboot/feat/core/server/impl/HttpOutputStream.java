@@ -11,6 +11,7 @@
 package tech.smartboot.feat.core.server.impl;
 
 import org.smartboot.socket.timer.HashedWheelTimer;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpMethod;
@@ -18,7 +19,6 @@ import tech.smartboot.feat.core.common.HttpProtocol;
 import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.io.FeatOutputStream;
 import tech.smartboot.feat.core.common.utils.Constant;
-import tech.smartboot.feat.core.common.utils.DateUtils;
 import tech.smartboot.feat.core.server.ServerOptions;
 
 import java.io.IOException;
@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit;
  * @version v1.0.0
  */
 final class HttpOutputStream extends FeatOutputStream {
-    private static final String TEXT_PLAIN_FAST_WRITE = HttpProtocol.HTTP_11.getProtocol() + " 200 OK\r\n" + HeaderName.SERVER.getName() + ":feat/" + ServerOptions.VERSION + "\r\nDate:" + DateUtils.formatRFC1123(DateUtils.currentTime()) + "\r\nContent-Type:" + HeaderValue.ContentType.TEXT_PLAIN_UTF8 + "\r\nContent-Length:";
+    private static final String TEXT_PLAIN_FAST_WRITE = HttpProtocol.HTTP_11.getProtocol() + " 200 OK\r\n" + HeaderName.SERVER.getName() + ":feat/" + ServerOptions.VERSION + "\r\nDate:" + FeatUtils.formatRFC1123(FeatUtils.currentTime()) + "\r\nContent-Type:" + HeaderValue.ContentType.TEXT_PLAIN_UTF8 + "\r\nContent-Length:";
     private static final int SERVER_INDEX = TEXT_PLAIN_FAST_WRITE.indexOf(HeaderName.SERVER.getName());
     private static final int DATE_INDEX = TEXT_PLAIN_FAST_WRITE.indexOf("Date:");
     private static final int SERVER_INDEX_LENGTH = TEXT_PLAIN_FAST_WRITE.indexOf(HeaderName.DATE.getName()) - SERVER_INDEX;
@@ -38,7 +38,7 @@ final class HttpOutputStream extends FeatOutputStream {
     private static final int PLAIN_CONTENT_LENGTH_INDEX = TEXT_PLAIN_FAST_WRITE.indexOf(HeaderName.CONTENT_LENGTH.getName()) - 2;
     private static final byte[] TEXT_PLAIN_FAST_WRITE_BYTES = TEXT_PLAIN_FAST_WRITE.getBytes();
 
-    private static final String APPLICATION_JSON = HttpProtocol.HTTP_11.getProtocol() + " 200 OK\r\n" + HeaderName.SERVER.getName() + ":feat/" + ServerOptions.VERSION + "\r\nDate:" + DateUtils.formatRFC1123(DateUtils.currentTime()) + "\r\nContent-Type:" + HeaderValue.ContentType.APPLICATION_JSON + "\r\nContent-Length:";
+    private static final String APPLICATION_JSON = HttpProtocol.HTTP_11.getProtocol() + " 200 OK\r\n" + HeaderName.SERVER.getName() + ":feat/" + ServerOptions.VERSION + "\r\nDate:" + FeatUtils.formatRFC1123(FeatUtils.currentTime()) + "\r\nContent-Type:" + HeaderValue.ContentType.APPLICATION_JSON + "\r\nContent-Length:";
     private static final int JSON_CONTENT_LENGTH_INDEX = APPLICATION_JSON.indexOf(HeaderName.CONTENT_LENGTH.getName()) - 2;
     private static final byte[] APPLICATION_JSON_FAST_WRITE_BYTES = APPLICATION_JSON.getBytes();
     private static final byte[] CHUNKED = "\r\nTransfer-Encoding: chunked\r\n\r\n".getBytes();
@@ -48,7 +48,7 @@ final class HttpOutputStream extends FeatOutputStream {
     static {
 
         HashedWheelTimer.DEFAULT_TIMER.scheduleWithFixedDelay(() -> {
-            byte[] bytes = DateUtils.formatRFC1123(DateUtils.currentTime()).getBytes();
+            byte[] bytes = FeatUtils.formatRFC1123(FeatUtils.currentTime()).getBytes();
             System.arraycopy(bytes, 0, TEXT_PLAIN_FAST_WRITE_BYTES, DATE_INDEX + 5, bytes.length);
             System.arraycopy(bytes, 0, APPLICATION_JSON_FAST_WRITE_BYTES, DATE_INDEX + 5, bytes.length);
         }, 800, TimeUnit.MILLISECONDS);
@@ -63,7 +63,7 @@ final class HttpOutputStream extends FeatOutputStream {
     @Override
     public void write(byte[] b, int off, int len) throws IOException {
         super.write(b, off, len);
-        request.setLatestIo(DateUtils.currentTime().getTime());
+        request.setLatestIo(FeatUtils.currentTime().getTime());
     }
 
     /**

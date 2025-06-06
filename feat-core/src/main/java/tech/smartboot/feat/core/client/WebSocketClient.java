@@ -18,6 +18,7 @@ import org.smartboot.socket.transport.AioSession;
 import org.smartboot.socket.util.StringUtils;
 import tech.smartboot.feat.core.client.impl.WebSocketRequestImpl;
 import tech.smartboot.feat.core.client.impl.WebSocketResponseImpl;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpMethod;
@@ -29,7 +30,6 @@ import tech.smartboot.feat.core.common.codec.websocket.WebSocket;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.utils.Constant;
-import tech.smartboot.feat.core.common.utils.NumberUtils;
 import tech.smartboot.feat.core.common.utils.WebSocketUtil;
 
 import java.io.IOException;
@@ -121,7 +121,7 @@ public class WebSocketClient {
         int port;
         if (portIndex > 0) {
             host = url.substring(schemaIndex + 3, portIndex);
-            port = NumberUtils.toInt(uriIndex > 0 ? url.substring(portIndex + 1, uriIndex) : url.substring(portIndex + 1), -1);
+            port = FeatUtils.toInt(uriIndex > 0 ? url.substring(portIndex + 1, uriIndex) : url.substring(portIndex + 1), -1);
         } else if (uriIndex > 0) {
             host = url.substring(schemaIndex + 3, uriIndex);
             port = wss ? 443 : 80;

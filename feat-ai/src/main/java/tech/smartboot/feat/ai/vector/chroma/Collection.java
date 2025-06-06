@@ -18,8 +18,8 @@ import tech.smartboot.feat.ai.vector.chroma.collection.Request;
 import tech.smartboot.feat.core.client.HttpGet;
 import tech.smartboot.feat.core.client.HttpPost;
 import tech.smartboot.feat.core.client.HttpRest;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HttpMethod;
-import tech.smartboot.feat.core.common.utils.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -107,6 +107,7 @@ public class Collection {
 
     /**
      * 更新文档，若不存在则忽略
+     *
      * @param document
      */
     public void upsert(Document document) {
@@ -122,6 +123,7 @@ public class Collection {
 
     /**
      * 更新文档，若不存在则忽略
+     *
      * @param document
      */
     public void update(Document document) {
@@ -165,7 +167,7 @@ public class Collection {
     public void query(Query query) {
         HttpPost httpPost = chroma.getHttpClient().post("/api/v2/tenants/" + tenant + "/databases/" + database + "/collections/" + id + "/query");
         // 若queryTexts不为空，则将其转换为embeddings
-        if (CollectionUtils.isNotEmpty(query.getQueryTexts())) {
+        if (FeatUtils.isNotEmpty(query.getQueryTexts())) {
             query.setQueryEmbeddings(chroma.options().embeddingModel().embed(query.getQueryTexts()));
         }
         httpPost.postJson(query);

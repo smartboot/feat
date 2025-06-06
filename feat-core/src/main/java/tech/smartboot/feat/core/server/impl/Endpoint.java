@@ -12,6 +12,7 @@ package tech.smartboot.feat.core.server.impl;
 
 import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.common.Cookie;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpProtocol;
@@ -22,8 +23,6 @@ import tech.smartboot.feat.core.common.io.BodyInputStream;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.utils.Constant;
-import tech.smartboot.feat.core.common.utils.HttpUtils;
-import tech.smartboot.feat.core.common.utils.NumberUtils;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpRequest;
@@ -309,7 +308,7 @@ public abstract class Endpoint implements Reset {
             return contentLength;
         }
         //不包含content-length,则为：-1
-        contentLength = NumberUtils.toLong(getHeader(HeaderName.CONTENT_LENGTH), NONE_CONTENT_LENGTH);
+        contentLength = FeatUtils.toLong(getHeader(HeaderName.CONTENT_LENGTH), NONE_CONTENT_LENGTH);
 
         return contentLength;
     }
@@ -330,7 +329,7 @@ public abstract class Endpoint implements Reset {
         String urlParamStr = queryString;
         if (StringUtils.isNotBlank(urlParamStr)) {
             urlParamStr = StringUtils.substringBefore(urlParamStr, "#");
-            HttpUtils.decodeParamString(urlParamStr, parameters);
+            FeatUtils.decodeParamString(urlParamStr, parameters);
         }
 
         //application/x-www-form-urlencoded
@@ -346,7 +345,7 @@ public abstract class Endpoint implements Reset {
                     while ((len = inputStream.read(bytes)) != -1) {
                         outputStream.write(bytes, 0, len);
                     }
-                    HttpUtils.decodeParamString(outputStream.toString(), parameters);
+                    FeatUtils.decodeParamString(outputStream.toString(), parameters);
                 }
             } catch (IOException e) {
                 LOGGER.error("getParameterValues error", e);
@@ -433,7 +432,7 @@ public abstract class Endpoint implements Reset {
         }
         final List<Cookie> parsedCookies = new ArrayList<>();
         while (headerValue != null) {
-            parsedCookies.addAll(HttpUtils.decodeCookies(headerValue.getValue()));
+            parsedCookies.addAll(FeatUtils.decodeCookies(headerValue.getValue()));
             headerValue = headerValue.getNextValue();
         }
         cookies = new Cookie[parsedCookies.size()];

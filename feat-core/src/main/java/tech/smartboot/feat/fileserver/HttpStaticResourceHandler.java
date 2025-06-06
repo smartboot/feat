@@ -10,6 +10,7 @@
 
 package tech.smartboot.feat.fileserver;
 
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpMethod;
@@ -19,7 +20,6 @@ import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.common.io.FeatOutputStream;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
-import tech.smartboot.feat.core.common.utils.DateUtils;
 import tech.smartboot.feat.core.common.utils.Mimetypes;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.HttpHandler;
@@ -49,7 +49,7 @@ public class HttpStaticResourceHandler implements HttpHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpStaticResourceHandler.class);
     private final Date lastModifyDate = new Date(System.currentTimeMillis() / 1000 * 1000);
 
-    private final String lastModifyDateFormat = DateUtils.formatRFC1123(lastModifyDate);
+    private final String lastModifyDateFormat = FeatUtils.formatRFC1123(lastModifyDate);
     private final File baseDir;
     private final FileServerOptions options;
     private String classPath;
@@ -95,7 +95,7 @@ public class HttpStaticResourceHandler implements HttpHandler {
 
         //304 命中缓存
         String requestModified = request.getHeader(HeaderName.IF_MODIFIED_SINCE);
-        if (StringUtils.isNotBlank(requestModified) && lastModifyDate.getTime() <= DateUtils.parseRFC1123(requestModified).getTime()) {
+        if (StringUtils.isNotBlank(requestModified) && lastModifyDate.getTime() <= FeatUtils.parseRFC1123(requestModified).getTime()) {
             response.setHttpStatus(HttpStatus.NOT_MODIFIED);
             completableFuture.complete(null);
             return;
@@ -196,14 +196,14 @@ public class HttpStaticResourceHandler implements HttpHandler {
         //304
         Date lastModifyDate = new Date(file.lastModified() / 1000 * 1000);
         String requestModified = request.getHeader(HeaderName.IF_MODIFIED_SINCE);
-        if (StringUtils.isNotBlank(requestModified) && lastModifyDate.getTime() <= DateUtils.parseRFC1123(requestModified).getTime()) {
+        if (StringUtils.isNotBlank(requestModified) && lastModifyDate.getTime() <= FeatUtils.parseRFC1123(requestModified).getTime()) {
             response.setHttpStatus(HttpStatus.NOT_MODIFIED);
             completableFuture.complete(null);
             return;
         }
 
 
-        response.setHeader(HeaderName.LAST_MODIFIED, DateUtils.formatRFC1123(lastModifyDate));
+        response.setHeader(HeaderName.LAST_MODIFIED, FeatUtils.formatRFC1123(lastModifyDate));
         response.setHeader(HeaderName.CONTENT_TYPE, Mimetypes.getInstance().getMimetype(file) + "; charset=utf-8");
         //HEAD不输出内容
         if (HttpMethod.HEAD.equals(request.getMethod())) {

@@ -22,7 +22,6 @@ import tech.smartboot.feat.core.common.codec.websocket.Decoder;
 import tech.smartboot.feat.core.common.codec.websocket.WebSocket;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
-import tech.smartboot.feat.core.common.utils.SHA1;
 import tech.smartboot.feat.core.common.utils.WebSocketUtil;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
@@ -34,6 +33,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.Base64;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -68,7 +68,7 @@ public class WebSocketUpgrade extends Upgrade {
         webSocketRequest = new WebSocketRequestImpl();
         webSocketResponse = new WebSocketResponseImpl(response);
         String acceptSeed = request.getHeader(HeaderName.Sec_WebSocket_Key) + WEBSOCKET_13_ACCEPT_GUID;
-        byte[] sha1 = SHA1.encode(acceptSeed);
+        byte[] sha1 = sha1Encode(acceptSeed);
         String accept = Base64.getEncoder().encodeToString(sha1);
         response.setHttpStatus(HttpStatus.SWITCHING_PROTOCOLS);
         response.setHeader(HeaderName.UPGRADE, HeaderValue.Upgrade.WEBSOCKET);
@@ -87,6 +87,18 @@ public class WebSocketUpgrade extends Upgrade {
             }, idleTimeout, TimeUnit.MILLISECONDS);
         }
         onHandShake(webSocketRequest, webSocketResponse);
+    }
+
+    private static byte[] sha1Encode(String str) {
+        if (str == null) {
+            return null;
+        }
+        try {
+            MessageDigest messageDigest = MessageDigest.getInstance("SHA1");
+            return messageDigest.digest(str.getBytes());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

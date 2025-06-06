@@ -10,8 +10,8 @@
 
 package tech.smartboot.feat.core.server.waf;
 
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HttpStatus;
-import tech.smartboot.feat.core.common.utils.CollectionUtils;
 import tech.smartboot.feat.core.server.ServerOptions;
 import tech.smartboot.feat.core.server.impl.HttpEndpoint;
 
@@ -38,7 +38,7 @@ public class WAF {
         if (!wafOptions.isEnable()) {
             return;
         }
-        if (request.getUri().equals("/") || CollectionUtils.isEmpty(wafOptions.getAllowUriPrefixes()) && CollectionUtils.isEmpty(wafOptions.getAllowUriSuffixes())) {
+        if (request.getUri().equals("/") || FeatUtils.isEmpty(wafOptions.getAllowUriPrefixes()) && FeatUtils.isEmpty(wafOptions.getAllowUriSuffixes())) {
             return;
         }
         for (String prefix : wafOptions.getAllowUriPrefixes()) {

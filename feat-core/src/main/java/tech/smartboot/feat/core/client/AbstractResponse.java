@@ -11,10 +11,10 @@
 package tech.smartboot.feat.core.client;
 
 import org.smartboot.socket.transport.AioSession;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.Reset;
-import tech.smartboot.feat.core.common.utils.NumberUtils;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 
 import java.nio.ByteBuffer;
@@ -128,7 +128,7 @@ public abstract class AbstractResponse implements Response, Reset {
             return contentLength;
         }
         //不包含content-length,则为：-1
-        contentLength = NumberUtils.toLong(getHeader(HeaderName.CONTENT_LENGTH), NONE_CONTENT_LENGTH);
+        contentLength = FeatUtils.toLong(getHeader(HeaderName.CONTENT_LENGTH), NONE_CONTENT_LENGTH);
         return contentLength;
     }
 

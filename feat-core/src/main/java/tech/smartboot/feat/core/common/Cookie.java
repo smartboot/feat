@@ -10,8 +10,6 @@
 
 package tech.smartboot.feat.core.common;
 
-import tech.smartboot.feat.core.common.utils.DateUtils;
-
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Date;
@@ -179,11 +177,11 @@ public class Cookie {
                         sb.append("Max-Age=").append(maxAge).append(";");
                         Date expires = new Date();
                         expires.setTime(expires.getTime() + maxAge * 1000L);
-                        sb.append("Expires=").append(DateUtils.formatCookieExpire(expires)).append(";");
+                        sb.append("Expires=").append(FeatUtils.formatCookieExpire(expires)).append(";");
                     } else if (maxAge == 0) {
                         Date expires = new Date();
                         expires.setTime(0);
-                        sb.append("Expires=").append(DateUtils.formatCookieExpire(expires)).append(";");
+                        sb.append("Expires=").append(FeatUtils.formatCookieExpire(expires)).append(";");
                     }
                     return;
                 }
