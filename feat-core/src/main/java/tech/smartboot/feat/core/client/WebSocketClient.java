@@ -318,7 +318,7 @@ public class WebSocketClient {
             throw new RuntimeException(e);
         } finally {
             connected = false;
-            client.shutdownNow();
+            client.shutdown();
         }
     }
 

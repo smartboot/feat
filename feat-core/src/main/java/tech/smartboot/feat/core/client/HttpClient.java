@@ -249,7 +249,7 @@ public final class HttpClient {
 
     public void close() {
         connected = false;
-        client.shutdownNow();
+        client.shutdown();
         if (semaphore.availablePermits() == 0) {
             semaphore.release();
         }

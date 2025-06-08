@@ -52,7 +52,7 @@ class HttpResponseImpl extends AbstractResponse {
             }
         } catch (IOException ignored) {
         } finally {
-            request.getAioSession().close(false);
+            request.getAioSession().close();
         }
         closed = true;
     }
