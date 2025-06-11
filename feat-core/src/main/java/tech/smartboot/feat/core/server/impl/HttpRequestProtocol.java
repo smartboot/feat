@@ -108,7 +108,7 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
                     byte[] bytes = new byte[byteBuffer.limit()];
                     byteBuffer.position(0);
                     byteBuffer.get(bytes);
-                    LOGGER.error("Unsupported HTTP version, data: " + org.smartboot.socket.util.StringUtils.toHexString(bytes));
+                    LOGGER.error("Unsupported HTTP version, remote:{}, method:{}, uri:{} , data:{} ", request.getRemoteAddr(), request.getMethod(), request.getUri(), org.smartboot.socket.util.StringUtils.toHexString(bytes));
                     throw new HttpException(HttpStatus.BAD_REQUEST, "Unsupported HTTP version");
                 } else {
                     byte minor = byteBuffer.get(byteBuffer.position() + 7);
