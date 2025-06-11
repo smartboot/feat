@@ -11,7 +11,6 @@
 package tech.smartboot.feat.core.common;
 
 import org.smartboot.socket.timer.HashedWheelTimer;
-import tech.smartboot.feat.core.common.codec.h2.hpack.Encoder;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.utils.StringUtils;
@@ -22,8 +21,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.nio.ByteBuffer;
-import java.security.MessageDigest;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -319,52 +316,6 @@ public class FeatUtils {
             decode(cookies, cookieStr, end + 1, cache);
         }
     }
-
-    public static List<ByteBuffer> HPackEncoder(Encoder encoder, Map<String, HeaderValue> headers) {
-        ByteBuffer buffer = ByteBuffer.allocate(1024);
-        List<ByteBuffer> buffers = new ArrayList<>();
-
-        for (Map.Entry<String, HeaderValue> entry : headers.entrySet()) {
-            if (entry.getKey().charAt(0) != ':') {
-                continue;
-            }
-            HeaderValue headerValue = entry.getValue();
-            while (headerValue != null) {
-                //todo: System.out.println("encode: " + entry.getKey() + ":" + entry.getValue().getValue());
-                encoder.header(entry.getKey().toLowerCase(), headerValue.getValue());
-                while (!encoder.encode(buffer)) {
-                    buffer.flip();
-                    buffers.add(buffer);
-                    buffer = ByteBuffer.allocate(1024);
-                }
-                headerValue = headerValue.getNextValue();
-            }
-        }
-
-        for (Map.Entry<String, HeaderValue> entry : headers.entrySet()) {
-            if (entry.getKey().charAt(0) == ':') {
-                continue;
-            }
-
-            HeaderValue headerValue = entry.getValue();
-            while (headerValue != null) {
-                System.out.println("encode: " + entry.getKey() + ":" + headerValue.getValue());
-                encoder.header(entry.getKey().toLowerCase(), headerValue.getValue());
-                while (!encoder.encode(buffer)) {
-                    buffer.flip();
-                    buffers.add(buffer);
-                    buffer = ByteBuffer.allocate(1024);
-                }
-                headerValue = headerValue.getNextValue();
-            }
-        }
-        buffer.flip();
-        if (buffer.hasRemaining()) {
-            buffers.add(buffer);
-        }
-        return buffers;
-    }
-
 
 
 }

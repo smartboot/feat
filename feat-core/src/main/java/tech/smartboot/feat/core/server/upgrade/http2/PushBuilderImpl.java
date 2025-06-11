@@ -10,7 +10,6 @@
 
 package tech.smartboot.feat.core.server.upgrade.http2;
 
-import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HttpMethod;
 import tech.smartboot.feat.core.common.codec.h2.codec.ContinuationFrame;
@@ -27,7 +26,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 public class PushBuilderImpl implements PushBuilder {
@@ -125,7 +124,7 @@ public class PushBuilderImpl implements PushBuilder {
             pushRequest.setHeader(":authority", pushRequest.getSession().getRequest().getHost());
             pushRequest.setUri(path);
             pushRequest.setRequestURI(path);
-            List<ByteBuffer> buffers = FeatUtils.HPackEncoder(pushRequest.getSession().getHpackEncoder(),
+            List<ByteBuffer> buffers = Util.HPackEncoder(pushRequest.getSession().getHpackEncoder(),
                     pushRequest.getHeaders());
             PushPromiseFrame frame = new PushPromiseFrame(streamId, buffers.size() > 1 ? 0 :
                     Http2Frame.FLAG_END_HEADERS, 0);

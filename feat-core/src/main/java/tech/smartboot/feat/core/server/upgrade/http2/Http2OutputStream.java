@@ -23,7 +23,7 @@ import java.nio.ByteBuffer;
 import java.util.List;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 public final class Http2OutputStream extends FeatOutputStream {
@@ -55,7 +55,7 @@ public final class Http2OutputStream extends FeatOutputStream {
         // Create HEADERS frame
         response.setHeader(":status", String.valueOf(response.getHttpStatus().value()));
 
-        List<ByteBuffer> buffers = FeatUtils.HPackEncoder(http2Session.getHpackEncoder(), response.getHeaders());
+        List<ByteBuffer> buffers = Util.HPackEncoder(http2Session.getHpackEncoder(), response.getHeaders());
 
         boolean multipleHeaders = buffers.size() > 1;
 
