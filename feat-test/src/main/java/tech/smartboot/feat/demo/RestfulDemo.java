@@ -10,7 +10,6 @@
 
 package tech.smartboot.feat.demo;
 
-import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.cloud.FeatCloud;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;

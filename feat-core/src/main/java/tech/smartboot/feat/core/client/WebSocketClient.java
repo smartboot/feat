@@ -29,7 +29,6 @@ import tech.smartboot.feat.core.common.codec.websocket.Decoder;
 import tech.smartboot.feat.core.common.codec.websocket.WebSocket;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
-import tech.smartboot.feat.core.common.utils.Constant;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -117,8 +116,8 @@ public class WebSocketClient {
         String schema = url.substring(0, schemaIndex);
         int uriIndex = url.indexOf("/", schemaIndex + 3);
         int portIndex = url.indexOf(":", schemaIndex + 3);
-        boolean ws = Constant.SCHEMA_WS.equals(schema);
-        boolean wss = !ws && Constant.SCHEMA_WSS.equals(schema);
+        boolean ws = FeatUtils.SCHEMA_WS.equals(schema);
+        boolean wss = !ws && FeatUtils.SCHEMA_WSS.equals(schema);
 
         if (!ws && !wss) {
             throw new IllegalArgumentException("invalid url:" + url);
@@ -334,16 +333,16 @@ public class WebSocketClient {
 //        random.nextBytes(maskKey);
 
         int maxlength;
-        if (len < Constant.WS_PLAY_LOAD_126) {
+        if (len < FeatUtils.WS_PLAY_LOAD_126) {
             maxlength = 6 + len;
         } else {
-            maxlength = 8 + Math.min(Constant.WS_DEFAULT_MAX_FRAME_SIZE, len);
+            maxlength = 8 + Math.min(FeatUtils.WS_DEFAULT_MAX_FRAME_SIZE, len);
         }
         byte[] writBytes = new byte[maxlength];
         do {
             int payloadLength = len - offset;
-            if (payloadLength > Constant.WS_DEFAULT_MAX_FRAME_SIZE) {
-                payloadLength = Constant.WS_DEFAULT_MAX_FRAME_SIZE;
+            if (payloadLength > FeatUtils.WS_DEFAULT_MAX_FRAME_SIZE) {
+                payloadLength = FeatUtils.WS_DEFAULT_MAX_FRAME_SIZE;
             }
             byte firstByte = offset + payloadLength < len ? (byte) 0x00 : (byte) 0x80;
             if (offset == 0) {
@@ -351,10 +350,10 @@ public class WebSocketClient {
             } else {
                 firstByte |= WebSocket.OPCODE_CONTINUE;
             }
-            byte secondByte = payloadLength < Constant.WS_PLAY_LOAD_126 ? (byte) payloadLength : Constant.WS_PLAY_LOAD_126;
+            byte secondByte = payloadLength < FeatUtils.WS_PLAY_LOAD_126 ? (byte) payloadLength : FeatUtils.WS_PLAY_LOAD_126;
             writBytes[0] = firstByte;
             writBytes[1] = (byte) (secondByte | 0x80);
-            if (secondByte == Constant.WS_PLAY_LOAD_126) {
+            if (secondByte == FeatUtils.WS_PLAY_LOAD_126) {
                 writBytes[2] = (byte) (payloadLength >> 8 & 0xff);
                 writBytes[3] = (byte) (payloadLength & 0xff);
                 System.arraycopy(maskKey, 0, writBytes, 4, maskKey.length);
@@ -369,7 +368,7 @@ public class WebSocketClient {
                     writBytes[6 + i] = (byte) (bytes[i] ^ maskKey[i % 4]);
                 }
             }
-            outputStream.write(writBytes, 0, payloadLength < Constant.WS_PLAY_LOAD_126 ? 6 + payloadLength : 8 + payloadLength);
+            outputStream.write(writBytes, 0, payloadLength < FeatUtils.WS_PLAY_LOAD_126 ? 6 + payloadLength : 8 + payloadLength);
             offset += payloadLength;
         } while (offset < len);
     }

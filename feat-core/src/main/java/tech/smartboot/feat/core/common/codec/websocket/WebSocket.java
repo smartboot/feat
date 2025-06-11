@@ -10,7 +10,7 @@
 
 package tech.smartboot.feat.core.common.codec.websocket;
 
-import tech.smartboot.feat.core.common.utils.Constant;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.utils.SmartDecoder;
 
 import java.io.IOException;
@@ -73,16 +73,16 @@ public interface WebSocket {
 
     public static void send(OutputStream outputStream, byte opCode, byte[] bytes, int offset, int len) throws IOException {
         int maxlength;
-        if (len < Constant.WS_PLAY_LOAD_126) {
+        if (len < FeatUtils.WS_PLAY_LOAD_126) {
             maxlength = 2 + len;
         } else {
-            maxlength = 4 + Math.min(Constant.WS_DEFAULT_MAX_FRAME_SIZE, len);
+            maxlength = 4 + Math.min(FeatUtils.WS_DEFAULT_MAX_FRAME_SIZE, len);
         }
         byte[] writBytes = new byte[maxlength];
         do {
             int payloadLength = len - offset;
-            if (payloadLength > Constant.WS_DEFAULT_MAX_FRAME_SIZE) {
-                payloadLength = Constant.WS_DEFAULT_MAX_FRAME_SIZE;
+            if (payloadLength > FeatUtils.WS_DEFAULT_MAX_FRAME_SIZE) {
+                payloadLength = FeatUtils.WS_DEFAULT_MAX_FRAME_SIZE;
             }
             byte firstByte = offset + payloadLength < len ? (byte) 0x00 : (byte) 0x80;
             if (offset == 0) {
@@ -90,17 +90,17 @@ public interface WebSocket {
             } else {
                 firstByte |= WebSocket.OPCODE_CONTINUE;
             }
-            byte secondByte = payloadLength < Constant.WS_PLAY_LOAD_126 ? (byte) payloadLength : Constant.WS_PLAY_LOAD_126;
+            byte secondByte = payloadLength < FeatUtils.WS_PLAY_LOAD_126 ? (byte) payloadLength : FeatUtils.WS_PLAY_LOAD_126;
             writBytes[0] = firstByte;
             writBytes[1] = secondByte;
-            if (secondByte == Constant.WS_PLAY_LOAD_126) {
+            if (secondByte == FeatUtils.WS_PLAY_LOAD_126) {
                 writBytes[2] = (byte) (payloadLength >> 8 & 0xff);
                 writBytes[3] = (byte) (payloadLength & 0xff);
                 System.arraycopy(bytes, offset, writBytes, 4, payloadLength);
             } else {
                 System.arraycopy(bytes, offset, writBytes, 2, payloadLength);
             }
-            outputStream.write(writBytes, 0, payloadLength < Constant.WS_PLAY_LOAD_126 ? 2 + payloadLength : 4 + payloadLength);
+            outputStream.write(writBytes, 0, payloadLength < FeatUtils.WS_PLAY_LOAD_126 ? 2 + payloadLength : 4 + payloadLength);
             offset += payloadLength;
         } while (offset < len);
     }

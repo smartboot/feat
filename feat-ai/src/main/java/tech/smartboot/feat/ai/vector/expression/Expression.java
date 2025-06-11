@@ -10,8 +10,6 @@
 
 package tech.smartboot.feat.ai.vector.expression;
 
-import com.alibaba.fastjson2.JSONObject;
-
 /**
  * @author 三刀(zhengjunweimail@163.com)
  * @version v1.0.0

@@ -10,13 +10,13 @@
 
 package tech.smartboot.feat.core.server.impl;
 
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.common.multipart.MultipartConfig;
 import tech.smartboot.feat.core.common.multipart.PartImpl;
 import tech.smartboot.feat.core.common.utils.ByteTree;
-import tech.smartboot.feat.core.common.utils.Constant;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 
 import java.io.ByteArrayInputStream;
@@ -67,7 +67,7 @@ class MultipartFormDecoder {
                 if (b == '-' && byteBuffer.get() == '-') {
                     state = STATE_END;
                     return decode(byteBuffer, request);
-                } else if (byteBuffer.get() == Constant.LF) {
+                } else if (byteBuffer.get() == FeatUtils.LF) {
                     state = STATE_PART_HEADER_NAME;
                     currentPart = new PartImpl(multipartConfig);
                     request.setPart(currentPart);
@@ -80,7 +80,7 @@ class MultipartFormDecoder {
                 if (byteBuffer.remaining() < 2) {
                     return false;
                 }
-                if (byteBuffer.get() == Constant.CR && byteBuffer.get() == Constant.LF) {
+                if (byteBuffer.get() == FeatUtils.CR && byteBuffer.get() == FeatUtils.LF) {
                     return true;
                 }
                 throw new HttpException(HttpStatus.BAD_REQUEST);
@@ -91,8 +91,8 @@ class MultipartFormDecoder {
                 }
                 //header解码结束
                 byteBuffer.mark();
-                if (byteBuffer.get() == Constant.CR) {
-                    if (byteBuffer.get() != Constant.LF) {
+                if (byteBuffer.get() == FeatUtils.CR) {
+                    if (byteBuffer.get() != FeatUtils.LF) {
                         throw new HttpException(HttpStatus.BAD_REQUEST);
                     }
                     //区分文件和普通字段
@@ -167,7 +167,7 @@ class MultipartFormDecoder {
                 if (!byteBuffer.hasRemaining()) {
                     return false;
                 }
-                if (byteBuffer.get() != Constant.LF) {
+                if (byteBuffer.get() != FeatUtils.LF) {
                     throw new HttpException(HttpStatus.BAD_REQUEST);
                 }
                 state = STATE_PART_HEADER_NAME;
@@ -190,7 +190,7 @@ class MultipartFormDecoder {
                 currentPart.setInputStream(new ByteArrayInputStream(bytes));
                 currentPart.setFormSize(bytes.length);
                 currentPart = null;
-                if (byteBuffer.get() != Constant.CR || byteBuffer.get() != Constant.LF) {
+                if (byteBuffer.get() != FeatUtils.CR || byteBuffer.get() != FeatUtils.LF) {
                     throw new HttpException(HttpStatus.BAD_REQUEST);
                 }
                 state = STATE_END_CHECK;
@@ -217,7 +217,7 @@ class MultipartFormDecoder {
                 try {
                     currentPart.getDiskOutputStream().write(bytes);
                     if (boundaryLimit >= 0) {
-                        if (byteBuffer.get() != Constant.CR || byteBuffer.get() != Constant.LF) {
+                        if (byteBuffer.get() != FeatUtils.CR || byteBuffer.get() != FeatUtils.LF) {
                             throw new HttpException(HttpStatus.BAD_REQUEST);
                         }
                         currentPart.getDiskOutputStream().flush();

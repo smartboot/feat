@@ -22,7 +22,6 @@ import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.common.io.BodyInputStream;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
-import tech.smartboot.feat.core.common.utils.Constant;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpRequest;
@@ -274,7 +273,7 @@ public abstract class Endpoint implements Reset {
     }
 
     public final String getScheme() {
-        return options.isSecure() ? Constant.SCHEMA_HTTPS : Constant.SCHEMA_HTTP;
+        return options.isSecure() ? FeatUtils.SCHEMA_HTTPS : FeatUtils.SCHEMA_HTTP;
     }
 
     public final String getQueryString() {

@@ -15,10 +15,10 @@ import org.smartboot.socket.StateMachineEnum;
 import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
 import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.common.DecodeState;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.common.utils.ByteTree;
-import tech.smartboot.feat.core.common.utils.Constant;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 
 import java.nio.ByteBuffer;
@@ -67,7 +67,7 @@ final class HttpMessageProcessor extends AbstractMessageProcessor<AbstractRespon
                 if (buffer.remaining() == 0) {
                     return null;
                 }
-                if (buffer.get() != Constant.LF) {
+                if (buffer.get() != FeatUtils.LF) {
                     throw new HttpException(HttpStatus.BAD_REQUEST);
                 }
                 attachment.setState(DecodeState.STATE_HEADER_END_CHECK);
@@ -79,8 +79,8 @@ final class HttpMessageProcessor extends AbstractMessageProcessor<AbstractRespon
                 }
                 //header解码结束
                 buffer.mark();
-                if (buffer.get() == Constant.CR) {
-                    if (buffer.get() != Constant.LF) {
+                if (buffer.get() == FeatUtils.CR) {
+                    if (buffer.get() != FeatUtils.LF) {
                         throw new HttpException(HttpStatus.BAD_REQUEST);
                     }
                     attachment.setState(DecodeState.STATE_HEADER_CALLBACK);
@@ -116,7 +116,7 @@ final class HttpMessageProcessor extends AbstractMessageProcessor<AbstractRespon
                 if (!buffer.hasRemaining()) {
                     return null;
                 }
-                if (buffer.get() != Constant.LF) {
+                if (buffer.get() != FeatUtils.LF) {
                     throw new HttpException(HttpStatus.BAD_REQUEST);
                 }
                 attachment.setState(DecodeState.STATE_HEADER_END_CHECK);

@@ -10,6 +10,8 @@
 
 package tech.smartboot.feat.core.common.utils;
 
+import tech.smartboot.feat.core.common.FeatUtils;
+
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
@@ -37,7 +39,7 @@ public class ByteTree<T> {
     /**
      * 空格字符结束匹配器，当遇到空格字符(ASCII 32)时返回true
      */
-    public final static EndMatcher SP_END_MATCHER = endByte -> endByte == Constant.SP;
+    public final static EndMatcher SP_END_MATCHER = endByte -> endByte == FeatUtils.SP;
 
     /**
      * 冒号结束匹配器，当遇到冒号字符(':')时返回true
@@ -47,7 +49,7 @@ public class ByteTree<T> {
     /**
      * 回车符结束匹配器，当遇到回车符(ASCII 13)时返回true
      */
-    public final static EndMatcher CR_END_MATCHER = endByte -> endByte == Constant.CR;
+    public final static EndMatcher CR_END_MATCHER = endByte -> endByte == FeatUtils.CR;
 
     /**
      * 字节树的最大深度限制，防止无限递归和栈溢出
@@ -164,7 +166,7 @@ public class ByteTree<T> {
             byte v = buffer.get();
             // 跳过前导空格
             if (trimState) {
-                if (v == Constant.SP) {
+                if (v == FeatUtils.SP) {
                     continue;
                 } else {
                     trimState = false;
@@ -207,7 +209,7 @@ public class ByteTree<T> {
             byte v = buffer.get();
             // 跳过前导空格
             if (trimState) {
-                if (v == Constant.SP) {
+                if (v == FeatUtils.SP) {
                     continue;
                 } else {
                     trimState = false;

@@ -10,7 +10,7 @@
 
 package tech.smartboot.feat.core.server;
 
-import tech.smartboot.feat.core.common.utils.Constant;
+import tech.smartboot.feat.core.common.FeatUtils;
 
 /**
  * @author 三刀(zhengjunweimail@163.com)
@@ -39,7 +39,7 @@ public interface WebSocketResponse {
     void sendBinaryMessage(byte[] bytes, int offset, int length);
 
     default void pong() {
-        pong(Constant.EMPTY_BYTES);
+        pong(FeatUtils.EMPTY_BYTES);
     }
 
 
@@ -48,7 +48,7 @@ public interface WebSocketResponse {
     void ping(byte[] bytes);
 
     default void ping() {
-        ping(Constant.EMPTY_BYTES);
+        ping(FeatUtils.EMPTY_BYTES);
     }
 
     /**

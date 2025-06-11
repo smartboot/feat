@@ -21,7 +21,6 @@ import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpProtocol;
-import tech.smartboot.feat.core.common.utils.Constant;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 
 import java.util.Base64;
@@ -66,8 +65,8 @@ public final class HttpClient {
         String schema = url.substring(0, schemaIndex);
         int uriIndex = url.indexOf("/", schemaIndex + 3);
         int portIndex = url.indexOf(":", schemaIndex + 3);
-        boolean http = Constant.SCHEMA_HTTP.equals(schema);
-        boolean https = !http && Constant.SCHEMA_HTTPS.equals(schema);
+        boolean http = FeatUtils.SCHEMA_HTTP.equals(schema);
+        boolean https = !http && FeatUtils.SCHEMA_HTTPS.equals(schema);
 
         if (!http && !https) {
             throw new IllegalArgumentException("invalid url:" + url);

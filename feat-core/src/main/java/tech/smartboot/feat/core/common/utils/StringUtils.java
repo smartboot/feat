@@ -9,6 +9,8 @@
  */
 package tech.smartboot.feat.core.common.utils;
 
+import tech.smartboot.feat.core.common.FeatUtils;
+
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -355,7 +357,7 @@ public class StringUtils {
     }
 
     private static void trimBuffer(ByteBuffer buffer) {
-        while (buffer.hasRemaining() && buffer.get(buffer.position()) == Constant.SP) {
+        while (buffer.hasRemaining() && buffer.get(buffer.position()) == FeatUtils.SP) {
             buffer.position(buffer.position() + 1);
         }
     }

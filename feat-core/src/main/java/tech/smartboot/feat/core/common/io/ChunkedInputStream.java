@@ -11,9 +11,9 @@
 package tech.smartboot.feat.core.common.io;
 
 import org.smartboot.socket.transport.AioSession;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.exception.HttpException;
-import tech.smartboot.feat.core.common.utils.Constant;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -101,7 +101,7 @@ public class ChunkedInputStream extends BodyInputStream {
         //前一个chunked解析完成，需要处理 CRLF
         if (anyAreSet(state, FLAG_EXPECT_CR_LF)) {
             if (byteBuffer.remaining() >= 2) {
-                if (byteBuffer.get() == Constant.CR && byteBuffer.get() == Constant.LF) {
+                if (byteBuffer.get() == FeatUtils.CR && byteBuffer.get() == FeatUtils.LF) {
                     clearFlags(FLAG_EXPECT_CR_LF);
                 } else {
                     throw new HttpException(HttpStatus.BAD_REQUEST);
@@ -113,10 +113,10 @@ public class ChunkedInputStream extends BodyInputStream {
         byteBuffer.mark();
         while (byteBuffer.hasRemaining()) {
             byte b = byteBuffer.get();
-            if (b != Constant.LF) {
+            if (b != FeatUtils.LF) {
                 continue;
             }
-            if (byteBuffer.get(byteBuffer.position() - 2) != Constant.CR) {
+            if (byteBuffer.get(byteBuffer.position() - 2) != FeatUtils.CR) {
                 throw new HttpException(HttpStatus.BAD_REQUEST);
             }
             int p = byteBuffer.position() - 2;
@@ -128,7 +128,7 @@ public class ChunkedInputStream extends BodyInputStream {
             if (remainingThreshold < 0) {
                 throw new HttpException(HttpStatus.PAYLOAD_TOO_LARGE);
             }
-            if (byteBuffer.get() != Constant.CR || byteBuffer.get() != Constant.LF) {
+            if (byteBuffer.get() != FeatUtils.CR || byteBuffer.get() != FeatUtils.LF) {
                 throw new HttpException(HttpStatus.BAD_REQUEST);
             }
             clearFlags(FLAG_READ_CHUNKED_LENGTH);
@@ -169,7 +169,7 @@ public class ChunkedInputStream extends BodyInputStream {
         byteBuffer.mark();
         while (byteBuffer.hasRemaining()) {
             byte b = byteBuffer.get();
-            if (b == Constant.LF) {
+            if (b == FeatUtils.LF) {
                 byteBuffer.mark();
                 if (buffer.size() == 0) {
                     consumer.accept(trailerFields);
@@ -183,7 +183,7 @@ public class ChunkedInputStream extends BodyInputStream {
                 trailerName = buffer.toString();
                 byteBuffer.mark();
                 buffer.reset();
-            } else if (b != Constant.CR) {
+            } else if (b != FeatUtils.CR) {
                 if (trailerFields == null) {
                     trailerFields = new HashMap<>();
                 }

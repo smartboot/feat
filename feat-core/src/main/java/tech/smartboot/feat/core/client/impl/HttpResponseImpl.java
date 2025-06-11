@@ -20,7 +20,6 @@ import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.exception.FeatException;
-import tech.smartboot.feat.core.common.utils.Constant;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 
 import java.io.IOException;
@@ -99,7 +98,7 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
         try {
             switch (state & ~STATE_GZIP) {
                 case STATE_CHUNK_LENGTH: {
-                    int length = StringUtils.scanUntilAndTrim(buffer, Constant.LF);
+                    int length = StringUtils.scanUntilAndTrim(buffer, FeatUtils.LF);
                     if (length < 0) {
                         return;
                     }
@@ -133,7 +132,7 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
                     if (buffer.remaining() < 2) {
                         return;
                     }
-                    if (buffer.get() == Constant.CR && buffer.get() == Constant.LF) {
+                    if (buffer.get() == FeatUtils.CR && buffer.get() == FeatUtils.LF) {
                         state = STATE_CHUNK_LENGTH;
                         onBodyStream(buffer);
                     } else {

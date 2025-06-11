@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -69,6 +70,44 @@ public class FeatUtils {
             currentTime.setTime(System.currentTimeMillis());
         }, 1, TimeUnit.SECONDS);
     }
+
+    public static final int WS_DEFAULT_MAX_FRAME_SIZE = (1 << 15) - 1;
+    public static final int WS_PLAY_LOAD_126 = 126;
+    public static final int WS_PLAY_LOAD_127 = 127;
+
+    /**
+     * Post 最大长度
+     */
+    public static final int maxBodySize = 2 * 1024 * 1024;
+
+    public static final String SCHEMA_HTTP = "http";
+    public static final String SCHEMA_HTTPS = "https";
+
+    public static final String SCHEMA_WS = "ws";
+    public static final String SCHEMA_WSS = "wss";
+    /**
+     * Horizontal space
+     */
+    public static final byte SP = 32;
+
+    /**
+     * Carriage return
+     */
+    public static final byte CR = 13;
+
+    /**
+     * Line feed character
+     */
+    public static final byte LF = 10;
+
+    public static final byte[] CRLF_BYTES = {CR, LF};
+
+    public static final byte[] CRLF_CRLF_BYTES = {CR, LF, CR, LF};
+
+
+    public static final byte[] CHUNKED_END_BYTES = "0\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
+
+    public static final byte[] EMPTY_BYTES = {};
 
     public static Date currentTime() {
         return currentTime;

@@ -11,8 +11,8 @@
 package tech.smartboot.feat.core.common.io;
 
 import org.smartboot.socket.transport.WriteBuffer;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.Reset;
-import tech.smartboot.feat.core.common.utils.Constant;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -74,7 +74,7 @@ public abstract class FeatOutputStream extends OutputStream implements Reset {
             byte[] start = (Integer.toHexString(len) + "\r\n").getBytes();
             writeBuffer.write(start);
             writeBuffer.write(b, off, len);
-            writeBuffer.write(Constant.CRLF_BYTES);
+            writeBuffer.write(FeatUtils.CRLF_BYTES);
         } else {
             if (remaining >= 0) {
                 remaining -= len;
@@ -96,7 +96,7 @@ public abstract class FeatOutputStream extends OutputStream implements Reset {
             byte[] start = (Integer.toHexString(len) + "\r\n").getBytes();
             writeBuffer.write(start);
             writeBuffer.write(b, off, len);
-            writeBuffer.write(Constant.CRLF_BYTES, 0, 2, writeBuffer -> consumer.accept(FeatOutputStream.this));
+            writeBuffer.write(FeatUtils.CRLF_BYTES, 0, 2, writeBuffer -> consumer.accept(FeatOutputStream.this));
         } else {
             writeBuffer.write(b, off, len, writeBuffer -> consumer.accept(FeatOutputStream.this));
         }
@@ -115,14 +115,14 @@ public abstract class FeatOutputStream extends OutputStream implements Reset {
         } else {
             writeBuffer.write(start);
         }
-        if (buffer.capacity() - buffer.limit() >= Constant.CRLF_BYTES.length) {
-            buffer.put(Constant.CRLF_BYTES, buffer.limit(), Constant.CRLF_BYTES.length);
-            buffer.limit(buffer.limit() + Constant.CRLF_BYTES.length);
+        if (buffer.capacity() - buffer.limit() >= FeatUtils.CRLF_BYTES.length) {
+            buffer.put(FeatUtils.CRLF_BYTES, buffer.limit(), FeatUtils.CRLF_BYTES.length);
+            buffer.limit(buffer.limit() + FeatUtils.CRLF_BYTES.length);
             writeBuffer.transferFrom(buffer, writeBuffer -> consumer.accept(FeatOutputStream.this));
         } else {
             writeBuffer.transferFrom(buffer, writeBuffer -> {
                 try {
-                    writeBuffer.write(Constant.CRLF_BYTES, 0, 2, buffer1 -> consumer.accept(FeatOutputStream.this));
+                    writeBuffer.write(FeatUtils.CRLF_BYTES, 0, 2, buffer1 -> consumer.accept(FeatOutputStream.this));
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -151,9 +151,9 @@ public abstract class FeatOutputStream extends OutputStream implements Reset {
                 for (String key : map.keySet()) {
                     writeBuffer.write((key + ":" + map.get(key) + "\r\n").getBytes());
                 }
-                writeBuffer.write(Constant.CRLF_BYTES);
+                writeBuffer.write(FeatUtils.CRLF_BYTES);
             } else {
-                writeBuffer.write(Constant.CHUNKED_END_BYTES);
+                writeBuffer.write(FeatUtils.CHUNKED_END_BYTES);
             }
         }
         closed = true;

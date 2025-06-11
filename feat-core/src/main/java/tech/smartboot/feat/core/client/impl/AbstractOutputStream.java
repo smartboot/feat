@@ -12,10 +12,10 @@ package tech.smartboot.feat.core.client.impl;
 
 import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.common.Cookie;
-import tech.smartboot.feat.core.common.HeaderValue;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
+import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.io.FeatOutputStream;
-import tech.smartboot.feat.core.common.utils.Constant;
 
 import java.io.IOException;
 import java.util.List;
@@ -55,14 +55,14 @@ abstract class AbstractOutputStream extends FeatOutputStream {
             writeString(HeaderName.CONTENT_TYPE.getName());
             writeBuffer.writeByte((byte) ':');
             writeBuffer.write(getBytes(String.valueOf(request.getContentType())));
-            writeBuffer.write(Constant.CRLF_BYTES);
+            writeBuffer.write(FeatUtils.CRLF_BYTES);
         }
 
         if (request.getContentLength() >= 0) {
             writeString(HeaderName.CONTENT_LENGTH.getName());
             writeBuffer.writeByte((byte) ':');
             writeBuffer.write(getBytes(String.valueOf(request.getContentLength())));
-            writeBuffer.write(Constant.CRLF_BYTES);
+            writeBuffer.write(FeatUtils.CRLF_BYTES);
         } else if (chunkedSupport) {
             request.addHeader(HeaderName.TRANSFER_ENCODING, HeaderValue.TransferEncoding.CHUNKED);
         }
@@ -75,12 +75,12 @@ abstract class AbstractOutputStream extends FeatOutputStream {
                     writeString(entry.getKey());
                     writeBuffer.writeByte((byte) ':');
                     writeString(headerValue.getValue());
-                    writeBuffer.write(Constant.CRLF_BYTES);
+                    writeBuffer.write(FeatUtils.CRLF_BYTES);
                     headerValue = headerValue.getNextValue();
                 }
             }
         }
-        writeBuffer.write(Constant.CRLF_BYTES);
+        writeBuffer.write(FeatUtils.CRLF_BYTES);
         committed = true;
     }
 

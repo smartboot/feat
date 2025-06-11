@@ -18,7 +18,6 @@ import tech.smartboot.feat.core.common.HttpMethod;
 import tech.smartboot.feat.core.common.HttpProtocol;
 import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.io.FeatOutputStream;
-import tech.smartboot.feat.core.common.utils.Constant;
 import tech.smartboot.feat.core.server.ServerOptions;
 
 import java.io.IOException;
@@ -95,11 +94,11 @@ final class HttpOutputStream extends FeatOutputStream {
                 writeString(entry.getKey());
                 writeBuffer.writeByte((byte) ':');
                 writeString(headerValue.getValue());
-                writeBuffer.write(Constant.CRLF_BYTES);
+                writeBuffer.write(FeatUtils.CRLF_BYTES);
                 headerValue = headerValue.getNextValue();
             }
         }
-        writeBuffer.write(Constant.CRLF_BYTES);
+        writeBuffer.write(FeatUtils.CRLF_BYTES);
     }
 
     private void writeHeadPart(boolean hasHeader) throws IOException {
@@ -121,7 +120,7 @@ final class HttpOutputStream extends FeatOutputStream {
 
     private void writeCommonHeadPart(boolean hasHeader, String contentType, long contentLength) throws IOException {
         writeString(request.getProtocol().getProtocol());
-        writeBuffer.writeByte(Constant.SP);
+        writeBuffer.writeByte(FeatUtils.SP);
         response.getHttpStatus().write(writeBuffer);
         // Server
         if (response.getHeader(HeaderName.SERVER) == null) {
@@ -139,9 +138,9 @@ final class HttpOutputStream extends FeatOutputStream {
             writeBuffer.write(TEXT_PLAIN_FAST_WRITE_BYTES, PLAIN_CONTENT_LENGTH_INDEX, 17);
             writeLongString(contentLength);
             if (hasHeader) {
-                writeBuffer.write(Constant.CRLF_BYTES);
+                writeBuffer.write(FeatUtils.CRLF_BYTES);
             } else {
-                writeBuffer.write(Constant.CRLF_CRLF_BYTES);
+                writeBuffer.write(FeatUtils.CRLF_CRLF_BYTES);
             }
         } else if (chunkedSupport) {
             if (hasHeader) {
@@ -150,9 +149,9 @@ final class HttpOutputStream extends FeatOutputStream {
                 writeBuffer.write(CHUNKED);
             }
         } else if (hasHeader) {
-            writeBuffer.write(Constant.CRLF_BYTES);
+            writeBuffer.write(FeatUtils.CRLF_BYTES);
         } else {
-            writeBuffer.write(Constant.CRLF_CRLF_BYTES);
+            writeBuffer.write(FeatUtils.CRLF_CRLF_BYTES);
         }
     }
 
@@ -172,9 +171,9 @@ final class HttpOutputStream extends FeatOutputStream {
                 writeBuffer.write(APPLICATION_JSON_FAST_WRITE_BYTES, 0, JSON_CONTENT_LENGTH_INDEX);
             }
             if (hasHeader) {
-                writeBuffer.write(Constant.CRLF_BYTES);
+                writeBuffer.write(FeatUtils.CRLF_BYTES);
             } else {
-                writeBuffer.write(Constant.CRLF_CRLF_BYTES);
+                writeBuffer.write(FeatUtils.CRLF_CRLF_BYTES);
             }
         }
     }
@@ -197,9 +196,9 @@ final class HttpOutputStream extends FeatOutputStream {
             writeBuffer.write(TEXT_PLAIN_FAST_WRITE_BYTES, 0, PLAIN_CONTENT_LENGTH_INDEX);
         }
         if (hasHeader) {
-            writeBuffer.write(Constant.CRLF_BYTES);
+            writeBuffer.write(FeatUtils.CRLF_BYTES);
         } else {
-            writeBuffer.write(Constant.CRLF_CRLF_BYTES);
+            writeBuffer.write(FeatUtils.CRLF_CRLF_BYTES);
         }
     }
 

@@ -15,8 +15,8 @@ import tech.smartboot.feat.ai.ModelMeta;
 import tech.smartboot.feat.ai.chat.ChatModel;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
-import tech.smartboot.feat.ai.demo.BaseChat;
 import tech.smartboot.feat.ai.chat.prompt.PromptTemplate;
+import tech.smartboot.feat.ai.demo.BaseChat;
 
 import java.io.File;
 import java.io.IOException;

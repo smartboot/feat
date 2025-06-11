@@ -13,6 +13,7 @@ package tech.smartboot.feat.core.server.impl;
 import org.smartboot.socket.Protocol;
 import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.common.DecodeState;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HttpProtocol;
 import tech.smartboot.feat.core.common.HttpStatus;
@@ -20,7 +21,6 @@ import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.utils.ByteTree;
-import tech.smartboot.feat.core.common.utils.Constant;
 import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.ServerOptions;
@@ -73,7 +73,7 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
                 }
                 WAF.checkUri(options, request);
                 switch (byteBuffer.get(byteBuffer.position() - 1)) {
-                    case Constant.SP:
+                    case FeatUtils.SP:
                         decodeState.setState(DecodeState.STATE_PROTOCOL_DECODE);
                         break;
                     case '?':
@@ -96,7 +96,7 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
                 // 跳过空格
                 do {
                     byteBuffer.mark();
-                } while (byteBuffer.hasRemaining() && byteBuffer.get() == Constant.SP);
+                } while (byteBuffer.hasRemaining() && byteBuffer.get() == FeatUtils.SP);
                 byteBuffer.reset();
                 if (byteBuffer.remaining() < 9) {
                     break;
@@ -131,7 +131,7 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
                 if (byteBuffer.remaining() == 0) {
                     break;
                 }
-                if (byteBuffer.get() != Constant.LF) {
+                if (byteBuffer.get() != FeatUtils.LF) {
                     throw new HttpException(HttpStatus.BAD_REQUEST);
                 }
                 decodeState.setState(DecodeState.STATE_HEADER_END_CHECK);
@@ -143,8 +143,8 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
                 }
                 //header解码结束
                 byteBuffer.mark();
-                if (byteBuffer.get() == Constant.CR) {
-                    if (byteBuffer.get() != Constant.LF) {
+                if (byteBuffer.get() == FeatUtils.CR) {
+                    if (byteBuffer.get() != FeatUtils.LF) {
                         throw new HttpException(HttpStatus.BAD_REQUEST);
                     }
                     decodeState.setState(DecodeState.STATE_HEADER_CALLBACK);
@@ -190,7 +190,7 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
                 if (!byteBuffer.hasRemaining()) {
                     break;
                 }
-                if (byteBuffer.get() != Constant.LF) {
+                if (byteBuffer.get() != FeatUtils.LF) {
                     throw new HttpException(HttpStatus.BAD_REQUEST);
                 }
                 decodeState.setState(DecodeState.STATE_HEADER_END_CHECK);
@@ -200,15 +200,15 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
                 while (byteBuffer.remaining() >= 4) {
                     int position = byteBuffer.position() + 3;
                     byte b = byteBuffer.get(position);
-                    if (b == Constant.CR) {
+                    if (b == FeatUtils.CR) {
                         byteBuffer.position(position - 2);
                         continue;
-                    } else if (b != Constant.LF) {
+                    } else if (b != FeatUtils.LF) {
                         byteBuffer.position(position);
                         continue;
                     }
                     // header 结束符匹配，最后2字节已经是CR、LF,无需重复验证
-                    if (byteBuffer.get(position - 3) == Constant.CR && byteBuffer.get(position - 2) == Constant.LF) {
+                    if (byteBuffer.get(position - 3) == FeatUtils.CR && byteBuffer.get(position - 2) == FeatUtils.LF) {
                         byteBuffer.position(position + 1);
                         decodeState.setState(DecodeState.STATE_HEADER_CALLBACK);
                         return true;

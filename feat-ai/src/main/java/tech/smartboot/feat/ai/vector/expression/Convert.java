@@ -10,8 +10,6 @@
 
 package tech.smartboot.feat.ai.vector.expression;
 
-import com.alibaba.fastjson2.JSONObject;
-
 import java.util.List;
 
 /**
