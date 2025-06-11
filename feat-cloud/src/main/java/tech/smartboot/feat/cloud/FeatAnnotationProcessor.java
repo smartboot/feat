@@ -101,7 +101,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             throw new FeatException(e);
         }
         System.out.println("processor init: " + this);
-        yamlValueSerializer = new FeatYamlValueSerializer(processingEnv,services);
+        yamlValueSerializer = new FeatYamlValueSerializer(processingEnv, services);
     }
 
     @Override
@@ -153,20 +153,21 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
 
 
     private <T extends Annotation> void createAptLoader(Element element, T annotation) throws IOException {
+        String packageName = element.getEnclosingElement().toString();
         String loaderName = element.getSimpleName() + "BeanAptLoader";
         //生成service配置
-        services.add(element.getEnclosingElement().toString() + "." + loaderName);
+        services.add(packageName + "." + loaderName);
 
-        FileObject preFileObject = processingEnv.getFiler().getResource(StandardLocation.SOURCE_OUTPUT, "", loaderName + ".java");
+        FileObject preFileObject = processingEnv.getFiler().getResource(StandardLocation.SOURCE_OUTPUT, packageName, loaderName + ".java");
         File f = new File(preFileObject.toUri());
         if (f.exists()) {
             f.delete();
         }
 
-        JavaFileObject javaFileObject = processingEnv.getFiler().createSourceFile(loaderName);
+        JavaFileObject javaFileObject = processingEnv.getFiler().createSourceFile(packageName + "." + loaderName);
         Writer writer = javaFileObject.openWriter();
         PrintWriter printWriter = new PrintWriter(writer);
-        printWriter.println("package " + element.getEnclosingElement().toString() + ";");
+        printWriter.println("package " + packageName + ";");
         printWriter.println();
         printWriter.println("import " + AbstractServiceLoader.class.getName() + ";");
         printWriter.println("import " + ApplicationContext.class.getName() + ";");

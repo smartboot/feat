@@ -48,7 +48,9 @@ import java.util.Set;
  */
 public class FeatYamlValueSerializer {
     private static final Logger logger = LoggerFactory.getLogger(FeatYamlValueSerializer.class);
-    public static final String SERVICE_NAME = "tech.smartboot.feat.sandao.FeatCloudOptionsBeanAptLoader";
+    private static final String PACKAGE = "tech.smartboot.feat.sandao";
+    private static final String CLASS_NAME = "FeatCloudOptionsBeanAptLoader";
+    public static final String SERVICE_NAME = PACKAGE + "." + CLASS_NAME;
     private String config;
     private boolean exception = false;
     private final ProcessingEnvironment processingEnv;
@@ -99,24 +101,22 @@ public class FeatYamlValueSerializer {
     }
 
     private void createServerOptionsBean() throws Throwable {
-        String loaderName = "FeatCloudOptionsBeanAptLoader";
-
-        FileObject preFileObject = processingEnv.getFiler().getResource(StandardLocation.SOURCE_OUTPUT, "", loaderName + ".java");
+        FileObject preFileObject = processingEnv.getFiler().getResource(StandardLocation.SOURCE_OUTPUT, PACKAGE, CLASS_NAME + ".java");
         File f = new File(preFileObject.toUri());
         if (f.exists()) {
             f.delete();
         }
 
-        JavaFileObject javaFileObject = processingEnv.getFiler().createSourceFile(loaderName);
+        JavaFileObject javaFileObject = processingEnv.getFiler().createSourceFile(SERVICE_NAME);
         Writer writer = javaFileObject.openWriter();
         PrintWriter printWriter = new PrintWriter(writer);
-        printWriter.println("package tech.smartboot.feat.sandao;");
+        printWriter.println("package " + PACKAGE + ";");
         printWriter.println();
         printWriter.println("import " + AbstractServiceLoader.class.getName() + ";");
         printWriter.println("import " + ApplicationContext.class.getName() + ";");
         printWriter.println("import " + Router.class.getName() + ";");
         printWriter.println();
-        printWriter.println("public class " + loaderName + " extends " + AbstractServiceLoader.class.getSimpleName() + " {");
+        printWriter.println("public class " + CLASS_NAME + " extends " + AbstractServiceLoader.class.getSimpleName() + " {");
         printWriter.println();
 
 
