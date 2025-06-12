@@ -71,9 +71,6 @@ public class FeatUtils {
         }, 1, TimeUnit.SECONDS);
     }
 
-    public static final int WS_DEFAULT_MAX_FRAME_SIZE = (1 << 15) - 1;
-    public static final int WS_PLAY_LOAD_126 = 126;
-    public static final int WS_PLAY_LOAD_127 = 127;
 
     /**
      * Post 最大长度
@@ -83,8 +80,7 @@ public class FeatUtils {
     public static final String SCHEMA_HTTP = "http";
     public static final String SCHEMA_HTTPS = "https";
 
-    public static final String SCHEMA_WS = "ws";
-    public static final String SCHEMA_WSS = "wss";
+
     /**
      * Horizontal space
      */

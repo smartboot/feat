@@ -10,7 +10,6 @@
 
 package tech.smartboot.feat.core.common.codec.websocket;
 
-import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.utils.SmartDecoder;
 
 import java.io.IOException;
@@ -22,6 +21,9 @@ import java.nio.ByteBuffer;
  * @version v1.0.0
  */
 public interface WebSocket {
+    int WS_DEFAULT_MAX_FRAME_SIZE = (1 << 15) - 1;
+    int WS_PLAY_LOAD_126 = 126;
+    int WS_PLAY_LOAD_127 = 127;
     byte OPCODE_CONTINUE = 0x0;
     byte OPCODE_TEXT = 0x1;
     byte OPCODE_BINARY = 0x2;
@@ -73,16 +75,16 @@ public interface WebSocket {
 
     public static void send(OutputStream outputStream, byte opCode, byte[] bytes, int offset, int len) throws IOException {
         int maxlength;
-        if (len < FeatUtils.WS_PLAY_LOAD_126) {
+        if (len < WS_PLAY_LOAD_126) {
             maxlength = 2 + len;
         } else {
-            maxlength = 4 + Math.min(FeatUtils.WS_DEFAULT_MAX_FRAME_SIZE, len);
+            maxlength = 4 + Math.min(WS_DEFAULT_MAX_FRAME_SIZE, len);
         }
         byte[] writBytes = new byte[maxlength];
         do {
             int payloadLength = len - offset;
-            if (payloadLength > FeatUtils.WS_DEFAULT_MAX_FRAME_SIZE) {
-                payloadLength = FeatUtils.WS_DEFAULT_MAX_FRAME_SIZE;
+            if (payloadLength > WS_DEFAULT_MAX_FRAME_SIZE) {
+                payloadLength = WS_DEFAULT_MAX_FRAME_SIZE;
             }
             byte firstByte = offset + payloadLength < len ? (byte) 0x00 : (byte) 0x80;
             if (offset == 0) {
@@ -90,17 +92,17 @@ public interface WebSocket {
             } else {
                 firstByte |= WebSocket.OPCODE_CONTINUE;
             }
-            byte secondByte = payloadLength < FeatUtils.WS_PLAY_LOAD_126 ? (byte) payloadLength : FeatUtils.WS_PLAY_LOAD_126;
+            byte secondByte = payloadLength < WS_PLAY_LOAD_126 ? (byte) payloadLength : WS_PLAY_LOAD_126;
             writBytes[0] = firstByte;
             writBytes[1] = secondByte;
-            if (secondByte == FeatUtils.WS_PLAY_LOAD_126) {
+            if (secondByte == WS_PLAY_LOAD_126) {
                 writBytes[2] = (byte) (payloadLength >> 8 & 0xff);
                 writBytes[3] = (byte) (payloadLength & 0xff);
                 System.arraycopy(bytes, offset, writBytes, 4, payloadLength);
             } else {
                 System.arraycopy(bytes, offset, writBytes, 2, payloadLength);
             }
-            outputStream.write(writBytes, 0, payloadLength < FeatUtils.WS_PLAY_LOAD_126 ? 2 + payloadLength : 4 + payloadLength);
+            outputStream.write(writBytes, 0, payloadLength < WS_PLAY_LOAD_126 ? 2 + payloadLength : 4 + payloadLength);
             offset += payloadLength;
         } while (offset < len);
     }

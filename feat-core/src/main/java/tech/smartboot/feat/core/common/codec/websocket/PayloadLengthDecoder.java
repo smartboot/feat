@@ -10,12 +10,10 @@
 
 package tech.smartboot.feat.core.common.codec.websocket;
 
-import tech.smartboot.feat.core.common.FeatUtils;
-
 import java.nio.ByteBuffer;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 class PayloadLengthDecoder implements Decoder {
@@ -26,14 +24,14 @@ class PayloadLengthDecoder implements Decoder {
     public Decoder decode(ByteBuffer byteBuffer, WebSocket request) {
         long length = request.getPayloadLength();
 
-        if (length == FeatUtils.WS_PLAY_LOAD_126) {
+        if (length == WebSocket.WS_PLAY_LOAD_126) {
             if (byteBuffer.remaining() < Short.BYTES) {
                 return this;
             }
             request.setPayloadLength(Short.toUnsignedInt(byteBuffer.getShort()));
         }
 
-        if (length == FeatUtils.WS_PLAY_LOAD_127) {
+        if (length == WebSocket.WS_PLAY_LOAD_127) {
             if (byteBuffer.remaining() < Long.BYTES) {
                 return this;
             } else {
