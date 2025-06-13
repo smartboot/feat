@@ -362,7 +362,7 @@ public class FeatUtils {
      *
      * @since 2.0
      */
-    private static final String EMPTY = "";
+    public static final String EMPTY = "";
 
 
     /**
