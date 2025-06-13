@@ -54,7 +54,7 @@ public class ByteTree<T> {
     /**
      * 字节树的最大深度限制，防止无限递归和栈溢出
      */
-    private static final int MAX_DEPTH = 32;
+    public static final int MAX_DEPTH = 32;
 
     /**
      * 空结束匹配器，永远返回false，用于构建完整字节序列的节点
@@ -279,51 +279,6 @@ public class ByteTree<T> {
 
         // 递归处理下一个字节
         return nextTree.addNode(value, offset + 1, limit, endMatcher);
-    }
-
-    /**
-     * 从ByteBuffer递归添加节点
-     * 该方法与byte[]版本类似，但直接从ByteBuffer读取字节数据
-     * 使用synchronized关键字确保线程安全
-     *
-     * @param value      包含要添加节点数据的字节缓冲区
-     * @param endMatcher 结束匹配器，用于确定何时停止添加
-     * @return 添加的叶子节点，即字节序列的最后一个节点
-     */
-    private synchronized ByteTree<T> addNode(ByteBuffer value, EndMatcher endMatcher) {
-        // 已处理完所有字节或达到最大深度，返回当前节点
-        if (!value.hasRemaining() || this.depth >= MAX_DEPTH) {
-            return this;
-        }
-
-        // 获取当前要处理的字节
-        byte b = value.get();
-        // 如果遇到结束字符，返回当前节点
-        if (endMatcher.match(b)) {
-            return this;
-        }
-
-        // 初始化shift值，用于优化子节点数组的空间
-        if (shift == -1) {
-            shift = b;
-        }
-
-        // 确保子节点数组有足够空间
-        if (b - shift < 0) {
-            increase(b - shift);
-        } else {
-            increase(b + 1 - shift);
-        }
-
-        // 获取或创建下一级节点
-        ByteTree<T> nextTree = nodes[b - shift];
-        if (nextTree == null) {
-            // 创建新节点并更新计数器
-            nextTree = nodes[b - shift] = new ByteTree<T>(this, b);
-        }
-
-        // 递归处理下一个字节
-        return nextTree.addNode(value, endMatcher);
     }
 
     /**

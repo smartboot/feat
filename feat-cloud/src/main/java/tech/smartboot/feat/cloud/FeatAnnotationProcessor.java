@@ -26,6 +26,7 @@ import tech.smartboot.feat.cloud.serializer.JsonSerializer;
 import tech.smartboot.feat.cloud.serializer.value.FeatYamlValueSerializer;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.exception.FeatException;
+import tech.smartboot.feat.core.common.utils.ByteTree;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.Session;
@@ -362,7 +363,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                 }
 
                 printWriter.println("\t\tSystem.out.println(\" \\u001B[32m|->\\u001B[0m " + requestURL + " ==> " + element.getSimpleName() + "@" + se.getSimpleName() + "\");");
-                if (!requestURL.contains(":") && !requestURL.contains("*")) {
+                if (!requestURL.contains(":") && !requestURL.contains("*") && requestURL.length() < ByteTree.MAX_DEPTH) {
                     printWriter.println("\t\tapplicationContext.getOptions().getUriByteTree().addNode(\"" + requestURL + "\");");
                 }
                 boolean async = returnTypeInt == RETURN_TYPE_OBJECT && AsyncResponse.class.getName().equals(returnType.toString());
