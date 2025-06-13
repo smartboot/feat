@@ -53,5 +53,5 @@
   <path d="M170 148 L170 152 M170 168 L170 172 M162 160 L158 160 M182 160 L178 160 M164 154 L161 151 M176 154 L179 151 M164 166 L161 169 M176 166 L179 169" stroke="white" stroke-width="2" />
 
   <!-- 右下角版本号 -->
-  <text x="270" y="175" font-family="Arial" font-size="10" fill="white" text-anchor="end">v1.0</text>
+  <text x="270" y="175" font-family="Arial" font-size="10" fill="white" text-anchor="end">v1.1</text>
 </svg>
