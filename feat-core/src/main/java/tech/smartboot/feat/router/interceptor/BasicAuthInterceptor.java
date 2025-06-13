@@ -12,7 +12,7 @@ package tech.smartboot.feat.router.interceptor;
 
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HttpStatus;
-import tech.smartboot.feat.core.common.utils.StringUtils;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.router.Chain;
 import tech.smartboot.feat.router.Context;
@@ -35,7 +35,7 @@ public class BasicAuthInterceptor implements Interceptor {
     @Override
     public void intercept(Context context, CompletableFuture<Void> completableFuture, Chain chain) throws Throwable {
         String clientBasic = context.Request.getHeader(HeaderName.AUTHORIZATION);
-        if (StringUtils.equals(clientBasic, this.basic)) {
+        if (FeatUtils.equals(clientBasic, this.basic)) {
             chain.proceed(context, completableFuture);
         } else {
             HttpResponse response = context.Response;

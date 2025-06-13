@@ -10,7 +10,7 @@
 
 package tech.smartboot.feat.core.common.logging;
 
-import tech.smartboot.feat.core.common.utils.StringUtils;
+import tech.smartboot.feat.core.common.FeatUtils;
 
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Handler;
@@ -45,7 +45,7 @@ class RunLogger implements tech.smartboot.feat.core.common.logging.Logger {
                 }
             }
 
-            if (StringUtils.isBlank(System.getProperty(LoggerFactory.SYSTEM_PROPERTY_LOG_LEVEL))) {
+            if (FeatUtils.isBlank(System.getProperty(LoggerFactory.SYSTEM_PROPERTY_LOG_LEVEL))) {
                 System.setProperty(LoggerFactory.SYSTEM_PROPERTY_LOG_LEVEL, "INFO");
             }
 
@@ -71,7 +71,7 @@ class RunLogger implements tech.smartboot.feat.core.common.logging.Logger {
         // 检查是否需要更新日志级别
         if (latestCheckTime + 5000 < System.currentTimeMillis()) {
             String newLevel = System.getProperty(LoggerFactory.SYSTEM_PROPERTY_LOG_LEVEL + "." + loggerName);
-            if (StringUtils.isBlank(newLevel)) {
+            if (FeatUtils.isBlank(newLevel)) {
                 newLevel = System.getProperty(LoggerFactory.SYSTEM_PROPERTY_LOG_LEVEL, "INFO");
             }
             if (!logger.getLevel().getName().equals(newLevel)) {

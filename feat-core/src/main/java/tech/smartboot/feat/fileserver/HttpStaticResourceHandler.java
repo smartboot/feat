@@ -21,7 +21,7 @@ import tech.smartboot.feat.core.common.io.FeatOutputStream;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.utils.Mimetypes;
-import tech.smartboot.feat.core.common.utils.StringUtils;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
@@ -78,7 +78,7 @@ public class HttpStaticResourceHandler implements HttpHandler {
 
     public void handle(HttpRequest request, CompletableFuture<Void> completableFuture) throws Throwable {
         String fileName = request.getRequestURI();
-        if (StringUtils.endsWith(fileName, "/") && !options.autoIndex()) {
+        if (FeatUtils.endsWith(fileName, "/") && !options.autoIndex()) {
             fileName += "index.html";
         }
         fileName = URLDecoder.decode(fileName, StandardCharsets.UTF_8.name());
@@ -95,7 +95,7 @@ public class HttpStaticResourceHandler implements HttpHandler {
 
         //304 命中缓存
         String requestModified = request.getHeader(HeaderName.IF_MODIFIED_SINCE);
-        if (StringUtils.isNotBlank(requestModified) && lastModifyDate.getTime() <= FeatUtils.parseRFC1123(requestModified).getTime()) {
+        if (FeatUtils.isNotBlank(requestModified) && lastModifyDate.getTime() <= FeatUtils.parseRFC1123(requestModified).getTime()) {
             response.setHttpStatus(HttpStatus.NOT_MODIFIED);
             completableFuture.complete(null);
             return;
@@ -160,7 +160,7 @@ public class HttpStaticResourceHandler implements HttpHandler {
             if (index != -1) {
                 path = fileName.substring(0, index);
             }
-            if (StringUtils.length(path) <= 1) {
+            if (FeatUtils.length(path) <= 1) {
                 path = "/";
             }
             response.write("返回上一级：<a href='" + path + "'>&gt;" + fileName + "</a>");
@@ -196,7 +196,7 @@ public class HttpStaticResourceHandler implements HttpHandler {
         //304
         Date lastModifyDate = new Date(file.lastModified() / 1000 * 1000);
         String requestModified = request.getHeader(HeaderName.IF_MODIFIED_SINCE);
-        if (StringUtils.isNotBlank(requestModified) && lastModifyDate.getTime() <= FeatUtils.parseRFC1123(requestModified).getTime()) {
+        if (FeatUtils.isNotBlank(requestModified) && lastModifyDate.getTime() <= FeatUtils.parseRFC1123(requestModified).getTime()) {
             response.setHttpStatus(HttpStatus.NOT_MODIFIED);
             completableFuture.complete(null);
             return;

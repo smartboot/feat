@@ -12,7 +12,7 @@ package tech.smartboot.feat.core.server.handler;
 
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HttpStatus;
-import tech.smartboot.feat.core.common.utils.StringUtils;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
@@ -62,7 +62,7 @@ public final class BasicAuthServerHandler implements HttpHandler {
     @Override
     public void onHeaderComplete(HttpEndpoint request) throws IOException {
         String clientBasic = request.getHeader(HeaderName.AUTHORIZATION);
-        if (StringUtils.equals(clientBasic, this.basic)) {
+        if (FeatUtils.equals(clientBasic, this.basic)) {
             // 认证通过，执行实际业务处理
             httpServerHandler.onHeaderComplete(request);
         } else {

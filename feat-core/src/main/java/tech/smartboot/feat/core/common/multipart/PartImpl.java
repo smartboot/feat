@@ -12,7 +12,7 @@ package tech.smartboot.feat.core.common.multipart;
 
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
-import tech.smartboot.feat.core.common.utils.StringUtils;
+import tech.smartboot.feat.core.common.FeatUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -111,7 +111,7 @@ public class PartImpl implements Part {
         }
         Path target = Paths.get(fileName);
         if (!target.isAbsolute()) {
-            if (StringUtils.isNotBlank(multipartConfig.getLocation())) {
+            if (FeatUtils.isNotBlank(multipartConfig.getLocation())) {
                 target = Paths.get(multipartConfig.getLocation(), fileName);
             } else {
                 target = File.createTempFile("feat_" + this.hashCode(), fileName).toPath();
@@ -223,7 +223,7 @@ public class PartImpl implements Part {
     }
 
     private File getFile() throws IOException {
-        if (StringUtils.isNotBlank(multipartConfig.getLocation())) {
+        if (FeatUtils.isNotBlank(multipartConfig.getLocation())) {
             File location = new File(multipartConfig.getLocation());
             if (location.isDirectory()) {
                 return new File(location, this.hashCode() + "_" + fileName);

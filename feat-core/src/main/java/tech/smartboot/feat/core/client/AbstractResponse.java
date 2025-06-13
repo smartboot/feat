@@ -15,7 +15,6 @@ import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.Reset;
-import tech.smartboot.feat.core.common.utils.StringUtils;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
@@ -137,8 +136,8 @@ public abstract class AbstractResponse implements Response, Reset {
             return encoding;
         }
         String contentType = getContentType();
-        String charset = StringUtils.substringAfter(contentType, "charset=");
-        if (StringUtils.isNotBlank(charset)) {
+        String charset = FeatUtils.substringAfter(contentType, "charset=");
+        if (FeatUtils.isNotBlank(charset)) {
             this.encoding = Charset.forName(charset).name();
         } else {
             this.encoding = "utf8";

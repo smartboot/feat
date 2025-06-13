@@ -20,7 +20,7 @@ import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.client.HttpRest;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.exception.FeatException;
-import tech.smartboot.feat.core.common.utils.StringUtils;
+import tech.smartboot.feat.core.common.FeatUtils;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -44,7 +44,7 @@ public class EmbeddingModel {
             opts.debug(options.isDebug());
         });
         HttpPost httpPost = httpClient.post("/v1/embeddings").header(header -> {
-            if (StringUtils.isNotBlank(options.getApiKey())) {
+            if (FeatUtils.isNotBlank(options.getApiKey())) {
                 header.add(HeaderName.AUTHORIZATION, "Bearer " + options.getApiKey());
             }
             header.add(HeaderName.CONTENT_TYPE, "application/json").add(HeaderName.CONTENT_LENGTH, bytes.length);

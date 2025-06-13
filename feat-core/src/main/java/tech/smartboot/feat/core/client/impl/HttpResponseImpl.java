@@ -20,7 +20,6 @@ import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.exception.FeatException;
-import tech.smartboot.feat.core.common.utils.StringUtils;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -73,7 +72,7 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
     @Override
     public void onHeaderComplete() {
         String transferEncoding = getHeader(HeaderName.TRANSFER_ENCODING);
-        if (StringUtils.equals(transferEncoding, HeaderValue.TransferEncoding.CHUNKED)) {
+        if (FeatUtils.equals(transferEncoding, HeaderValue.TransferEncoding.CHUNKED)) {
             state = STATE_CHUNK_LENGTH;
         } else if (getContentLength() > 0) {
             state = STATE_CONTENT_LENGTH;
@@ -84,7 +83,7 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
         } else {
             state = STATE_FINISH;
         }
-        if (StringUtils.equals(HeaderValue.ContentEncoding.GZIP, getHeader(HeaderName.CONTENT_ENCODING))) {
+        if (FeatUtils.equals(HeaderValue.ContentEncoding.GZIP, getHeader(HeaderName.CONTENT_ENCODING))) {
             state = STATE_GZIP | state;
             streaming = new GzipStream(streaming);
         }
@@ -98,14 +97,14 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
         try {
             switch (state & ~STATE_GZIP) {
                 case STATE_CHUNK_LENGTH: {
-                    int length = StringUtils.scanUntilAndTrim(buffer, FeatUtils.LF);
+                    int length = FeatUtils.scanUntilAndTrim(buffer, FeatUtils.LF);
                     if (length < 0) {
                         return;
                     }
                     if (length == 1) {
                         state = STATE_FINISH;
                     } else {
-                        remaining = StringUtils.convertHexString(buffer, buffer.position() - length - 1, length - 1);
+                        remaining = FeatUtils.convertHexString(buffer, buffer.position() - length - 1, length - 1);
                         if (remaining != 0) {
                             state = STATE_CHUNK_CONTENT;
                         }

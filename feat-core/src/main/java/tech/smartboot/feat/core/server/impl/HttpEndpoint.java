@@ -27,7 +27,7 @@ import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.multipart.MultipartConfig;
 import tech.smartboot.feat.core.common.multipart.Part;
-import tech.smartboot.feat.core.common.utils.StringUtils;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.ServerOptions;
@@ -276,7 +276,7 @@ public final class HttpEndpoint extends Endpoint implements HttpRequest, Reset {
 
     public Collection<Part> getParts(MultipartConfig configElement) throws IOException {
         if (!multipartParsed) {
-            if (StringUtils.isBlank(getContentType()) || !getContentType().startsWith(HeaderValue.ContentType.MULTIPART_FORM_DATA)) {
+            if (FeatUtils.isBlank(getContentType()) || !getContentType().startsWith(HeaderValue.ContentType.MULTIPART_FORM_DATA)) {
                 throw new FeatException("Multipart is not supported for content type " + getContentType());
             }
             MultipartFormDecoder multipartFormDecoder = new MultipartFormDecoder(this, configElement);

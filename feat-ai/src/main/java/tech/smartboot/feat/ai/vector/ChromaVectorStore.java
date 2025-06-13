@@ -20,7 +20,7 @@ import tech.smartboot.feat.ai.vector.expression.Expression;
 import tech.smartboot.feat.ai.vector.expression.SimpleExpression;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.exception.FeatException;
-import tech.smartboot.feat.core.common.utils.StringUtils;
+import tech.smartboot.feat.core.common.FeatUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -87,7 +87,7 @@ public class ChromaVectorStore implements VectorStore {
 
     public ChromaVectorStore(Consumer<ChromaVectorOptions> consumer) {
         consumer.accept(options);
-        if (StringUtils.isBlank(options.getCollectionName())) {
+        if (FeatUtils.isBlank(options.getCollectionName())) {
             throw new FeatException("Collection name is required");
         }
         chroma = new Chroma(options.getUrl(), opt -> {

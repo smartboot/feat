@@ -11,7 +11,7 @@
 package tech.smartboot.feat.fileserver;
 
 import tech.smartboot.feat.Feat;
-import tech.smartboot.feat.core.common.utils.StringUtils;
+import tech.smartboot.feat.core.common.FeatUtils;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -26,7 +26,7 @@ public class Bootstrap {
         boolean autoIndex = "true".equals(System.getenv("FEAT_AUTO_INDEX"));
         String webRoot = System.getenv("FEAT_WEB_ROOT");
         Path path;
-        if (StringUtils.isBlank(webRoot)) {
+        if (FeatUtils.isBlank(webRoot)) {
             webRoot = "./webroot";
             path = Paths.get(webRoot);
             if (!path.toFile().isDirectory()) {

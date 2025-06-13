@@ -11,7 +11,7 @@
 package tech.smartboot.feat.core.common.multipart;
 
 
-import tech.smartboot.feat.core.common.utils.StringUtils;
+import tech.smartboot.feat.core.common.FeatUtils;
 
 import java.nio.file.Paths;
 
@@ -43,7 +43,7 @@ public class MultipartConfig {
         } else {
             this.location = location;
         }
-        if (StringUtils.isNotBlank(this.location) && !Paths.get(this.location).isAbsolute()) {
+        if (FeatUtils.isNotBlank(this.location) && !Paths.get(this.location).isAbsolute()) {
             throw new IllegalStateException("location must be absolute");
         }
 

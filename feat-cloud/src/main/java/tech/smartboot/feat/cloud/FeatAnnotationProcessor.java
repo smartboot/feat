@@ -24,8 +24,8 @@ import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.cloud.annotation.RequestMethod;
 import tech.smartboot.feat.cloud.serializer.JsonSerializer;
 import tech.smartboot.feat.cloud.serializer.value.FeatYamlValueSerializer;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.exception.FeatException;
-import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.Session;
@@ -319,7 +319,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         Controller controller = annotation;
         //遍历所有方法,获得RequestMapping注解
         String basePath = controller.value();
-        if (!StringUtils.startsWith(basePath, "/")) {
+        if (!FeatUtils.startsWith(basePath, "/")) {
             basePath = "/" + basePath;
         }
         for (Element se : element.getEnclosedElements()) {
@@ -334,7 +334,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                     requestURL = basePath + "/" + requestURL;
                 }
 
-                if (StringUtils.isBlank(requestURL)) {
+                if (FeatUtils.isBlank(requestURL)) {
                     throw new FeatException("the value of RequestMapping on " + element.getSimpleName() + "@" + se.getSimpleName() + " is not allowed to be empty.");
                 }
 

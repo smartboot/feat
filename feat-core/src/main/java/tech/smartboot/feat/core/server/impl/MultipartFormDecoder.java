@@ -17,7 +17,7 @@ import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.common.multipart.MultipartConfig;
 import tech.smartboot.feat.core.common.multipart.PartImpl;
 import tech.smartboot.feat.core.common.utils.ByteTree;
-import tech.smartboot.feat.core.common.utils.StringUtils;
+import tech.smartboot.feat.core.common.FeatUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
@@ -105,7 +105,7 @@ class MultipartFormDecoder {
                 }
                 byteBuffer.reset();
                 //Header name解码
-                ByteTree<HeaderName> name = StringUtils.scanByteTree(byteBuffer, ByteTree.COLON_END_MATCHER, request.getOptions().getHeaderNameByteTree());
+                ByteTree<HeaderName> name = FeatUtils.scanByteTree(byteBuffer, ByteTree.COLON_END_MATCHER, request.getOptions().getHeaderNameByteTree());
                 if (name == null) {
                     return false;
                 }
@@ -119,7 +119,7 @@ class MultipartFormDecoder {
                 return decode(byteBuffer, request);
             }
             case STATE_PART_HEADER_VALUE: {
-                ByteTree<?> value = StringUtils.scanByteTree(byteBuffer, ByteTree.CR_END_MATCHER, request.getOptions().getByteCache());
+                ByteTree<?> value = FeatUtils.scanByteTree(byteBuffer, ByteTree.CR_END_MATCHER, request.getOptions().getByteCache());
                 if (value == null) {
                     if (byteBuffer.remaining() == byteBuffer.capacity()) {
                         throw new HttpException(HttpStatus.REQUEST_HEADER_FIELDS_TOO_LARGE);
@@ -131,7 +131,7 @@ class MultipartFormDecoder {
                 return decode(byteBuffer, request);
             }
             case STATE_CONTENT_DISPOSITION_DECODER: {
-                ByteTree<?> value = StringUtils.scanByteTree(byteBuffer, ByteTree.CR_END_MATCHER, request.getOptions().getByteCache());
+                ByteTree<?> value = FeatUtils.scanByteTree(byteBuffer, ByteTree.CR_END_MATCHER, request.getOptions().getByteCache());
                 if (value == null) {
                     if (byteBuffer.remaining() == byteBuffer.capacity()) {
                         throw new HttpException(HttpStatus.REQUEST_HEADER_FIELDS_TOO_LARGE);
@@ -141,9 +141,9 @@ class MultipartFormDecoder {
                 currentPart.setHeadValue(value.getStringValue());
                 for (String partVal : value.getStringValue().split(";")) {
                     partVal = partVal.trim();
-                    if (StringUtils.startsWith(partVal, "filename")) {
+                    if (FeatUtils.startsWith(partVal, "filename")) {
                         if (partVal.charAt(8) == '=') {
-                            currentPart.setFileName(StringUtils.substring(partVal, 10, partVal.length() - 1));
+                            currentPart.setFileName(FeatUtils.substring(partVal, 10, partVal.length() - 1));
                         } else if (partVal.charAt(8) == '*' && partVal.charAt(9) == '=') {
                             int characterSetIndex = partVal.indexOf('\'', 10);
                             int languageIndex = partVal.indexOf('\'', characterSetIndex + 1);
@@ -157,8 +157,8 @@ class MultipartFormDecoder {
                         } else {
                             throw new HttpException(HttpStatus.BAD_REQUEST);
                         }
-                    } else if (StringUtils.startsWith(partVal, "name")) {
-                        currentPart.setName(StringUtils.substring(partVal, partVal.indexOf("=\"") + 2, partVal.length() - 1));
+                    } else if (FeatUtils.startsWith(partVal, "name")) {
+                        currentPart.setName(FeatUtils.substring(partVal, partVal.indexOf("=\"") + 2, partVal.length() - 1));
                     }
                 }
                 state = STATE_HEADER_END;

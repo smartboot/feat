@@ -21,7 +21,7 @@ import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.utils.ByteTree;
-import tech.smartboot.feat.core.common.utils.StringUtils;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.ServerOptions;
 import tech.smartboot.feat.core.server.waf.WAF;
@@ -54,7 +54,7 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
         DecoderUnit decodeState = request.getDecodeState();
         switch (decodeState.getState()) {
             case DecodeState.STATE_METHOD: {
-                ByteTree<?> method = StringUtils.scanByteTree(byteBuffer, ByteTree.SP_END_MATCHER, options.getByteCache());
+                ByteTree<?> method = FeatUtils.scanByteTree(byteBuffer, ByteTree.SP_END_MATCHER, options.getByteCache());
                 if (method == null) {
                     break;
                 }
@@ -63,7 +63,7 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
                 WAF.methodCheck(options, request);
             }
             case DecodeState.STATE_URI: {
-                ByteTree<HttpHandler> uriTreeNode = StringUtils.scanByteTree(byteBuffer, URI_END_MATCHER, options.getUriByteTree());
+                ByteTree<HttpHandler> uriTreeNode = FeatUtils.scanByteTree(byteBuffer, URI_END_MATCHER, options.getUriByteTree());
                 if (uriTreeNode == null) {
                     break;
                 }
@@ -85,7 +85,7 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
                 return decode(byteBuffer, request);
             }
             case DecodeState.STATE_URI_QUERY: {
-                ByteTree<?> query = StringUtils.scanByteTree(byteBuffer, ByteTree.SP_END_MATCHER, options.getByteCache());
+                ByteTree<?> query = FeatUtils.scanByteTree(byteBuffer, ByteTree.SP_END_MATCHER, options.getByteCache());
                 if (query == null) {
                     break;
                 }
@@ -160,7 +160,7 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
             }
             // header name解析
             case DecodeState.STATE_HEADER_NAME: {
-                ByteTree<HeaderName> name = StringUtils.scanByteTree(byteBuffer, ByteTree.COLON_END_MATCHER, options.getHeaderNameByteTree());
+                ByteTree<HeaderName> name = FeatUtils.scanByteTree(byteBuffer, ByteTree.COLON_END_MATCHER, options.getHeaderNameByteTree());
                 if (name == null) {
                     break;
                 }
@@ -169,7 +169,7 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
             }
             // header value解析
             case DecodeState.STATE_HEADER_VALUE: {
-                ByteTree<?> value = StringUtils.scanByteTree(byteBuffer, ByteTree.CR_END_MATCHER, options.getByteCache());
+                ByteTree<?> value = FeatUtils.scanByteTree(byteBuffer, ByteTree.CR_END_MATCHER, options.getByteCache());
                 if (value == null) {
                     if (byteBuffer.remaining() == byteBuffer.capacity()) {
                         throw new HttpException(HttpStatus.REQUEST_HEADER_FIELDS_TOO_LARGE, "The length of the value of header <u>" + decodeState.getDecodeHeaderName().getStringValue() + "</u> exceeds the read buffer.");

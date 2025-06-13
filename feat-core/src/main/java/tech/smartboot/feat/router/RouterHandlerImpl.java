@@ -11,7 +11,7 @@
 package tech.smartboot.feat.router;
 
 import tech.smartboot.feat.core.common.exception.FeatException;
-import tech.smartboot.feat.core.common.utils.StringUtils;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.impl.HttpEndpoint;
@@ -112,7 +112,7 @@ final class RouterHandlerImpl implements HttpHandler {
         if (handler != null) {
             return handler;
         }
-        if (StringUtils.isBlank(routerUnit.method) || StringUtils.equals(routerUnit.method, request.getMethod())) {
+        if (FeatUtils.isBlank(routerUnit.method) || FeatUtils.equals(routerUnit.method, request.getMethod())) {
             return routerUnit;
         }
         return routerDefaultHandler.routerUnit;
@@ -129,8 +129,8 @@ final class RouterHandlerImpl implements HttpHandler {
     }
 
     public void addMethodHandler(RouterHandlerImpl methodHandler) {
-        if (StringUtils.isBlank(methodHandler.routerUnit.method)) {
-            if (StringUtils.isBlank(routerUnit.method)) {
+        if (FeatUtils.isBlank(methodHandler.routerUnit.method)) {
+            if (FeatUtils.isBlank(routerUnit.method)) {
                 throw new FeatException("urlPattern:[" + urlPattern + "] is duplicate");
             }
             if (methodHandlers == null) {
@@ -147,7 +147,7 @@ final class RouterHandlerImpl implements HttpHandler {
         if (methodHandlers == null) {
             methodHandlers = new HashMap<>();
         }
-        if (StringUtils.equals(routerUnit.method, methodHandler.routerUnit.method) || methodHandlers.containsKey(methodHandler.routerUnit.method)) {
+        if (FeatUtils.equals(routerUnit.method, methodHandler.routerUnit.method) || methodHandlers.containsKey(methodHandler.routerUnit.method)) {
             throw new FeatException("urlPattern:[" + urlPattern + "],method:[" + routerUnit.method + "] is duplicate");
         }
         methodHandlers.put(methodHandler.routerUnit.method, methodHandler.routerUnit);

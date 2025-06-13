@@ -11,7 +11,7 @@
 package tech.smartboot.feat.cloud.serializer;
 
 import com.alibaba.fastjson2.annotation.JSONField;
-import tech.smartboot.feat.core.common.utils.StringUtils;
+import tech.smartboot.feat.core.common.FeatUtils;
 
 import javax.lang.model.element.Element;
 import java.io.PrintWriter;
@@ -32,7 +32,7 @@ class DateSerializer extends AbstractSerializer {
         printWriter.append("java.util.Date " + fieldName + " = ").append(obj).append(".get").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).println("();");
         printWriter.append(JsonSerializer.headBlank(deep));
         printWriter.println("if (" + fieldName + " != null) {");
-        if (jsonField != null && StringUtils.isNotBlank(jsonField.format())) {
+        if (jsonField != null && FeatUtils.isNotBlank(jsonField.format())) {
             printWriter.append(JsonSerializer.headBlank(deep + 1)).println("java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat(\"" + jsonField.format() + "\");");
             printWriter.append(JsonSerializer.headBlank(deep + 1)).println("os.write('\"');");
             printWriter.append(JsonSerializer.headBlank(deep + 1)).println("os.write(sdf.format(" + fieldName + ").getBytes());");

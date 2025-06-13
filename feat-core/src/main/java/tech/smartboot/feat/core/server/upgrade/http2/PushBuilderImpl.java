@@ -15,7 +15,7 @@ import tech.smartboot.feat.core.common.HttpMethod;
 import tech.smartboot.feat.core.common.codec.h2.codec.ContinuationFrame;
 import tech.smartboot.feat.core.common.codec.h2.codec.Http2Frame;
 import tech.smartboot.feat.core.common.codec.h2.codec.PushPromiseFrame;
-import tech.smartboot.feat.core.common.utils.StringUtils;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.server.PushBuilder;
 
 import java.io.IOException;
@@ -106,7 +106,7 @@ public class PushBuilderImpl implements PushBuilder {
 //                (pushRequest);
 //            }
 //        });
-        if (StringUtils.isBlank(path)) {
+        if (FeatUtils.isBlank(path)) {
             throw new IllegalStateException();
         }
         String path = this.path;

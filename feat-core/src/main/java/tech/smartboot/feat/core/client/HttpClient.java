@@ -21,7 +21,7 @@ import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpProtocol;
-import tech.smartboot.feat.core.common.utils.StringUtils;
+import tech.smartboot.feat.core.common.FeatUtils;
 
 import java.util.Base64;
 import java.util.concurrent.CompletableFuture;
@@ -153,7 +153,7 @@ public final class HttpClient {
 
     private void initRest(HttpRestImpl httpRestImpl, String uri) {
         HttpRequestImpl request = httpRestImpl.getRequest();
-        if (options.getProxy() != null && StringUtils.isNotBlank(options.getProxy().getProxyUserName())) {
+        if (options.getProxy() != null && FeatUtils.isNotBlank(options.getProxy().getProxyUserName())) {
             request.addHeader(HeaderName.PROXY_AUTHORIZATION,
                     "Basic " + Base64.getEncoder().encodeToString((options.getProxy().getProxyUserName() + ":" + options.getProxy().getProxyPassword()).getBytes()));
         }

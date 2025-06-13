@@ -15,8 +15,9 @@ import tech.smartboot.feat.ai.vector.expression.Expression;
 import tech.smartboot.feat.ai.vector.expression.SimpleExpression;
 import tech.smartboot.feat.ai.vector.milvus.Collection;
 import tech.smartboot.feat.ai.vector.milvus.Milvus;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.exception.FeatException;
-import tech.smartboot.feat.core.common.utils.StringUtils;
+import tech.smartboot.feat.core.common.FeatUtils;
 
 import java.util.Collections;
 import java.util.List;
@@ -96,7 +97,7 @@ public class MilvusVectorStore implements VectorStore {
 
     public MilvusVectorStore(Consumer<MilvusVectorOptions> consumer) {
         consumer.accept(options);
-        if (StringUtils.isBlank(options.getCollectionName())) {
+        if (FeatUtils.isBlank(options.getCollectionName())) {
             throw new FeatException("Collection name is required");
         }
         milvus = new Milvus(options.getUrl(), opt -> {

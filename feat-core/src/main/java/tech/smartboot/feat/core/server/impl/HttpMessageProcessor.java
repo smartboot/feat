@@ -23,7 +23,7 @@ import tech.smartboot.feat.core.common.io.FeatOutputStream;
 import tech.smartboot.feat.core.common.io.ReadListener;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
-import tech.smartboot.feat.core.common.utils.StringUtils;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.ServerOptions;
 
@@ -197,7 +197,7 @@ public final class HttpMessageProcessor extends AbstractMessageProcessor<HttpEnd
      */
     private void uriCheck(HttpEndpoint request) {
         String originalUri = request.getUri();
-        if (StringUtils.length(originalUri) > MAX_LENGTH) {
+        if (FeatUtils.length(originalUri) > MAX_LENGTH) {
             throw new HttpException(HttpStatus.URI_TOO_LONG);
         }
         /**
@@ -213,10 +213,10 @@ public final class HttpMessageProcessor extends AbstractMessageProcessor<HttpEnd
         int schemeIndex = originalUri.indexOf("://");
         if (schemeIndex > 0) {//绝对路径
             int uriIndex = originalUri.indexOf('/', schemeIndex + 3);
-            if (uriIndex == StringUtils.INDEX_NOT_FOUND) {
+            if (uriIndex == FeatUtils.INDEX_NOT_FOUND) {
                 request.setRequestURI("/");
             } else {
-                request.setRequestURI(StringUtils.substring(originalUri, uriIndex));
+                request.setRequestURI(FeatUtils.substring(originalUri, uriIndex));
             }
         } else {
             request.setRequestURI(originalUri);

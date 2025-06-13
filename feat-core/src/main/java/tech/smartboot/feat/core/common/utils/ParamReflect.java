@@ -10,6 +10,8 @@
 
 package tech.smartboot.feat.core.common.utils;
 
+import tech.smartboot.feat.core.common.FeatUtils;
+
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -67,14 +69,14 @@ public class ParamReflect {
                 }
                 Param p = f.getAnnotation(Param.class);// 配置项默认值
                 String name = p.name();
-                if (StringUtils.isBlank(name)) {
+                if (FeatUtils.isBlank(name)) {
                     name = f.getName();
                 }
                 Type fieldType = f.getGenericType();
                 String value;
                 if (property.containsKey(name)) {
                     value = property.getProperty(name);
-                } else if (StringUtils.isNotBlank(p.value())) {
+                } else if (FeatUtils.isNotBlank(p.value())) {
                     value = p.value();
                 } else {
                     continue;
@@ -82,15 +84,15 @@ public class ParamReflect {
 
                 f.setAccessible(true);
                 if (int.class == fieldType) {
-                    if (StringUtils.isNotBlank(value)) {
+                    if (FeatUtils.isNotBlank(value)) {
                         f.setInt(obj, Integer.parseInt(value));
                     }
                 } else if (long.class == fieldType) {
-                    if (StringUtils.isNotBlank(value)) {
+                    if (FeatUtils.isNotBlank(value)) {
                         f.setLong(obj, Long.parseLong(value));
                     }
                 } else if (boolean.class == fieldType) {
-                    if (StringUtils.isNotBlank(value)) {
+                    if (FeatUtils.isNotBlank(value)) {
                         f.setBoolean(obj, Boolean.parseBoolean(value));
                     }
                 } else if (fieldType == String.class) {
@@ -98,18 +100,18 @@ public class ParamReflect {
                 }
                 // 字符串数组
                 else if (String.class.equals(f.getType().getComponentType())) {
-                    if (StringUtils.isBlank(value)) {
+                    if (FeatUtils.isBlank(value)) {
                         continue;
                     }
                     f.set(obj, value.split(","));
                 } else if (Level.class.equals(f.getGenericType())) {
                     f.set(obj, Level.parse(value));
-                } else if (f.getType().isInterface() && !StringUtils.isBlank(value)) {
+                } else if (f.getType().isInterface() && !FeatUtils.isBlank(value)) {
                     f.set(obj, Class.forName(value).newInstance());
                 }
                 // 返回表示数组组件类型的Class。如果此类不表示数组类，则此方法返回 null。
                 else if (f.getType().getComponentType() != null) {
-                    if (StringUtils.isBlank(value)) {
+                    if (FeatUtils.isBlank(value)) {
                         continue;
                     }
                     String[] vals = value.split(",");

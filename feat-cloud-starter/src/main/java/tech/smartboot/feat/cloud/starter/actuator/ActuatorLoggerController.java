@@ -17,8 +17,8 @@ import tech.smartboot.feat.cloud.annotation.Param;
 import tech.smartboot.feat.cloud.annotation.PathParam;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.cloud.annotation.RequestMethod;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
-import tech.smartboot.feat.core.common.utils.StringUtils;
 
 import java.util.logging.Level;
 
@@ -62,7 +62,7 @@ public class ActuatorLoggerController {
      */
     @RequestMapping(value = "/level", method = RequestMethod.POST)
     public RestResult<Boolean> setLogger(@Param("level") String level) {
-        if (StringUtils.isBlank(level)) {
+        if (FeatUtils.isBlank(level)) {
             return RestResult.fail("level is empty");
         }
         level = convertLevel(level);
@@ -83,7 +83,7 @@ public class ActuatorLoggerController {
      */
     @RequestMapping(value = "/level/:loggerName", method = RequestMethod.GET)
     public RestResult<String> getLogger(@PathParam("loggerName") String loggerName) {
-        if (StringUtils.isBlank(loggerName)) {
+        if (FeatUtils.isBlank(loggerName)) {
             return RestResult.fail("loggerName is empty");
         }
         return RestResult.ok(reverseLevel(System.getProperty(LoggerFactory.SYSTEM_PROPERTY_LOG_LEVEL + "." + loggerName, System.getProperty(LoggerFactory.SYSTEM_PROPERTY_LOG_LEVEL))));
@@ -101,10 +101,10 @@ public class ActuatorLoggerController {
      */
     @RequestMapping(value = "/level/:loggerName", method = RequestMethod.POST)
     public RestResult<Boolean> setLogger(@PathParam("loggerName") String loggerName, @Param("level") String level) {
-        if (StringUtils.isBlank(loggerName)) {
+        if (FeatUtils.isBlank(loggerName)) {
             return RestResult.fail("loggerName is empty");
         }
-        if (StringUtils.isBlank(level)) {
+        if (FeatUtils.isBlank(level)) {
             return RestResult.fail("level is empty");
         }
         level = convertLevel(level);

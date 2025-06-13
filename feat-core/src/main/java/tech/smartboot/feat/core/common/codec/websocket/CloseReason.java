@@ -10,7 +10,7 @@
 
 package tech.smartboot.feat.core.common.codec.websocket;
 
-import tech.smartboot.feat.core.common.utils.StringUtils;
+import tech.smartboot.feat.core.common.FeatUtils;
 
 import java.nio.charset.StandardCharsets;
 
@@ -70,7 +70,7 @@ public class CloseReason {
 
     public byte[] toBytes() {
         byte[] payload;
-        if (StringUtils.isBlank(reason)) {
+        if (FeatUtils.isBlank(reason)) {
             payload = new byte[2];
             payload[0] = (byte) ((code >>> 8) & 0xFF);
             payload[1] = (byte) (code & 0xFF);

@@ -16,10 +16,10 @@ import org.yaml.snakeyaml.Yaml;
 import tech.smartboot.feat.cloud.AbstractServiceLoader;
 import tech.smartboot.feat.cloud.ApplicationContext;
 import tech.smartboot.feat.cloud.annotation.Value;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
-import tech.smartboot.feat.core.common.utils.StringUtils;
 import tech.smartboot.feat.core.server.ServerOptions;
 import tech.smartboot.feat.router.Router;
 
@@ -176,9 +176,9 @@ public class FeatYamlValueSerializer {
             Value value = field.getAnnotation(Value.class);
             String paramName = value.value();
             String defaultValue = null;
-            if (StringUtils.isBlank(paramName)) {
+            if (FeatUtils.isBlank(paramName)) {
                 paramName = field.getSimpleName().toString();
-            } else if (StringUtils.startsWith(paramName, "${") && StringUtils.endsWith(paramName, "}")) {
+            } else if (FeatUtils.startsWith(paramName, "${") && FeatUtils.endsWith(paramName, "}")) {
                 paramName = paramName.substring(2, paramName.length() - 1);
                 int index = paramName.indexOf(":");
                 if (index != -1) {

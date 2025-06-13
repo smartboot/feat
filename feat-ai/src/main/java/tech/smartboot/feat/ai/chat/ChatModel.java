@@ -30,7 +30,7 @@ import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.client.stream.ServerSentEventStream;
 import tech.smartboot.feat.core.client.stream.Stream;
 import tech.smartboot.feat.core.common.HeaderName;
-import tech.smartboot.feat.core.common.utils.StringUtils;
+import tech.smartboot.feat.core.common.FeatUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -55,7 +55,7 @@ public class ChatModel {
             options.baseUrl(options.baseUrl().substring(0, options.baseUrl().length() - 1));
         }
         this.options = options;
-        if (StringUtils.isNotBlank(options.getSystem())) {
+        if (FeatUtils.isNotBlank(options.getSystem())) {
             Message message = new Message();
             message.setRole(Message.ROLE_SYSTEM);
             message.setContent(options.getSystem());
@@ -82,7 +82,7 @@ public class ChatModel {
                     @Override
                     public void onEvent(HttpResponse httpResponse, Map<String, String> event) {
                         String data = event.get(ServerSentEventStream.DATA);
-                        if ("[DONE]".equals(data) || StringUtils.isBlank(data)) {
+                        if ("[DONE]".equals(data) || FeatUtils.isBlank(data)) {
                             ResponseMessage responseMessage = new ResponseMessage();
                             responseMessage.setRole(Message.ROLE_ASSISTANT);
                             responseMessage.setContent(contentBuilder.toString());
@@ -110,16 +110,16 @@ public class ChatModel {
                                     t.setFunction(new HashMap<>());
                                     return t;
                                 });
-                                if (StringUtils.isNotBlank(toolCall.getId())) {
+                                if (FeatUtils.isNotBlank(toolCall.getId())) {
                                     tool.setId(toolCall.getId());
                                 }
-                                if (StringUtils.isNotBlank(toolCall.getType())) {
+                                if (FeatUtils.isNotBlank(toolCall.getType())) {
                                     tool.setType(toolCall.getType());
                                 }
                                 if (toolCall.getFunction() != null) {
                                     toolCall.getFunction().forEach((k, v) -> {
                                         String preV = tool.getFunction().get(k);
-                                        if (StringUtils.isNotBlank(preV)) {
+                                        if (FeatUtils.isNotBlank(preV)) {
                                             tool.getFunction().put(k, preV + v);
                                         } else {
                                             tool.getFunction().put(k, v);
@@ -224,7 +224,7 @@ public class ChatModel {
         HttpPost post = Feat.postJson(options.baseUrl() + "/chat/completions", opts -> {
             opts.debug(options.isDebug());
         }, header -> {
-            if (StringUtils.isNotBlank(options.getApiKey())) {
+            if (FeatUtils.isNotBlank(options.getApiKey())) {
                 header.add(HeaderName.AUTHORIZATION, "Bearer " + options.getApiKey());
             }
             options.getHeaders().forEach(header::add);
@@ -251,7 +251,7 @@ public class ChatModel {
         Map<String, String> params = new HashMap<>();
         data.accept(params);
         history.clear();
-        if (StringUtils.isNotBlank(prompt.role())) {
+        if (FeatUtils.isNotBlank(prompt.role())) {
             options.system(prompt.role());
             Message message = new Message();
             message.setRole(Message.ROLE_SYSTEM);
@@ -265,7 +265,7 @@ public class ChatModel {
         Map<String, String> params = new HashMap<>();
         data.accept(params);
         history.clear();
-        if (StringUtils.isNotBlank(prompt.role())) {
+        if (FeatUtils.isNotBlank(prompt.role())) {
             options.system(prompt.role());
             Message message = new Message();
             message.setRole(Message.ROLE_SYSTEM);

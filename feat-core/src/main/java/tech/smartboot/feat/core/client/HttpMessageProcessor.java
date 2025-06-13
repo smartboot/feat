@@ -19,12 +19,11 @@ import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.common.utils.ByteTree;
-import tech.smartboot.feat.core.common.utils.StringUtils;
 
 import java.nio.ByteBuffer;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 final class HttpMessageProcessor extends AbstractMessageProcessor<AbstractResponse> implements Protocol<AbstractResponse> {
@@ -36,7 +35,7 @@ final class HttpMessageProcessor extends AbstractMessageProcessor<AbstractRespon
         switch (attachment.getState()) {
             // 协议解析
             case DecodeState.STATE_PROTOCOL_DECODE: {
-                ByteTree<?> method = StringUtils.scanByteTree(buffer, ByteTree.SP_END_MATCHER, ByteTree.DEFAULT);
+                ByteTree<?> method = FeatUtils.scanByteTree(buffer, ByteTree.SP_END_MATCHER, ByteTree.DEFAULT);
                 if (method == null) {
                     return null;
                 }
@@ -45,7 +44,7 @@ final class HttpMessageProcessor extends AbstractMessageProcessor<AbstractRespon
             }
             // 状态码解析
             case DecodeState.STATE_STATUS_CODE: {
-                ByteTree<?> byteTree = StringUtils.scanByteTree(buffer, ByteTree.SP_END_MATCHER, ByteTree.DEFAULT);
+                ByteTree<?> byteTree = FeatUtils.scanByteTree(buffer, ByteTree.SP_END_MATCHER, ByteTree.DEFAULT);
                 if (byteTree == null) {
                     return null;
                 }
@@ -55,7 +54,7 @@ final class HttpMessageProcessor extends AbstractMessageProcessor<AbstractRespon
             }
             // 状态码描述解析
             case DecodeState.STATE_STATUS_DESC: {
-                ByteTree<?> byteTree = StringUtils.scanByteTree(buffer, ByteTree.CR_END_MATCHER, ByteTree.DEFAULT);
+                ByteTree<?> byteTree = FeatUtils.scanByteTree(buffer, ByteTree.CR_END_MATCHER, ByteTree.DEFAULT);
                 if (byteTree == null) {
                     return null;
                 }
@@ -92,7 +91,7 @@ final class HttpMessageProcessor extends AbstractMessageProcessor<AbstractRespon
             }
             // header name解析
             case DecodeState.STATE_HEADER_NAME: {
-                ByteTree<?> name = StringUtils.scanByteTree(buffer, ByteTree.COLON_END_MATCHER, ByteTree.DEFAULT);
+                ByteTree<?> name = FeatUtils.scanByteTree(buffer, ByteTree.COLON_END_MATCHER, ByteTree.DEFAULT);
                 if (name == null) {
                     return null;
                 }
@@ -101,7 +100,7 @@ final class HttpMessageProcessor extends AbstractMessageProcessor<AbstractRespon
             }
             // header value解析
             case DecodeState.STATE_HEADER_VALUE: {
-                ByteTree<?> value = StringUtils.scanByteTree(buffer, ByteTree.CR_END_MATCHER, ByteTree.DEFAULT);
+                ByteTree<?> value = FeatUtils.scanByteTree(buffer, ByteTree.CR_END_MATCHER, ByteTree.DEFAULT);
                 if (value == null) {
                     if (buffer.remaining() == buffer.capacity()) {
                         throw new HttpException(HttpStatus.REQUEST_HEADER_FIELDS_TOO_LARGE);

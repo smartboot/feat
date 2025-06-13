@@ -11,6 +11,8 @@
 package tech.smartboot.feat.core.common.utils;
 
 
+import tech.smartboot.feat.core.common.FeatUtils;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -48,7 +50,7 @@ public class Mimetypes {
                 if (line.isEmpty() || line.charAt(0) == '#') {
                     continue;
                 }
-                String[] tokens = StringUtils.splitPreserveAllTokens(line, " \t\n\r\f");
+                String[] tokens = FeatUtils.splitPreserveAllTokens(line, " \t\n\r\f");
                 String mediaType = tokens[0];
                 for (int i = 1; i < tokens.length; i++) {
                     String fileExtension = tokens[i].toLowerCase(Locale.ENGLISH);

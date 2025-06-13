@@ -22,7 +22,7 @@ import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.common.io.BodyInputStream;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
-import tech.smartboot.feat.core.common.utils.StringUtils;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.ServerOptions;
@@ -326,8 +326,8 @@ public abstract class Endpoint implements Reset {
         parameters = new HashMap<>();
         //识别url中的参数
         String urlParamStr = queryString;
-        if (StringUtils.isNotBlank(urlParamStr)) {
-            urlParamStr = StringUtils.substringBefore(urlParamStr, "#");
+        if (FeatUtils.isNotBlank(urlParamStr)) {
+            urlParamStr = FeatUtils.substringBefore(urlParamStr, "#");
             FeatUtils.decodeParamString(urlParamStr, parameters);
         }
 

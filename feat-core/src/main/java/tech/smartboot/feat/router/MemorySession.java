@@ -14,7 +14,7 @@ import tech.smartboot.feat.core.common.Cookie;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.exception.FeatException;
-import tech.smartboot.feat.core.common.utils.StringUtils;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.ServerOptions;
 import tech.smartboot.feat.core.server.Session;
@@ -103,7 +103,7 @@ class MemorySession implements Session {
         if (FeatUtils.isNotEmpty(preValues)) {
             request.getResponse().setHeader(HeaderName.SET_COOKIE, null);
             preValues.forEach(preValue -> {
-                if (!StringUtils.startsWith(preValue, DEFAULT_SESSION_COOKIE_NAME + "=")) {
+                if (!FeatUtils.startsWith(preValue, DEFAULT_SESSION_COOKIE_NAME + "=")) {
                     request.getResponse().addHeader(HeaderName.SET_COOKIE, preValue);
                 }
             });

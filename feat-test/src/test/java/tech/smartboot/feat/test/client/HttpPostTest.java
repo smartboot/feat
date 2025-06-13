@@ -22,7 +22,7 @@ import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
-import tech.smartboot.feat.core.common.utils.StringUtils;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.router.Router;
@@ -227,7 +227,7 @@ public class HttpPostTest {
                 JSONObject jsonObject = JSONObject.parseObject(response.body());
                 boolean suc = false;
                 for (String key : param.keySet()) {
-                    suc = StringUtils.equals(param.get(key), jsonObject.getString(key));
+                    suc = FeatUtils.equals(param.get(key), jsonObject.getString(key));
                     if (!suc) {
                         break;
                     }

@@ -62,21 +62,21 @@ public class ServerOptions {
      * 在 HTTP 报文解析过程中，将频繁使用的字符串缓存到 ByteTree 中可以显著提高性能。
      * 适用范围包括：URL、HeaderName、HeaderValue 等。
      */
-    private final ByteTree<Object> byteCache = new ByteTree<>(16 * 1024);
+    private final ByteTree<Object> byteCache = new ByteTree<>();
 
     /**
      * URI 路由缓存树
      * <p>
      * 用于存储 URI 与对应处理器的映射关系，提高路由查找效率。
      */
-    private final ByteTree<HttpHandler> uriByteTree = new ByteTree<>(16 * 1024);
+    private final ByteTree<HttpHandler> uriByteTree = new ByteTree<>();
 
     /**
      * HTTP 请求头名称缓存树
      * <p>
      * 用于缓存常用的 HTTP 请求头名称，提高请求头解析效率。
      */
-    private final ByteTree<HeaderName> headerNameByteTree = new ByteTree<>(16 * 1024);
+    private final ByteTree<HeaderName> headerNameByteTree = new ByteTree<>();
 
     /**
      * smart-socket 插件列表

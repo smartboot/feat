@@ -11,7 +11,7 @@
 package tech.smartboot.feat.cloud.serializer;
 
 import com.alibaba.fastjson2.annotation.JSONField;
-import tech.smartboot.feat.core.common.utils.StringUtils;
+import tech.smartboot.feat.core.common.FeatUtils;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -132,7 +132,7 @@ public class JsonSerializer {
             }
             String fieldName = se.getSimpleName().toString();
             JSONField jsonField = se.getAnnotation(JSONField.class);
-            if (jsonField != null && StringUtils.isNotBlank(jsonField.name())) {
+            if (jsonField != null && FeatUtils.isNotBlank(jsonField.name())) {
                 fieldName = jsonField.name();
             }
             AbstractSerializer serializer = jsonFieldSerializerMap.get(type.toString());
