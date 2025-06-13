@@ -18,7 +18,7 @@
         <artifactId>feat-parent</artifactId>
         <version>1.1.0</version>
     </parent>
-    <name>feat-cloud</name>
+    <name>feat-ai</name>
     <artifactId>feat-ai</artifactId>
 
     <properties>
