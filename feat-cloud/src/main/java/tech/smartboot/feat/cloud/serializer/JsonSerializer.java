@@ -79,11 +79,12 @@ public class JsonSerializer {
             printWriter.println("os.write(new JSONObject(" + obj + ").toString().getBytes());");
             return;
         } else if (typeMirror.toString().endsWith(".JSONObject")) {
-            printWriter.println("if (" + obj + " != null) {");
-            printWriter.println("os.write(" + obj + ".toString().getBytes());");
-            printWriter.println("} else {");
+            printWriter.println(headBlank(i) + "if (" + obj + " != null) {");
+            printWriter.println(headBlank(i + 1) + "os.write(" + obj + ".toString().getBytes());");
+            printWriter.println(headBlank(i) + "} else {");
+            printWriter.append(headBlank(i + 1));
             toBytesPool("null");
-            printWriter.println("}");
+            printWriter.println(headBlank(i) + "}");
             return;
         }
         printWriter.println(headBlank(i) + "os.write('{');");

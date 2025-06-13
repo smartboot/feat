@@ -14,7 +14,7 @@ package tech.smartboot.feat.cloud;
 import tech.smartboot.feat.router.Router;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 public interface CloudService {
@@ -26,7 +26,7 @@ public interface CloudService {
 
     void destroy() throws Throwable;
 
-    void router(Router router);
+    void router(ApplicationContext context, Router router);
 
     default int order() {
         return 0;

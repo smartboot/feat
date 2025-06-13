@@ -64,7 +64,7 @@ public class ApplicationContext {
         }
         System.out.println("\u001B[32mFeat Router:\u001B[0m");
         for (CloudService service : services) {
-            service.router(router);
+            service.router(this, router);
         }
     }
 

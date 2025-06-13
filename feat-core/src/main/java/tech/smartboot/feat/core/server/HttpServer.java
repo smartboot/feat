@@ -18,7 +18,6 @@ import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpMethod;
 import tech.smartboot.feat.core.common.HttpProtocol;
 import tech.smartboot.feat.core.common.utils.ByteTree;
-import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.server.impl.HttpMessageProcessor;
 import tech.smartboot.feat.core.server.impl.HttpRequestProtocol;
 
@@ -79,7 +78,7 @@ public class HttpServer {
             throw new RuntimeException("server is running");
         }
         started = true;
-        bufferPagePool = new BufferPagePool(options.getThreadNum(), false);
+        bufferPagePool = new BufferPagePool(options.getThreadNum(), true);
         initByteCache();
 
         options.getPlugins().forEach(processor::addPlugin);

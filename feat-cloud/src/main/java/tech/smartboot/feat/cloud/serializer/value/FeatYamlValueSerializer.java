@@ -143,7 +143,7 @@ public class FeatYamlValueSerializer {
         printWriter.println("\t}");
         printWriter.println();
 
-        printWriter.println("\tpublic void router(" + Router.class.getSimpleName() + " router) {");
+        printWriter.println("\tpublic void router(ApplicationContext applicationContext, " + Router.class.getSimpleName() + " router) {");
 
         printWriter.println("\t}");
         printWriter.println();

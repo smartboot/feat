@@ -209,7 +209,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         printWriter.println("\t}");
         printWriter.println();
 
-        printWriter.println("\tpublic void router(" + Router.class.getSimpleName() + " router) {");
+        printWriter.println("\tpublic void router(ApplicationContext applicationContext, " + Router.class.getSimpleName() + " router) {");
         Map<String, String> bytesCache = new HashMap<>();
         if (annotation instanceof Controller) {
             createController(element, (Controller) annotation, printWriter, bytesCache);
@@ -362,6 +362,9 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                 }
 
                 printWriter.println("\t\tSystem.out.println(\" \\u001B[32m|->\\u001B[0m " + requestURL + " ==> " + element.getSimpleName() + "@" + se.getSimpleName() + "\");");
+                if (!requestURL.contains(":") && !requestURL.contains("*")) {
+                    printWriter.println("\t\tapplicationContext.getOptions().getUriByteTree().addNode(\"" + requestURL + "\");");
+                }
                 boolean async = returnTypeInt == RETURN_TYPE_OBJECT && AsyncResponse.class.getName().equals(returnType.toString());
                 if (async) {
                     printWriter.println("\t\trouter.route(\"" + requestURL + "\"" + routeMethods + ", new " + RouterHandler.class.getName() + "()  {");
