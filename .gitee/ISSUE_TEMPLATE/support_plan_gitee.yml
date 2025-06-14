@@ -1,0 +1,26 @@
+name: ✴️参与 Gitee 个人开源项目支持计划
+description: 针对  Gitee 平台上的个人开源项目，可申请免费使用 Feat 产品。
+title: Gitee开源项目申请-[项目名称]
+labels: [ "support" ]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        注意事项：
+        - 必须是 Gitee 上的个人开源项目。
+        - 目前仅面向开源协议为 AGPL 的项目开放申请资格。
+        - 当未来项目主体变更为企业时，授权资格将自动失效。
+  - type: input
+    id: project_url
+    validations:
+      required: true
+    attributes:
+      label: 项目地址
+      description: 请填写您的项目地址。
+  - type: textarea
+    validations:
+      required: true
+    attributes:
+      label: 项目简介
+      placeholder: |
+        请用一段简短的文字介绍该项目，并上传项目logo。
