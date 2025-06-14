@@ -9,7 +9,8 @@ body:
       label: 版本号
       description: 请选择项目使用的 Feat 版本？
       options:
-        - v1.0.0 (最新)
+        - v1.1.0 (最新)
+        - v1.0.0
         - 其他
     validations:
       required: true
