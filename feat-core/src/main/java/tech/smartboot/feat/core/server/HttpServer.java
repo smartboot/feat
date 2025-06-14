@@ -128,17 +128,23 @@ public class HttpServer {
         headerNameByteTree.addNode(HeaderName.CONTENT_LANGUAGE.getName(), HeaderName.CONTENT_LANGUAGE);
         headerNameByteTree.addNode(HeaderName.CONTENT_LOCATION.getName(), HeaderName.CONTENT_LOCATION);
         headerNameByteTree.addNode(HeaderName.CONTENT_DISPOSITION.getName(), HeaderName.CONTENT_DISPOSITION);
+        headerNameByteTree.addNode(HeaderName.USER_AGENT.getName(), HeaderName.USER_AGENT);
+        headerNameByteTree.addNode(HeaderName.HOST.getName(), HeaderName.HOST);
+        headerNameByteTree.addNode(HeaderName.PRAGMA.getName(), HeaderName.PRAGMA);
+        headerNameByteTree.addNode(HeaderName.REFERER.getName(), HeaderName.REFERER);
         // 缓存一些常用字符串
         options.getByteCache().addNode(HeaderValue.TransferEncoding.CHUNKED);
         options.getByteCache().addNode(HeaderValue.ContentEncoding.GZIP);
         options.getByteCache().addNode(HeaderValue.Connection.UPGRADE);
         options.getByteCache().addNode(HeaderValue.Connection.KEEPALIVE);
+        options.getByteCache().addNode(HeaderValue.Connection.keepalive);
         options.getByteCache().addNode(HeaderValue.ContentType.MULTIPART_FORM_DATA);
         options.getByteCache().addNode(HeaderValue.ContentType.APPLICATION_JSON);
         options.getByteCache().addNode(HeaderValue.ContentType.X_WWW_FORM_URLENCODED);
         options.getByteCache().addNode(HeaderValue.ContentType.APPLICATION_JSON_UTF8);
         options.getByteCache().addNode(HeaderValue.ContentType.TEXT_HTML_UTF8);
         options.getByteCache().addNode(HeaderValue.ContentType.TEXT_PLAIN_UTF8);
+        options.getByteCache().addNode("no-cache");
     }
 
     /**

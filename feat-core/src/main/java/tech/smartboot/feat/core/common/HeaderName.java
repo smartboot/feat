@@ -15,7 +15,7 @@ package tech.smartboot.feat.core.common;
  * @version v1.0.0
  */
 public class HeaderName {
-    public static final HeaderName ACCEPT = new HeaderName(" Accept");
+    public static final HeaderName ACCEPT = new HeaderName("Accept");
     public static final HeaderName ACCEPT_CHARSET = new HeaderName("Accept-Charset");
     public static final HeaderName ACCEPT_ENCODING = new HeaderName("Accept-Encoding");
     public static final HeaderName ACCEPT_LANGUAGE = new HeaderName("Accept-Language");
