@@ -1,4 +1,4 @@
-<img src="feat_rect_logo.svg" width="30%" height="30%"/>
+<img src="feat_rect_logo.svg" width="10%" height="10%"/>
 
 
 [![AGPL License](https://img.shields.io/badge/license-AGPL-blue.svg)](http://www.gnu.org/licenses/agpl-3.0)
