@@ -177,8 +177,8 @@ public class UserController {
 ### 📚 学习资源
 
 - **[官方文档](https://smartboot.tech/feat)**：详细的使用指南和API参考
-- **[示例项目](https://gitee.com/smartboot/feat/tree/master/feat-test)**：各种场景的实际应用示例
-- **[性能测试报告](https://smartboot.tech/feat/guides/benchmark/)**：了解Feat的性能优势
+- **[示例项目](https://gitee.com/smartboot/feat/feat-test)**：各种场景的实际应用示例
+- **[性能测试报告](https://smartboot.tech/feat/appendix/benchmark/)**：了解Feat的性能优势
 
 ### 💬 获取支持
 
