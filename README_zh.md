@@ -1,5 +1,5 @@
+<img src="feat_rect_logo.svg" width="50%" height="50%"/>
 
-![Logo](feat_rect_logo.svg)
 
 [![AGPL License](https://img.shields.io/badge/license-AGPL-blue.svg)](http://www.gnu.org/licenses/agpl-3.0)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/smartboot/feat)
