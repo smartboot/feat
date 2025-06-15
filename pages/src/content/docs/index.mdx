@@ -17,6 +17,20 @@ import FeatUsers from '../../components/FeatUsers.astro'
 
 <FeatUsers/>
 
+```java title="Application.java"
+@Controller
+public class Application {
+    @RequestMapping("/")
+    public String helloWorld() {
+        return "hello Feat Cloud";
+    }
+
+    public static void main(String[] args) {
+        Feat.cloudServer().listen();
+    }
+}
+```
+
 ## 产品特色
 
 <CardGrid stagger>
