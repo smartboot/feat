@@ -20,6 +20,133 @@ Feat Cloud 在设计 Controller 注解时，一定程度上延用了 Spring 的�
 - tech.smartboot.feat.cloud.annotation.PathParam
 - tech.smartboot.feat.cloud.annotation.InterceptorMapping
 
+## 注解详解
+
+### `@Controller`
+`@Controller` 用于标记一个类为控制器，通常与 `@RequestMapping` 一起使用来定义请求映射路径。
+
+**定义：**
+```java
+@Target({ElementType.TYPE})
+@Retention(RetentionPolicy.SOURCE)
+@Documented
+public @interface Controller {
+    /**
+     * 定义控制器的请求路径前缀。
+     *
+     * @return 控制器级别的请求路径前缀，默认为空字符串。
+     */
+    String value() default "";
+}
+```
+
+**主要用途：**
+- 标识该类是一个控制器
+- 配合`@RequestMapping`定义控制器级别的请求路径前缀
+- 作为Spring风格的注解设计，降低学习成本
+
+### `@RequestMapping`
+`@RequestMapping` 用于标记方法，表示该方法处理特定的 HTTP 请求路径。
+
+**定义：**
+```java
+@Target({ElementType.METHOD})
+@Retention(RetentionPolicy.SOURCE)
+@Documented
+public @interface RequestMapping {
+    String value() default "";
+
+    RequestMethod[] method() default {};
+}
+```
+
+**主要用途：**
+- 定义具体的请求映射路径
+- 支持指定HTTP请求方法（GET、POST等）
+- 实现请求路径与控制器方法的绑定
+
+### `@Param`
+`@Param` 用于绑定请求中的查询参数（Query Parameters）到方法参数上。
+
+**定义：**
+```java
+@Target({ElementType.PARAMETER})
+@Retention(RetentionPolicy.SOURCE)
+@Documented
+public @interface Param {
+    /**
+     * 参数名称
+     *
+     * @return 参数名称
+     */
+    String value();
+}
+```
+
+**主要用途：**
+- 将HTTP请求中的查询参数绑定到控制器方法的参数上
+- 支持基本类型和String类型的参数绑定
+- 当方法参数为Map或自定义POJO类型时无需使用该注解
+
+> 提示：当方法参数为`Map`或自定义POJO类型时，无需使用`@Param`注解，框架会自动进行参数绑定。
+
+### `@PathParam`
+`@PathParam` 用于绑定请求中的路径参数（Path Parameters）到方法参数上。
+
+**定义：**
+```java
+@Target({ElementType.PARAMETER})
+@Retention(RetentionPolicy.SOURCE)
+@Documented
+public @interface PathParam {
+    /**
+     * 参数名称
+     *
+     * @return 参数名称
+     */
+    String value();
+}
+```
+
+**主要用途：**
+- 将URL模板中的变量绑定到控制器方法的参数上
+- 支持RESTful风格的URL设计
+- 支持基本类型和String类型的参数绑定
+
+### `@InterceptorMapping`
+`@InterceptorMapping` 用于为特定的请求路径添加拦截器逻辑，在请求到达目标方法之前执行一些操作。
+
+**定义：**
+```java
+@Target({ElementType.METHOD})
+@Retention(RetentionPolicy.SOURCE)
+@Documented
+public @interface InterceptorMapping {
+    /**
+     * 拦截器映射路径，用于指定拦截器应用的URL模式。
+     * <p>
+     * 支持以下匹配模式：
+     * <ul>
+     *   <li>"/path" - 精确匹配指定路径</li>
+     *   <li>"/path/*" - 匹配指定路径下的所有子路径</li>
+     * </ul>
+     * <p>
+     * 可以指定多个路径模式，拦截器将应用于所有匹配的请求。
+     *
+     * @return 拦截器应用的URL模式数组
+     */
+    String[] value() default "";
+}
+```
+
+**主要用途：**
+- 定义拦截器及其应用的URL模式
+- 实现请求预处理和后处理逻辑
+- 支持构建拦截器链
+- 可以定义多个路径模式，拦截器将应用于所有匹配的请求
+
+> 注意：拦截器执行顺序与定义顺序一致，可以定义多个拦截器形成拦截器链。
+
 ## 基本使用
 
 创建一个简单的 Controller 示例：
@@ -77,19 +204,3 @@ public Interceptor userApiInterceptor() {
 | 灵活性 | 简洁高效 | 更加灵活 |
 
 这种设计使得 Feat Cloud 在保持类似 Spring Boot 开发体验的同时，实现了更好的性能表现。
-
-### 注解处理机制
-Feat Cloud 的注解处理在编译期完成，具有以下特点：
-
-| 注解类型          | 处理时机       | 反射使用 | 性能优势         | 灵活性           |
-|-------------------|----------------|----------|------------------|------------------|
-| `@Controller`     | 编译期         | 无       | 高               | 简洁高效         |
-| `@RequestMapping` | 编译期         | 无       | 高               | 简洁高效         |
-| `@Param`          | 编译期         | 无       | 高               | 简洁高效         |
-| `@PathParam`      | 编译期         | 无       | 高               | 简洁高效         |
-| `@InterceptorMapping` | 编译期      | 无       | 高               | 简洁高效         |
-
-**与Spring Boot对比**：
-- **处理时机**：Feat Cloud在编译期处理注解，而Spring Boot在运行时通过反射处理
-- **性能表现**：Feat Cloud避免了反射开销，启动更快、运行时性能更高
-- **灵活性权衡**：Feat Cloud牺牲部分运行时动态性换取性能提升

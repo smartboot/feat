@@ -17,7 +17,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 @Target({ElementType.PARAMETER})
@@ -31,11 +31,4 @@ public @interface Param {
      * @return 参数名称
      */
     String value();
-
-    /**
-     * 参数提取范围
-     *
-     * @return 参数提取范围
-     */
-    Scope scope() default Scope.URL_PARAM;
 }
