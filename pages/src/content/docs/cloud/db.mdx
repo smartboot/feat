@@ -66,7 +66,7 @@ Feat Cloud 已同 Mybatis 做了一定程度的集成，你可以直接使用 My
 配置文件可以放置在任意子目录下，例如 `src/main/resources/mybatis/mybatis-config.xml`。建议将配置文件放在专门的目录中以便管理。
 </Aside>
 
-## 实例化 SqlSessionFactory
+## 实例化 SessionFactory Bean
 Feat Cloud 提供了两种方式来实例化 SqlSessionFactory：
 
 <Tabs>
@@ -148,8 +148,8 @@ public interface UserMapper {
 }
 ```
 
-## 使用@Mapper和事务管理
-Mapper 接口可以通过 `@Autowired` 注解注入到其他 Bean 中使用。同时，Feat Cloud 也支持使用 `@Transactional` 注解进行事务管理：
+## 使用@Mapper
+Mapper 接口可以通过 `@Autowired` 注解注入到其他 Bean 中使用。
 
 ```java title="UserService.java"
 @Service
@@ -158,7 +158,6 @@ public class UserService {
     private UserMapper userMapper;
 
     // 使用事务注解
-    @Transactional
     public void createUser(UserDO user) {
         // 检查用户是否存在
         UserDO existingUser = userMapper.getUser(user.getUsername(), null);
@@ -170,7 +169,6 @@ public class UserService {
     }
 
     // 批量操作示例
-    @Transactional
     public void batchUpdateUsers(List<UserDO> users) {
         for (UserDO user : users) {
             userMapper.updateUser(user);
@@ -178,13 +176,3 @@ public class UserService {
     }
 }
 ```
-
-<Aside type="tip">
-`@Transactional` 注解支持配置事务的传播行为、隔离级别、超时时间等属性：
-
-- `propagation`：事务传播行为（默认REQUIRED）
-- `isolation`：事务隔离级别
-- `timeout`：事务超时时间
-- `readOnly`：是否为只读事务
-- `rollbackFor`：触发回滚的异常类
-</Aside>

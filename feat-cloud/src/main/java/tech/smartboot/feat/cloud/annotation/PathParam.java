@@ -21,7 +21,7 @@ import java.lang.annotation.Target;
  * @version v1.0.0
  */
 @Target({ElementType.PARAMETER})
-@Retention(RetentionPolicy.RUNTIME)
+@Retention(RetentionPolicy.SOURCE)
 @Documented
 public @interface PathParam {
 

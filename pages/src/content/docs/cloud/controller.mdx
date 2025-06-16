@@ -9,216 +9,87 @@ import {TabItem, Tabs, Aside} from "@astrojs/starlight/components";
 
 <CheckAuthorize/>
 
-## Feat Cloud 与 Spring Boot 的对比
+Feat Cloud 在设计 Controller 注解时，一定程度上延用了 Spring 的设计理念，使得用户更容易理解和运用。
 
-Feat Cloud 和 Spring Boot 都提供了便捷的 Web 开发体验，但在 Controller 的实现方式上有一些区别。下面我们对比两者的主要差异：
+当然，我们也并非完全复刻Spring 的 Controller 注解，而是进行了极致的简化，剔除了不必要的灵活性。
 
-| 特性 | Feat Cloud | Spring Boot |
-|:---:|:---|:---|
-| **注解定义** | • `@Controller`<br/>• `@RequestMapping` | • `@Controller`<br/>• `@RestController`<br/>• `@RequestMapping` |
-| **路由映射** | • 基于方法的 `@RequestMapping` | • `@GetMapping`<br/>• `@PostMapping`<br/>• `@PutMapping`<br/>• `@DeleteMapping`<br/>• 等 HTTP 方法特定注解 |
-| **参数处理** | • 自动类型转换<br/>• 支持 HttpRequest、HttpResponse 等原生对象 | • `@RequestParam`<br/>• `@PathVariable`<br/>• `@RequestBody`<br/>• 等注解 |
-| **异步处理** | • 通过 `@Controller(async=true)` 配置 | • `@Async` 注解<br/>• 返回 `CompletableFuture`<br/>• 返回 `DeferredResult` |
-| **依赖注入** | • 构造器注入<br/>• 字段注入 | • 构造器注入<br/>• 字段注入<br/>• setter 注入 |
-| **编译时处理** | • 编译时静态转码<br/>• 无运行时反射 | • 运行时反射<br/>• 动态代理 |
+**相关注解：**
+- tech.smartboot.feat.cloud.annotation.Controller
+- tech.smartboot.feat.cloud.annotation.RequestMapping
+- tech.smartboot.feat.cloud.annotation.Param
+- tech.smartboot.feat.cloud.annotation.PathParam
+- tech.smartboot.feat.cloud.annotation.InterceptorMapping
 
-<Aside type="note">
-  Feat Cloud 的 Controller 在编译时完成静态转码，相比 Spring Boot 的运行时反射机制，具有更高的性能优势。
-</Aside>
+## 基本使用
 
-## Controller 基本使用
-
-### 定义 Controller
-
-在 Feat Cloud 中，使用 `@Controller` 注解标记一个类为控制器：
+创建一个简单的 Controller 示例：
 
 ```java
-import tech.smartboot.feat.cloud.annotation.Controller;
-import tech.smartboot.feat.cloud.annotation.RequestMapping;
-
-@Controller
-public class HelloController {
-    
-    @RequestMapping("/hello")
-    public String hello() {
-        return "Hello, Feat Cloud!";
-    }
-}
-```
-
-### 请求映射
-
-使用 `@RequestMapping` 注解将 HTTP 请求映射到控制器的方法：
-
-```java
-@Controller
+@Controller("userApi")
 public class UserController {
     
-    @RequestMapping("/users")
-    public List<User> getUsers() {
-        // 返回用户列表
-        return userService.findAll();
+    // 支持路径参数
+    @RequestMapping("/users/:id")
+    public String getUser(@PathParam("id") String id) {
+        return "User: " + id;
     }
     
-    @RequestMapping("/users/{id}")
-    public User getUser(String id) {
-        // 根据ID返回用户
-        return userService.findById(id);
+    // 支持查询参数
+    @RequestMapping("/users/search")
+    public String searchUsers(@Param("name") String name, @Param("age") int age) {
+        return "Search users with name: " + name + ", age: " + age;
+    }
+    
+    // 支持对象参数绑定
+    @RequestMapping("/users/create")
+    public RestResult<Map<String, String>> createUser(UserParam param) {
+        RestResult<Map<String, String>> result = new RestResult<>();
+        result.setData(Collections.singletonMap("id", "123"));
+        return result;
     }
 }
 ```
 
-## 请求处理
+## 拦截器使用
 
-### 参数绑定
-
-Feat Cloud 支持多种参数类型的自动绑定：
+通过 `@InterceptorMapping` 注解可以为 Controller 添加拦截器：
 
 ```java
-@Controller
-public class OrderController {
-    
-    // 基本类型参数自动绑定
-    @RequestMapping("/orders")
-    public List<Order> getOrders(int page, int size) {
-        return orderService.findByPage(page, size);
-    }
-    
-    // 对象参数自动绑定
-    @RequestMapping("/orders/create")
-    public Order createOrder(Order order) {
-        return orderService.create(order);
-    }
-    
-    // 原生请求/响应对象
-    @RequestMapping("/orders/download")
-    public void downloadOrders(HttpRequest request, HttpResponse response) {
-        // 处理文件下载
-        response.setContentType(HeaderValue.ContentType.APPLICATION_OCTET_STREAM);
-        // ...
-    }
+// 为用户API添加拦截器
+@InterceptorMapping({"/users/*"})
+public Interceptor userApiInterceptor() {
+    return (context, completableFuture, chain) -> {
+        System.out.println("Intercepting user API request...");
+        chain.proceed(context, completableFuture);
+    };
 }
 ```
 
-### 实际案例分析
+## 性能优势
 
-以下是一个实际的 Controller 示例，展示了如何处理不同类型的请求和响应：
+与 Spring Boot 相比，Feat Cloud 的注解处理方式有本质区别：
 
-<Tabs>
-    <TabItem label="FeatController.java">
-    ```java
-    @Controller
-    public class FeatController {
-        static byte[] body = "Hello, World!".getBytes();
+| 特性 | Feat Cloud | Spring Boot |
+|------|------------|-------------|
+| 注解处理时机 | 编译期 | 运行时 |
+| 反射使用 | 不需要 | 需要 |
+| 性能 | 更高 | 相对较低 |
+| 灵活性 | 简洁高效 | 更加灵活 |
 
-        @RequestMapping("/plaintext")
-        public byte[] plaintext(HttpResponse response) {
-            response.setContentType(HeaderValue.ContentType.TEXT_PLAIN_UTF8);
-            return body;
-        }
+这种设计使得 Feat Cloud 在保持类似 Spring Boot 开发体验的同时，实现了更好的性能表现。
 
-        @RequestMapping("/json")
-        public Message json(HttpResponse response) {
-            response.setContentType(HeaderValue.ContentType.APPLICATION_JSON_UTF8);
-            return new Message("Hello, World!");
-        }
-    }
-    ```
-    </TabItem>
-    <TabItem label="Message.java">
-    ```java
-    public class Message {
-        private String message;
+### 注解处理机制
+Feat Cloud 的注解处理在编译期完成，具有以下特点：
 
-        public Message(String message) {
-            this.message = message;
-        }
+| 注解类型          | 处理时机       | 反射使用 | 性能优势         | 灵活性           |
+|-------------------|----------------|----------|------------------|------------------|
+| `@Controller`     | 编译期         | 无       | 高               | 简洁高效         |
+| `@RequestMapping` | 编译期         | 无       | 高               | 简洁高效         |
+| `@Param`          | 编译期         | 无       | 高               | 简洁高效         |
+| `@PathParam`      | 编译期         | 无       | 高               | 简洁高效         |
+| `@InterceptorMapping` | 编译期      | 无       | 高               | 简洁高效         |
 
-        public String getMessage() {
-            return message;
-        }
-
-        public void setMessage(String message) {
-            this.message = message;
-        }
-    }
-    ```
-    </TabItem>
-</Tabs>
-
-## 高级特性
-
-### 异步处理
-
-Feat Cloud 支持异步 Controller，通过设置 `@Controller` 的 `async` 属性为 `true` 启用：
-
-```java
-@Controller(async = true)
-public class AsyncController {
-    
-    @RequestMapping("/async/data")
-    public CompletableFuture<Data> getAsyncData() {
-        return CompletableFuture.supplyAsync(() -> {
-            // 执行耗时操作
-            return new Data("Async result");
-        });
-    }
-}
-```
-
-### 跨域支持
-
-使用 `@CrossOrigin` 注解支持跨域请求：
-
-```java
-@Controller
-public class ApiController {
-    
-    @CrossOrigin
-    @RequestMapping("/api/data")
-    public Data getData() {
-        return new Data("Cross-origin data");
-    }
-}
-```
-
-### 依赖注入
-
-Feat Cloud 支持在 Controller 中注入其他服务：
-
-```java
-@Controller
-public class ProductController {
-    
-    private final ProductService productService;
-    
-    // 构造器注入
-    public ProductController(ProductService productService) {
-        this.productService = productService;
-    }
-    
-    @RequestMapping("/products")
-    public List<Product> getProducts() {
-        return productService.findAll();
-    }
-}
-```
-
-## 最佳实践
-
-### Controller 设计原则
-
-1. **职责单一**：Controller 只负责请求的接收和响应的返回，业务逻辑应当放在 Service 层。
-2. **参数校验**：对输入参数进行必要的校验，确保数据的合法性。
-3. **异常处理**：合理处理异常，避免将异常直接暴露给客户端。
-4. **RESTful 设计**：遵循 RESTful API 设计规范，使 API 更加直观和易用。
-
-### 性能优化
-
-1. **使用异步处理**：对于耗时操作，考虑使用异步 Controller。
-2. **合理设置响应类型**：根据实际需求设置合适的 Content-Type。
-3. **避免大对象传输**：对于大数据量的响应，考虑分页或流式处理。
-
-<Aside type="tip">
-  Feat Cloud 的 Controller 在编译时完成静态转码，无需运行时反射，因此具有更高的性能。在高并发场景下，这一优势尤为明显。
-</Aside>
+**与Spring Boot对比**：
+- **处理时机**：Feat Cloud在编译期处理注解，而Spring Boot在运行时通过反射处理
+- **性能表现**：Feat Cloud避免了反射开销，启动更快、运行时性能更高
+- **灵活性权衡**：Feat Cloud牺牲部分运行时动态性换取性能提升
