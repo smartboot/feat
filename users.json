@@ -114,5 +114,21 @@
   "mdm_uncle": {
     "date": "2025-06-16",
     "expireTime": "2026-06-16"
+  },
+  "hopper": {
+    "date": "2025-06-17",
+    "expireTime": "2026-06-17"
+  },
+  "zidongdang": {
+    "date": "2025-06-17",
+    "expireTime": "2026-06-17"
+  },
+  "xiaofengxifeng": {
+    "date": "2025-06-17",
+    "expireTime": "2026-06-17"
+  },
+  "yxdwind": {
+    "date": "2025-06-17",
+    "expireTime": "2026-06-17"
   }
 }
