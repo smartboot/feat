@@ -37,4 +37,9 @@ public class Controller2 {
     public String helloworld3(@PathParam("abc") String a, Session session) {
         return "hello " + a;
     }
+
+    @RequestMapping("/object")
+    public String object(TestParam param) {
+        return "hello " + param.getParam1();
+    }
 }

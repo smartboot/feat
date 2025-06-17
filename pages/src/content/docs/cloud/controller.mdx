@@ -11,7 +11,7 @@ import {TabItem, Tabs, Aside} from "@astrojs/starlight/components";
 
 Feat Cloud 在设计 Controller 注解时，一定程度上延用了 Spring 的设计理念，使得用户更容易理解和运用。
 
-当然，我们也并非完全复刻Spring 的 Controller 注解，而是进行了极致的简化，剔除了不必要的灵活性。
+当然，我们也并非完全复刻 Spring 的 Controller 注解，而是进行了极致的简化，剔除了不必要的灵活性。
 
 **相关注解：**
 - tech.smartboot.feat.cloud.annotation.Controller
@@ -23,7 +23,9 @@ Feat Cloud 在设计 Controller 注解时，一定程度上延用了 Spring 的�
 ## 注解详解
 
 ### `@Controller`
-`@Controller` 用于标记一个类为控制器，通常与 `@RequestMapping` 一起使用来定义请求映射路径。
+`@Controller` 用于标记一个类为控制器，作为 Spring 风格的注解设计，降低学习成本。
+
+通常与 `@RequestMapping` 一起使用来定义请求映射路径。
 
 **定义：**
 ```java
@@ -31,23 +33,19 @@ Feat Cloud 在设计 Controller 注解时，一定程度上延用了 Spring 的�
 @Retention(RetentionPolicy.SOURCE)
 @Documented
 public @interface Controller {
-    /**
-     * 定义控制器的请求路径前缀。
-     *
-     * @return 控制器级别的请求路径前缀，默认为空字符串。
-     */
     String value() default "";
 }
 ```
 
-**主要用途：**
-- 标识该类是一个控制器
-- 配合`@RequestMapping`定义控制器级别的请求路径前缀
-- 作为Spring风格的注解设计，降低学习成本
+**value 参数说明：**
+- `value()` 定义了 Controller 的基础路径，其他方法级别的请求路径会基于这个基础路径。
+- 默认情况下，value 是一个空字符串，意味着没有基础路径前缀。
+- 示例：如果设置 `@Controller("/user")`，那么该 Controller 下的所有方法将通过 `/user` 路径前缀访问。
 
 ### `@RequestMapping`
 `@RequestMapping` 用于标记方法，表示该方法处理特定的 HTTP 请求路径。
 
+支持指定HTTP请求方法，有效类型：`GET`, `HEAD`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS`, `TRACE`
 **定义：**
 ```java
 @Target({ElementType.METHOD})
@@ -60,13 +58,12 @@ public @interface RequestMapping {
 }
 ```
 
-**主要用途：**
-- 定义具体的请求映射路径
-- 支持指定HTTP请求方法（GET、POST等）
-- 实现请求路径与控制器方法的绑定
+**参数说明：**
+- **value**: 指定与该方法关联的 URL 路径，默认为空字符串，意味着使用 Controller 级别的路径前缀（如果有）。
+- **method**: 指定该方法支持的 HTTP 请求类型，默认不限制请求方法，即所有类型都可以访问该方法。
 
 ### `@Param`
-`@Param` 用于绑定请求中的查询参数（Query Parameters）到方法参数上。
+`@Param` 用于绑定请求中的查询参数（Query Parameters）到方法参数上。当方法参数为自定义POJO类型时，可无需使用`@Param`注解，框架会自动进行参数绑定。
 
 **定义：**
 ```java
@@ -75,20 +72,16 @@ public @interface RequestMapping {
 @Documented
 public @interface Param {
     /**
-     * 参数名称
+     * 指定要绑定的查询参数的名称。
      *
      * @return 参数名称
      */
     String value();
 }
 ```
-
-**主要用途：**
-- 将HTTP请求中的查询参数绑定到控制器方法的参数上
-- 支持基本类型和String类型的参数绑定
-- 当方法参数为Map或自定义POJO类型时无需使用该注解
-
-> 提示：当方法参数为`Map`或自定义POJO类型时，无需使用`@Param`注解，框架会自动进行参数绑定。
+**value 参数说明：**
+- 如果 HTTP 请求中没有与 `value` 匹配的查询参数，则方法参数将被赋予默认值（如 null、0 或 false，取决于类型）。
+- 示例：若方法定义为 `@Param("id") int userId`，则会尝试从请求中获取名为 `id` 的参数并转换为整数赋值给 `userId`。
 
 ### `@PathParam`
 `@PathParam` 用于绑定请求中的路径参数（Path Parameters）到方法参数上。
@@ -108,10 +101,9 @@ public @interface PathParam {
 }
 ```
 
-**主要用途：**
-- 将URL模板中的变量绑定到控制器方法的参数上
-- 支持RESTful风格的URL设计
-- 支持基本类型和String类型的参数绑定
+**value 参数说明：** 指定要绑定的路径参数的名称，该名称必须与路由中定义的占位符名称一致。
+- 示例：若 URL 定义为 `/user/{id}`，则应使用 `@PathParam("id")` 来绑定路径中的 `id` 值到方法参数。
+- 如果 HTTP 请求路径中没有匹配的参数名，则框架会抛出异常或自动赋予默认值（如 null、0 等），具体行为取决于框架实现和参数类型。
 
 ### `@InterceptorMapping`
 `@InterceptorMapping` 用于为特定的请求路径添加拦截器逻辑，在请求到达目标方法之前执行一些操作。
@@ -122,30 +114,15 @@ public @interface PathParam {
 @Retention(RetentionPolicy.SOURCE)
 @Documented
 public @interface InterceptorMapping {
-    /**
-     * 拦截器映射路径，用于指定拦截器应用的URL模式。
-     * <p>
-     * 支持以下匹配模式：
-     * <ul>
-     *   <li>"/path" - 精确匹配指定路径</li>
-     *   <li>"/path/*" - 匹配指定路径下的所有子路径</li>
-     * </ul>
-     * <p>
-     * 可以指定多个路径模式，拦截器将应用于所有匹配的请求。
-     *
-     * @return 拦截器应用的URL模式数组
-     */
+
     String[] value() default "";
 }
 ```
 
-**主要用途：**
-- 定义拦截器及其应用的URL模式
-- 实现请求预处理和后处理逻辑
-- 支持构建拦截器链
-- 可以定义多个路径模式，拦截器将应用于所有匹配的请求
-
-> 注意：拦截器执行顺序与定义顺序一致，可以定义多个拦截器形成拦截器链。
+**value 参数说明：** 指定拦截器应用的 URL 路径模式数组。
+- 支持精确匹配（如 `/path`）和通配符匹配（如 `/path/*`）。
+- 如果未指定，默认为空数组，表示拦截器不匹配任何请求。
+- 示例：若设置 `@InterceptorMapping({"/user", "/api/*"})`，则该拦截器会作用于所有 `/user` 和 `/api` 下的请求路径。
 
 ## 基本使用
 
@@ -179,7 +156,7 @@ public class UserController {
 
 ## 拦截器使用
 
-通过 `@InterceptorMapping` 注解可以为 Controller 添加拦截器：
+通过 `@InterceptorMapping` 注解可以为 Controller 添加拦截器，以实现请求的预处理或后处理逻辑。
 
 ```java
 // 为用户API添加拦截器
@@ -187,10 +164,23 @@ public class UserController {
 public Interceptor userApiInterceptor() {
     return (context, completableFuture, chain) -> {
         System.out.println("Intercepting user API request...");
+        // 可以在请求处理前执行前置逻辑
+        
+        // 继续执行请求链
         chain.proceed(context, completableFuture);
+        
+        // 可以在请求处理后执行后置逻辑
+        System.out.println("Finished intercepting user API request.");
     };
 }
 ```
+
+**说明与注意事项：**
+- **拦截路径匹配**：`@InterceptorMapping` 的 `value` 属性用于指定拦截器生效的路径模式，支持精确匹配（如 `/user`）和通配符匹配（如 `/user/*`）。
+- **拦截器顺序**：多个拦截器按照定义顺序依次执行，形成拦截器链。
+- **异步处理**：由于 HTTP 请求处理可能是异步的，因此拦截器中应正确处理 `CompletableFuture`。
+- **避免阻塞**：拦截器中的逻辑不应长时间阻塞主线程，建议将耗时操作提交到独立线程池。
+- **异常处理**：拦截器内部需要自行捕获并处理异常，防止因未处理异常导致请求失败。
 
 ## 性能优势
 
