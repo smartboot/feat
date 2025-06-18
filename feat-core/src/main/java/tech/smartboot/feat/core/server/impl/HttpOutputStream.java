@@ -214,8 +214,6 @@ final class HttpOutputStream extends FeatOutputStream {
             disableChunked();
         } else if (HttpProtocol.HTTP_11 != request.getProtocol()) {
             disableChunked();
-        } else if (response.getContentType().startsWith(HeaderValue.ContentType.EVENT_STREAM)) {
-            disableChunked();
         }
     }
 }
