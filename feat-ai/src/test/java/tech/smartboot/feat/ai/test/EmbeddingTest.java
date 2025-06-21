@@ -19,7 +19,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 public class EmbeddingTest {
@@ -27,7 +27,7 @@ public class EmbeddingTest {
     @Test
     public void testEmbedding1() {
         //调用Gitee AI的Embedding模型
-        EmbeddingModel embeddingModel = FeatAI.embedding(opt -> opt.model(ModelVendor.GITEE_AI_BCE_BASE_V1));
+        EmbeddingModel embeddingModel = FeatAI.embedding(opt -> opt.model(ModelVendor.Gitee.bce_embedding_base_v1));
         float[] embed = embeddingModel.embed("你好！");
         System.out.println(Arrays.toString(embed));
     }
@@ -35,7 +35,7 @@ public class EmbeddingTest {
     @Test
     public void testEmbedding2() {
         //调用Gitee AI的Embedding模型
-        EmbeddingModel embeddingModel = FeatAI.embedding(opt -> opt.model(ModelVendor.GITEE_AI_BGE_LARGE_ZH_V1_5));
+        EmbeddingModel embeddingModel = FeatAI.embedding(opt -> opt.model(ModelVendor.Gitee.bge_large_zh_v1_5));
         List<float[]> embeds = embeddingModel.embed(Arrays.asList("Hello World", "你好"));
         embeds.forEach(embed -> System.out.println(Arrays.toString(embed)));
     }

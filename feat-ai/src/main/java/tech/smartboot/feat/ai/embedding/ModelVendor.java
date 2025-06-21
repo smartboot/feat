@@ -16,15 +16,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 public class ModelVendor {
     private static final Map<String, Map<String, ModelVendor>> modelMetas = new HashMap<>();
-    public static final ModelVendor GITEE_AI_BCE_BASE_V1 = new ModelVendor(Options.AI_VENDOR_GITEE, "bce-embedding-base_v1");
-    public static final ModelVendor GITEE_AI_BGE_SMALL_ZH_V1_5 = new ModelVendor(Options.AI_VENDOR_GITEE, "bge-small-zh-v1.5");
-    public static final ModelVendor GITEE_AI_BGE_LARGE_ZH_V1_5 = new ModelVendor(Options.AI_VENDOR_GITEE, "bge-large-zh-v1.5");
-    public static final ModelVendor GITEE_AI_BGE_M3 = new ModelVendor(Options.AI_VENDOR_GITEE, "bge-m3");
+
 
     /**
      * 服务商
@@ -55,13 +52,35 @@ public class ModelVendor {
         return modelMetas.getOrDefault(vendor, new HashMap<>()).getOrDefault(model, null);
     }
 
+    public interface Gitee {
+        /**
+         * Qwen3‑Embedding‑8B 是 Qwen 系列推出的大规模嵌入模型，专注于生成高质量、多语言及代码向量，支持多种下游任务中的语义匹配与信息检索需求。
+         */
+        ModelVendor Qwen3_Embedding_8B = new ModelVendor(Options.AI_VENDOR_GITEE, "Qwen3-Embedding-8B");
+        /**
+         * Qwen3-Embedding-4B 是一款多语言、多模态任务通用的高性能文本和代码嵌入模型，适用于语义搜索、跨语言检索和信息匹配等场景。
+         */
+        ModelVendor Qwen3_Embedding_4B = new ModelVendor(Options.AI_VENDOR_GITEE, "Qwen3-Embedding-4B");
+
+        /**
+         * Qwen3‑Embedding‑0.6B 是一款多语言文本嵌入模型，支持用户自定义输出维度，擅长跨语言和代码检索任务，并与同系列重排序模型联合使用可通过指令微调以提升特定场景表现
+         */
+        ModelVendor Qwen3_Embedding_06B = new ModelVendor(Options.AI_VENDOR_GITEE, "Qwen3-Embedding-0.6B");
+
+        ModelVendor bce_embedding_base_v1 = new ModelVendor(Options.AI_VENDOR_GITEE, "bce-embedding-base_v1");
+        ModelVendor bge_small_zh_v1_5 = new ModelVendor(Options.AI_VENDOR_GITEE, "bge-small-zh-v1.5");
+        ModelVendor bge_large_zh_v1_5 = new ModelVendor(Options.AI_VENDOR_GITEE, "bge-large-zh-v1.5");
+        ModelVendor BGE_M3 = new ModelVendor(Options.AI_VENDOR_GITEE, "bge-m3");
+
+    }
+
     /**
-     *  Ollama 模型
+     * Ollama 模型
      */
     public interface Ollama {
         /**
          * A high-performing open embedding model with a large token context window.
-         *
+         * <p>
          * nomic-embed-text 是一个大上下文长度的文本编码器，
          * 它超越了 OpenAItext-embedding-ada-002 并 text-embedding-3-small 短上下文任务和长上下文任务的性能。
          */
@@ -69,10 +88,10 @@ public class ModelVendor {
 
         /**
          * State-of-the-art large embedding model from mixedbread.ai
-         *
+         * <p>
          * 截至 2024 年 3 月，该模型在 MTEB 上归档了 Bert 大尺寸模型的 SOTA 性能。
          * 它优于商业模型，如 OpenAI 的 text-embedding-3-large 模型，并与模型 20 倍的性能相匹配。
-         *
+         * <p>
          * mxbae-embed-size 在没有 MTEB 数据重叠的情况下进行了训练，这表明该模型在多个领域、任务和文本长度上具有良好的泛化性。
          */
         String mxbai_embed_large = "mxbai-embed-large";
