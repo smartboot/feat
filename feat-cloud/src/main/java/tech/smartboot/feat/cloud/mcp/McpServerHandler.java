@@ -95,8 +95,17 @@ public class McpServerHandler implements HttpHandler {
                         request.getResponse().setContentLength(bytes.length);
                         request.getResponse().setContentType(HeaderValue.ContentType.APPLICATION_JSON);
                         request.getResponse().write(bytes);
-                        return;
+
+                    } else if ("ping".equals(method)) {
+                        Response<JSONObject> response = new Response<>();
+                        response.setResult(new JSONObject());
+                        response.setId(req.getId());
+                        byte[] bytes = JSON.toJSONBytes(response);
+                        request.getResponse().setContentLength(bytes.length);
+                        request.getResponse().setContentType(HeaderValue.ContentType.APPLICATION_JSON);
+                        request.getResponse().write(bytes);
                     }
+                    return;
                 }
 
                 if ("text/event-stream".equalsIgnoreCase(request.getHeader(HeaderName.ACCEPT.getName()))) {
