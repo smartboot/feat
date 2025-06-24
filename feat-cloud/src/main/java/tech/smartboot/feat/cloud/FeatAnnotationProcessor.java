@@ -467,6 +467,14 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                             printWriter.println("\t\t\t}");
                         } else if (int.class.getName().equals(returnType.toString())) {
                             printWriter.println("\t\t\twriteInt(ctx.Response.getOutputStream(), rst);");
+                        } else if (boolean.class.getName().equals(returnType.toString())) {
+                            printWriter.println("\t\t\tctx.Response.setContentType(\"application/json\");");
+                            printWriter.println("\t\t\tif (rst) {");
+                            printWriter.println("\t\t\tctx.Response.setContentLength(4);");
+                            printWriter.println("\t\t\t} else {");
+                            printWriter.println("\t\t\tctx.Response.setContentLength(5);");
+                            printWriter.println("\t\t\t}");
+                            printWriter.println("\t\t\twriteBool(ctx.Response.getOutputStream(), rst);");
                         } else {
                             printWriter.println("\t\t\tjava.io.ByteArrayOutputStream os = getOutputStream();");
                             JsonSerializer jsonSerializer = new JsonSerializer(printWriter);

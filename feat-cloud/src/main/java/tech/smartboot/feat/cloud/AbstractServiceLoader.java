@@ -85,6 +85,17 @@ public abstract class AbstractServiceLoader implements CloudService {
         writeInt(out, value);
     }
 
+    private static final byte[] TRUE = new byte[]{'t', 'r', 'u', 'e'};
+    private static final byte[] FALSE = new byte[]{'f', 'a', 'l', 's', 'e'};
+
+    protected void writeBool(OutputStream out, boolean value) throws IOException {
+        if (value) {
+            out.write(TRUE);
+        } else {
+            out.write(FALSE);
+        }
+    }
+
     protected void writeByte(OutputStream out, byte value) throws IOException {
         if (value == 0) {
             out.write('0');
