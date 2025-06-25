@@ -162,6 +162,11 @@ public abstract class AbstractServiceLoader implements CloudService {
                 os.write('\\');
                 os.write('n');
                 start = i + 1;
+            } else if (b == '\r') {
+                os.write(bytes, start, i - start);
+                os.write('\\');
+                os.write('r');
+                start = i + 1;
             }
         }
         if (start < bytes.length) {
