@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 abstract class AbstractOutputStream extends FeatOutputStream {
@@ -30,7 +30,8 @@ abstract class AbstractOutputStream extends FeatOutputStream {
     protected final AbstractRequest request;
 
     public AbstractOutputStream(AbstractRequest request, AioSession aioSession) {
-        super(aioSession.writeBuffer());
+        //连接异常情况下 session 为 null
+        super(aioSession == null ? null : aioSession.writeBuffer());
         this.request = request;
     }
 

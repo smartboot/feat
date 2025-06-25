@@ -21,7 +21,6 @@ import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpProtocol;
-import tech.smartboot.feat.core.common.FeatUtils;
 
 import java.util.Base64;
 import java.util.concurrent.CompletableFuture;
@@ -49,6 +48,7 @@ public final class HttpClient {
 
     private boolean firstConnected = true;
 
+    private Throwable connectThrowable;
     /**
      * 消息处理器
      */
@@ -125,6 +125,12 @@ public final class HttpClient {
             @Override
             public CompletableFuture<HttpResponse> submit() {
                 try {
+                    if (connectThrowable != null) {
+                        CompletableFuture future = getCompletableFuture();
+                        future.completeExceptionally(connectThrowable);
+                        connectThrowable = null;
+                        return future;
+                    }
                     return super.submit();
                 } finally {
                     if (HeaderValue.Connection.KEEPALIVE.equals(getRequest().getHeader(HeaderName.CONNECTION))) {
@@ -199,7 +205,8 @@ public final class HttpClient {
         try {
             semaphore.acquire();
         } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            connectThrowable = e;
+            return;
         }
         if (connected) {
             AioSession session = client.getSession();
@@ -241,7 +248,7 @@ public final class HttpClient {
                 client.start(options.group());
             }
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            connectThrowable = e;
         }
     }
 
