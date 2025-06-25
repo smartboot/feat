@@ -16,7 +16,6 @@ import tech.smartboot.feat.core.client.impl.HttpResponseImpl;
 import tech.smartboot.feat.core.client.stream.Stream;
 import tech.smartboot.feat.core.common.HeaderName;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.ByteBuffer;
@@ -41,18 +40,23 @@ class HttpRestImpl implements HttpRest {
     private RequestBody body;
 
     private final HttpResponseImpl response;
+    private Throwable throwable;
 
-    HttpRestImpl(AioSession session, AbstractQueue<AbstractResponse> queue) {
+    HttpRestImpl(AioSession session, AbstractQueue<AbstractResponse> queue, Throwable connectThrowable) {
         this.request = new HttpRequestImpl(session);
         this.queue = queue;
         this.response = new HttpResponseImpl(session, completableFuture);
+        this.throwable = connectThrowable;
     }
 
-    protected final void willSendRequest() {
+    protected final void willSendRequest() throws Throwable {
         if (commit) {
             return;
         }
         commit = true;
+        if (throwable != null) {
+            throw throwable;
+        }
         resetUri();
         Collection<String> headers = request.getHeaderNames();
         if (!headers.contains(HeaderName.USER_AGENT.getName())) {
@@ -106,7 +110,7 @@ class HttpRestImpl implements HttpRest {
                     try {
                         willSendRequest();
                         request.getOutputStream().write(bytes, offset, len);
-                    } catch (IOException e) {
+                    } catch (Throwable e) {
                         System.out.println("body stream write error! " + e.getMessage());
                         completableFuture.completeExceptionally(e);
                     }
@@ -118,7 +122,7 @@ class HttpRestImpl implements HttpRest {
                     try {
                         willSendRequest();
                         request.getOutputStream().transferFrom(buffer, bufferOutputStream -> consumer.accept(HttpRestImpl.this.body));
-                    } catch (IOException e) {
+                    } catch (Throwable e) {
                         System.out.println("body stream write error! " + e.getMessage());
                         completableFuture.completeExceptionally(e);
                     }
@@ -129,7 +133,7 @@ class HttpRestImpl implements HttpRest {
                     try {
                         willSendRequest();
                         request.getOutputStream().flush();
-                    } catch (IOException e) {
+                    } catch (Throwable e) {
                         System.out.println("body stream flush error! " + e.getMessage());
                         e.printStackTrace();
                         completableFuture.completeExceptionally(e);

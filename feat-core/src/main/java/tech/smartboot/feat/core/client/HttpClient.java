@@ -121,7 +121,7 @@ public final class HttpClient {
 
     private HttpRestImpl rest0(String uri) {
         connect();
-        HttpRestImpl httpRestImpl = new HttpRestImpl(client.getSession(), queue) {
+        HttpRestImpl httpRestImpl = new HttpRestImpl(client.getSession(), queue, connectThrowable) {
             @Override
             public CompletableFuture<HttpResponse> submit() {
                 try {

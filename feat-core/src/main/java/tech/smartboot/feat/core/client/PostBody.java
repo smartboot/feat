@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 public final class PostBody extends CommonBody {
@@ -55,7 +55,7 @@ public final class PostBody extends CommonBody {
             //输出数据
             request.write(bytes);
             request.getOutputStream().flush();
-        } catch (Exception e) {
+        } catch (Throwable e) {
             e.printStackTrace();
             httpPost.rest.getCompletableFuture().completeExceptionally(e);
         }
@@ -74,7 +74,7 @@ public final class PostBody extends CommonBody {
                 multipart.write(this);
             }
             write("--" + boundary + "--\r\n");
-        } catch (Exception e) {
+        } catch (Throwable e) {
             e.printStackTrace();
             httpPost.rest.getCompletableFuture().completeExceptionally(e);
         }
