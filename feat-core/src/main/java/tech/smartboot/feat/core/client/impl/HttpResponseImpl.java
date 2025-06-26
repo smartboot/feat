@@ -190,7 +190,7 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
     @Override
     protected void onClose() {
         //对于 Connection: close 的请求，需要待服务端关闭连接后，再视为完成
-        if ((state & STATE_CONNECTION_CLOSE) == STATE_CONNECTION_CLOSE) {
+        if ((state & STATE_CONNECTION_CLOSE) == STATE_CONNECTION_CLOSE || (state & STATE_STREAM) == STATE_STREAM) {
             state = STATE_FINISH;
             try {
                 streaming.stream(this, FeatUtils.EMPTY_BYTE_ARRAY, true);
