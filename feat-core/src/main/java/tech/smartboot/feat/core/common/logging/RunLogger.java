@@ -74,7 +74,7 @@ class RunLogger implements tech.smartboot.feat.core.common.logging.Logger {
             if (FeatUtils.isBlank(newLevel)) {
                 newLevel = System.getProperty(LoggerFactory.SYSTEM_PROPERTY_LOG_LEVEL, "INFO");
             }
-            if (!newLevel.equals(logger.getLevel().getName())) {
+            if (logger.getLevel() == null || !newLevel.equals(logger.getLevel().getName())) {
                 logger.setLevel(Level.parse(newLevel));
             }
             latestCheckTime = System.currentTimeMillis();

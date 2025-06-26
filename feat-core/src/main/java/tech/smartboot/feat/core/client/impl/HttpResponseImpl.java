@@ -37,6 +37,7 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
     private static final int STATE_CONTENT_LENGTH = 1 << 3;
     private static final int STATE_CONNECTION_CLOSE = 1 << 4;
     private static final int STATE_FINISH = 1 << 5;
+    private static final int STATE_STREAM = 1 << 6;
     private static final int STATE_GZIP = 0x80;
     private Stream streaming = new StringStream();
     private int state;
@@ -80,6 +81,9 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
         } else if (HeaderValue.Connection.CLOSE.equals(getHeader(HeaderName.CONNECTION))) {
             state = STATE_CONNECTION_CLOSE;
             remaining = Long.MAX_VALUE;
+        } else if (HeaderValue.ContentType.EVENT_STREAM.equals(getHeader(HeaderName.CONTENT_TYPE))) {
+            //stream存在无chunked的情况
+            state = STATE_STREAM;
         } else {
             state = STATE_FINISH;
         }
@@ -154,6 +158,7 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
                     onBodyStream(buffer);
                 }
                 break;
+                case STATE_STREAM:
                 case STATE_CONNECTION_CLOSE: {
                     int length = buffer.remaining();
                     if (length == 0) {
