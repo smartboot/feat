@@ -156,9 +156,14 @@ final class HttpMessageProcessor extends AbstractMessageProcessor<AbstractRespon
                 }
                 session.close();
                 break;
-            case DECODE_EXCEPTION:
-                throwable.printStackTrace();
-                break;
+            case DECODE_EXCEPTION: {
+                DecoderUnit attachment = session.getAttachment();
+                AbstractResponse response = attachment.getResponse();
+                if (response != null) {
+                    response.future.completeExceptionally(throwable);
+                }
+            }
+            break;
             case SESSION_CLOSED: {
                 DecoderUnit attachment = session.getAttachment();
                 AbstractResponse response = attachment.getResponse();
