@@ -68,6 +68,9 @@ class RunLogger implements tech.smartboot.feat.core.common.logging.Logger {
     }
 
     private void log(Level level, String msg, Object... arguments) {
+        if (!logger.isLoggable(level)) {
+            return;
+        }
         // 检查是否需要更新日志级别
         if (latestCheckTime + 5000 < System.currentTimeMillis()) {
             String newLevel = System.getProperty(LoggerFactory.SYSTEM_PROPERTY_LOG_LEVEL + "." + loggerName);
@@ -96,7 +99,7 @@ class RunLogger implements tech.smartboot.feat.core.common.logging.Logger {
 
     @Override
     public boolean isTraceEnabled() {
-        return false;
+        return logger.isLoggable(Level.FINE);
     }
 
     @Override
@@ -126,7 +129,7 @@ class RunLogger implements tech.smartboot.feat.core.common.logging.Logger {
 
     @Override
     public boolean isDebugEnabled() {
-        return false;
+        return logger.isLoggable(Level.CONFIG);
     }
 
     @Override
@@ -156,7 +159,7 @@ class RunLogger implements tech.smartboot.feat.core.common.logging.Logger {
 
     @Override
     public boolean isInfoEnabled() {
-        return false;
+        return logger.isLoggable(Level.INFO);
     }
 
     @Override
@@ -186,7 +189,7 @@ class RunLogger implements tech.smartboot.feat.core.common.logging.Logger {
 
     @Override
     public boolean isWarnEnabled() {
-        return false;
+        return logger.isLoggable(Level.WARNING);
     }
 
     @Override
@@ -216,7 +219,7 @@ class RunLogger implements tech.smartboot.feat.core.common.logging.Logger {
 
     @Override
     public boolean isErrorEnabled() {
-        return false;
+        return logger.isLoggable(Level.SEVERE);
     }
 
     @Override

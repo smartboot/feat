@@ -14,6 +14,7 @@ import org.smartboot.socket.StateMachineEnum;
 import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
 import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.common.DecodeState;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpProtocol;
@@ -23,7 +24,6 @@ import tech.smartboot.feat.core.common.io.FeatOutputStream;
 import tech.smartboot.feat.core.common.io.ReadListener;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
-import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.ServerOptions;
 
@@ -90,7 +90,7 @@ public final class HttpMessageProcessor extends AbstractMessageProcessor<HttpEnd
         } else if (throwable.getCause() != null) {
             responseError(response, throwable.getCause());
         } else {
-            LOGGER.error("HttpError response exception", throwable);
+            LOGGER.debug("HttpError response exception", throwable);
             responseError(response, HttpStatus.INTERNAL_SERVER_ERROR, throwable.fillInStackTrace().toString());
         }
     }
