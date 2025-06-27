@@ -241,7 +241,7 @@ public class ByteTree<T> {
      * @param endMatcher 结束匹配器，用于确定何时停止添加
      * @return 添加的叶子节点，即字节序列的最后一个节点
      */
-    private ByteTree<T> addNode(byte[] value, int offset, int limit, EndMatcher endMatcher) {
+    private synchronized ByteTree<T> addNode(byte[] value, int offset, int limit, EndMatcher endMatcher) {
         // 已处理完所有字节或达到最大深度，返回当前节点
         if (offset == limit || this.depth >= MAX_DEPTH) {
             return this;
