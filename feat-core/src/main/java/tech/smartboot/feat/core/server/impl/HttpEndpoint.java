@@ -14,6 +14,7 @@ import org.smartboot.socket.timer.HashedWheelTimer;
 import org.smartboot.socket.timer.TimerTask;
 import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.common.DecodeState;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpStatus;
@@ -27,7 +28,6 @@ import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.multipart.MultipartConfig;
 import tech.smartboot.feat.core.common.multipart.Part;
-import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.ServerOptions;
@@ -83,9 +83,7 @@ public final class HttpEndpoint extends Endpoint implements HttpRequest, Reset {
     void cancelHttpIdleTask() {
         synchronized (this) {
             if (httpIdleTask != null) {
-                if (LOGGER.isInfoEnabled()) {
-                    LOGGER.info("cancel http idle monitor, request:{}", this);
-                }
+                LOGGER.debug("cancel http idle monitor, request:{}", this);
                 httpIdleTask.cancel();
                 httpIdleTask = null;
             }
