@@ -104,7 +104,7 @@ public final class HttpMessageProcessor extends AbstractMessageProcessor<HttpEnd
             OutputStream outputStream = response.getOutputStream();
             outputStream.write(("<center><h1>" + httpStatus.value() + " " + httpStatus.getReasonPhrase() + "</h1>" + desc + "<hr/><a target='_blank' href='https://smartboot.tech/'>feat</a>/" + ServerOptions.VERSION + "&nbsp;|&nbsp; <a target='_blank' href='https://gitee.com/smartboot/feat'>Gitee</a></center>").getBytes());
         } catch (IOException e) {
-            LOGGER.warn("HttpError response exception", e);
+            LOGGER.debug("HttpError response exception", e);
         } finally {
             response.close();
         }
