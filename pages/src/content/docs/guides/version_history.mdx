@@ -10,9 +10,14 @@ import { Image } from '@astrojs/starlight/components';
 ## v1.2.0 (孵化中)
 
 ### 版本特性
+- **Feat Core：**
+  - HttpClient 连接异常也以回调形式处理。
+  - 扩充 ByteTree 初始化缓存值，提升服务性能。
+  - 修复关闭进程时可能触发的 RunLogger 空指针问题。
 - **Feat Cloud**
   - 新增`@HttpClient`注解，用于发起 HTTP 请求。
   - 新增 MCP 特性
+  - 支持响应结果为 bool 值的 HTTP 接口服务。
 ### 升级指南
 ### 兼容性说明
 
