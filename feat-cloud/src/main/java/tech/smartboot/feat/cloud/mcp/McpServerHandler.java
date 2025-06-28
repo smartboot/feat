@@ -16,6 +16,8 @@ import com.alibaba.fastjson2.TypeReference;
 import tech.smartboot.feat.cloud.mcp.handler.ListPromptsHandler;
 import tech.smartboot.feat.cloud.mcp.handler.PingHandler;
 import tech.smartboot.feat.cloud.mcp.handler.PromptsGetHandler;
+import tech.smartboot.feat.cloud.mcp.handler.ResourcesListHandler;
+import tech.smartboot.feat.cloud.mcp.handler.ResourcesReadHandler;
 import tech.smartboot.feat.cloud.mcp.handler.ServerHandler;
 import tech.smartboot.feat.cloud.mcp.handler.ToolsCallHandler;
 import tech.smartboot.feat.cloud.mcp.handler.ToolsListHandler;
@@ -47,6 +49,8 @@ public class McpServerHandler implements HttpHandler {
         handlers.put("tools/call", new ToolsCallHandler());
         handlers.put("prompts/list", new ListPromptsHandler());
         handlers.put("prompts/get", new PromptsGetHandler());
+        handlers.put("resources/list", new ResourcesListHandler());
+        handlers.put("resources/read", new ResourcesReadHandler());
         handlers.put("ping", new PingHandler());
     }
 
@@ -76,7 +80,7 @@ public class McpServerHandler implements HttpHandler {
                 }
                 Response<McpInitializeResponse> rsp = new Response<>();
                 rsp.setId(req.getId());
-                McpInitializeResponse initializeResponse = McpInitializeResponse.builder().loggingEnable().promptsEnable().build();
+                McpInitializeResponse initializeResponse = McpInitializeResponse.builder().loggingEnable().promptsEnable().resourceEnable().toolEnable().build();
                 rsp.setResult(initializeResponse);
                 byte[] bytes = JSON.toJSONBytes(rsp);
                 request.getResponse().setContentLength(bytes.length);

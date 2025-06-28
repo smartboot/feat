@@ -58,6 +58,20 @@ public class McpInitializeResponse extends Response {
             return this;
         }
 
+        public Builder resourceEnable() {
+            Capability capability = new Capability();
+            capability.setListChanged(true);
+            mcpInitializeResponse.getCapabilities().setResources(capability);
+            return this;
+        }
+
+        public Builder toolEnable() {
+            Capability capability = new Capability();
+            capability.setListChanged(true);
+            mcpInitializeResponse.getCapabilities().setTools(capability);
+            return this;
+        }
+
         public McpInitializeResponse build() {
             return mcpInitializeResponse;
         }
