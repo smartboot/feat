@@ -8,11 +8,20 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.cloud.mcp;
+package tech.smartboot.feat.cloud.mcp.request;
 
 /**
  * @author 三刀
- * @version v1.0 6/23/25
+ * @version v1.0 6/28/25
  */
-public class McpServerController {
+public class PaginationRequest {
+    private String cursor;
+
+    public String getCursor() {
+        return cursor;
+    }
+
+    public void setCursor(String cursor) {
+        this.cursor = cursor;
+    }
 }

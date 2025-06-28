@@ -11,9 +11,11 @@
 package tech.smartboot.feat.cloud.mcp;
 
 import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.TypeReference;
+import tech.smartboot.feat.cloud.mcp.handler.PingHandler;
+import tech.smartboot.feat.cloud.mcp.handler.PromptsListHandler;
+import tech.smartboot.feat.cloud.mcp.handler.ServerHandler;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
@@ -34,6 +36,12 @@ import java.util.Map;
  */
 public class McpServerHandler implements HttpHandler {
     private final Map<String, StreamSession> sseEmitters = new HashMap<>();
+    private final Map<String, ServerHandler<?>> handlers = new HashMap<>();
+
+    {
+        handlers.put("prompts/list", new PromptsListHandler());
+        handlers.put("ping", new PingHandler());
+    }
 
     @Override
     public void handle(HttpRequest request) throws Throwable {
@@ -82,29 +90,15 @@ public class McpServerHandler implements HttpHandler {
             case StreamSession.STATE_READY: {
                 System.out.println("ready: " + request);
                 if (HeaderValue.ContentType.APPLICATION_JSON.equals(request.getContentType())) {
-                    Request req = JSON.parseObject(FeatUtils.asString(request.getInputStream()), Request.class);
-                    String method = req.getMethod();
-                    if ("prompts/list".equals(method)) {
-                        Response<JSONObject> response = new Response<>();
-                        response.setId(req.getId());
-                        JSONObject result = new JSONObject();
-                        result.put("prompts", new JSONArray());
-                        result.put("nextCursor", null);
-                        response.setResult(result);
-                        byte[] bytes = JSON.toJSONBytes(response);
-                        request.getResponse().setContentLength(bytes.length);
-                        request.getResponse().setContentType(HeaderValue.ContentType.APPLICATION_JSON);
-                        request.getResponse().write(bytes);
-
-                    } else if ("ping".equals(method)) {
-                        Response<JSONObject> response = new Response<>();
-                        response.setResult(new JSONObject());
-                        response.setId(req.getId());
-                        byte[] bytes = JSON.toJSONBytes(response);
-                        request.getResponse().setContentLength(bytes.length);
-                        request.getResponse().setContentType(HeaderValue.ContentType.APPLICATION_JSON);
-                        request.getResponse().write(bytes);
-                    }
+                    JSONObject jsonObject = JSON.parseObject(request.getInputStream());
+                    String method = jsonObject.getString("method");
+                    ServerHandler<?> handler = handlers.get(method);
+                    Response<?> response = handler.apply(request, jsonObject);
+                    response.setId(jsonObject.getInteger("id"));
+                    byte[] bytes = JSON.toJSONBytes(response);
+                    request.getResponse().setContentLength(bytes.length);
+                    request.getResponse().setContentType(HeaderValue.ContentType.APPLICATION_JSON);
+                    request.getResponse().write(bytes);
                     return;
                 }
 

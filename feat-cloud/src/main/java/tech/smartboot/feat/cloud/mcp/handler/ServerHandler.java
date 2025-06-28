@@ -8,30 +8,17 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.cloud.mcp;
+package tech.smartboot.feat.cloud.mcp.handler;
+
+import com.alibaba.fastjson2.JSONObject;
+import tech.smartboot.feat.cloud.mcp.Response;
+import tech.smartboot.feat.core.server.HttpRequest;
 
 /**
  * @author 三刀
- * @version v1.0 6/22/25
+ * @version v1.0 6/28/25
  */
-public class JsonRpc {
-    private String jsonrpc = "2.0";
+public interface ServerHandler<T> {
 
-    private Integer id;
-
-    public String getJsonrpc() {
-        return jsonrpc;
-    }
-
-    public void setJsonrpc(String jsonrpc) {
-        this.jsonrpc = jsonrpc;
-    }
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
+    Response<T> apply(HttpRequest request, JSONObject jsonObject);
 }
