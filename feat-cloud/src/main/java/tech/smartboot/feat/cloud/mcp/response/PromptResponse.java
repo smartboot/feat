@@ -8,24 +8,17 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.cloud.mcp.model;
+package tech.smartboot.feat.cloud.mcp.response;
+
+import java.util.List;
 
 /**
  * @author 三刀
  * @version v1.0 6/28/25
  */
-public class Argument {
-    private String name;
+public class PromptResponse {
     private String description;
-    private boolean required;
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
+    private List<PromptMessage> messages;
 
     public String getDescription() {
         return description;
@@ -35,11 +28,11 @@ public class Argument {
         this.description = description;
     }
 
-    public boolean isRequired() {
-        return required;
+    public List<PromptMessage> getMessages() {
+        return messages;
     }
 
-    public void setRequired(boolean required) {
-        this.required = required;
+    public void setMessages(List<PromptMessage> messages) {
+        this.messages = messages;
     }
 }

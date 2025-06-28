@@ -11,18 +11,16 @@
 package tech.smartboot.feat.cloud.mcp.handler;
 
 import com.alibaba.fastjson2.JSONObject;
-import tech.smartboot.feat.cloud.mcp.Response;
+import tech.smartboot.feat.cloud.mcp.McpServer;
 import tech.smartboot.feat.core.server.HttpRequest;
 
 /**
  * @author 三刀
  * @version v1.0 6/28/25
  */
-public class PingHandler implements ServerHandler<JSONObject> {
+public class PingHandler implements ServerHandler {
     @Override
-    public Response<JSONObject> apply(HttpRequest request, JSONObject jsonObject) {
-        Response<JSONObject> response = new Response<>();
-        response.setResult(new JSONObject());
-        return response;
+    public JSONObject apply(McpServer mcpServer, HttpRequest request, JSONObject jsonObject) {
+        return new JSONObject();
     }
 }

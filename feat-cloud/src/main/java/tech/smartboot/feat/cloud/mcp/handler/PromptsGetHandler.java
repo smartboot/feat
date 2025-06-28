@@ -11,20 +11,16 @@
 package tech.smartboot.feat.cloud.mcp.handler;
 
 import com.alibaba.fastjson2.JSONObject;
-import tech.smartboot.feat.cloud.mcp.Response;
-import tech.smartboot.feat.cloud.mcp.response.PromptsListResponse;
+import tech.smartboot.feat.cloud.mcp.McpServer;
 import tech.smartboot.feat.core.server.HttpRequest;
 
 /**
  * @author 三刀
  * @version v1.0 6/28/25
  */
-public class PromptsListHandler implements ServerHandler<PromptsListResponse> {
-
+public class PromptsGetHandler implements ServerHandler {
     @Override
-    public Response<PromptsListResponse> apply(HttpRequest request, JSONObject jsonObject) {
-        Response<PromptsListResponse> response = new Response<>();
-        response.setResult(new PromptsListResponse());
-        return response;
+    public JSONObject apply(McpServer mcpServer, HttpRequest request, JSONObject jsonObject) {
+        return null;
     }
 }

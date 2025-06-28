@@ -8,20 +8,20 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.cloud.mcp.request;
+package tech.smartboot.feat.cloud.mcp.handler;
+
+import com.alibaba.fastjson2.JSONObject;
+import tech.smartboot.feat.cloud.mcp.McpServer;
+import tech.smartboot.feat.core.server.HttpRequest;
 
 /**
  * @author 三刀
  * @version v1.0 6/28/25
  */
-public class PaginationRequest {
-    private String cursor;
+public class ToolsCallHandler implements ServerHandler {
 
-    public String getCursor() {
-        return cursor;
-    }
-
-    public void setCursor(String cursor) {
-        this.cursor = cursor;
+    @Override
+    public JSONObject apply(McpServer mcp, HttpRequest request, JSONObject jsonObject) {
+        return null;
     }
 }

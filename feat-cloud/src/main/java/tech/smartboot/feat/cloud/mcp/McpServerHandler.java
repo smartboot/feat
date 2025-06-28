@@ -13,9 +13,12 @@ package tech.smartboot.feat.cloud.mcp;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.TypeReference;
+import tech.smartboot.feat.cloud.mcp.handler.ListPromptsHandler;
 import tech.smartboot.feat.cloud.mcp.handler.PingHandler;
-import tech.smartboot.feat.cloud.mcp.handler.PromptsListHandler;
+import tech.smartboot.feat.cloud.mcp.handler.PromptsGetHandler;
 import tech.smartboot.feat.cloud.mcp.handler.ServerHandler;
+import tech.smartboot.feat.cloud.mcp.handler.ToolsCallHandler;
+import tech.smartboot.feat.cloud.mcp.handler.ToolsListHandler;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
@@ -35,11 +38,15 @@ import java.util.Map;
  * @version v1.0 6/22/25
  */
 public class McpServerHandler implements HttpHandler {
+    private final McpServer mcp = new McpServer();
     private final Map<String, StreamSession> sseEmitters = new HashMap<>();
-    private final Map<String, ServerHandler<?>> handlers = new HashMap<>();
+    private final Map<String, ServerHandler> handlers = new HashMap<>();
 
     {
-        handlers.put("prompts/list", new PromptsListHandler());
+        handlers.put("tools/list", new ToolsListHandler());
+        handlers.put("tools/call", new ToolsCallHandler());
+        handlers.put("prompts/list", new ListPromptsHandler());
+        handlers.put("prompts/get", new PromptsGetHandler());
         handlers.put("ping", new PingHandler());
     }
 
@@ -92,9 +99,11 @@ public class McpServerHandler implements HttpHandler {
                 if (HeaderValue.ContentType.APPLICATION_JSON.equals(request.getContentType())) {
                     JSONObject jsonObject = JSON.parseObject(request.getInputStream());
                     String method = jsonObject.getString("method");
-                    ServerHandler<?> handler = handlers.get(method);
-                    Response<?> response = handler.apply(request, jsonObject);
+                    ServerHandler handler = handlers.get(method);
+                    JSONObject result = handler.apply(mcp, request, jsonObject);
+                    Response<JSONObject> response = new Response<>();
                     response.setId(jsonObject.getInteger("id"));
+                    response.setResult(result);
                     byte[] bytes = JSON.toJSONBytes(response);
                     request.getResponse().setContentLength(bytes.length);
                     request.getResponse().setContentType(HeaderValue.ContentType.APPLICATION_JSON);

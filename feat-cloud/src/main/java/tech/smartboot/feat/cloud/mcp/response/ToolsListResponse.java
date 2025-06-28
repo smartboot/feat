@@ -8,17 +8,25 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.cloud.mcp.handler;
+package tech.smartboot.feat.cloud.mcp.response;
 
-import com.alibaba.fastjson2.JSONObject;
-import tech.smartboot.feat.cloud.mcp.McpServer;
-import tech.smartboot.feat.core.server.HttpRequest;
+import tech.smartboot.feat.cloud.mcp.model.Tool;
+
+import java.util.List;
 
 /**
  * @author 三刀
  * @version v1.0 6/28/25
  */
-public interface ServerHandler {
+public class ToolsListResponse extends PaginationResponse {
+    private List<Tool> tools;
 
-    JSONObject apply(McpServer mcpServer, HttpRequest request, JSONObject jsonObject);
+    public List<Tool> getTools() {
+        return tools;
+    }
+
+    public void setTools(List<Tool> tools) {
+        this.tools = tools;
+    }
 }
+

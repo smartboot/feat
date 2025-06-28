@@ -12,15 +12,12 @@ package tech.smartboot.feat.cloud.mcp.model;
 
 import java.util.List;
 
-/**
- * @author 三刀
- * @version v1.0 6/28/25
- */
-public class Prompt {
+public class Tool {
     private String name;
     private String title;
     private String description;
-    private List<Argument> arguments;
+    private List<Property> inputs;
+    private List<Property> outputs;
 
     public String getName() {
         return name;
@@ -46,20 +43,38 @@ public class Prompt {
         this.description = description;
     }
 
-    public List<Argument> getArguments() {
-        return arguments;
+    public List<Property> getInputs() {
+        return inputs;
     }
 
-    public void setArguments(List<Argument> arguments) {
-        this.arguments = arguments;
+    public void setInputs(List<Property> inputs) {
+        this.inputs = inputs;
     }
 
-    /**
-     * @author 三刀
-     * @version v1.0 6/28/25
-     */
-    public static class Argument {
+    public List<Property> getOutputs() {
+        return outputs;
+    }
+
+    public void setOutputs(List<Property> outputs) {
+        this.outputs = outputs;
+    }
+
+    public enum PropertyType {
+        Object("object"), Number("number"), String("string"), Boolean("boolean");
+        private final String type;
+
+        PropertyType(String type) {
+            this.type = type;
+        }
+
+        public String getType() {
+            return type;
+        }
+    }
+
+    public static class Property {
         private String name;
+        private PropertyType type;
         private String description;
         private boolean required;
 
@@ -69,6 +84,14 @@ public class Prompt {
 
         public void setName(String name) {
             this.name = name;
+        }
+
+        public PropertyType getType() {
+            return type;
+        }
+
+        public void setType(PropertyType type) {
+            this.type = type;
         }
 
         public String getDescription() {
@@ -88,3 +111,4 @@ public class Prompt {
         }
     }
 }
+

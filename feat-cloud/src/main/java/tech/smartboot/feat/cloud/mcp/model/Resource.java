@@ -10,17 +10,25 @@
 
 package tech.smartboot.feat.cloud.mcp.model;
 
-import java.util.List;
-
 /**
  * @author 三刀
  * @version v1.0 6/28/25
  */
-public class Prompt {
+public class Resource {
+    private String uri;
     private String name;
     private String title;
+    private String mimeType;
     private String description;
-    private List<Argument> arguments;
+    private String size;
+
+    public String getUri() {
+        return uri;
+    }
+
+    public void setUri(String uri) {
+        this.uri = uri;
+    }
 
     public String getName() {
         return name;
@@ -38,6 +46,14 @@ public class Prompt {
         this.title = title;
     }
 
+    public String getMimeType() {
+        return mimeType;
+    }
+
+    public void setMimeType(String mimeType) {
+        this.mimeType = mimeType;
+    }
+
     public String getDescription() {
         return description;
     }
@@ -46,45 +62,11 @@ public class Prompt {
         this.description = description;
     }
 
-    public List<Argument> getArguments() {
-        return arguments;
+    public String getSize() {
+        return size;
     }
 
-    public void setArguments(List<Argument> arguments) {
-        this.arguments = arguments;
-    }
-
-    /**
-     * @author 三刀
-     * @version v1.0 6/28/25
-     */
-    public static class Argument {
-        private String name;
-        private String description;
-        private boolean required;
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public String getDescription() {
-            return description;
-        }
-
-        public void setDescription(String description) {
-            this.description = description;
-        }
-
-        public boolean isRequired() {
-            return required;
-        }
-
-        public void setRequired(boolean required) {
-            this.required = required;
-        }
+    public void setSize(String size) {
+        this.size = size;
     }
 }
