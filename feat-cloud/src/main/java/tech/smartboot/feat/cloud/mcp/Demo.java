@@ -30,7 +30,14 @@ public class Demo {
             }).setAction(jsonObject -> {
                 return jsonObject;
             });
+        }, tool -> {
+            tool.setName("textResult").setInputs(opt -> opt.withString("aa", "aa").required()).setTextAction(jsonObject -> "Hello World:" + jsonObject.getString("aa"));
         });
+
+        handler.getMcp().addResource(resource -> {
+
+        });
+
         Feat.httpServer(opt -> opt.debug(true)).httpHandler(handler).listen(3002);
     }
 }

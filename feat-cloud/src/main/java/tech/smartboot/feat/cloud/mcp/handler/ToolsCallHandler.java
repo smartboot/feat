@@ -31,10 +31,7 @@ public class ToolsCallHandler implements ServerHandler {
 
         JSONArray array = new JSONArray();
         mcp.getTools().stream().filter(tool -> tool.getName().equals(toolName)).findFirst().ifPresent(tool -> {
-            JSONObject context = new JSONObject();
-            context.put("type", "text");
-            context.put("text", tool.getAction().apply(toolParams).toString());
-            array.add(context);
+            array.add(tool.getAction().apply(toolParams));
         });
         result.put("context", array);
         result.put("isError", false);

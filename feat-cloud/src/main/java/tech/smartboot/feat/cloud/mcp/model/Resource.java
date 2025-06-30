@@ -69,4 +69,8 @@ public class Resource {
     public void setSize(String size) {
         this.size = size;
     }
+
+    public static class TextResource extends Resource {
+
+    }
 }

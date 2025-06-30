@@ -39,9 +39,19 @@ public class McpServer {
         return resources;
     }
 
-    public void addTool(Consumer<Tool> tool) {
-        Tool t = new Tool();
-        tool.accept(t);
-        tools.add(t);
+    public void addTool(Consumer<Tool>... tool) {
+        for (Consumer<Tool> consumer : tool) {
+            Tool t = new Tool();
+            consumer.accept(t);
+            tools.add(t);
+        }
+    }
+
+    public void addResource(Consumer<Resource>... resource) {
+        for (Consumer<Resource> consumer : resource) {
+            Resource r = new Resource();
+            consumer.accept(r);
+            resources.add(r);
+        }
     }
 }

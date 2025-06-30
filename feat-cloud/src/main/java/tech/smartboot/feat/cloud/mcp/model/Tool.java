@@ -21,7 +21,7 @@ public class Tool {
     private String name;
     private String title;
     private String description;
-    private List<Property> inputs = new ArrayList<>();
+    private final List<Property> inputs = new ArrayList<>();
     private List<Property> outputs = new ArrayList<>();
     private Function<JSONObject, JSONObject> action;
 
@@ -68,6 +68,64 @@ public class Tool {
     public Tool setAction(Function<JSONObject, JSONObject> action) {
         this.action = action;
         return this;
+    }
+
+    public Tool setTextAction(Function<JSONObject, String> action) {
+        return setAction(jsonObject -> {
+            String textContent = action.apply(jsonObject);
+            JSONObject result = new JSONObject();
+            result.put("text", textContent);
+            result.put("type", "text");
+            return result;
+        });
+    }
+
+    public Tool setImageAction(Function<JSONObject, ImageContent> action) {
+        return setAction(jsonObject -> {
+            ImageContent content = action.apply(jsonObject);
+            JSONObject result = new JSONObject();
+            result.put("type", "image");
+            result.put("data", content.getData());
+            result.put("mimeType", content.getMimeType());
+            return result;
+        });
+    }
+
+    public Tool setAudioAction(Function<JSONObject, AudioContent> action) {
+        return setAction(jsonObject -> {
+            AudioContent content = action.apply(jsonObject);
+            JSONObject result = new JSONObject();
+            result.put("type", "audio");
+            result.put("data", content.getData());
+            result.put("mimeType", content.getMimeType());
+            return result;
+        });
+    }
+
+    public Tool setResourceLinksAction(Function<JSONObject, ResourceLinks> action) {
+        return setAction(jsonObject -> {
+            ResourceLinks content = action.apply(jsonObject);
+            JSONObject result = new JSONObject();
+            result.put("type", "resource_link");
+            result.put("uri", content.getUri());
+            result.put("name", content.getName());
+            result.put("description", content.getDescription());
+            result.put("mimeType", content.getMimeType());
+            return result;
+        });
+    }
+
+    public Tool setEmbeddedResourcesAction(Function<JSONObject, ResourceLinks> action) {
+        return setAction(jsonObject -> {
+            ResourceLinks content = action.apply(jsonObject);
+            JSONObject result = new JSONObject();
+            result.put("type", "resource_link");
+            result.put("uri", content.getUri());
+            result.put("name", content.getName());
+            result.put("description", content.getDescription());
+            result.put("mimeType", content.getMimeType());
+            return result;
+        });
     }
 
     public Function<JSONObject, JSONObject> getAction() {
@@ -144,5 +202,108 @@ public class Tool {
             return this;
         }
     }
+
+    class ToolResult {
+        private String type;
+
+        public ToolResult(String type) {
+            this.type = type;
+        }
+
+        public String getType() {
+            return type;
+        }
+
+        public void setType(String type) {
+            this.type = type;
+        }
+    }
+
+    public static class ImageContent {
+        private String data;
+        private String mimeType;
+
+        public String getData() {
+            return data;
+        }
+
+        public void setData(String data) {
+            this.data = data;
+        }
+
+        public String getMimeType() {
+            return mimeType;
+        }
+
+        public void setMimeType(String mimeType) {
+            this.mimeType = mimeType;
+        }
+    }
+
+    public static class AudioContent {
+        private String data;
+        private String mimeType;
+
+        public String getData() {
+            return data;
+        }
+
+        public void setData(String data) {
+            this.data = data;
+        }
+
+        public String getMimeType() {
+            return mimeType;
+        }
+
+        public void setMimeType(String mimeType) {
+            this.mimeType = mimeType;
+        }
+    }
+
+    class ResourceLinks extends ToolResult {
+        private String uri;
+        private String name;
+        private String description;
+        private String mimeType;
+
+        public ResourceLinks() {
+            super("resource_link");
+        }
+
+        public String getUri() {
+            return uri;
+        }
+
+        public void setUri(String uri) {
+            this.uri = uri;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public void setDescription(String description) {
+            this.description = description;
+        }
+
+        public String getMimeType() {
+            return mimeType;
+        }
+
+        public void setMimeType(String mimeType) {
+            this.mimeType = mimeType;
+        }
+    }
+
+
 }
 
