@@ -10,6 +10,7 @@
 
 package tech.smartboot.feat.cloud.mcp.handler;
 
+import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.cloud.mcp.McpServer;
 import tech.smartboot.feat.core.server.HttpRequest;
@@ -22,6 +23,21 @@ public class ToolsCallHandler implements ServerHandler {
 
     @Override
     public JSONObject apply(McpServer mcp, HttpRequest request, JSONObject jsonObject) {
-        return null;
+        JSONObject params = jsonObject.getJSONObject("params");
+        String toolName = params.getString("name");
+        JSONObject toolParams = params.getJSONObject("arguments");
+
+        JSONObject result = new JSONObject();
+
+        JSONArray array = new JSONArray();
+        mcp.getTools().stream().filter(tool -> tool.getName().equals(toolName)).findFirst().ifPresent(tool -> {
+            JSONObject context = new JSONObject();
+            context.put("type", "text");
+            context.put("text", tool.getAction().apply(toolParams).toString());
+            array.add(context);
+        });
+        result.put("context", array);
+        result.put("isError", false);
+        return result;
     }
 }

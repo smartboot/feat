@@ -10,45 +10,68 @@
 
 package tech.smartboot.feat.cloud.mcp.model;
 
+import com.alibaba.fastjson2.JSONObject;
+
+import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class Tool {
     private String name;
     private String title;
     private String description;
-    private List<Property> inputs;
-    private List<Property> outputs;
+    private List<Property> inputs = new ArrayList<>();
+    private List<Property> outputs = new ArrayList<>();
+    private Function<JSONObject, JSONObject> action;
 
     public String getName() {
         return name;
     }
 
-    public void setName(String name) {
+    public Tool setName(String name) {
         this.name = name;
+        return this;
     }
 
     public String getTitle() {
         return title;
     }
 
-    public void setTitle(String title) {
+    public Tool setTitle(String title) {
         this.title = title;
+        return this;
     }
 
     public String getDescription() {
         return description;
     }
 
-    public void setDescription(String description) {
+    public Tool setDescription(String description) {
         this.description = description;
+        return this;
     }
 
     public List<Property> getInputs() {
         return inputs;
     }
 
-    public void setInputs(List<Property> inputs) {
-        this.inputs = inputs;
+    public Tool setInputs(Consumer<Property>... inputs) {
+        for (Consumer<Property> input : inputs) {
+            Property property = new Property();
+            input.accept(property);
+            this.inputs.add(property);
+        }
+        return this;
+    }
+
+    public Tool setAction(Function<JSONObject, JSONObject> action) {
+        this.action = action;
+        return this;
+    }
+
+    public Function<JSONObject, JSONObject> getAction() {
+        return action;
     }
 
     public List<Property> getOutputs() {
@@ -82,32 +105,43 @@ public class Tool {
             return name;
         }
 
-        public void setName(String name) {
+        public Property withString(String name, String description) {
             this.name = name;
+            this.type = PropertyType.String;
+            this.description = description;
+            return this;
         }
+
+        public Property withNumber(String name, String description) {
+            this.name = name;
+            this.type = PropertyType.Number;
+            this.description = description;
+            return this;
+        }
+
+        public Property withBool(String name, String description) {
+            this.name = name;
+            this.type = PropertyType.Boolean;
+            this.description = description;
+            return this;
+        }
+
 
         public PropertyType getType() {
             return type;
-        }
-
-        public void setType(PropertyType type) {
-            this.type = type;
         }
 
         public String getDescription() {
             return description;
         }
 
-        public void setDescription(String description) {
-            this.description = description;
-        }
-
         public boolean isRequired() {
             return required;
         }
 
-        public void setRequired(boolean required) {
-            this.required = required;
+        public Property required() {
+            this.required = true;
+            return this;
         }
     }
 }

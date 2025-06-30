@@ -16,6 +16,7 @@ import tech.smartboot.feat.cloud.mcp.model.Tool;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * @author 三刀
@@ -36,5 +37,11 @@ public class McpServer {
 
     public List<Resource> getResources() {
         return resources;
+    }
+
+    public void addTool(Consumer<Tool> tool) {
+        Tool t = new Tool();
+        tool.accept(t);
+        tools.add(t);
     }
 }

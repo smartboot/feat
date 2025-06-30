@@ -18,6 +18,19 @@ import tech.smartboot.feat.Feat;
  */
 public class Demo {
     public static void main(String[] args) {
-        Feat.httpServer(opt -> opt.debug(true)).httpHandler(new McpServerHandler()).listen(3002);
+        McpServerHandler handler = new McpServerHandler();
+        handler.getMcp().addTool(tool -> {
+            tool.setName("test");
+            tool.setTitle("测试");
+            tool.setDescription("测试");
+            tool.setInputs(opt -> {
+                opt.withString("name", "用户名称").required();
+            }, opt -> {
+                opt.withString("age", "用户年龄").required();
+            }).setAction(jsonObject -> {
+                return jsonObject;
+            });
+        });
+        Feat.httpServer(opt -> opt.debug(true)).httpHandler(handler).listen(3002);
     }
 }

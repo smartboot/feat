@@ -133,4 +133,8 @@ public class McpServerHandler implements HttpHandler {
     public void onClose(HttpEndpoint request) {
         sseEmitters.remove(request);
     }
+
+    public McpServer getMcp() {
+        return mcp;
+    }
 }
