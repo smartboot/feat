@@ -10,7 +10,11 @@
 
 package tech.smartboot.feat.cloud.mcp;
 
+import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.Feat;
+import tech.smartboot.feat.cloud.mcp.model.Property;
+import tech.smartboot.feat.cloud.mcp.model.Resource;
+import tech.smartboot.feat.cloud.mcp.model.Tool;
 
 /**
  * @author 三刀
@@ -18,25 +22,17 @@ import tech.smartboot.feat.Feat;
  */
 public class Demo {
     public static void main(String[] args) {
+        Tool tool = Tool.of("test").title("测试").description("测试")
+                .inputSchema(Property.withString("name", "用户名称"), Property.withRequiredString("age", "用户年龄"))
+                .outputSchema(Property.withRequiredNumber("age", "年龄"))
+                .doAction(input -> {
+                    JSONObject object = new JSONObject();
+                    return object;
+                });
         McpServerHandler handler = new McpServerHandler();
-        handler.getMcp().addTool(tool -> {
-            tool.setName("test");
-            tool.setTitle("测试");
-            tool.setDescription("测试");
-            tool.setInputs(opt -> {
-                opt.withString("name", "用户名称").required();
-            }, opt -> {
-                opt.withString("age", "用户年龄").required();
-            }).setAction(jsonObject -> {
-                return jsonObject;
-            });
-        }, tool -> {
-            tool.setName("textResult").setInputs(opt -> opt.withString("aa", "aa").required()).setTextAction(jsonObject -> "Hello World:" + jsonObject.getString("aa"));
-        });
+        handler.getMcp().addTool(tool).addTool(Tool.of("textResult").inputSchema(Property.withString("aa", "aa")).setTextAction(jsonObject -> "Hello World:" + jsonObject.getString("aa")));
 
-        handler.getMcp().addResource(resource -> {
-
-        });
+        handler.getMcp().addResource(Resource.of("test", "test.txt")).addResource(Resource.ofText("test2", "test2.txt").setText("Hello World")).addResource(Resource.ofBinary("test3", "test3.txt").setBlob("text/plain", "Hello World"));
 
         Feat.httpServer(opt -> opt.debug(true)).httpHandler(handler).listen(3002);
     }

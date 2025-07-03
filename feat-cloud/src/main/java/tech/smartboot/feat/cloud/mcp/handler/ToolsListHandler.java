@@ -13,6 +13,8 @@ package tech.smartboot.feat.cloud.mcp.handler;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.cloud.mcp.McpServer;
+import tech.smartboot.feat.cloud.mcp.model.Property;
+import tech.smartboot.feat.cloud.mcp.model.PropertyType;
 import tech.smartboot.feat.cloud.mcp.model.Tool;
 import tech.smartboot.feat.core.server.HttpRequest;
 
@@ -39,9 +41,9 @@ public class ToolsListHandler implements ServerHandler {
             List<String> requiredInputs = new ArrayList<>();
 
             JSONObject inputSchema = new JSONObject();
-            inputSchema.put("type", Tool.PropertyType.Object.getType());
+            inputSchema.put("type", PropertyType.Object.getType());
             JSONObject properties = new JSONObject();
-            for (Tool.Property property : tool.getInputs()) {
+            for (Property property : tool.getInputs()) {
                 JSONObject propertyObject = new JSONObject();
                 propertyObject.put("type", property.getType().getType());
                 propertyObject.put("description", property.getDescription());

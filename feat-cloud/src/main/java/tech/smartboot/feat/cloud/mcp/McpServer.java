@@ -13,10 +13,10 @@ package tech.smartboot.feat.cloud.mcp;
 import tech.smartboot.feat.cloud.mcp.model.Prompt;
 import tech.smartboot.feat.cloud.mcp.model.Resource;
 import tech.smartboot.feat.cloud.mcp.model.Tool;
+import tech.smartboot.feat.core.common.FeatUtils;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 
 /**
  * @author 三刀
@@ -39,19 +39,25 @@ public class McpServer {
         return resources;
     }
 
-    public void addTool(Consumer<Tool>... tool) {
-        for (Consumer<Tool> consumer : tool) {
-            Tool t = new Tool();
-            consumer.accept(t);
-            tools.add(t);
-        }
+    public McpServer addTool(Tool tool) {
+        tools.stream().filter(t -> t.getName().equals(tool.getName())).findAny().ifPresent(t -> {
+            throw new IllegalStateException("tool already exists");
+        });
+        tools.add(tool);
+        return this;
     }
 
-    public void addResource(Consumer<Resource>... resource) {
-        for (Consumer<Resource> consumer : resource) {
-            Resource r = new Resource();
-            consumer.accept(r);
-            resources.add(r);
+    public McpServer addResource(Resource resource) {
+        if (FeatUtils.isBlank(resource.getUri())) {
+            throw new IllegalStateException("uri can not be null");
         }
+        if (FeatUtils.isBlank(resource.getName())) {
+            throw new IllegalStateException("name can not be null");
+        }
+        if (resources.stream().anyMatch(r -> r.getUri().equals(resource.getUri()))) {
+            throw new IllegalStateException("resource already exists");
+        }
+        resources.add(resource);
+        return this;
     }
 }

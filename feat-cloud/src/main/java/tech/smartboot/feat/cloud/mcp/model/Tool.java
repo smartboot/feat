@@ -13,17 +13,35 @@ package tech.smartboot.feat.cloud.mcp.model;
 import com.alibaba.fastjson2.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class Tool {
+    /**
+     * The name of the tool. Must be unique.
+     */
     private String name;
+    /**
+     * Optional human-readable name of the tool for display purposes.
+     */
     private String title;
+    /**
+     * Human-readable description of functionality
+     */
     private String description;
-    private final List<Property> inputs = new ArrayList<>();
-    private List<Property> outputs = new ArrayList<>();
+    private final List<Property> inputSchema = new ArrayList<>();
+    private List<Property> outputSchema = new ArrayList<>();
     private Function<JSONObject, JSONObject> action;
+
+    private Tool() {
+    }
+
+    public static Tool of(String name) {
+        Tool tool = new Tool();
+        tool.setName(name);
+        return tool;
+    }
 
     public String getName() {
         return name;
@@ -38,7 +56,7 @@ public class Tool {
         return title;
     }
 
-    public Tool setTitle(String title) {
+    public Tool title(String title) {
         this.title = title;
         return this;
     }
@@ -47,31 +65,30 @@ public class Tool {
         return description;
     }
 
-    public Tool setDescription(String description) {
+    public Tool description(String description) {
         this.description = description;
         return this;
     }
 
     public List<Property> getInputs() {
-        return inputs;
+        return inputSchema;
     }
 
-    public Tool setInputs(Consumer<Property>... inputs) {
-        for (Consumer<Property> input : inputs) {
-            Property property = new Property();
-            input.accept(property);
-            this.inputs.add(property);
+    public final Tool inputSchema(Property... inputs) {
+        if (inputs == null) {
+            return this;
         }
+        inputSchema.addAll(Arrays.asList(inputs));
         return this;
     }
 
-    public Tool setAction(Function<JSONObject, JSONObject> action) {
+    public Tool doAction(Function<JSONObject, JSONObject> action) {
         this.action = action;
         return this;
     }
 
     public Tool setTextAction(Function<JSONObject, String> action) {
-        return setAction(jsonObject -> {
+        return doAction(jsonObject -> {
             String textContent = action.apply(jsonObject);
             JSONObject result = new JSONObject();
             result.put("text", textContent);
@@ -81,7 +98,7 @@ public class Tool {
     }
 
     public Tool setImageAction(Function<JSONObject, ImageContent> action) {
-        return setAction(jsonObject -> {
+        return doAction(jsonObject -> {
             ImageContent content = action.apply(jsonObject);
             JSONObject result = new JSONObject();
             result.put("type", "image");
@@ -92,7 +109,7 @@ public class Tool {
     }
 
     public Tool setAudioAction(Function<JSONObject, AudioContent> action) {
-        return setAction(jsonObject -> {
+        return doAction(jsonObject -> {
             AudioContent content = action.apply(jsonObject);
             JSONObject result = new JSONObject();
             result.put("type", "audio");
@@ -103,7 +120,7 @@ public class Tool {
     }
 
     public Tool setResourceLinksAction(Function<JSONObject, ResourceLinks> action) {
-        return setAction(jsonObject -> {
+        return doAction(jsonObject -> {
             ResourceLinks content = action.apply(jsonObject);
             JSONObject result = new JSONObject();
             result.put("type", "resource_link");
@@ -116,7 +133,7 @@ public class Tool {
     }
 
     public Tool setEmbeddedResourcesAction(Function<JSONObject, ResourceLinks> action) {
-        return setAction(jsonObject -> {
+        return doAction(jsonObject -> {
             ResourceLinks content = action.apply(jsonObject);
             JSONObject result = new JSONObject();
             result.put("type", "resource_link");
@@ -132,76 +149,18 @@ public class Tool {
         return action;
     }
 
-    public List<Property> getOutputs() {
-        return outputs;
+    public List<Property> outputSchema() {
+        return outputSchema;
     }
 
-    public void setOutputs(List<Property> outputs) {
-        this.outputs = outputs;
+    public Tool outputSchema(Property... output) {
+        if (output == null) {
+            return this;
+        }
+        outputSchema.addAll(Arrays.asList(output));
+        return this;
     }
 
-    public enum PropertyType {
-        Object("object"), Number("number"), String("string"), Boolean("boolean");
-        private final String type;
-
-        PropertyType(String type) {
-            this.type = type;
-        }
-
-        public String getType() {
-            return type;
-        }
-    }
-
-    public static class Property {
-        private String name;
-        private PropertyType type;
-        private String description;
-        private boolean required;
-
-        public String getName() {
-            return name;
-        }
-
-        public Property withString(String name, String description) {
-            this.name = name;
-            this.type = PropertyType.String;
-            this.description = description;
-            return this;
-        }
-
-        public Property withNumber(String name, String description) {
-            this.name = name;
-            this.type = PropertyType.Number;
-            this.description = description;
-            return this;
-        }
-
-        public Property withBool(String name, String description) {
-            this.name = name;
-            this.type = PropertyType.Boolean;
-            this.description = description;
-            return this;
-        }
-
-
-        public PropertyType getType() {
-            return type;
-        }
-
-        public String getDescription() {
-            return description;
-        }
-
-        public boolean isRequired() {
-            return required;
-        }
-
-        public Property required() {
-            this.required = true;
-            return this;
-        }
-    }
 
     class ToolResult {
         private String type;
