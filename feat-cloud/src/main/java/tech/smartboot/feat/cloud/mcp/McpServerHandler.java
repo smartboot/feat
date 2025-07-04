@@ -104,10 +104,26 @@ public class McpServerHandler implements HttpHandler {
                     JSONObject jsonObject = JSON.parseObject(request.getInputStream());
                     String method = jsonObject.getString("method");
                     ServerHandler handler = handlers.get(method);
-                    JSONObject result = handler.apply(mcp, request, jsonObject);
                     Response<JSONObject> response = new Response<>();
+
+                    try {
+                        JSONObject result = handler.apply(mcp, request, jsonObject);
+                        response.setResult(result);
+                    } catch (McpServerException e) {
+                        JSONObject error = new JSONObject();
+                        error.put("code", e.getCode());
+                        error.put("message", e.getMessage());
+                        error.put("data", e.getData());
+                        response.setError(error);
+                    } catch (Throwable e) {
+                        JSONObject error = new JSONObject();
+                        error.put("code", -32603);
+                        error.put("message", e.getMessage());
+                        response.setError(error);
+                    }
                     response.setId(jsonObject.getInteger("id"));
-                    response.setResult(result);
+
+
                     byte[] bytes = JSON.toJSONBytes(response);
                     request.getResponse().setContentLength(bytes.length);
                     request.getResponse().setContentType(HeaderValue.ContentType.APPLICATION_JSON);

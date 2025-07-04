@@ -13,6 +13,11 @@ package tech.smartboot.feat.cloud.mcp.handler;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.cloud.mcp.McpServer;
+import tech.smartboot.feat.cloud.mcp.McpServerException;
+import tech.smartboot.feat.cloud.mcp.enums.ToolResultType;
+import tech.smartboot.feat.cloud.mcp.model.Tool;
+import tech.smartboot.feat.cloud.mcp.model.ToolContext;
+import tech.smartboot.feat.cloud.mcp.model.ToolResult;
 import tech.smartboot.feat.core.server.HttpRequest;
 
 /**
@@ -27,14 +32,26 @@ public class ToolsCallHandler implements ServerHandler {
         String toolName = params.getString("name");
         JSONObject toolParams = params.getJSONObject("arguments");
 
-        JSONObject result = new JSONObject();
+        ToolContext toolContext = new ToolContext(request, toolParams);
 
-        JSONArray array = new JSONArray();
-        mcp.getTools().stream().filter(tool -> tool.getName().equals(toolName)).findFirst().ifPresent(tool -> {
-            array.add(tool.getAction().apply(toolParams));
-        });
-        result.put("context", array);
-        result.put("isError", false);
+        Tool tool = mcp.getTools().stream().filter(t -> t.getName().equals(toolName)).findFirst().orElse(null);
+        if (tool == null) {
+            throw new McpServerException(McpServerException.INTERNAL_ERROR, "Unknown tool: " + toolName);
+        }
+        JSONObject result = new JSONObject();
+        try {
+            ToolResult content = tool.getAction().apply(toolContext);
+            if (ToolResultType.STRUCTURED_CONTENT.getType().equals(content.getType())) {
+                ToolResult.StructuredContent structuredContent = (ToolResult.StructuredContent) content;
+                result.put("content", JSONArray.of(JSONObject.from(ToolResult.ofText(structuredContent.getContent().toString()))));
+                result.put("structuredContent", structuredContent.getContent());
+            } else {
+                result.put("content", JSONArray.of(JSONObject.from(content)));
+            }
+        } catch (Throwable e) {
+            result.put("content", JSONArray.of(JSONObject.from(ToolResult.ofText(e.getMessage()))));
+            result.put("isError", true);
+        }
         return result;
     }
 }

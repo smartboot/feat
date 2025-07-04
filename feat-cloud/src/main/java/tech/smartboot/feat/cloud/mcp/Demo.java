@@ -15,6 +15,7 @@ import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.cloud.mcp.model.Property;
 import tech.smartboot.feat.cloud.mcp.model.Resource;
 import tech.smartboot.feat.cloud.mcp.model.Tool;
+import tech.smartboot.feat.cloud.mcp.model.ToolResult;
 
 /**
  * @author 三刀
@@ -22,15 +23,24 @@ import tech.smartboot.feat.cloud.mcp.model.Tool;
  */
 public class Demo {
     public static void main(String[] args) {
-        Tool tool = Tool.of("test").title("测试").description("测试")
-                .inputSchema(Property.withString("name", "用户名称"), Property.withRequiredString("age", "用户年龄"))
-                .outputSchema(Property.withRequiredNumber("age", "年龄"))
-                .doAction(input -> {
-                    JSONObject object = new JSONObject();
-                    return object;
-                });
+        Tool tool = Tool.of("test").title("测试").description("测试").inputSchema(Property.withString("name", "用户名称"), Property.withRequiredString("age", "用户年龄")).outputSchema(Property.withRequiredNumber("age", "年龄")).doAction(input -> {
+            return ToolResult.ofText("aaa");
+        });
+
+        Tool structTool = Tool.of("structResultTool").inputSchema(Property.withString("aa", "aa")).doAction(toolContext -> {
+            JSONObject j = new JSONObject();
+            j.put("name", "name");
+            j.put("age", 18);
+            j.put("text", toolContext.getArguments().get("aa"));
+            j.put("resource", Resource.of("test", "test.txt"));
+            return ToolResult.ofStructuredContent(j);
+        });
+
         McpServerHandler handler = new McpServerHandler();
-        handler.getMcp().addTool(tool).addTool(Tool.of("textResult").inputSchema(Property.withString("aa", "aa")).setTextAction(jsonObject -> "Hello World:" + jsonObject.getString("aa")));
+        handler.getMcp().addTool(tool).addTool(Tool.of("errorTool").inputSchema(Property.withString("aa", "aa")).doAction(jsonObject -> {
+            throw new IllegalStateException("exception...");
+        })).addTool(structTool);
+
 
         handler.getMcp().addResource(Resource.of("test", "test.txt")).addResource(Resource.ofText("test2", "test2.txt").setText("Hello World")).addResource(Resource.ofBinary("test3", "test3.txt").setBlob("text/plain", "Hello World"));
 
