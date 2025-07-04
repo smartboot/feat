@@ -18,6 +18,7 @@ import tech.smartboot.feat.cloud.mcp.server.handler.PingHandler;
 import tech.smartboot.feat.cloud.mcp.server.handler.PromptsGetHandler;
 import tech.smartboot.feat.cloud.mcp.server.handler.ResourcesListHandler;
 import tech.smartboot.feat.cloud.mcp.server.handler.ResourcesReadHandler;
+import tech.smartboot.feat.cloud.mcp.server.handler.ResourcesTemplateListHandler;
 import tech.smartboot.feat.cloud.mcp.server.handler.ServerHandler;
 import tech.smartboot.feat.cloud.mcp.server.handler.ToolsCallHandler;
 import tech.smartboot.feat.cloud.mcp.server.handler.ToolsListHandler;
@@ -51,6 +52,7 @@ public class McpServerHandler implements HttpHandler {
         handlers.put("prompts/get", new PromptsGetHandler());
         handlers.put("resources/list", new ResourcesListHandler());
         handlers.put("resources/read", new ResourcesReadHandler());
+        handlers.put("resources/templates/list", new ResourcesTemplateListHandler());
         handlers.put("ping", new PingHandler());
     }
 

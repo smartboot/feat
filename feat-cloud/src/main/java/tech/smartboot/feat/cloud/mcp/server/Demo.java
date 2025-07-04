@@ -18,6 +18,7 @@ import tech.smartboot.feat.cloud.mcp.server.model.Prompt;
 import tech.smartboot.feat.cloud.mcp.server.model.PromptResult;
 import tech.smartboot.feat.cloud.mcp.server.model.Property;
 import tech.smartboot.feat.cloud.mcp.server.model.Resource;
+import tech.smartboot.feat.cloud.mcp.server.model.ResourceTemplate;
 import tech.smartboot.feat.cloud.mcp.server.model.Tool;
 import tech.smartboot.feat.cloud.mcp.server.model.ToolResult;
 
@@ -81,11 +82,14 @@ public class Demo {
 
         // resources
         mcp.addResource(Resource.of("test", "test.txt").doAction(resourceContext -> {
-            return Resource.ofText(resourceContext.getResource(), "contentcontentcontentcontentcontent");
-        }));
-        mcp.addResource(Resource.of("bbbbb", "test.bin").doAction(resourceContext -> {
-            return Resource.ofBinary(resourceContext.getResource(), "YXNkZmFzZGY=");
-        }));
+                    return Resource.ofText(resourceContext.getResource(), "contentcontentcontentcontentcontent");
+                })).addResource(Resource.of("bbbbb", "test.bin").doAction(resourceContext -> {
+                    return Resource.ofBinary(resourceContext.getResource(), "YXNkZmFzZGY=");
+                })).addResource(Resource.ofText("file:///aa.txt", "test.txt", "text/plain", "bbbbb"))
+                .addResource(Resource.ofText("file:///bb.txt", "bb.txt", "text/plain", "aaaaaaa"));
+
+        // resourceTemplate
+        mcp.addResourceTemplate(ResourceTemplate.of("file:///{path}", "testTemplate").title("\uD83D\uDCC1 Project Files").description("Access files in the project directory").mimeType("application/octet-stream"));
 
         Feat.httpServer(opt -> opt.debug(true)).httpHandler(handler).listen(3002);
     }

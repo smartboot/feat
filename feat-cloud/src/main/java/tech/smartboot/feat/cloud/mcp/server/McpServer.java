@@ -12,6 +12,7 @@ package tech.smartboot.feat.cloud.mcp.server;
 
 import tech.smartboot.feat.cloud.mcp.server.model.Prompt;
 import tech.smartboot.feat.cloud.mcp.server.model.Resource;
+import tech.smartboot.feat.cloud.mcp.server.model.ResourceTemplate;
 import tech.smartboot.feat.cloud.mcp.server.model.Tool;
 import tech.smartboot.feat.core.common.FeatUtils;
 
@@ -26,6 +27,7 @@ public class McpServer {
     private final List<Tool> tools = new ArrayList<>();
     private final List<Prompt> prompts = new ArrayList<>();
     private final List<Resource> resources = new ArrayList<>();
+    private final List<ResourceTemplate> resourceTemplates = new ArrayList<>();
 
     public List<Tool> getTools() {
         return tools;
@@ -37,6 +39,10 @@ public class McpServer {
 
     public List<Resource> getResources() {
         return resources;
+    }
+
+    public List<ResourceTemplate> getResourceTemplates() {
+        return resourceTemplates;
     }
 
     public McpServer addPrompt(Prompt prompt) {
@@ -66,6 +72,20 @@ public class McpServer {
             throw new IllegalStateException("resource already exists");
         }
         resources.add(resource);
+        return this;
+    }
+
+    public McpServer addResourceTemplate(ResourceTemplate resourceTemplate) {
+        if (FeatUtils.isBlank(resourceTemplate.getUriTemplate())) {
+            throw new IllegalStateException("uriTemplate can not be null");
+        }
+        if (FeatUtils.isBlank(resourceTemplate.getName())) {
+            throw new IllegalStateException("name can not be null");
+        }
+        if (resourceTemplates.stream().anyMatch(r -> r.getUriTemplate().equals(resourceTemplate.getUriTemplate()))) {
+            throw new IllegalStateException("resourceTemplate already exists");
+        }
+        resourceTemplates.add(resourceTemplate);
         return this;
     }
 }

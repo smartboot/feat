@@ -112,6 +112,7 @@ public class Resource {
         public TextResource(Resource resource, String text) {
             super(resource.uri, resource.name, resource.mimeType);
             this.text = text;
+            this.doAction(action -> this);
         }
 
         public String getText() {
@@ -125,6 +126,7 @@ public class Resource {
         BinaryResource(Resource resource, String blob) {
             super(resource.uri, resource.name, resource.mimeType);
             this.blob = blob;
+            this.doAction(action -> this);
         }
 
         public String getBlob() {
