@@ -8,17 +8,29 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.cloud.mcp.server.handler;
+package tech.smartboot.feat.cloud.mcp.server.model;
 
 import com.alibaba.fastjson2.JSONObject;
-import tech.smartboot.feat.cloud.mcp.server.McpServer;
 import tech.smartboot.feat.core.server.HttpRequest;
 
 /**
  * @author 三刀
- * @version v1.0 6/28/25
+ * @version v1.0 7/4/25
  */
-public interface ServerHandler {
+public class PromptContext {
+    private final HttpRequest request;
+    private final JSONObject arguments;
 
-    JSONObject apply(McpServer mcp, HttpRequest request, JSONObject jsonObject);
+    public PromptContext(HttpRequest request, JSONObject arguments) {
+        this.request = request;
+        this.arguments = arguments;
+    }
+
+    public HttpRequest getRequest() {
+        return request;
+    }
+
+    public JSONObject getArguments() {
+        return arguments;
+    }
 }

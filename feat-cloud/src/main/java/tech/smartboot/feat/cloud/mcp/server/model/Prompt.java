@@ -10,7 +10,10 @@
 
 package tech.smartboot.feat.cloud.mcp.server.model;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * @author 三刀
@@ -20,7 +23,18 @@ public class Prompt {
     private String name;
     private String title;
     private String description;
-    private List<Argument> arguments;
+    private final List<Argument> arguments = new ArrayList<>();
+
+    private Prompt(String name) {
+        this.name = name;
+    }
+
+    public static Prompt of(String name) {
+        return new Prompt(name);
+    }
+
+
+    private Function<PromptContext, PromptResult> action;
 
     public String getName() {
         return name;
@@ -34,57 +48,40 @@ public class Prompt {
         return title;
     }
 
-    public void setTitle(String title) {
+    public Prompt title(String title) {
         this.title = title;
+        return this;
     }
 
     public String getDescription() {
         return description;
     }
 
-    public void setDescription(String description) {
+    public Prompt description(String description) {
         this.description = description;
+        return this;
     }
 
     public List<Argument> getArguments() {
         return arguments;
     }
 
-    public void setArguments(List<Argument> arguments) {
-        this.arguments = arguments;
+    public Prompt arguments(Argument... arguments) {
+        if (arguments == null) {
+            return this;
+        }
+        this.arguments.addAll(Arrays.asList(arguments));
+        return this;
     }
 
-    /**
-     * @author 三刀
-     * @version v1.0 6/28/25
-     */
-    public static class Argument {
-        private String name;
-        private String description;
-        private boolean required;
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public String getDescription() {
-            return description;
-        }
-
-        public void setDescription(String description) {
-            this.description = description;
-        }
-
-        public boolean isRequired() {
-            return required;
-        }
-
-        public void setRequired(boolean required) {
-            this.required = required;
-        }
+    public Prompt doAction(Function<PromptContext, PromptResult> action) {
+        this.action = action;
+        return this;
     }
+
+    public Function<PromptContext, PromptResult> getAction() {
+        return action;
+    }
+
+
 }

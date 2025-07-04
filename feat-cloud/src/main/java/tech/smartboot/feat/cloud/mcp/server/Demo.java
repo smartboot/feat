@@ -12,6 +12,10 @@ package tech.smartboot.feat.cloud.mcp.server;
 
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.Feat;
+import tech.smartboot.feat.cloud.mcp.enums.RoleEnum;
+import tech.smartboot.feat.cloud.mcp.server.model.Argument;
+import tech.smartboot.feat.cloud.mcp.server.model.Prompt;
+import tech.smartboot.feat.cloud.mcp.server.model.PromptResult;
 import tech.smartboot.feat.cloud.mcp.server.model.Property;
 import tech.smartboot.feat.cloud.mcp.server.model.Resource;
 import tech.smartboot.feat.cloud.mcp.server.model.Tool;
@@ -37,12 +41,48 @@ public class Demo {
         });
 
         McpServerHandler handler = new McpServerHandler();
-        handler.getMcp().addTool(tool).addTool(Tool.of("errorTool").inputSchema(Property.withString("aa", "aa")).doAction(jsonObject -> {
+        McpServer mcp = handler.getMcp();
+        mcp.addTool(tool).addTool(Tool.of("errorTool").inputSchema(Property.withString("aa", "aa")).doAction(jsonObject -> {
             throw new IllegalStateException("exception...");
         })).addTool(structTool);
 
 
         handler.getMcp().addResource(Resource.of("test", "test.txt")).addResource(Resource.ofText("test2", "test2.txt").setText("Hello World")).addResource(Resource.ofBinary("test3", "test3.txt").setBlob("text/plain", "Hello World"));
+
+        //prompt
+        mcp.addPrompt(Prompt.of("code_review")
+                        .title("Request Code Review")
+                        .description("Asks the LLM to analyze code quality and suggest improvements")
+                        .arguments(Argument.requiredOf("code", "The code to review"))
+                        .doAction(promptContext -> {
+                            String code = promptContext.getArguments().getString("code");
+                            return PromptResult.ofText(RoleEnum.User, "Please review the following code and provide suggestions for improvement:" + code);
+                        }))
+                .addPrompt(Prompt.of("image_review")
+                        .title("Request Image Review")
+                        .description("Asks the LLM to analyze image quality and suggest improvements")
+                        .arguments(Argument.requiredOf("image", "The image to review"))
+                        .doAction(promptContext -> {
+                            String image = promptContext.getArguments().getString("image");
+                            return PromptResult.ofImage(RoleEnum.User, image, "image/png");
+                        }))
+                .addPrompt(Prompt.of("audio_review")
+                        .title("Request Audio Review")
+                        .description("Asks the LLM to analyze audio quality and suggest improvements")
+                        .arguments(Argument.requiredOf("audio", "The audio to review"))
+                        .doAction(promptContext -> {
+                            String image = promptContext.getArguments().getString("audio");
+                            return PromptResult.ofAudio(RoleEnum.User, "YXNkZmFzZGY=", "audio/wav");
+                        }))
+                .addPrompt(Prompt.of("embedded_resource_review")
+                        .title("Request Embedded Resource Review")
+                        .description("Asks the LLM to analyze embedded resource quality and suggest improvements")
+                        .doAction(promptContext -> {
+                            Resource.TextResource resource = Resource.ofText("test", "test.txt");
+                            resource.setText("Hello World");
+                            return PromptResult.ofEmbeddedResource(RoleEnum.Assistant, resource);
+                        }));
+
 
         Feat.httpServer(opt -> opt.debug(true)).httpHandler(handler).listen(3002);
     }

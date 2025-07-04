@@ -8,17 +8,21 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.cloud.mcp.server.handler;
-
-import com.alibaba.fastjson2.JSONObject;
-import tech.smartboot.feat.cloud.mcp.server.McpServer;
-import tech.smartboot.feat.core.server.HttpRequest;
+package tech.smartboot.feat.cloud.mcp.enums;
 
 /**
  * @author 三刀
- * @version v1.0 6/28/25
+ * @version v1.0 7/4/25
  */
-public interface ServerHandler {
+public enum RoleEnum {
+    User("user"), Assistant("assistant");
+    private final String role;
 
-    JSONObject apply(McpServer mcp, HttpRequest request, JSONObject jsonObject);
+    RoleEnum(String role) {
+        this.role = role;
+    }
+
+    public String getRole() {
+        return role;
+    }
 }

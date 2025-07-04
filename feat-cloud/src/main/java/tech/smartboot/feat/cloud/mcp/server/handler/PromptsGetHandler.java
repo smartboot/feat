@@ -10,8 +10,13 @@
 
 package tech.smartboot.feat.cloud.mcp.server.handler;
 
+import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.cloud.mcp.server.McpServer;
+import tech.smartboot.feat.cloud.mcp.server.McpServerException;
+import tech.smartboot.feat.cloud.mcp.server.model.Prompt;
+import tech.smartboot.feat.cloud.mcp.server.model.PromptContext;
+import tech.smartboot.feat.cloud.mcp.server.model.PromptResult;
 import tech.smartboot.feat.core.server.HttpRequest;
 
 /**
@@ -20,7 +25,21 @@ import tech.smartboot.feat.core.server.HttpRequest;
  */
 public class PromptsGetHandler implements ServerHandler {
     @Override
-    public JSONObject apply(McpServer mcpServer, HttpRequest request, JSONObject jsonObject) {
-        return null;
+    public JSONObject apply(McpServer mcp, HttpRequest request, JSONObject jsonObject) {
+        JSONObject params = jsonObject.getJSONObject("params");
+        String promptName = params.getString("name");
+        JSONObject promptParams = params.getJSONObject("arguments");
+
+        PromptContext promptContext = new PromptContext(request, promptParams);
+
+        Prompt prompt = mcp.getPrompts().stream().filter(t -> t.getName().equals(promptName)).findFirst().orElse(null);
+        if (prompt == null) {
+            throw new McpServerException(McpServerException.INTERNAL_ERROR, "Unknown prompt: " + promptName);
+        }
+        JSONObject result = new JSONObject();
+        PromptResult content = prompt.getAction().apply(promptContext);
+        result.put("messages", JSONArray.of(JSONObject.from(content)));
+        result.put("description", prompt.getDescription());
+        return result;
     }
 }

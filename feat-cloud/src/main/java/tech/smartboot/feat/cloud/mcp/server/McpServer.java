@@ -39,6 +39,14 @@ public class McpServer {
         return resources;
     }
 
+    public McpServer addPrompt(Prompt prompt) {
+        prompts.stream().filter(p -> p.getName().equals(prompt.getName())).findAny().ifPresent(p -> {
+            throw new IllegalStateException("prompt already exists");
+        });
+        prompts.add(prompt);
+        return this;
+    }
+
     public McpServer addTool(Tool tool) {
         tools.stream().filter(t -> t.getName().equals(tool.getName())).findAny().ifPresent(t -> {
             throw new IllegalStateException("tool already exists");
