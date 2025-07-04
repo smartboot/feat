@@ -232,6 +232,17 @@
                 <enabled>true</enabled>
             </snapshots>
         </repository>
+        <repository>
+            <name>Central Portal</name>
+            <id>central-portal</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
     </repositories>
     <pluginRepositories>
         <!--        <pluginRepository>-->
