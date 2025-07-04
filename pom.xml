@@ -221,11 +221,6 @@
         </pluginManagement>
     </build>
     <repositories>
-        <!--        <repository>-->
-        <!--            <id>alimaven</id>-->
-        <!--            <name>aliyun maven</name>-->
-        <!--            <url>https://maven.aliyun.com/repository/public</url>-->
-        <!--        </repository>-->
         <repository>
             <name>Central Portal Snapshots</name>
             <id>central-portal-snapshots</id>
