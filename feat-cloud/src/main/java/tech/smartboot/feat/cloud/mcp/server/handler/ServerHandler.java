@@ -8,17 +8,17 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.cloud.mcp.model;
+package tech.smartboot.feat.cloud.mcp.server.handler;
 
-public enum PropertyType {
-    Object("object"), Number("number"), String("string"), Boolean("boolean");
-    private final String type;
+import com.alibaba.fastjson2.JSONObject;
+import tech.smartboot.feat.cloud.mcp.server.McpServer;
+import tech.smartboot.feat.core.server.HttpRequest;
 
-    PropertyType(String type) {
-        this.type = type;
-    }
+/**
+ * @author 三刀
+ * @version v1.0 6/28/25
+ */
+public interface ServerHandler {
 
-    public String getType() {
-        return type;
-    }
+    JSONObject apply(McpServer mcpServer, HttpRequest request, JSONObject jsonObject);
 }

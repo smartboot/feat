@@ -8,11 +8,11 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.cloud.mcp;
+package tech.smartboot.feat.cloud.mcp.server;
 
-import tech.smartboot.feat.cloud.mcp.model.Prompt;
-import tech.smartboot.feat.cloud.mcp.model.Resource;
-import tech.smartboot.feat.cloud.mcp.model.Tool;
+import tech.smartboot.feat.cloud.mcp.server.model.Prompt;
+import tech.smartboot.feat.cloud.mcp.server.model.Resource;
+import tech.smartboot.feat.cloud.mcp.server.model.Tool;
 import tech.smartboot.feat.core.common.FeatUtils;
 
 import java.util.ArrayList;

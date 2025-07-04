@@ -8,16 +8,16 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.cloud.mcp.handler;
+package tech.smartboot.feat.cloud.mcp.server.handler;
 
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
-import tech.smartboot.feat.cloud.mcp.McpServer;
-import tech.smartboot.feat.cloud.mcp.McpServerException;
+import tech.smartboot.feat.cloud.mcp.server.McpServer;
+import tech.smartboot.feat.cloud.mcp.server.McpServerException;
 import tech.smartboot.feat.cloud.mcp.enums.ToolResultType;
-import tech.smartboot.feat.cloud.mcp.model.Tool;
-import tech.smartboot.feat.cloud.mcp.model.ToolContext;
-import tech.smartboot.feat.cloud.mcp.model.ToolResult;
+import tech.smartboot.feat.cloud.mcp.server.model.Tool;
+import tech.smartboot.feat.cloud.mcp.server.model.ToolContext;
+import tech.smartboot.feat.cloud.mcp.server.model.ToolResult;
 import tech.smartboot.feat.core.server.HttpRequest;
 
 /**

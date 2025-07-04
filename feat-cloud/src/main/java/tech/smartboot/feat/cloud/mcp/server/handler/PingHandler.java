@@ -8,17 +8,19 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.cloud.mcp.handler;
+package tech.smartboot.feat.cloud.mcp.server.handler;
 
 import com.alibaba.fastjson2.JSONObject;
-import tech.smartboot.feat.cloud.mcp.McpServer;
+import tech.smartboot.feat.cloud.mcp.server.McpServer;
 import tech.smartboot.feat.core.server.HttpRequest;
 
 /**
  * @author 三刀
  * @version v1.0 6/28/25
  */
-public interface ServerHandler {
-
-    JSONObject apply(McpServer mcpServer, HttpRequest request, JSONObject jsonObject);
+public class PingHandler implements ServerHandler {
+    @Override
+    public JSONObject apply(McpServer mcpServer, HttpRequest request, JSONObject jsonObject) {
+        return new JSONObject();
+    }
 }

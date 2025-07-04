@@ -8,7 +8,7 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.cloud.mcp.response;
+package tech.smartboot.feat.cloud.mcp.server.response;
 
 /**
  * @author 三刀

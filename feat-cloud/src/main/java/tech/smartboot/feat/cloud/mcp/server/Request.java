@@ -8,30 +8,30 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.cloud.mcp;
+package tech.smartboot.feat.cloud.mcp.server;
 
 /**
  * @author 三刀
- * @version v1.0 6/22/25
+ * @version v1.0 6/18/25
  */
-public class JsonRpc {
-    private String jsonrpc = "2.0";
+public class Request<T> extends JsonRpc {
+    private String method;
 
-    private Integer id;
+    private T params;
 
-    public String getJsonrpc() {
-        return jsonrpc;
+    public String getMethod() {
+        return method;
     }
 
-    public void setJsonrpc(String jsonrpc) {
-        this.jsonrpc = jsonrpc;
+    public void setMethod(String method) {
+        this.method = method;
     }
 
-    public Integer getId() {
-        return id;
+    public T getParams() {
+        return params;
     }
 
-    public void setId(Integer id) {
-        this.id = id;
+    public void setParams(T params) {
+        this.params = params;
     }
 }

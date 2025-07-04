@@ -8,7 +8,7 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.cloud.mcp.model;
+package tech.smartboot.feat.cloud.mcp.server.model;
 
 public class Property {
     private final String name;

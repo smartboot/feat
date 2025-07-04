@@ -8,19 +8,19 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.cloud.mcp;
+package tech.smartboot.feat.cloud.mcp.server;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.TypeReference;
-import tech.smartboot.feat.cloud.mcp.handler.ListPromptsHandler;
-import tech.smartboot.feat.cloud.mcp.handler.PingHandler;
-import tech.smartboot.feat.cloud.mcp.handler.PromptsGetHandler;
-import tech.smartboot.feat.cloud.mcp.handler.ResourcesListHandler;
-import tech.smartboot.feat.cloud.mcp.handler.ResourcesReadHandler;
-import tech.smartboot.feat.cloud.mcp.handler.ServerHandler;
-import tech.smartboot.feat.cloud.mcp.handler.ToolsCallHandler;
-import tech.smartboot.feat.cloud.mcp.handler.ToolsListHandler;
+import tech.smartboot.feat.cloud.mcp.server.handler.ListPromptsHandler;
+import tech.smartboot.feat.cloud.mcp.server.handler.PingHandler;
+import tech.smartboot.feat.cloud.mcp.server.handler.PromptsGetHandler;
+import tech.smartboot.feat.cloud.mcp.server.handler.ResourcesListHandler;
+import tech.smartboot.feat.cloud.mcp.server.handler.ResourcesReadHandler;
+import tech.smartboot.feat.cloud.mcp.server.handler.ServerHandler;
+import tech.smartboot.feat.cloud.mcp.server.handler.ToolsCallHandler;
+import tech.smartboot.feat.cloud.mcp.server.handler.ToolsListHandler;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;

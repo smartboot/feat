@@ -8,14 +8,14 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.cloud.mcp;
+package tech.smartboot.feat.cloud.mcp.server;
 
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.Feat;
-import tech.smartboot.feat.cloud.mcp.model.Property;
-import tech.smartboot.feat.cloud.mcp.model.Resource;
-import tech.smartboot.feat.cloud.mcp.model.Tool;
-import tech.smartboot.feat.cloud.mcp.model.ToolResult;
+import tech.smartboot.feat.cloud.mcp.server.model.Property;
+import tech.smartboot.feat.cloud.mcp.server.model.Resource;
+import tech.smartboot.feat.cloud.mcp.server.model.Tool;
+import tech.smartboot.feat.cloud.mcp.server.model.ToolResult;
 
 /**
  * @author 三刀
