@@ -17,6 +17,7 @@ import com.alibaba.fastjson2.JSONObject;
  * @version v1.0 7/4/25
  */
 public class McpServerException extends RuntimeException {
+    public static final int RESOURCE_NOT_FOUND = -32002;
     /**
      * Invalid Parameters
      */

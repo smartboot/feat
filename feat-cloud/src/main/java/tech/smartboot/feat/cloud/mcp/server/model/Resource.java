@@ -10,6 +10,8 @@
 
 package tech.smartboot.feat.cloud.mcp.server.model;
 
+import java.util.function.Function;
+
 /**
  * @author 三刀
  * @version v1.0 6/28/25
@@ -18,25 +20,52 @@ public class Resource {
     private final String uri;
     private final String name;
     private String title;
-    private String mimeType;
+    private final String mimeType;
     private String description;
     private String size;
+    private Function<ResourceContext, Resource> action;
 
-    Resource(String uri, String name) {
+    Resource(String uri, String name, String mimeType) {
         this.uri = uri;
         this.name = name;
+        this.mimeType = mimeType;
+    }
+
+    public Resource doAction(Function<ResourceContext, Resource> action) {
+        this.action = action;
+        return this;
+    }
+
+    public Function<ResourceContext, Resource> getAction() {
+        return action;
     }
 
     public static Resource of(String uri, String name) {
-        return new Resource(uri, name);
+        return new Resource(uri, name, null);
     }
 
-    public static TextResource ofText(String uri, String name) {
-        return new TextResource(uri, name);
+    public static Resource of(String uri, String name, String mimeType) {
+        return new Resource(uri, name, mimeType);
     }
 
-    public static BinaryResource ofBinary(String uri, String name) {
-        return new BinaryResource(uri, name);
+    public static TextResource ofText(String uri, String name, String text) {
+        return ofText(uri, name, "text/plain", text);
+    }
+
+    public static TextResource ofText(String uri, String name, String mimeType, String text) {
+        return new TextResource(Resource.of(uri, name, mimeType), text);
+    }
+
+    public static TextResource ofText(Resource resource, String text) {
+        return new TextResource(resource, text);
+    }
+
+    public static BinaryResource ofBinary(String uri, String name, String mimeType, String blob) {
+        return new BinaryResource(Resource.of(uri, name, mimeType), blob);
+    }
+
+    public static BinaryResource ofBinary(Resource resource, String blob) {
+        return new BinaryResource(resource, blob);
     }
 
     public String getUri() {
@@ -61,11 +90,6 @@ public class Resource {
         return mimeType;
     }
 
-    public Resource setMimeType(String mimeType) {
-        this.mimeType = mimeType;
-        return this;
-    }
-
     public String getDescription() {
         return description;
     }
@@ -83,44 +107,28 @@ public class Resource {
     }
 
     public static class TextResource extends Resource {
-        private String text;
+        private final String text;
 
-        public TextResource(String uri, String name) {
-            super(uri, name);
-            setMimeType("text/plain");
+        public TextResource(Resource resource, String text) {
+            super(resource.uri, resource.name, resource.mimeType);
+            this.text = text;
         }
 
         public String getText() {
             return text;
         }
-
-        public TextResource setText(String text) {
-            this.text = text;
-            return this;
-        }
-
-        @Override
-        public TextResource setMimeType(String mimeType) {
-            super.setMimeType(mimeType);
-            return this;
-        }
     }
 
     public static class BinaryResource extends Resource {
-        private String blob;
+        private final String blob;
 
-        BinaryResource(String uri, String name) {
-            super(uri, name);
+        BinaryResource(Resource resource, String blob) {
+            super(resource.uri, resource.name, resource.mimeType);
+            this.blob = blob;
         }
 
         public String getBlob() {
             return blob;
-        }
-
-        public BinaryResource setBlob(String mimeType, String blob) {
-            setMimeType(mimeType);
-            this.blob = blob;
-            return this;
         }
     }
 }

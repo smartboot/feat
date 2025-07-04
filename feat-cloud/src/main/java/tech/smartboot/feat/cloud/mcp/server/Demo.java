@@ -46,9 +46,6 @@ public class Demo {
             throw new IllegalStateException("exception...");
         })).addTool(structTool);
 
-
-        handler.getMcp().addResource(Resource.of("test", "test.txt")).addResource(Resource.ofText("test2", "test2.txt").setText("Hello World")).addResource(Resource.ofBinary("test3", "test3.txt").setBlob("text/plain", "Hello World"));
-
         //prompt
         mcp.addPrompt(Prompt.of("code_review")
                         .title("Request Code Review")
@@ -78,11 +75,17 @@ public class Demo {
                         .title("Request Embedded Resource Review")
                         .description("Asks the LLM to analyze embedded resource quality and suggest improvements")
                         .doAction(promptContext -> {
-                            Resource.TextResource resource = Resource.ofText("test", "test.txt");
-                            resource.setText("Hello World");
+                            Resource.TextResource resource = Resource.ofText("test", "test.txt", "Hello World");
                             return PromptResult.ofEmbeddedResource(RoleEnum.Assistant, resource);
                         }));
 
+        // resources
+        mcp.addResource(Resource.of("test", "test.txt").doAction(resourceContext -> {
+            return Resource.ofText(resourceContext.getResource(), "contentcontentcontentcontentcontent");
+        }));
+        mcp.addResource(Resource.of("bbbbb", "test.bin").doAction(resourceContext -> {
+            return Resource.ofBinary(resourceContext.getResource(), "YXNkZmFzZGY=");
+        }));
 
         Feat.httpServer(opt -> opt.debug(true)).httpHandler(handler).listen(3002);
     }
