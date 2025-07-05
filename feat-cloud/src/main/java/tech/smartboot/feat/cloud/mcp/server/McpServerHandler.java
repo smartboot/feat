@@ -13,7 +13,9 @@ package tech.smartboot.feat.cloud.mcp.server;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.TypeReference;
+import tech.smartboot.feat.cloud.mcp.server.handler.CompletionCompleteHandler;
 import tech.smartboot.feat.cloud.mcp.server.handler.ListPromptsHandler;
+import tech.smartboot.feat.cloud.mcp.server.handler.LoggingSetLevelHandler;
 import tech.smartboot.feat.cloud.mcp.server.handler.PingHandler;
 import tech.smartboot.feat.cloud.mcp.server.handler.PromptsGetHandler;
 import tech.smartboot.feat.cloud.mcp.server.handler.ResourcesListHandler;
@@ -53,6 +55,8 @@ public class McpServerHandler implements HttpHandler {
         handlers.put("resources/list", new ResourcesListHandler());
         handlers.put("resources/read", new ResourcesReadHandler());
         handlers.put("resources/templates/list", new ResourcesTemplateListHandler());
+        handlers.put("completion/complete", new CompletionCompleteHandler());
+        handlers.put("logging/setLevel", new LoggingSetLevelHandler());
         handlers.put("ping", new PingHandler());
     }
 

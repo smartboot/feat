@@ -24,6 +24,7 @@ public class Prompt {
     private String title;
     private String description;
     private final List<Argument> arguments = new ArrayList<>();
+    private Function<PromptContext, PromptResult> action;
 
     private Prompt(String name) {
         this.name = name;
@@ -34,7 +35,7 @@ public class Prompt {
     }
 
 
-    private Function<PromptContext, PromptResult> action;
+
 
     public String getName() {
         return name;
