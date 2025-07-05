@@ -29,6 +29,7 @@ import tech.smartboot.feat.cloud.mcp.server.model.Resource;
 import tech.smartboot.feat.cloud.mcp.server.model.ResourceTemplate;
 import tech.smartboot.feat.cloud.mcp.server.model.Tool;
 import tech.smartboot.feat.core.common.FeatUtils;
+import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.exception.HttpException;
@@ -248,6 +249,44 @@ public class McpServer {
             Response response = jsonRpcHandle(session, ctx.Request);
             if (response != null) {
                 session.getSseEmitter().send(JSONObject.toJSONString(response));
+            }
+        };
+    }
+
+    public RouterHandler mcpHandler() {
+        return ctx -> {
+            HttpRequest request = ctx.Request;
+            String sessionId = request.getHeader("mcp-session-id");
+            StreamSession session;
+            if (sessionId == null) {
+                session = new StreamSession();
+                sessionId = session.getSessionId();
+                sseEmitters.put(session.getSessionId(), session);
+            } else {
+                session = sseEmitters.get(sessionId);
+            }
+            if (session == null) {
+                request.getResponse().setHttpStatus(HttpStatus.UNAUTHORIZED);
+                request.getResponse().close();
+                return;
+            }
+            if (request.getContentType() == null && HeaderValue.ContentType.EVENT_STREAM.equalsIgnoreCase(request.getHeader(HeaderName.ACCEPT))) {
+                request.upgrade(new SSEUpgrade() {
+                    @Override
+                    public void onOpen(SseEmitter sseEmitter) throws IOException {
+//                    sseEmitter.send(SseEventBuilder.event().name("init").data("init"));
+                        System.out.println("onOpen");
+                    }
+                });
+                return;
+            }
+            Response response = jsonRpcHandle(session, request);
+            if (response != null) {
+                byte[] bytes = JSON.toJSONBytes(response);
+                request.getResponse().setContentLength(bytes.length);
+                request.getResponse().setContentType(HeaderValue.ContentType.APPLICATION_JSON);
+                request.getResponse().setHeader("Mcp-Session-Id", sessionId);
+                request.getResponse().write(bytes);
             }
         };
     }

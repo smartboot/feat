@@ -42,8 +42,7 @@ public class Demo {
             return ToolResult.ofStructuredContent(j);
         });
 
-        McpServerHandler handler = new McpServerHandler();
-        McpServer mcp = handler.getMcp();
+        McpServer mcp = new McpServer();
         mcp.addTool(tool).addTool(Tool.of("errorTool").inputSchema(Property.withString("aa", "aa")).doAction(jsonObject -> {
             throw new IllegalStateException("exception...");
         })).addTool(structTool);
@@ -95,7 +94,7 @@ public class Demo {
         Router router = new Router();
         router.route(mcp.getOptions().getSseEndpoint(), mcp.sseHandler());
         router.route(mcp.getOptions().getSseMessageEndpoint(), mcp.sseMessageHandler());
-        router.route(mcp.getOptions().getMcpEndpoint(), handler);
+        router.route(mcp.getOptions().getMcpEndpoint(), mcp.mcpHandler());
         Feat.httpServer(opt -> opt.debug(true)).httpHandler(router).listen(3002);
     }
 }
