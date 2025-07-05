@@ -11,149 +11,67 @@
 package tech.smartboot.feat.cloud.mcp.server;
 
 import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONObject;
-import com.alibaba.fastjson2.TypeReference;
-import tech.smartboot.feat.cloud.mcp.server.handler.CompletionCompleteHandler;
-import tech.smartboot.feat.cloud.mcp.server.handler.ListPromptsHandler;
-import tech.smartboot.feat.cloud.mcp.server.handler.LoggingSetLevelHandler;
-import tech.smartboot.feat.cloud.mcp.server.handler.PingHandler;
-import tech.smartboot.feat.cloud.mcp.server.handler.PromptsGetHandler;
-import tech.smartboot.feat.cloud.mcp.server.handler.ResourcesListHandler;
-import tech.smartboot.feat.cloud.mcp.server.handler.ResourcesReadHandler;
-import tech.smartboot.feat.cloud.mcp.server.handler.ResourcesTemplateListHandler;
-import tech.smartboot.feat.cloud.mcp.server.handler.ServerHandler;
-import tech.smartboot.feat.cloud.mcp.server.handler.ToolsCallHandler;
-import tech.smartboot.feat.cloud.mcp.server.handler.ToolsListHandler;
-import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpStatus;
-import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.impl.HttpEndpoint;
 import tech.smartboot.feat.core.server.upgrade.sse.SSEUpgrade;
 import tech.smartboot.feat.core.server.upgrade.sse.SseEmitter;
+import tech.smartboot.feat.router.Context;
+import tech.smartboot.feat.router.RouterHandler;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * @author 三刀
  * @version v1.0 6/22/25
  */
-public class McpServerHandler implements HttpHandler {
-    private final McpServer mcp = new McpServer();
-    private final Map<String, StreamSession> sseEmitters = new HashMap<>();
-    private final Map<String, ServerHandler> handlers = new HashMap<>();
+public class McpServerHandler implements RouterHandler {
 
-    {
-        handlers.put("tools/list", new ToolsListHandler());
-        handlers.put("tools/call", new ToolsCallHandler());
-        handlers.put("prompts/list", new ListPromptsHandler());
-        handlers.put("prompts/get", new PromptsGetHandler());
-        handlers.put("resources/list", new ResourcesListHandler());
-        handlers.put("resources/read", new ResourcesReadHandler());
-        handlers.put("resources/templates/list", new ResourcesTemplateListHandler());
-        handlers.put("completion/complete", new CompletionCompleteHandler());
-        handlers.put("logging/setLevel", new LoggingSetLevelHandler());
-        handlers.put("ping", new PingHandler());
-    }
+    private final McpServer mcp = new McpServer();
+
 
     @Override
-    public void handle(HttpRequest request) throws Throwable {
+    public void handle(Context context) throws Throwable {
+        HttpRequest request = context.Request;
         String sessionId = request.getHeader("mcp-session-id");
         StreamSession session;
         if (sessionId == null) {
             session = new StreamSession();
             sessionId = session.getSessionId();
-            sseEmitters.put(session.getSessionId(), session);
+            mcp.getSseEmitters().put(session.getSessionId(), session);
         } else {
-            session = sseEmitters.get(sessionId);
+            session = mcp.getSseEmitters().get(sessionId);
         }
         if (session == null) {
             request.getResponse().setHttpStatus(HttpStatus.UNAUTHORIZED);
             request.getResponse().close();
             return;
         }
-        switch (session.getState()) {
-            case StreamSession.STATE_INITIALIZE: {
-                Request<McpInitializeRequest> req = JSON.parseObject(FeatUtils.asString(request.getInputStream()), new TypeReference<Request<McpInitializeRequest>>() {
-                });
-                if (req == null) {
-                    request.getResponse().close();
-                    return;
+        if (request.getContentType() == null && HeaderValue.ContentType.EVENT_STREAM.equalsIgnoreCase(request.getHeader(HeaderName.ACCEPT))) {
+            request.upgrade(new SSEUpgrade() {
+                @Override
+                public void onOpen(SseEmitter sseEmitter) throws IOException {
+//                    sseEmitter.send(SseEventBuilder.event().name("init").data("init"));
+                    System.out.println("onOpen");
                 }
-                Response<McpInitializeResponse> rsp = new Response<>();
-                rsp.setId(req.getId());
-                McpInitializeResponse initializeResponse = McpInitializeResponse.builder().loggingEnable().promptsEnable().resourceEnable().toolEnable().build();
-                rsp.setResult(initializeResponse);
-                byte[] bytes = JSON.toJSONBytes(rsp);
-                request.getResponse().setContentLength(bytes.length);
-                request.getResponse().setContentType(HeaderValue.ContentType.APPLICATION_JSON);
-                request.getResponse().setHeader("Mcp-Session-Id", sessionId);
-                request.getResponse().write(bytes);
-                session.setState(StreamSession.STATE_INITIALIZED);
-                break;
-            }
-            case StreamSession.STATE_INITIALIZED: {
-                String json1 = FeatUtils.asString(request.getInputStream());
-                System.out.println(json1);
-                session.setState(StreamSession.STATE_READY);
-                request.getResponse().setHttpStatus(HttpStatus.ACCEPTED);
-                break;
-            }
-
-            case StreamSession.STATE_READY: {
-                System.out.println("ready: " + request);
-                if (HeaderValue.ContentType.APPLICATION_JSON.equals(request.getContentType())) {
-                    JSONObject jsonObject = JSON.parseObject(request.getInputStream());
-                    String method = jsonObject.getString("method");
-                    ServerHandler handler = handlers.get(method);
-                    Response<JSONObject> response = new Response<>();
-
-                    try {
-                        JSONObject result = handler.apply(mcp, request, jsonObject);
-                        response.setResult(result);
-                    } catch (McpServerException e) {
-                        JSONObject error = new JSONObject();
-                        error.put("code", e.getCode());
-                        error.put("message", e.getMessage());
-                        error.put("data", e.getData());
-                        response.setError(error);
-                    } catch (Throwable e) {
-                        JSONObject error = new JSONObject();
-                        error.put("code", -32603);
-                        error.put("message", e.getMessage());
-                        response.setError(error);
-                    }
-                    response.setId(jsonObject.getInteger("id"));
-
-
-                    byte[] bytes = JSON.toJSONBytes(response);
-                    request.getResponse().setContentLength(bytes.length);
-                    request.getResponse().setContentType(HeaderValue.ContentType.APPLICATION_JSON);
-                    request.getResponse().write(bytes);
-                    return;
-                }
-
-                if ("text/event-stream".equalsIgnoreCase(request.getHeader(HeaderName.ACCEPT.getName()))) {
-                    request.upgrade(new SSEUpgrade() {
-                        @Override
-                        public void onOpen(SseEmitter sseEmitter) throws IOException {
-
-                        }
-                    });
-                }
-
-                break;
-            }
+            });
+            return;
+        }
+        Response response = mcp.jsonRpcHandle(session, request);
+        if (response != null) {
+            byte[] bytes = JSON.toJSONBytes(response);
+            request.getResponse().setContentLength(bytes.length);
+            request.getResponse().setContentType(HeaderValue.ContentType.APPLICATION_JSON);
+            request.getResponse().setHeader("Mcp-Session-Id", sessionId);
+            request.getResponse().write(bytes);
         }
     }
 
     @Override
     public void onClose(HttpEndpoint request) {
-        sseEmitters.remove(request);
+        mcp.getSseEmitters().remove(request);
     }
 
     public McpServer getMcp() {

@@ -21,6 +21,7 @@ import tech.smartboot.feat.cloud.mcp.server.model.Resource;
 import tech.smartboot.feat.cloud.mcp.server.model.ResourceTemplate;
 import tech.smartboot.feat.cloud.mcp.server.model.Tool;
 import tech.smartboot.feat.cloud.mcp.server.model.ToolResult;
+import tech.smartboot.feat.router.Router;
 
 /**
  * @author 三刀
@@ -91,6 +92,10 @@ public class Demo {
         // resourceTemplate
         mcp.addResourceTemplate(ResourceTemplate.of("file:///{path}", "testTemplate").title("\uD83D\uDCC1 Project Files").description("Access files in the project directory").mimeType("application/octet-stream"));
 
-        Feat.httpServer(opt -> opt.debug(true)).httpHandler(handler).listen(3002);
+        Router router = new Router();
+        router.route(mcp.getOptions().getSseEndpoint(), mcp.sseHandler());
+        router.route(mcp.getOptions().getSseMessageEndpoint(), mcp.sseMessageHandler());
+        router.route(mcp.getOptions().getMcpEndpoint(), handler);
+        Feat.httpServer(opt -> opt.debug(true)).httpHandler(router).listen(3002);
     }
 }

@@ -10,6 +10,8 @@
 
 package tech.smartboot.feat.cloud.mcp.server;
 
+import tech.smartboot.feat.core.server.upgrade.sse.SseEmitter;
+
 import java.util.UUID;
 
 /**
@@ -21,6 +23,7 @@ public class StreamSession {
     public static final int STATE_INITIALIZED = 2;
     public static final int STATE_READY = 3;
     private int state = STATE_INITIALIZE;
+    private SseEmitter sseEmitter;
     private final String sessionId = UUID.randomUUID().toString();
 
     public int getState() {
@@ -35,4 +38,11 @@ public class StreamSession {
         return sessionId;
     }
 
+    public SseEmitter getSseEmitter() {
+        return sseEmitter;
+    }
+
+    public void setSseEmitter(SseEmitter sseEmitter) {
+        this.sseEmitter = sseEmitter;
+    }
 }
