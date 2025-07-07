@@ -10,10 +10,20 @@
 
 package tech.smartboot.feat.cloud.mcp.server;
 
+import com.alibaba.fastjson2.JSONArray;
+import com.alibaba.fastjson2.JSONObject;
+import tech.smartboot.feat.cloud.mcp.server.model.Roots;
 import tech.smartboot.feat.core.common.FeatUtils;
+import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.server.upgrade.sse.SseEmitter;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 /**
  * @author 三刀
@@ -28,6 +38,8 @@ public class StreamSession {
     private final String sessionId = FeatUtils.createSessionId();
     private McpInitializeRequest initializeRequest;
     private final AtomicInteger id = new AtomicInteger(0);
+    private final Map<Integer, Consumer<JSONObject>> responseCallbacks = new ConcurrentHashMap<>();
+    private final List<Roots> roots = new ArrayList<>();
 
     public int getState() {
         return state;
@@ -59,5 +71,37 @@ public class StreamSession {
 
     public AtomicInteger getId() {
         return id;
+    }
+
+    public void registerResponse(int id, Consumer<JSONObject> response) {
+        if (responseCallbacks.containsKey(id)) {
+            throw new FeatException("response " + id + " already exists");
+        }
+        responseCallbacks.put(id, response);
+    }
+
+    public Consumer<JSONObject> doResponse(int id) {
+        return responseCallbacks.remove(id);
+    }
+
+    void rootsList() throws IOException {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("jsonrpc", "2.0");
+        jsonObject.put("method", "roots/list");
+        int id = getId().incrementAndGet();
+        jsonObject.put("id", id);
+        registerResponse(id, result -> {
+            JSONArray array = result.getJSONArray("roots");
+            roots.clear();
+            roots.addAll(array.toList(Roots.class));
+            for (Roots root : roots) {
+                System.out.println("root:" + root);
+            }
+        });
+        sseEmitter.send(SseEmitter.event().data(jsonObject.toString()));
+    }
+
+    void sampling(){
+
     }
 }

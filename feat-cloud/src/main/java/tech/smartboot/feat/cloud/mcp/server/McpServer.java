@@ -32,6 +32,7 @@ import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpStatus;
+import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.upgrade.sse.SSEUpgrade;
@@ -44,6 +45,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 
 /**
  * @author 三刀
@@ -173,6 +175,21 @@ public class McpServer {
                 if (HeaderValue.ContentType.APPLICATION_JSON.equals(request.getContentType())) {
                     JSONObject jsonObject = JSON.parseObject(request.getInputStream());
                     String method = jsonObject.getString("method");
+                    if (FeatUtils.isBlank(method)) {
+                        int id = jsonObject.getIntValue("id", -1);
+                        Consumer<JSONObject> response = session.doResponse(id);
+                        if (response != null) {
+                            response.accept(jsonObject.getJSONObject("result"));
+                            return null;
+                        } else {
+                            throw new FeatException("method is null");
+                        }
+                    } else if ("notifications/roots/list_changed".equalsIgnoreCase(method)) {
+                        session.rootsList();
+                        return null;
+                    }
+
+
                     ServerHandler handler = handlers.get(method);
                     Response<JSONObject> response = new Response<>();
 
@@ -203,11 +220,7 @@ public class McpServer {
     private void initialized(StreamSession session) throws IOException {
         Capability roots = session.getInitializeRequest().getCapabilities().getRoots();
         if (roots != null && roots.isListChanged()) {
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("jsonrpc", "2.0");
-            jsonObject.put("method", "roots/list");
-            jsonObject.put("id", session.getId().incrementAndGet());
-            session.getSseEmitter().send(SseEmitter.event().data(jsonObject.toString()));
+            session.rootsList();
         }
     }
 
