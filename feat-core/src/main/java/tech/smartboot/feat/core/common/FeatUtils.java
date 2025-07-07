@@ -14,6 +14,7 @@ import org.smartboot.socket.timer.HashedWheelTimer;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.utils.ByteTree;
+import tech.smartboot.feat.core.server.ServerOptions;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -26,12 +27,14 @@ import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Random;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
@@ -683,5 +686,33 @@ public class FeatUtils {
         while (buffer.hasRemaining() && buffer.get(buffer.position()) == FeatUtils.SP) {
             buffer.position(buffer.position() + 1);
         }
+    }
+
+    private final static byte[] DEFAULT_BYTES = ("feat:" + ServerOptions.VERSION).getBytes();
+    private final static int maskLength = 4;
+    private final static String MAGIC_NUMBER = "feat-";
+
+    public static String createSessionId() {
+        Random random = new Random();
+        //掩码+固定前缀+时间戳
+        byte[] bytes = new byte[maskLength + DEFAULT_BYTES.length + Integer.BYTES];
+
+        for (int i = 0; i < maskLength; ) {
+            for (int rnd = random.nextInt(), n = Math.min(maskLength - i, Integer.SIZE / Byte.SIZE); n-- > 0; rnd >>= Byte.SIZE)
+                bytes[i++] = (byte) rnd;
+        }
+        System.arraycopy(DEFAULT_BYTES, 0, bytes, maskLength, DEFAULT_BYTES.length);
+        //将System.nanoTime()填充至bytes后四字节
+        int time = (int) System.nanoTime();
+        bytes[maskLength + DEFAULT_BYTES.length] = (byte) (time >>> 24);
+        bytes[maskLength + DEFAULT_BYTES.length + 1] = (byte) (time >>> 16);
+        bytes[maskLength + DEFAULT_BYTES.length + 2] = (byte) (time >>> 8);
+        bytes[maskLength + DEFAULT_BYTES.length + 3] = (byte) (time);
+
+        for (int i = maskLength; i < bytes.length; i++) {
+            bytes[i] = (byte) (bytes[i] ^ bytes[i % maskLength]);
+        }
+
+        return MAGIC_NUMBER + Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
 }

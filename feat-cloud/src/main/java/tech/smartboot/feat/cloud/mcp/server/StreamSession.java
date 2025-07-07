@@ -10,9 +10,10 @@
 
 package tech.smartboot.feat.cloud.mcp.server;
 
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.server.upgrade.sse.SseEmitter;
 
-import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author 三刀
@@ -24,7 +25,9 @@ public class StreamSession {
     public static final int STATE_READY = 3;
     private int state = STATE_INITIALIZE;
     private SseEmitter sseEmitter;
-    private final String sessionId = UUID.randomUUID().toString();
+    private final String sessionId = FeatUtils.createSessionId();
+    private McpInitializeRequest initializeRequest;
+    private final AtomicInteger id = new AtomicInteger(0);
 
     public int getState() {
         return state;
@@ -44,5 +47,17 @@ public class StreamSession {
 
     public void setSseEmitter(SseEmitter sseEmitter) {
         this.sseEmitter = sseEmitter;
+    }
+
+    public McpInitializeRequest getInitializeRequest() {
+        return initializeRequest;
+    }
+
+    public void setInitializeRequest(McpInitializeRequest initializeRequest) {
+        this.initializeRequest = initializeRequest;
+    }
+
+    public AtomicInteger getId() {
+        return id;
     }
 }

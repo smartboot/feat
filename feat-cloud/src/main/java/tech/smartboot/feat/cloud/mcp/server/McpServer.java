@@ -39,7 +39,6 @@ import tech.smartboot.feat.core.server.upgrade.sse.SseEmitter;
 import tech.smartboot.feat.router.RouterHandler;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -51,7 +50,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @version v1.0 6/28/25
  */
 public class McpServer {
-    private McpOptions options = new McpOptions();
+    private final McpOptions options = new McpOptions();
     private final Map<String, ServerHandler> handlers = new HashMap<>();
 
     {
@@ -153,16 +152,11 @@ public class McpServer {
                     request.getResponse().close();
                     throw new HttpException(HttpStatus.BAD_REQUEST);
                 }
+                session.setInitializeRequest(req.getParams());
                 Response<McpInitializeResponse> rsp = new Response<>();
                 rsp.setId(req.getId());
                 McpInitializeResponse initializeResponse = McpInitializeResponse.builder().loggingEnable().promptsEnable().resourceEnable().toolEnable().build();
                 rsp.setResult(initializeResponse);
-
-                byte[] bytes = JSON.toJSONBytes(rsp);
-                request.getResponse().setContentLength(bytes.length);
-                request.getResponse().setContentType(HeaderValue.ContentType.APPLICATION_JSON);
-                request.getResponse().setHeader("Mcp-Session-Id", session.getSessionId());
-                request.getResponse().write(bytes);
                 session.setState(StreamSession.STATE_INITIALIZED);
                 return rsp;
             }
@@ -206,6 +200,17 @@ public class McpServer {
         throw new RuntimeException("Not Found");
     }
 
+    private void initialized(StreamSession session) throws IOException {
+        Capability roots = session.getInitializeRequest().getCapabilities().getRoots();
+        if (roots != null && roots.isListChanged()) {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("jsonrpc", "2.0");
+            jsonObject.put("method", "roots/list");
+            jsonObject.put("id", session.getId().incrementAndGet());
+            session.getSseEmitter().send(SseEmitter.event().data(jsonObject.toString()));
+        }
+    }
+
     public RouterHandler sseHandler() {
         return ctx -> {
             String sessionId = ctx.Request.getHeader("mcp-session-id");
@@ -231,13 +236,6 @@ public class McpServer {
                     session.setSseEmitter(sseEmitter);
                     sseEmitter.send(SseEmitter.event().name("endpoint").data(options.getSseMessageEndpoint() + "?session_id=" + session.getSessionId()));
                 }
-
-                @Override
-                public void onBodyStream(ByteBuffer buffer) {
-                    byte[] bytes = new byte[buffer.remaining()];
-                    buffer.get(bytes);
-                    System.out.println("cc: " + new String(bytes));
-                }
             });
         };
     }
@@ -246,9 +244,12 @@ public class McpServer {
         return ctx -> {
             StreamSession session = sseEmitters.get(ctx.Request.getParameter("session_id"));
             ctx.Response.setHttpStatus(HttpStatus.ACCEPTED);
+            int preStatus = session.getState();
             Response response = jsonRpcHandle(session, ctx.Request);
             if (response != null) {
                 session.getSseEmitter().send(JSONObject.toJSONString(response));
+            } else if (preStatus == StreamSession.STATE_INITIALIZED && session.getState() == StreamSession.STATE_READY) {
+                initialized(session);
             }
         };
     }
@@ -274,7 +275,11 @@ public class McpServer {
                 request.upgrade(new SSEUpgrade() {
                     @Override
                     public void onOpen(SseEmitter sseEmitter) throws IOException {
-//                    sseEmitter.send(SseEventBuilder.event().name("init").data("init"));
+                        if (session.getSseEmitter() != null) {
+                            session.getSseEmitter().complete();
+                        }
+                        session.setSseEmitter(sseEmitter);
+                        initialized(session);
                         System.out.println("onOpen");
                     }
                 });
@@ -285,7 +290,9 @@ public class McpServer {
                 byte[] bytes = JSON.toJSONBytes(response);
                 request.getResponse().setContentLength(bytes.length);
                 request.getResponse().setContentType(HeaderValue.ContentType.APPLICATION_JSON);
-                request.getResponse().setHeader("Mcp-Session-Id", sessionId);
+                if (response.getResult() instanceof McpInitializeResponse) {
+                    request.getResponse().setHeader("Mcp-Session-Id", sessionId);
+                }
                 request.getResponse().write(bytes);
             }
         };
