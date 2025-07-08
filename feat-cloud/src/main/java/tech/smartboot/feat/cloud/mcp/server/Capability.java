@@ -10,6 +10,8 @@
 
 package tech.smartboot.feat.cloud.mcp.server;
 
+import com.alibaba.fastjson2.annotation.JSONField;
+
 public class Capability {
     /**
      * Support for list change notifications (for prompts, resources, and tools)

@@ -13,6 +13,8 @@ package tech.smartboot.feat.cloud.mcp.server;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.TypeReference;
+import tech.smartboot.feat.cloud.mcp.McpInitializeRequest;
+import tech.smartboot.feat.cloud.mcp.McpInitializeResponse;
 import tech.smartboot.feat.cloud.mcp.server.handler.CompletionCompleteHandler;
 import tech.smartboot.feat.cloud.mcp.server.handler.ListPromptsHandler;
 import tech.smartboot.feat.cloud.mcp.server.handler.LoggingSetLevelHandler;
@@ -218,8 +220,12 @@ public class McpServer {
     }
 
     private void initialized(StreamSession session) throws IOException {
-        Capability roots = session.getInitializeRequest().getCapabilities().getRoots();
-        if (roots != null && roots.isListChanged()) {
+        JSONObject capabilities = session.getInitializeRequest().getCapabilities();
+        if (capabilities == null) {
+            return;
+        }
+        JSONObject roots = capabilities.getJSONObject("roots");
+        if (roots != null && roots.getBoolean("rootsEnabled")) {
             session.rootsList();
         }
     }

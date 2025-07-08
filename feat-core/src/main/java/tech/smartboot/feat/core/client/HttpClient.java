@@ -26,6 +26,7 @@ import java.util.Base64;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Semaphore;
+import java.util.function.Consumer;
 
 /**
  * @author 三刀(zhengjunweimail @ 163.com)
@@ -124,19 +125,25 @@ public final class HttpClient {
         HttpRestImpl httpRestImpl = new HttpRestImpl(client.getSession(), queue, connectThrowable) {
             @Override
             public CompletableFuture<HttpResponse> submit() {
-                try {
-                    if (connectThrowable != null) {
-                        CompletableFuture future = getCompletableFuture();
-                        future.completeExceptionally(connectThrowable);
-                        connectThrowable = null;
-                        return future;
-                    }
-                    return super.submit();
-                } finally {
-                    if (HeaderValue.Connection.KEEPALIVE.equals(getRequest().getHeader(HeaderName.CONNECTION))) {
-                        semaphore.release();
-                    }
+                if (connectThrowable != null) {
+                    CompletableFuture future = getCompletableFuture();
+                    future.completeExceptionally(connectThrowable);
+                    connectThrowable = null;
+                    return future;
                 }
+                return super.submit();
+            }
+
+            @Override
+            public HttpRestImpl onSuccess(Consumer<HttpResponse> consumer) {
+                semaphore.release();
+                return super.onSuccess(consumer);
+            }
+
+            @Override
+            public HttpRestImpl onFailure(Consumer<Throwable> consumer) {
+                semaphore.release();
+                return super.onFailure(consumer);
             }
         };
         initRest(httpRestImpl, uri);

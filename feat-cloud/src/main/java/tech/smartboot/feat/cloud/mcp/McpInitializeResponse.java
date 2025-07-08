@@ -8,7 +8,11 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.cloud.mcp.server;
+package tech.smartboot.feat.cloud.mcp;
+
+import tech.smartboot.feat.cloud.mcp.server.Capability;
+import tech.smartboot.feat.cloud.mcp.server.Implementation;
+import tech.smartboot.feat.cloud.mcp.server.Response;
 
 /**
  * @author 三刀
