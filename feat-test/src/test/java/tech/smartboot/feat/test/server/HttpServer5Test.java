@@ -14,6 +14,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
@@ -32,7 +33,7 @@ import java.nio.charset.StandardCharsets;
 public class HttpServer5Test extends BastTest {
     HttpClient httpClient;
     HttpServer bootstrap;
-    private String serverName = "feat/" + ServerOptions.VERSION;
+    private String serverName = "feat/" + Feat.VERSION;
 
     @Before
     public void init() {

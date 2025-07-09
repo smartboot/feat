@@ -11,10 +11,12 @@
 package tech.smartboot.feat.cloud.mcp.client;
 
 import com.alibaba.fastjson2.JSONObject;
+import com.alibaba.fastjson2.TypeReference;
 import tech.smartboot.feat.cloud.mcp.McpInitializeRequest;
 import tech.smartboot.feat.cloud.mcp.McpInitializeResponse;
-import tech.smartboot.feat.cloud.mcp.server.Implementation;
+import tech.smartboot.feat.cloud.mcp.enums.TransportTypeEnum;
 import tech.smartboot.feat.cloud.mcp.server.Request;
+import tech.smartboot.feat.cloud.mcp.server.Response;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpRest;
 import tech.smartboot.feat.core.common.FeatUtils;
@@ -32,28 +34,28 @@ public class McpClient {
     private final McpOptions options;
     private HttpClient httpClient;
     private String sessionId;
+    private TransportTypeEnum transportType;
 
-    private McpClient(McpOptions options) {
+    private McpClient(McpOptions options, TransportTypeEnum transportType) {
         this.options = options;
         httpClient = new HttpClient(options.getBaseUrl());
+        this.transportType = transportType;
     }
 
     public static McpClient newSseClient(Consumer<McpOptions> opt) {
         McpOptions options = new McpOptions();
         opt.accept(options);
-        options.setType("sse");
-        return new McpClient(options);
+        return new McpClient(options, TransportTypeEnum.Sse);
     }
 
     public static McpClient newStreamableClient(Consumer<McpOptions> opt) {
         McpOptions options = new McpOptions();
         opt.accept(options);
-        options.setType("streamable");
-        return new McpClient(options);
+        return new McpClient(options, TransportTypeEnum.Streamable);
     }
 
-    public CompletableFuture<McpClient> AsyncInitialize(ClientCapabilities capabilities, Implementation clientInfo) {
-        CompletableFuture<McpClient> future = new CompletableFuture<>();
+    public CompletableFuture<McpInitializeResponse> AsyncInitialize(ClientCapabilities capabilities) {
+        CompletableFuture<McpInitializeResponse> future = new CompletableFuture<>();
         McpInitializeRequest request = new McpInitializeRequest();
         request.setProtocolVersion(McpInitializeRequest.PROTOCOL_VERSION);
         JSONObject capabilitiesJson = new JSONObject();
@@ -70,7 +72,7 @@ public class McpClient {
             capabilitiesJson.put("experimental", capabilities.getExperimental());
         }
         request.setCapabilities(capabilitiesJson);
-        request.setClientInfo(clientInfo);
+        request.setClientInfo(options.getImplementation());
 
         Request<McpInitializeRequest> jsonrpcRequest = new Request<>();
         jsonrpcRequest.setMethod("initialize");
@@ -78,22 +80,21 @@ public class McpClient {
 
         sendRequest(jsonrpcRequest).onSuccess(response -> {
             sessionId = response.getHeader("Mcp-Session-Id");
-            McpInitializeResponse r = JSONObject.parseObject(response.body(), McpInitializeResponse.class);
+            Response<McpInitializeResponse> r = JSONObject.parseObject(response.body(), new TypeReference<Response<McpInitializeResponse>>() {
+            });
             System.out.println("response:" + response.body());
             Request initialized = new Request();
             initialized.setMethod("notifications/initialized");
-            sendRequest(initialized)
-                    .onSuccess(response1 -> {
-                        future.complete(this);
-                    }).onFailure(future::completeExceptionally)
-                    .submit();
+            sendRequest(initialized).onSuccess(response1 -> {
+                future.complete(r.getResult());
+            }).onFailure(future::completeExceptionally).submit();
         }).onFailure(future::completeExceptionally).submit();
         return future;
     }
 
-    public McpClient Initialize(ClientCapabilities capabilities, Implementation clientInfo) {
+    public McpInitializeResponse Initialize(ClientCapabilities capabilities) {
         try {
-            return AsyncInitialize(capabilities, clientInfo).get();
+            return AsyncInitialize(capabilities).get();
         } catch (Throwable e) {
             throw new FeatException(e);
         }
@@ -109,8 +110,4 @@ public class McpClient {
         }).body(b -> b.write(body));
     }
 
-    public static void main(String[] args) {
-        McpClient client = McpClient.newSseClient(opt -> opt.baseUrl("http://localhost:3002").setMcpEndpoint("/mcp"));
-        client.Initialize(new ClientCapabilities(), new Implementation());
-    }
 }

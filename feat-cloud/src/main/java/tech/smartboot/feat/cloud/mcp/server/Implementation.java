@@ -11,9 +11,19 @@
 package tech.smartboot.feat.cloud.mcp.server;
 
 public class Implementation {
-    private String name = "feat mcpServer";
+    private String name;
     private String title;
-    private String version = "1.0.0";
+    private String version;
+
+    private Implementation(String name, String title, String version) {
+        this.name = name;
+        this.title = title;
+        this.version = version;
+    }
+
+    public static Implementation of(String name, String title, String version) {
+        return new Implementation(name, title, version);
+    }
 
     public String getTitle() {
         return title;

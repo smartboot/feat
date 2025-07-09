@@ -10,15 +10,15 @@
 
 package tech.smartboot.feat.cloud.mcp;
 
-import tech.smartboot.feat.cloud.mcp.server.Capability;
+import com.alibaba.fastjson2.JSONObject;
+import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.cloud.mcp.server.Implementation;
-import tech.smartboot.feat.cloud.mcp.server.Response;
 
 /**
  * @author 三刀
  * @version v1.0 6/18/25
  */
-public class McpInitializeResponse extends Response {
+public class McpInitializeResponse {
     private String protocolVersion;
     private ServerCapabilities capabilities = new ServerCapabilities();
     private Implementation serverInfo;
@@ -52,7 +52,7 @@ public class McpInitializeResponse extends Response {
 
     public static Builder builder() {
         Builder builder = new Builder();
-        builder.mcpInitializeResponse.serverInfo = new Implementation();
+        builder.mcpInitializeResponse.serverInfo = Implementation.of("feat-mcp-server", "feat-mcp-server", Feat.VERSION);
         builder.mcpInitializeResponse.protocolVersion = "2025-03-26";
         return builder;
     }
@@ -61,27 +61,28 @@ public class McpInitializeResponse extends Response {
         private final McpInitializeResponse mcpInitializeResponse = new McpInitializeResponse();
 
         public Builder loggingEnable() {
-            mcpInitializeResponse.getCapabilities().setLogging(new Capability());
+            mcpInitializeResponse.getCapabilities().setLogging(new JSONObject());
             return this;
         }
 
         public Builder promptsEnable() {
-            Capability capability = new Capability();
-            capability.setListChanged(true);
+            JSONObject capability = new JSONObject();
+            capability.put("listChanged", true);
             mcpInitializeResponse.getCapabilities().setPrompts(capability);
             return this;
         }
 
         public Builder resourceEnable() {
-            Capability capability = new Capability();
-            capability.setListChanged(true);
+            JSONObject capability = new JSONObject();
+            capability.put("listChanged", true);
+            capability.put("subscribe", true);
             mcpInitializeResponse.getCapabilities().setResources(capability);
             return this;
         }
 
         public Builder toolEnable() {
-            Capability capability = new Capability();
-            capability.setListChanged(true);
+            JSONObject capability = new JSONObject();
+            capability.put("listChanged", true);
             mcpInitializeResponse.getCapabilities().setTools(capability);
             return this;
         }
@@ -93,58 +94,58 @@ public class McpInitializeResponse extends Response {
 }
 
 class ServerCapabilities {
-    private Capability prompts;
-    private Capability resources;
-    private Capability tools;
-    private Capability logging;
-    private Capability completions;
-    private Capability experimental;
+    private JSONObject prompts;
+    private JSONObject resources;
+    private JSONObject tools;
+    private JSONObject logging;
+    private JSONObject completions;
+    private JSONObject experimental;
 
-    public Capability getPrompts() {
+    public JSONObject getPrompts() {
         return prompts;
     }
 
-    public void setPrompts(Capability prompts) {
+    public void setPrompts(JSONObject prompts) {
         this.prompts = prompts;
     }
 
-    public Capability getResources() {
+    public JSONObject getResources() {
         return resources;
     }
 
-    public void setResources(Capability resources) {
+    public void setResources(JSONObject resources) {
         this.resources = resources;
     }
 
-    public Capability getTools() {
+    public JSONObject getTools() {
         return tools;
     }
 
-    public void setTools(Capability tools) {
+    public void setTools(JSONObject tools) {
         this.tools = tools;
     }
 
-    public Capability getLogging() {
+    public JSONObject getLogging() {
         return logging;
     }
 
-    public void setLogging(Capability logging) {
+    public void setLogging(JSONObject logging) {
         this.logging = logging;
     }
 
-    public Capability getCompletions() {
+    public JSONObject getCompletions() {
         return completions;
     }
 
-    public void setCompletions(Capability completions) {
+    public void setCompletions(JSONObject completions) {
         this.completions = completions;
     }
 
-    public Capability getExperimental() {
+    public JSONObject getExperimental() {
         return experimental;
     }
 
-    public void setExperimental(Capability experimental) {
+    public void setExperimental(JSONObject experimental) {
         this.experimental = experimental;
     }
 }
