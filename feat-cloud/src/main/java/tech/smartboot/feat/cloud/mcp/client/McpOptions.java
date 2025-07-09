@@ -12,7 +12,6 @@ package tech.smartboot.feat.cloud.mcp.client;
 
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.cloud.mcp.server.Implementation;
-import tech.smartboot.feat.core.server.ServerOptions;
 
 /**
  * @author 三刀
@@ -23,7 +22,7 @@ public class McpOptions {
     private String mcpEndpoint = "/mcp";
     private String sseEndpoint = "/sse";
     private String sseMessageEndpoint = "/message";
-    private Implementation implementation = Implementation.of("feat-mcp-client", "Feat MCP", Feat.VERSION);
+    private final Implementation implementation = Implementation.of("feat-mcp-client", "Feat MCP", Feat.VERSION);
 
     McpOptions() {
     }
