@@ -8,31 +8,32 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.cloud.mcp.server;
+package tech.smartboot.feat.cloud.mcp;
 
-import com.alibaba.fastjson2.JSONObject;
+import tech.smartboot.feat.cloud.mcp.server.JsonRpc;
 
 /**
  * @author 三刀
  * @version v1.0 6/18/25
  */
-public class Response<T> extends JsonRpc {
-    private T result;
-    private JSONObject error;
+public class Request<T> extends JsonRpc {
+    private String method;
 
-    public T getResult() {
-        return result;
+    private T params;
+
+    public String getMethod() {
+        return method;
     }
 
-    public void setResult(T result) {
-        this.result = result;
+    public void setMethod(String method) {
+        this.method = method;
     }
 
-    public JSONObject getError() {
-        return error;
+    public T getParams() {
+        return params;
     }
 
-    public void setError(JSONObject error) {
-        this.error = error;
+    public void setParams(T params) {
+        this.params = params;
     }
 }

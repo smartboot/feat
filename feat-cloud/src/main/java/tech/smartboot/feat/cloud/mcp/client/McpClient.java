@@ -15,8 +15,8 @@ import com.alibaba.fastjson2.TypeReference;
 import tech.smartboot.feat.cloud.mcp.McpInitializeRequest;
 import tech.smartboot.feat.cloud.mcp.McpInitializeResponse;
 import tech.smartboot.feat.cloud.mcp.enums.TransportTypeEnum;
-import tech.smartboot.feat.cloud.mcp.server.Request;
-import tech.smartboot.feat.cloud.mcp.server.Response;
+import tech.smartboot.feat.cloud.mcp.Request;
+import tech.smartboot.feat.cloud.mcp.Response;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpRest;
 import tech.smartboot.feat.core.common.FeatUtils;
@@ -34,24 +34,25 @@ public class McpClient {
     private final McpOptions options;
     private HttpClient httpClient;
     private String sessionId;
+    private Transport transport;
     private TransportTypeEnum transportType;
 
-    private McpClient(McpOptions options, TransportTypeEnum transportType) {
+    private McpClient(McpOptions options, Transport transport) {
         this.options = options;
         httpClient = new HttpClient(options.getBaseUrl());
-        this.transportType = transportType;
+        this.transport = transport;
     }
 
     public static McpClient newSseClient(Consumer<McpOptions> opt) {
         McpOptions options = new McpOptions();
         opt.accept(options);
-        return new McpClient(options, TransportTypeEnum.Sse);
+        return new McpClient(options, new SseTransport(options));
     }
 
     public static McpClient newStreamableClient(Consumer<McpOptions> opt) {
         McpOptions options = new McpOptions();
         opt.accept(options);
-        return new McpClient(options, TransportTypeEnum.Streamable);
+        return new McpClient(options, new StreamableTransport(options));
     }
 
     public CompletableFuture<McpInitializeResponse> AsyncInitialize(ClientCapabilities capabilities) {
@@ -102,7 +103,16 @@ public class McpClient {
 
     private HttpRest sendRequest(Request request) {
         byte[] body = JSONObject.toJSONString(request).getBytes();
-        return httpClient.post(options.getMcpEndpoint()).header(header -> {
+        String endpoint = null;
+        if (transportType == TransportTypeEnum.Sse) {
+            endpoint = options.getSseEndpoint();
+        } else if (transportType == TransportTypeEnum.Streamable) {
+            endpoint = options.getMcpEndpoint();
+        }
+        if (FeatUtils.isBlank(endpoint)) {
+            throw new RuntimeException("endpoint is null.");
+        }
+        return httpClient.post(endpoint).header(header -> {
             header.setContentType(HeaderValue.ContentType.APPLICATION_JSON).setContentLength(body.length);
             if (FeatUtils.isNotBlank(sessionId)) {
                 header.set("Mcp-Session-Id", sessionId);

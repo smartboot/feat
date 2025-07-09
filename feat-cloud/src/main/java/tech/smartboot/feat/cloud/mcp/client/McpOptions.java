@@ -11,7 +11,7 @@
 package tech.smartboot.feat.cloud.mcp.client;
 
 import tech.smartboot.feat.Feat;
-import tech.smartboot.feat.cloud.mcp.server.Implementation;
+import tech.smartboot.feat.cloud.mcp.Implementation;
 
 /**
  * @author 三刀

@@ -15,6 +15,8 @@ import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.TypeReference;
 import tech.smartboot.feat.cloud.mcp.McpInitializeRequest;
 import tech.smartboot.feat.cloud.mcp.McpInitializeResponse;
+import tech.smartboot.feat.cloud.mcp.Request;
+import tech.smartboot.feat.cloud.mcp.Response;
 import tech.smartboot.feat.cloud.mcp.server.handler.CompletionCompleteHandler;
 import tech.smartboot.feat.cloud.mcp.server.handler.ListPromptsHandler;
 import tech.smartboot.feat.cloud.mcp.server.handler.LoggingSetLevelHandler;
@@ -159,7 +161,28 @@ public class McpServer {
                 session.setInitializeRequest(req.getParams());
                 Response<McpInitializeResponse> rsp = new Response<>();
                 rsp.setId(req.getId());
-                McpInitializeResponse initializeResponse = McpInitializeResponse.builder().loggingEnable().promptsEnable().resourceEnable().toolEnable().build();
+                McpInitializeResponse initializeResponse = new McpInitializeResponse();
+                ServerCapabilities capabilities = initializeResponse.getCapabilities();
+                if (options.isLoggingEnable()) {
+                    capabilities.setLogging(new JSONObject());
+                }
+                if (options.isPromptsEnable()) {
+                    JSONObject capability = new JSONObject();
+                    capability.put("listChanged", true);
+                    capabilities.setPrompts(capability);
+                }
+                if (options.isResourceEnable()) {
+                    JSONObject capability = new JSONObject();
+                    capability.put("listChanged", true);
+                    capability.put("subscribe", true);
+                    capabilities.setResources(capability);
+                }
+                if (options.isToolEnable()) {
+                    JSONObject capability = new JSONObject();
+                    capability.put("listChanged", true);
+                    capabilities.setTools(capability);
+                }
+                initializeResponse.setServerInfo(options.getImplementation());
                 rsp.setResult(initializeResponse);
                 session.setState(StreamSession.STATE_INITIALIZED);
                 return rsp;

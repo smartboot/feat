@@ -8,30 +8,22 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.cloud.mcp.server;
+package tech.smartboot.feat.cloud.mcp.client;
+
+import tech.smartboot.feat.cloud.mcp.Request;
+import tech.smartboot.feat.cloud.mcp.Response;
 
 /**
  * @author 三刀
- * @version v1.0 6/18/25
+ * @version v1.0 7/9/25
  */
-public class Request<T> extends JsonRpc {
-    private String method;
-
-    private T params;
-
-    public String getMethod() {
-        return method;
+public class StreamableTransport extends Transport {
+    public StreamableTransport(McpOptions options) {
+        super(options);
     }
 
-    public void setMethod(String method) {
-        this.method = method;
-    }
-
-    public T getParams() {
-        return params;
-    }
-
-    public void setParams(T params) {
-        this.params = params;
+    @Override
+    Response sendRequest(Request request) {
+        return null;
     }
 }

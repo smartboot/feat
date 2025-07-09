@@ -10,6 +10,9 @@
 
 package tech.smartboot.feat.cloud.mcp.server;
 
+import tech.smartboot.feat.Feat;
+import tech.smartboot.feat.cloud.mcp.Implementation;
+
 /**
  * @author 三刀
  * @version v1.0 7/5/25
@@ -18,6 +21,11 @@ public class McpOptions {
     private String mcpEndpoint = "/mcp";
     private String sseEndpoint = "/sse";
     private String sseMessageEndpoint = "/message";
+    private final Implementation implementation = Implementation.of("feat-mcp-server", "Feat MCP Server", Feat.VERSION);
+    private boolean loggingEnable;
+    private boolean promptsEnable;
+    private boolean resourceEnable;
+    private boolean toolEnable;
 
     public String getSseEndpoint() {
         return sseEndpoint;
@@ -43,5 +51,51 @@ public class McpOptions {
 
     public void setMcpEndpoint(String mcpEndpoint) {
         this.mcpEndpoint = mcpEndpoint;
+    }
+
+    public Implementation getImplementation() {
+        return implementation;
+    }
+
+    public void implementation(String name, String title, String version) {
+        this.implementation.setName(name);
+        this.implementation.setTitle(title);
+        this.implementation.setVersion(version);
+    }
+
+    public McpOptions loggingEnable() {
+        this.loggingEnable = true;
+        return this;
+    }
+
+    public McpOptions promptsEnable() {
+        this.promptsEnable = true;
+        return this;
+    }
+
+    public McpOptions resourceEnable() {
+        this.resourceEnable = true;
+        return this;
+    }
+
+    public McpOptions toolEnable() {
+        this.toolEnable = true;
+        return this;
+    }
+
+    public boolean isLoggingEnable() {
+        return loggingEnable;
+    }
+
+    public boolean isPromptsEnable() {
+        return promptsEnable;
+    }
+
+    public boolean isResourceEnable() {
+        return resourceEnable;
+    }
+
+    public boolean isToolEnable() {
+        return toolEnable;
     }
 }
