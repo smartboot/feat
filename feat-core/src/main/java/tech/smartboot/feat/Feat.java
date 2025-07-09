@@ -39,11 +39,16 @@ import java.util.function.Consumer;
  *   <li>HTTP客户端：支持RESTFUL API调用，包含JSON请求等常用场景</li>
  *   <li>WebSocket：提供WebSocket客户端功能</li>
  * </ul>
- * 
- * @author 三刀(zhengjunweimail@163.com)
+ *
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 public class Feat {
+    /**
+     * 当前 Feat 框架版本号
+     */
+    public static final String VERSION = "v1.1.1-SNAPSHOT";
+
     /**
      * 创建一个HTTP服务器实例，使用默认配置。
      * 该方法对标vert.x的HTTP服务器功能，提供高性能的HTTP请求处理能力。

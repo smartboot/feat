@@ -11,6 +11,7 @@
 package tech.smartboot.feat.core.common;
 
 import org.smartboot.socket.timer.HashedWheelTimer;
+import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.utils.ByteTree;
@@ -688,7 +689,7 @@ public class FeatUtils {
         }
     }
 
-    private final static byte[] DEFAULT_BYTES = ("feat:" + ServerOptions.VERSION).getBytes();
+    private final static byte[] DEFAULT_BYTES = ("feat:" + Feat.VERSION).getBytes();
     private final static int maskLength = 4;
     private final static String MAGIC_NUMBER = "feat-";
 

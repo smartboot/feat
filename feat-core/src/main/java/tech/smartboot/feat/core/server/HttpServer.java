@@ -12,6 +12,7 @@ package tech.smartboot.feat.core.server;
 
 import org.smartboot.socket.buffer.BufferPagePool;
 import org.smartboot.socket.transport.AioQuickServer;
+import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
@@ -97,7 +98,7 @@ public class HttpServer {
 
             if (options.isBannerEnabled() && bannerEnabled) {
                 bannerEnabled = false;
-                System.out.println(FeatUtils.getResourceAsString("feat-banner.txt") + "\r\n :: Feat :: (" + ServerOptions.VERSION + ")");
+                System.out.println(FeatUtils.getResourceAsString("feat-banner.txt") + "\r\n :: Feat :: (" + Feat.VERSION + ")");
                 System.out.println(FeatUtils.getResourceAsString("feat-support.txt"));
                 System.out.println("\u001B[32m\uD83C\uDF89Congratulations, the feat startup is successful" + ".\u001B[0m");
             }

@@ -10,6 +10,7 @@
 
 package tech.smartboot.feat.cloud.mcp;
 
+import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.cloud.mcp.server.Capability;
 import tech.smartboot.feat.cloud.mcp.server.Implementation;
 import tech.smartboot.feat.cloud.mcp.server.Response;
@@ -52,7 +53,7 @@ public class McpInitializeResponse extends Response {
 
     public static Builder builder() {
         Builder builder = new Builder();
-        builder.mcpInitializeResponse.serverInfo = new Implementation();
+        builder.mcpInitializeResponse.serverInfo = Implementation.of("feat-mcp-server", "feat-mcp-server", Feat.VERSION);
         builder.mcpInitializeResponse.protocolVersion = "2025-03-26";
         return builder;
     }

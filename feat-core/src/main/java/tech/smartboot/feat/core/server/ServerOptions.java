@@ -47,10 +47,6 @@ import java.util.List;
  * @version v1.0.0
  */
 public class ServerOptions {
-    /**
-     * 当前 Feat 框架版本号
-     */
-    public static final String VERSION = "v1.1.1-SNAPSHOT";
 
     private int port = 8080;
 
