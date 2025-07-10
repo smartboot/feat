@@ -15,11 +15,9 @@ import tech.smartboot.feat.cloud.mcp.McpInitializeRequest;
 import tech.smartboot.feat.cloud.mcp.McpInitializeResponse;
 import tech.smartboot.feat.cloud.mcp.Request;
 import tech.smartboot.feat.cloud.mcp.Response;
-import tech.smartboot.feat.cloud.mcp.enums.TransportTypeEnum;
 import tech.smartboot.feat.core.client.HttpClient;
-import tech.smartboot.feat.core.client.HttpRest;
-import tech.smartboot.feat.core.common.FeatUtils;
-import tech.smartboot.feat.core.common.HeaderValue;
+import tech.smartboot.feat.core.client.HttpResponse;
+import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.exception.FeatException;
 
 import java.util.concurrent.CompletableFuture;
@@ -34,7 +32,7 @@ public class McpClient {
     private HttpClient httpClient;
     private String sessionId;
     private Transport transport;
-    private TransportTypeEnum transportType;
+    private boolean initialized = false;
 
     private McpClient(McpOptions options, Transport transport) {
         this.options = options;
@@ -74,29 +72,29 @@ public class McpClient {
         request.setCapabilities(capabilitiesJson);
         request.setClientInfo(options.getImplementation());
 
-        Request<McpInitializeRequest> jsonrpcRequest = new Request<>();
-        jsonrpcRequest.setMethod("initialize");
-        jsonrpcRequest.setParams(request);
-
         CompletableFuture<Response<JSONObject>> f = transport.asyncRequest("initialize", JSONObject.from(request));
         f.thenAccept(response -> {
             McpInitializeResponse initializeResponse = response.getResult().to(McpInitializeResponse.class);
-            future.complete(initializeResponse);
+            //After successful initialization, the client MUST send an initialized notification to indicate it is ready to begin normal operations
+            Request<JSONObject> initializedNotify = new Request<>();
+            initializedNotify.setMethod("notifications/initialized");
+            initializedNotify.setParams(new JSONObject());
+            CompletableFuture<HttpResponse> notification = transport.sendNotification(initializedNotify);
+            notification.whenComplete((r, e) -> {
+                if (e != null) {
+                    future.completeExceptionally(e);
+                } else if (r.statusCode() == HttpStatus.ACCEPTED.value()) {
+                    initialized = true;
+                    future.complete(initializeResponse);
+                } else {
+                    future.completeExceptionally(new FeatException("notification failed"));
+                }
+            });
+
         }).exceptionally(throwable -> {
             future.completeExceptionally(throwable);
             return null;
         });
-//        sendRequest(jsonrpcRequest).onSuccess(response -> {
-//            sessionId = response.getHeader("Mcp-Session-Id");
-//            Response<McpInitializeResponse> r = JSONObject.parseObject(response.body(), new TypeReference<Response<McpInitializeResponse>>() {
-//            });
-//            System.out.println("response:" + response.body());
-//            Request initialized = new Request();
-//            initialized.setMethod("notifications/initialized");
-//            sendRequest(initialized).onSuccess(response1 -> {
-//                future.complete(r.getResult());
-//            }).onFailure(future::completeExceptionally).submit();
-//        }).onFailure(future::completeExceptionally).submit();
         return future;
     }
 
@@ -107,24 +105,4 @@ public class McpClient {
             throw new FeatException(e);
         }
     }
-
-    private HttpRest sendRequest(Request request) {
-        byte[] body = JSONObject.toJSONString(request).getBytes();
-        String endpoint = null;
-        if (transportType == TransportTypeEnum.Sse) {
-            endpoint = options.getSseEndpoint();
-        } else if (transportType == TransportTypeEnum.Streamable) {
-            endpoint = options.getMcpEndpoint();
-        }
-        if (FeatUtils.isBlank(endpoint)) {
-            throw new RuntimeException("endpoint is null.");
-        }
-        return httpClient.post(endpoint).header(header -> {
-            header.setContentType(HeaderValue.ContentType.APPLICATION_JSON).setContentLength(body.length);
-            if (FeatUtils.isNotBlank(sessionId)) {
-                header.set("Mcp-Session-Id", sessionId);
-            }
-        }).body(b -> b.write(body));
-    }
-
 }

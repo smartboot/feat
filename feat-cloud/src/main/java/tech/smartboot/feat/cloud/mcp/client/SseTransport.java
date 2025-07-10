@@ -83,4 +83,15 @@ public class SseTransport extends Transport {
         }
         return future;
     }
+
+    @Override
+    public CompletableFuture<HttpResponse> sendNotification(Request<JSONObject> request) {
+        byte[] body = JSONObject.toJSONString(request).getBytes();
+        return httpClient.post(endpoint).header(header -> {
+            header.setContentType(HeaderValue.ContentType.APPLICATION_JSON).setContentLength(body.length);
+            if (FeatUtils.isNotBlank(sessionId)) {
+                header.set("Mcp-Session-Id", sessionId);
+            }
+        }).body(b -> b.write(body)).submit();
+    }
 }

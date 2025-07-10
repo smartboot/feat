@@ -13,6 +13,7 @@ package tech.smartboot.feat.cloud.mcp.client;
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.cloud.mcp.Request;
 import tech.smartboot.feat.cloud.mcp.Response;
+import tech.smartboot.feat.core.client.HttpResponse;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -27,6 +28,11 @@ public class StreamableTransport extends Transport {
 
     @Override
     protected CompletableFuture<Response<JSONObject>> doRequest(CompletableFuture<Response<JSONObject>> future, Request<JSONObject> request) {
+        return null;
+    }
+
+    @Override
+    public CompletableFuture<HttpResponse> sendNotification(Request<JSONObject> request) {
         return null;
     }
 }
