@@ -19,7 +19,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 /**
- * @author 三刀(zhengjunweimail @ 163.com)
+ * @author 三刀(zhengjunweimail@163.com)
  * @version v1.0.0
  */
 class WebSocketRequestImpl implements WebSocketRequest, WebSocket, Reset {

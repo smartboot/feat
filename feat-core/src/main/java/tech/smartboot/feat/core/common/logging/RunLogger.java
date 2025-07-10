@@ -19,7 +19,7 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 /**
- * @author 三刀(zhengjunweimail @ 163.com)
+ * @author 三刀(zhengjunweimail@163.com)
  * @version v1.0.0
  */
 class RunLogger implements tech.smartboot.feat.core.common.logging.Logger {

@@ -22,7 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * @author 三刀(zhengjunweimail @ 163.com)
+ * @author 三刀(zhengjunweimail@163.com)
  * @version v1.0
  */
 class MemorySession implements Session {

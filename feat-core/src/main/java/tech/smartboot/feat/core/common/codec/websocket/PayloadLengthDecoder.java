@@ -13,7 +13,7 @@ package tech.smartboot.feat.core.common.codec.websocket;
 import java.nio.ByteBuffer;
 
 /**
- * @author 三刀(zhengjunweimail @ 163.com)
+ * @author 三刀(zhengjunweimail@163.com)
  * @version v1.0.0
  */
 class PayloadLengthDecoder implements Decoder {

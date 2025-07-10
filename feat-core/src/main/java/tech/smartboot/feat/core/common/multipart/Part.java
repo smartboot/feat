@@ -18,7 +18,7 @@ import java.util.Collection;
 
 
 /**
- * @author 三刀(zhengjunweimail @ 163.com)
+ * @author 三刀(zhengjunweimail@163.com)
  * @version v1.0.0
  */
 public interface Part {

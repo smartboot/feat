@@ -27,7 +27,7 @@ import java.util.concurrent.CompletableFuture;
  * 并在处理完成后手动完成CompletableFuture。
  * </p>
  *
- * @author 三刀(zhengjunweimail @ 163.com)
+ * @author 三刀(zhengjunweimail@163.com)
  * @version v1.0.0
  */
 public interface HttpHandler {
