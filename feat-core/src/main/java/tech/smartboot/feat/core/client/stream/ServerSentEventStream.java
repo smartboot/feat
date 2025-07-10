@@ -27,6 +27,7 @@ public abstract class ServerSentEventStream implements Stream {
     private static final int STATE_LF = 3;
     private static final int STATE_END_CHECK = 4;
     public static final String DATA = "data";
+    public static final String EVENT = "event";
     public static final String TYPE = "type";
     public static final String ID = "id";
     private final ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -63,6 +64,7 @@ public abstract class ServerSentEventStream implements Stream {
                 case STATE_LF:
                     if (b == '\n') {
                         event.put(new String(bytes, keyPos, colonPos - keyPos), new String(bytes, valuePos, i - valuePos));
+                        keyPos = i + 1;
                         state = STATE_END_CHECK;
                     }
                     break;

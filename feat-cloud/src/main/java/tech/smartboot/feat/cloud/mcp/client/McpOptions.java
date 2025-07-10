@@ -21,7 +21,6 @@ public class McpOptions {
     private String baseUrl;
     private String mcpEndpoint = "/mcp";
     private String sseEndpoint = "/sse";
-    private String sseMessageEndpoint = "/message";
     private final Implementation implementation = Implementation.of("feat-mcp-client", "Feat MCP", Feat.VERSION);
 
     McpOptions() {
@@ -53,13 +52,6 @@ public class McpOptions {
         this.sseEndpoint = sseEndpoint;
     }
 
-    public String getSseMessageEndpoint() {
-        return sseMessageEndpoint;
-    }
-
-    public void setSseMessageEndpoint(String sseMessageEndpoint) {
-        this.sseMessageEndpoint = sseMessageEndpoint;
-    }
 
     public Implementation getImplementation() {
         return implementation;

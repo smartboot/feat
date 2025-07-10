@@ -15,6 +15,9 @@ import tech.smartboot.feat.cloud.mcp.Request;
 import tech.smartboot.feat.cloud.mcp.Response;
 import tech.smartboot.feat.core.common.exception.FeatException;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
+
 /**
  * @author 三刀
  * @version v1.0 7/9/25
@@ -23,20 +26,24 @@ public abstract class Transport {
     protected final McpOptions options;
     protected boolean initialized;
     protected String sessionId;
+    private final AtomicInteger requestId = new AtomicInteger(0);
 
     public Transport(McpOptions options) {
         this.options = options;
     }
 
-    Response SendRequest(String method, JSONObject param) {
+    public CompletableFuture<Response<JSONObject>> asyncRequest(String method, JSONObject param) {
+        CompletableFuture<Response<JSONObject>> future = new CompletableFuture<>();
         if (!initialized && !"initialize".equals(method)) {
-            throw new FeatException("not initialized");
+            future.completeExceptionally(new FeatException("not initialized"));
+            return future;
         }
-        Request request = new Request();
+        Request<JSONObject> request = new Request<>();
         request.setMethod(method);
         request.setParams(param);
-        return sendRequest(request);
+        request.setId(requestId.incrementAndGet());
+        return doRequest(future, request);
     }
 
-    abstract Response sendRequest(Request request);
+    protected abstract CompletableFuture<Response<JSONObject>> doRequest(CompletableFuture<Response<JSONObject>> future, Request<JSONObject> request);
 }

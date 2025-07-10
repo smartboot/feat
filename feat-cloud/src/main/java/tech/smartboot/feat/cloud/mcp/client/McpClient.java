@@ -11,12 +11,11 @@
 package tech.smartboot.feat.cloud.mcp.client;
 
 import com.alibaba.fastjson2.JSONObject;
-import com.alibaba.fastjson2.TypeReference;
 import tech.smartboot.feat.cloud.mcp.McpInitializeRequest;
 import tech.smartboot.feat.cloud.mcp.McpInitializeResponse;
-import tech.smartboot.feat.cloud.mcp.enums.TransportTypeEnum;
 import tech.smartboot.feat.cloud.mcp.Request;
 import tech.smartboot.feat.cloud.mcp.Response;
+import tech.smartboot.feat.cloud.mcp.enums.TransportTypeEnum;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpRest;
 import tech.smartboot.feat.core.common.FeatUtils;
@@ -79,17 +78,25 @@ public class McpClient {
         jsonrpcRequest.setMethod("initialize");
         jsonrpcRequest.setParams(request);
 
-        sendRequest(jsonrpcRequest).onSuccess(response -> {
-            sessionId = response.getHeader("Mcp-Session-Id");
-            Response<McpInitializeResponse> r = JSONObject.parseObject(response.body(), new TypeReference<Response<McpInitializeResponse>>() {
-            });
-            System.out.println("response:" + response.body());
-            Request initialized = new Request();
-            initialized.setMethod("notifications/initialized");
-            sendRequest(initialized).onSuccess(response1 -> {
-                future.complete(r.getResult());
-            }).onFailure(future::completeExceptionally).submit();
-        }).onFailure(future::completeExceptionally).submit();
+        CompletableFuture<Response<JSONObject>> f = transport.asyncRequest("initialize", JSONObject.from(request));
+        f.thenAccept(response -> {
+            McpInitializeResponse initializeResponse = response.getResult().to(McpInitializeResponse.class);
+            future.complete(initializeResponse);
+        }).exceptionally(throwable -> {
+            future.completeExceptionally(throwable);
+            return null;
+        });
+//        sendRequest(jsonrpcRequest).onSuccess(response -> {
+//            sessionId = response.getHeader("Mcp-Session-Id");
+//            Response<McpInitializeResponse> r = JSONObject.parseObject(response.body(), new TypeReference<Response<McpInitializeResponse>>() {
+//            });
+//            System.out.println("response:" + response.body());
+//            Request initialized = new Request();
+//            initialized.setMethod("notifications/initialized");
+//            sendRequest(initialized).onSuccess(response1 -> {
+//                future.complete(r.getResult());
+//            }).onFailure(future::completeExceptionally).submit();
+//        }).onFailure(future::completeExceptionally).submit();
         return future;
     }
 

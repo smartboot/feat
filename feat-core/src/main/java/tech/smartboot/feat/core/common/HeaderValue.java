@@ -11,11 +11,12 @@
 package tech.smartboot.feat.core.common;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 public class HeaderValue {
-    String CONTINUE = "100-continue";
+    public static final String CONTINUE = "100-continue";
+    public static final String NO_CACHE = "no-cache";
 
     public interface TransferEncoding {
         String CHUNKED = "chunked";
