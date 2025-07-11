@@ -49,7 +49,7 @@ public final class PromptResult {
         return new PromptResult(roleEnum, JSONObject.from(new AudioPromptContent(data, mimeType)));
     }
 
-    public static PromptResult ofEmbeddedResource(RoleEnum roleEnum, Resource resource) {
+    public static PromptResult ofEmbeddedResource(RoleEnum roleEnum, ServerResource resource) {
         return new PromptResult(roleEnum, JSONObject.from(new EmbeddedResourcePromptContent(JSONObject.from(resource))));
     }
 

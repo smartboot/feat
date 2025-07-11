@@ -14,7 +14,7 @@ import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.cloud.mcp.server.McpServer;
 import tech.smartboot.feat.cloud.mcp.server.McpServerException;
-import tech.smartboot.feat.cloud.mcp.server.model.Resource;
+import tech.smartboot.feat.cloud.mcp.server.model.ServerResource;
 import tech.smartboot.feat.cloud.mcp.server.model.ResourceContext;
 import tech.smartboot.feat.core.server.HttpRequest;
 
@@ -28,7 +28,7 @@ public class ResourcesReadHandler implements ServerHandler {
     public JSONObject apply(McpServer mcp, HttpRequest request, JSONObject jsonObject) {
         JSONObject params = jsonObject.getJSONObject("params");
         String uri = params.getString("uri");
-        Resource resource = mcp.getResources().stream().filter(r -> r.getUri().equals(uri)).findFirst().orElse(null);
+        ServerResource resource = mcp.getResources().stream().filter(r -> r.getUri().equals(uri)).findFirst().orElse(null);
 
         if (resource == null) {
             throw new McpServerException(McpServerException.RESOURCE_NOT_FOUND, "Resource not found ", JSONObject.of("uri", uri));

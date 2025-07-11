@@ -14,10 +14,9 @@ import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.cloud.mcp.enums.RoleEnum;
 import tech.smartboot.feat.cloud.mcp.Argument;
-import tech.smartboot.feat.cloud.mcp.Prompt;
 import tech.smartboot.feat.cloud.mcp.server.model.PromptResult;
 import tech.smartboot.feat.cloud.mcp.server.model.Property;
-import tech.smartboot.feat.cloud.mcp.server.model.Resource;
+import tech.smartboot.feat.cloud.mcp.server.model.ServerResource;
 import tech.smartboot.feat.cloud.mcp.server.model.ResourceTemplate;
 import tech.smartboot.feat.cloud.mcp.server.model.ServerPrompt;
 import tech.smartboot.feat.cloud.mcp.server.model.Tool;
@@ -39,7 +38,7 @@ public class Demo {
             j.put("name", "name");
             j.put("age", 18);
             j.put("text", toolContext.getArguments().get("aa"));
-            j.put("resource", Resource.of("test", "test.txt"));
+            j.put("resource", ServerResource.of("test", "test.txt"));
             return ToolResult.ofStructuredContent(j);
         });
 
@@ -77,17 +76,17 @@ public class Demo {
                         .title("Request Embedded Resource Review")
                         .description("Asks the LLM to analyze embedded resource quality and suggest improvements")
                         .doAction(promptContext -> {
-                            Resource.TextResource resource = Resource.ofText("test", "test.txt", "Hello World");
+                            ServerResource.TextServerResource resource = ServerResource.ofText("test", "test.txt", "Hello World");
                             return PromptResult.ofEmbeddedResource(RoleEnum.Assistant, resource);
                         }));
 
         // resources
-        mcp.addResource(Resource.of("test", "test.txt").doAction(resourceContext -> {
-                    return Resource.ofText(resourceContext.getResource(), "contentcontentcontentcontentcontent");
-                })).addResource(Resource.of("bbbbb", "test.bin").doAction(resourceContext -> {
-                    return Resource.ofBinary(resourceContext.getResource(), "YXNkZmFzZGY=");
-                })).addResource(Resource.ofText("file:///aa.txt", "test.txt", "text/plain", "bbbbb"))
-                .addResource(Resource.ofText("file:///bb.txt", "bb.txt", "text/plain", "aaaaaaa"));
+        mcp.addResource(ServerResource.of("test", "test.txt").doAction(resourceContext -> {
+                    return ServerResource.ofText(resourceContext.getResource(), "contentcontentcontentcontentcontent");
+                })).addResource(ServerResource.of("bbbbb", "test.bin").doAction(resourceContext -> {
+                    return ServerResource.ofBinary(resourceContext.getResource(), "YXNkZmFzZGY=");
+                })).addResource(ServerResource.ofText("file:///aa.txt", "test.txt", "text/plain", "bbbbb"))
+                .addResource(ServerResource.ofText("file:///bb.txt", "bb.txt", "text/plain", "aaaaaaa"));
 
         // resourceTemplate
         mcp.addResourceTemplate(ResourceTemplate.of("file:///{path}", "testTemplate").title("\uD83D\uDCC1 Project Files").description("Access files in the project directory").mimeType("application/octet-stream"));

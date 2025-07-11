@@ -18,9 +18,9 @@ import tech.smartboot.feat.core.server.HttpRequest;
  */
 public class ResourceContext {
     private final HttpRequest request;
-    private final Resource resource;
+    private final ServerResource resource;
 
-    public ResourceContext(HttpRequest request, Resource resource) {
+    public ResourceContext(HttpRequest request, ServerResource resource) {
         this.request = request;
         this.resource = resource;
     }
@@ -29,7 +29,7 @@ public class ResourceContext {
         return request;
     }
 
-    public Resource getResource() {
+    public ServerResource getResource() {
         return resource;
     }
 }

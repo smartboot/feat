@@ -28,7 +28,7 @@ import tech.smartboot.feat.cloud.mcp.server.handler.ResourcesTemplateListHandler
 import tech.smartboot.feat.cloud.mcp.server.handler.ServerHandler;
 import tech.smartboot.feat.cloud.mcp.server.handler.ToolsCallHandler;
 import tech.smartboot.feat.cloud.mcp.server.handler.ToolsListHandler;
-import tech.smartboot.feat.cloud.mcp.server.model.Resource;
+import tech.smartboot.feat.cloud.mcp.server.model.ServerResource;
 import tech.smartboot.feat.cloud.mcp.server.model.ResourceTemplate;
 import tech.smartboot.feat.cloud.mcp.server.model.ServerPrompt;
 import tech.smartboot.feat.cloud.mcp.server.model.Tool;
@@ -75,7 +75,7 @@ public class McpServer {
     private final Map<String, StreamSession> sseEmitters = new ConcurrentHashMap<>();
     private final List<Tool> tools = new ArrayList<>();
     private final List<ServerPrompt> prompts = new ArrayList<>();
-    private final List<Resource> resources = new ArrayList<>();
+    private final List<ServerResource> resources = new ArrayList<>();
     private final List<ResourceTemplate> resourceTemplates = new ArrayList<>();
 
     public List<Tool> getTools() {
@@ -86,7 +86,7 @@ public class McpServer {
         return prompts;
     }
 
-    public List<Resource> getResources() {
+    public List<ServerResource> getResources() {
         return resources;
     }
 
@@ -110,7 +110,7 @@ public class McpServer {
         return this;
     }
 
-    public McpServer addResource(Resource resource) {
+    public McpServer addResource(ServerResource resource) {
         if (FeatUtils.isBlank(resource.getUri())) {
             throw new IllegalStateException("uri can not be null");
         }
