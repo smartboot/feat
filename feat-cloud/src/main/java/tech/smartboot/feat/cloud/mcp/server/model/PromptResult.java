@@ -11,6 +11,7 @@
 package tech.smartboot.feat.cloud.mcp.server.model;
 
 import com.alibaba.fastjson2.JSONObject;
+import tech.smartboot.feat.cloud.mcp.Resource;
 import tech.smartboot.feat.cloud.mcp.enums.RoleEnum;
 import tech.smartboot.feat.cloud.mcp.enums.ToolResultType;
 import tech.smartboot.feat.cloud.mcp.server.McpServerException;
@@ -49,8 +50,8 @@ public final class PromptResult {
         return new PromptResult(roleEnum, JSONObject.from(new AudioPromptContent(data, mimeType)));
     }
 
-    public static PromptResult ofEmbeddedResource(RoleEnum roleEnum, ServerResource resource) {
-        return new PromptResult(roleEnum, JSONObject.from(new EmbeddedResourcePromptContent(JSONObject.from(resource))));
+    public static PromptResult ofEmbeddedResource(RoleEnum roleEnum, Resource resource) {
+        return new PromptResult(roleEnum, JSONObject.from(new EmbeddedResourcePromptContent(resource)));
     }
 
 
@@ -88,14 +89,14 @@ public final class PromptResult {
     }
 
     public static class EmbeddedResourcePromptContent extends PromptContent {
-        private final JSONObject resource;
+        private final Resource resource;
 
-        public EmbeddedResourcePromptContent(JSONObject resource) {
+        public EmbeddedResourcePromptContent(Resource resource) {
             super(ToolResultType.EMBEDDED_RESOURCE);
             this.resource = resource;
         }
 
-        public JSONObject getResource() {
+        public Resource getResource() {
             return resource;
         }
     }
@@ -124,7 +125,7 @@ public final class PromptResult {
     public static class TextPromptContent extends PromptContent {
         private final String text;
 
-        TextPromptContent(String text) {
+        public TextPromptContent(String text) {
             super(ToolResultType.TEXT);
             this.text = text;
         }

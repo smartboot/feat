@@ -34,6 +34,9 @@ import tech.smartboot.feat.router.Router;
  * @version v1.0 7/9/25
  */
 public class McpTest {
+    private McpServer mcp;
+    private McpClient sseClient;
+    private McpClient streamClient;
 
     @Before
     public void init() {
@@ -50,7 +53,7 @@ public class McpTest {
             return ToolResult.ofStructuredContent(j);
         });
 
-        McpServer mcp = new McpServer();
+        mcp = new McpServer();
         mcp.addTool(tool).addTool(Tool.of("errorTool").inputSchema(Property.withString("aa", "aa")).doAction(jsonObject -> {
             throw new IllegalStateException("exception...");
         })).addTool(structTool);
@@ -104,6 +107,10 @@ public class McpTest {
         router.route(mcp.getOptions().getSseMessageEndpoint(), mcp.sseMessageHandler());
         router.route(mcp.getOptions().getMcpEndpoint(), mcp.mcpHandler());
         Feat.httpServer(opt -> opt.debug(true)).httpHandler(router).listen(3002);
+
+        sseClient = McpClient.newSseClient(opt -> opt.baseUrl("http://localhost:3002").setMcpEndpoint("/mcp"));
+        sseClient.Initialize(new ClientCapabilities());
+        streamClient = McpClient.newStreamableClient(opt -> opt.baseUrl("http://localhost:3002").setMcpEndpoint("/mcp"));
     }
 
     @Test
@@ -114,5 +121,20 @@ public class McpTest {
         System.out.println(JSONObject.toJSONString(client.ListTools()));
         System.out.println(JSONObject.toJSONString(client.ListPrompts()));
         System.out.println(JSONObject.toJSONString(client.ListResources()));
+
+
+    }
+
+    @Test
+    public void test2() throws Exception {
+        mcp.addPrompt(ServerPrompt.of("code_review_1")
+                .title("Request Code Review")
+                .description("Asks the LLM to analyze code quality and suggest improvements")
+                .arguments(Argument.requiredOf("code", "The code to review"))
+                .doAction(promptContext -> {
+                    String code = promptContext.getArguments().getString("code");
+                    return PromptResult.ofText(RoleEnum.User, "Please review the following code and provide suggestions for improvement:" + code);
+                }));
+        System.out.println(JSONObject.toJSONString(sseClient.getPrompt("code_review_1")));
     }
 }

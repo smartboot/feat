@@ -14,6 +14,7 @@ import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.TypeReference;
 import tech.smartboot.feat.cloud.mcp.Request;
 import tech.smartboot.feat.cloud.mcp.Response;
+import tech.smartboot.feat.cloud.mcp.server.McpServerException;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.client.HttpRest;
@@ -53,7 +54,11 @@ public class SseTransport extends Transport {
                     });
                     CompletableFuture<Response<JSONObject>> future = responseCallbacks.remove(response.getId());
                     if (future != null) {
-                        future.complete(response);
+                        if (response.getError() != null) {
+                            future.completeExceptionally(new McpServerException(response.getError().getInteger("code"), response.getError().getString("message")));
+                        } else {
+                            future.complete(response);
+                        }
                     }
                 }
             }

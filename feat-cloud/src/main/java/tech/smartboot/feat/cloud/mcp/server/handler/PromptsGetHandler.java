@@ -29,6 +29,9 @@ public class PromptsGetHandler implements ServerHandler {
         JSONObject params = jsonObject.getJSONObject("params");
         String promptName = params.getString("name");
         JSONObject promptParams = params.getJSONObject("arguments");
+        if (promptParams == null) {
+            promptParams = new JSONObject();
+        }
 
         PromptContext promptContext = new PromptContext(request, promptParams);
 

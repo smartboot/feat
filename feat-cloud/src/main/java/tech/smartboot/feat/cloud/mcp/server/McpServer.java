@@ -28,9 +28,9 @@ import tech.smartboot.feat.cloud.mcp.server.handler.ResourcesTemplateListHandler
 import tech.smartboot.feat.cloud.mcp.server.handler.ServerHandler;
 import tech.smartboot.feat.cloud.mcp.server.handler.ToolsCallHandler;
 import tech.smartboot.feat.cloud.mcp.server.handler.ToolsListHandler;
-import tech.smartboot.feat.cloud.mcp.server.model.ServerResource;
 import tech.smartboot.feat.cloud.mcp.server.model.ResourceTemplate;
 import tech.smartboot.feat.cloud.mcp.server.model.ServerPrompt;
+import tech.smartboot.feat.cloud.mcp.server.model.ServerResource;
 import tech.smartboot.feat.cloud.mcp.server.model.Tool;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
@@ -38,6 +38,8 @@ import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.exception.HttpException;
+import tech.smartboot.feat.core.common.logging.Logger;
+import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.upgrade.sse.SSEUpgrade;
 import tech.smartboot.feat.core.server.upgrade.sse.SseEmitter;
@@ -56,6 +58,7 @@ import java.util.function.Consumer;
  * @version v1.0 6/28/25
  */
 public class McpServer {
+    private static final Logger logger = LoggerFactory.getLogger(McpServer.class);
     private final McpOptions options = new McpOptions();
     private final Map<String, ServerHandler> handlers = new HashMap<>();
 
@@ -228,10 +231,12 @@ public class McpServer {
                         error.put("data", e.getData());
                         response.setError(error);
                     } catch (Throwable e) {
+                        logger.error("", e);
                         JSONObject error = new JSONObject();
                         error.put("code", -32603);
-                        error.put("message", e.getMessage());
+                        error.put("message", e.toString());
                         response.setError(error);
+
                     }
                     response.setId(jsonObject.getInteger("id"));
                     return response;

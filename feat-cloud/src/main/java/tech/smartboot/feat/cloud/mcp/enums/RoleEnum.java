@@ -25,4 +25,13 @@ public enum RoleEnum {
     public String getRole() {
         return role;
     }
+
+    public static RoleEnum of(String role) {
+        for (RoleEnum value : values()) {
+            if (value.role.equals(role)) {
+                return value;
+            }
+        }
+        return null;
+    }
 }

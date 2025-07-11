@@ -10,14 +10,19 @@
 
 package tech.smartboot.feat.cloud.mcp.client;
 
+import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.cloud.mcp.McpInitializeRequest;
 import tech.smartboot.feat.cloud.mcp.McpInitializeResponse;
+import tech.smartboot.feat.cloud.mcp.PromptMessage;
 import tech.smartboot.feat.cloud.mcp.Request;
+import tech.smartboot.feat.cloud.mcp.Resource;
 import tech.smartboot.feat.cloud.mcp.Response;
+import tech.smartboot.feat.cloud.mcp.client.model.GetPromptResult;
 import tech.smartboot.feat.cloud.mcp.client.model.PromptListResponse;
 import tech.smartboot.feat.cloud.mcp.client.model.ResourceListResponse;
 import tech.smartboot.feat.cloud.mcp.client.model.ToolListResponse;
+import tech.smartboot.feat.cloud.mcp.server.model.PromptResult;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.common.FeatUtils;
@@ -143,6 +148,32 @@ public class McpClient {
         return ListPrompts(null);
     }
 
+
+    public CompletableFuture<JSONObject> asyncCallTool(String toolName, JSONObject arguments) {
+        JSONObject param = new JSONObject();
+        param.put("name", toolName);
+        param.put("arguments", arguments);
+        CompletableFuture<JSONObject> future = new CompletableFuture<>();
+        CompletableFuture<Response<JSONObject>> f = transport.asyncRequest("tools/call", param);
+        f.thenAccept(response -> {
+            future.complete(response.getResult());
+        }).exceptionally(throwable -> {
+            future.completeExceptionally(throwable);
+            return null;
+        });
+        return future;
+    }
+
+    public JSONObject callTool(String toolName, JSONObject arguments) {
+        try {
+            return asyncCallTool(toolName, arguments).get();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public CompletableFuture<PromptListResponse> AsyncListPrompts(String nextCursor) {
         CompletableFuture<PromptListResponse> future = new CompletableFuture<>();
         JSONObject param = new JSONObject();
@@ -167,6 +198,63 @@ public class McpClient {
         }
     }
 
+    public CompletableFuture<GetPromptResult> asyncGetPrompt(String name, JSONObject arguments) {
+        JSONObject param = new JSONObject();
+        param.put("name", name);
+        if (arguments != null) {
+            param.put("arguments", arguments);
+        }
+        CompletableFuture<Response<JSONObject>> f = transport.asyncRequest("prompts/get", param);
+        CompletableFuture<GetPromptResult> future = new CompletableFuture<>();
+        f.thenAccept(response -> {
+            JSONObject result = response.getResult();
+            GetPromptResult promptMessage = new GetPromptResult();
+            promptMessage.setDescription(result.getString("description"));
+            JSONArray messages = result.getJSONArray("messages");
+            for (int i = 0; i < messages.size(); i++) {
+                JSONObject message = messages.getJSONObject(i);
+                JSONObject content = message.getJSONObject("content");
+                String type = content.getString("type");
+                PromptMessage promptResult = new PromptMessage();
+                promptResult.setRole(message.getString("role"));
+                switch (type) {
+                    case "text":
+                        promptResult.setContent(new PromptResult.TextPromptContent(content.getString("text")));
+                        break;
+                    case "image":
+                        promptResult.setContent(new PromptResult.ImagePromptContent(content.getString("data"), content.getString("mimeType")));
+                        break;
+                    case "audio":
+                        promptResult.setContent(new PromptResult.AudioPromptContent(content.getString("data"), content.getString("mimeType")));
+                        break;
+                    case "resource":
+                        JSONObject resource = content.getJSONObject("resource");
+                        promptResult.setContent(new PromptResult.EmbeddedResourcePromptContent(resource.to(Resource.class)));
+                        break;
+                    default:
+                        throw new FeatException("unknown prompt content type: " + type);
+                }
+                promptMessage.getMessages().add(promptResult);
+                future.complete(promptMessage);
+            }
+        }).exceptionally(throwable -> {
+            future.completeExceptionally(throwable);
+            return null;
+        });
+        return future;
+    }
+
+    public GetPromptResult getPrompt(String name) {
+        return getPrompt(name, null);
+    }
+
+    public GetPromptResult getPrompt(String name, JSONObject arguments) {
+        try {
+            return asyncGetPrompt(name, arguments).get();
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public ResourceListResponse ListResources() {
         return ListResources(null);
