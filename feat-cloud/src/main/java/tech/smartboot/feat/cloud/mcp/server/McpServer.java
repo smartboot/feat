@@ -102,6 +102,7 @@ public class McpServer {
             throw new IllegalStateException("prompt already exists");
         });
         prompts.add(prompt);
+        notification("notifications/prompts/list_changed");
         return this;
     }
 
@@ -110,7 +111,25 @@ public class McpServer {
             throw new IllegalStateException("tool already exists");
         });
         tools.add(tool);
+        notification("notifications/tools/list_changed");
+
         return this;
+    }
+
+    private void notification(String method) {
+        if (sseEmitters.isEmpty()) {
+            return;
+        }
+        Request notify = new Request();
+        notify.setMethod(method);
+        String data = JSON.toJSONString(notify);
+        sseEmitters.forEach((sessionId, session) -> {
+            try {
+                session.getSseEmitter().send(data);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
     public McpServer addResource(ServerResource resource) {
@@ -124,6 +143,7 @@ public class McpServer {
             throw new IllegalStateException("resource already exists");
         }
         resources.add(resource);
+        notification("notifications/resources/list_changed");
         return this;
     }
 
