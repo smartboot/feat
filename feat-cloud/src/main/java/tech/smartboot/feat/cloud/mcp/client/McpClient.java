@@ -15,12 +15,15 @@ import tech.smartboot.feat.cloud.mcp.McpInitializeRequest;
 import tech.smartboot.feat.cloud.mcp.McpInitializeResponse;
 import tech.smartboot.feat.cloud.mcp.Request;
 import tech.smartboot.feat.cloud.mcp.Response;
+import tech.smartboot.feat.cloud.mcp.client.model.ToolListResponse;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpResponse;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.exception.FeatException;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 
 /**
@@ -103,6 +106,34 @@ public class McpClient {
             return AsyncInitialize(capabilities).get();
         } catch (Throwable e) {
             throw new FeatException(e);
+        }
+    }
+
+    public ToolListResponse ListTools() {
+        return ListTools(null);
+    }
+
+    public CompletableFuture<ToolListResponse> AsyncListTools(String nextCursor) {
+        CompletableFuture<ToolListResponse> future = new CompletableFuture<>();
+        JSONObject param = new JSONObject();
+        if (FeatUtils.isNotBlank(nextCursor)) {
+            param.put("cursor", nextCursor);
+        }
+        CompletableFuture<Response<JSONObject>> f = transport.asyncRequest("tools/list", param);
+        f.thenAccept(response -> {
+            ToolListResponse toolListResponse = response.getResult().to(ToolListResponse.class);
+            future.complete(toolListResponse);
+        });
+        return future;
+    }
+
+    public ToolListResponse ListTools(String nextCursor) {
+        try {
+            return AsyncListTools(nextCursor).get();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e);
         }
     }
 }

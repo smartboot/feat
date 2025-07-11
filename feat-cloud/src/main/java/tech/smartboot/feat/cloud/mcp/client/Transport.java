@@ -14,7 +14,6 @@ import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.cloud.mcp.Request;
 import tech.smartboot.feat.cloud.mcp.Response;
 import tech.smartboot.feat.core.client.HttpResponse;
-import tech.smartboot.feat.core.common.exception.FeatException;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -25,7 +24,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public abstract class Transport {
     protected final McpOptions options;
-    protected boolean initialized;
     protected String sessionId;
     private final AtomicInteger requestId = new AtomicInteger(0);
 
@@ -35,10 +33,6 @@ public abstract class Transport {
 
     public CompletableFuture<Response<JSONObject>> asyncRequest(String method, JSONObject param) {
         CompletableFuture<Response<JSONObject>> future = new CompletableFuture<>();
-        if (!initialized && !"initialize".equals(method)) {
-            future.completeExceptionally(new FeatException("not initialized"));
-            return future;
-        }
         Request<JSONObject> request = new Request<>();
         request.setMethod(method);
         request.setParams(param);

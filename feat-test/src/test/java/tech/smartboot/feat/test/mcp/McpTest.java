@@ -111,5 +111,6 @@ public class McpTest {
         McpClient client = McpClient.newSseClient(opt -> opt.baseUrl("http://localhost:3002").setMcpEndpoint("/mcp"));
         McpInitializeResponse response = client.Initialize(new ClientCapabilities());
         System.out.println(JSONObject.toJSONString(response));
+        System.out.println(JSONObject.toJSONString(client.ListTools()));
     }
 }
