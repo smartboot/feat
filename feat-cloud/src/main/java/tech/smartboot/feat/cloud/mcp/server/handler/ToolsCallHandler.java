@@ -12,12 +12,12 @@ package tech.smartboot.feat.cloud.mcp.server.handler;
 
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
+import tech.smartboot.feat.cloud.mcp.CallToolResult;
+import tech.smartboot.feat.cloud.mcp.enums.ToolResultType;
 import tech.smartboot.feat.cloud.mcp.server.McpServer;
 import tech.smartboot.feat.cloud.mcp.server.McpServerException;
-import tech.smartboot.feat.cloud.mcp.enums.ToolResultType;
 import tech.smartboot.feat.cloud.mcp.server.model.Tool;
 import tech.smartboot.feat.cloud.mcp.server.model.ToolContext;
-import tech.smartboot.feat.cloud.mcp.server.model.ToolResultContext;
 import tech.smartboot.feat.core.server.HttpRequest;
 
 /**
@@ -40,16 +40,16 @@ public class ToolsCallHandler implements ServerHandler {
         }
         JSONObject result = new JSONObject();
         try {
-            ToolResultContext content = tool.getAction().apply(toolContext);
+            CallToolResult.Content content = tool.getAction().apply(toolContext);
             if (ToolResultType.STRUCTURED_CONTENT.getType().equals(content.getType())) {
-                ToolResultContext.StructuredContent structuredContent = (ToolResultContext.StructuredContent) content;
-                result.put("content", JSONArray.of(JSONObject.from(ToolResultContext.ofText(structuredContent.getContent().toString()))));
+                CallToolResult.StructuredContent structuredContent = (CallToolResult.StructuredContent) content;
+                result.put("content", JSONArray.of(JSONObject.from(CallToolResult.ofText(structuredContent.getContent().toString()))));
                 result.put("structuredContent", structuredContent.getContent());
             } else {
                 result.put("content", JSONArray.of(JSONObject.from(content)));
             }
         } catch (Throwable e) {
-            result.put("content", JSONArray.of(JSONObject.from(ToolResultContext.ofText(e.getMessage()))));
+            result.put("content", JSONArray.of(JSONObject.from(CallToolResult.ofText(e.getMessage()))));
             result.put("isError", true);
         }
         return result;

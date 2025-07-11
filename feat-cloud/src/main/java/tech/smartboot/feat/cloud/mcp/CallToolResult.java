@@ -8,20 +8,36 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.cloud.mcp.server.model;
+package tech.smartboot.feat.cloud.mcp;
 
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.cloud.mcp.enums.ToolResultType;
 
-public abstract class ToolResultContext {
-    private final String type;
+import java.util.ArrayList;
+import java.util.List;
 
-    public ToolResultContext(ToolResultType type) {
-        this.type = type.getType();
+/**
+ * @author 三刀
+ * @version v1.0 7/11/25
+ */
+public class CallToolResult {
+    private final List<Content> content = new ArrayList<>();
+    private boolean isError;
+
+    public List<Content> getContent() {
+        return content;
     }
 
-    public String getType() {
-        return type;
+    public void addContent(Content content) {
+        this.content.add(content);
+    }
+
+    public boolean isError() {
+        return isError;
+    }
+
+    public void setError(boolean error) {
+        isError = error;
     }
 
     public static TextContent ofText(String text) {
@@ -43,7 +59,20 @@ public abstract class ToolResultContext {
     }
 
 
-    public static class TextContent extends ToolResultContext {
+    public abstract static class Content {
+        private final String type;
+
+        public Content(ToolResultType type) {
+            this.type = type.getType();
+        }
+
+        public String getType() {
+            return type;
+        }
+
+    }
+
+    public static class TextContent extends Content {
         private String text;
 
         TextContent() {
@@ -59,7 +88,7 @@ public abstract class ToolResultContext {
         }
     }
 
-    public static class ResourceLinks extends ToolResultContext {
+    public static class ResourceLinks extends Content {
         private String uri;
         private String name;
         private String description;
@@ -102,7 +131,7 @@ public abstract class ToolResultContext {
         }
     }
 
-    public static class ImageContent extends ToolResultContext {
+    public static class ImageContent extends Content {
         private String data;
         private String mimeType;
 
@@ -127,7 +156,7 @@ public abstract class ToolResultContext {
         }
     }
 
-    public static class AudioContent extends ToolResultContext {
+    public static class AudioContent extends Content {
         private String data;
         private String mimeType;
 
@@ -152,7 +181,7 @@ public abstract class ToolResultContext {
         }
     }
 
-    public static class StructuredContent extends ToolResultContext {
+    public static class StructuredContent extends Content {
         private final JSONObject content;
 
         public StructuredContent(JSONObject content) {

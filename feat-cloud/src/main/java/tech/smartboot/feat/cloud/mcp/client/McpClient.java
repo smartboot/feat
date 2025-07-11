@@ -12,19 +12,18 @@ package tech.smartboot.feat.cloud.mcp.client;
 
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
+import tech.smartboot.feat.cloud.mcp.CallToolResult;
 import tech.smartboot.feat.cloud.mcp.McpInitializeRequest;
 import tech.smartboot.feat.cloud.mcp.McpInitializeResponse;
 import tech.smartboot.feat.cloud.mcp.PromptMessage;
 import tech.smartboot.feat.cloud.mcp.Request;
 import tech.smartboot.feat.cloud.mcp.Resource;
 import tech.smartboot.feat.cloud.mcp.Response;
-import tech.smartboot.feat.cloud.mcp.client.model.CallToolResult;
 import tech.smartboot.feat.cloud.mcp.client.model.GetPromptResult;
 import tech.smartboot.feat.cloud.mcp.client.model.PromptListResponse;
 import tech.smartboot.feat.cloud.mcp.client.model.ResourceListResponse;
 import tech.smartboot.feat.cloud.mcp.client.model.ToolListResponse;
 import tech.smartboot.feat.cloud.mcp.server.model.PromptResult;
-import tech.smartboot.feat.cloud.mcp.server.model.ToolResultContext;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.common.FeatUtils;
@@ -168,19 +167,19 @@ public class McpClient {
                 String type = contentItem.getString("type");
                 switch (type) {
                     case "text":
-                        callToolResult.addContent(contentItem.to(ToolResultContext.TextContent.class));
+                        callToolResult.addContent(contentItem.to(CallToolResult.TextContent.class));
                         break;
                     case "image":
-                        callToolResult.addContent(contentItem.to(ToolResultContext.ImageContent.class));
+                        callToolResult.addContent(contentItem.to(CallToolResult.ImageContent.class));
                         break;
                     case "audio":
-                        callToolResult.addContent(contentItem.to(ToolResultContext.AudioContent.class));
+                        callToolResult.addContent(contentItem.to(CallToolResult.AudioContent.class));
                         break;
                     case "resource_link":
-                        callToolResult.addContent(contentItem.to(ToolResultContext.ResourceLinks.class));
+                        callToolResult.addContent(contentItem.to(CallToolResult.ResourceLinks.class));
                         break;
                     default:
-                        callToolResult.addContent(ToolResultContext.ofStructuredContent(content.getJSONObject(i)));
+                        callToolResult.addContent(CallToolResult.ofStructuredContent(content.getJSONObject(i)));
                 }
             }
             future.complete(callToolResult);

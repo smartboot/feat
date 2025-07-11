@@ -10,6 +10,8 @@
 
 package tech.smartboot.feat.cloud.mcp.server.model;
 
+import tech.smartboot.feat.cloud.mcp.CallToolResult;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -30,7 +32,7 @@ public class Tool {
     private String description;
     private final List<Property> inputSchema = new ArrayList<>();
     private final List<Property> outputSchema = new ArrayList<>();
-    private Function<ToolContext, ToolResultContext> action;
+    private Function<ToolContext, CallToolResult.Content> action;
 
     private Tool() {
     }
@@ -80,12 +82,12 @@ public class Tool {
         return this;
     }
 
-    public Tool doAction(Function<ToolContext, ToolResultContext> action) {
+    public Tool doAction(Function<ToolContext, CallToolResult.Content> action) {
         this.action = action;
         return this;
     }
 
-    public Function<ToolContext, ToolResultContext> getAction() {
+    public Function<ToolContext, CallToolResult.Content> getAction() {
         return action;
     }
 

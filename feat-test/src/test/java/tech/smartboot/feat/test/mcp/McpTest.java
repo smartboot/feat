@@ -15,6 +15,7 @@ import org.junit.Before;
 import org.junit.Test;
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.cloud.mcp.Argument;
+import tech.smartboot.feat.cloud.mcp.CallToolResult;
 import tech.smartboot.feat.cloud.mcp.McpInitializeResponse;
 import tech.smartboot.feat.cloud.mcp.client.ClientCapabilities;
 import tech.smartboot.feat.cloud.mcp.client.McpClient;
@@ -26,7 +27,6 @@ import tech.smartboot.feat.cloud.mcp.server.model.ResourceTemplate;
 import tech.smartboot.feat.cloud.mcp.server.model.ServerPrompt;
 import tech.smartboot.feat.cloud.mcp.server.model.ServerResource;
 import tech.smartboot.feat.cloud.mcp.server.model.Tool;
-import tech.smartboot.feat.cloud.mcp.server.model.ToolResultContext;
 import tech.smartboot.feat.router.Router;
 
 /**
@@ -41,7 +41,7 @@ public class McpTest {
     @Before
     public void init() {
         Tool tool = Tool.of("test").title("测试").description("测试").inputSchema(Property.withString("name", "用户名称"), Property.withRequiredString("age", "用户年龄")).outputSchema(Property.withRequiredNumber("age", "年龄")).doAction(input -> {
-            return ToolResultContext.ofText("aaa");
+            return CallToolResult.ofText("aaa");
         });
 
         Tool structTool = Tool.of("structResultTool").inputSchema(Property.withString("aa", "aa")).doAction(toolContext -> {
@@ -50,7 +50,7 @@ public class McpTest {
             j.put("age", 18);
             j.put("text", toolContext.getArguments().get("aa"));
             j.put("resource", ServerResource.of("test", "test.txt"));
-            return ToolResultContext.ofStructuredContent(j);
+            return CallToolResult.ofStructuredContent(j);
         });
 
         mcp = new McpServer();
@@ -141,7 +141,7 @@ public class McpTest {
     @Test
     public void test3() throws Exception {
         mcp.addTool(Tool.of("test_aaa").title("测试").description("测试").inputSchema(Property.withString("name", "用户名称"), Property.withRequiredString("age", "用户年龄")).outputSchema(Property.withRequiredNumber("age", "年龄")).doAction(input -> {
-            return ToolResultContext.ofText("aaa");
+            return CallToolResult.ofText("aaa");
         }));
         System.out.println(JSONObject.toJSONString(sseClient.callTool("test_aaa")));
     }
