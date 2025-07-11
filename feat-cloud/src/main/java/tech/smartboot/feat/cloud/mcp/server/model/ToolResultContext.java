@@ -13,10 +13,10 @@ package tech.smartboot.feat.cloud.mcp.server.model;
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.cloud.mcp.enums.ToolResultType;
 
-public abstract class ToolResult {
+public abstract class ToolResultContext {
     private final String type;
 
-    public ToolResult(ToolResultType type) {
+    public ToolResultContext(ToolResultType type) {
         this.type = type.getType();
     }
 
@@ -43,7 +43,7 @@ public abstract class ToolResult {
     }
 
 
-    public static class TextContent extends ToolResult {
+    public static class TextContent extends ToolResultContext {
         private String text;
 
         TextContent() {
@@ -59,7 +59,7 @@ public abstract class ToolResult {
         }
     }
 
-    public static class ResourceLinks extends ToolResult {
+    public static class ResourceLinks extends ToolResultContext {
         private String uri;
         private String name;
         private String description;
@@ -102,7 +102,7 @@ public abstract class ToolResult {
         }
     }
 
-    public static class ImageContent extends ToolResult {
+    public static class ImageContent extends ToolResultContext {
         private String data;
         private String mimeType;
 
@@ -127,7 +127,7 @@ public abstract class ToolResult {
         }
     }
 
-    public static class AudioContent extends ToolResult {
+    public static class AudioContent extends ToolResultContext {
         private String data;
         private String mimeType;
 
@@ -152,7 +152,7 @@ public abstract class ToolResult {
         }
     }
 
-    public static class StructuredContent extends ToolResult {
+    public static class StructuredContent extends ToolResultContext {
         private final JSONObject content;
 
         public StructuredContent(JSONObject content) {

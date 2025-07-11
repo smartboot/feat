@@ -20,7 +20,7 @@ import tech.smartboot.feat.cloud.mcp.server.model.ServerResource;
 import tech.smartboot.feat.cloud.mcp.server.model.ResourceTemplate;
 import tech.smartboot.feat.cloud.mcp.server.model.ServerPrompt;
 import tech.smartboot.feat.cloud.mcp.server.model.Tool;
-import tech.smartboot.feat.cloud.mcp.server.model.ToolResult;
+import tech.smartboot.feat.cloud.mcp.server.model.ToolResultContext;
 import tech.smartboot.feat.router.Router;
 
 /**
@@ -30,7 +30,7 @@ import tech.smartboot.feat.router.Router;
 public class Demo {
     public static void main(String[] args) {
         Tool tool = Tool.of("test").title("测试").description("测试").inputSchema(Property.withString("name", "用户名称"), Property.withRequiredString("age", "用户年龄")).outputSchema(Property.withRequiredNumber("age", "年龄")).doAction(input -> {
-            return ToolResult.ofText("aaa");
+            return ToolResultContext.ofText("aaa");
         });
 
         Tool structTool = Tool.of("structResultTool").inputSchema(Property.withString("aa", "aa")).doAction(toolContext -> {
@@ -39,7 +39,7 @@ public class Demo {
             j.put("age", 18);
             j.put("text", toolContext.getArguments().get("aa"));
             j.put("resource", ServerResource.of("test", "test.txt"));
-            return ToolResult.ofStructuredContent(j);
+            return ToolResultContext.ofStructuredContent(j);
         });
 
         McpServer mcp = new McpServer();

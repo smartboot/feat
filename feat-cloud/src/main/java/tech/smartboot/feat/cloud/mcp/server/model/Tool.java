@@ -30,7 +30,7 @@ public class Tool {
     private String description;
     private final List<Property> inputSchema = new ArrayList<>();
     private final List<Property> outputSchema = new ArrayList<>();
-    private Function<ToolContext, ToolResult> action;
+    private Function<ToolContext, ToolResultContext> action;
 
     private Tool() {
     }
@@ -80,12 +80,12 @@ public class Tool {
         return this;
     }
 
-    public Tool doAction(Function<ToolContext, ToolResult> action) {
+    public Tool doAction(Function<ToolContext, ToolResultContext> action) {
         this.action = action;
         return this;
     }
 
-    public Function<ToolContext, ToolResult> getAction() {
+    public Function<ToolContext, ToolResultContext> getAction() {
         return action;
     }
 
