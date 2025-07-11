@@ -8,7 +8,7 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.cloud.mcp.server.model;
+package tech.smartboot.feat.cloud.mcp;
 
 public class Argument {
     private String name;

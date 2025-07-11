@@ -13,8 +13,8 @@ package tech.smartboot.feat.cloud.mcp.server.handler;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.cloud.mcp.server.McpServer;
-import tech.smartboot.feat.cloud.mcp.server.model.Argument;
-import tech.smartboot.feat.cloud.mcp.server.model.Prompt;
+import tech.smartboot.feat.cloud.mcp.Argument;
+import tech.smartboot.feat.cloud.mcp.Prompt;
 import tech.smartboot.feat.core.server.HttpRequest;
 
 /**

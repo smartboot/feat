@@ -15,6 +15,7 @@ import tech.smartboot.feat.cloud.mcp.McpInitializeRequest;
 import tech.smartboot.feat.cloud.mcp.McpInitializeResponse;
 import tech.smartboot.feat.cloud.mcp.Request;
 import tech.smartboot.feat.cloud.mcp.Response;
+import tech.smartboot.feat.cloud.mcp.client.model.PromptListResponse;
 import tech.smartboot.feat.cloud.mcp.client.model.ToolListResponse;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpResponse;
@@ -136,4 +137,33 @@ public class McpClient {
             throw new RuntimeException(e);
         }
     }
+
+    public PromptListResponse ListPrompts() {
+        return ListPrompts(null);
+    }
+
+    public CompletableFuture<PromptListResponse> AsyncListPrompts(String nextCursor) {
+        CompletableFuture<PromptListResponse> future = new CompletableFuture<>();
+        JSONObject param = new JSONObject();
+        if (FeatUtils.isNotBlank(nextCursor)) {
+            param.put("cursor", nextCursor);
+        }
+        CompletableFuture<Response<JSONObject>> f = transport.asyncRequest("prompts/list", param);
+        f.thenAccept(response -> {
+            PromptListResponse toolListResponse = response.getResult().to(PromptListResponse.class);
+            future.complete(toolListResponse);
+        });
+        return future;
+    }
+
+    public PromptListResponse ListPrompts(String nextCursor) {
+        try {
+            return AsyncListPrompts(nextCursor).get();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 }

@@ -14,9 +14,9 @@ import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.cloud.mcp.server.McpServer;
 import tech.smartboot.feat.cloud.mcp.server.McpServerException;
-import tech.smartboot.feat.cloud.mcp.server.model.Prompt;
 import tech.smartboot.feat.cloud.mcp.server.model.PromptContext;
 import tech.smartboot.feat.cloud.mcp.server.model.PromptResult;
+import tech.smartboot.feat.cloud.mcp.server.model.ServerPrompt;
 import tech.smartboot.feat.core.server.HttpRequest;
 
 /**
@@ -32,7 +32,7 @@ public class PromptsGetHandler implements ServerHandler {
 
         PromptContext promptContext = new PromptContext(request, promptParams);
 
-        Prompt prompt = mcp.getPrompts().stream().filter(t -> t.getName().equals(promptName)).findFirst().orElse(null);
+        ServerPrompt prompt = mcp.getPrompts().stream().filter(t -> t.getName().equals(promptName)).findFirst().orElse(null);
         if (prompt == null) {
             throw new McpServerException(McpServerException.INTERNAL_ERROR, "Unknown prompt: " + promptName);
         }

@@ -28,9 +28,9 @@ import tech.smartboot.feat.cloud.mcp.server.handler.ResourcesTemplateListHandler
 import tech.smartboot.feat.cloud.mcp.server.handler.ServerHandler;
 import tech.smartboot.feat.cloud.mcp.server.handler.ToolsCallHandler;
 import tech.smartboot.feat.cloud.mcp.server.handler.ToolsListHandler;
-import tech.smartboot.feat.cloud.mcp.server.model.Prompt;
 import tech.smartboot.feat.cloud.mcp.server.model.Resource;
 import tech.smartboot.feat.cloud.mcp.server.model.ResourceTemplate;
+import tech.smartboot.feat.cloud.mcp.server.model.ServerPrompt;
 import tech.smartboot.feat.cloud.mcp.server.model.Tool;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
@@ -74,7 +74,7 @@ public class McpServer {
 
     private final Map<String, StreamSession> sseEmitters = new ConcurrentHashMap<>();
     private final List<Tool> tools = new ArrayList<>();
-    private final List<Prompt> prompts = new ArrayList<>();
+    private final List<ServerPrompt> prompts = new ArrayList<>();
     private final List<Resource> resources = new ArrayList<>();
     private final List<ResourceTemplate> resourceTemplates = new ArrayList<>();
 
@@ -82,7 +82,7 @@ public class McpServer {
         return tools;
     }
 
-    public List<Prompt> getPrompts() {
+    public List<ServerPrompt> getPrompts() {
         return prompts;
     }
 
@@ -94,7 +94,7 @@ public class McpServer {
         return resourceTemplates;
     }
 
-    public McpServer addPrompt(Prompt prompt) {
+    public McpServer addPrompt(ServerPrompt prompt) {
         prompts.stream().filter(p -> p.getName().equals(prompt.getName())).findAny().ifPresent(p -> {
             throw new IllegalStateException("prompt already exists");
         });

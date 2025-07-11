@@ -8,12 +8,11 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.cloud.mcp.server.model;
+package tech.smartboot.feat.cloud.mcp;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.Function;
 
 /**
  * @author 三刀
@@ -24,17 +23,15 @@ public class Prompt {
     private String title;
     private String description;
     private final List<Argument> arguments = new ArrayList<>();
-    private Function<PromptContext, PromptResult> action;
 
-    private Prompt(String name) {
+
+    protected Prompt(String name) {
         this.name = name;
     }
 
     public static Prompt of(String name) {
         return new Prompt(name);
     }
-
-
 
 
     public String getName() {
@@ -73,15 +70,6 @@ public class Prompt {
         }
         this.arguments.addAll(Arrays.asList(arguments));
         return this;
-    }
-
-    public Prompt doAction(Function<PromptContext, PromptResult> action) {
-        this.action = action;
-        return this;
-    }
-
-    public Function<PromptContext, PromptResult> getAction() {
-        return action;
     }
 
 
