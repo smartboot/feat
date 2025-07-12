@@ -13,8 +13,7 @@ package tech.smartboot.feat.cloud.mcp.server.handler;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.cloud.mcp.server.McpServer;
-import tech.smartboot.feat.cloud.mcp.Argument;
-import tech.smartboot.feat.cloud.mcp.Prompt;
+import tech.smartboot.feat.cloud.mcp.model.Prompt;
 import tech.smartboot.feat.core.server.HttpRequest;
 
 /**
@@ -36,7 +35,7 @@ public class ListPromptsHandler implements ServerHandler {
 
 
             JSONArray arguments = new JSONArray();
-            for (Argument argument : prompt.getArguments()) {
+            for (Prompt.Argument argument : prompt.getArguments()) {
                 JSONObject propertyObject = new JSONObject();
                 propertyObject.put("name", argument.getName());
                 propertyObject.put("description", argument.getDescription());

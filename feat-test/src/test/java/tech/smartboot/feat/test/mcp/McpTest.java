@@ -14,12 +14,12 @@ import com.alibaba.fastjson2.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 import tech.smartboot.feat.Feat;
-import tech.smartboot.feat.cloud.mcp.Argument;
-import tech.smartboot.feat.cloud.mcp.CallToolResult;
-import tech.smartboot.feat.cloud.mcp.McpInitializeResponse;
+import tech.smartboot.feat.cloud.mcp.model.CallToolResult;
+import tech.smartboot.feat.cloud.mcp.model.McpInitializeResponse;
 import tech.smartboot.feat.cloud.mcp.client.ClientCapabilities;
 import tech.smartboot.feat.cloud.mcp.client.McpClient;
 import tech.smartboot.feat.cloud.mcp.enums.RoleEnum;
+import tech.smartboot.feat.cloud.mcp.model.Prompt;
 import tech.smartboot.feat.cloud.mcp.server.McpServer;
 import tech.smartboot.feat.cloud.mcp.server.model.PromptResult;
 import tech.smartboot.feat.cloud.mcp.server.model.Property;
@@ -62,7 +62,7 @@ public class McpTest {
         mcp.addPrompt(ServerPrompt.of("code_review")
                         .title("Request Code Review")
                         .description("Asks the LLM to analyze code quality and suggest improvements")
-                        .arguments(Argument.requiredOf("code", "The code to review"))
+                        .arguments(Prompt.requiredArgument("code", "The code to review"))
                         .doAction(promptContext -> {
                             String code = promptContext.getArguments().getString("code");
                             return PromptResult.ofText(RoleEnum.User, "Please review the following code and provide suggestions for improvement:" + code);
@@ -70,7 +70,7 @@ public class McpTest {
                 .addPrompt(ServerPrompt.of("image_review")
                         .title("Request Image Review")
                         .description("Asks the LLM to analyze image quality and suggest improvements")
-                        .arguments(Argument.requiredOf("image", "The image to review"))
+                        .arguments(Prompt.requiredArgument("image", "The image to review"))
                         .doAction(promptContext -> {
                             String image = promptContext.getArguments().getString("image");
                             return PromptResult.ofImage(RoleEnum.User, image, "image/png");
@@ -78,7 +78,7 @@ public class McpTest {
                 .addPrompt(ServerPrompt.of("audio_review")
                         .title("Request Audio Review")
                         .description("Asks the LLM to analyze audio quality and suggest improvements")
-                        .arguments(Argument.requiredOf("audio", "The audio to review"))
+                        .arguments(Prompt.requiredArgument("audio", "The audio to review"))
                         .doAction(promptContext -> {
                             String image = promptContext.getArguments().getString("audio");
                             return PromptResult.ofAudio(RoleEnum.User, "YXNkZmFzZGY=", "audio/wav");
@@ -131,7 +131,7 @@ public class McpTest {
         mcp.addPrompt(ServerPrompt.of("code_review_1")
                 .title("Request Code Review")
                 .description("Asks the LLM to analyze code quality and suggest improvements")
-                .arguments(Argument.requiredOf("code", "The code to review"))
+                .arguments(Prompt.requiredArgument("code", "The code to review"))
                 .doAction(promptContext -> {
                     String code = promptContext.getArguments().getString("code");
                     return PromptResult.ofText(RoleEnum.User, "Please review the following code and provide suggestions for improvement:" + code);

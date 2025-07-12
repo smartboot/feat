@@ -10,7 +10,7 @@
 
 package tech.smartboot.feat.cloud.mcp.client.model;
 
-import tech.smartboot.feat.cloud.mcp.Resource;
+import tech.smartboot.feat.cloud.mcp.model.Resource;
 
 import java.util.List;
 

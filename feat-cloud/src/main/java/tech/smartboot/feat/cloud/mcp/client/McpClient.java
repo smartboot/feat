@@ -12,19 +12,18 @@ package tech.smartboot.feat.cloud.mcp.client;
 
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
-import tech.smartboot.feat.cloud.mcp.CallToolResult;
-import tech.smartboot.feat.cloud.mcp.McpInitializeRequest;
-import tech.smartboot.feat.cloud.mcp.McpInitializeResponse;
-import tech.smartboot.feat.cloud.mcp.PromptMessage;
-import tech.smartboot.feat.cloud.mcp.Request;
-import tech.smartboot.feat.cloud.mcp.Resource;
-import tech.smartboot.feat.cloud.mcp.Response;
+import tech.smartboot.feat.cloud.mcp.model.CallToolResult;
+import tech.smartboot.feat.cloud.mcp.model.McpInitializeRequest;
+import tech.smartboot.feat.cloud.mcp.model.McpInitializeResponse;
+import tech.smartboot.feat.cloud.mcp.model.PromptMessage;
+import tech.smartboot.feat.cloud.mcp.model.Request;
+import tech.smartboot.feat.cloud.mcp.model.Resource;
+import tech.smartboot.feat.cloud.mcp.model.Response;
 import tech.smartboot.feat.cloud.mcp.client.model.GetPromptResult;
 import tech.smartboot.feat.cloud.mcp.client.model.PromptListResponse;
 import tech.smartboot.feat.cloud.mcp.client.model.ResourceListResponse;
 import tech.smartboot.feat.cloud.mcp.client.model.ToolListResponse;
 import tech.smartboot.feat.cloud.mcp.server.model.PromptResult;
-import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HttpStatus;
@@ -40,14 +39,11 @@ import java.util.function.Consumer;
  */
 public class McpClient {
     private final McpOptions options;
-    private HttpClient httpClient;
-    private String sessionId;
-    private Transport transport;
+    private final Transport transport;
     private boolean initialized = false;
 
     private McpClient(McpOptions options, Transport transport) {
         this.options = options;
-        httpClient = new HttpClient(options.getBaseUrl());
         this.transport = transport;
     }
 

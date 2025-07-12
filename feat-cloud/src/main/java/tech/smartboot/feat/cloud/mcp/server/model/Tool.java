@@ -10,7 +10,7 @@
 
 package tech.smartboot.feat.cloud.mcp.server.model;
 
-import tech.smartboot.feat.cloud.mcp.CallToolResult;
+import tech.smartboot.feat.cloud.mcp.model.CallToolResult;
 
 import java.util.ArrayList;
 import java.util.Arrays;

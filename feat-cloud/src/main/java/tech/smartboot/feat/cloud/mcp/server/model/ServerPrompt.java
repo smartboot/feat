@@ -10,8 +10,7 @@
 
 package tech.smartboot.feat.cloud.mcp.server.model;
 
-import tech.smartboot.feat.cloud.mcp.Argument;
-import tech.smartboot.feat.cloud.mcp.Prompt;
+import tech.smartboot.feat.cloud.mcp.model.Prompt;
 
 import java.util.function.Function;
 

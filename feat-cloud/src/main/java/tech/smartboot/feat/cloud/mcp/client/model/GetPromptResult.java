@@ -10,7 +10,7 @@
 
 package tech.smartboot.feat.cloud.mcp.client.model;
 
-import tech.smartboot.feat.cloud.mcp.PromptMessage;
+import tech.smartboot.feat.cloud.mcp.model.PromptMessage;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -8,7 +8,7 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.cloud.mcp.server;
+package tech.smartboot.feat.cloud.mcp.model;
 
 /**
  * @author 三刀

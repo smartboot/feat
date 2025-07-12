@@ -8,7 +8,7 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.cloud.mcp;
+package tech.smartboot.feat.cloud.mcp.model;
 
 import tech.smartboot.feat.cloud.mcp.server.model.PromptResult;
 

@@ -11,8 +11,8 @@
 package tech.smartboot.feat.cloud.mcp.client;
 
 import com.alibaba.fastjson2.JSONObject;
-import tech.smartboot.feat.cloud.mcp.Request;
-import tech.smartboot.feat.cloud.mcp.Response;
+import tech.smartboot.feat.cloud.mcp.model.Request;
+import tech.smartboot.feat.cloud.mcp.model.Response;
 import tech.smartboot.feat.core.client.HttpResponse;
 
 import java.util.concurrent.CompletableFuture;

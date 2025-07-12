@@ -8,19 +8,16 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.cloud.mcp;
-
-import com.alibaba.fastjson2.JSONObject;
+package tech.smartboot.feat.cloud.mcp.model;
 
 /**
  * @author 三刀
  * @version v1.0 6/18/25
  */
-public class McpInitializeRequest {
-    public static final String PROTOCOL_VERSION = "2025-06-18";
-    private String protocolVersion;
-    private JSONObject capabilities;
-    private Implementation clientInfo;
+public class McpInitializeResponse {
+    private String protocolVersion = "2025-03-26";
+    private final ServerCapabilities capabilities = new ServerCapabilities();
+    private Implementation serverInfo;
 
     // Getters and Setters
 
@@ -32,20 +29,20 @@ public class McpInitializeRequest {
         this.protocolVersion = protocolVersion;
     }
 
-    public JSONObject getCapabilities() {
+    public ServerCapabilities getCapabilities() {
         return capabilities;
     }
 
-    public void setCapabilities(JSONObject capabilities) {
-        this.capabilities = capabilities;
+
+    public Implementation getServerInfo() {
+        return serverInfo;
     }
 
-    public Implementation getClientInfo() {
-        return clientInfo;
-    }
-
-    public void setClientInfo(Implementation clientInfo) {
-        this.clientInfo = clientInfo;
+    public void setServerInfo(Implementation serverInfo) {
+        this.serverInfo = serverInfo;
     }
 }
+
+
+
 

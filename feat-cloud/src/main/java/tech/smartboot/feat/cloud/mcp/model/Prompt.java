@@ -8,7 +8,7 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.cloud.mcp;
+package tech.smartboot.feat.cloud.mcp.model;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,6 +33,13 @@ public class Prompt {
         return new Prompt(name);
     }
 
+    public static Argument argument(String name, String description) {
+        return new Argument(name, description, false);
+    }
+
+    public static Argument requiredArgument(String name, String description) {
+        return new Argument(name, description, true);
+    }
 
     public String getName() {
         return name;
@@ -73,4 +80,39 @@ public class Prompt {
     }
 
 
+    public static class Argument {
+        private String name;
+        private String description;
+        private boolean required;
+
+        private Argument(String name, String description, boolean required) {
+            this.name = name;
+            this.description = description;
+            this.required = required;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public void setDescription(String description) {
+            this.description = description;
+        }
+
+        public boolean isRequired() {
+            return required;
+        }
+
+        public void setRequired(boolean required) {
+            this.required = required;
+        }
+    }
 }

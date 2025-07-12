@@ -11,7 +11,7 @@
 package tech.smartboot.feat.cloud.mcp.server.model;
 
 import com.alibaba.fastjson2.JSONObject;
-import tech.smartboot.feat.cloud.mcp.Resource;
+import tech.smartboot.feat.cloud.mcp.model.Resource;
 import tech.smartboot.feat.cloud.mcp.enums.RoleEnum;
 import tech.smartboot.feat.cloud.mcp.enums.ToolResultType;
 import tech.smartboot.feat.cloud.mcp.server.McpServerException;
