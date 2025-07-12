@@ -109,18 +109,19 @@ public class McpTest {
         Feat.httpServer(opt -> opt.debug(true)).httpHandler(router).listen(3002);
 
         sseClient = McpClient.newSseClient(opt -> opt.baseUrl("http://localhost:3002").setMcpEndpoint("/mcp"));
-        sseClient.Initialize(new ClientCapabilities());
+        sseClient.initialize(new ClientCapabilities());
         streamClient = McpClient.newStreamableClient(opt -> opt.baseUrl("http://localhost:3002").setMcpEndpoint("/mcp"));
+        streamClient.initialize(new ClientCapabilities());
     }
 
     @Test
     public void test() throws Exception {
         McpClient client = McpClient.newSseClient(opt -> opt.baseUrl("http://localhost:3002").setMcpEndpoint("/mcp"));
-        McpInitializeResponse response = client.Initialize(new ClientCapabilities());
+        McpInitializeResponse response = client.initialize(new ClientCapabilities());
         System.out.println(JSONObject.toJSONString(response));
-        System.out.println(JSONObject.toJSONString(client.ListTools()));
-        System.out.println(JSONObject.toJSONString(client.ListPrompts()));
-        System.out.println(JSONObject.toJSONString(client.ListResources()));
+        System.out.println(JSONObject.toJSONString(client.listTools()));
+        System.out.println(JSONObject.toJSONString(client.listPrompts()));
+        System.out.println(JSONObject.toJSONString(client.listResources()));
 
 
     }
@@ -144,5 +145,6 @@ public class McpTest {
             return CallToolResult.ofText("aaa");
         }));
         System.out.println(JSONObject.toJSONString(sseClient.callTool("test_aaa")));
+        System.out.println(JSONObject.toJSONString(streamClient.callTool("test_aaa")));
     }
 }

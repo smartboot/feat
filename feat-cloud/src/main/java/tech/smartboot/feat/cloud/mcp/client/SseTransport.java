@@ -33,8 +33,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * @version v1.0 7/9/25
  */
 public class SseTransport extends Transport {
-    private HttpClient httpClient;
-    private HttpClient sseClient;
+    private final HttpClient httpClient;
+    private final HttpClient sseClient;
     private String endpoint;
     private final Map<Integer, CompletableFuture<Response<JSONObject>>> responseCallbacks = new ConcurrentHashMap<>();
 
@@ -52,6 +52,10 @@ public class SseTransport extends Transport {
                 } else {
                     Response<JSONObject> response = JSONObject.parseObject(data, new TypeReference<Response<JSONObject>>() {
                     });
+                    if (response.getId() == null) {
+                        System.out.println("no id");
+                        return;
+                    }
                     CompletableFuture<Response<JSONObject>> future = responseCallbacks.remove(response.getId());
                     if (future != null) {
                         if (response.getError() != null) {
@@ -62,6 +66,9 @@ public class SseTransport extends Transport {
                     }
                 }
             }
+        }).onFailure(throwable -> {
+            System.out.println("sse error");
+            throwable.printStackTrace();
         }).submit();
     }
 

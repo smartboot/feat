@@ -63,7 +63,7 @@ public class McpClient {
         return new McpClient(options, new StreamableTransport(options));
     }
 
-    public CompletableFuture<McpInitializeResponse> AsyncInitialize(ClientCapabilities capabilities) {
+    public CompletableFuture<McpInitializeResponse> asyncInitialize(ClientCapabilities capabilities) {
         CompletableFuture<McpInitializeResponse> future = new CompletableFuture<>();
         McpInitializeRequest request = new McpInitializeRequest();
         request.setProtocolVersion(McpInitializeRequest.PROTOCOL_VERSION);
@@ -89,7 +89,6 @@ public class McpClient {
             //After successful initialization, the client MUST send an initialized notification to indicate it is ready to begin normal operations
             Request<JSONObject> initializedNotify = new Request<>();
             initializedNotify.setMethod("notifications/initialized");
-            initializedNotify.setParams(new JSONObject());
             CompletableFuture<HttpResponse> notification = transport.sendNotification(initializedNotify);
             notification.whenComplete((r, e) -> {
                 if (e != null) {
@@ -109,19 +108,19 @@ public class McpClient {
         return future;
     }
 
-    public McpInitializeResponse Initialize(ClientCapabilities capabilities) {
+    public McpInitializeResponse initialize(ClientCapabilities capabilities) {
         try {
-            return AsyncInitialize(capabilities).get();
+            return asyncInitialize(capabilities).get();
         } catch (Throwable e) {
             throw new FeatException(e);
         }
     }
 
-    public ToolListResponse ListTools() {
-        return ListTools(null);
+    public ToolListResponse listTools() {
+        return listTools(null);
     }
 
-    public CompletableFuture<ToolListResponse> AsyncListTools(String nextCursor) {
+    public CompletableFuture<ToolListResponse> asyncListTools(String nextCursor) {
         CompletableFuture<ToolListResponse> future = new CompletableFuture<>();
         JSONObject param = new JSONObject();
         if (FeatUtils.isNotBlank(nextCursor)) {
@@ -135,9 +134,9 @@ public class McpClient {
         return future;
     }
 
-    public ToolListResponse ListTools(String nextCursor) {
+    public ToolListResponse listTools(String nextCursor) {
         try {
-            return AsyncListTools(nextCursor).get();
+            return asyncListTools(nextCursor).get();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         } catch (ExecutionException e) {
@@ -145,8 +144,8 @@ public class McpClient {
         }
     }
 
-    public PromptListResponse ListPrompts() {
-        return ListPrompts(null);
+    public PromptListResponse listPrompts() {
+        return listPrompts(null);
     }
 
 
@@ -194,6 +193,7 @@ public class McpClient {
         return callTool(toolName, null);
     }
 
+
     public CallToolResult callTool(String toolName, JSONObject arguments) {
         try {
             return asyncCallTool(toolName, arguments).get();
@@ -204,7 +204,7 @@ public class McpClient {
         }
     }
 
-    public CompletableFuture<PromptListResponse> AsyncListPrompts(String nextCursor) {
+    public CompletableFuture<PromptListResponse> asyncListPrompts(String nextCursor) {
         CompletableFuture<PromptListResponse> future = new CompletableFuture<>();
         JSONObject param = new JSONObject();
         if (FeatUtils.isNotBlank(nextCursor)) {
@@ -218,9 +218,9 @@ public class McpClient {
         return future;
     }
 
-    public PromptListResponse ListPrompts(String nextCursor) {
+    public PromptListResponse listPrompts(String nextCursor) {
         try {
-            return AsyncListPrompts(nextCursor).get();
+            return asyncListPrompts(nextCursor).get();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         } catch (ExecutionException e) {
@@ -286,11 +286,11 @@ public class McpClient {
         }
     }
 
-    public ResourceListResponse ListResources() {
-        return ListResources(null);
+    public ResourceListResponse listResources() {
+        return listResources(null);
     }
 
-    public CompletableFuture<ResourceListResponse> AsyncListResources(String nextCursor) {
+    public CompletableFuture<ResourceListResponse> asyncListResources(String nextCursor) {
         CompletableFuture<ResourceListResponse> future = new CompletableFuture<>();
         JSONObject param = new JSONObject();
         if (FeatUtils.isNotBlank(nextCursor)) {
@@ -304,13 +304,18 @@ public class McpClient {
         return future;
     }
 
-    public ResourceListResponse ListResources(String nextCursor) {
+    public ResourceListResponse listResources(String nextCursor) {
         try {
-            return AsyncListResources(nextCursor).get();
+            return asyncListResources(nextCursor).get();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         } catch (ExecutionException e) {
             throw new RuntimeException(e);
         }
     }
+
+//    public void subscribeResource(String uri) {
+//
+//        CompletableFuture<Response<JSONObject>> f = transport.asyncRequest("resources/subscribe", JSONObject.of("uri",uri));
+//    }
 }

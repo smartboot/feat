@@ -125,9 +125,11 @@ public class McpServer {
         String data = JSON.toJSONString(notify);
         sseEmitters.forEach((sessionId, session) -> {
             try {
-                session.getSseEmitter().send(data);
+                if (session.getSseEmitter() != null) {
+                    session.getSseEmitter().send(data);
+                }
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                logger.error("notification exception", e);
             }
         });
     }
@@ -314,7 +316,9 @@ public class McpServer {
             int preStatus = session.getState();
             Response response = jsonRpcHandle(session, ctx.Request);
             if (response != null) {
-                session.getSseEmitter().send(JSONObject.toJSONString(response));
+                session.getSseEmitter().send(JSONObject.toJSONString(response), (Throwable throwable) -> {
+                    logger.error("send error", throwable);
+                });
             } else if (preStatus == StreamSession.STATE_INITIALIZED && session.getState() == StreamSession.STATE_READY) {
                 initialized(session);
             }
