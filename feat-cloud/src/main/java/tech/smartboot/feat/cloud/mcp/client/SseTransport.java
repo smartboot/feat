@@ -32,7 +32,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author 三刀
  * @version v1.0 7/9/25
  */
-public class SseTransport extends Transport {
+final class SseTransport extends Transport {
     private final HttpClient httpClient;
     private final HttpClient sseClient;
     private String endpoint;

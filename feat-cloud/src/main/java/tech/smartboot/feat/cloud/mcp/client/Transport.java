@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author 三刀
  * @version v1.0 7/9/25
  */
-public abstract class Transport {
+abstract class Transport {
     protected final McpOptions options;
     protected String sessionId;
     private final AtomicInteger requestId = new AtomicInteger(0);

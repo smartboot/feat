@@ -12,18 +12,18 @@ package tech.smartboot.feat.cloud.mcp.client;
 
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
-import tech.smartboot.feat.cloud.mcp.model.PromptGetResult;
-import tech.smartboot.feat.cloud.mcp.model.ResourceListResponse;
-import tech.smartboot.feat.cloud.mcp.model.ToolListResponse;
 import tech.smartboot.feat.cloud.mcp.enums.RoleEnum;
-import tech.smartboot.feat.cloud.mcp.model.ToolCalledResult;
 import tech.smartboot.feat.cloud.mcp.model.McpInitializeRequest;
 import tech.smartboot.feat.cloud.mcp.model.McpInitializeResponse;
+import tech.smartboot.feat.cloud.mcp.model.PromptGetResult;
 import tech.smartboot.feat.cloud.mcp.model.PromptListResponse;
 import tech.smartboot.feat.cloud.mcp.model.PromptMessage;
 import tech.smartboot.feat.cloud.mcp.model.Request;
 import tech.smartboot.feat.cloud.mcp.model.Resource;
+import tech.smartboot.feat.cloud.mcp.model.ResourceListResponse;
 import tech.smartboot.feat.cloud.mcp.model.Response;
+import tech.smartboot.feat.cloud.mcp.model.ToolCalledResult;
+import tech.smartboot.feat.cloud.mcp.model.ToolListResponse;
 import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HttpStatus;
@@ -59,22 +59,22 @@ public class McpClient {
         return new McpClient(options, new StreamableTransport(options));
     }
 
-    public CompletableFuture<McpInitializeResponse> asyncInitialize(ClientCapabilities capabilities) {
+    public CompletableFuture<McpInitializeResponse> asyncInitialize() {
         CompletableFuture<McpInitializeResponse> future = new CompletableFuture<>();
         McpInitializeRequest request = new McpInitializeRequest();
         request.setProtocolVersion(McpInitializeRequest.PROTOCOL_VERSION);
         JSONObject capabilitiesJson = new JSONObject();
-        if (capabilities.isRoots()) {
+        if (options.isRoots()) {
             capabilitiesJson.put("roots", JSONObject.of("listChanged", true));
         }
-        if (capabilities.isSampling()) {
+        if (options.isSampling()) {
             capabilitiesJson.put("sampling", new JSONObject());
         }
-        if (capabilities.isElicitation()) {
+        if (options.isElicitation()) {
             capabilitiesJson.put("elicitation", new JSONObject());
         }
-        if (capabilities.getExperimental() != null) {
-            capabilitiesJson.put("experimental", capabilities.getExperimental());
+        if (options.getExperimental() != null) {
+            capabilitiesJson.put("experimental", options.getExperimental());
         }
         request.setCapabilities(capabilitiesJson);
         request.setClientInfo(options.getImplementation());
@@ -104,9 +104,9 @@ public class McpClient {
         return future;
     }
 
-    public McpInitializeResponse initialize(ClientCapabilities capabilities) {
+    public McpInitializeResponse initialize() {
         try {
-            return asyncInitialize(capabilities).get();
+            return asyncInitialize().get();
         } catch (Throwable e) {
             throw new FeatException(e);
         }

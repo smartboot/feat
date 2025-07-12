@@ -28,7 +28,7 @@ import java.util.concurrent.CompletableFuture;
  * @author 三刀
  * @version v1.0 7/9/25
  */
-public class StreamableTransport extends Transport {
+final class StreamableTransport extends Transport {
     private HttpClient httpClient;
     private HttpClient sseClient;
 

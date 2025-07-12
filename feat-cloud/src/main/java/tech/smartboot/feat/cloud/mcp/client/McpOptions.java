@@ -10,6 +10,7 @@
 
 package tech.smartboot.feat.cloud.mcp.client;
 
+import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.cloud.mcp.model.Implementation;
 
@@ -22,6 +23,10 @@ public class McpOptions {
     private String mcpEndpoint = "/mcp";
     private String sseEndpoint = "/sse";
     private final Implementation implementation = Implementation.of("feat-mcp-client", "Feat MCP", Feat.VERSION);
+    private boolean roots;
+    private boolean sampling;
+    private boolean elicitation;
+    private JSONObject experimental;
 
     McpOptions() {
     }
@@ -61,5 +66,36 @@ public class McpOptions {
         this.implementation.setName(name);
         this.implementation.setTitle(title);
         this.implementation.setVersion(version);
+    }
+
+    public McpOptions rootsEnable() {
+        this.roots = true;
+        return this;
+    }
+
+    public McpOptions samplingEnable() {
+        this.sampling = true;
+        return this;
+    }
+
+    public McpOptions elicitationEnable() {
+        this.elicitation = true;
+        return this;
+    }
+
+    public boolean isRoots() {
+        return roots;
+    }
+
+    public boolean isSampling() {
+        return sampling;
+    }
+
+    public boolean isElicitation() {
+        return elicitation;
+    }
+
+    public JSONObject getExperimental() {
+        return experimental;
     }
 }

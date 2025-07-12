@@ -14,7 +14,6 @@ import com.alibaba.fastjson2.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 import tech.smartboot.feat.Feat;
-import tech.smartboot.feat.cloud.mcp.client.ClientCapabilities;
 import tech.smartboot.feat.cloud.mcp.client.McpClient;
 import tech.smartboot.feat.cloud.mcp.model.Tool;
 import tech.smartboot.feat.cloud.mcp.enums.RoleEnum;
@@ -91,9 +90,9 @@ public class McpTest {
         Feat.httpServer(opt -> opt.debug(true)).httpHandler(router).listen(3002);
 
         sseClient = McpClient.newSseClient(opt -> opt.baseUrl("http://localhost:3002").setMcpEndpoint("/mcp"));
-        sseClient.initialize(new ClientCapabilities());
+        sseClient.initialize();
         streamClient = McpClient.newStreamableClient(opt -> opt.baseUrl("http://localhost:3002").setMcpEndpoint("/mcp"));
-        streamClient.initialize(new ClientCapabilities());
+        streamClient.initialize();
     }
 
     @Test
