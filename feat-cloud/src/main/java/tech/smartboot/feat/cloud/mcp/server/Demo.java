@@ -12,13 +12,13 @@ package tech.smartboot.feat.cloud.mcp.server;
 
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.Feat;
+import tech.smartboot.feat.cloud.mcp.model.Tool;
 import tech.smartboot.feat.cloud.mcp.enums.RoleEnum;
 import tech.smartboot.feat.cloud.mcp.model.CallToolResult;
 import tech.smartboot.feat.cloud.mcp.model.Prompt;
 import tech.smartboot.feat.cloud.mcp.model.PromptMessage;
 import tech.smartboot.feat.cloud.mcp.model.Resource;
 import tech.smartboot.feat.cloud.mcp.model.ResourceTemplate;
-import tech.smartboot.feat.cloud.mcp.model.Tool;
 import tech.smartboot.feat.cloud.mcp.server.model.ServerPrompt;
 import tech.smartboot.feat.cloud.mcp.server.model.ServerResource;
 import tech.smartboot.feat.cloud.mcp.server.model.ServerTool;

@@ -8,9 +8,7 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.cloud.mcp.client.model;
-
-import tech.smartboot.feat.cloud.mcp.model.Resource;
+package tech.smartboot.feat.cloud.mcp.model;
 
 import java.util.List;
 

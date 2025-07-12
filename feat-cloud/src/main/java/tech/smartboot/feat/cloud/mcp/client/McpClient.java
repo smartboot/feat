@@ -12,9 +12,9 @@ package tech.smartboot.feat.cloud.mcp.client;
 
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
-import tech.smartboot.feat.cloud.mcp.client.model.GetPromptResult;
-import tech.smartboot.feat.cloud.mcp.client.model.ResourceListResponse;
-import tech.smartboot.feat.cloud.mcp.client.model.ToolListResponse;
+import tech.smartboot.feat.cloud.mcp.model.GetPromptResult;
+import tech.smartboot.feat.cloud.mcp.model.ResourceListResponse;
+import tech.smartboot.feat.cloud.mcp.model.ToolListResponse;
 import tech.smartboot.feat.cloud.mcp.enums.RoleEnum;
 import tech.smartboot.feat.cloud.mcp.model.CallToolResult;
 import tech.smartboot.feat.cloud.mcp.model.McpInitializeRequest;

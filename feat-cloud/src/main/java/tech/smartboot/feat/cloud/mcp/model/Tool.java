@@ -10,28 +10,20 @@
 
 package tech.smartboot.feat.cloud.mcp.model;
 
+import com.alibaba.fastjson2.annotation.JSONField;
 import tech.smartboot.feat.cloud.mcp.enums.PropertyType;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class Tool {
-    /**
-     * The name of the tool. Must be unique.
-     */
     private final String name;
-    /**
-     * Optional human-readable name of the tool for display purposes.
-     */
-    protected String title;
-    /**
-     * Human-readable description of functionality
-     */
-    protected String description;
-    private final List<Property> inputSchema = new ArrayList<>();
-    private final List<Property> outputSchema = new ArrayList<>();
+    private String title;
+    private String description;
+    protected Schema inputSchema;
+    protected Schema outputSchema;
 
-    protected Tool(String name) {
+    public Tool(String name) {
         this.name = name;
     }
 
@@ -43,16 +35,32 @@ public class Tool {
         return title;
     }
 
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
     public String getDescription() {
         return description;
     }
 
-    public List<Property> getInputs() {
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public Schema getInputSchema() {
         return inputSchema;
     }
 
-    public final List<Property> outputSchema() {
+    public void setInputSchema(Schema inputSchema) {
+        this.inputSchema = inputSchema;
+    }
+
+    public Schema getOutputSchema() {
         return outputSchema;
+    }
+
+    public void setOutputSchema(Schema outputSchema) {
+        this.outputSchema = outputSchema;
     }
 
     public static Property stringProperty(String name, String description) {
@@ -75,10 +83,42 @@ public class Tool {
         return new Property(name, PropertyType.Boolean, description, false);
     }
 
+    public class Schema {
+        private String type;
+        private Map<String, Property> properties;
+        private List<String> required;
+
+        public String getType() {
+            return type;
+        }
+
+        public void setType(String type) {
+            this.type = type;
+        }
+
+        public Map<String, Property> getProperties() {
+            return properties;
+        }
+
+        public void setProperties(Map<String, Property> properties) {
+            this.properties = properties;
+        }
+
+        public List<String> getRequired() {
+            return required;
+        }
+
+        public void setRequired(List<String> required) {
+            this.required = required;
+        }
+    }
+
     public static class Property {
+        @JSONField(serialize = false)
         private final String name;
         private final PropertyType type;
         private final String description;
+        @JSONField(serialize = false)
         private final boolean required;
 
         Property(String name, PropertyType type, String description, boolean required) {
@@ -106,4 +146,3 @@ public class Tool {
         }
     }
 }
-

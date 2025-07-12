@@ -10,16 +10,12 @@
 
 package tech.smartboot.feat.cloud.mcp.server.handler;
 
-import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
-import tech.smartboot.feat.cloud.mcp.model.Tool;
+import tech.smartboot.feat.cloud.mcp.model.ToolListResponse;
 import tech.smartboot.feat.cloud.mcp.server.McpServer;
-import tech.smartboot.feat.cloud.mcp.enums.PropertyType;
-import tech.smartboot.feat.cloud.mcp.server.model.ServerTool;
 import tech.smartboot.feat.core.server.HttpRequest;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author 三刀
@@ -29,36 +25,8 @@ public class ToolsListHandler implements ServerHandler {
 
     @Override
     public JSONObject apply(McpServer mcp, HttpRequest request, JSONObject jsonObject) {
-        JSONObject result = new JSONObject();
-
-        JSONArray tools = new JSONArray();
-        for (ServerTool tool : mcp.getTools()) {
-            JSONObject toolObject = new JSONObject();
-            toolObject.put("name", tool.getName());
-            toolObject.put("title", tool.getTitle());
-            toolObject.put("description", tool.getDescription());
-
-            List<String> requiredInputs = new ArrayList<>();
-
-            JSONObject inputSchema = new JSONObject();
-            inputSchema.put("type", PropertyType.Object.getType());
-            JSONObject properties = new JSONObject();
-            for (Tool.Property property : tool.getInputs()) {
-                JSONObject propertyObject = new JSONObject();
-                propertyObject.put("type", property.getType().getType());
-                propertyObject.put("description", property.getDescription());
-                properties.put(property.getName(), propertyObject);
-
-                if (property.isRequired()) {
-                    requiredInputs.add(property.getName());
-                }
-            }
-            inputSchema.put("properties", properties);
-            inputSchema.put("required", requiredInputs);
-            toolObject.put("inputSchema", inputSchema);
-            tools.add(toolObject);
-        }
-        result.put("tools", tools);
-        return result;
+        ToolListResponse response = new ToolListResponse();
+        response.setTools(new ArrayList<>(mcp.getTools()));
+        return JSONObject.from(response);
     }
 }

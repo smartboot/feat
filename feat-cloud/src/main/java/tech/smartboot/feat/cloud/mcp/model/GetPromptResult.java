@@ -8,9 +8,7 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.cloud.mcp.client.model;
-
-import tech.smartboot.feat.cloud.mcp.model.PromptMessage;
+package tech.smartboot.feat.cloud.mcp.model;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +19,7 @@ import java.util.List;
  */
 public class GetPromptResult {
     private String description;
-    private final List<PromptMessage> messages = new ArrayList<>();
+    private final List<PromptMessage<?>> messages = new ArrayList<>();
 
     public String getDescription() {
         return description;
@@ -31,11 +29,11 @@ public class GetPromptResult {
         this.description = description;
     }
 
-    public List<PromptMessage> getMessages() {
+    public List<PromptMessage<?>> getMessages() {
         return messages;
     }
 
-    public void addMessage(PromptMessage message) {
+    public void addMessage(PromptMessage<?> message) {
         this.messages.add(message);
     }
 }

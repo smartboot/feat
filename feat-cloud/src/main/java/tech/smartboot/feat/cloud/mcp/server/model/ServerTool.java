@@ -10,10 +10,10 @@
 
 package tech.smartboot.feat.cloud.mcp.server.model;
 
-import tech.smartboot.feat.cloud.mcp.model.CallToolResult;
 import tech.smartboot.feat.cloud.mcp.model.Tool;
+import tech.smartboot.feat.cloud.mcp.model.CallToolResult;
 
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.function.Function;
 
 public class ServerTool extends Tool {
@@ -31,7 +31,14 @@ public class ServerTool extends Tool {
         if (inputs == null) {
             return this;
         }
-        getInputs().addAll(Arrays.asList(inputs));
+        if (inputSchema == null) {
+            inputSchema = new Schema();
+            inputSchema.setType("object");
+            inputSchema.setProperties(new HashMap<>());
+        }
+        for (Property input : inputs) {
+            inputSchema.getProperties().put(input.getName(), input);
+        }
         return this;
     }
 
@@ -45,21 +52,28 @@ public class ServerTool extends Tool {
     }
 
 
-    public ServerTool outputSchema(Property... output) {
-        if (output == null) {
+    public ServerTool outputSchema(Property... outputs) {
+        if (outputs == null) {
             return this;
         }
-        outputSchema().addAll(Arrays.asList(output));
+        if (outputSchema == null) {
+            outputSchema = new Schema();
+            outputSchema.setType("object");
+            outputSchema.setProperties(new HashMap<>());
+        }
+        for (Property output : outputs) {
+            outputSchema.getProperties().put(output.getName(), output);
+        }
         return this;
     }
 
     public ServerTool title(String title) {
-        this.title = title;
+        super.setTitle(title);
         return this;
     }
 
     public ServerTool description(String description) {
-        this.description = description;
+        super.setDescription(description);
         return this;
     }
 }
