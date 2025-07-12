@@ -18,7 +18,7 @@ import tech.smartboot.feat.cloud.mcp.client.ClientCapabilities;
 import tech.smartboot.feat.cloud.mcp.client.McpClient;
 import tech.smartboot.feat.cloud.mcp.model.Tool;
 import tech.smartboot.feat.cloud.mcp.enums.RoleEnum;
-import tech.smartboot.feat.cloud.mcp.model.CallToolResult;
+import tech.smartboot.feat.cloud.mcp.model.ToolCalledResult;
 import tech.smartboot.feat.cloud.mcp.model.Prompt;
 import tech.smartboot.feat.cloud.mcp.model.PromptMessage;
 import tech.smartboot.feat.cloud.mcp.model.Resource;
@@ -41,7 +41,7 @@ public class McpTest {
     @Before
     public void init() {
         ServerTool tool = ServerTool.of("test").title("测试").description("测试").inputSchema(Tool.stringProperty("name", "用户名称"), Tool.requiredStringProperty("age", "用户年龄")).outputSchema(Tool.requiredNumberProperty("age", "年龄")).doAction(input -> {
-            return CallToolResult.ofText("aaa");
+            return ToolCalledResult.ofText("aaa");
         });
 
         ServerTool structTool = ServerTool.of("structResultTool").inputSchema(Tool.stringProperty("aa", "aa")).doAction(toolContext -> {
@@ -50,7 +50,7 @@ public class McpTest {
             j.put("age", 18);
             j.put("text", toolContext.getArguments().get("aa"));
             j.put("resource", Resource.of("test", "test.txt"));
-            return CallToolResult.ofStructuredContent(j);
+            return ToolCalledResult.ofStructuredContent(j);
         });
 
         mcp = new McpServer();
@@ -117,7 +117,7 @@ public class McpTest {
     @Test
     public void test3() throws Exception {
         mcp.addTool(ServerTool.of("test_aaa").title("测试").description("测试").inputSchema(Tool.stringProperty("name", "用户名称"), Tool.requiredStringProperty("age", "用户年龄")).outputSchema(Tool.requiredNumberProperty("age", "年龄")).doAction(input -> {
-            return CallToolResult.ofText("aaa");
+            return ToolCalledResult.ofText("aaa");
         }));
         System.out.println(JSONObject.toJSONString(sseClient.callTool("test_aaa")));
         System.out.println(JSONObject.toJSONString(streamClient.callTool("test_aaa")));

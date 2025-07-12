@@ -12,7 +12,7 @@ package tech.smartboot.feat.cloud.mcp.server.handler;
 
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
-import tech.smartboot.feat.cloud.mcp.model.CallToolResult;
+import tech.smartboot.feat.cloud.mcp.model.ToolCalledResult;
 import tech.smartboot.feat.cloud.mcp.enums.ToolResultType;
 import tech.smartboot.feat.cloud.mcp.server.McpServer;
 import tech.smartboot.feat.cloud.mcp.server.McpServerException;
@@ -40,16 +40,16 @@ public class ToolsCallHandler implements ServerHandler {
         }
         JSONObject result = new JSONObject();
         try {
-            CallToolResult.Content content = tool.getAction().apply(toolContext);
+            ToolCalledResult.Content content = tool.getAction().apply(toolContext);
             if (ToolResultType.STRUCTURED_CONTENT.getType().equals(content.getType())) {
-                CallToolResult.StructuredContent structuredContent = (CallToolResult.StructuredContent) content;
-                result.put("content", JSONArray.of(JSONObject.from(CallToolResult.ofText(structuredContent.getContent().toString()))));
+                ToolCalledResult.StructuredContent structuredContent = (ToolCalledResult.StructuredContent) content;
+                result.put("content", JSONArray.of(JSONObject.from(ToolCalledResult.ofText(structuredContent.getContent().toString()))));
                 result.put("structuredContent", structuredContent.getContent());
             } else {
                 result.put("content", JSONArray.of(JSONObject.from(content)));
             }
         } catch (Throwable e) {
-            result.put("content", JSONArray.of(JSONObject.from(CallToolResult.ofText(e.getMessage()))));
+            result.put("content", JSONArray.of(JSONObject.from(ToolCalledResult.ofText(e.getMessage()))));
             result.put("isError", true);
         }
         return result;

@@ -20,7 +20,7 @@ import java.util.List;
  * @author 三刀
  * @version v1.0 7/11/25
  */
-public class CallToolResult {
+public class ToolCalledResult {
     private final List<Content> content = new ArrayList<>();
     private boolean isError;
 

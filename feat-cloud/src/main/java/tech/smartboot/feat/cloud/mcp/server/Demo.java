@@ -14,7 +14,7 @@ import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.cloud.mcp.model.Tool;
 import tech.smartboot.feat.cloud.mcp.enums.RoleEnum;
-import tech.smartboot.feat.cloud.mcp.model.CallToolResult;
+import tech.smartboot.feat.cloud.mcp.model.ToolCalledResult;
 import tech.smartboot.feat.cloud.mcp.model.Prompt;
 import tech.smartboot.feat.cloud.mcp.model.PromptMessage;
 import tech.smartboot.feat.cloud.mcp.model.Resource;
@@ -31,7 +31,7 @@ import tech.smartboot.feat.router.Router;
 public class Demo {
     public static void main(String[] args) {
         ServerTool tool = ServerTool.of("test").title("测试").description("测试").inputSchema(Tool.stringProperty("name", "用户名称"), Tool.requiredStringProperty("age", "用户年龄")).outputSchema(Tool.requiredNumberProperty("age", "年龄")).doAction(input -> {
-            return CallToolResult.ofText("aaa");
+            return ToolCalledResult.ofText("aaa");
         });
 
         ServerTool structTool = ServerTool.of("structResultTool").inputSchema(Tool.stringProperty("aa", "aa")).doAction(toolContext -> {
@@ -40,7 +40,7 @@ public class Demo {
             j.put("age", 18);
             j.put("text", toolContext.getArguments().get("aa"));
             j.put("resource", Resource.of("test", "test.txt"));
-            return CallToolResult.ofStructuredContent(j);
+            return ToolCalledResult.ofStructuredContent(j);
         });
 
         McpServer mcp = new McpServer();

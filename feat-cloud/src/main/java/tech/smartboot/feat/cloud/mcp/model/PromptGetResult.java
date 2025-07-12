@@ -17,7 +17,7 @@ import java.util.List;
  * @author 三刀
  * @version v1.0 7/11/25
  */
-public class GetPromptResult {
+public class PromptGetResult {
     private String description;
     private final List<PromptMessage<?>> messages = new ArrayList<>();
 

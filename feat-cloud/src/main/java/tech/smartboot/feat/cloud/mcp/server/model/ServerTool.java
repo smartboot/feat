@@ -11,13 +11,13 @@
 package tech.smartboot.feat.cloud.mcp.server.model;
 
 import tech.smartboot.feat.cloud.mcp.model.Tool;
-import tech.smartboot.feat.cloud.mcp.model.CallToolResult;
+import tech.smartboot.feat.cloud.mcp.model.ToolCalledResult;
 
 import java.util.HashMap;
 import java.util.function.Function;
 
 public class ServerTool extends Tool {
-    private Function<ToolContext, CallToolResult.Content> action;
+    private Function<ToolContext, ToolCalledResult.Content> action;
 
     private ServerTool(String name) {
         super(name);
@@ -42,12 +42,12 @@ public class ServerTool extends Tool {
         return this;
     }
 
-    public ServerTool doAction(Function<ToolContext, CallToolResult.Content> action) {
+    public ServerTool doAction(Function<ToolContext, ToolCalledResult.Content> action) {
         this.action = action;
         return this;
     }
 
-    public Function<ToolContext, CallToolResult.Content> getAction() {
+    public Function<ToolContext, ToolCalledResult.Content> getAction() {
         return action;
     }
 

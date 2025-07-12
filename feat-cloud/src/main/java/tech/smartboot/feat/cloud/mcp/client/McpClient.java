@@ -12,11 +12,11 @@ package tech.smartboot.feat.cloud.mcp.client;
 
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
-import tech.smartboot.feat.cloud.mcp.model.GetPromptResult;
+import tech.smartboot.feat.cloud.mcp.model.PromptGetResult;
 import tech.smartboot.feat.cloud.mcp.model.ResourceListResponse;
 import tech.smartboot.feat.cloud.mcp.model.ToolListResponse;
 import tech.smartboot.feat.cloud.mcp.enums.RoleEnum;
-import tech.smartboot.feat.cloud.mcp.model.CallToolResult;
+import tech.smartboot.feat.cloud.mcp.model.ToolCalledResult;
 import tech.smartboot.feat.cloud.mcp.model.McpInitializeRequest;
 import tech.smartboot.feat.cloud.mcp.model.McpInitializeResponse;
 import tech.smartboot.feat.cloud.mcp.model.PromptListResponse;
@@ -145,36 +145,36 @@ public class McpClient {
     }
 
 
-    public CompletableFuture<CallToolResult> asyncCallTool(String toolName, JSONObject arguments) {
+    public CompletableFuture<ToolCalledResult> asyncCallTool(String toolName, JSONObject arguments) {
         JSONObject param = new JSONObject();
         param.put("name", toolName);
         if (arguments != null) {
             param.put("arguments", arguments);
         }
-        CompletableFuture<CallToolResult> future = new CompletableFuture<>();
+        CompletableFuture<ToolCalledResult> future = new CompletableFuture<>();
         CompletableFuture<Response<JSONObject>> f = transport.asyncRequest("tools/call", param);
         f.thenAccept(response -> {
             JSONArray content = response.getResult().getJSONArray("content");
-            CallToolResult callToolResult = new CallToolResult();
+            ToolCalledResult callToolResult = new ToolCalledResult();
             callToolResult.setError(response.getResult().getBooleanValue("isError"));
             for (int i = 0; i < content.size(); i++) {
                 JSONObject contentItem = content.getJSONObject(i);
                 String type = contentItem.getString("type");
                 switch (type) {
                     case "text":
-                        callToolResult.addContent(contentItem.to(CallToolResult.TextContent.class));
+                        callToolResult.addContent(contentItem.to(ToolCalledResult.TextContent.class));
                         break;
                     case "image":
-                        callToolResult.addContent(contentItem.to(CallToolResult.ImageContent.class));
+                        callToolResult.addContent(contentItem.to(ToolCalledResult.ImageContent.class));
                         break;
                     case "audio":
-                        callToolResult.addContent(contentItem.to(CallToolResult.AudioContent.class));
+                        callToolResult.addContent(contentItem.to(ToolCalledResult.AudioContent.class));
                         break;
                     case "resource_link":
-                        callToolResult.addContent(contentItem.to(CallToolResult.ResourceLinks.class));
+                        callToolResult.addContent(contentItem.to(ToolCalledResult.ResourceLinks.class));
                         break;
                     default:
-                        callToolResult.addContent(CallToolResult.ofStructuredContent(content.getJSONObject(i)));
+                        callToolResult.addContent(ToolCalledResult.ofStructuredContent(content.getJSONObject(i)));
                 }
             }
             future.complete(callToolResult);
@@ -185,12 +185,12 @@ public class McpClient {
         return future;
     }
 
-    public CallToolResult callTool(String toolName) {
+    public ToolCalledResult callTool(String toolName) {
         return callTool(toolName, null);
     }
 
 
-    public CallToolResult callTool(String toolName, JSONObject arguments) {
+    public ToolCalledResult callTool(String toolName, JSONObject arguments) {
         try {
             return asyncCallTool(toolName, arguments).get();
         } catch (InterruptedException e) {
@@ -224,17 +224,17 @@ public class McpClient {
         }
     }
 
-    public CompletableFuture<GetPromptResult> asyncGetPrompt(String name, JSONObject arguments) {
+    public CompletableFuture<PromptGetResult> asyncGetPrompt(String name, JSONObject arguments) {
         JSONObject param = new JSONObject();
         param.put("name", name);
         if (arguments != null) {
             param.put("arguments", arguments);
         }
         CompletableFuture<Response<JSONObject>> f = transport.asyncRequest("prompts/get", param);
-        CompletableFuture<GetPromptResult> future = new CompletableFuture<>();
+        CompletableFuture<PromptGetResult> future = new CompletableFuture<>();
         f.thenAccept(response -> {
             JSONObject result = response.getResult();
-            GetPromptResult promptMessage = new GetPromptResult();
+            PromptGetResult promptMessage = new PromptGetResult();
             promptMessage.setDescription(result.getString("description"));
             JSONArray messages = result.getJSONArray("messages");
             for (int i = 0; i < messages.size(); i++) {
@@ -270,11 +270,11 @@ public class McpClient {
         return future;
     }
 
-    public GetPromptResult getPrompt(String name) {
+    public PromptGetResult getPrompt(String name) {
         return getPrompt(name, null);
     }
 
-    public GetPromptResult getPrompt(String name, JSONObject arguments) {
+    public PromptGetResult getPrompt(String name, JSONObject arguments) {
         try {
             return asyncGetPrompt(name, arguments).get();
         } catch (Throwable e) {
