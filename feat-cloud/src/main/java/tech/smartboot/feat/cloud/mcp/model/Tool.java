@@ -10,7 +10,7 @@
 
 package tech.smartboot.feat.cloud.mcp.model;
 
-import tech.smartboot.feat.cloud.mcp.server.model.Property;
+import tech.smartboot.feat.cloud.mcp.enums.PropertyType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -53,6 +53,57 @@ public class Tool {
 
     public final List<Property> outputSchema() {
         return outputSchema;
+    }
+
+    public static Property stringProperty(String name, String description) {
+        return new Property(name, PropertyType.String, description, false);
+    }
+
+    public static Property requiredStringProperty(String name, String description) {
+        return new Property(name, PropertyType.String, description, true);
+    }
+
+    public static Property numberProperty(String name, String description) {
+        return new Property(name, PropertyType.Number, description, false);
+    }
+
+    public static Property requiredNumberProperty(String name, String description) {
+        return new Property(name, PropertyType.Number, description, false);
+    }
+
+    public static Property boolProperty(String name, String description) {
+        return new Property(name, PropertyType.Boolean, description, false);
+    }
+
+    public static class Property {
+        private final String name;
+        private final PropertyType type;
+        private final String description;
+        private final boolean required;
+
+        Property(String name, PropertyType type, String description, boolean required) {
+            this.name = name;
+            this.type = type;
+            this.description = description;
+            this.required = required;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+
+        public PropertyType getType() {
+            return type;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public boolean isRequired() {
+            return required;
+        }
     }
 }
 

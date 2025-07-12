@@ -16,7 +16,7 @@ import com.alibaba.fastjson2.TypeReference;
 import tech.smartboot.feat.cloud.mcp.model.McpInitializeRequest;
 import tech.smartboot.feat.cloud.mcp.model.McpInitializeResponse;
 import tech.smartboot.feat.cloud.mcp.model.Request;
-import tech.smartboot.feat.cloud.mcp.model.Resource;
+import tech.smartboot.feat.cloud.mcp.model.ResourceTemplate;
 import tech.smartboot.feat.cloud.mcp.model.Response;
 import tech.smartboot.feat.cloud.mcp.model.ServerCapabilities;
 import tech.smartboot.feat.cloud.mcp.server.handler.CompletionCompleteHandler;
@@ -30,7 +30,6 @@ import tech.smartboot.feat.cloud.mcp.server.handler.ResourcesTemplateListHandler
 import tech.smartboot.feat.cloud.mcp.server.handler.ServerHandler;
 import tech.smartboot.feat.cloud.mcp.server.handler.ToolsCallHandler;
 import tech.smartboot.feat.cloud.mcp.server.handler.ToolsListHandler;
-import tech.smartboot.feat.cloud.mcp.model.ResourceTemplate;
 import tech.smartboot.feat.cloud.mcp.server.model.ServerPrompt;
 import tech.smartboot.feat.cloud.mcp.server.model.ServerResource;
 import tech.smartboot.feat.cloud.mcp.server.model.ServerTool;
@@ -136,18 +135,17 @@ public class McpServer {
         });
     }
 
-    public McpServer addResource(ServerResource serverResource) {
-        Resource resource = serverResource.getResource();
+    public McpServer addResource(ServerResource resource) {
         if (FeatUtils.isBlank(resource.getUri())) {
             throw new IllegalStateException("uri can not be null");
         }
         if (FeatUtils.isBlank(resource.getName())) {
             throw new IllegalStateException("name can not be null");
         }
-        if (resources.stream().anyMatch(r -> r.getResource().getUri().equals(resource.getUri()))) {
+        if (resources.stream().anyMatch(r -> r.getUri().equals(resource.getUri()))) {
             throw new IllegalStateException("resource already exists");
         }
-        resources.add(serverResource);
+        resources.add(resource);
         notification("notifications/resources/list_changed");
         return this;
     }

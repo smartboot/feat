@@ -29,14 +29,14 @@ public class ResourcesReadHandler implements ServerHandler {
     public JSONObject apply(McpServer mcp, HttpRequest request, JSONObject jsonObject) {
         JSONObject params = jsonObject.getJSONObject("params");
         String uri = params.getString("uri");
-        ServerResource serverResource = mcp.getResources().stream().filter(r -> r.getResource().getUri().equals(uri)).findFirst().orElse(null);
+        ServerResource serverResource = mcp.getResources().stream().filter(r -> r.getUri().equals(uri)).findFirst().orElse(null);
 
         if (serverResource == null) {
             throw new McpServerException(McpServerException.RESOURCE_NOT_FOUND, "Resource not found ", JSONObject.of("uri", uri));
         }
         ResourceContext promptContext = new ResourceContext(request, serverResource);
         String data = serverResource.getAction().apply(promptContext);
-        Resource resource = Resource.copy(serverResource.getResource());
+        Resource resource = Resource.copy(serverResource);
         if (serverResource.isText()) {
             resource.setText(data);
         } else {

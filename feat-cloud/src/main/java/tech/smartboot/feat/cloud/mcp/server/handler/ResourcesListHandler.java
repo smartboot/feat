@@ -13,7 +13,6 @@ package tech.smartboot.feat.cloud.mcp.server.handler;
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.cloud.mcp.model.Resource;
 import tech.smartboot.feat.cloud.mcp.server.McpServer;
-import tech.smartboot.feat.cloud.mcp.server.model.ServerResource;
 import tech.smartboot.feat.core.server.HttpRequest;
 
 import java.util.ArrayList;
@@ -28,10 +27,7 @@ public class ResourcesListHandler implements ServerHandler {
     @Override
     public JSONObject apply(McpServer mcp, HttpRequest request, JSONObject jsonObject) {
         JSONObject result = new JSONObject();
-        List<Resource> resources = new ArrayList<>();
-        for (ServerResource resource : mcp.getResources()) {
-            resources.add(resource.getResource());
-        }
+        List<Resource> resources = new ArrayList<>(mcp.getResources());
         result.put("resources", resources);
         return result;
     }

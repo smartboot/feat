@@ -17,8 +17,8 @@ import tech.smartboot.feat.cloud.mcp.model.CallToolResult;
 import tech.smartboot.feat.cloud.mcp.model.Prompt;
 import tech.smartboot.feat.cloud.mcp.model.PromptMessage;
 import tech.smartboot.feat.cloud.mcp.model.Resource;
-import tech.smartboot.feat.cloud.mcp.server.model.Property;
 import tech.smartboot.feat.cloud.mcp.model.ResourceTemplate;
+import tech.smartboot.feat.cloud.mcp.model.Tool;
 import tech.smartboot.feat.cloud.mcp.server.model.ServerPrompt;
 import tech.smartboot.feat.cloud.mcp.server.model.ServerResource;
 import tech.smartboot.feat.cloud.mcp.server.model.ServerTool;
@@ -30,11 +30,11 @@ import tech.smartboot.feat.router.Router;
  */
 public class Demo {
     public static void main(String[] args) {
-        ServerTool tool = ServerTool.of("test").title("测试").description("测试").inputSchema(Property.withString("name", "用户名称"), Property.withRequiredString("age", "用户年龄")).outputSchema(Property.withRequiredNumber("age", "年龄")).doAction(input -> {
+        ServerTool tool = ServerTool.of("test").title("测试").description("测试").inputSchema(Tool.stringProperty("name", "用户名称"), Tool.requiredStringProperty("age", "用户年龄")).outputSchema(Tool.requiredNumberProperty("age", "年龄")).doAction(input -> {
             return CallToolResult.ofText("aaa");
         });
 
-        ServerTool structTool = ServerTool.of("structResultTool").inputSchema(Property.withString("aa", "aa")).doAction(toolContext -> {
+        ServerTool structTool = ServerTool.of("structResultTool").inputSchema(Tool.stringProperty("aa", "aa")).doAction(toolContext -> {
             JSONObject j = new JSONObject();
             j.put("name", "name");
             j.put("age", 18);
@@ -44,7 +44,7 @@ public class Demo {
         });
 
         McpServer mcp = new McpServer();
-        mcp.addTool(tool).addTool(ServerTool.of("errorTool").inputSchema(Property.withString("aa", "aa")).doAction(jsonObject -> {
+        mcp.addTool(tool).addTool(ServerTool.of("errorTool").inputSchema(Tool.stringProperty("aa", "aa")).doAction(jsonObject -> {
             throw new IllegalStateException("exception...");
         })).addTool(structTool);
 

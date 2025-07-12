@@ -18,13 +18,12 @@ import java.util.function.Function;
  * @author 三刀
  * @version v1.0 6/28/25
  */
-public class ServerResource {
-    private final Resource resource;
+public class ServerResource extends Resource {
     private Function<ResourceContext, String> action;
     private final boolean isText;
 
-    private ServerResource(Resource resource, boolean isText) {
-        this.resource = resource;
+    private ServerResource(String uri, String name, String mimeType, boolean isText) {
+        super(uri, name, mimeType);
         this.isText = isText;
     }
 
@@ -42,7 +41,7 @@ public class ServerResource {
     }
 
     public static ServerResource ofText(String uri, String name, String mimeType, String text) {
-        return new ServerResource(Resource.of(uri, name, mimeType), true).doAction(resourceContext -> text);
+        return new ServerResource(uri, name, mimeType, true).doAction(resourceContext -> text);
     }
 
     public static ServerResource ofText(Resource resource, String text) {
@@ -58,15 +57,11 @@ public class ServerResource {
     }
 
     public static ServerResource ofBinary(String uri, String name, String mimeType, String blob) {
-        return new ServerResource(Resource.of(uri, name, mimeType), false).doAction(resourceContext -> blob);
+        return new ServerResource(uri, name, mimeType, false).doAction(resourceContext -> blob);
     }
 
     public static ServerResource ofBinary(Resource resource, String blob) {
         return ofBinary(resource.getUri(), resource.getName(), resource.getMimeType(), blob);
-    }
-
-    public Resource getResource() {
-        return resource;
     }
 
     public boolean isText() {
