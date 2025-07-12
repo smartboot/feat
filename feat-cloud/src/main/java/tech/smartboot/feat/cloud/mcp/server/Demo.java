@@ -16,11 +16,12 @@ import tech.smartboot.feat.cloud.mcp.enums.RoleEnum;
 import tech.smartboot.feat.cloud.mcp.model.CallToolResult;
 import tech.smartboot.feat.cloud.mcp.model.Prompt;
 import tech.smartboot.feat.cloud.mcp.model.PromptMessage;
+import tech.smartboot.feat.cloud.mcp.model.Resource;
 import tech.smartboot.feat.cloud.mcp.server.model.Property;
-import tech.smartboot.feat.cloud.mcp.server.model.ResourceTemplate;
+import tech.smartboot.feat.cloud.mcp.model.ResourceTemplate;
 import tech.smartboot.feat.cloud.mcp.server.model.ServerPrompt;
 import tech.smartboot.feat.cloud.mcp.server.model.ServerResource;
-import tech.smartboot.feat.cloud.mcp.server.model.Tool;
+import tech.smartboot.feat.cloud.mcp.server.model.ServerTool;
 import tech.smartboot.feat.router.Router;
 
 /**
@@ -29,21 +30,21 @@ import tech.smartboot.feat.router.Router;
  */
 public class Demo {
     public static void main(String[] args) {
-        Tool tool = Tool.of("test").title("测试").description("测试").inputSchema(Property.withString("name", "用户名称"), Property.withRequiredString("age", "用户年龄")).outputSchema(Property.withRequiredNumber("age", "年龄")).doAction(input -> {
+        ServerTool tool = ServerTool.of("test").title("测试").description("测试").inputSchema(Property.withString("name", "用户名称"), Property.withRequiredString("age", "用户年龄")).outputSchema(Property.withRequiredNumber("age", "年龄")).doAction(input -> {
             return CallToolResult.ofText("aaa");
         });
 
-        Tool structTool = Tool.of("structResultTool").inputSchema(Property.withString("aa", "aa")).doAction(toolContext -> {
+        ServerTool structTool = ServerTool.of("structResultTool").inputSchema(Property.withString("aa", "aa")).doAction(toolContext -> {
             JSONObject j = new JSONObject();
             j.put("name", "name");
             j.put("age", 18);
             j.put("text", toolContext.getArguments().get("aa"));
-            j.put("resource", ServerResource.of("test", "test.txt"));
+            j.put("resource", Resource.of("test", "test.txt"));
             return CallToolResult.ofStructuredContent(j);
         });
 
         McpServer mcp = new McpServer();
-        mcp.addTool(tool).addTool(Tool.of("errorTool").inputSchema(Property.withString("aa", "aa")).doAction(jsonObject -> {
+        mcp.addTool(tool).addTool(ServerTool.of("errorTool").inputSchema(Property.withString("aa", "aa")).doAction(jsonObject -> {
             throw new IllegalStateException("exception...");
         })).addTool(structTool);
 
@@ -76,15 +77,15 @@ public class Demo {
                         .title("Request Embedded Resource Review")
                         .description("Asks the LLM to analyze embedded resource quality and suggest improvements")
                         .doAction(promptContext -> {
-                            ServerResource.TextServerResource resource = ServerResource.ofText("test", "test.txt", "Hello World");
+                            Resource resource = Resource.of("test", "test.txt", "text/plain");
+                            resource.setText("context");
                             return PromptMessage.ofEmbeddedResource(RoleEnum.Assistant, resource);
                         }));
 
         // resources
-        mcp.addResource(ServerResource.of("test", "test.txt").doAction(resourceContext -> {
-                    return ServerResource.ofText(resourceContext.getResource(), "contentcontentcontentcontentcontent");
-                })).addResource(ServerResource.of("bbbbb", "test.bin").doAction(resourceContext -> {
-                    return ServerResource.ofBinary(resourceContext.getResource(), "YXNkZmFzZGY=");
+        mcp.addResource(ServerResource.ofText("test", "test.txt", "contentcontentcontentcontentcontent"))
+                .addResource(ServerResource.ofBinary("bbbbb", "test.bin").doAction(resourceContext -> {
+                    return "adfasfasdf";
                 })).addResource(ServerResource.ofText("file:///aa.txt", "test.txt", "text/plain", "bbbbb"))
                 .addResource(ServerResource.ofText("file:///bb.txt", "bb.txt", "text/plain", "aaaaaaa"));
 

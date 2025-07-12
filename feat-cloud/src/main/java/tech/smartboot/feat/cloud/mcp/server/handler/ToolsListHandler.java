@@ -14,8 +14,8 @@ import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.cloud.mcp.server.McpServer;
 import tech.smartboot.feat.cloud.mcp.server.model.Property;
-import tech.smartboot.feat.cloud.mcp.server.model.PropertyType;
-import tech.smartboot.feat.cloud.mcp.server.model.Tool;
+import tech.smartboot.feat.cloud.mcp.enums.PropertyType;
+import tech.smartboot.feat.cloud.mcp.server.model.ServerTool;
 import tech.smartboot.feat.core.server.HttpRequest;
 
 import java.util.ArrayList;
@@ -32,7 +32,7 @@ public class ToolsListHandler implements ServerHandler {
         JSONObject result = new JSONObject();
 
         JSONArray tools = new JSONArray();
-        for (Tool tool : mcp.getTools()) {
+        for (ServerTool tool : mcp.getTools()) {
             JSONObject toolObject = new JSONObject();
             toolObject.put("name", tool.getName());
             toolObject.put("title", tool.getTitle());

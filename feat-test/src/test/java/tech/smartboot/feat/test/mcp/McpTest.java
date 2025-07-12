@@ -20,12 +20,13 @@ import tech.smartboot.feat.cloud.mcp.enums.RoleEnum;
 import tech.smartboot.feat.cloud.mcp.model.CallToolResult;
 import tech.smartboot.feat.cloud.mcp.model.Prompt;
 import tech.smartboot.feat.cloud.mcp.model.PromptMessage;
+import tech.smartboot.feat.cloud.mcp.model.Resource;
 import tech.smartboot.feat.cloud.mcp.server.McpServer;
 import tech.smartboot.feat.cloud.mcp.server.model.Property;
-import tech.smartboot.feat.cloud.mcp.server.model.ResourceTemplate;
+import tech.smartboot.feat.cloud.mcp.model.ResourceTemplate;
 import tech.smartboot.feat.cloud.mcp.server.model.ServerPrompt;
 import tech.smartboot.feat.cloud.mcp.server.model.ServerResource;
-import tech.smartboot.feat.cloud.mcp.server.model.Tool;
+import tech.smartboot.feat.cloud.mcp.server.model.ServerTool;
 import tech.smartboot.feat.router.Router;
 
 /**
@@ -39,64 +40,46 @@ public class McpTest {
 
     @Before
     public void init() {
-        Tool tool = Tool.of("test").title("测试").description("测试").inputSchema(Property.withString("name", "用户名称"), Property.withRequiredString("age", "用户年龄")).outputSchema(Property.withRequiredNumber("age", "年龄")).doAction(input -> {
+        ServerTool tool = ServerTool.of("test").title("测试").description("测试").inputSchema(Property.withString("name", "用户名称"), Property.withRequiredString("age", "用户年龄")).outputSchema(Property.withRequiredNumber("age", "年龄")).doAction(input -> {
             return CallToolResult.ofText("aaa");
         });
 
-        Tool structTool = Tool.of("structResultTool").inputSchema(Property.withString("aa", "aa")).doAction(toolContext -> {
+        ServerTool structTool = ServerTool.of("structResultTool").inputSchema(Property.withString("aa", "aa")).doAction(toolContext -> {
             JSONObject j = new JSONObject();
             j.put("name", "name");
             j.put("age", 18);
             j.put("text", toolContext.getArguments().get("aa"));
-            j.put("resource", ServerResource.of("test", "test.txt"));
+            j.put("resource", Resource.of("test", "test.txt"));
             return CallToolResult.ofStructuredContent(j);
         });
 
         mcp = new McpServer();
-        mcp.addTool(tool).addTool(Tool.of("errorTool").inputSchema(Property.withString("aa", "aa")).doAction(jsonObject -> {
+        mcp.addTool(tool).addTool(ServerTool.of("errorTool").inputSchema(Property.withString("aa", "aa")).doAction(jsonObject -> {
             throw new IllegalStateException("exception...");
         })).addTool(structTool);
 
         //prompt
-        mcp.addPrompt(ServerPrompt.of("code_review")
-                        .title("Request Code Review")
-                        .description("Asks the LLM to analyze code quality and suggest improvements")
-                        .arguments(Prompt.requiredArgument("code", "The code to review"))
-                        .doAction(promptContext -> {
-                            String code = promptContext.getArguments().getString("code");
-                            return PromptMessage.ofText(RoleEnum.User, "Please review the following code and provide suggestions for improvement:" + code);
-                        }))
-                .addPrompt(ServerPrompt.of("image_review")
-                        .title("Request Image Review")
-                        .description("Asks the LLM to analyze image quality and suggest improvements")
-                        .arguments(Prompt.requiredArgument("image", "The image to review"))
-                        .doAction(promptContext -> {
-                            String image = promptContext.getArguments().getString("image");
-                            return PromptMessage.ofImage(RoleEnum.User, image, "image/png");
-                        }))
-                .addPrompt(ServerPrompt.of("audio_review")
-                        .title("Request Audio Review")
-                        .description("Asks the LLM to analyze audio quality and suggest improvements")
-                        .arguments(Prompt.requiredArgument("audio", "The audio to review"))
-                        .doAction(promptContext -> {
-                            String image = promptContext.getArguments().getString("audio");
-                            return PromptMessage.ofAudio(RoleEnum.User, "YXNkZmFzZGY=", "audio/wav");
-                        }))
-                .addPrompt(ServerPrompt.of("embedded_resource_review")
-                        .title("Request Embedded Resource Review")
-                        .description("Asks the LLM to analyze embedded resource quality and suggest improvements")
-                        .doAction(promptContext -> {
-                            ServerResource.TextServerResource resource = ServerResource.ofText("test", "test.txt", "Hello World");
-                            return PromptMessage.ofEmbeddedResource(RoleEnum.Assistant, resource);
-                        }));
+        mcp.addPrompt(ServerPrompt.of("code_review").title("Request Code Review").description("Asks the LLM to analyze code quality and suggest improvements").arguments(Prompt.requiredArgument("code", "The code to review")).doAction(promptContext -> {
+            String code = promptContext.getArguments().getString("code");
+            return PromptMessage.ofText(RoleEnum.User, "Please review the following code and provide suggestions for improvement:" + code);
+        })).addPrompt(ServerPrompt.of("image_review").title("Request Image Review").description("Asks the LLM to analyze image quality and suggest improvements").arguments(Prompt.requiredArgument("image", "The image to review")).doAction(promptContext -> {
+            String image = promptContext.getArguments().getString("image");
+            return PromptMessage.ofImage(RoleEnum.User, image, "image/png");
+        })).addPrompt(ServerPrompt.of("audio_review").title("Request Audio Review").description("Asks the LLM to analyze audio quality and suggest improvements").arguments(Prompt.requiredArgument("audio", "The audio to review")).doAction(promptContext -> {
+            String image = promptContext.getArguments().getString("audio");
+            return PromptMessage.ofAudio(RoleEnum.User, "YXNkZmFzZGY=", "audio/wav");
+        })).addPrompt(ServerPrompt.of("embedded_resource_review").title("Request Embedded Resource Review").description("Asks the LLM to analyze embedded resource quality and suggest improvements").doAction(promptContext -> {
+            Resource resource = Resource.of("test", "test.txt", "text/plain");
+            resource.setText("context");
+            return PromptMessage.ofEmbeddedResource(RoleEnum.Assistant, resource);
+        }));
 
         // resources
-        mcp.addResource(ServerResource.of("test", "test.txt").doAction(resourceContext -> {
-                    return ServerResource.ofText(resourceContext.getResource(), "contentcontentcontentcontentcontent");
-                })).addResource(ServerResource.of("bbbbb", "test.bin").doAction(resourceContext -> {
-                    return ServerResource.ofBinary(resourceContext.getResource(), "YXNkZmFzZGY=");
-                })).addResource(ServerResource.ofText("file:///aa.txt", "test.txt", "text/plain", "bbbbb"))
-                .addResource(ServerResource.ofText("file:///bb.txt", "bb.txt", "text/plain", "aaaaaaa"));
+        mcp.addResource(ServerResource.ofText("test", "test.txt", "aaa").doAction(resourceContext -> {
+            return "contentcontentcontentcontentcontent";
+        })).addResource(ServerResource.ofBinary("bbbbb", "test.bin").doAction(resourceContext -> {
+            return "YXNkZmFzZGY=";
+        })).addResource(ServerResource.ofText("file:///aa.txt", "test.txt", "text/plain", "bbbbb")).addResource(ServerResource.ofText("file:///bb.txt", "bb.txt", "text/plain", "aaaaaaa"));
 
         // resourceTemplate
         mcp.addResourceTemplate(ResourceTemplate.of("file:///{path}", "testTemplate").title("\uD83D\uDCC1 Project Files").description("Access files in the project directory").mimeType("application/octet-stream"));
@@ -124,20 +107,16 @@ public class McpTest {
 
     @Test
     public void test2() throws Exception {
-        mcp.addPrompt(ServerPrompt.of("code_review_1")
-                .title("Request Code Review")
-                .description("Asks the LLM to analyze code quality and suggest improvements")
-                .arguments(Prompt.requiredArgument("code", "The code to review"))
-                .doAction(promptContext -> {
-                    String code = promptContext.getArguments().getString("code");
-                    return PromptMessage.ofText(RoleEnum.User, "Please review the following code and provide suggestions for improvement:" + code);
-                }));
+        mcp.addPrompt(ServerPrompt.of("code_review_1").title("Request Code Review").description("Asks the LLM to analyze code quality and suggest improvements").arguments(Prompt.requiredArgument("code", "The code to review")).doAction(promptContext -> {
+            String code = promptContext.getArguments().getString("code");
+            return PromptMessage.ofText(RoleEnum.User, "Please review the following code and provide suggestions for improvement:" + code);
+        }));
         System.out.println(JSONObject.toJSONString(sseClient.getPrompt("code_review_1")));
     }
 
     @Test
     public void test3() throws Exception {
-        mcp.addTool(Tool.of("test_aaa").title("测试").description("测试").inputSchema(Property.withString("name", "用户名称"), Property.withRequiredString("age", "用户年龄")).outputSchema(Property.withRequiredNumber("age", "年龄")).doAction(input -> {
+        mcp.addTool(ServerTool.of("test_aaa").title("测试").description("测试").inputSchema(Property.withString("name", "用户名称"), Property.withRequiredString("age", "用户年龄")).outputSchema(Property.withRequiredNumber("age", "年龄")).doAction(input -> {
             return CallToolResult.ofText("aaa");
         }));
         System.out.println(JSONObject.toJSONString(sseClient.callTool("test_aaa")));

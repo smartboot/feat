@@ -16,6 +16,7 @@ import com.alibaba.fastjson2.TypeReference;
 import tech.smartboot.feat.cloud.mcp.model.McpInitializeRequest;
 import tech.smartboot.feat.cloud.mcp.model.McpInitializeResponse;
 import tech.smartboot.feat.cloud.mcp.model.Request;
+import tech.smartboot.feat.cloud.mcp.model.Resource;
 import tech.smartboot.feat.cloud.mcp.model.Response;
 import tech.smartboot.feat.cloud.mcp.model.ServerCapabilities;
 import tech.smartboot.feat.cloud.mcp.server.handler.CompletionCompleteHandler;
@@ -29,10 +30,10 @@ import tech.smartboot.feat.cloud.mcp.server.handler.ResourcesTemplateListHandler
 import tech.smartboot.feat.cloud.mcp.server.handler.ServerHandler;
 import tech.smartboot.feat.cloud.mcp.server.handler.ToolsCallHandler;
 import tech.smartboot.feat.cloud.mcp.server.handler.ToolsListHandler;
-import tech.smartboot.feat.cloud.mcp.server.model.ResourceTemplate;
+import tech.smartboot.feat.cloud.mcp.model.ResourceTemplate;
 import tech.smartboot.feat.cloud.mcp.server.model.ServerPrompt;
 import tech.smartboot.feat.cloud.mcp.server.model.ServerResource;
-import tech.smartboot.feat.cloud.mcp.server.model.Tool;
+import tech.smartboot.feat.cloud.mcp.server.model.ServerTool;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
@@ -77,12 +78,12 @@ public class McpServer {
     }
 
     private final Map<String, StreamSession> sseEmitters = new ConcurrentHashMap<>();
-    private final List<Tool> tools = new ArrayList<>();
+    private final List<ServerTool> tools = new ArrayList<>();
     private final List<ServerPrompt> prompts = new ArrayList<>();
     private final List<ServerResource> resources = new ArrayList<>();
     private final List<ResourceTemplate> resourceTemplates = new ArrayList<>();
 
-    public List<Tool> getTools() {
+    public List<ServerTool> getTools() {
         return tools;
     }
 
@@ -107,7 +108,7 @@ public class McpServer {
         return this;
     }
 
-    public McpServer addTool(Tool tool) {
+    public McpServer addTool(ServerTool tool) {
         tools.stream().filter(t -> t.getName().equals(tool.getName())).findAny().ifPresent(t -> {
             throw new IllegalStateException("tool already exists");
         });
@@ -135,17 +136,18 @@ public class McpServer {
         });
     }
 
-    public McpServer addResource(ServerResource resource) {
+    public McpServer addResource(ServerResource serverResource) {
+        Resource resource = serverResource.getResource();
         if (FeatUtils.isBlank(resource.getUri())) {
             throw new IllegalStateException("uri can not be null");
         }
         if (FeatUtils.isBlank(resource.getName())) {
             throw new IllegalStateException("name can not be null");
         }
-        if (resources.stream().anyMatch(r -> r.getUri().equals(resource.getUri()))) {
+        if (resources.stream().anyMatch(r -> r.getResource().getUri().equals(resource.getUri()))) {
             throw new IllegalStateException("resource already exists");
         }
-        resources.add(resource);
+        resources.add(serverResource);
         notification("notifications/resources/list_changed");
         return this;
     }

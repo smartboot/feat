@@ -18,75 +18,58 @@ import java.util.function.Function;
  * @author 三刀
  * @version v1.0 6/28/25
  */
-public class ServerResource extends Resource {
-    private Function<ResourceContext, ServerResource> action;
+public class ServerResource {
+    private final Resource resource;
+    private Function<ResourceContext, String> action;
+    private final boolean isText;
 
-    protected ServerResource(String uri, String name, String mimeType) {
-        super(uri, name, mimeType);
+    private ServerResource(Resource resource, boolean isText) {
+        this.resource = resource;
+        this.isText = isText;
     }
 
-    public ServerResource doAction(Function<ResourceContext, ServerResource> action) {
+    public ServerResource doAction(Function<ResourceContext, String> action) {
         this.action = action;
         return this;
     }
 
-    public Function<ResourceContext, ServerResource> getAction() {
+    public Function<ResourceContext, String> getAction() {
         return action;
     }
 
-    public static ServerResource of(String uri, String name) {
-        return new ServerResource(uri, name, null);
-    }
-
-    public static ServerResource of(String uri, String name, String mimeType) {
-        return new ServerResource(uri, name, mimeType);
-    }
-
-    public static TextServerResource ofText(String uri, String name, String text) {
+    public static ServerResource ofText(String uri, String name, String text) {
         return ofText(uri, name, "text/plain", text);
     }
 
-    public static TextServerResource ofText(String uri, String name, String mimeType, String text) {
-        return new TextServerResource(ServerResource.of(uri, name, mimeType), text);
+    public static ServerResource ofText(String uri, String name, String mimeType, String text) {
+        return new ServerResource(Resource.of(uri, name, mimeType), true).doAction(resourceContext -> text);
     }
 
-    public static TextServerResource ofText(ServerResource resource, String text) {
-        return new TextServerResource(resource, text);
+    public static ServerResource ofText(Resource resource, String text) {
+        return ofText(resource.getUri(), resource.getName(), resource.getMimeType(), text);
     }
 
-    public static BinaryServerResource ofBinary(String uri, String name, String mimeType, String blob) {
-        return new BinaryServerResource(ServerResource.of(uri, name, mimeType), blob);
+    public static ServerResource ofBinary(String uri, String name) {
+        return ofBinary(uri, name, null, null);
     }
 
-    public static BinaryServerResource ofBinary(ServerResource resource, String blob) {
-        return new BinaryServerResource(resource, blob);
+    public static ServerResource ofBinary(String uri, String name, String mimeType) {
+        return ofBinary(uri, name, mimeType, null);
     }
 
-    public static class TextServerResource extends ServerResource {
-
-        public TextServerResource(ServerResource resource, String text) {
-            super(resource.getUri(), resource.getName(), resource.getMimeType());
-            setText(text);
-            this.doAction(action -> this);
-        }
-
-        @Override
-        public String getBlob() {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
+    public static ServerResource ofBinary(String uri, String name, String mimeType, String blob) {
+        return new ServerResource(Resource.of(uri, name, mimeType), false).doAction(resourceContext -> blob);
     }
 
-    public static class BinaryServerResource extends ServerResource {
+    public static ServerResource ofBinary(Resource resource, String blob) {
+        return ofBinary(resource.getUri(), resource.getName(), resource.getMimeType(), blob);
+    }
 
-        BinaryServerResource(ServerResource resource, String blob) {
-            super(resource.getUri(), resource.getName(), resource.getMimeType());
-            setBlob(blob);
-            this.doAction(action -> this);
-        }
+    public Resource getResource() {
+        return resource;
+    }
 
-        @Override
-        public String getText() {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
+    public boolean isText() {
+        return isText;
     }
 }

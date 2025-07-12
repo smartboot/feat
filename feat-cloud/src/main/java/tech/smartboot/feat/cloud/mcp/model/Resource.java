@@ -15,11 +15,29 @@ package tech.smartboot.feat.cloud.mcp.model;
  * @version v1.0 6/28/25
  */
 public class Resource {
+    /**
+     * Unique identifier for the resource
+     */
     private final String uri;
+    /**
+     * Name of the resource
+     */
     private final String name;
+    /**
+     * Optional human-readable name of the resource for display purposes.
+     */
     private String title;
+    /**
+     * Optional MIME type
+     */
     private final String mimeType;
+    /**
+     * Optional description
+     */
     private String description;
+    /**
+     * Optional size in bytes
+     */
     private String size;
     private String text;
     private String blob;
@@ -37,6 +55,31 @@ public class Resource {
     public static Resource of(String uri, String name, String mimeType) {
         return new Resource(uri, name, mimeType);
     }
+
+    public static Resource copy(Resource resource) {
+        return new Resource(resource.uri, resource.name, resource.mimeType);
+    }
+
+
+//    public static TextServerResource ofText(String uri, String name, String text) {
+//        return ofText(uri, name, "text/plain", text);
+//    }
+//
+//    public static TextServerResource ofText(String uri, String name, String mimeType, String text) {
+//        return new TextServerResource(ServerResource.of(uri, name, mimeType), text);
+//    }
+//
+//    public static TextServerResource ofText(Resource resource, String text) {
+//        return new TextServerResource(resource, text);
+//    }
+//
+//    public static BinaryServerResource ofBinary(String uri, String name, String mimeType, String blob) {
+//        return new BinaryServerResource(ServerResource.of(uri, name, mimeType), blob);
+//    }
+//
+//    public static BinaryServerResource ofBinary(Resource resource, String blob) {
+//        return new BinaryServerResource(resource, blob);
+//    }
 
     public String getUri() {
         return uri;
@@ -90,5 +133,31 @@ public class Resource {
 
     public void setBlob(String blob) {
         this.blob = blob;
+    }
+
+    public static class TextServerResource extends Resource {
+
+        public TextServerResource(Resource resource, String text) {
+            super(resource.getUri(), resource.getName(), resource.getMimeType());
+            setText(text);
+        }
+
+        @Override
+        public String getBlob() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+    }
+
+    public static class BinaryServerResource extends Resource {
+
+        public BinaryServerResource(Resource resource, String blob) {
+            super(resource.getUri(), resource.getName(), resource.getMimeType());
+            setBlob(blob);
+        }
+
+        @Override
+        public String getText() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
     }
 }

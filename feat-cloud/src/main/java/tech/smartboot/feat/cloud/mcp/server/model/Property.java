@@ -10,6 +10,8 @@
 
 package tech.smartboot.feat.cloud.mcp.server.model;
 
+import tech.smartboot.feat.cloud.mcp.enums.PropertyType;
+
 public class Property {
     private final String name;
     private final PropertyType type;

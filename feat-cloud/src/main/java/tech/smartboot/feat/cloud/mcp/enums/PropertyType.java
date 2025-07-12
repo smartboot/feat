@@ -8,7 +8,7 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.cloud.mcp.server.model;
+package tech.smartboot.feat.cloud.mcp.enums;
 
 public enum PropertyType {
     Object("object"), Number("number"), String("string"), Boolean("boolean");

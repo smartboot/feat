@@ -16,7 +16,7 @@ import tech.smartboot.feat.cloud.mcp.model.CallToolResult;
 import tech.smartboot.feat.cloud.mcp.enums.ToolResultType;
 import tech.smartboot.feat.cloud.mcp.server.McpServer;
 import tech.smartboot.feat.cloud.mcp.server.McpServerException;
-import tech.smartboot.feat.cloud.mcp.server.model.Tool;
+import tech.smartboot.feat.cloud.mcp.server.model.ServerTool;
 import tech.smartboot.feat.cloud.mcp.server.model.ToolContext;
 import tech.smartboot.feat.core.server.HttpRequest;
 
@@ -34,7 +34,7 @@ public class ToolsCallHandler implements ServerHandler {
 
         ToolContext toolContext = new ToolContext(request, toolParams);
 
-        Tool tool = mcp.getTools().stream().filter(t -> t.getName().equals(toolName)).findFirst().orElse(null);
+        ServerTool tool = mcp.getTools().stream().filter(t -> t.getName().equals(toolName)).findFirst().orElse(null);
         if (tool == null) {
             throw new McpServerException(McpServerException.INTERNAL_ERROR, "Unknown tool: " + toolName);
         }

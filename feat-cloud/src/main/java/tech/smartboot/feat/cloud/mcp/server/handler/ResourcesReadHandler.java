@@ -12,10 +12,11 @@ package tech.smartboot.feat.cloud.mcp.server.handler;
 
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
+import tech.smartboot.feat.cloud.mcp.model.Resource;
 import tech.smartboot.feat.cloud.mcp.server.McpServer;
 import tech.smartboot.feat.cloud.mcp.server.McpServerException;
-import tech.smartboot.feat.cloud.mcp.server.model.ServerResource;
 import tech.smartboot.feat.cloud.mcp.server.model.ResourceContext;
+import tech.smartboot.feat.cloud.mcp.server.model.ServerResource;
 import tech.smartboot.feat.core.server.HttpRequest;
 
 /**
@@ -28,13 +29,19 @@ public class ResourcesReadHandler implements ServerHandler {
     public JSONObject apply(McpServer mcp, HttpRequest request, JSONObject jsonObject) {
         JSONObject params = jsonObject.getJSONObject("params");
         String uri = params.getString("uri");
-        ServerResource resource = mcp.getResources().stream().filter(r -> r.getUri().equals(uri)).findFirst().orElse(null);
+        ServerResource serverResource = mcp.getResources().stream().filter(r -> r.getResource().getUri().equals(uri)).findFirst().orElse(null);
 
-        if (resource == null) {
+        if (serverResource == null) {
             throw new McpServerException(McpServerException.RESOURCE_NOT_FOUND, "Resource not found ", JSONObject.of("uri", uri));
         }
-        ResourceContext promptContext = new ResourceContext(request, resource);
-        resource = resource.getAction().apply(promptContext);
+        ResourceContext promptContext = new ResourceContext(request, serverResource);
+        String data = serverResource.getAction().apply(promptContext);
+        Resource resource = Resource.copy(serverResource.getResource());
+        if (serverResource.isText()) {
+            resource.setText(data);
+        } else {
+            resource.setBlob(data);
+        }
         JSONObject result = new JSONObject();
         result.put("contents", JSONArray.of(JSONObject.from(resource)));
         return result;
