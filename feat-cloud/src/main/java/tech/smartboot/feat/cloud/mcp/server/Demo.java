@@ -12,14 +12,14 @@ package tech.smartboot.feat.cloud.mcp.server;
 
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.Feat;
-import tech.smartboot.feat.cloud.mcp.model.CallToolResult;
 import tech.smartboot.feat.cloud.mcp.enums.RoleEnum;
+import tech.smartboot.feat.cloud.mcp.model.CallToolResult;
 import tech.smartboot.feat.cloud.mcp.model.Prompt;
-import tech.smartboot.feat.cloud.mcp.server.model.PromptResult;
+import tech.smartboot.feat.cloud.mcp.model.PromptMessage;
 import tech.smartboot.feat.cloud.mcp.server.model.Property;
-import tech.smartboot.feat.cloud.mcp.server.model.ServerResource;
 import tech.smartboot.feat.cloud.mcp.server.model.ResourceTemplate;
 import tech.smartboot.feat.cloud.mcp.server.model.ServerPrompt;
+import tech.smartboot.feat.cloud.mcp.server.model.ServerResource;
 import tech.smartboot.feat.cloud.mcp.server.model.Tool;
 import tech.smartboot.feat.router.Router;
 
@@ -54,7 +54,7 @@ public class Demo {
                         .arguments(Prompt.requiredArgument("code", "The code to review"))
                         .doAction(promptContext -> {
                             String code = promptContext.getArguments().getString("code");
-                            return PromptResult.ofText(RoleEnum.User, "Please review the following code and provide suggestions for improvement:" + code);
+                            return PromptMessage.ofText(RoleEnum.User, "Please review the following code and provide suggestions for improvement:" + code);
                         }))
                 .addPrompt(ServerPrompt.of("image_review")
                         .title("Request Image Review")
@@ -62,7 +62,7 @@ public class Demo {
                         .arguments(Prompt.requiredArgument("image", "The image to review"))
                         .doAction(promptContext -> {
                             String image = promptContext.getArguments().getString("image");
-                            return PromptResult.ofImage(RoleEnum.User, image, "image/png");
+                            return PromptMessage.ofImage(RoleEnum.User, image, "image/png");
                         }))
                 .addPrompt(ServerPrompt.of("audio_review")
                         .title("Request Audio Review")
@@ -70,14 +70,14 @@ public class Demo {
                         .arguments(Prompt.requiredArgument("audio", "The audio to review"))
                         .doAction(promptContext -> {
                             String image = promptContext.getArguments().getString("audio");
-                            return PromptResult.ofAudio(RoleEnum.User, "YXNkZmFzZGY=", "audio/wav");
+                            return PromptMessage.ofAudio(RoleEnum.User, "YXNkZmFzZGY=", "audio/wav");
                         }))
                 .addPrompt(ServerPrompt.of("embedded_resource_review")
                         .title("Request Embedded Resource Review")
                         .description("Asks the LLM to analyze embedded resource quality and suggest improvements")
                         .doAction(promptContext -> {
                             ServerResource.TextServerResource resource = ServerResource.ofText("test", "test.txt", "Hello World");
-                            return PromptResult.ofEmbeddedResource(RoleEnum.Assistant, resource);
+                            return PromptMessage.ofEmbeddedResource(RoleEnum.Assistant, resource);
                         }));
 
         // resources

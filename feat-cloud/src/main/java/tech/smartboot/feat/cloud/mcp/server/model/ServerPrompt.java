@@ -11,6 +11,7 @@
 package tech.smartboot.feat.cloud.mcp.server.model;
 
 import tech.smartboot.feat.cloud.mcp.model.Prompt;
+import tech.smartboot.feat.cloud.mcp.model.PromptMessage;
 
 import java.util.function.Function;
 
@@ -19,7 +20,7 @@ import java.util.function.Function;
  * @version v1.0 7/11/25
  */
 public class ServerPrompt extends Prompt {
-    private Function<PromptContext, PromptResult> action;
+    private Function<PromptContext, PromptMessage<?>> action;
 
     public static ServerPrompt of(String name) {
         return new ServerPrompt(name);
@@ -47,12 +48,12 @@ public class ServerPrompt extends Prompt {
         return this;
     }
 
-    public ServerPrompt doAction(Function<PromptContext, PromptResult> action) {
+    public ServerPrompt doAction(Function<PromptContext, PromptMessage<?>> action) {
         this.action = action;
         return this;
     }
 
-    public Function<PromptContext, PromptResult> getAction() {
+    public Function<PromptContext, PromptMessage<?>> getAction() {
         return action;
     }
 }

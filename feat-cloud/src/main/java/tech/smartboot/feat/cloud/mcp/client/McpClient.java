@@ -12,18 +12,18 @@ package tech.smartboot.feat.cloud.mcp.client;
 
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
+import tech.smartboot.feat.cloud.mcp.client.model.GetPromptResult;
+import tech.smartboot.feat.cloud.mcp.client.model.ResourceListResponse;
+import tech.smartboot.feat.cloud.mcp.client.model.ToolListResponse;
+import tech.smartboot.feat.cloud.mcp.enums.RoleEnum;
 import tech.smartboot.feat.cloud.mcp.model.CallToolResult;
 import tech.smartboot.feat.cloud.mcp.model.McpInitializeRequest;
 import tech.smartboot.feat.cloud.mcp.model.McpInitializeResponse;
+import tech.smartboot.feat.cloud.mcp.model.PromptListResponse;
 import tech.smartboot.feat.cloud.mcp.model.PromptMessage;
 import tech.smartboot.feat.cloud.mcp.model.Request;
 import tech.smartboot.feat.cloud.mcp.model.Resource;
 import tech.smartboot.feat.cloud.mcp.model.Response;
-import tech.smartboot.feat.cloud.mcp.client.model.GetPromptResult;
-import tech.smartboot.feat.cloud.mcp.client.model.PromptListResponse;
-import tech.smartboot.feat.cloud.mcp.client.model.ResourceListResponse;
-import tech.smartboot.feat.cloud.mcp.client.model.ToolListResponse;
-import tech.smartboot.feat.cloud.mcp.server.model.PromptResult;
 import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HttpStatus;
@@ -241,21 +241,21 @@ public class McpClient {
                 JSONObject message = messages.getJSONObject(i);
                 JSONObject content = message.getJSONObject("content");
                 String type = content.getString("type");
-                PromptMessage promptResult = new PromptMessage();
-                promptResult.setRole(message.getString("role"));
+                RoleEnum roleEnum = RoleEnum.of(message.getString("role"));
+                PromptMessage<?> promptResult = null;
                 switch (type) {
                     case "text":
-                        promptResult.setContent(new PromptResult.TextPromptContent(content.getString("text")));
+                        promptResult = PromptMessage.ofText(roleEnum, content.getString("text"));
                         break;
                     case "image":
-                        promptResult.setContent(new PromptResult.ImagePromptContent(content.getString("data"), content.getString("mimeType")));
+                        promptResult = PromptMessage.ofImage(roleEnum, content.getString("data"), content.getString("mimeType"));
                         break;
                     case "audio":
-                        promptResult.setContent(new PromptResult.AudioPromptContent(content.getString("data"), content.getString("mimeType")));
+                        promptResult = PromptMessage.ofAudio(roleEnum, content.getString("data"), content.getString("mimeType"));
                         break;
                     case "resource":
                         JSONObject resource = content.getJSONObject("resource");
-                        promptResult.setContent(new PromptResult.EmbeddedResourcePromptContent(resource.to(Resource.class)));
+                        promptResult = PromptMessage.ofEmbeddedResource(roleEnum, resource.to(Resource.class));
                         break;
                     default:
                         throw new FeatException("unknown prompt content type: " + type);

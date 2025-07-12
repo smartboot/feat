@@ -14,14 +14,13 @@ import com.alibaba.fastjson2.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 import tech.smartboot.feat.Feat;
-import tech.smartboot.feat.cloud.mcp.model.CallToolResult;
-import tech.smartboot.feat.cloud.mcp.model.McpInitializeResponse;
 import tech.smartboot.feat.cloud.mcp.client.ClientCapabilities;
 import tech.smartboot.feat.cloud.mcp.client.McpClient;
 import tech.smartboot.feat.cloud.mcp.enums.RoleEnum;
+import tech.smartboot.feat.cloud.mcp.model.CallToolResult;
 import tech.smartboot.feat.cloud.mcp.model.Prompt;
+import tech.smartboot.feat.cloud.mcp.model.PromptMessage;
 import tech.smartboot.feat.cloud.mcp.server.McpServer;
-import tech.smartboot.feat.cloud.mcp.server.model.PromptResult;
 import tech.smartboot.feat.cloud.mcp.server.model.Property;
 import tech.smartboot.feat.cloud.mcp.server.model.ResourceTemplate;
 import tech.smartboot.feat.cloud.mcp.server.model.ServerPrompt;
@@ -65,7 +64,7 @@ public class McpTest {
                         .arguments(Prompt.requiredArgument("code", "The code to review"))
                         .doAction(promptContext -> {
                             String code = promptContext.getArguments().getString("code");
-                            return PromptResult.ofText(RoleEnum.User, "Please review the following code and provide suggestions for improvement:" + code);
+                            return PromptMessage.ofText(RoleEnum.User, "Please review the following code and provide suggestions for improvement:" + code);
                         }))
                 .addPrompt(ServerPrompt.of("image_review")
                         .title("Request Image Review")
@@ -73,7 +72,7 @@ public class McpTest {
                         .arguments(Prompt.requiredArgument("image", "The image to review"))
                         .doAction(promptContext -> {
                             String image = promptContext.getArguments().getString("image");
-                            return PromptResult.ofImage(RoleEnum.User, image, "image/png");
+                            return PromptMessage.ofImage(RoleEnum.User, image, "image/png");
                         }))
                 .addPrompt(ServerPrompt.of("audio_review")
                         .title("Request Audio Review")
@@ -81,14 +80,14 @@ public class McpTest {
                         .arguments(Prompt.requiredArgument("audio", "The audio to review"))
                         .doAction(promptContext -> {
                             String image = promptContext.getArguments().getString("audio");
-                            return PromptResult.ofAudio(RoleEnum.User, "YXNkZmFzZGY=", "audio/wav");
+                            return PromptMessage.ofAudio(RoleEnum.User, "YXNkZmFzZGY=", "audio/wav");
                         }))
                 .addPrompt(ServerPrompt.of("embedded_resource_review")
                         .title("Request Embedded Resource Review")
                         .description("Asks the LLM to analyze embedded resource quality and suggest improvements")
                         .doAction(promptContext -> {
                             ServerResource.TextServerResource resource = ServerResource.ofText("test", "test.txt", "Hello World");
-                            return PromptResult.ofEmbeddedResource(RoleEnum.Assistant, resource);
+                            return PromptMessage.ofEmbeddedResource(RoleEnum.Assistant, resource);
                         }));
 
         // resources
@@ -116,12 +115,9 @@ public class McpTest {
 
     @Test
     public void test() throws Exception {
-        McpClient client = McpClient.newSseClient(opt -> opt.baseUrl("http://localhost:3002").setMcpEndpoint("/mcp"));
-        McpInitializeResponse response = client.initialize(new ClientCapabilities());
-        System.out.println(JSONObject.toJSONString(response));
-        System.out.println(JSONObject.toJSONString(client.listTools()));
-        System.out.println(JSONObject.toJSONString(client.listPrompts()));
-        System.out.println(JSONObject.toJSONString(client.listResources()));
+        System.out.println(JSONObject.toJSONString(sseClient.listTools()));
+        System.out.println(JSONObject.toJSONString(sseClient.listPrompts()));
+        System.out.println(JSONObject.toJSONString(sseClient.listResources()));
 
 
     }
@@ -134,7 +130,7 @@ public class McpTest {
                 .arguments(Prompt.requiredArgument("code", "The code to review"))
                 .doAction(promptContext -> {
                     String code = promptContext.getArguments().getString("code");
-                    return PromptResult.ofText(RoleEnum.User, "Please review the following code and provide suggestions for improvement:" + code);
+                    return PromptMessage.ofText(RoleEnum.User, "Please review the following code and provide suggestions for improvement:" + code);
                 }));
         System.out.println(JSONObject.toJSONString(sseClient.getPrompt("code_review_1")));
     }

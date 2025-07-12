@@ -10,11 +10,12 @@
 
 package tech.smartboot.feat.cloud.mcp.server.handler;
 
-import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
+import tech.smartboot.feat.cloud.mcp.model.PromptListResponse;
 import tech.smartboot.feat.cloud.mcp.server.McpServer;
-import tech.smartboot.feat.cloud.mcp.model.Prompt;
 import tech.smartboot.feat.core.server.HttpRequest;
+
+import java.util.ArrayList;
 
 /**
  * @author 三刀
@@ -24,28 +25,8 @@ public class ListPromptsHandler implements ServerHandler {
 
     @Override
     public JSONObject apply(McpServer mcp, HttpRequest request, JSONObject jsonObject) {
-        JSONObject result = new JSONObject();
-
-        JSONArray prompts = new JSONArray();
-        for (Prompt prompt : mcp.getPrompts()) {
-            JSONObject toolObject = new JSONObject();
-            toolObject.put("name", prompt.getName());
-            toolObject.put("title", prompt.getTitle());
-            toolObject.put("description", prompt.getDescription());
-
-
-            JSONArray arguments = new JSONArray();
-            for (Prompt.Argument argument : prompt.getArguments()) {
-                JSONObject propertyObject = new JSONObject();
-                propertyObject.put("name", argument.getName());
-                propertyObject.put("description", argument.getDescription());
-                propertyObject.put("required", argument.isRequired());
-                arguments.add(propertyObject);
-            }
-            toolObject.put("arguments", arguments);
-            prompts.add(toolObject);
-        }
-        result.put("prompts", prompts);
-        return result;
+        PromptListResponse listResponse = new PromptListResponse();
+        listResponse.setPrompts(new ArrayList<>(mcp.getPrompts()));
+        return JSONObject.from(listResponse);
     }
 }
