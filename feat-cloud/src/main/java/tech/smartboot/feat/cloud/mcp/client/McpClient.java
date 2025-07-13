@@ -92,6 +92,7 @@ public class McpClient {
                     future.completeExceptionally(e);
                 } else if (r.statusCode() == HttpStatus.ACCEPTED.value()) {
                     initialized = true;
+                    transport.initialized();
                     future.complete(initializeResponse);
                 } else {
                     future.completeExceptionally(new FeatException("notification failed"));

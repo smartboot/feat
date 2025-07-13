@@ -40,7 +40,25 @@ abstract class Transport {
         return doRequest(future, request);
     }
 
+    abstract void initialized();
+
     protected abstract CompletableFuture<Response<JSONObject>> doRequest(CompletableFuture<Response<JSONObject>> future, Request<JSONObject> request);
 
+    protected abstract void doResponse(Response<JSONObject> request);
+
     public abstract CompletableFuture<HttpResponse> sendNotification(Request<JSONObject> request);
+
+    protected boolean handleServerRequest(JSONObject request) {
+        String method = request.getString("method");
+        if ("roots/list".equals(method)) {
+            Response<JSONObject> response = new Response<>();
+            response.setId(request.getInteger("id"));
+            JSONObject json = new JSONObject();
+            json.put("roots", options.getRootsList());
+            response.setResult(json);
+            doResponse(response);
+            return true;
+        }
+        return false;
+    }
 }

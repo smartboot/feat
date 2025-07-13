@@ -236,7 +236,9 @@ public class McpServer {
                             throw new FeatException("method is null");
                         }
                     } else if ("notifications/roots/list_changed".equalsIgnoreCase(method)) {
-                        session.rootsList();
+                        if (session.getSseEmitter() != null) {
+                            session.rootsList();
+                        }
                         return null;
                     }
 
@@ -271,19 +273,12 @@ public class McpServer {
     }
 
     private void initialized(StreamSession session) throws IOException {
-        JSONObject capabilities = session.getInitializeRequest().getCapabilities();
-        if (capabilities == null) {
-            return;
-        }
-        JSONObject roots = capabilities.getJSONObject("roots");
-        if (roots != null && roots.getBooleanValue("listChanged")) {
-            session.rootsList();
-        }
+        session.rootsList();
     }
 
     public RouterHandler sseHandler() {
         return ctx -> {
-            String sessionId = ctx.Request.getHeader("mcp-session-id");
+            String sessionId = ctx.Request.getHeader(Request.HEADER_SESSION_ID);
             StreamSession session;
             if (sessionId == null) {
                 session = new StreamSession();
@@ -329,12 +324,11 @@ public class McpServer {
     public RouterHandler mcpHandler() {
         return ctx -> {
             HttpRequest request = ctx.Request;
-            String sessionId = request.getHeader("mcp-session-id");
+            String sessionId = request.getHeader(Request.HEADER_SESSION_ID);
+
             StreamSession session;
             if (sessionId == null) {
                 session = new StreamSession();
-                sessionId = session.getSessionId();
-                sseEmitters.put(session.getSessionId(), session);
             } else {
                 session = sseEmitters.get(sessionId);
             }
@@ -344,6 +338,11 @@ public class McpServer {
                 return;
             }
             if (request.getContentType() == null && HeaderValue.ContentType.EVENT_STREAM.equalsIgnoreCase(request.getHeader(HeaderName.ACCEPT))) {
+                if (session.getState() != StreamSession.STATE_READY) {
+                    request.getResponse().setHttpStatus(HttpStatus.UNAUTHORIZED);
+                    request.getResponse().close();
+                    return;
+                }
                 request.upgrade(new SSEUpgrade() {
                     @Override
                     public void onOpen(SseEmitter sseEmitter) throws IOException {
@@ -363,7 +362,8 @@ public class McpServer {
                 request.getResponse().setContentLength(bytes.length);
                 request.getResponse().setContentType(HeaderValue.ContentType.APPLICATION_JSON);
                 if (response.getResult() instanceof McpInitializeResponse) {
-                    request.getResponse().setHeader("Mcp-Session-Id", sessionId);
+                    request.getResponse().setHeader(Request.HEADER_SESSION_ID, session.getSessionId());
+                    sseEmitters.put(session.getSessionId(), session);
                 }
                 request.getResponse().write(bytes);
             }

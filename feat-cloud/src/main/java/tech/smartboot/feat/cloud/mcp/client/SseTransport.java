@@ -50,7 +50,11 @@ final class SseTransport extends Transport {
                 if ("endpoint".equals(e)) {
                     endpoint = data;
                 } else {
-                    Response<JSONObject> response = JSONObject.parseObject(data, new TypeReference<Response<JSONObject>>() {
+                    JSONObject jsonObject = JSONObject.parseObject(data);
+                    if (handleServerRequest(jsonObject)) {
+                        return;
+                    }
+                    Response<JSONObject> response = jsonObject.to(new TypeReference<Response<JSONObject>>() {
                     });
                     if (response.getId() == null) {
                         System.out.println("no id");
@@ -73,6 +77,11 @@ final class SseTransport extends Transport {
     }
 
     @Override
+    void initialized() {
+
+    }
+
+    @Override
     protected CompletableFuture<Response<JSONObject>> doRequest(CompletableFuture<Response<JSONObject>> future, Request<JSONObject> request) {
         if (FeatUtils.isBlank(endpoint)) {
             future.completeExceptionally(new FeatException("endpoint not found"));
@@ -83,7 +92,7 @@ final class SseTransport extends Transport {
         HttpRest rest = httpClient.post(endpoint).header(header -> {
             header.setContentType(HeaderValue.ContentType.APPLICATION_JSON).setContentLength(body.length);
             if (FeatUtils.isNotBlank(sessionId)) {
-                header.set("Mcp-Session-Id", sessionId);
+                header.set(Request.HEADER_SESSION_ID, sessionId);
             }
         }).body(b -> b.write(body));
 
@@ -97,12 +106,23 @@ final class SseTransport extends Transport {
     }
 
     @Override
+    protected void doResponse(Response<JSONObject> request) {
+        byte[] body = JSONObject.toJSONString(request).getBytes();
+        httpClient.post(endpoint).header(header -> {
+            header.setContentType(HeaderValue.ContentType.APPLICATION_JSON).setContentLength(body.length);
+            if (FeatUtils.isNotBlank(sessionId)) {
+                header.set(Request.HEADER_SESSION_ID, sessionId);
+            }
+        }).body(b -> b.write(body)).submit();
+    }
+
+    @Override
     public CompletableFuture<HttpResponse> sendNotification(Request<JSONObject> request) {
         byte[] body = JSONObject.toJSONString(request).getBytes();
         return httpClient.post(endpoint).header(header -> {
             header.setContentType(HeaderValue.ContentType.APPLICATION_JSON).setContentLength(body.length);
             if (FeatUtils.isNotBlank(sessionId)) {
-                header.set("Mcp-Session-Id", sessionId);
+                header.set(Request.HEADER_SESSION_ID, sessionId);
             }
         }).body(b -> b.write(body)).submit();
     }

@@ -86,6 +86,14 @@ public class StreamSession {
     }
 
     void rootsList() throws IOException {
+        JSONObject capabilities = initializeRequest.getCapabilities();
+        if (capabilities == null) {
+            return;
+        }
+        JSONObject rootsCapabilities = capabilities.getJSONObject("roots");
+        if (rootsCapabilities == null || !rootsCapabilities.getBooleanValue("listChanged")) {
+            return;
+        }
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("jsonrpc", "2.0");
         jsonObject.put("method", "roots/list");
@@ -99,10 +107,12 @@ public class StreamSession {
                 System.out.println("root:" + root);
             }
         });
+//        if (sseEmitter != null) {
         sseEmitter.send(SseEmitter.event().data(jsonObject.toString()));
+//        }
     }
 
-    void sampling(){
+    void sampling() {
 
     }
 }

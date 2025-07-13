@@ -91,7 +91,7 @@ public class McpTest {
 
         sseClient = McpClient.newSseClient(opt -> opt.baseUrl("http://localhost:3002").setMcpEndpoint("/mcp").rootsEnable());
         sseClient.initialize();
-        streamClient = McpClient.newStreamableClient(opt -> opt.baseUrl("http://localhost:3002").setMcpEndpoint("/mcp"));
+        streamClient = McpClient.newStreamableClient(opt -> opt.baseUrl("http://localhost:3002").setMcpEndpoint("/mcp").rootsEnable());
         streamClient.initialize();
     }
 
@@ -125,5 +125,7 @@ public class McpTest {
     @Test
     public void roots() throws Exception {
         sseClient.addRoot("file:///", "root");
+        streamClient.addRoot("file:///", "root");
+        Thread.sleep(1000);
     }
 }

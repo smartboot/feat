@@ -15,6 +15,7 @@ package tech.smartboot.feat.cloud.mcp.model;
  * @version v1.0 6/18/25
  */
 public class Request<T> extends JsonRpc {
+    public static final String HEADER_SESSION_ID = "mcp-session-id";
     private String method;
 
     private T params;
