@@ -15,7 +15,7 @@ package tech.smartboot.feat.cloud.mcp.model;
  * @version v1.0 6/18/25
  */
 public class McpInitializeResponse {
-    private String protocolVersion = "2025-03-26";
+    private String protocolVersion = McpInitializeRequest.PROTOCOL_VERSION;
     private final ServerCapabilities capabilities = new ServerCapabilities();
     private Implementation serverInfo;
 

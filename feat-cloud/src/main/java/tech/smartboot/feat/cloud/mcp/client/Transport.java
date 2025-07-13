@@ -11,9 +11,13 @@
 package tech.smartboot.feat.cloud.mcp.client;
 
 import com.alibaba.fastjson2.JSONObject;
+import tech.smartboot.feat.cloud.mcp.model.JsonRpc;
 import tech.smartboot.feat.cloud.mcp.model.Request;
 import tech.smartboot.feat.cloud.mcp.model.Response;
 import tech.smartboot.feat.core.client.HttpResponse;
+import tech.smartboot.feat.core.client.HttpRest;
+import tech.smartboot.feat.core.common.FeatUtils;
+import tech.smartboot.feat.core.common.HeaderValue;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -44,11 +48,19 @@ abstract class Transport {
 
     protected abstract CompletableFuture<Response<JSONObject>> doRequest(CompletableFuture<Response<JSONObject>> future, Request<JSONObject> request);
 
-    protected abstract void doResponse(Response<JSONObject> request);
+    protected final CompletableFuture<HttpResponse> doRequest(HttpRest httpRest, JsonRpc request) {
+        byte[] body = JSONObject.toJSONString(request).getBytes();
+        return httpRest.header(header -> {
+            header.setContentType(HeaderValue.ContentType.APPLICATION_JSON).setContentLength(body.length);
+            if (FeatUtils.isNotBlank(sessionId)) {
+                header.set(Request.HEADER_SESSION_ID, sessionId);
+            }
+        }).body(b -> b.write(body)).submit();
+    }
 
-    public abstract CompletableFuture<HttpResponse> sendNotification(Request<JSONObject> request);
+    public abstract CompletableFuture<HttpResponse> sendNotification(String method);
 
-    protected boolean handleServerRequest(JSONObject request) {
+    protected final Response<JSONObject> handleServerRequest(JSONObject request) {
         String method = request.getString("method");
         if ("roots/list".equals(method)) {
             Response<JSONObject> response = new Response<>();
@@ -56,9 +68,8 @@ abstract class Transport {
             JSONObject json = new JSONObject();
             json.put("roots", options.getRootsList());
             response.setResult(json);
-            doResponse(response);
-            return true;
+            return response;
         }
-        return false;
+        return null;
     }
 }

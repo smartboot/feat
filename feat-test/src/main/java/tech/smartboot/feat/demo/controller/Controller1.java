@@ -15,8 +15,9 @@ import tech.smartboot.feat.cloud.RestResult;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.InterceptorMapping;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
-import tech.smartboot.feat.core.client.HttpResponse;
+import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.server.HttpRequest;
+import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.router.Interceptor;
 
 import java.util.Collections;
@@ -24,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 @Controller("controller1")
@@ -39,6 +40,16 @@ public class Controller1 {
         RestResult<List<Map<String, String>>> result = new RestResult<>();
         result.setData(Collections.singletonList(Collections.singletonMap("hello", "world")));
         return result;
+    }
+
+    @RequestMapping("/big")
+    public RestResult<String> hello11ssss2(HttpRequest request, HttpResponse response) {
+        response.setHeader(HeaderName.CONNECTION, "keep-alive");
+        StringBuilder stringBuilder = new StringBuilder();
+        for (int i = 0; i < 200000; i++) {
+            stringBuilder.append("hello world");
+        }
+        return RestResult.ok(stringBuilder.toString());
     }
 
     @InterceptorMapping({"/controller1/*"})

@@ -15,6 +15,8 @@ import tech.smartboot.feat.core.client.impl.HttpRequestImpl;
 import tech.smartboot.feat.core.client.impl.HttpResponseImpl;
 import tech.smartboot.feat.core.client.stream.Stream;
 import tech.smartboot.feat.core.common.HeaderName;
+import tech.smartboot.feat.core.common.logging.Logger;
+import tech.smartboot.feat.core.common.logging.LoggerFactory;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -31,6 +33,7 @@ import java.util.function.Consumer;
  * @version v1.0.0
  */
 class HttpRestImpl implements HttpRest {
+    private static final Logger logger = LoggerFactory.getLogger(HttpRestImpl.class);
     private final static String DEFAULT_USER_AGENT = "feat";
     private final HttpRequestImpl request;
     private final CompletableFuture<HttpResponseImpl> completableFuture = new CompletableFuture<>();
@@ -111,7 +114,7 @@ class HttpRestImpl implements HttpRest {
                         willSendRequest();
                         request.getOutputStream().write(bytes, offset, len);
                     } catch (Throwable e) {
-                        System.out.println("body stream write error! " + e.getMessage());
+                        logger.error("body stream write error! ", e);
                         completableFuture.completeExceptionally(e);
                     }
                     return this;
@@ -123,7 +126,7 @@ class HttpRestImpl implements HttpRest {
                         willSendRequest();
                         request.getOutputStream().transferFrom(buffer, bufferOutputStream -> consumer.accept(HttpRestImpl.this.body));
                     } catch (Throwable e) {
-                        System.out.println("body stream write error! " + e.getMessage());
+                        logger.error("body stream write error! ", e);
                         completableFuture.completeExceptionally(e);
                     }
                 }

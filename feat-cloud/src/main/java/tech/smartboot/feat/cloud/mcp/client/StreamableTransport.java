@@ -17,6 +17,7 @@ import tech.smartboot.feat.cloud.mcp.model.Response;
 import tech.smartboot.feat.cloud.mcp.server.McpServerException;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpResponse;
+import tech.smartboot.feat.core.client.HttpRest;
 import tech.smartboot.feat.core.client.stream.ServerSentEventStream;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
@@ -58,7 +59,9 @@ final class StreamableTransport extends Transport {
                         String data = event.get(ServerSentEventStream.DATA);
 
                         JSONObject jsonObject = JSONObject.parseObject(data);
-                        if (handleServerRequest(jsonObject)) {
+                        Response<JSONObject> response = handleServerRequest(jsonObject);
+                        if (response != null) {
+                            doRequest(httpClient.post(options.getMcpEndpoint()), response);
                             return;
                         }
                         logger.warn("unexpected event: " + e + " data: " + data);
@@ -75,13 +78,9 @@ final class StreamableTransport extends Transport {
             future.completeExceptionally(new FeatException("endpoint not found"));
             return future;
         }
-        byte[] body = JSONObject.toJSONString(request).getBytes();
-        httpClient.post(options.getMcpEndpoint()).header(header -> {
-            header.setContentType(HeaderValue.ContentType.APPLICATION_JSON).setContentLength(body.length);
-            if (FeatUtils.isNotBlank(sessionId)) {
-                header.set(Request.HEADER_SESSION_ID, sessionId);
-            }
-        }).body(b -> b.write(body)).onSuccess(response -> {
+        HttpRest httpRest = httpClient.post(options.getMcpEndpoint());
+        doRequest(httpRest, request);
+        httpRest.onSuccess(response -> {
             if (response.statusCode() == HttpStatus.ACCEPTED.value()) {
                 future.complete(null);
                 return;
@@ -96,23 +95,14 @@ final class StreamableTransport extends Transport {
             } else {
                 future.complete(rsp);
             }
-        }).onFailure(throwable -> future.completeExceptionally(throwable)).submit();
+        }).onFailure(future::completeExceptionally);
         return future;
     }
 
     @Override
-    protected void doResponse(Response<JSONObject> request) {
-        byte[] body = JSONObject.toJSONString(request).getBytes();
-        httpClient.post(options.getMcpEndpoint()).header(header -> {
-            header.setContentType(HeaderValue.ContentType.APPLICATION_JSON).setContentLength(body.length);
-            if (FeatUtils.isNotBlank(sessionId)) {
-                header.set(Request.HEADER_SESSION_ID, sessionId);
-            }
-        }).body(b -> b.write(body)).submit();
-    }
-
-    @Override
-    public CompletableFuture<HttpResponse> sendNotification(Request<JSONObject> request) {
+    public CompletableFuture<HttpResponse> sendNotification(String method) {
+        Request<JSONObject> request = new Request<>();
+        request.setMethod(method);
         byte[] body = JSONObject.toJSONString(request).getBytes();
         return httpClient.post(options.getMcpEndpoint()).header(header -> {
             header.setContentType(HeaderValue.ContentType.APPLICATION_JSON).setContentLength(body.length);

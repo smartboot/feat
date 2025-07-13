@@ -12,13 +12,13 @@ package tech.smartboot.feat.cloud.mcp.client;
 
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
+import tech.smartboot.feat.cloud.mcp.enums.LoggerLevel;
 import tech.smartboot.feat.cloud.mcp.enums.RoleEnum;
 import tech.smartboot.feat.cloud.mcp.model.McpInitializeRequest;
 import tech.smartboot.feat.cloud.mcp.model.McpInitializeResponse;
 import tech.smartboot.feat.cloud.mcp.model.PromptGetResult;
 import tech.smartboot.feat.cloud.mcp.model.PromptListResponse;
 import tech.smartboot.feat.cloud.mcp.model.PromptMessage;
-import tech.smartboot.feat.cloud.mcp.model.Request;
 import tech.smartboot.feat.cloud.mcp.model.Resource;
 import tech.smartboot.feat.cloud.mcp.model.ResourceListResponse;
 import tech.smartboot.feat.cloud.mcp.model.Response;
@@ -31,7 +31,6 @@ import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.exception.FeatException;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 
 /**
@@ -84,9 +83,7 @@ public class McpClient {
         f.thenAccept(response -> {
             McpInitializeResponse initializeResponse = response.getResult().to(McpInitializeResponse.class);
             //After successful initialization, the client MUST send an initialized notification to indicate it is ready to begin normal operations
-            Request<JSONObject> initializedNotify = new Request<>();
-            initializedNotify.setMethod("notifications/initialized");
-            CompletableFuture<HttpResponse> notification = transport.sendNotification(initializedNotify);
+            CompletableFuture<HttpResponse> notification = transport.sendNotification("notifications/initialized");
             notification.whenComplete((r, e) -> {
                 if (e != null) {
                     future.completeExceptionally(e);
@@ -135,10 +132,8 @@ public class McpClient {
     public ToolListResponse listTools(String nextCursor) {
         try {
             return asyncListTools(nextCursor).get();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        } catch (ExecutionException e) {
-            throw new RuntimeException(e);
+        } catch (Throwable e) {
+            throw new FeatException(e);
         }
     }
 
@@ -195,10 +190,8 @@ public class McpClient {
     public ToolCalledResult callTool(String toolName, JSONObject arguments) {
         try {
             return asyncCallTool(toolName, arguments).get();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        } catch (ExecutionException e) {
-            throw new RuntimeException(e);
+        } catch (Throwable e) {
+            throw new FeatException(e);
         }
     }
 
@@ -219,10 +212,8 @@ public class McpClient {
     public PromptListResponse listPrompts(String nextCursor) {
         try {
             return asyncListPrompts(nextCursor).get();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        } catch (ExecutionException e) {
-            throw new RuntimeException(e);
+        } catch (Throwable e) {
+            throw new FeatException(e);
         }
     }
 
@@ -280,8 +271,12 @@ public class McpClient {
         try {
             return asyncGetPrompt(name, arguments).get();
         } catch (Throwable e) {
-            throw new RuntimeException(e);
+            throw new FeatException(e);
         }
+    }
+
+    public void setLoggingLevel(LoggerLevel level) {
+//transport.sendNotification()
     }
 
     public ResourceListResponse listResources() {
@@ -305,10 +300,8 @@ public class McpClient {
     public ResourceListResponse listResources(String nextCursor) {
         try {
             return asyncListResources(nextCursor).get();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        } catch (ExecutionException e) {
-            throw new RuntimeException(e);
+        } catch (Throwable e) {
+            throw new FeatException(e);
         }
     }
 
@@ -317,9 +310,15 @@ public class McpClient {
             throw new FeatException("roots is not enabled");
         }
         options.getRootsList().add(new Roots(uri, name));
-        Request<JSONObject> initializedNotify = new Request<>();
-        initializedNotify.setMethod("notifications/roots/list_changed");
-        transport.sendNotification(initializedNotify);
+        transport.sendNotification("notifications/roots/list_changed");
+    }
+
+    public void removeRoot(String uri) {
+        if (!options.isRoots()) {
+            throw new FeatException("roots is not enabled");
+        }
+        options.getRootsList().removeIf(roots -> roots.getUri().equals(uri));
+        transport.sendNotification("notifications/roots/list_changed");
     }
 //    public void subscribeResource(String uri) {
 //

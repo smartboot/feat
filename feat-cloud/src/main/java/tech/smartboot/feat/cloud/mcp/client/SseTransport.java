@@ -17,7 +17,6 @@ import tech.smartboot.feat.cloud.mcp.model.Response;
 import tech.smartboot.feat.cloud.mcp.server.McpServerException;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpResponse;
-import tech.smartboot.feat.core.client.HttpRest;
 import tech.smartboot.feat.core.client.stream.ServerSentEventStream;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
@@ -51,10 +50,13 @@ final class SseTransport extends Transport {
                     endpoint = data;
                 } else {
                     JSONObject jsonObject = JSONObject.parseObject(data);
-                    if (handleServerRequest(jsonObject)) {
+
+                    Response<JSONObject> response = handleServerRequest(jsonObject);
+                    if (response != null) {
+                        doRequest(httpClient.post(endpoint), response);
                         return;
                     }
-                    Response<JSONObject> response = jsonObject.to(new TypeReference<Response<JSONObject>>() {
+                    response = jsonObject.to(new TypeReference<Response<JSONObject>>() {
                     });
                     if (response.getId() == null) {
                         System.out.println("no id");
@@ -88,16 +90,8 @@ final class SseTransport extends Transport {
             return future;
         }
         responseCallbacks.put(request.getId(), future);
-        byte[] body = JSONObject.toJSONString(request).getBytes();
-        HttpRest rest = httpClient.post(endpoint).header(header -> {
-            header.setContentType(HeaderValue.ContentType.APPLICATION_JSON).setContentLength(body.length);
-            if (FeatUtils.isNotBlank(sessionId)) {
-                header.set(Request.HEADER_SESSION_ID, sessionId);
-            }
-        }).body(b -> b.write(body));
-
         try {
-            HttpResponse response = rest.submit().get();
+            HttpResponse response = doRequest(httpClient.post(endpoint), request).get();
             System.out.println("status: " + response.statusCode());
         } catch (Throwable e) {
             future.completeExceptionally(e);
@@ -106,18 +100,9 @@ final class SseTransport extends Transport {
     }
 
     @Override
-    protected void doResponse(Response<JSONObject> request) {
-        byte[] body = JSONObject.toJSONString(request).getBytes();
-        httpClient.post(endpoint).header(header -> {
-            header.setContentType(HeaderValue.ContentType.APPLICATION_JSON).setContentLength(body.length);
-            if (FeatUtils.isNotBlank(sessionId)) {
-                header.set(Request.HEADER_SESSION_ID, sessionId);
-            }
-        }).body(b -> b.write(body)).submit();
-    }
-
-    @Override
-    public CompletableFuture<HttpResponse> sendNotification(Request<JSONObject> request) {
+    public CompletableFuture<HttpResponse> sendNotification(String method) {
+        Request<JSONObject> request = new Request<>();
+        request.setMethod(method);
         byte[] body = JSONObject.toJSONString(request).getBytes();
         return httpClient.post(endpoint).header(header -> {
             header.setContentType(HeaderValue.ContentType.APPLICATION_JSON).setContentLength(body.length);
