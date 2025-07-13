@@ -22,6 +22,7 @@ import tech.smartboot.feat.cloud.mcp.model.Request;
 import tech.smartboot.feat.cloud.mcp.model.Resource;
 import tech.smartboot.feat.cloud.mcp.model.ResourceListResponse;
 import tech.smartboot.feat.cloud.mcp.model.Response;
+import tech.smartboot.feat.cloud.mcp.model.Roots;
 import tech.smartboot.feat.cloud.mcp.model.ToolCalledResult;
 import tech.smartboot.feat.cloud.mcp.model.ToolListResponse;
 import tech.smartboot.feat.core.client.HttpResponse;
@@ -310,6 +311,15 @@ public class McpClient {
         }
     }
 
+    public void addRoot(String uri, String name) {
+        if (!options.isRoots()) {
+            throw new FeatException("roots is not enabled");
+        }
+        options.getRootsList().add(new Roots(uri, name));
+        Request<JSONObject> initializedNotify = new Request<>();
+        initializedNotify.setMethod("notifications/roots/list_changed");
+        transport.sendNotification(initializedNotify);
+    }
 //    public void subscribeResource(String uri) {
 //
 //        CompletableFuture<Response<JSONObject>> f = transport.asyncRequest("resources/subscribe", JSONObject.of("uri",uri));

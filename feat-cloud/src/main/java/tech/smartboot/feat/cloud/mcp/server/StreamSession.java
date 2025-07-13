@@ -13,7 +13,7 @@ package tech.smartboot.feat.cloud.mcp.server;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.cloud.mcp.model.McpInitializeRequest;
-import tech.smartboot.feat.cloud.mcp.server.model.Roots;
+import tech.smartboot.feat.cloud.mcp.model.Roots;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.server.upgrade.sse.SseEmitter;

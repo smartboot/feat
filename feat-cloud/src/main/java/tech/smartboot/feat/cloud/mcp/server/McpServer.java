@@ -276,7 +276,7 @@ public class McpServer {
             return;
         }
         JSONObject roots = capabilities.getJSONObject("roots");
-        if (roots != null && roots.getBoolean("rootsEnabled")) {
+        if (roots != null && roots.getBooleanValue("listChanged")) {
             session.rootsList();
         }
     }

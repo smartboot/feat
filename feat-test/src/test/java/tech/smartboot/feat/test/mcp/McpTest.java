@@ -15,14 +15,14 @@ import org.junit.Before;
 import org.junit.Test;
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.cloud.mcp.client.McpClient;
-import tech.smartboot.feat.cloud.mcp.model.Tool;
 import tech.smartboot.feat.cloud.mcp.enums.RoleEnum;
-import tech.smartboot.feat.cloud.mcp.model.ToolCalledResult;
 import tech.smartboot.feat.cloud.mcp.model.Prompt;
 import tech.smartboot.feat.cloud.mcp.model.PromptMessage;
 import tech.smartboot.feat.cloud.mcp.model.Resource;
-import tech.smartboot.feat.cloud.mcp.server.McpServer;
 import tech.smartboot.feat.cloud.mcp.model.ResourceTemplate;
+import tech.smartboot.feat.cloud.mcp.model.Tool;
+import tech.smartboot.feat.cloud.mcp.model.ToolCalledResult;
+import tech.smartboot.feat.cloud.mcp.server.McpServer;
 import tech.smartboot.feat.cloud.mcp.server.model.ServerPrompt;
 import tech.smartboot.feat.cloud.mcp.server.model.ServerResource;
 import tech.smartboot.feat.cloud.mcp.server.model.ServerTool;
@@ -89,7 +89,7 @@ public class McpTest {
         router.route(mcp.getOptions().getMcpEndpoint(), mcp.mcpHandler());
         Feat.httpServer(opt -> opt.debug(true)).httpHandler(router).listen(3002);
 
-        sseClient = McpClient.newSseClient(opt -> opt.baseUrl("http://localhost:3002").setMcpEndpoint("/mcp"));
+        sseClient = McpClient.newSseClient(opt -> opt.baseUrl("http://localhost:3002").setMcpEndpoint("/mcp").rootsEnable());
         sseClient.initialize();
         streamClient = McpClient.newStreamableClient(opt -> opt.baseUrl("http://localhost:3002").setMcpEndpoint("/mcp"));
         streamClient.initialize();
@@ -120,5 +120,10 @@ public class McpTest {
         }));
         System.out.println(JSONObject.toJSONString(sseClient.callTool("test_aaa")));
         System.out.println(JSONObject.toJSONString(streamClient.callTool("test_aaa")));
+    }
+
+    @Test
+    public void roots() throws Exception {
+        sseClient.addRoot("file:///", "root");
     }
 }

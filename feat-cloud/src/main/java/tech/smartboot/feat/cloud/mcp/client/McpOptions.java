@@ -13,6 +13,10 @@ package tech.smartboot.feat.cloud.mcp.client;
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.cloud.mcp.model.Implementation;
+import tech.smartboot.feat.cloud.mcp.model.Roots;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author 三刀
@@ -27,6 +31,7 @@ public class McpOptions {
     private boolean sampling;
     private boolean elicitation;
     private JSONObject experimental;
+    private List<Roots> rootsList;
 
     McpOptions() {
     }
@@ -70,6 +75,7 @@ public class McpOptions {
 
     public McpOptions rootsEnable() {
         this.roots = true;
+        this.rootsList = new ArrayList<>();
         return this;
     }
 
@@ -83,19 +89,23 @@ public class McpOptions {
         return this;
     }
 
-    public boolean isRoots() {
+    boolean isRoots() {
         return roots;
     }
 
-    public boolean isSampling() {
+    boolean isSampling() {
         return sampling;
     }
 
-    public boolean isElicitation() {
+    boolean isElicitation() {
         return elicitation;
     }
 
-    public JSONObject getExperimental() {
+    JSONObject getExperimental() {
         return experimental;
+    }
+
+    List<Roots> getRootsList() {
+        return rootsList;
     }
 }
