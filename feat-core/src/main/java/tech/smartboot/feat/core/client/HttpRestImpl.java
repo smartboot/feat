@@ -21,7 +21,6 @@ import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.ByteBuffer;
-import java.util.AbstractQueue;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,19 +36,15 @@ class HttpRestImpl implements HttpRest {
     private final static String DEFAULT_USER_AGENT = "feat";
     private final HttpRequestImpl request;
     private final CompletableFuture<HttpResponseImpl> completableFuture = new CompletableFuture<>();
-    private final AbstractQueue<AbstractResponse> queue;
     private Map<String, String> queryParams = null;
     private boolean commit = false;
     private RequestBody body;
 
     private final HttpResponseImpl response;
-    private Throwable throwable;
 
-    HttpRestImpl(AioSession session, AbstractQueue<AbstractResponse> queue, Throwable connectThrowable) {
+    HttpRestImpl(AioSession session) {
         this.request = new HttpRequestImpl(session);
-        this.queue = queue;
         this.response = new HttpResponseImpl(session, completableFuture);
-        this.throwable = connectThrowable;
     }
 
     protected final void willSendRequest() throws Throwable {
@@ -57,9 +52,6 @@ class HttpRestImpl implements HttpRest {
             return;
         }
         commit = true;
-        if (throwable != null) {
-            throw throwable;
-        }
         resetUri();
         Collection<String> headers = request.getHeaderNames();
         if (!headers.contains(HeaderName.USER_AGENT.getName())) {
@@ -68,11 +60,7 @@ class HttpRestImpl implements HttpRest {
         AioSession session = response.getSession();
         DecoderUnit attachment = session.getAttachment();
         synchronized (session) {
-            if (attachment.getResponse() == null) {
-                attachment.setResponse(response);
-            } else {
-                queue.offer(response);
-            }
+            attachment.setResponse(response);
         }
     }
 

@@ -49,13 +49,15 @@ abstract class Transport {
     protected abstract CompletableFuture<Response<JSONObject>> doRequest(CompletableFuture<Response<JSONObject>> future, Request<JSONObject> request);
 
     protected final CompletableFuture<HttpResponse> doRequest(HttpRest httpRest, JsonRpc request) {
+        CompletableFuture<HttpResponse> future = new CompletableFuture<>();
         byte[] body = JSONObject.toJSONString(request).getBytes();
-        return httpRest.header(header -> {
+        httpRest.header(header -> {
             header.setContentType(HeaderValue.ContentType.APPLICATION_JSON).setContentLength(body.length);
             if (FeatUtils.isNotBlank(sessionId)) {
                 header.set(Request.HEADER_SESSION_ID, sessionId);
             }
-        }).body(b -> b.write(body)).submit();
+        }).body(b -> b.write(body)).onSuccess(future::complete).onFailure(future::completeExceptionally).submit();
+        return future;
     }
 
     public abstract CompletableFuture<HttpResponse> sendNotification(String method);

@@ -21,12 +21,10 @@ import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpProtocol;
+import tech.smartboot.feat.core.common.exception.FeatException;
 
 import java.util.Base64;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.Semaphore;
-import java.util.function.Consumer;
 
 /**
  * @author 三刀(zhengjunweimail@163.com)
@@ -40,23 +38,18 @@ public final class HttpClient {
      * Header: Host
      */
     private final String hostHeader;
-    /**
-     * 客户端Client
-     */
-    private AioQuickClient client;
 
-    private boolean connected;
+    private boolean closed;
 
     private boolean firstConnected = true;
 
-    private Throwable connectThrowable;
+
+    private final ConcurrentLinkedQueue<AioQuickClient> clients = new ConcurrentLinkedQueue<>();
     /**
      * 消息处理器
      */
     private final HttpMessageProcessor processor = new HttpMessageProcessor();
-    private final ConcurrentLinkedQueue<AbstractResponse> queue = new ConcurrentLinkedQueue<>();
     private final String uri;
-    private final Semaphore semaphore = new Semaphore(1);
 
     public HttpClient(String url) {
         int schemaIndex = url.indexOf("://");
@@ -121,32 +114,12 @@ public final class HttpClient {
     }
 
     private HttpRestImpl rest0(String uri) {
-        connect();
-        HttpRestImpl httpRestImpl = new HttpRestImpl(client.getSession(), queue, connectThrowable) {
-            @Override
-            public CompletableFuture<HttpResponse> submit() {
-                if (connectThrowable != null) {
-                    CompletableFuture future = getCompletableFuture();
-                    future.completeExceptionally(connectThrowable);
-                    connectThrowable = null;
-                    return future;
-                }
-                return super.submit();
-            }
-
-            @Override
-            public HttpRestImpl onSuccess(Consumer<HttpResponse> consumer) {
-                semaphore.release();
-                return super.onSuccess(consumer);
-            }
-
-            @Override
-            public HttpRestImpl onFailure(Consumer<Throwable> consumer) {
-                semaphore.release();
-                return super.onFailure(consumer);
-            }
-        };
-        initRest(httpRestImpl, uri);
+        if (closed) {
+            throw new FeatException("client closed");
+        }
+        AioQuickClient client = acquireConnection();
+        HttpRestImpl httpRestImpl = new HttpRestImpl(client.getSession());
+        initRest(httpRestImpl, uri, client);
         return httpRestImpl;
     }
 
@@ -164,42 +137,29 @@ public final class HttpClient {
 
     int i = 0;
 
-    private void initRest(HttpRestImpl httpRestImpl, String uri) {
+    private void initRest(HttpRestImpl httpRestImpl, String uri, AioQuickClient client) {
         HttpRequestImpl request = httpRestImpl.getRequest();
         if (options.getProxy() != null && FeatUtils.isNotBlank(options.getProxy().getProxyUserName())) {
-            request.addHeader(HeaderName.PROXY_AUTHORIZATION,
-                    "Basic " + Base64.getEncoder().encodeToString((options.getProxy().getProxyUserName() + ":" + options.getProxy().getProxyPassword()).getBytes()));
+            request.addHeader(HeaderName.PROXY_AUTHORIZATION, "Basic " + Base64.getEncoder().encodeToString((options.getProxy().getProxyUserName() + ":" + options.getProxy().getProxyPassword()).getBytes()));
         }
         request.setUri(uri);
         request.addHeader(HeaderName.HOST, hostHeader);
         request.setProtocol(HttpProtocol.HTTP_11.getProtocol());
 
         httpRestImpl.getCompletableFuture().thenAccept(httpResponse -> {
-            AioSession session = client.getSession();
-            DecoderUnit attachment = session.getAttachment();
-            //重置附件，为下一个响应作准备
-            synchronized (session) {
-                attachment.setState(DecoderUnit.STATE_PROTOCOL_DECODE);
-                attachment.setResponse(queue.poll());
+            boolean close = !HeaderValue.Connection.KEEPALIVE.equalsIgnoreCase(httpResponse.getHeader(HeaderName.CONNECTION));
+            if (!close) {
+                close = !HeaderValue.Connection.KEEPALIVE.equalsIgnoreCase(request.getHeader(HeaderName.CONNECTION));
             }
-            //request标注为keep-alive，response不包含该header,默认保持连接.
-            if (HeaderValue.Connection.KEEPALIVE.equalsIgnoreCase(request.getHeader(HeaderName.CONNECTION)) && httpResponse.getHeader(HeaderName.CONNECTION) == null) {
-                return;
-            }
-            //存在链路复用情况
-            if (attachment.getResponse() != null || !queue.isEmpty()) {
-                return;
-            }
-
             //非keep-alive,主动断开连接
-            if (!HeaderValue.Connection.KEEPALIVE.equalsIgnoreCase(httpResponse.getHeader(HeaderName.CONNECTION))) {
-                close();
-            } else if (!HeaderValue.Connection.KEEPALIVE.equalsIgnoreCase(request.getHeader(HeaderName.CONNECTION))) {
-                close();
+            if (close) {
+                releaseConnection(client);
+                return;
             }
+            clients.offer(client);
         });
         httpRestImpl.getCompletableFuture().exceptionally(throwable -> {
-            close();
+            releaseConnection(client);
             return null;
         });
     }
@@ -209,20 +169,23 @@ public final class HttpClient {
         return options;
     }
 
-    private void connect() {
-        try {
-            semaphore.acquire();
-        } catch (InterruptedException e) {
-            connectThrowable = e;
-            return;
-        }
-        if (connected) {
-            AioSession session = client.getSession();
-            if (session == null || session.isInvalid()) {
-                close();
-                connect();
+    private AioQuickClient acquireConnection() {
+        AioQuickClient client;
+        while (true) {
+            client = clients.poll();
+            if (client == null) {
+                break;
             }
-            return;
+            AioSession session = client.getSession();
+            if (session.isInvalid()) {
+                releaseConnection(client);
+                continue;
+            }
+            DecoderUnit attachment = session.getAttachment();
+            //重置附件，为下一个响应作准备
+            attachment.setState(DecoderUnit.STATE_PROTOCOL_DECODE);
+            attachment.setResponse(null);
+            return client;
         }
 
         try {
@@ -243,7 +206,6 @@ public final class HttpClient {
 
                 firstConnected = false;
             }
-            connected = true;
             client = options.getProxy() == null ? new AioQuickClient(options.getHost(), options.getPort(), processor, processor) : new AioQuickClient(options.getProxy().getProxyHost(), options.getProxy().getProxyPort(), processor, processor);
             client.setWriteBuffer(options.getWriteBufferSize(), 2).setReadBufferSize(options.readBufferSize());
             if (options.getConnectTimeout() > 0) {
@@ -254,18 +216,19 @@ public final class HttpClient {
             } else {
                 client.start(options.group());
             }
-        } catch (Exception e) {
-            connectThrowable = e;
+            return client;
+        } catch (Throwable e) {
+            throw new FeatException(e);
         }
     }
 
+    private void releaseConnection(AioQuickClient client) {
+        client.shutdownNow();
+    }
 
     public void close() {
-        connected = false;
-        client.shutdown();
-        if (semaphore.availablePermits() == 0) {
-            semaphore.release();
-        }
+        closed = true;
+        clients.forEach(this::releaseConnection);
     }
 
 }
