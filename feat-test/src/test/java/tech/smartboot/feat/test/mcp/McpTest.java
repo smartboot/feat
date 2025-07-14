@@ -94,8 +94,8 @@ public class McpTest {
 
         sseClient = McpClient.newSseClient(opt -> opt.baseUrl("http://localhost:3002").setMcpEndpoint("/mcp").rootsEnable());
         sseClient.initialize();
-//        streamClient = McpClient.newStreamableClient(opt -> opt.baseUrl("http://localhost:3002").setMcpEndpoint("/mcp").rootsEnable());
-//        streamClient.initialize();
+        streamClient = McpClient.newStreamableClient(opt -> opt.baseUrl("http://localhost:3002").setMcpEndpoint("/mcp").rootsEnable());
+        streamClient.initialize();
     }
 
     @After
