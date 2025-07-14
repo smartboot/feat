@@ -15,6 +15,7 @@ import tech.smartboot.feat.core.client.impl.HttpRequestImpl;
 import tech.smartboot.feat.core.client.impl.HttpResponseImpl;
 import tech.smartboot.feat.core.client.stream.Stream;
 import tech.smartboot.feat.core.common.HeaderName;
+import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 
@@ -45,9 +46,14 @@ class HttpRestImpl implements HttpRest {
     HttpRestImpl(AioSession session) {
         this.request = new HttpRequestImpl(session);
         this.response = new HttpResponseImpl(session, completableFuture);
+        DecoderUnit attachment = session.getAttachment();
+        if (attachment.getResponse() != null) {
+            throw new FeatException("HttpRestImpl can not be reused");
+        }
+        attachment.setResponse(response);
     }
 
-    protected final void willSendRequest() throws Throwable {
+    protected final void willSendRequest() {
         if (commit) {
             return;
         }
@@ -56,11 +62,6 @@ class HttpRestImpl implements HttpRest {
         Collection<String> headers = request.getHeaderNames();
         if (!headers.contains(HeaderName.USER_AGENT.getName())) {
             request.addHeader(HeaderName.USER_AGENT, DEFAULT_USER_AGENT);
-        }
-        AioSession session = response.getSession();
-        DecoderUnit attachment = session.getAttachment();
-        synchronized (session) {
-            attachment.setResponse(response);
         }
     }
 
