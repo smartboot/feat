@@ -28,7 +28,7 @@ import java.util.Map;
  * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
-@Controller("controller1")
+@Controller(value = "controller1", gzip = true)
 public class Controller1 {
     @RequestMapping("/helloworld")
     public String helloworld() {

@@ -15,7 +15,6 @@ import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.utils.ByteTree;
-import tech.smartboot.feat.core.server.ServerOptions;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -42,7 +41,7 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 public class FeatUtils {
@@ -193,6 +192,10 @@ public class FeatUtils {
 
     public static final String GZIP_ENCODE_UTF_8 = "UTF-8";
     public static final String GZIP_ENCODE_ISO_8859_1 = "ISO-8859-1";
+
+    public static byte[] gzip(byte[] data) {
+        return gzip(data, 0, data.length);
+    }
 
     public static byte[] gzip(byte[] data, int offset, int length) {
         return gzip(data, offset, length, GZIP_ENCODE_UTF_8);

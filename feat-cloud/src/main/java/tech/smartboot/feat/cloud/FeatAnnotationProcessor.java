@@ -66,7 +66,7 @@ import java.util.concurrent.CompletableFuture;
 // 该注解表示该处理器支持的 Java 源代码版本
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
@@ -448,16 +448,20 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                         throw new RuntimeException("不支持的返回类型");
                 }
                 printWriter.append(params).println(");");
-
+                boolean gzip = annotation.gzip();
+                int gzipThreshold = annotation.gzipThreshold();
                 switch (returnTypeInt) {
                     case RETURN_TYPE_VOID:
                         break;
                     case RETURN_TYPE_STRING:
                         printWriter.println("\t\t\tbyte[] bytes = rst.getBytes(\"UTF-8\"); ");
-                        printWriter.println("\t\t\tctx.Response.setContentLength(bytes.length);");
-                        printWriter.println("\t\t\tctx.Response.write(bytes);");
-                        break;
                     case RETURN_TYPE_BYTE_ARRAY:
+                        if (gzip) {
+                            printWriter.println("\t\t\tif(bytes.length > " + gzipThreshold + ") {");
+                            printWriter.println("\t\t\t\tbytes = " + FeatUtils.class.getName() + ".gzip(bytes);");
+                            printWriter.println("\t\t\t\tctx.Response.setHeader(\"Content-Encoding\", \"gzip\");");
+                            printWriter.println("\t\t\t}");
+                        }
                         printWriter.println("\t\t\tctx.Response.setContentLength(bytes.length);");
                         printWriter.println("\t\t\tctx.Response.write(bytes);");
                         break;
@@ -481,8 +485,19 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                             jsonSerializer.serialize(returnType, "rst", 0, null);
                             bytesCache.putAll(jsonSerializer.getByteCache());
                             printWriter.println("\t\t\tctx.Response.setContentType(\"application/json\");");
-                            printWriter.println("\t\t\tctx.Response.setContentLength(os.size());");
-                            printWriter.println("\t\t\tos.writeTo(ctx.Response.getOutputStream());");
+                            if (gzip) {
+                                printWriter.println("\t\t\tctx.Response.setHeader(\"Content-Encoding\", \"gzip\");");
+                                printWriter.println("\t\t\tbyte[] bytes = os.toByteArray();");
+                                printWriter.println("\t\t\tif (bytes.length > " + gzipThreshold + ") {");
+                                printWriter.println("\t\t\t\tbytes = " + FeatUtils.class.getName() + ".gzip(bytes);");
+                                printWriter.println("\t\t\t\tctx.Response.setHeader(\"Content-Encoding\", \"gzip\");");
+                                printWriter.println("\t\t\t}");
+                                printWriter.println("\t\t\tctx.Response.setContentLength(bytes.length);");
+                                printWriter.println("\t\t\tctx.Response.write(bytes);");
+                            } else {
+                                printWriter.println("\t\t\tctx.Response.setContentLength(os.size());");
+                                printWriter.println("\t\t\tos.writeTo(ctx.Response.getOutputStream());");
+                            }
                         }
 
 //                            System.out.println("typeMirror:" + stringBuilder);
