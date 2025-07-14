@@ -74,4 +74,6 @@ abstract class Transport {
         }
         return null;
     }
+
+    public abstract void close();
 }

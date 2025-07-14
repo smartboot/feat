@@ -324,4 +324,8 @@ public class McpClient {
 //
 //        CompletableFuture<Response<JSONObject>> f = transport.asyncRequest("resources/subscribe", JSONObject.of("uri",uri));
 //    }
+
+    public void close(){
+        transport.close();
+    }
 }

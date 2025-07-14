@@ -113,4 +113,10 @@ final class StreamableTransport extends Transport {
         }).body(b -> b.write(body)).onSuccess(future::complete).onFailure(future::completeExceptionally).submit();
         return future;
     }
+
+    @Override
+    public void close() {
+        httpClient.close();
+        sseClient.close();
+    }
 }

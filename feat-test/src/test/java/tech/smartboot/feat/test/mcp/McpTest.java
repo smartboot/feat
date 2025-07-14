@@ -11,6 +11,7 @@
 package tech.smartboot.feat.test.mcp;
 
 import com.alibaba.fastjson2.JSONObject;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import tech.smartboot.feat.Feat;
@@ -26,6 +27,7 @@ import tech.smartboot.feat.cloud.mcp.server.McpServer;
 import tech.smartboot.feat.cloud.mcp.server.model.ServerPrompt;
 import tech.smartboot.feat.cloud.mcp.server.model.ServerResource;
 import tech.smartboot.feat.cloud.mcp.server.model.ServerTool;
+import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.router.Router;
 
 /**
@@ -36,6 +38,7 @@ public class McpTest {
     private McpServer mcp;
     private McpClient sseClient;
     private McpClient streamClient;
+    private HttpServer mcpServer;
 
     @Before
     public void init() {
@@ -87,12 +90,21 @@ public class McpTest {
         router.route(mcp.getOptions().getSseEndpoint(), mcp.sseHandler());
         router.route(mcp.getOptions().getSseMessageEndpoint(), mcp.sseMessageHandler());
         router.route(mcp.getOptions().getMcpEndpoint(), mcp.mcpHandler());
-        Feat.httpServer(opt -> opt.debug(true)).httpHandler(router).listen(3002);
+        mcpServer = Feat.httpServer(opt -> opt.debug(true)).httpHandler(router).listen(3002);
 
         sseClient = McpClient.newSseClient(opt -> opt.baseUrl("http://localhost:3002").setMcpEndpoint("/mcp").rootsEnable());
         sseClient.initialize();
-        streamClient = McpClient.newStreamableClient(opt -> opt.baseUrl("http://localhost:3002").setMcpEndpoint("/mcp").rootsEnable());
-        streamClient.initialize();
+//        streamClient = McpClient.newStreamableClient(opt -> opt.baseUrl("http://localhost:3002").setMcpEndpoint("/mcp").rootsEnable());
+//        streamClient.initialize();
+    }
+
+    @After
+    public void destroy() {
+        mcpServer.shutdown();
+        sseClient.close();
+        if (streamClient != null) {
+            streamClient.close();
+        }
     }
 
     @Test

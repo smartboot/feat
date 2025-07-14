@@ -22,19 +22,24 @@ import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.exception.FeatException;
+import tech.smartboot.feat.core.common.logging.Logger;
+import tech.smartboot.feat.core.common.logging.LoggerFactory;
 
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * @author 三刀
  * @version v1.0 7/9/25
  */
 final class SseTransport extends Transport {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SseTransport.class);
     private final HttpClient httpClient;
     private final HttpClient sseClient;
     private String endpoint;
+    private CountDownLatch latch = new CountDownLatch(1);
     private final Map<Integer, CompletableFuture<Response<JSONObject>>> responseCallbacks = new ConcurrentHashMap<>();
 
     public SseTransport(McpOptions options) {
@@ -48,12 +53,17 @@ final class SseTransport extends Transport {
                 String data = event.get(ServerSentEventStream.DATA);
                 if ("endpoint".equals(e)) {
                     endpoint = data;
+                    latch.countDown();
                 } else {
                     JSONObject jsonObject = JSONObject.parseObject(data);
 
                     Response<JSONObject> response = handleServerRequest(jsonObject);
                     if (response != null) {
-                        doRequest(httpClient.post(endpoint), response);
+                        try {
+                            doRequest(httpClient.post(endpoint), response);
+                        } catch (Throwable throwable) {
+                            LOGGER.error("send error", throwable);
+                        }
                         return;
                     }
                     response = jsonObject.to(new TypeReference<Response<JSONObject>>() {
@@ -85,6 +95,13 @@ final class SseTransport extends Transport {
 
     @Override
     protected CompletableFuture<Response<JSONObject>> doRequest(CompletableFuture<Response<JSONObject>> future, Request<JSONObject> request) {
+        if ("initialize".equals(request.getMethod())) {
+            try {
+                latch.await();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
         if (FeatUtils.isBlank(endpoint)) {
             future.completeExceptionally(new FeatException("endpoint not found"));
             return future;
@@ -112,5 +129,12 @@ final class SseTransport extends Transport {
             }
         }).body(b -> b.write(body)).onSuccess(future::complete).onFailure(future::completeExceptionally).submit();
         return future;
+    }
+
+    @Override
+    public void close() {
+        latch.countDown();
+        httpClient.close();
+        sseClient.close();
     }
 }
