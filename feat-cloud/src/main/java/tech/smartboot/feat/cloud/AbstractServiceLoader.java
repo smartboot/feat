@@ -61,6 +61,10 @@ public abstract class AbstractServiceLoader implements CloudService {
     }
 
     protected void response(AsyncResponse response, Context ctx, CompletableFuture<Void> completableFuture) {
+        gzipResponse(response, ctx, completableFuture, Integer.MAX_VALUE);
+    }
+
+    protected void gzipResponse(AsyncResponse response, Context ctx, CompletableFuture<Void> completableFuture, int threshold) {
         response.getFuture().thenAccept(result -> {
             if (result == null) {
                 completableFuture.complete(null);
@@ -69,6 +73,10 @@ public abstract class AbstractServiceLoader implements CloudService {
             try {
                 byte[] bytes = JSONObject.toJSONString(result).getBytes();
                 ctx.Response.setContentType(HeaderValue.ContentType.APPLICATION_JSON);
+                if (bytes.length > threshold) {
+                    bytes = tech.smartboot.feat.core.common.FeatUtils.gzip(bytes);
+                    ctx.Response.setHeader("Content-Encoding", "gzip");
+                }
                 ctx.Response.setContentLength(bytes.length);
                 ctx.Response.write(bytes);
                 completableFuture.complete(null);

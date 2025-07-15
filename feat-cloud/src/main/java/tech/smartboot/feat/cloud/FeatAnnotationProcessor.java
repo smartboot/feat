@@ -467,7 +467,11 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                         break;
                     case RETURN_TYPE_OBJECT:
                         if (AsyncResponse.class.getName().equals(returnType.toString())) {
-                            printWriter.println("\t\t\t\tresponse(rst, ctx, completableFuture);");
+                            if (gzip) {
+                                printWriter.println("\t\t\t\tgzipResponse(rst, ctx, completableFuture, " + gzipThreshold + ");");
+                            } else {
+                                printWriter.println("\t\t\t\tresponse(rst, ctx, completableFuture);");
+                            }
                             printWriter.println("\t\t\t}");
                         } else if (int.class.getName().equals(returnType.toString())) {
                             printWriter.println("\t\t\twriteInt(ctx.Response.getOutputStream(), rst);");
