@@ -11,13 +11,18 @@ import { Image } from '@astrojs/starlight/components';
 
 ### 版本特性
 - **Feat Core：**
-  - HttpClient 连接异常也以回调形式处理。
-  - 扩充 ByteTree 初始化缓存值，提升服务性能。
-  - 修复关闭进程时可能触发的 RunLogger 空指针问题。
+    - 优化 HttpClient 实现，并修复已知 bug
+    - 启用SSE时默认禁用 chunked 响应header
+    - 扩充 ByteTree 初始化缓存值，提升服务性能。
+    - 修复 Runlogger 未实现日志级别判定的问题。
+    - 修复关闭进程时可能触发的 RunLogger 空指针问题。
+    - 版本号的定义从 `ServerOptions.java` 迁移至 `Feat.java`。
+    - 新增 MCP 特性（孵化中）
 - **Feat Cloud**
   - 新增`@HttpClient`注解，用于发起 HTTP 请求。
-  - 新增 MCP 特性
   - 支持响应结果为 bool 值的 HTTP 接口服务。
+  - 预定义高频使用的byte数组，节省 APT 编译产生的常量bytes.
+  - @Controller 增加配置项：gzip、gzipThreshold，用于配置gzip响应策略。
 ### 升级指南
 ### 兼容性说明
 
