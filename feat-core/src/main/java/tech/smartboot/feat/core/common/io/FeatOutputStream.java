@@ -23,7 +23,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
 public abstract class FeatOutputStream extends OutputStream implements Reset {

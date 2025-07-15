@@ -13,7 +13,7 @@ package tech.smartboot.feat.demo.controller;
 import java.util.List;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
 public class TestParam0<T, K> {

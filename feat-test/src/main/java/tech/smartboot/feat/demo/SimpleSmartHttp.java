@@ -16,7 +16,7 @@ import java.io.InputStream;
 
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
 public class SimpleSmartHttp {

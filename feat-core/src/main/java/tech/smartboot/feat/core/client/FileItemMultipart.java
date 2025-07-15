@@ -15,7 +15,7 @@ import tech.smartboot.feat.core.common.utils.Mimetypes;
 import java.io.File;
 
 /**
- * @author 三刀
+ * @author 三刀 zhengjunweimail@163.com
  * @version v1.0 3/23/25
  */
 public class FileItemMultipart extends Multipart {

@@ -27,7 +27,7 @@ import java.nio.charset.StandardCharsets;
  * 4. 具有容量管理机制，防止内存过度使用
  * 5. 支持虚拟节点，用于临时匹配结果
  *
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
 public class ByteTree<T> {

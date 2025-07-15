@@ -11,7 +11,7 @@
 package tech.smartboot.feat.core.server;
 
 /**
- * @author 三刀
+ * @author 三刀 zhengjunweimail@163.com
  * @version v1.0 3/7/25
  */
 public interface Session {

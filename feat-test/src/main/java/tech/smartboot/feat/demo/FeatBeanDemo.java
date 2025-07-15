@@ -16,7 +16,7 @@ import tech.smartboot.feat.cloud.annotation.Bean;
 import tech.smartboot.feat.cloud.annotation.PostConstruct;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
 @Bean

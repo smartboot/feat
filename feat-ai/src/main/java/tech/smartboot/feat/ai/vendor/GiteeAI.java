@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 /**
- * @author 三刀
+ * @author 三刀 zhengjunweimail@163.com
  * @version v1.0 3/23/25
  */
 public class GiteeAI {

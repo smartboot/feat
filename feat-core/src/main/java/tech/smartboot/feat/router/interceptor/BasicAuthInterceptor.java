@@ -22,7 +22,7 @@ import java.util.Base64;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * @author 三刀
+ * @author 三刀 zhengjunweimail@163.com
  * @version v1.0 3/18/25
  */
 public class BasicAuthInterceptor implements Interceptor {

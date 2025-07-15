@@ -31,7 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 
 /**
- * @author 三刀
+ * @author 三刀 zhengjunweimail@163.com
  * @version v1.0 7/9/25
  */
 final class SseTransport extends Transport {

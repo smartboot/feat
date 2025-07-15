@@ -66,7 +66,7 @@ import java.util.concurrent.CompletableFuture;
 // 该注解表示该处理器支持的 Java 源代码版本
 
 /**
- * @author 三刀(zhengjunweimail @ 163.com)
+ * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
 @SupportedSourceVersion(SourceVersion.RELEASE_8)

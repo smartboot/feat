@@ -25,7 +25,7 @@ import tech.smartboot.feat.mcp.server.model.ServerTool;
 import tech.smartboot.feat.router.Router;
 
 /**
- * @author 三刀
+ * @author 三刀 zhengjunweimail@163.com
  * @version v1.0 6/18/25
  */
 public class Demo {

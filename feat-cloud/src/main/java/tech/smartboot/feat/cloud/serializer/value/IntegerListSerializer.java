@@ -16,7 +16,7 @@ import tech.smartboot.feat.core.common.exception.FeatException;
 import javax.lang.model.element.Element;
 
 /**
- * @author 三刀
+ * @author 三刀 zhengjunweimail@163.com
  * @version v1.0 5/27/25
  */
 class IntegerListSerializer extends AbstractSerializer {

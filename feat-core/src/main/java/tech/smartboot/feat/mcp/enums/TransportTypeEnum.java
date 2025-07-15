@@ -11,7 +11,7 @@
 package tech.smartboot.feat.mcp.enums;
 
 /**
- * @author 三刀
+ * @author 三刀 zhengjunweimail@163.com
  * @version v1.0 7/9/25
  */
 public enum TransportTypeEnum {

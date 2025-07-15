@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @author 三刀
+ * @author 三刀 zhengjunweimail@163.com
  * @version v1.0 5/13/25
  */
 class ListSerializer extends AbstractSerializer {

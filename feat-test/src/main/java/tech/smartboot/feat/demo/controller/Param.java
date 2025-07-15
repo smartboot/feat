@@ -15,7 +15,7 @@ import com.alibaba.fastjson2.annotation.JSONField;
 import java.util.Date;
 
 /**
- * @author 三刀
+ * @author 三刀 zhengjunweimail@163.com
  * @version v1.0 4/29/25
  */
 public class Param {

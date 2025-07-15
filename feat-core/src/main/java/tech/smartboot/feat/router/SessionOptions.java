@@ -11,7 +11,7 @@
 package tech.smartboot.feat.router;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀 zhengjunweimail@163.com
  * @version v1.0 3/3/25
  */
 public class SessionOptions {

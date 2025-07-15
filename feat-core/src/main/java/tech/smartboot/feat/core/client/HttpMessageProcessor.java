@@ -23,7 +23,7 @@ import tech.smartboot.feat.core.common.utils.ByteTree;
 import java.nio.ByteBuffer;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
 final class HttpMessageProcessor extends AbstractMessageProcessor<AbstractResponse> implements Protocol<AbstractResponse> {

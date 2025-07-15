@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
 final class RouterHandlerImpl implements HttpHandler {

@@ -20,7 +20,7 @@ import java.lang.annotation.Target;
  * Controller 注解用于标识一个类作为控制器，处理HTTP请求。
  * 该注解应用在类级别上，表明此类中包含的请求处理方法。
  *
- * @author 三刀(zhengjunweimail @ 163.com)
+ * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  * @see tech.smartboot.feat.cloud.annotation.RequestMapping
  */

@@ -13,7 +13,7 @@ package tech.smartboot.feat.ai.vector.milvus;
 import tech.smartboot.feat.ai.embedding.EmbeddingModel;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
 public class MilvusOptions {

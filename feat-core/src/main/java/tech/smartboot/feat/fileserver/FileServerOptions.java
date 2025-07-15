@@ -13,7 +13,7 @@ package tech.smartboot.feat.fileserver;
 import tech.smartboot.feat.core.server.ServerOptions;
 
 /**
- * @author 三刀
+ * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
 public class FileServerOptions extends ServerOptions {

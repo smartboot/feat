@@ -32,7 +32,7 @@ import java.util.Collection;
 import java.util.Map;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
 public class Http2Endpoint extends Endpoint implements HttpRequest, Reset {

@@ -13,7 +13,7 @@ package tech.smartboot.feat.cloud.serializer.value;
 import javax.lang.model.element.Element;
 
 /**
- * @author 三刀
+ * @author 三刀 zhengjunweimail@163.com
  * @version v1.0 5/27/25
  */
 class IntegerSerializer extends AbstractSerializer {

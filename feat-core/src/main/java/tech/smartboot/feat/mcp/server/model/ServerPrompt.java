@@ -16,7 +16,7 @@ import tech.smartboot.feat.mcp.model.PromptMessage;
 import java.util.function.Function;
 
 /**
- * @author 三刀
+ * @author 三刀 zhengjunweimail@163.com
  * @version v1.0 7/11/25
  */
 public class ServerPrompt extends Prompt {

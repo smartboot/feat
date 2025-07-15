@@ -35,7 +35,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * @author 三刀
+ * @author 三刀 zhengjunweimail@163.com
  * @version v1.0 5/13/25
  */
 public class JsonSerializer {

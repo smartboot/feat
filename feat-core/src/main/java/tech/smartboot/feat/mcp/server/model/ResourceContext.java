@@ -13,7 +13,7 @@ package tech.smartboot.feat.mcp.server.model;
 import tech.smartboot.feat.core.server.HttpRequest;
 
 /**
- * @author 三刀
+ * @author 三刀 zhengjunweimail@163.com
  * @version v1.0 7/4/25
  */
 public class ResourceContext {

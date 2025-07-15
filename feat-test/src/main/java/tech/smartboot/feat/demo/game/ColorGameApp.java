@@ -16,7 +16,7 @@ import tech.smartboot.feat.core.server.HttpServer;
 /**
  * 一个适合3岁小朋友玩的颜色匹配游戏
  *
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
 public class ColorGameApp {

@@ -18,7 +18,7 @@ import java.util.logging.Formatter;
 import java.util.logging.LogRecord;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
 class LogFormatter extends Formatter {

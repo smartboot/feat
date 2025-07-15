@@ -32,7 +32,7 @@ import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.router.Router;
 
 /**
- * @author 三刀
+ * @author 三刀 zhengjunweimail@163.com
  * @version v1.0 7/9/25
  */
 public class McpTest {

@@ -17,7 +17,7 @@ import tech.smartboot.feat.core.server.HttpServer;
 import java.io.IOException;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
 public class PostChunkedDemo {

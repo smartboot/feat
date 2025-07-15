@@ -26,7 +26,7 @@ import java.nio.ByteBuffer;
 // The encoding is simple and well known: 1 byte <-> 1 char
 //
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
 final class ISO_8859_1 {

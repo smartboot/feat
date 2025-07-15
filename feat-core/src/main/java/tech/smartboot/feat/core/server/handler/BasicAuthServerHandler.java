@@ -26,7 +26,7 @@ import java.util.Base64;
  * 
  * <p>实现HTTP Basic认证机制，验证客户端请求的Authorization头信息</p>
  * 
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  * @since 1.0.0
  */

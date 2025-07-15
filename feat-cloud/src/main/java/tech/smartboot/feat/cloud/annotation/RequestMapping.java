@@ -38,7 +38,7 @@ import java.lang.annotation.Target;
  * 在上面的例子中，`@RequestMapping("/example")` 设置了控制器的基础路径，
  * `@RequestMapping(value = "/get", method = RequestMethod.GET)` 则指定了具体的 GET 请求路径。
  *
- * @author 三刀(zhengjunweimail @ 163.com)
+ * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
 @Target({ElementType.METHOD})

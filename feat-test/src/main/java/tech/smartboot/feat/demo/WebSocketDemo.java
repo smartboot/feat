@@ -16,7 +16,7 @@ import tech.smartboot.feat.core.server.WebSocketResponse;
 import tech.smartboot.feat.core.server.upgrade.websocket.WebSocketUpgrade;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
 public class WebSocketDemo {

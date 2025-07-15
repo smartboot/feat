@@ -14,7 +14,7 @@ import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.exception.HttpException;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
 public class WafException extends HttpException {

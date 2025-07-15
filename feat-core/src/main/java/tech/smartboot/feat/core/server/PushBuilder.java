@@ -13,7 +13,7 @@ package tech.smartboot.feat.core.server;
 import java.util.Set;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
 public interface PushBuilder {

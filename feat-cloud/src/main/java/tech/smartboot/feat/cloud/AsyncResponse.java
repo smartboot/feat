@@ -13,7 +13,7 @@ package tech.smartboot.feat.cloud;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * @author 三刀
+ * @author 三刀 zhengjunweimail@163.com
  * @version v1.0 4/22/25
  */
 public final class AsyncResponse {

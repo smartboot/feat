@@ -48,7 +48,7 @@ import java.lang.annotation.Target;
  * }
  * </pre>
  *
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  * @see tech.smartboot.feat.router.Interceptor
  * @see tech.smartboot.feat.router.Router#addInterceptors(java.util.List, tech.smartboot.feat.router.Interceptor)

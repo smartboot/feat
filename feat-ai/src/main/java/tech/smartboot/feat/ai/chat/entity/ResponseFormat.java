@@ -11,7 +11,7 @@
 package tech.smartboot.feat.ai.chat.entity;
 
 /**
- * @author 三刀
+ * @author 三刀 zhengjunweimail@163.com
  * @version v1.0 3/23/25
  */
 public class ResponseFormat {

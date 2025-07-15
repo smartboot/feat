@@ -16,7 +16,7 @@ package tech.smartboot.feat.ai.chat.entity;
  * 该接口继承自ResponseCallback，专门用于处理流式数据的场景。它允许在接收到流式数据时进行实时处理，
  * 并在数据传输完成时执行相应的完成操作。
  *
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
 public interface StreamResponseCallback extends ResponseCallback {

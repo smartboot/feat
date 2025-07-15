@@ -15,7 +15,7 @@ import tech.smartboot.feat.mcp.model.Resource;
 import java.util.function.Function;
 
 /**
- * @author 三刀
+ * @author 三刀 zhengjunweimail@163.com
  * @version v1.0 6/28/25
  */
 public class ServerResource extends Resource {

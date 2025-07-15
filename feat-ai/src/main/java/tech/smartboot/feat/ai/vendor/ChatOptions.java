@@ -14,7 +14,7 @@ import tech.smartboot.feat.ai.ModelMeta;
 import tech.smartboot.feat.ai.Options;
 
 /**
- * @author 三刀
+ * @author 三刀 zhengjunweimail@163.com
  * @version v1.0 3/23/25
  */
 public class ChatOptions extends Options {
