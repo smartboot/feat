@@ -168,9 +168,23 @@ public class JsonSerializer {
     }
 
     public void toBytesPool(String value) {
-        String key = ("b_" + value.hashCode()).replace("-", "$");
-        byteCache.put(key, "private static final byte[] " + key + " = " + toBytesStr(value) + ";");
-        printWriter.append("os.write(").append(key).println(");");
+        if ("\"success\":false".equals(value)) {
+            printWriter.println("os.write(b_success_false);");
+        } else if ("\"success\":true".equals(value)) {
+            printWriter.println("os.write(b_success_true);");
+        } else if ("null".equals(value)) {
+            printWriter.println("os.write(b_null);");
+        } else if ("\"message\":".equals(value)) {
+            printWriter.println("os.write(b_message);");
+        } else if ("\"data\":".equals(value)) {
+            printWriter.println("os.write(b_data);");
+        } else if ("\"code\":".equals(value)) {
+            printWriter.println("os.write(b_code);");
+        } else {
+            String key = ("b_" + value.hashCode()).replace("-", "$");
+            byteCache.put(key, "private static final byte[] " + key + " = " + toBytesStr(value) + ";");
+            printWriter.append("os.write(").append(key).println(");");
+        }
     }
 
     private String toBytesStr(String str) {

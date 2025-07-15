@@ -29,6 +29,12 @@ import java.util.concurrent.CompletableFuture;
  * @version v1.0.0
  */
 public abstract class AbstractServiceLoader implements CloudService {
+    protected static final byte[] b_success_false = {'"', 's', 'u', 'c', 'c', 'e', 's', 's', '"', ':', 'f', 'a', 'l', 's', 'e'};
+    protected static final byte[] b_data = {'"', 'd', 'a', 't', 'a', '"', ':'};
+    protected static final byte[] b_null = {'n', 'u', 'l', 'l'};
+    protected static final byte[] b_code = {'"', 'c', 'o', 'd', 'e', '"', ':'};
+    protected static final byte[] b_message = {'"', 'm', 'e', 's', 's', 'a', 'g', 'e', '"', ':'};
+    protected static final byte[] b_success_true = {'"', 's', 'u', 'c', 'c', 'e', 's', 's', '"', ':', 't', 'r', 'u', 'e'};
     protected ThreadLocal<ByteArrayOutputStream> outputStream = ThreadLocal.withInitial(() -> new ByteArrayOutputStream(1024));
 
     protected JSONObject getParams(HttpRequest request) {
