@@ -8,7 +8,7 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.cloud.mcp.server;
+package tech.smartboot.feat.cloud.mcp;
 
 import com.alibaba.fastjson2.JSONObject;
 
@@ -16,7 +16,7 @@ import com.alibaba.fastjson2.JSONObject;
  * @author 三刀
  * @version v1.0 7/4/25
  */
-public class McpServerException extends RuntimeException {
+public class McpException extends RuntimeException {
     public static final int RESOURCE_NOT_FOUND = -32002;
     /**
      * Invalid Parameters
@@ -25,11 +25,11 @@ public class McpServerException extends RuntimeException {
     private int code;
     private JSONObject data;
 
-    public McpServerException(int code, String message) {
+    public McpException(int code, String message) {
         this(code, message, null);
     }
 
-    public McpServerException(int code, String message, JSONObject data) {
+    public McpException(int code, String message, JSONObject data) {
         super(message);
         this.code = code;
         this.data = data;

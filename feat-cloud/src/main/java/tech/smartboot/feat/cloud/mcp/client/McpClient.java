@@ -45,6 +45,11 @@ public class McpClient {
     private McpClient(McpOptions options, Transport transport) {
         this.options = options;
         this.transport = transport;
+        options.setNotificationHandler(method -> {
+            if ("notifications/tools/list_changed".equals(method)) {
+                listTools();
+            }
+        });
     }
 
     public static McpClient newSseClient(Consumer<McpOptions> opt) {
@@ -325,7 +330,7 @@ public class McpClient {
 //        CompletableFuture<Response<JSONObject>> f = transport.asyncRequest("resources/subscribe", JSONObject.of("uri",uri));
 //    }
 
-    public void close(){
+    public void close() {
         transport.close();
     }
 }

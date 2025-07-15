@@ -21,6 +21,7 @@ import tech.smartboot.feat.core.common.HeaderValue;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 /**
  * @author 三刀

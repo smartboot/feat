@@ -13,6 +13,7 @@ package tech.smartboot.feat.cloud.mcp.server;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.TypeReference;
+import tech.smartboot.feat.cloud.mcp.McpException;
 import tech.smartboot.feat.cloud.mcp.model.McpInitializeRequest;
 import tech.smartboot.feat.cloud.mcp.model.McpInitializeResponse;
 import tech.smartboot.feat.cloud.mcp.model.Request;
@@ -249,7 +250,7 @@ public class McpServer {
                     try {
                         JSONObject result = handler.apply(this, request, jsonObject);
                         response.setResult(result);
-                    } catch (McpServerException e) {
+                    } catch (McpException e) {
                         JSONObject error = new JSONObject();
                         error.put("code", e.getCode());
                         error.put("message", e.getMessage());

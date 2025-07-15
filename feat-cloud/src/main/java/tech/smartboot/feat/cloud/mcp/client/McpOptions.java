@@ -17,6 +17,7 @@ import tech.smartboot.feat.cloud.mcp.model.Roots;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * @author 三刀
@@ -32,6 +33,8 @@ public class McpOptions {
     private boolean elicitation;
     private JSONObject experimental;
     private List<Roots> rootsList;
+    private Consumer<String> notificationHandler = (method) -> {
+    };
 
     McpOptions() {
     }
@@ -107,5 +110,13 @@ public class McpOptions {
 
     List<Roots> getRootsList() {
         return rootsList;
+    }
+
+    Consumer<String> getNotificationHandler() {
+        return notificationHandler;
+    }
+
+    void setNotificationHandler(Consumer<String> notificationHandler) {
+        this.notificationHandler = notificationHandler;
     }
 }

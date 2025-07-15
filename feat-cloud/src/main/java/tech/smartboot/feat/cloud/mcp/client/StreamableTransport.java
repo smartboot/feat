@@ -12,9 +12,9 @@ package tech.smartboot.feat.cloud.mcp.client;
 
 import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.TypeReference;
+import tech.smartboot.feat.cloud.mcp.McpException;
 import tech.smartboot.feat.cloud.mcp.model.Request;
 import tech.smartboot.feat.cloud.mcp.model.Response;
-import tech.smartboot.feat.cloud.mcp.server.McpServerException;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.client.HttpRest;
@@ -38,6 +38,7 @@ final class StreamableTransport extends Transport {
     private static final Logger logger = LoggerFactory.getLogger(StreamableTransport.class);
     private HttpClient httpClient;
     private HttpClient sseClient;
+
 
     public StreamableTransport(McpOptions options) {
         super(options);
@@ -64,6 +65,7 @@ final class StreamableTransport extends Transport {
                             doRequest(httpClient.post(options.getMcpEndpoint()), response);
                             return;
                         }
+                        options.getNotificationHandler().accept(jsonObject.getString("method"));
                         logger.warn("unexpected event: " + e + " data: " + data);
                     }
                 }).onFailure(throwable -> {
@@ -91,7 +93,7 @@ final class StreamableTransport extends Transport {
             Response<JSONObject> rsp = JSONObject.parseObject(response.body(), new TypeReference<Response<JSONObject>>() {
             });
             if (rsp.getError() != null) {
-                future.completeExceptionally(new McpServerException(rsp.getError().getInteger("code"), rsp.getError().getString("message")));
+                future.completeExceptionally(new McpException(rsp.getError().getInteger("code"), rsp.getError().getString("message")));
             } else {
                 future.complete(rsp);
             }

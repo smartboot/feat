@@ -11,7 +11,7 @@
 package tech.smartboot.feat.core.common.exception;
 
 /**
- * @author 三刀(zhengjunweimail@163.com)
+ * @author 三刀(zhengjunweimail @ 163.com)
  * @version v1.0.0
  */
 public class FeatException extends RuntimeException {
@@ -20,10 +20,17 @@ public class FeatException extends RuntimeException {
     }
 
     public FeatException(Throwable cause) {
-        super(cause);
+        super(getRootCause(cause));
     }
 
     public FeatException(String message, Throwable cause) {
         super(message, cause);
+    }
+
+    private static Throwable getRootCause(Throwable cause) {
+        while (cause.getCause() != null) {
+            cause = cause.getCause();
+        }
+        return cause;
     }
 }

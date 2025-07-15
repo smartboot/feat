@@ -12,7 +12,7 @@ package tech.smartboot.feat.cloud.mcp.model;
 
 import tech.smartboot.feat.cloud.mcp.enums.RoleEnum;
 import tech.smartboot.feat.cloud.mcp.enums.ToolResultType;
-import tech.smartboot.feat.cloud.mcp.server.McpServerException;
+import tech.smartboot.feat.cloud.mcp.McpException;
 import tech.smartboot.feat.core.common.FeatUtils;
 
 /**
@@ -54,7 +54,7 @@ public class PromptMessage<T extends PromptMessage.PromptContent> {
 
     public static PromptMessage<PromptMessage.AudioPromptContent> ofAudio(RoleEnum roleEnum, String data, String mimeType) {
         if (FeatUtils.isBlank(data)) {
-            throw new McpServerException(McpServerException.INTERNAL_ERROR, "Audio data cannot be empty");
+            throw new McpException(McpException.INTERNAL_ERROR, "Audio data cannot be empty");
         }
         return new PromptMessage<>(roleEnum, new PromptMessage.AudioPromptContent(data, mimeType));
     }

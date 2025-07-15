@@ -15,7 +15,7 @@ import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.cloud.mcp.model.ToolCalledResult;
 import tech.smartboot.feat.cloud.mcp.enums.ToolResultType;
 import tech.smartboot.feat.cloud.mcp.server.McpServer;
-import tech.smartboot.feat.cloud.mcp.server.McpServerException;
+import tech.smartboot.feat.cloud.mcp.McpException;
 import tech.smartboot.feat.cloud.mcp.server.model.ServerTool;
 import tech.smartboot.feat.cloud.mcp.server.model.ToolContext;
 import tech.smartboot.feat.core.server.HttpRequest;
@@ -36,7 +36,7 @@ public class ToolsCallHandler implements ServerHandler {
 
         ServerTool tool = mcp.getTools().stream().filter(t -> t.getName().equals(toolName)).findFirst().orElse(null);
         if (tool == null) {
-            throw new McpServerException(McpServerException.INTERNAL_ERROR, "Unknown tool: " + toolName);
+            throw new McpException(McpException.INTERNAL_ERROR, "Unknown tool: " + toolName);
         }
         JSONObject result = new JSONObject();
         try {

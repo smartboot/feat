@@ -12,6 +12,7 @@ package tech.smartboot.feat.test.mcp;
 
 import com.alibaba.fastjson2.JSONObject;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import tech.smartboot.feat.Feat;
@@ -126,12 +127,12 @@ public class McpTest {
     }
 
     @Test
-    public void test3() throws Exception {
-        mcp.addTool(ServerTool.of("test_aaa").title("测试").description("测试").inputSchema(Tool.stringProperty("name", "用户名称"), Tool.requiredStringProperty("age", "用户年龄")).outputSchema(Tool.requiredNumberProperty("age", "年龄")).doAction(input -> {
-            return ToolCalledResult.ofText("aaa");
-        }));
-        System.out.println(JSONObject.toJSONString(sseClient.callTool("test_aaa")));
-        System.out.println(JSONObject.toJSONString(streamClient.callTool("test_aaa")));
+    public void callTool() throws Exception {
+        mcp.addTool(ServerTool.of("test_aaa").title("测试").description("测试").inputSchema(Tool.stringProperty("name", "用户名称"), Tool.requiredStringProperty("age", "用户年龄")).outputSchema(Tool.requiredNumberProperty("age", "年龄")).doAction(input -> ToolCalledResult.ofText("aaa")));
+        ToolCalledResult result = sseClient.callTool("test_aaa");
+        Assert.assertEquals("aaa", ((ToolCalledResult.TextContent) (result.getContent().get(0))).getText());
+        ToolCalledResult streamClient = sseClient.callTool("test_aaa");
+        Assert.assertEquals("aaa", ((ToolCalledResult.TextContent) (result.getContent().get(0))).getText());
     }
 
     @Test
