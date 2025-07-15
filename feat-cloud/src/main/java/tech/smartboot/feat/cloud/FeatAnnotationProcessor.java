@@ -486,7 +486,6 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                             bytesCache.putAll(jsonSerializer.getByteCache());
                             printWriter.println("\t\t\tctx.Response.setContentType(\"application/json\");");
                             if (gzip) {
-                                printWriter.println("\t\t\tctx.Response.setHeader(\"Content-Encoding\", \"gzip\");");
                                 printWriter.println("\t\t\tbyte[] bytes = os.toByteArray();");
                                 printWriter.println("\t\t\tif (bytes.length > " + gzipThreshold + ") {");
                                 printWriter.println("\t\t\t\tbytes = " + FeatUtils.class.getName() + ".gzip(bytes);");
