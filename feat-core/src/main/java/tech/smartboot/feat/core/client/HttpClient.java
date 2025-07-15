@@ -24,6 +24,7 @@ import tech.smartboot.feat.core.common.HttpProtocol;
 import tech.smartboot.feat.core.common.exception.FeatException;
 
 import java.util.Base64;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
@@ -117,9 +118,22 @@ public final class HttpClient {
         if (closed) {
             throw new FeatException("client closed");
         }
-        AioQuickClient client = acquireConnection();
-        HttpRestImpl httpRestImpl = new HttpRestImpl(client.getSession());
-        initRest(httpRestImpl, uri, client);
+        HttpRestImpl httpRestImpl;
+        try {
+            AioQuickClient client = acquireConnection();
+            httpRestImpl = new HttpRestImpl(client.getSession());
+            initRest(httpRestImpl, uri, client);
+        } catch (Throwable e) {
+            httpRestImpl = new HttpRestImpl(null) {
+                @Override
+                public CompletableFuture<HttpResponse> submit() {
+                    CompletableFuture future = super.getCompletableFuture();
+                    future.completeExceptionally(e);
+                    return future;
+                }
+            };
+        }
+
         return httpRestImpl;
     }
 
@@ -169,7 +183,7 @@ public final class HttpClient {
         return options;
     }
 
-    private AioQuickClient acquireConnection() {
+    private AioQuickClient acquireConnection() throws Throwable {
         AioQuickClient client;
         while (true) {
             client = clients.poll();
@@ -188,38 +202,34 @@ public final class HttpClient {
             return client;
         }
 
-        try {
-            if (firstConnected) {
-                boolean noneSslPlugin = true;
-                for (Plugin responsePlugin : options.getPlugins()) {
-                    processor.addPlugin(responsePlugin);
-                    if (responsePlugin instanceof SslPlugin) {
-                        noneSslPlugin = false;
-                    }
+        if (firstConnected) {
+            boolean noneSslPlugin = true;
+            for (Plugin responsePlugin : options.getPlugins()) {
+                processor.addPlugin(responsePlugin);
+                if (responsePlugin instanceof SslPlugin) {
+                    noneSslPlugin = false;
                 }
-                if (noneSslPlugin && options.isHttps()) {
-                    processor.addPlugin(new SslPlugin<>(new ClientSSLContextFactory()));
-                }
-                if (options.isDebug()) {
-                    processor.addPlugin(new StreamMonitorPlugin<>(StreamMonitorPlugin.BLUE_TEXT_INPUT_STREAM, StreamMonitorPlugin.RED_TEXT_OUTPUT_STREAM));
-                }
+            }
+            if (noneSslPlugin && options.isHttps()) {
+                processor.addPlugin(new SslPlugin<>(new ClientSSLContextFactory()));
+            }
+            if (options.isDebug()) {
+                processor.addPlugin(new StreamMonitorPlugin<>(StreamMonitorPlugin.BLUE_TEXT_INPUT_STREAM, StreamMonitorPlugin.RED_TEXT_OUTPUT_STREAM));
+            }
 
-                firstConnected = false;
-            }
-            client = options.getProxy() == null ? new AioQuickClient(options.getHost(), options.getPort(), processor, processor) : new AioQuickClient(options.getProxy().getProxyHost(), options.getProxy().getProxyPort(), processor, processor);
-            client.setWriteBuffer(options.getWriteBufferSize(), 2).setReadBufferSize(options.readBufferSize());
-            if (options.getConnectTimeout() > 0) {
-                client.connectTimeout(options.getConnectTimeout());
-            }
-            if (options.group() == null) {
-                client.start();
-            } else {
-                client.start(options.group());
-            }
-            return client;
-        } catch (Throwable e) {
-            throw new FeatException(e);
+            firstConnected = false;
         }
+        client = options.getProxy() == null ? new AioQuickClient(options.getHost(), options.getPort(), processor, processor) : new AioQuickClient(options.getProxy().getProxyHost(), options.getProxy().getProxyPort(), processor, processor);
+        client.setWriteBuffer(options.getWriteBufferSize(), 2).setReadBufferSize(options.readBufferSize());
+        if (options.getConnectTimeout() > 0) {
+            client.connectTimeout(options.getConnectTimeout());
+        }
+        if (options.group() == null) {
+            client.start();
+        } else {
+            client.start(options.group());
+        }
+        return client;
     }
 
     private void releaseConnection(AioQuickClient client) {

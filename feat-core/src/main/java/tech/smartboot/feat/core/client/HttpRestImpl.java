@@ -46,11 +46,13 @@ class HttpRestImpl implements HttpRest {
     HttpRestImpl(AioSession session) {
         this.request = new HttpRequestImpl(session);
         this.response = new HttpResponseImpl(session, completableFuture);
-        DecoderUnit attachment = session.getAttachment();
-        if (attachment.getResponse() != null) {
-            throw new FeatException("HttpRestImpl can not be reused");
+        if (session != null) {
+            DecoderUnit attachment = session.getAttachment();
+            if (attachment.getResponse() != null) {
+                throw new FeatException("HttpRestImpl can not be reused");
+            }
+            attachment.setResponse(response);
         }
-        attachment.setResponse(response);
     }
 
     protected final void willSendRequest() {
