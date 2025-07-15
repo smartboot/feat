@@ -239,4 +239,9 @@ public class FeatYamlValueSerializer {
     public boolean isException() {
         return exception;
     }
+
+    public String getFeatYamlValue(String name) {
+        Object val = JSONPath.eval(config, "$.server." + name);
+        return val == null ? "" : val.toString();
+    }
 }

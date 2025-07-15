@@ -450,6 +450,10 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                 printWriter.append(params).println(");");
                 boolean gzip = annotation.gzip();
                 int gzipThreshold = annotation.gzipThreshold();
+                if (Boolean.parseBoolean(yamlValueSerializer.getFeatYamlValue("gzip"))) {
+                    gzip = true;
+                    gzipThreshold = FeatUtils.toInt(yamlValueSerializer.getFeatYamlValue("gzipThreshold"), gzipThreshold);
+                }
                 switch (returnTypeInt) {
                     case RETURN_TYPE_VOID:
                         break;
