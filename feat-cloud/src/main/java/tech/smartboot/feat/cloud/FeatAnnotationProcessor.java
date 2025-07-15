@@ -514,7 +514,6 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                     default:
                         throw new RuntimeException("不支持的返回类型");
                 }
-                printWriter.println("\t\t\tctx.Response.getOutputStream().flush();");
                 printWriter.println("\t\t});");
             }
         }
