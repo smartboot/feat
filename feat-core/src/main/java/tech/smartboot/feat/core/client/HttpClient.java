@@ -25,6 +25,7 @@ import tech.smartboot.feat.core.common.exception.FeatException;
 
 import java.util.Base64;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
@@ -46,6 +47,7 @@ public final class HttpClient {
 
 
     private final ConcurrentLinkedQueue<AioQuickClient> clients = new ConcurrentLinkedQueue<>();
+    private final ConcurrentHashMap<AioQuickClient, AioQuickClient> usingClient = new ConcurrentHashMap<>();
     /**
      * 消息处理器
      */
@@ -121,6 +123,7 @@ public final class HttpClient {
         HttpRestImpl httpRestImpl;
         try {
             AioQuickClient client = acquireConnection();
+            usingClient.put(client, client);
             httpRestImpl = new HttpRestImpl(client.getSession());
             initRest(httpRestImpl, uri, client);
         } catch (Throwable e) {
@@ -170,6 +173,7 @@ public final class HttpClient {
                 releaseConnection(client);
                 return;
             }
+            usingClient.remove(client);
             clients.offer(client);
         });
         httpRestImpl.getCompletableFuture().exceptionally(throwable -> {
@@ -239,6 +243,7 @@ public final class HttpClient {
     public void close() {
         closed = true;
         clients.forEach(this::releaseConnection);
+        usingClient.forEach((client, aioQuickClient) -> releaseConnection(client));
     }
 
 }
