@@ -46,8 +46,14 @@ public final class HttpClient {
     private boolean firstConnected = true;
 
 
-    private final ConcurrentLinkedQueue<AioQuickClient> clients = new ConcurrentLinkedQueue<>();
-    private final ConcurrentHashMap<AioQuickClient, AioQuickClient> usingClient = new ConcurrentHashMap<>();
+    /**
+     * 可链路复用的连接
+     */
+    private final ConcurrentLinkedQueue<AioQuickClient> resuingClients = new ConcurrentLinkedQueue<>();
+    /**
+     * 所有连接
+     */
+    private final ConcurrentHashMap<AioQuickClient, AioQuickClient> clients = new ConcurrentHashMap<>();
     /**
      * 消息处理器
      */
@@ -123,7 +129,6 @@ public final class HttpClient {
         HttpRestImpl httpRestImpl;
         try {
             AioQuickClient client = acquireConnection();
-            usingClient.put(client, client);
             httpRestImpl = new HttpRestImpl(client.getSession());
             initRest(httpRestImpl, uri, client);
         } catch (Throwable e) {
@@ -171,10 +176,9 @@ public final class HttpClient {
             //非keep-alive,主动断开连接
             if (close) {
                 releaseConnection(client);
-                return;
+            } else {
+                resuingClients.offer(client);
             }
-            usingClient.remove(client);
-            clients.offer(client);
         });
         httpRestImpl.getCompletableFuture().exceptionally(throwable -> {
             releaseConnection(client);
@@ -190,7 +194,7 @@ public final class HttpClient {
     private AioQuickClient acquireConnection() throws Throwable {
         AioQuickClient client;
         while (true) {
-            client = clients.poll();
+            client = resuingClients.poll();
             if (client == null) {
                 break;
             }
@@ -233,17 +237,18 @@ public final class HttpClient {
         } else {
             client.start(options.group());
         }
+        clients.put(client, client);
         return client;
     }
 
     private void releaseConnection(AioQuickClient client) {
         client.shutdownNow();
+        clients.remove(client);
     }
 
     public void close() {
         closed = true;
-        clients.forEach(this::releaseConnection);
-        usingClient.forEach((client, aioQuickClient) -> releaseConnection(client));
+        clients.forEach((client, aioQuickClient) -> releaseConnection(client));
     }
 
 }
