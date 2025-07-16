@@ -97,4 +97,10 @@ public class HttpOptions extends Options<HttpResponse> {
         super.group(group);
         return this;
     }
+
+    @Override
+    public HttpOptions idleTimeout(int idleTimeout) {
+        super.idleTimeout(idleTimeout);
+        return this;
+    }
 }

@@ -10,6 +10,7 @@
 
 package tech.smartboot.feat.core.client;
 
+import org.smartboot.socket.extension.plugins.IdleStatePlugin;
 import org.smartboot.socket.extension.plugins.Plugin;
 import org.smartboot.socket.extension.plugins.SslPlugin;
 import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
@@ -223,6 +224,9 @@ public final class HttpClient {
             }
             if (options.isDebug()) {
                 processor.addPlugin(new StreamMonitorPlugin<>(StreamMonitorPlugin.BLUE_TEXT_INPUT_STREAM, StreamMonitorPlugin.RED_TEXT_OUTPUT_STREAM));
+            }
+            if (options.idleTimeout() > 0) {
+                processor.addPlugin(new IdleStatePlugin<>(options.idleTimeout()));
             }
 
             firstConnected = false;

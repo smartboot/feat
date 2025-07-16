@@ -58,6 +58,11 @@ class Options<T> {
     private boolean https = false;
 
     private boolean debug = false;
+
+    /**
+     * 空闲超时时间，单位：毫秒
+     */
+    private int idleTimeout = 60000;
     /**
      * 绑定线程池资源组
      */
@@ -75,7 +80,7 @@ class Options<T> {
     /**
      * 设置建立连接的超时时间
      */
-    protected Options connectTimeout(int connectTimeout) {
+    protected Options<T> connectTimeout(int connectTimeout) {
         this.connectTimeout = connectTimeout;
         return this;
     }
@@ -108,7 +113,7 @@ class Options<T> {
      * @param host 代理服务器地址
      * @param port 代理服务器端口
      */
-    public Options proxy(String host, int port) {
+    public Options<T> proxy(String host, int port) {
         return this.proxy(host, port, null, null);
     }
 
@@ -159,18 +164,27 @@ class Options<T> {
         return https;
     }
 
-    public Options setHttps(boolean https) {
+    public Options<T> setHttps(boolean https) {
         this.https = https;
         return this;
     }
 
 
-    public Options group(AsynchronousChannelGroup group) {
+    public Options<T> group(AsynchronousChannelGroup group) {
         this.group = group;
         return this;
     }
 
     public AsynchronousChannelGroup group() {
         return group;
+    }
+
+    public int idleTimeout() {
+        return idleTimeout;
+    }
+
+    public Options<T> idleTimeout(int idleTimeout) {
+        this.idleTimeout = idleTimeout;
+        return this;
     }
 }
