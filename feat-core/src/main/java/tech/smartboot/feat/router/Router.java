@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
  *   <li>拦截器：支持全局和局部拦截器，可控制请求的生命周期</li>
  *   <li>会话管理：支持基于Cookie的会话管理</li>
  * </ul>
- * 
+ *
  * <p>使用示例：
  * <pre>
  * Router router = new Router();
@@ -51,7 +51,7 @@ import java.util.stream.Collectors;
  *     // 处理逻辑
  * });
  * </pre>
- * 
+ *
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
@@ -71,7 +71,11 @@ public final class Router implements HttpHandler {
     /**
      * session监听器,用于清理过期的session
      */
-    private final HashedWheelTimer timer = new HashedWheelTimer(r -> new Thread(r, "feat-session-timer"), 10, 64);
+    private static final HashedWheelTimer timer = new HashedWheelTimer(r -> {
+        Thread thread = new Thread(r, "feat-session-timer");
+        thread.setDaemon(true);
+        return thread;
+    }, 1000, 64);
     /**
      * session的配置
      */
