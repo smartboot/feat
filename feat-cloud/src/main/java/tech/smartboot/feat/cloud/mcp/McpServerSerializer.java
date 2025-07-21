@@ -23,7 +23,8 @@ public class McpServerSerializer {
     public void serialize(PrintWriter printWriter, Element element) {
         element.getEnclosedElements().stream()
                 .filter(e -> e.getAnnotation(Tool.class) != null)
-                .forEach(field -> {
+                .forEach(method -> {
+                    Tool tool = method.getAnnotation(Tool.class);
 
                 });
     }

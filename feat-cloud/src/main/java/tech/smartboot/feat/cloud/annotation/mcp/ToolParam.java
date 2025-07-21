@@ -20,11 +20,11 @@ import java.lang.annotation.Target;
  * @author 三刀
  * @version v1.0 7/21/25
  */
-@Target({ElementType.METHOD})
+@Target({ElementType.PARAMETER})
 @Retention(RetentionPolicy.SOURCE)
 @Documented
-public @interface Tool {
-    String name() default "";
+public @interface ToolParam {
+    boolean required();
 
     String description() default "";
 }
