@@ -241,7 +241,7 @@ public class FeatYamlValueSerializer {
     }
 
     public String getFeatYamlValue(String name) {
-        Object val = JSONPath.eval(config, "$.server." + name);
+        Object val = JSONPath.eval(config, name);
         return val == null ? "" : val.toString();
     }
 }
