@@ -10,11 +10,12 @@
 
 package tech.smartboot.feat.cloud.mcp;
 
-import tech.smartboot.feat.ai.mcp.model.ToolCalledResult;
 import tech.smartboot.feat.ai.mcp.model.ToolResult;
 import tech.smartboot.feat.ai.mcp.server.model.ServerTool;
+import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
 import tech.smartboot.feat.cloud.annotation.mcp.Tool;
 import tech.smartboot.feat.cloud.annotation.mcp.ToolParam;
+import tech.smartboot.feat.cloud.serializer.value.FeatYamlValueSerializer;
 import tech.smartboot.feat.core.common.FeatUtils;
 
 import javax.annotation.processing.ProcessingEnvironment;
@@ -31,10 +32,35 @@ import java.util.stream.Collectors;
  * @version v1.0 7/20/25
  */
 public class McpServerSerializer {
+    private final FeatYamlValueSerializer yamlValueSerializer;
+
+    public McpServerSerializer(FeatYamlValueSerializer yamlValueSerializer) {
+        this.yamlValueSerializer = yamlValueSerializer;
+    }
+
     public void serialize(ProcessingEnvironment processingEnv, PrintWriter printWriter, Element element) {
+        McpEndpoint controller = element.getAnnotation(McpEndpoint.class);
         List<Element> toolMethods = element.getEnclosedElements().stream().filter(e -> e.getAnnotation(Tool.class) != null).collect(Collectors.toList());
         if (FeatUtils.isNotEmpty(toolMethods)) {
-            printWriter.println("\t\ttech.smartboot.feat.ai.mcp.server.McpServer mcpServer = applicationContext.getBean(\"mcpServer\");");
+            if (controller != null) {
+                printWriter.append("\t\ttech.smartboot.feat.ai.mcp.server.McpServer mcpServer = new tech.smartboot.feat.ai.mcp.server.McpServer(opts -> opts");
+                if (FeatUtils.isNotBlank(controller.mcpStreamableEndpoint())) {
+                    printWriter.append(".setMcpEndpoint(\"").append(controller.mcpStreamableEndpoint()).append("\")");
+                }
+                if (FeatUtils.isNotBlank(controller.mcpSseEndpoint())) {
+                    printWriter.append(".setSseEndpoint(\"").append(controller.mcpSseEndpoint()).append("\")");
+                }
+                printWriter.append(".getImplementation().setName(\"").append(controller.name()).append("\").setTitle(\"").append(controller.title()).append("\").setVersion(\"").append(controller.version()).append("\"));\n");
+
+                if (FeatUtils.isNotBlank(controller.mcpStreamableEndpoint())) {
+                    printWriter.println("\t\tapplicationContext.getRouter().route(\"" + controller.mcpStreamableEndpoint() + "\", mcpServer.mcpHandler());");
+                }
+                if (FeatUtils.isNotBlank(controller.mcpSseEndpoint())) {
+                    printWriter.println("\t\tapplicationContext.getRouter().route(\"" + controller.mcpSseEndpoint() + "\", mcpServer.sseHandler());");
+                }
+            } else {
+                printWriter.println("\t\ttech.smartboot.feat.ai.mcp.server.McpServer mcpServer = applicationContext.getBean(\"mcpServer\");");
+            }
         }
         for (Element t : toolMethods) {
             ExecutableElement toolMethod = (ExecutableElement) t;

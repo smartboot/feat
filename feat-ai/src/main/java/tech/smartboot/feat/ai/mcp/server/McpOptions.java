@@ -49,8 +49,9 @@ public class McpOptions {
         return mcpEndpoint;
     }
 
-    public void setMcpEndpoint(String mcpEndpoint) {
+    public McpOptions setMcpEndpoint(String mcpEndpoint) {
         this.mcpEndpoint = mcpEndpoint;
+        return this;
     }
 
     public Implementation getImplementation() {

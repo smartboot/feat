@@ -29,23 +29,26 @@ public class Implementation {
         return title;
     }
 
-    public void setTitle(String title) {
+    public Implementation setTitle(String title) {
         this.title = title;
+        return this;
     }
 
     public String getName() {
         return name;
     }
 
-    public void setName(String name) {
+    public Implementation setName(String name) {
         this.name = name;
+        return this;
     }
 
     public String getVersion() {
         return version;
     }
 
-    public void setVersion(String version) {
+    public Implementation setVersion(String version) {
         this.version = version;
+        return this;
     }
 }

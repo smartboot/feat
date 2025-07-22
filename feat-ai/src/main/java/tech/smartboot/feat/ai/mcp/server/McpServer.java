@@ -83,6 +83,14 @@ public class McpServer {
     private final List<ServerResource> resources = new ArrayList<>();
     private final List<ResourceTemplate> resourceTemplates = new ArrayList<>();
 
+    public McpServer() {
+    }
+
+    public McpServer(Consumer<McpOptions> opts) {
+        opts.accept(options);
+    }
+
+
     public List<ServerTool> getTools() {
         return tools;
     }
