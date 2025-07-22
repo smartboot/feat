@@ -12,6 +12,7 @@ package tech.smartboot.feat.ai.mcp.client;
 
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
+import tech.smartboot.feat.ai.mcp.model.ToolResult;
 import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HttpStatus;
@@ -166,19 +167,19 @@ public class McpClient {
                 String type = contentItem.getString("type");
                 switch (type) {
                     case "text":
-                        callToolResult.addContent(contentItem.to(ToolCalledResult.TextContent.class));
+                        callToolResult.addContent(contentItem.to(ToolResult.TextContent.class));
                         break;
                     case "image":
-                        callToolResult.addContent(contentItem.to(ToolCalledResult.ImageContent.class));
+                        callToolResult.addContent(contentItem.to(ToolResult.ImageContent.class));
                         break;
                     case "audio":
-                        callToolResult.addContent(contentItem.to(ToolCalledResult.AudioContent.class));
+                        callToolResult.addContent(contentItem.to(ToolResult.AudioContent.class));
                         break;
                     case "resource_link":
-                        callToolResult.addContent(contentItem.to(ToolCalledResult.ResourceLinks.class));
+                        callToolResult.addContent(contentItem.to(ToolResult.ResourceLinks.class));
                         break;
                     default:
-                        callToolResult.addContent(ToolCalledResult.ofStructuredContent(content.getJSONObject(i)));
+                        callToolResult.addContent(ToolResult.ofStructuredContent(content.getJSONObject(i)));
                 }
             }
             future.complete(callToolResult);

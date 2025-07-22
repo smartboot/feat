@@ -14,8 +14,6 @@ package tech.smartboot.feat.demo.controller;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.PathParam;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
-import tech.smartboot.feat.cloud.annotation.mcp.Tool;
-import tech.smartboot.feat.cloud.annotation.mcp.ToolParam;
 import tech.smartboot.feat.core.server.Session;
 
 /**
@@ -45,8 +43,4 @@ public class Controller2 {
         return "hello " + param.getParam1();
     }
 
-    @Tool(description = "测试工具")
-    public String tool(@ToolParam(required = true, description = "参数1") String param1, @ToolParam(required = false, description = "参数2") int param2) {
-        return "hello " + param1;
-    }
 }

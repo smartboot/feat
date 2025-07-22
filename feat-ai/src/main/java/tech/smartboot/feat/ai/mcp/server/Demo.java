@@ -19,6 +19,7 @@ import tech.smartboot.feat.ai.mcp.model.Prompt;
 import tech.smartboot.feat.ai.mcp.model.PromptMessage;
 import tech.smartboot.feat.ai.mcp.model.Resource;
 import tech.smartboot.feat.ai.mcp.model.ResourceTemplate;
+import tech.smartboot.feat.ai.mcp.model.ToolResult;
 import tech.smartboot.feat.ai.mcp.server.model.ServerPrompt;
 import tech.smartboot.feat.ai.mcp.server.model.ServerResource;
 import tech.smartboot.feat.ai.mcp.server.model.ServerTool;
@@ -31,7 +32,7 @@ import tech.smartboot.feat.router.Router;
 public class Demo {
     public static void main(String[] args) {
         ServerTool tool = ServerTool.of("test").title("测试").description("测试").inputSchema(Tool.stringProperty("name", "用户名称"), Tool.requiredStringProperty("age", "用户年龄")).outputSchema(Tool.requiredNumberProperty("age", "年龄")).doAction(input -> {
-            return ToolCalledResult.ofText("aaa");
+            return ToolResult.ofText("aaa");
         });
 
         ServerTool structTool = ServerTool.of("structResultTool").inputSchema(Tool.stringProperty("aa", "aa")).doAction(toolContext -> {
@@ -40,7 +41,7 @@ public class Demo {
             j.put("age", 18);
             j.put("text", toolContext.getArguments().get("aa"));
             j.put("resource", Resource.of("test", "test.txt"));
-            return ToolCalledResult.ofStructuredContent(j);
+            return ToolResult.ofStructuredContent(j);
         });
 
         McpServer mcp = new McpServer();

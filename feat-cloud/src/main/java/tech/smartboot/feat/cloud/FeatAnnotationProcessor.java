@@ -287,7 +287,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         printWriter.append(yamlValueSerializer.generateValueSetter(element));
         //注册MCP 服务
         if (mcpServerSerializer != null) {
-            mcpServerSerializer.serialize(printWriter, element);
+            mcpServerSerializer.serialize(processingEnv, printWriter, element);
         }
         printWriter.println("\t}");
         printWriter.println();
