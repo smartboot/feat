@@ -171,7 +171,11 @@ final class NodePath {
             curNode = exactPaths.get(nodePath);
         }
         if (curNode != null) {
-            curNode.handler.addMethodHandler(handler);
+            if (curNode.handler == null) {
+                curNode.handler = handler;
+            } else {
+                curNode.handler.addMethodHandler(handler);
+            }
             return;
         }
 

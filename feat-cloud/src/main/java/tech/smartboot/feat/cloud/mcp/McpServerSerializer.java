@@ -62,6 +62,7 @@ public class McpServerSerializer {
             } else {
                 printWriter.println("\t\ttech.smartboot.feat.ai.mcp.server.McpServer mcpServer = applicationContext.getBean(\"" + DEFAULT_BEAN_NAME + "\");");
             }
+            printWriter.println("\t\tmcpServer.getOptions().toolEnable();");
         }
         for (Element t : toolMethods) {
             ExecutableElement toolMethod = (ExecutableElement) t;
