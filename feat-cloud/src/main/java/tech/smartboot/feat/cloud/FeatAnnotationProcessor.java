@@ -111,7 +111,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
 
         try {
 
-            String mcpServerEnable = yamlValueSerializer.getFeatYamlValue("$['server']['mcp-server']['enable']");
+            String mcpServerEnable = yamlValueSerializer.getFeatYamlValue("$['server']['mcp']['server']['enable']");
             isMcpServerEnable = "true".equals(mcpServerEnable);
         } catch (Exception e) {
             e.printStackTrace();
@@ -179,7 +179,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
     }
 
     private <T extends Annotation> void createMcpServerBean() throws IOException {
-        String packageName = "tech.smartboot.feat.cloud.mcp." + FeatUtils.createSessionId().replace("-", "");
+        String packageName = "tech.smartboot.feat.cloud.mcp";
         String loaderName = "McpServerBeanAptLoader";
         //生成service配置
         services.add(packageName + "." + loaderName);

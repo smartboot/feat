@@ -46,7 +46,7 @@ public class Controller2 {
     }
 
     @Tool(description = "测试工具")
-    public String tool(@ToolParam(required = true, description = "参数1") String param1) {
+    public String tool(@ToolParam(required = true, description = "参数1") String param1, @ToolParam(required = false, description = "参数2") int param2) {
         return "hello " + param1;
     }
 }
