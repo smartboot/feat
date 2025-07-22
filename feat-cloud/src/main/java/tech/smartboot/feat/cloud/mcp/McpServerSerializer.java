@@ -33,6 +33,7 @@ import java.util.stream.Collectors;
  */
 public class McpServerSerializer {
     private final FeatYamlValueSerializer yamlValueSerializer;
+    public static final String DEFAULT_BEAN_NAME = "mcpServer" + System.nanoTime();
 
     public McpServerSerializer(FeatYamlValueSerializer yamlValueSerializer) {
         this.yamlValueSerializer = yamlValueSerializer;
@@ -59,7 +60,7 @@ public class McpServerSerializer {
                     printWriter.println("\t\tapplicationContext.getRouter().route(\"" + controller.mcpSseEndpoint() + "\", mcpServer.sseHandler());");
                 }
             } else {
-                printWriter.println("\t\ttech.smartboot.feat.ai.mcp.server.McpServer mcpServer = applicationContext.getBean(\"mcpServer\");");
+                printWriter.println("\t\ttech.smartboot.feat.ai.mcp.server.McpServer mcpServer = applicationContext.getBean(\"" + DEFAULT_BEAN_NAME + "\");");
             }
         }
         for (Element t : toolMethods) {

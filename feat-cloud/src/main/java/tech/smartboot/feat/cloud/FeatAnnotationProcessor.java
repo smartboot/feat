@@ -127,7 +127,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         System.out.println("annotation process: " + this + " ,annotations: " + annotations);
 
         if (isMcpServerEnable) {
-            mcpServerSerializer = new McpServerSerializer();
+            mcpServerSerializer = new McpServerSerializer(yamlValueSerializer);
             try {
                 createMcpServerBean();
             } catch (Throwable e) {
@@ -208,7 +208,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         printWriter.println();
 
         printWriter.println("\tpublic void loadBean(ApplicationContext applicationContext) throws Throwable {");
-        printWriter.println("\t\tapplicationContext.addBean(\"mcpServer\", bean);");
+        printWriter.println("\t\tapplicationContext.addBean(\"" + McpServerSerializer.DEFAULT_BEAN_NAME + "\", bean);");
         printWriter.println("\t}");
 
         printWriter.println();
@@ -217,7 +217,12 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         printWriter.println();
 
         printWriter.println("\tpublic void router(ApplicationContext applicationContext, " + Router.class.getSimpleName() + " router) {");
-
+        printWriter.println("\t\tif(" + FeatUtils.class.getName() + ".isNotBlank(bean.getOptions().getMcpEndpoint())){");
+        printWriter.println("\t\t\trouter.route(bean.getOptions().getMcpEndpoint(), bean.mcpHandler());");
+        printWriter.println("\t\t}");
+        printWriter.println("\t\tif(" + FeatUtils.class.getName() + ".isNotBlank(bean.getOptions().getSseEndpoint())){");
+        printWriter.println("\t\t\trouter.route(bean.getOptions().getSseEndpoint(), bean.sseHandler());");
+        printWriter.println("\t\t}");
         printWriter.println("\t}");
         printWriter.println();
 
