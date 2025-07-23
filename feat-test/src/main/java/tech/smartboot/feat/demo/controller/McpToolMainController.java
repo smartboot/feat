@@ -14,11 +14,11 @@ package tech.smartboot.feat.demo.controller;
 import tech.smartboot.feat.ai.mcp.enums.PromptType;
 import tech.smartboot.feat.ai.mcp.enums.RoleEnum;
 import tech.smartboot.feat.ai.mcp.model.PromptMessage;
-import tech.smartboot.feat.ai.mcp.model.Resource;
 import tech.smartboot.feat.ai.mcp.model.ToolResult;
 import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
 import tech.smartboot.feat.cloud.annotation.mcp.Param;
 import tech.smartboot.feat.cloud.annotation.mcp.Prompt;
+import tech.smartboot.feat.cloud.annotation.mcp.Resource;
 import tech.smartboot.feat.cloud.annotation.mcp.Tool;
 
 import java.util.Base64;
@@ -105,11 +105,16 @@ public class McpToolMainController {
 
     @Prompt(name = "prompt5", description = "测试提示", type = PromptType.EMBEDDED_RESOURCE)
     public PromptMessage prompt5(@Param(required = true, description = "参数1") String param1, @Param(required = false, description = "参数2") int param2) {
-        return PromptMessage.ofEmbeddedResource(RoleEnum.User, Resource.of("file:///aa.txt", "test.txt", "text/plain"));
+        return PromptMessage.ofEmbeddedResource(RoleEnum.User, tech.smartboot.feat.ai.mcp.model.Resource.of("file:///aa.txt", "test.txt", "text/plain"));
     }
 
     @Prompt(name = "prompt6", description = "测试提示", type = PromptType.EMBEDDED_RESOURCE)
     public PromptMessage<PromptMessage.EmbeddedResourcePromptContent> prompt6(@Param(required = true, description = "参数1") String param1, @Param(required = false, description = "参数2") int param2) {
-        return PromptMessage.ofEmbeddedResource(RoleEnum.User, Resource.of("file:///aa.txt", "test.txt", "text/plain"));
+        return PromptMessage.ofEmbeddedResource(RoleEnum.User, tech.smartboot.feat.ai.mcp.model.Resource.of("file:///aa.txt", "test.txt", "text/plain"));
+    }
+
+    @Resource(uri = "/resource/text", name = "text", description = "text", isText = true)
+    public String resourceText() {
+        return "text";
     }
 }

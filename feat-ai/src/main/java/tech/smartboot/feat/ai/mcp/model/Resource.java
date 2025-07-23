@@ -107,8 +107,9 @@ public class Resource {
         return description;
     }
 
-    public void setDescription(String description) {
+    public Resource description(String description) {
         this.description = description;
+        return this;
     }
 
     public String getSize() {

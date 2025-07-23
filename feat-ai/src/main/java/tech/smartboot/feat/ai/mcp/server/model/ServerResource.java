@@ -36,6 +36,12 @@ public class ServerResource extends Resource {
         return action;
     }
 
+    @Override
+    public ServerResource description(String description) {
+        super.description(description);
+        return this;
+    }
+
     public static ServerResource ofText(String uri, String name, String text) {
         return ofText(uri, name, "text/plain", text);
     }
