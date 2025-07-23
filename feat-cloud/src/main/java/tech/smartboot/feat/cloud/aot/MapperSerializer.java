@@ -10,6 +10,7 @@
 
 package tech.smartboot.feat.cloud.aot;
 
+import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import tech.smartboot.feat.cloud.aot.controller.JsonSerializer;
 import tech.smartboot.feat.cloud.aot.value.FeatYamlValueSerializer;
@@ -30,12 +31,13 @@ final class MapperSerializer extends Serializer {
     @Override
     void serializeImport() {
         printWriter.println("import " + SqlSessionFactory.class.getName() + ";");
+        printWriter.println("import " + SqlSession.class.getName() + ";");
         super.serializeImport();
     }
 
     @Override
     void serializeProperty() {
-        printWriter.println("\tSqlSessionFactory factory;");
+        printWriter.println("\tprivate SqlSessionFactory factory;");
         super.serializeProperty();
     }
 
@@ -55,7 +57,7 @@ final class MapperSerializer extends Serializer {
                 printWriter.print(param.asType().toString() + " " + param.getSimpleName());
             }
             printWriter.println(") {");
-            printWriter.append(JsonSerializer.headBlank(1)).println("try (org.apache.ibatis.session.SqlSession session = factory.openSession(true)) {");
+            printWriter.append(JsonSerializer.headBlank(1)).println("try (SqlSession session = factory.openSession(true)) {");
             printWriter.print(JsonSerializer.headBlank(2));
             if (!"void".equals(returnType)) {
                 printWriter.print("return ");
