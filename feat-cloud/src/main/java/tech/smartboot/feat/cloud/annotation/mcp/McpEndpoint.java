@@ -34,5 +34,7 @@ public @interface McpEndpoint {
 
     String mcpSseEndpoint();
 
+    String mcpSseMessageEndpoint();
+
     String mcpStreamableEndpoint();
 }

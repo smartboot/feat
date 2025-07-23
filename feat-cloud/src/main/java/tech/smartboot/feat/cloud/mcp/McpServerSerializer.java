@@ -51,6 +51,9 @@ public class McpServerSerializer {
                 if (FeatUtils.isNotBlank(controller.mcpSseEndpoint())) {
                     printWriter.append(".setSseEndpoint(\"").append(controller.mcpSseEndpoint()).append("\")");
                 }
+                if (FeatUtils.isNotBlank(controller.mcpSseMessageEndpoint())) {
+                    printWriter.append(".setSseMessageEndpoint(\"").append(controller.mcpSseMessageEndpoint()).append("\")");
+                }
                 printWriter.append(".getImplementation().setName(\"").append(controller.name()).append("\").setTitle(\"").append(controller.title()).append("\").setVersion(\"").append(controller.version()).append("\"));\n");
 
                 if (FeatUtils.isNotBlank(controller.mcpStreamableEndpoint())) {
@@ -58,6 +61,9 @@ public class McpServerSerializer {
                 }
                 if (FeatUtils.isNotBlank(controller.mcpSseEndpoint())) {
                     printWriter.println("\t\tapplicationContext.getRouter().route(\"" + controller.mcpSseEndpoint() + "\", mcpServer.sseHandler());");
+                }
+                if (FeatUtils.isNotBlank(controller.mcpSseMessageEndpoint())) {
+                    printWriter.println("\t\tapplicationContext.getRouter().route(\"" + controller.mcpSseMessageEndpoint() + "\", mcpServer.sseMessageHandler());");
                 }
             } else {
                 printWriter.println("\t\ttech.smartboot.feat.ai.mcp.server.McpServer mcpServer = applicationContext.getBean(\"" + DEFAULT_BEAN_NAME + "\");");
