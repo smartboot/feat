@@ -23,6 +23,7 @@ import tech.smartboot.feat.cloud.annotation.PostConstruct;
 import tech.smartboot.feat.cloud.annotation.PreDestroy;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.cloud.annotation.RequestMethod;
+import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
 import tech.smartboot.feat.cloud.mcp.McpServerSerializer;
 import tech.smartboot.feat.cloud.serializer.JsonSerializer;
 import tech.smartboot.feat.cloud.serializer.value.FeatYamlValueSerializer;
@@ -85,6 +86,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         types.add(Autowired.class.getCanonicalName());
         types.add(Controller.class.getCanonicalName());
         types.add(Mapper.class.getCanonicalName());
+        types.add(McpEndpoint.class.getCanonicalName());
         return types;
     }
 
@@ -94,7 +96,6 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
     private final List<String> services = new ArrayList<>();
     private FeatYamlValueSerializer yamlValueSerializer;
 
-    private boolean isMcpServerEnable = false;
     private McpServerSerializer mcpServerSerializer;
 
     @Override
@@ -108,15 +109,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         }
         System.out.println("processor init: " + this);
         yamlValueSerializer = new FeatYamlValueSerializer(processingEnv, services);
-
-        try {
-
-            String mcpServerEnable = yamlValueSerializer.getFeatYamlValue("$['server']['mcp']['server']['enable']");
-            isMcpServerEnable = "true".equals(mcpServerEnable);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
+        mcpServerSerializer = new McpServerSerializer(yamlValueSerializer);
     }
 
     @Override
@@ -126,16 +119,6 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         }
         System.out.println("annotation process: " + this + " ,annotations: " + annotations);
 
-        if (isMcpServerEnable) {
-            mcpServerSerializer = new McpServerSerializer(yamlValueSerializer);
-            try {
-                createMcpServerBean();
-            } catch (Throwable e) {
-                System.err.println("createMcpServerBean error");
-                e.printStackTrace();
-                exception = true;
-            }
-        }
 
         for (Element element : roundEnv.getElementsAnnotatedWith(Bean.class)) {
             Bean bean = element.getAnnotation(Bean.class);
@@ -151,12 +134,26 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         for (Element element : roundEnv.getElementsAnnotatedWith(Controller.class)) {
             Controller controller = element.getAnnotation(Controller.class);
             try {
+                if (element.getAnnotation(McpEndpoint.class) != null) {
+                    throw new FeatException("@Controller and @McpEndpoint cannot be used together!");
+                }
                 createAptLoader(element, controller);
             } catch (Throwable e) {
                 System.err.println("createAptLoader error: " + element.getSimpleName() + " " + e.getMessage());
                 exception = true;
             }
         }
+
+        for (Element element : roundEnv.getElementsAnnotatedWith(McpEndpoint.class)) {
+            McpEndpoint mcpEndpoint = element.getAnnotation(McpEndpoint.class);
+            try {
+                createAptLoader(element, mcpEndpoint);
+            } catch (Throwable e) {
+                System.err.println("createAptLoader error: " + element.getSimpleName() + " " + e.getMessage());
+                exception = true;
+            }
+        }
+
         for (Element element : roundEnv.getElementsAnnotatedWith(Mapper.class)) {
             Mapper mapper = element.getAnnotation(Mapper.class);
             try {
@@ -178,64 +175,6 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         return false;
     }
 
-    private <T extends Annotation> void createMcpServerBean() throws IOException {
-        String packageName = "tech.smartboot.feat.cloud.mcp";
-        String loaderName = "McpServerBeanAptLoader";
-        //生成service配置
-        services.add(packageName + "." + loaderName);
-
-        FileObject preFileObject = processingEnv.getFiler().getResource(StandardLocation.SOURCE_OUTPUT, packageName, loaderName + ".java");
-        File f = new File(preFileObject.toUri());
-        if (f.exists()) {
-            f.delete();
-        }
-
-        JavaFileObject javaFileObject = processingEnv.getFiler().createSourceFile(packageName + "." + loaderName);
-        Writer writer = javaFileObject.openWriter();
-        PrintWriter printWriter = new PrintWriter(writer);
-        printWriter.println("package " + packageName + ";");
-        printWriter.println();
-        printWriter.println("import " + AbstractServiceLoader.class.getName() + ";");
-        printWriter.println("import " + ApplicationContext.class.getName() + ";");
-        printWriter.println("import " + Router.class.getName() + ";");
-        printWriter.println("import " + JSONObject.class.getName() + ";");
-        printWriter.println("import com.alibaba.fastjson2.JSON;");
-        printWriter.println();
-        printWriter.println("public class " + loaderName + " extends " + AbstractServiceLoader.class.getSimpleName() + " {");
-        printWriter.println();
-        printWriter.println("    private " + McpServer.class.getName() + " bean = new tech.smartboot.feat.ai.mcp.server.McpServer();");
-
-        printWriter.println();
-
-        printWriter.println("\tpublic void loadBean(ApplicationContext applicationContext) throws Throwable {");
-        printWriter.println("\t\tapplicationContext.addBean(\"" + McpServerSerializer.DEFAULT_BEAN_NAME + "\", bean);");
-        printWriter.println("\t}");
-
-        printWriter.println();
-        printWriter.println("\tpublic void autowired(ApplicationContext applicationContext) throws Throwable {");
-        printWriter.println("\t}");
-        printWriter.println();
-
-        printWriter.println("\tpublic void router(ApplicationContext applicationContext, " + Router.class.getSimpleName() + " router) {");
-        printWriter.println("\t\tif(" + FeatUtils.class.getName() + ".isNotBlank(bean.getOptions().getMcpEndpoint())){");
-        printWriter.println("\t\t\trouter.route(bean.getOptions().getMcpEndpoint(), bean.mcpHandler());");
-        printWriter.println("\t\t}");
-        printWriter.println("\t\tif(" + FeatUtils.class.getName() + ".isNotBlank(bean.getOptions().getSseEndpoint())){");
-        printWriter.println("\t\t\trouter.route(bean.getOptions().getSseEndpoint(), bean.sseHandler());");
-        printWriter.println("\t\t}");
-        printWriter.println("\t}");
-        printWriter.println();
-
-        printWriter.println();
-        printWriter.println("\tpublic void destroy() throws Throwable {");
-        printWriter.println("\t}");
-        printWriter.println();
-        printWriter.println("\tpublic void postConstruct(ApplicationContext applicationContext) throws Throwable {");
-        printWriter.println("\t}");
-        printWriter.println("}");
-        writer.close();
-    }
-
     private <T extends Annotation> void createAptLoader(Element element, T annotation) throws IOException {
         String packageName = element.getEnclosingElement().toString();
         String loaderName = element.getSimpleName() + "BeanAptLoader";
@@ -253,6 +192,9 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         PrintWriter printWriter = new PrintWriter(writer);
         printWriter.println("package " + packageName + ";");
         printWriter.println();
+        if (annotation instanceof McpEndpoint) {
+            printWriter.println("import " + McpServer.class.getName() + ";");
+        }
         printWriter.println("import " + AbstractServiceLoader.class.getName() + ";");
         printWriter.println("import " + ApplicationContext.class.getName() + ";");
         printWriter.println("import " + Router.class.getName() + ";");
@@ -261,9 +203,15 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         printWriter.println();
         printWriter.println("public class " + loaderName + " extends " + AbstractServiceLoader.class.getSimpleName() + " {");
         printWriter.println();
-        printWriter.println("    private " + element.getSimpleName() + " bean;");
+
         if (annotation instanceof Mapper) {
             printWriter.println("    private org.apache.ibatis.session.SqlSessionFactory factory;");
+        }
+        if (annotation instanceof McpEndpoint) {
+            printWriter.println("    private McpServer mcpServer = new McpServer();");
+            printWriter.println("    private " + element.getSimpleName() + " bean = new " + element.getSimpleName() + "();");
+        } else {
+            printWriter.println("    private " + element.getSimpleName() + " bean;");
         }
         if (annotation instanceof Bean) {
             printWriter.println();
@@ -276,14 +224,14 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         printWriter.println("\tpublic void loadBean(ApplicationContext applicationContext) throws Throwable {");
         if (annotation instanceof Mapper) {
             createMapperBean(element, printWriter);
-        } else {
+        } else if (!(annotation instanceof McpEndpoint)) {
             generateBeanOrController(element, printWriter);
+            String beanName = element.getSimpleName().toString().substring(0, 1).toLowerCase() + element.getSimpleName().toString().substring(1);
+            if (annotation instanceof Bean && !((Bean) annotation).value().isEmpty()) {
+                beanName = ((Bean) annotation).value();
+            }
+            printWriter.println("\t\tapplicationContext.addBean(\"" + beanName + "\", bean);");
         }
-        String beanName = element.getSimpleName().toString().substring(0, 1).toLowerCase() + element.getSimpleName().toString().substring(1);
-        if (annotation instanceof Bean && !((Bean) annotation).value().isEmpty()) {
-            beanName = ((Bean) annotation).value();
-        }
-        printWriter.println("\t\tapplicationContext.addBean(\"" + beanName + "\", bean);");
         printWriter.println("\t}");
 
         printWriter.println();
@@ -291,9 +239,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         printWriter.append(generateAutoWriedMethod(element, annotation));
         printWriter.append(yamlValueSerializer.generateValueSetter(element));
         //注册MCP 服务
-        if (mcpServerSerializer != null) {
-            mcpServerSerializer.serialize(processingEnv, printWriter, element);
-        }
+        mcpServerSerializer.serialize(processingEnv, printWriter, element);
         printWriter.println("\t}");
         printWriter.println();
 

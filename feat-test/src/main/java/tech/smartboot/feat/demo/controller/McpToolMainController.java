@@ -12,7 +12,7 @@ package tech.smartboot.feat.demo.controller;
 
 
 import tech.smartboot.feat.ai.mcp.model.ToolResult;
-import tech.smartboot.feat.cloud.annotation.Controller;
+import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
 import tech.smartboot.feat.cloud.annotation.mcp.Tool;
 import tech.smartboot.feat.cloud.annotation.mcp.ToolParam;
 
@@ -20,7 +20,9 @@ import tech.smartboot.feat.cloud.annotation.mcp.ToolParam;
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
-@Controller
+@McpEndpoint(mcpSseEndpoint = "/main/sse"
+        , mcpSseMessageEndpoint = "/main/sse/message"
+        , mcpStreamableEndpoint = "/main/mcp")
 public class McpToolMainController {
 
     @Tool(description = "测试工具")

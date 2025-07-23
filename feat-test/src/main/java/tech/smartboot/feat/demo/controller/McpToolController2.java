@@ -21,7 +21,6 @@ import tech.smartboot.feat.cloud.annotation.mcp.ToolParam;
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
-@Controller()
 @McpEndpoint(mcpSseEndpoint = "/mcp/sse"
         , mcpSseMessageEndpoint = "/mcp/sse/message"
         , mcpStreamableEndpoint = "/mcp/message")
