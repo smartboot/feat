@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
  * @author 三刀
  * @version v1.0 7/20/25
  */
-public class McpEndpointSerializer extends Serializer {
+final class McpEndpointSerializer extends Serializer {
     public static final String DEFAULT_BEAN_NAME = "mcpServer" + System.nanoTime();
     private ProcessingEnvironment processingEnv;
 

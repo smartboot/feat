@@ -17,7 +17,7 @@ import java.io.PrintWriter;
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0 5/14/25
  */
-class IntSerializer extends AbstractSerializer {
+final class IntSerializer extends AbstractSerializer {
     public static final int TYPE_INT = 1;
     public static final int TYPE_LONG = 2;
     public static final int TYPE_SHORT = 3;

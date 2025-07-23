@@ -46,7 +46,7 @@ import java.util.Set;
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0 5/27/25
  */
-public class FeatYamlValueSerializer {
+public final class FeatYamlValueSerializer {
     private static final Logger logger = LoggerFactory.getLogger(FeatYamlValueSerializer.class);
     private static final String PACKAGE = "tech.smartboot.feat.sandao";
     private static final String CLASS_NAME = "FeatCloudOptionsBeanAptLoader";

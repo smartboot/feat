@@ -16,7 +16,7 @@ import tech.smartboot.feat.core.common.FeatUtils;
 import javax.lang.model.element.Element;
 import java.io.PrintWriter;
 
-class DateSerializer extends AbstractSerializer {
+final class DateSerializer extends AbstractSerializer {
     public DateSerializer(JsonSerializer serializer) {
         super(serializer);
     }

@@ -16,7 +16,7 @@ import javax.lang.model.element.Element;
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0 5/27/25
  */
-class StringValueSerializer extends AbstractSerializer {
+final class StringValueSerializer extends AbstractSerializer {
     @Override
     public String serialize(Element se, Object paramValue) {
         return toString(paramValue.toString());

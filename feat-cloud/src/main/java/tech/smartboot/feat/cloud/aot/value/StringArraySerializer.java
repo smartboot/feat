@@ -19,7 +19,7 @@ import javax.lang.model.element.Element;
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0 5/27/25
  */
-class StringArraySerializer extends AbstractSerializer {
+final class StringArraySerializer extends AbstractSerializer {
     @Override
     public String serialize(Element field, Object paramValue) {
         JSONArray array = (JSONArray) paramValue;

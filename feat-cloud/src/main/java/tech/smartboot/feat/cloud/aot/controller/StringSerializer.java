@@ -13,7 +13,7 @@ package tech.smartboot.feat.cloud.aot.controller;
 import javax.lang.model.element.Element;
 import java.io.PrintWriter;
 
-class StringSerializer extends AbstractSerializer {
+final class StringSerializer extends AbstractSerializer {
 
     public StringSerializer(JsonSerializer printWriter) {
         super(printWriter);
