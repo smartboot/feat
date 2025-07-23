@@ -44,31 +44,28 @@ import java.util.List;
  * @version v1.0 7/23/25
  */
 abstract class AbstractSerializer implements Serializer {
-    protected CloudOptionsSerializer yamlValueSerializer;
+    protected final String config;
     protected final PrintWriter printWriter;
     protected final Element element;
     private final String packageName;
     private final String className;
     protected ProcessingEnvironment processingEnv;
 
-    public AbstractSerializer(ProcessingEnvironment processingEnv, CloudOptionsSerializer yamlValueSerializer, Element element) throws IOException {
-        this(processingEnv, yamlValueSerializer, element, element.getEnclosingElement().toString(), element.getSimpleName() + "BeanAptLoader");
-    }
 
-    public AbstractSerializer(ProcessingEnvironment processingEnv, CloudOptionsSerializer yamlValueSerializer, Element element, String packageName, String loaderName) throws IOException {
-        this.yamlValueSerializer = yamlValueSerializer;
+    public AbstractSerializer(ProcessingEnvironment processingEnv, String config, Element element) throws IOException {
+        this.config = config;
         this.element = element;
-        this.packageName = packageName;
-        this.className = loaderName;
+        this.packageName = element.getEnclosingElement().toString();
+        this.className = element.getSimpleName() + "BeanAptLoader";
         this.processingEnv = processingEnv;
 
-        FileObject preFileObject = processingEnv.getFiler().getResource(StandardLocation.SOURCE_OUTPUT, packageName, loaderName + ".java");
+        FileObject preFileObject = processingEnv.getFiler().getResource(StandardLocation.SOURCE_OUTPUT, packageName, className + ".java");
         File f = new File(preFileObject.toUri());
         if (f.exists()) {
             f.delete();
         }
 
-        JavaFileObject javaFileObject = processingEnv.getFiler().createSourceFile(packageName + "." + loaderName);
+        JavaFileObject javaFileObject = processingEnv.getFiler().createSourceFile(packageName + "." + className);
         Writer writer = javaFileObject.openWriter();
         printWriter = new PrintWriter(writer);
     }
@@ -170,7 +167,7 @@ abstract class AbstractSerializer implements Serializer {
             } else {
                 throw new FeatException("the value of Value on " + field.getEnclosingElement().getSimpleName() + "@" + field.getSimpleName() + " is not allowed to be empty.");
             }
-            Object paramValue = JSONPath.eval(yamlValueSerializer.getConfig(), "$." + paramName);
+            Object paramValue = JSONPath.eval(config, "$." + paramName);
             if (defaultValue == null && paramValue == null) {
                 return;
             }
@@ -225,5 +222,10 @@ abstract class AbstractSerializer implements Serializer {
 
     public String className() {
         return className;
+    }
+
+    protected String getFeatYamlValue(String name) {
+        Object val = JSONPath.eval(config, name);
+        return val == null ? "" : val.toString();
     }
 }

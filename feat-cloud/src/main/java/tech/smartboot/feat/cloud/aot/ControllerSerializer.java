@@ -52,8 +52,8 @@ final class ControllerSerializer extends AbstractSerializer {
 
     private final Map<String, String> bytesCache = new HashMap<>();
 
-    public ControllerSerializer(ProcessingEnvironment processingEnv, CloudOptionsSerializer yamlValueSerializer, Element element) throws IOException {
-        super(processingEnv, yamlValueSerializer, element);
+    public ControllerSerializer(ProcessingEnvironment processingEnv, String config, Element element) throws IOException {
+        super(processingEnv, config, element);
     }
 
     @Override
@@ -191,9 +191,9 @@ final class ControllerSerializer extends AbstractSerializer {
                 printWriter.append(params).println(");");
                 boolean gzip = controller.gzip();
                 int gzipThreshold = controller.gzipThreshold();
-                if (Boolean.parseBoolean(yamlValueSerializer.getFeatYamlValue("$.server.gzip"))) {
+                if (Boolean.parseBoolean(getFeatYamlValue("$.server.gzip"))) {
                     gzip = true;
-                    gzipThreshold = FeatUtils.toInt(yamlValueSerializer.getFeatYamlValue("$.server.gzipThreshold"), gzipThreshold);
+                    gzipThreshold = FeatUtils.toInt(getFeatYamlValue("$.server.gzipThreshold"), gzipThreshold);
                 }
                 switch (returnTypeInt) {
                     case RETURN_TYPE_VOID:

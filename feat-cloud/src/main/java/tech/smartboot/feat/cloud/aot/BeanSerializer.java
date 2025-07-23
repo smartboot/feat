@@ -21,8 +21,8 @@ import java.io.IOException;
  * @version v1.0 7/23/25
  */
 final class BeanSerializer extends AbstractSerializer {
-    public BeanSerializer(ProcessingEnvironment processingEnv, CloudOptionsSerializer yamlValueSerializer, Element element) throws IOException {
-        super(processingEnv, yamlValueSerializer, element);
+    public BeanSerializer(ProcessingEnvironment processingEnv, String config, Element element) throws IOException {
+        super(processingEnv, config, element);
     }
 
     @Override

@@ -10,9 +10,7 @@
 
 package tech.smartboot.feat.cloud.aot;
 
-import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.JSONPath;
-import org.yaml.snakeyaml.Yaml;
 import tech.smartboot.feat.cloud.AbstractServiceLoader;
 import tech.smartboot.feat.cloud.ApplicationContext;
 import tech.smartboot.feat.core.common.logging.Logger;
@@ -25,7 +23,6 @@ import javax.tools.FileObject;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
 import java.io.File;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.lang.reflect.Field;
@@ -44,34 +41,10 @@ final class CloudOptionsSerializer implements Serializer {
     private final String config;
     private final Set<String> availableTypes = new HashSet<>(Arrays.asList(String.class.getName(), int.class.getName()));
 
-    private final ProcessingEnvironment processingEnv;
     private final PrintWriter printWriter;
 
-    public CloudOptionsSerializer(ProcessingEnvironment processingEnv) throws Throwable {
-        this.processingEnv = processingEnv;
-        FileObject featYaml = null;
-        for (String filename : Arrays.asList("feat.yml", "feat.yaml")) {
-            featYaml = loadFeatYaml(filename);
-            if (featYaml != null) {
-                break;
-            }
-        }
-
-        if (featYaml == null) {
-            config = "{}";
-            printWriter = null;
-            return;
-        }
-
-        File featFile = new File(featYaml.toUri());
-        if (!featFile.exists()) {
-            config = "{}";
-            printWriter = null;
-            return;
-        }
-
-        Yaml yaml = new Yaml();
-        config = JSONObject.from(yaml.load(featYaml.openInputStream())).toJSONString();
+    public CloudOptionsSerializer(ProcessingEnvironment processingEnv, String config) throws Throwable {
+        this.config = config;
 
         FileObject preFileObject = processingEnv.getFiler().getResource(StandardLocation.SOURCE_OUTPUT, packageName(), className() + ".java");
         File f = new File(preFileObject.toUri());
@@ -123,20 +96,4 @@ final class CloudOptionsSerializer implements Serializer {
         }
     }
 
-    private FileObject loadFeatYaml(String filename) {
-        try {
-            return processingEnv.getFiler().getResource(StandardLocation.CLASS_OUTPUT, "", filename);
-        } catch (IOException ignored) {
-        }
-        return null;
-    }
-
-    public String getConfig() {
-        return config;
-    }
-
-    public String getFeatYamlValue(String name) {
-        Object val = JSONPath.eval(config, name);
-        return val == null ? "" : val.toString();
-    }
 }

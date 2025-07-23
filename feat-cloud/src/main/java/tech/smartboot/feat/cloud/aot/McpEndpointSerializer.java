@@ -36,8 +36,8 @@ import java.util.stream.Collectors;
 final class McpEndpointSerializer extends AbstractSerializer {
     private final ProcessingEnvironment processingEnv;
 
-    public McpEndpointSerializer(ProcessingEnvironment processingEnv, CloudOptionsSerializer yamlValueSerializer, Element element) throws IOException {
-        super(processingEnv, yamlValueSerializer, element);
+    public McpEndpointSerializer(ProcessingEnvironment processingEnv, String config, Element element) throws IOException {
+        super(processingEnv, config, element);
         this.processingEnv = processingEnv;
     }
 

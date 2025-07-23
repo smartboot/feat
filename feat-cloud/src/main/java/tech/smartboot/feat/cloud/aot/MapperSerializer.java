@@ -25,8 +25,8 @@ import java.io.IOException;
  * @version v1.0 7/23/25
  */
 final class MapperSerializer extends AbstractSerializer {
-    public MapperSerializer(ProcessingEnvironment processingEnv, CloudOptionsSerializer yamlValueSerializer, Element element) throws IOException {
-        super(processingEnv, yamlValueSerializer, element);
+    public MapperSerializer(ProcessingEnvironment processingEnv, String config, Element element) throws IOException {
+        super(processingEnv, config, element);
     }
 
     @Override

@@ -10,7 +10,9 @@
 
 package tech.smartboot.feat.cloud.aot;
 
+import com.alibaba.fastjson2.JSONObject;
 import org.apache.ibatis.annotations.Mapper;
+import org.yaml.snakeyaml.Yaml;
 import tech.smartboot.feat.cloud.AbstractServiceLoader;
 import tech.smartboot.feat.cloud.CloudService;
 import tech.smartboot.feat.cloud.annotation.Autowired;
@@ -31,10 +33,12 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.tools.FileObject;
 import javax.tools.StandardLocation;
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -63,18 +67,19 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
     PrintWriter serviceWrite;
     private Throwable exception = null;
     private final List<String> services = new ArrayList<>();
-    private CloudOptionsSerializer yamlValueSerializer;
+    private String config;
 
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
         try {
+            this.config = loadFeatYaml(processingEnv);
             serviceFile = processingEnv.getFiler().createResource(StandardLocation.CLASS_OUTPUT, "", "META-INF/services/" + CloudService.class.getName());
             serviceWrite = new PrintWriter(serviceFile.openWriter());
             System.out.println("processor init: " + this);
-            yamlValueSerializer = new CloudOptionsSerializer(processingEnv);
-            if (FeatUtils.length(yamlValueSerializer.getConfig()) > 2) {
-                createAptLoader(yamlValueSerializer);
+            //注入 feat.yaml 配置
+            if (FeatUtils.length(config) > 2) {
+                createAptLoader(new CloudOptionsSerializer(processingEnv, config));
             }
         } catch (Throwable e) {
             throw new FeatException(e);
@@ -92,7 +97,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         for (Element element : roundEnv.getElementsAnnotatedWith(Bean.class)) {
             if (element.getKind() == ElementKind.CLASS) {
                 try {
-                    createAptLoader(new BeanSerializer(processingEnv, yamlValueSerializer, element));
+                    createAptLoader(new BeanSerializer(processingEnv, config, element));
                 } catch (Throwable e) {
                     exception = e;
                 }
@@ -103,7 +108,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                 if (element.getAnnotation(McpEndpoint.class) != null) {
                     throw new FeatException("@Controller and @McpEndpoint cannot be used together!");
                 }
-                createAptLoader(new ControllerSerializer(processingEnv, yamlValueSerializer, element));
+                createAptLoader(new ControllerSerializer(processingEnv, config, element));
             } catch (Throwable e) {
                 exception = e;
             }
@@ -111,7 +116,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
 
         for (Element element : roundEnv.getElementsAnnotatedWith(McpEndpoint.class)) {
             try {
-                createAptLoader(new McpEndpointSerializer(processingEnv, yamlValueSerializer, element));
+                createAptLoader(new McpEndpointSerializer(processingEnv, config, element));
             } catch (Throwable e) {
                 exception = e;
             }
@@ -119,7 +124,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
 
         for (Element element : roundEnv.getElementsAnnotatedWith(Mapper.class)) {
             try {
-                createAptLoader(new MapperSerializer(processingEnv, yamlValueSerializer, element));
+                createAptLoader(new MapperSerializer(processingEnv, config, element));
             } catch (Throwable e) {
                 exception = e;
             }
@@ -179,5 +184,28 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         printWriter.close();
     }
 
+    private String loadFeatYaml(ProcessingEnvironment processingEnv) throws IOException {
+        FileObject featYaml = null;
+        for (String filename : Arrays.asList("feat.yml", "feat.yaml")) {
+            try {
+                featYaml = processingEnv.getFiler().getResource(StandardLocation.CLASS_OUTPUT, "", filename);
+            } catch (IOException ignored) {
+            }
+            if (featYaml != null) {
+                break;
+            }
+        }
 
+        if (featYaml == null) {
+            return "{}";
+        }
+
+        File featFile = new File(featYaml.toUri());
+        if (!featFile.exists()) {
+            return "{}";
+        }
+
+        Yaml yaml = new Yaml();
+        return JSONObject.from(yaml.load(featYaml.openInputStream())).toJSONString();
+    }
 }
