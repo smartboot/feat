@@ -179,10 +179,11 @@ final class McpEndpointSerializer extends AbstractSerializer {
             printWriter.println("\t\t{");
             printWriter.append("\t\t\tmcpServer.addResource(").append(ServerResource.class.getSimpleName());
             if (prompt.isText()) {
-                printWriter.append(".ofText(\"").append(prompt.uri()).append("\", \"").append(prompt.name()).println("\", \"\")");
+                printWriter.append(".ofText(\"");
             } else {
-                printWriter.append(".ofBinary(\"").append(prompt.uri()).append("\", \"").append(prompt.name()).println("\", \"\")");
+                printWriter.append(".ofBinary(\"");
             }
+            printWriter.append(prompt.uri()).append("\", \"").append(prompt.name()).append("\",\"").append(prompt.mimeType()).println("\", \"\")");
 
             if (FeatUtils.isNotBlank(prompt.description())) {
                 printWriter.append("\t\t\t\t\t.description(\"").append(prompt.description()).println("\")");

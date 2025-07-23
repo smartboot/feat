@@ -113,8 +113,13 @@ public class McpToolMainController {
         return PromptMessage.ofEmbeddedResource(RoleEnum.User, tech.smartboot.feat.ai.mcp.model.Resource.of("file:///aa.txt", "test.txt", "text/plain"));
     }
 
-    @Resource(uri = "/resource/text", name = "text", description = "text", isText = true)
+    @Resource(uri = "/resource/text", name = "text", description = "text", mimeType = "text/x-rust", isText = true)
     public String resourceText() {
+        return "text";
+    }
+
+    @Resource(uri = "/resource/text1", name = "text", description = "text", isText = false)
+    public String resourceBin() {
         return "text";
     }
 }

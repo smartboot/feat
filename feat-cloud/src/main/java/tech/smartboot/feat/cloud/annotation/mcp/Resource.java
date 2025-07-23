@@ -35,5 +35,5 @@ public @interface Resource {
      */
     boolean isText() default true;
 
-    String mineType() default "";
+    String mimeType() default "";
 }
