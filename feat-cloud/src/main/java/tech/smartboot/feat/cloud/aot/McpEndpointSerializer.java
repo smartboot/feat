@@ -183,7 +183,13 @@ final class McpEndpointSerializer extends AbstractSerializer {
             } else {
                 printWriter.append(".ofBinary(\"");
             }
-            printWriter.append(prompt.uri()).append("\", \"").append(prompt.name()).append("\",\"").append(prompt.mimeType()).println("\", \"\")");
+            printWriter.append(prompt.uri()).append("\", \"").append(prompt.name());
+            if (FeatUtils.isNotBlank(prompt.mimeType())) {
+                printWriter.append("\",\"").append(prompt.mimeType()).println("\", \"\")");
+            } else {
+                printWriter.append("\", null, \"\")");
+            }
+
 
             if (FeatUtils.isNotBlank(prompt.description())) {
                 printWriter.append("\t\t\t\t\t.description(\"").append(prompt.description()).println("\")");
