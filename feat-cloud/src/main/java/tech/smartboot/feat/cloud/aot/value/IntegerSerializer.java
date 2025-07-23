@@ -8,7 +8,7 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.cloud.serializer.value;
+package tech.smartboot.feat.cloud.aot.value;
 
 import javax.lang.model.element.Element;
 
@@ -16,9 +16,9 @@ import javax.lang.model.element.Element;
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0 5/27/25
  */
-class StringValueSerializer extends AbstractSerializer {
+class IntegerSerializer extends AbstractSerializer {
     @Override
-    public String serialize(Element se, Object paramValue) {
-        return toString(paramValue.toString());
+    public String serialize(Element se, Object value) {
+        return String.valueOf(Integer.parseInt(value.toString()));
     }
 }

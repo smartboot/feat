@@ -8,7 +8,7 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.cloud.serializer;
+package tech.smartboot.feat.cloud.aot.controller;
 
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;

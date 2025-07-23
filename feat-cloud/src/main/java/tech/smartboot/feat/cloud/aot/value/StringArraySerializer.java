@@ -8,7 +8,7 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.cloud.serializer.value;
+package tech.smartboot.feat.cloud.aot.value;
 
 import com.alibaba.fastjson2.JSONArray;
 import tech.smartboot.feat.core.common.exception.FeatException;
@@ -19,20 +19,20 @@ import javax.lang.model.element.Element;
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0 5/27/25
  */
-class IntegerArraySerializer extends AbstractSerializer {
+class StringArraySerializer extends AbstractSerializer {
     @Override
     public String serialize(Element field, Object paramValue) {
         JSONArray array = (JSONArray) paramValue;
-        StringBuilder stringValue = new StringBuilder("new int[]{");
+        StringBuilder stringValue = new StringBuilder("new String[]{");
         for (int i = 0; i < array.size(); i++) {
             if (i != 0) {
                 stringValue.append(", ");
             }
             Object o = array.get(i);
-            if (!(o instanceof Integer)) {
+            if (!(o instanceof String)) {
                 throw new FeatException("compiler err: invalid value [ " + o + " ] for field[ " + field.getSimpleName() + " ] in class[ " + field.getEnclosingElement() + " ]");
             }
-            stringValue.append(o);
+            stringValue.append(toString(o.toString()));
         }
         stringValue.append("}");
         return stringValue.toString();

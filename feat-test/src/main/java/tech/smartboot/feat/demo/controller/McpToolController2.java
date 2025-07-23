@@ -12,7 +12,6 @@ package tech.smartboot.feat.demo.controller;
 
 
 import tech.smartboot.feat.ai.mcp.model.ToolResult;
-import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
 import tech.smartboot.feat.cloud.annotation.mcp.Tool;
 import tech.smartboot.feat.cloud.annotation.mcp.ToolParam;

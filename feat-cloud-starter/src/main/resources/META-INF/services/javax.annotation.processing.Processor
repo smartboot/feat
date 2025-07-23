@@ -8,4 +8,4 @@
 #  without special permission from the smartboot organization.
 #
 
-tech.smartboot.feat.cloud.FeatAnnotationProcessor
+tech.smartboot.feat.cloud.aot.FeatAnnotationProcessor

@@ -92,7 +92,7 @@ public @interface McpEndpoint {
      * 是否启用资源变更通知
      * 默认值：true（启用）
      */
-    boolean resourceChangeNotification() default true;
+//    boolean resourceChangeNotification() default true;
 
     /**
      * 是否启用工具管理功能
@@ -104,7 +104,7 @@ public @interface McpEndpoint {
      * 是否启用工具变更通知
      * 默认值：true（启用）
      */
-    boolean toolChangeNotification() default true;
+//    boolean toolChangeNotification() default true;
 
     /**
      * 是否启用提示词管理功能
@@ -116,7 +116,7 @@ public @interface McpEndpoint {
      * 是否启用提示词变更通知
      * 默认值：true（启用）
      */
-    boolean promptChangeNotification() default true;
+//    boolean promptChangeNotification() default true;
 
     /**
      * 是否启用日志记录功能
@@ -128,6 +128,6 @@ public @interface McpEndpoint {
      * 是否启用自动完成功能
      * 默认值：true（启用）
      */
-    boolean completionEnable() default true;
+//    boolean completionEnable() default true;
 
 }

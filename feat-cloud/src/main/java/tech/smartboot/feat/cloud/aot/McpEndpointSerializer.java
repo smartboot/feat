@@ -8,15 +8,15 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.cloud.mcp;
+package tech.smartboot.feat.cloud.aot;
 
 import tech.smartboot.feat.ai.mcp.model.ToolResult;
+import tech.smartboot.feat.ai.mcp.server.McpServer;
 import tech.smartboot.feat.ai.mcp.server.model.ServerTool;
-import tech.smartboot.feat.cloud.Serializer;
 import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
 import tech.smartboot.feat.cloud.annotation.mcp.Tool;
 import tech.smartboot.feat.cloud.annotation.mcp.ToolParam;
-import tech.smartboot.feat.cloud.serializer.value.FeatYamlValueSerializer;
+import tech.smartboot.feat.cloud.aot.value.FeatYamlValueSerializer;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.exception.FeatException;
 
@@ -33,17 +33,35 @@ import java.util.stream.Collectors;
  * @author 三刀
  * @version v1.0 7/20/25
  */
-public class McpServerSerializer implements Serializer {
-    private final FeatYamlValueSerializer yamlValueSerializer;
+public class McpEndpointSerializer extends Serializer {
     public static final String DEFAULT_BEAN_NAME = "mcpServer" + System.nanoTime();
     private ProcessingEnvironment processingEnv;
 
-    public McpServerSerializer(ProcessingEnvironment processingEnv, FeatYamlValueSerializer yamlValueSerializer) {
+    public McpEndpointSerializer(ProcessingEnvironment processingEnv, FeatYamlValueSerializer yamlValueSerializer, Element element) {
+        super(yamlValueSerializer, element);
         this.processingEnv = processingEnv;
-        this.yamlValueSerializer = yamlValueSerializer;
     }
 
-    public void serializeAutowired(PrintWriter printWriter, Element element) {
+    @Override
+    void serializeImport() {
+        printWriter.println("import " + McpServer.class.getName() + ";");
+        printWriter.println("import " + ServerTool.class.getName() + ";");
+        super.serializeImport();
+    }
+
+    @Override
+    void serializeProperty() {
+        printWriter.println("\tprivate McpServer mcpServer = new McpServer();");
+        printWriter.println("\tprivate " + element.getSimpleName() + " bean = new " + element.getSimpleName() + "();");
+    }
+
+    @Override
+    void serializeLoadBean() {
+
+    }
+
+    public void serializeAutowired() {
+        super.serializeAutowired();
         McpEndpoint controller = element.getAnnotation(McpEndpoint.class);
         List<Element> toolMethods = element.getEnclosedElements().stream().filter(e -> e.getAnnotation(Tool.class) != null).collect(Collectors.toList());
         if (FeatUtils.isNotEmpty(toolMethods)) {
@@ -105,7 +123,7 @@ public class McpServerSerializer implements Serializer {
     }
 
     @Override
-    public void serializeRouter(PrintWriter printWriter, Element element) {
+    public void serializeRouter() {
         McpEndpoint mcpEndpoint = element.getAnnotation(McpEndpoint.class);
         //注册Router
         if (FeatUtils.isNotBlank(mcpEndpoint.mcpStreamableEndpoint())) {

@@ -8,17 +8,17 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.cloud;
+package tech.smartboot.feat.cloud.aot.value;
 
 import javax.lang.model.element.Element;
-import java.io.PrintWriter;
 
 /**
- * @author 三刀
- * @version v1.0 7/23/25
+ * @author 三刀 zhengjunweimail@163.com
+ * @version v1.0 5/27/25
  */
-public interface Serializer {
-    void serializeAutowired(PrintWriter printWriter, Element element);
-
-    void serializeRouter(PrintWriter printWriter, Element element);
+class StringValueSerializer extends AbstractSerializer {
+    @Override
+    public String serialize(Element se, Object paramValue) {
+        return toString(paramValue.toString());
+    }
 }

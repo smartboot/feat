@@ -8,7 +8,7 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.cloud.serializer;
+package tech.smartboot.feat.cloud.aot.controller;
 
 import com.alibaba.fastjson2.annotation.JSONField;
 import tech.smartboot.feat.core.common.FeatUtils;

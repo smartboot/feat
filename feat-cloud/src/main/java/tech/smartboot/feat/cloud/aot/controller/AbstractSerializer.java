@@ -8,7 +8,7 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.cloud.serializer;
+package tech.smartboot.feat.cloud.aot.controller;
 
 import com.alibaba.fastjson2.annotation.JSONField;
 import tech.smartboot.feat.core.common.FeatUtils;
@@ -18,7 +18,7 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import java.io.IOException;
 
-public abstract class AbstractSerializer {
+abstract class AbstractSerializer {
     public void serialize(Element se, String obj, int deep) {
         throw new UnsupportedOperationException();
     }

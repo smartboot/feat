@@ -8,7 +8,7 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.cloud.serializer;
+package tech.smartboot.feat.cloud.aot.controller;
 
 import javax.lang.model.element.Element;
 import java.io.PrintWriter;
@@ -17,7 +17,7 @@ import java.io.PrintWriter;
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0 5/14/25
  */
-public class IntSerializer extends AbstractSerializer {
+class IntSerializer extends AbstractSerializer {
     public static final int TYPE_INT = 1;
     public static final int TYPE_LONG = 2;
     public static final int TYPE_SHORT = 3;
