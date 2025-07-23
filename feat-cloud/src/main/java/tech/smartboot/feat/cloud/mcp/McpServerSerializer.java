@@ -44,18 +44,36 @@ public class McpServerSerializer {
         List<Element> toolMethods = element.getEnclosedElements().stream().filter(e -> e.getAnnotation(Tool.class) != null).collect(Collectors.toList());
         if (FeatUtils.isNotEmpty(toolMethods)) {
             if (controller != null) {
-                printWriter.append("\t\ttech.smartboot.feat.ai.mcp.server.McpServer mcpServer = new tech.smartboot.feat.ai.mcp.server.McpServer(opts -> opts");
+                printWriter.println("\t\ttech.smartboot.feat.ai.mcp.server.McpServer mcpServer = new tech.smartboot.feat.ai.mcp.server.McpServer(");
+                printWriter.println("\t\t\t\topts -> opts");
+                //配置McpOptions
                 if (FeatUtils.isNotBlank(controller.mcpStreamableEndpoint())) {
-                    printWriter.append(".setMcpEndpoint(\"").append(controller.mcpStreamableEndpoint()).append("\")");
+                    printWriter.append("\t\t\t\t\t\t.setMcpEndpoint(\"").append(controller.mcpStreamableEndpoint()).println("\")");
                 }
                 if (FeatUtils.isNotBlank(controller.mcpSseEndpoint())) {
-                    printWriter.append(".setSseEndpoint(\"").append(controller.mcpSseEndpoint()).append("\")");
+                    printWriter.append("\t\t\t\t\t\t.setSseEndpoint(\"").append(controller.mcpSseEndpoint()).println("\")");
                 }
                 if (FeatUtils.isNotBlank(controller.mcpSseMessageEndpoint())) {
-                    printWriter.append(".setSseMessageEndpoint(\"").append(controller.mcpSseMessageEndpoint()).append("\")");
+                    printWriter.append("\t\t\t\t\t\t.setSseMessageEndpoint(\"").append(controller.mcpSseMessageEndpoint()).println("\")");
                 }
-                printWriter.append(".getImplementation().setName(\"").append(controller.name()).append("\").setTitle(\"").append(controller.title()).append("\").setVersion(\"").append(controller.version()).append("\"));\n");
+                if (controller.toolEnable()) {
+                    printWriter.println("\t\t\t\t\t\t.toolEnable()");
+                }
+                if (controller.resourceEnable()) {
+                    printWriter.println("\t\t\t\t\t\t.resourceEnable()");
+                }
+                if (controller.loggingEnable()) {
+                    printWriter.println("\t\t\t\t\t\t.loggingEnable()");
+                }
+                if (controller.promptsEnable()) {
+                    printWriter.println("\t\t\t\t\t\t.promptsEnable()");
+                }
+                printWriter.println("\t\t\t\t\t\t.getImplementation()");
+                printWriter.append("\t\t\t\t\t\t.setName(\"").append(controller.name()).println("\")");
+                printWriter.append("\t\t\t\t\t\t.setTitle(\"").append(controller.title()).println("\")");
+                printWriter.append("\t\t\t\t\t\t.setVersion(\"").append(controller.version()).println("\"));");
 
+                //注册Router
                 if (FeatUtils.isNotBlank(controller.mcpStreamableEndpoint())) {
                     printWriter.println("\t\tapplicationContext.getRouter().route(\"" + controller.mcpStreamableEndpoint() + "\", mcpServer.mcpHandler());");
                 }
