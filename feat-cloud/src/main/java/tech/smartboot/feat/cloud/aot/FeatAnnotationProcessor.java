@@ -17,7 +17,7 @@ import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Bean;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
-import tech.smartboot.feat.cloud.aot.value.FeatYamlValueSerializer;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.router.Router;
 
@@ -30,12 +30,9 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.tools.FileObject;
-import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.Writer;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -66,7 +63,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
     PrintWriter serviceWrite;
     private Throwable exception = null;
     private final List<String> services = new ArrayList<>();
-    private FeatYamlValueSerializer yamlValueSerializer;
+    private CloudOptionsSerializer yamlValueSerializer;
 
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
@@ -74,11 +71,14 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         try {
             serviceFile = processingEnv.getFiler().createResource(StandardLocation.CLASS_OUTPUT, "", "META-INF/services/" + CloudService.class.getName());
             serviceWrite = new PrintWriter(serviceFile.openWriter());
-        } catch (IOException e) {
+            System.out.println("processor init: " + this);
+            yamlValueSerializer = new CloudOptionsSerializer(processingEnv);
+            if (FeatUtils.length(yamlValueSerializer.getConfig()) > 2) {
+                createAptLoader(yamlValueSerializer);
+            }
+        } catch (Throwable e) {
             throw new FeatException(e);
         }
-        System.out.println("processor init: " + this);
-        yamlValueSerializer = new FeatYamlValueSerializer(processingEnv, services);
     }
 
     @Override
@@ -92,7 +92,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         for (Element element : roundEnv.getElementsAnnotatedWith(Bean.class)) {
             if (element.getKind() == ElementKind.CLASS) {
                 try {
-                    createAptLoader(new BeanSerializer(yamlValueSerializer, element));
+                    createAptLoader(new BeanSerializer(processingEnv, yamlValueSerializer, element));
                 } catch (Throwable e) {
                     exception = e;
                 }
@@ -103,7 +103,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                 if (element.getAnnotation(McpEndpoint.class) != null) {
                     throw new FeatException("@Controller and @McpEndpoint cannot be used together!");
                 }
-                createAptLoader(new ControllerSerializer(yamlValueSerializer, element));
+                createAptLoader(new ControllerSerializer(processingEnv, yamlValueSerializer, element));
             } catch (Throwable e) {
                 exception = e;
             }
@@ -119,7 +119,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
 
         for (Element element : roundEnv.getElementsAnnotatedWith(Mapper.class)) {
             try {
-                createAptLoader(new MapperSerializer(yamlValueSerializer, element));
+                createAptLoader(new MapperSerializer(processingEnv, yamlValueSerializer, element));
             } catch (Throwable e) {
                 exception = e;
             }
@@ -130,35 +130,23 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         }
         serviceWrite.flush();
 
-        Throwable throwable = exception == null ? yamlValueSerializer.isException() : exception;
-        if (throwable != null) {
-            throwable.printStackTrace();
+        if (exception != null) {
+            exception.printStackTrace();
             throw new FeatException("编译失败！请根据提示修复错误，或者联系开发者：https://gitee.com/smartboot/feat/issues");
         }
         return false;
     }
 
     private <T extends Annotation> void createAptLoader(Serializer serializer) throws IOException {
-        String packageName = serializer.getElement().getEnclosingElement().toString();
-        String loaderName = serializer.getElement().getSimpleName() + "BeanAptLoader";
         //生成service配置
-        services.add(packageName + "." + loaderName);
+        services.add(serializer.packageName() + "." + serializer.className());
 
-        FileObject preFileObject = processingEnv.getFiler().getResource(StandardLocation.SOURCE_OUTPUT, packageName, loaderName + ".java");
-        File f = new File(preFileObject.toUri());
-        if (f.exists()) {
-            f.delete();
-        }
-
-        JavaFileObject javaFileObject = processingEnv.getFiler().createSourceFile(packageName + "." + loaderName);
-        Writer writer = javaFileObject.openWriter();
-        PrintWriter printWriter = new PrintWriter(writer);
-        serializer.setPrintWriter(printWriter);
-        printWriter.println("package " + packageName + ";");
+        PrintWriter printWriter = serializer.getPrintWriter();
+        printWriter.println("package " + serializer.packageName() + ";");
         printWriter.println();
         serializer.serializeImport();
         printWriter.println();
-        printWriter.println("public class " + loaderName + " extends " + AbstractServiceLoader.class.getSimpleName() + " {");
+        printWriter.println("public class " + serializer.className() + " extends " + AbstractServiceLoader.class.getSimpleName() + " {");
         printWriter.println();
         serializer.serializeProperty();
         printWriter.println();
@@ -188,7 +176,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         serializer.serializePostConstruct();
         printWriter.println("\t}");
         printWriter.println("}");
-        writer.close();
+        printWriter.close();
     }
 
 

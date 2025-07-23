@@ -13,36 +13,37 @@ package tech.smartboot.feat.cloud.aot;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import tech.smartboot.feat.cloud.aot.controller.JsonSerializer;
-import tech.smartboot.feat.cloud.aot.value.FeatYamlValueSerializer;
 
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.VariableElement;
+import java.io.IOException;
 
 /**
  * @author 三刀
  * @version v1.0 7/23/25
  */
-final class MapperSerializer extends Serializer {
-    public MapperSerializer(FeatYamlValueSerializer yamlValueSerializer, Element element) {
-        super(yamlValueSerializer, element);
+final class MapperSerializer extends AbstractSerializer {
+    public MapperSerializer(ProcessingEnvironment processingEnv, CloudOptionsSerializer yamlValueSerializer, Element element) throws IOException {
+        super(processingEnv, yamlValueSerializer, element);
     }
 
     @Override
-    void serializeImport() {
+    public void serializeImport() {
         printWriter.println("import " + SqlSessionFactory.class.getName() + ";");
         printWriter.println("import " + SqlSession.class.getName() + ";");
         super.serializeImport();
     }
 
     @Override
-    void serializeProperty() {
+    public void serializeProperty() {
         printWriter.println("\tprivate SqlSessionFactory factory;");
         super.serializeProperty();
     }
 
     @Override
-    void serializeLoadBean() {
+    public void serializeLoadBean() {
         printWriter.println("\t\tbean = new " + element.getSimpleName() + "() { ");
         for (Element se : element.getEnclosedElements()) {
             String returnType = ((ExecutableElement) se).getReturnType().toString();
@@ -83,7 +84,7 @@ final class MapperSerializer extends Serializer {
     }
 
     @Override
-    void serializeAutowired() {
+    public void serializeAutowired() {
         super.serializeAutowired();
         printWriter.println("\t\tfactory = applicationContext.getBean(\"sessionFactory\");");
     }

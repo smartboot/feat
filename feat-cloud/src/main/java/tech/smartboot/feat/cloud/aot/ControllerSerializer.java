@@ -18,7 +18,6 @@ import tech.smartboot.feat.cloud.annotation.PathParam;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.cloud.annotation.RequestMethod;
 import tech.smartboot.feat.cloud.aot.controller.JsonSerializer;
-import tech.smartboot.feat.cloud.aot.value.FeatYamlValueSerializer;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.utils.ByteTree;
@@ -28,6 +27,7 @@ import tech.smartboot.feat.core.server.Session;
 import tech.smartboot.feat.router.Context;
 import tech.smartboot.feat.router.RouterHandler;
 
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
@@ -44,7 +44,7 @@ import java.util.concurrent.CompletableFuture;
  * @author 三刀
  * @version v1.0 7/23/25
  */
-final class ControllerSerializer extends Serializer {
+final class ControllerSerializer extends AbstractSerializer {
     private static final int RETURN_TYPE_VOID = 0;
     private static final int RETURN_TYPE_STRING = 1;
     private static final int RETURN_TYPE_OBJECT = 2;
@@ -52,12 +52,12 @@ final class ControllerSerializer extends Serializer {
 
     private final Map<String, String> bytesCache = new HashMap<>();
 
-    public ControllerSerializer(FeatYamlValueSerializer yamlValueSerializer, Element element) {
-        super(yamlValueSerializer, element);
+    public ControllerSerializer(ProcessingEnvironment processingEnv, CloudOptionsSerializer yamlValueSerializer, Element element) throws IOException {
+        super(processingEnv, yamlValueSerializer, element);
     }
 
     @Override
-    void serializeRouter() throws IOException {
+    public void serializeRouter() throws IOException {
         Controller controller = element.getAnnotation(Controller.class);
         //遍历所有方法,获得RequestMapping注解
         String basePath = controller.value();
@@ -290,7 +290,7 @@ final class ControllerSerializer extends Serializer {
     }
 
     @Override
-    void serializeBytePool() {
+    public void serializeBytePool() {
         if (!bytesCache.isEmpty()) {
             for (Map.Entry<String, String> entry : bytesCache.entrySet()) {
                 printWriter.println("\t" + entry.getValue());

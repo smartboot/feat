@@ -16,7 +16,6 @@ import tech.smartboot.feat.ai.mcp.server.model.ServerTool;
 import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
 import tech.smartboot.feat.cloud.annotation.mcp.Tool;
 import tech.smartboot.feat.cloud.annotation.mcp.ToolParam;
-import tech.smartboot.feat.cloud.aot.value.FeatYamlValueSerializer;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.exception.FeatException;
 
@@ -25,6 +24,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -33,30 +33,29 @@ import java.util.stream.Collectors;
  * @author 三刀
  * @version v1.0 7/20/25
  */
-final class McpEndpointSerializer extends Serializer {
-    public static final String DEFAULT_BEAN_NAME = "mcpServer" + System.nanoTime();
-    private ProcessingEnvironment processingEnv;
+final class McpEndpointSerializer extends AbstractSerializer {
+    private final ProcessingEnvironment processingEnv;
 
-    public McpEndpointSerializer(ProcessingEnvironment processingEnv, FeatYamlValueSerializer yamlValueSerializer, Element element) {
-        super(yamlValueSerializer, element);
+    public McpEndpointSerializer(ProcessingEnvironment processingEnv, CloudOptionsSerializer yamlValueSerializer, Element element) throws IOException {
+        super(processingEnv, yamlValueSerializer, element);
         this.processingEnv = processingEnv;
     }
 
     @Override
-    void serializeImport() {
+    public void serializeImport() {
         printWriter.println("import " + McpServer.class.getName() + ";");
         printWriter.println("import " + ServerTool.class.getName() + ";");
         super.serializeImport();
     }
 
     @Override
-    void serializeProperty() {
+    public void serializeProperty() {
         printWriter.println("\tprivate McpServer mcpServer = new McpServer();");
         printWriter.println("\tprivate " + element.getSimpleName() + " bean = new " + element.getSimpleName() + "();");
     }
 
     @Override
-    void serializeLoadBean() {
+    public void serializeLoadBean() {
 
     }
 

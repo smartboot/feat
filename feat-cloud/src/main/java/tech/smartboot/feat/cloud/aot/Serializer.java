@@ -10,142 +10,44 @@
 
 package tech.smartboot.feat.cloud.aot;
 
-import com.alibaba.fastjson2.JSONObject;
-import tech.smartboot.feat.cloud.AbstractServiceLoader;
-import tech.smartboot.feat.cloud.ApplicationContext;
-import tech.smartboot.feat.cloud.annotation.Autowired;
-import tech.smartboot.feat.cloud.annotation.Bean;
-import tech.smartboot.feat.cloud.annotation.PostConstruct;
-import tech.smartboot.feat.cloud.annotation.PreDestroy;
-import tech.smartboot.feat.cloud.aot.value.FeatYamlValueSerializer;
-import tech.smartboot.feat.router.Router;
-
-import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.VariableElement;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author 三刀
  * @version v1.0 7/23/25
  */
-abstract class Serializer {
-    protected FeatYamlValueSerializer yamlValueSerializer;
-    protected PrintWriter printWriter;
-    protected final Element element;
+interface Serializer {
+    PrintWriter getPrintWriter();
 
-    public Serializer(FeatYamlValueSerializer yamlValueSerializer, Element element) {
-        this.yamlValueSerializer = yamlValueSerializer;
-        this.element = element;
+    String packageName();
+
+    String className();
+
+    default void serializeImport() {
     }
 
-    public Element getElement() {
-        return element;
+    default void serializeProperty() {
     }
 
-    public void setPrintWriter(PrintWriter printWriter) {
-        this.printWriter = printWriter;
+    default void serializeLoadBean() {
     }
 
-    void serializeImport() {
-        printWriter.println("import " + AbstractServiceLoader.class.getName() + ";");
-        printWriter.println("import " + ApplicationContext.class.getName() + ";");
-        printWriter.println("import " + Router.class.getName() + ";");
-        printWriter.println("import " + JSONObject.class.getName() + ";");
-        printWriter.println("import com.alibaba.fastjson2.JSON;");
+    default void serializeAutowired() {
     }
 
-    void serializeProperty() {
-        printWriter.println("\tprivate " + element.getSimpleName() + " bean;");
+    default void serializeRouter() throws IOException {
     }
 
-    void serializeLoadBean() {
-        printWriter.println("\t\tbean = new " + element.getSimpleName() + "(); ");
-        //初始化通过方法实例化的bean
-        for (Element se : element.getEnclosedElements()) {
-            for (AnnotationMirror mirror : se.getAnnotationMirrors()) {
-                if (!Bean.class.getName().equals(mirror.getAnnotationType().toString())) {
-                    continue;
-                }
-                printWriter.print("\t\tapplicationContext.addBean(\"" + se.getSimpleName() + "\", bean." + se.getSimpleName() + "(");
-                boolean first = true;
-                for (VariableElement param : ((ExecutableElement) se).getParameters()) {
-                    if (first) {
-                        first = false;
-                    } else {
-                        printWriter.print(", ");
-                    }
-                    printWriter.print("loadBean(\"" + param.getSimpleName() + "\", applicationContext)");
-                }
-                printWriter.println("));");
-            }
-        }
+    default void serializeBytePool() {
     }
 
-    void serializeAutowired() {
-        List<Element> autowiredFields = new ArrayList<>();
-        for (Element field : element.getEnclosedElements()) {
-            if (field.getAnnotation(Autowired.class) != null) {
-                autowiredFields.add(field);
-            }
-        }
-        for (Element field : autowiredFields) {
-            String name = field.getSimpleName().toString();
-            name = name.substring(0, 1).toUpperCase() + name.substring(1);
-
-            //判断是否存在setter方法
-            boolean hasSetter = false;
-            for (Element se : element.getEnclosedElements()) {
-                if (!("set" + name).equals(se.getSimpleName().toString())) {
-                    continue;
-                }
-                List<? extends VariableElement> list = ((ExecutableElement) se).getParameters();
-                if (list.size() != 1) {
-                    continue;
-                }
-                VariableElement param = list.get(0);
-                if (!param.asType().toString().equals(field.asType().toString())) {
-                    continue;
-                }
-                hasSetter = true;
-            }
-            if (hasSetter) {
-                printWriter.append("\t\tbean.set").append(name).append("(loadBean(\"").append(field.getSimpleName()).append("\", applicationContext));\n");
-            } else {
-                printWriter.append("\t\treflectAutowired(bean, \"").append(field.getSimpleName().toString()).append("\", applicationContext);\n");
-            }
-        }
-        printWriter.append(yamlValueSerializer.generateValueSetter(element));
+    default void serializerValueSetter() {
     }
 
-    void serializeRouter() throws IOException {
+    default void serializePostConstruct() {
     }
 
-    void serializeBytePool() {
-
-    }
-
-    final void serializePostConstruct() {
-        for (Element se : element.getEnclosedElements()) {
-            for (AnnotationMirror mirror : se.getAnnotationMirrors()) {
-                if (PostConstruct.class.getName().equals(mirror.getAnnotationType().toString())) {
-                    printWriter.println("\t\tbean." + se.getSimpleName() + "();");
-                }
-            }
-        }
-    }
-
-    final void serializeDestroy() {
-        for (Element se : element.getEnclosedElements()) {
-            for (AnnotationMirror mirror : se.getAnnotationMirrors()) {
-                if (PreDestroy.class.getName().equals(mirror.getAnnotationType().toString())) {
-                    printWriter.println("\t\tbean." + se.getSimpleName() + "();");
-                }
-            }
-        }
+    default void serializeDestroy() {
     }
 }

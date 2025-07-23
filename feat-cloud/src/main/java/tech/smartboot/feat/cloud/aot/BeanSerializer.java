@@ -11,21 +11,22 @@
 package tech.smartboot.feat.cloud.aot;
 
 import tech.smartboot.feat.cloud.annotation.Bean;
-import tech.smartboot.feat.cloud.aot.value.FeatYamlValueSerializer;
 
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
+import java.io.IOException;
 
 /**
  * @author 三刀
  * @version v1.0 7/23/25
  */
-final class BeanSerializer extends Serializer {
-    public BeanSerializer(FeatYamlValueSerializer yamlValueSerializer, Element element) {
-        super(yamlValueSerializer, element);
+final class BeanSerializer extends AbstractSerializer {
+    public BeanSerializer(ProcessingEnvironment processingEnv, CloudOptionsSerializer yamlValueSerializer, Element element) throws IOException {
+        super(processingEnv, yamlValueSerializer, element);
     }
 
     @Override
-    void serializeProperty() {
+    public void serializeProperty() {
         super.serializeProperty();
 
         printWriter.println();
@@ -35,7 +36,7 @@ final class BeanSerializer extends Serializer {
     }
 
     @Override
-    void serializeLoadBean() {
+    public void serializeLoadBean() {
         super.serializeLoadBean();
         Bean annotation = element.getAnnotation(Bean.class);
         String beanName = element.getSimpleName().toString().substring(0, 1).toLowerCase() + element.getSimpleName().toString().substring(1);
