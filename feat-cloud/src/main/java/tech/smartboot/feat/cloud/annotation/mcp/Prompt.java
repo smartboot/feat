@@ -10,6 +10,9 @@
 
 package tech.smartboot.feat.cloud.annotation.mcp;
 
+import tech.smartboot.feat.ai.mcp.enums.PromptType;
+import tech.smartboot.feat.ai.mcp.enums.RoleEnum;
+
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -20,11 +23,17 @@ import java.lang.annotation.Target;
  * @author 三刀
  * @version v1.0 7/21/25
  */
-@Target({ElementType.PARAMETER})
+@Target({ElementType.METHOD})
 @Retention(RetentionPolicy.SOURCE)
 @Documented
-public @interface ToolParam {
-    boolean required();
+public @interface Prompt {
+    String name();
 
     String description() default "";
+
+    PromptType type();
+
+    RoleEnum role() default RoleEnum.User;
+
+    String mineType() default "";
 }

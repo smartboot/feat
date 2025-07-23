@@ -10,16 +10,16 @@
 
 package tech.smartboot.feat.ai.mcp.model;
 
-import tech.smartboot.feat.ai.mcp.enums.RoleEnum;
-import tech.smartboot.feat.ai.mcp.enums.ToolResultType;
 import tech.smartboot.feat.ai.mcp.McpException;
+import tech.smartboot.feat.ai.mcp.enums.PromptType;
+import tech.smartboot.feat.ai.mcp.enums.RoleEnum;
 import tech.smartboot.feat.core.common.FeatUtils;
 
 /**
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0 6/28/25
  */
-public class PromptMessage<T extends PromptMessage.PromptContent> {
+public final class PromptMessage<T extends PromptMessage.PromptContent> {
     private String role;
     private T content;
 
@@ -66,7 +66,7 @@ public class PromptMessage<T extends PromptMessage.PromptContent> {
     public abstract static class PromptContent {
         private final String type;
 
-        PromptContent(ToolResultType type) {
+        PromptContent(PromptType type) {
             this.type = type.getType();
         }
 
@@ -80,7 +80,7 @@ public class PromptMessage<T extends PromptMessage.PromptContent> {
         private final String mimeType;
 
         ImagePromptContent(String data, String mimeType) {
-            super(ToolResultType.IMAGE);
+            super(PromptType.IMAGE);
             this.mimeType = mimeType;
             this.data = data;
         }
@@ -100,7 +100,7 @@ public class PromptMessage<T extends PromptMessage.PromptContent> {
         private final Resource resource;
 
         EmbeddedResourcePromptContent(Resource resource) {
-            super(ToolResultType.EMBEDDED_RESOURCE);
+            super(PromptType.EMBEDDED_RESOURCE);
             this.resource = resource;
         }
 
@@ -114,7 +114,7 @@ public class PromptMessage<T extends PromptMessage.PromptContent> {
         private final String mimeType;
 
         AudioPromptContent(String data, String mimeType) {
-            super(ToolResultType.AUDIO);
+            super(PromptType.AUDIO);
             this.mimeType = mimeType;
             this.data = data;
         }
@@ -134,7 +134,7 @@ public class PromptMessage<T extends PromptMessage.PromptContent> {
         private final String text;
 
         TextPromptContent(String text) {
-            super(ToolResultType.TEXT);
+            super(PromptType.TEXT);
             this.text = text;
         }
 

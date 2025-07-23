@@ -11,10 +11,17 @@
 package tech.smartboot.feat.demo.controller;
 
 
+import tech.smartboot.feat.ai.mcp.enums.PromptType;
+import tech.smartboot.feat.ai.mcp.enums.RoleEnum;
+import tech.smartboot.feat.ai.mcp.model.PromptMessage;
+import tech.smartboot.feat.ai.mcp.model.Resource;
 import tech.smartboot.feat.ai.mcp.model.ToolResult;
 import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
+import tech.smartboot.feat.cloud.annotation.mcp.Param;
+import tech.smartboot.feat.cloud.annotation.mcp.Prompt;
 import tech.smartboot.feat.cloud.annotation.mcp.Tool;
-import tech.smartboot.feat.cloud.annotation.mcp.ToolParam;
+
+import java.util.Base64;
 
 /**
  * @author 三刀 zhengjunweimail@163.com
@@ -26,54 +33,83 @@ import tech.smartboot.feat.cloud.annotation.mcp.ToolParam;
 public class McpToolMainController {
 
     @Tool(description = "测试工具")
-    public String tool1(@ToolParam(required = true, description = "参数1") String param1, @ToolParam(required = false, description = "参数2") int param2, boolean param3) {
+    public String tool1(@Param(required = true, description = "参数1") String param1, @Param(required = false, description = "参数2") int param2, boolean param3) {
         return "hello " + param1;
     }
 
     @Tool(description = "测试工具")
-    public boolean tool2(@ToolParam(required = true, description = "参数1") String param1, @ToolParam(required = false, description = "参数2") int param2, boolean param3) {
+    public boolean tool2(@Param(required = true, description = "参数1") String param1, @Param(required = false, description = "参数2") int param2, boolean param3) {
         return true;
     }
 
     @Tool(description = "测试工具")
-    public int tool3(@ToolParam(required = true, description = "参数1") String param1, @ToolParam(required = false, description = "参数2") int param2, boolean param3) {
+    public int tool3(@Param(required = true, description = "参数1") String param1, @Param(required = false, description = "参数2") int param2, boolean param3) {
         return 0;
     }
 
     @Tool(description = "测试工具")
-    public float tool4(@ToolParam(required = true, description = "参数1") String param1, @ToolParam(required = false, description = "参数2") int param2, boolean param3) {
+    public float tool4(@Param(required = true, description = "参数1") String param1, @Param(required = false, description = "参数2") int param2, boolean param3) {
         return 0;
     }
 
     @Tool(description = "测试工具")
-    public short tool5(@ToolParam(required = true, description = "参数1") String param1, @ToolParam(required = false, description = "参数2") int param2, boolean param3) {
+    public short tool5(@Param(required = true, description = "参数1") String param1, @Param(required = false, description = "参数2") int param2, boolean param3) {
         return 0;
     }
 
     @Tool(description = "测试工具")
-    public long tool6(@ToolParam(required = true, description = "参数1") String param1, @ToolParam(required = false, description = "参数2") int param2, boolean param3) {
+    public long tool6(@Param(required = true, description = "参数1") String param1, @Param(required = false, description = "参数2") int param2, boolean param3) {
         return 0;
     }
 
     @Tool(description = "测试工具")
-    public double tool7(@ToolParam(required = true, description = "参数1") String param1, @ToolParam(required = false, description = "参数2") int param2, boolean param3) {
+    public double tool7(@Param(required = true, description = "参数1") String param1, @Param(required = false, description = "参数2") int param2, boolean param3) {
         return 0;
     }
 
 
     @Tool(description = "测试工具")
-    public byte tool8(@ToolParam(required = true, description = "参数1") String param1, @ToolParam(required = false, description = "参数2") int param2, boolean param3) {
+    public byte tool8(@Param(required = true, description = "参数1") String param1, @Param(required = false, description = "参数2") int param2, boolean param3) {
         return 0;
     }
 
     @Tool(description = "测试工具")
-    public ToolResult.ImageContent tool9(@ToolParam(required = true, description = "参数1") String param1, @ToolParam(required = false, description = "参数2") int param2, boolean param3) {
+    public ToolResult.ImageContent tool9(@Param(required = true, description = "参数1") String param1, @Param(required = false, description = "参数2") int param2, boolean param3) {
         return ToolResult.ofImage("data", "mimeType");
     }
 
     @Tool(description = "测试工具")
-    public ToolResult.TextContent tool10(@ToolParam(required = true, description = "参数1") String param1, @ToolParam(required = false, description = "参数2") int param2, boolean param3) {
+    public ToolResult.TextContent tool10(@Param(required = true, description = "参数1") String param1, @Param(required = false, description = "参数2") int param2, boolean param3) {
         return ToolResult.ofText("aaaaa");
     }
 
+    @Prompt(name = "prompt1", description = "测试提示", type = PromptType.TEXT)
+    public String prompt1(@Param(required = true, description = "参数1") String param1, @Param(required = false, description = "参数2") int param2) {
+        return "prompt1";
+    }
+
+    @Prompt(name = "prompt2", description = "测试提示", type = PromptType.TEXT)
+    public int prompt2(@Param(required = true, description = "参数1") String param1, @Param(required = false, description = "参数2") int param2) {
+        return 1;
+    }
+
+    @Prompt(name = "prompt3", description = "测试提示", type = PromptType.IMAGE, mineType = "bbb")
+    public String prompt3(@Param(required = true, description = "参数1") String param1, @Param(required = false, description = "参数2") int param2) {
+        return Base64.getEncoder().encodeToString("aasdfadsfa".getBytes());
+    }
+
+    @Prompt(name = "prompt4", description = "测试提示", type = PromptType.AUDIO, mineType = "aaa")
+    public String prompt4(@Param(required = true, description = "参数1") String param1, @Param(required = false, description = "参数2") int param2) {
+        return Base64.getEncoder().encodeToString("aasdfadsfa".getBytes());
+    }
+
+    @Prompt(name = "prompt5", description = "测试提示", type = PromptType.EMBEDDED_RESOURCE)
+    public PromptMessage prompt5(@Param(required = true, description = "参数1") String param1, @Param(required = false, description = "参数2") int param2) {
+        return PromptMessage.ofEmbeddedResource(RoleEnum.User, Resource.of("file:///aa.txt", "test.txt", "text/plain"));
+    }
+
+    @Prompt(name = "prompt6", description = "测试提示", type = PromptType.EMBEDDED_RESOURCE)
+    public PromptMessage<PromptMessage.EmbeddedResourcePromptContent> prompt6(@Param(required = true, description = "参数1") String param1, @Param(required = false, description = "参数2") int param2) {
+        return PromptMessage.ofEmbeddedResource(RoleEnum.User, Resource.of("file:///aa.txt", "test.txt", "text/plain"));
+    }
 }

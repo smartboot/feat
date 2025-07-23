@@ -10,12 +10,17 @@
 
 package tech.smartboot.feat.cloud.aot;
 
+import tech.smartboot.feat.ai.mcp.enums.PromptType;
+import tech.smartboot.feat.ai.mcp.enums.RoleEnum;
+import tech.smartboot.feat.ai.mcp.model.PromptMessage;
 import tech.smartboot.feat.ai.mcp.model.ToolResult;
 import tech.smartboot.feat.ai.mcp.server.McpServer;
+import tech.smartboot.feat.ai.mcp.server.model.ServerPrompt;
 import tech.smartboot.feat.ai.mcp.server.model.ServerTool;
 import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
+import tech.smartboot.feat.cloud.annotation.mcp.Param;
+import tech.smartboot.feat.cloud.annotation.mcp.Prompt;
 import tech.smartboot.feat.cloud.annotation.mcp.Tool;
-import tech.smartboot.feat.cloud.annotation.mcp.ToolParam;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.exception.FeatException;
 
@@ -23,6 +28,7 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -35,16 +41,31 @@ import java.util.stream.Collectors;
  */
 final class McpEndpointSerializer extends AbstractSerializer {
     private final ProcessingEnvironment processingEnv;
+    private final List<Element> toolMethods;
+    private final List<Element> promptMethods;
+    private final McpEndpoint controller;
 
     public McpEndpointSerializer(ProcessingEnvironment processingEnv, String config, Element element) throws IOException {
         super(processingEnv, config, element);
         this.processingEnv = processingEnv;
+        controller = element.getAnnotation(McpEndpoint.class);
+        toolMethods = element.getEnclosedElements().stream().filter(e -> e.getAnnotation(Tool.class) != null).collect(Collectors.toList());
+        promptMethods = element.getEnclosedElements().stream().filter(e -> e.getAnnotation(Prompt.class) != null).collect(Collectors.toList());
     }
 
     @Override
     public void serializeImport() {
         printWriter.println("import " + McpServer.class.getName() + ";");
-        printWriter.println("import " + ServerTool.class.getName() + ";");
+        if (FeatUtils.isNotEmpty(promptMethods)) {
+            printWriter.println("import " + ServerPrompt.class.getName() + ";");
+            printWriter.println("import " + tech.smartboot.feat.ai.mcp.model.Prompt.class.getName() + ";");
+            printWriter.println("import " + RoleEnum.class.getName() + ";");
+            printWriter.println("import " + PromptMessage.class.getName() + ";");
+        }
+        if (FeatUtils.isNotEmpty(toolMethods)) {
+            printWriter.println("import " + ServerTool.class.getName() + ";");
+            printWriter.println("import " + ToolResult.class.getName() + ";");
+        }
         super.serializeImport();
     }
 
@@ -61,12 +82,11 @@ final class McpEndpointSerializer extends AbstractSerializer {
 
     public void serializeAutowired() {
         super.serializeAutowired();
-        McpEndpoint controller = element.getAnnotation(McpEndpoint.class);
-        List<Element> toolMethods = element.getEnclosedElements().stream().filter(e -> e.getAnnotation(Tool.class) != null).collect(Collectors.toList());
-        if (FeatUtils.isNotEmpty(toolMethods)) {
-            if (controller == null) {
-                throw new FeatException("@Tool is only supported for use in classes marked with the @McpEndpoint annotation!");
-            }
+
+        if (FeatUtils.isNotEmpty(toolMethods) || FeatUtils.isNotEmpty(promptMethods)) {
+//            if (controller == null) {
+//                throw new FeatException("@Tool is only supported for use in classes marked with the @McpEndpoint annotation!");
+//            }
             printWriter.println("\t\tmcpServer.getOptions()");
             //配置McpOptions
             if (FeatUtils.isNotBlank(controller.mcpStreamableEndpoint())) {
@@ -103,7 +123,7 @@ final class McpEndpointSerializer extends AbstractSerializer {
                 toolName = element + "-" + toolMethod.getSimpleName().toString();
             }
             printWriter.println("\t\t{");
-            printWriter.println("\t\t\t" + ServerTool.class.getName() + " tool = " + ServerTool.class.getName() + ".of(\"" + toolName + "\");");
+            printWriter.println("\t\t\t" + ServerTool.class.getSimpleName() + " tool = " + ServerTool.class.getSimpleName() + ".of(\"" + toolName + "\");");
             if (FeatUtils.isNotBlank(tool.description())) {
                 printWriter.println("\t\t\ttool.description(\"" + tool.description() + "\");");
             }
@@ -119,6 +139,28 @@ final class McpEndpointSerializer extends AbstractSerializer {
             printWriter.println("\t\t}");
         }
 
+        for (Element t : promptMethods) {
+            ExecutableElement promptMethod = (ExecutableElement) t;
+            Prompt prompt = promptMethod.getAnnotation(Prompt.class);
+            String name = prompt.name();
+            if (FeatUtils.isBlank(name)) {
+                name = element + "-" + promptMethod.getSimpleName().toString();
+            }
+            printWriter.println("\t\t{");
+            printWriter.append("\t\t\tmcpServer.addPrompt(").append(ServerPrompt.class.getSimpleName()).append(".of(\"").append(name).append("\")");
+            if (FeatUtils.isNotBlank(prompt.description())) {
+                printWriter.append("\n\t\t\t\t\t.description(\"").append(prompt.description()).append("\")");
+            }
+            //入参
+            String inputParams = serializePromptArguments(printWriter, promptMethod);
+            //出参
+//            serializeOutputSchema(printWriter, toolMethod.getReturnType());
+
+            //doAction
+            serializePromptAction(printWriter, promptMethod, inputParams);
+            printWriter.println("\t\t\t);");
+            printWriter.println("\t\t}");
+        }
     }
 
     @Override
@@ -141,9 +183,9 @@ final class McpEndpointSerializer extends AbstractSerializer {
         printWriter.println("\t\t\ttool.doAction(ctx -> {");
         printWriter.println("\t\t\t\t" + returnType + " result = bean." + toolMethod.getSimpleName() + "(" + inputParams + ");");
         if (String.class.getName().equals(returnType.toString())) {
-            printWriter.println("\t\t\t\treturn tech.smartboot.feat.ai.mcp.model.ToolResult.ofText(result);");
+            printWriter.println("\t\t\t\treturn ToolResult.ofText(result);");
         } else if (returnType.getKind().isPrimitive()) {
-            printWriter.println("\t\t\t\treturn tech.smartboot.feat.ai.mcp.model.ToolResult.ofText(String.valueOf(result));");
+            printWriter.println("\t\t\t\treturn ToolResult.ofText(String.valueOf(result));");
         } else if (processingEnv.getTypeUtils().isSubtype(returnType, processingEnv.getElementUtils().getTypeElement(ToolResult.class.getName()).asType())) {
             printWriter.println("\t\t\t\treturn result;");
         } else {
@@ -155,16 +197,16 @@ final class McpEndpointSerializer extends AbstractSerializer {
 
     private void serializeOutputSchema(PrintWriter printWriter, TypeMirror returnType) {
         if (returnType.getKind().isPrimitive()) {
-            printWriter.println("\t\t\ttool.outputSchema(" + ServerTool.class.getName() + ".stringProperty(\"result\", \"返回结果\"));");
+            printWriter.println("\t\t\ttool.outputSchema(" + ServerTool.class.getSimpleName() + ".stringProperty(\"result\", \"返回结果\"));");
         } else {
-            printWriter.println("\t\t\ttool.outputSchema(" + ServerTool.class.getName() + ".stringProperty(\"result\", \"返回结果\"));");
+            printWriter.println("\t\t\ttool.outputSchema(" + ServerTool.class.getSimpleName() + ".stringProperty(\"result\", \"返回结果\"));");
         }
     }
 
     private String serializeInputSchema(PrintWriter printWriter, ExecutableElement toolMethod) {
         StringBuilder inputParams = new StringBuilder();
         for (VariableElement param : toolMethod.getParameters()) {
-            ToolParam toolParam = param.getAnnotation(ToolParam.class);
+            Param toolParam = param.getAnnotation(Param.class);
             String description = "";
             boolean required = false;
             if (toolParam != null) {
@@ -173,28 +215,89 @@ final class McpEndpointSerializer extends AbstractSerializer {
             }
             if (param.asType().toString().equals("java.lang.String")) {
                 if (required) {
-                    printWriter.println("\t\t\ttool.inputSchema(" + ServerTool.class.getName() + ".requiredStringProperty(\"" + param.getSimpleName().toString() + "\", \"" + description + "\"));");
+                    printWriter.println("\t\t\ttool.inputSchema(" + ServerTool.class.getSimpleName() + ".requiredStringProperty(\"" + param.getSimpleName().toString() + "\", \"" + description + "\"));");
                 } else {
-                    printWriter.println("\t\t\ttool.inputSchema(" + ServerTool.class.getName() + ".stringProperty(\"" + param.getSimpleName().toString() + "\", \"" + description + "\"));");
+                    printWriter.println("\t\t\ttool.inputSchema(" + ServerTool.class.getSimpleName() + ".stringProperty(\"" + param.getSimpleName().toString() + "\", \"" + description + "\"));");
                 }
                 inputParams.append("ctx.getArguments().getString(\"").append(param.getSimpleName()).append("\"), ");
             } else if (param.asType().toString().equals("int")) {
                 if (required) {
-                    printWriter.println("\t\t\ttool.inputSchema(" + ServerTool.class.getName() + ".requiredNumberProperty(\"" + param.getSimpleName().toString() + "\", \"" + description + "\"));");
+                    printWriter.println("\t\t\ttool.inputSchema(" + ServerTool.class.getSimpleName() + ".requiredNumberProperty(\"" + param.getSimpleName().toString() + "\", \"" + description + "\"));");
                 } else {
-                    printWriter.println("\t\t\ttool.inputSchema(" + ServerTool.class.getName() + ".numberProperty(\"" + param.getSimpleName().toString() + "\", \"" + description + "\"));");
+                    printWriter.println("\t\t\ttool.inputSchema(" + ServerTool.class.getSimpleName() + ".numberProperty(\"" + param.getSimpleName().toString() + "\", \"" + description + "\"));");
                 }
                 inputParams.append("ctx.getArguments().getIntValue(\"").append(param.getSimpleName()).append("\"), ");
             } else if (param.asType().toString().equals("boolean")) {
                 if (required) {
-                    printWriter.println("\t\t\ttool.inputSchema(" + ServerTool.class.getName() + ".requiredBoolProperty(\"" + param.getSimpleName().toString() + "\", \"" + description + "\"));");
+                    printWriter.println("\t\t\ttool.inputSchema(" + ServerTool.class.getSimpleName() + ".requiredBoolProperty(\"" + param.getSimpleName().toString() + "\", \"" + description + "\"));");
                 } else {
-                    printWriter.println("\t\t\ttool.inputSchema(" + ServerTool.class.getName() + ".boolProperty(\"" + param.getSimpleName().toString() + "\", \"" + description + "\"));");
+                    printWriter.println("\t\t\ttool.inputSchema(" + ServerTool.class.getSimpleName() + ".boolProperty(\"" + param.getSimpleName().toString() + "\", \"" + description + "\"));");
                 }
                 inputParams.append("ctx.getArguments().getBooleanValue(\"").append(param.getSimpleName()).append("\"), ");
             }
         }
 
         return inputParams.length() > 2 ? inputParams.substring(0, inputParams.length() - 2) : "";
+    }
+
+    private String serializePromptArguments(PrintWriter printWriter, ExecutableElement toolMethod) {
+        StringBuilder inputParams = new StringBuilder();
+        for (VariableElement param : toolMethod.getParameters()) {
+            Param toolParam = param.getAnnotation(Param.class);
+            String description = "";
+            boolean required = false;
+            if (toolParam != null) {
+                description = toolParam.description();
+                required = toolParam.required();
+            }
+            if (required) {
+                printWriter.append("\n\t\t\t\t\t.arguments(").append(tech.smartboot.feat.ai.mcp.model.Prompt.class.getSimpleName()).append(".requiredArgument(\"").append(param.getSimpleName().toString()).append("\", \"").append(description).append("\"))");
+            } else {
+                printWriter.append("\n\t\t\t\t\t.arguments(").append(tech.smartboot.feat.ai.mcp.model.Prompt.class.getSimpleName()).append(".argument(\"").append(param.getSimpleName().toString()).append("\", \"").append(description).append("\"))");
+            }
+            if (param.asType().toString().equals("java.lang.String")) {
+                inputParams.append("ctx.getArguments().getString(\"").append(param.getSimpleName()).append("\"), ");
+            } else if (param.asType().toString().equals("int")) {
+                inputParams.append("ctx.getArguments().getIntValue(\"").append(param.getSimpleName()).append("\"), ");
+            } else if (param.asType().toString().equals("boolean")) {
+                inputParams.append("ctx.getArguments().getBooleanValue(\"").append(param.getSimpleName()).append("\"), ");
+            } else {
+                throw new FeatException("参数类型不支持");
+            }
+        }
+
+        return inputParams.length() > 2 ? inputParams.substring(0, inputParams.length() - 2) : "";
+    }
+
+    private void serializePromptAction(PrintWriter printWriter, ExecutableElement promptMethod, String inputParams) {
+        TypeMirror returnType = promptMethod.getReturnType();
+        Prompt prompt = promptMethod.getAnnotation(Prompt.class);
+        printWriter.println("\n\t\t\t\t\t.doAction(ctx -> {");
+        if (String.class.getName().equals(returnType.toString())) {
+            printWriter.println("\t\t\t\t\t\tString result = bean." + promptMethod.getSimpleName() + "(" + inputParams + ");");
+            if (prompt.type() == PromptType.TEXT) {
+                printWriter.println("\t\t\t\t\t\treturn PromptMessage.ofText(" + RoleEnum.class.getSimpleName() + "." + prompt.role() + ", result);");
+            } else if (prompt.type() == PromptType.IMAGE) {
+                printWriter.println("\t\t\t\t\t\treturn PromptMessage.ofImage(" + RoleEnum.class.getSimpleName() + "." + prompt.role() + ", result, \"" + prompt.mineType() + "\");");
+            } else if (prompt.type() == PromptType.AUDIO) {
+                printWriter.println("\t\t\t\t\t\treturn PromptMessage.ofAudio(" + RoleEnum.class.getSimpleName() + "." + prompt.role() + ", result, \"" + prompt.mineType() + "\");");
+            } else if (prompt.type() == PromptType.EMBEDDED_RESOURCE) {
+                throw new FeatException("When the type of the @Prompt annotation is PromptType.EMBEDDED_RESOURCE, the result must be returned via PromptMessage.ofEmbeddedResource. please check [" + element.toString() + "@" + promptMethod.getSimpleName() + "]");
+            } else {
+                throw new FeatException("不支持的返回类型");
+            }
+        } else if (returnType.getKind().isPrimitive()) {
+            if (prompt.type() != PromptType.TEXT) {
+                throw new FeatException("When the return type of [" + element.toString() + "@" + promptMethod.getSimpleName() + "] is " + returnType.getKind() + ", the type of the @Prompt annotation must be PromptType.TEXT.");
+            }
+            printWriter.println("\t\t\t\t\t\t" + returnType + " result = bean." + promptMethod.getSimpleName() + "(" + inputParams + ");");
+            printWriter.println("\t\t\t\t\t\treturn PromptMessage.ofText(" + RoleEnum.class.getSimpleName() + "." + prompt.role() + ", String.valueOf(result));");
+        } else if (PromptMessage.class.getName().equals(((DeclaredType) returnType).asElement().toString())) {
+            printWriter.println("\t\t\t\t\t\treturn bean." + promptMethod.getSimpleName() + "(" + inputParams + ");");
+        } else {
+            throw new FeatException("unSupport returnType[" + returnType + "] , please check [" + element.toString() + "@" + promptMethod.getSimpleName() + "]");
+        }
+
+        printWriter.println("\t\t\t\t\t})");
     }
 }

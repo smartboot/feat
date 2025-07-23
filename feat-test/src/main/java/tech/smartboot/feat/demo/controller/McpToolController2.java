@@ -14,7 +14,7 @@ package tech.smartboot.feat.demo.controller;
 import tech.smartboot.feat.ai.mcp.model.ToolResult;
 import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
 import tech.smartboot.feat.cloud.annotation.mcp.Tool;
-import tech.smartboot.feat.cloud.annotation.mcp.ToolParam;
+import tech.smartboot.feat.cloud.annotation.mcp.Param;
 
 /**
  * @author 三刀 zhengjunweimail@163.com
@@ -26,53 +26,53 @@ import tech.smartboot.feat.cloud.annotation.mcp.ToolParam;
 public class McpToolController2 {
 
     @Tool(description = "测试工具")
-    public String tool1(@ToolParam(required = true, description = "参数1") String param1, @ToolParam(required = false, description = "参数2") int param2, boolean param3) {
+    public String tool1(@Param(required = true, description = "参数1") String param1, @Param(required = false, description = "参数2") int param2, boolean param3) {
         return "hello " + param1;
     }
 
     @Tool(description = "测试工具")
-    public boolean tool2(@ToolParam(required = true, description = "参数1") String param1, @ToolParam(required = false, description = "参数2") int param2, boolean param3) {
+    public boolean tool2(@Param(required = true, description = "参数1") String param1, @Param(required = false, description = "参数2") int param2, boolean param3) {
         return true;
     }
 
     @Tool(description = "测试工具")
-    public int tool3(@ToolParam(required = true, description = "参数1") String param1, @ToolParam(required = false, description = "参数2") int param2, boolean param3) {
+    public int tool3(@Param(required = true, description = "参数1") String param1, @Param(required = false, description = "参数2") int param2, boolean param3) {
         return 0;
     }
 
     @Tool(description = "测试工具")
-    public float tool4(@ToolParam(required = true, description = "参数1") String param1, @ToolParam(required = false, description = "参数2") int param2, boolean param3) {
+    public float tool4(@Param(required = true, description = "参数1") String param1, @Param(required = false, description = "参数2") int param2, boolean param3) {
         return 0;
     }
 
     @Tool(description = "测试工具")
-    public short tool5(@ToolParam(required = true, description = "参数1") String param1, @ToolParam(required = false, description = "参数2") int param2, boolean param3) {
+    public short tool5(@Param(required = true, description = "参数1") String param1, @Param(required = false, description = "参数2") int param2, boolean param3) {
         return 0;
     }
 
     @Tool(description = "测试工具")
-    public long tool6(@ToolParam(required = true, description = "参数1") String param1, @ToolParam(required = false, description = "参数2") int param2, boolean param3) {
+    public long tool6(@Param(required = true, description = "参数1") String param1, @Param(required = false, description = "参数2") int param2, boolean param3) {
         return 0;
     }
 
     @Tool(description = "测试工具")
-    public double tool7(@ToolParam(required = true, description = "参数1") String param1, @ToolParam(required = false, description = "参数2") int param2, boolean param3) {
+    public double tool7(@Param(required = true, description = "参数1") String param1, @Param(required = false, description = "参数2") int param2, boolean param3) {
         return 0;
     }
 
 
     @Tool(description = "测试工具")
-    public byte tool8(@ToolParam(required = true, description = "参数1") String param1, @ToolParam(required = false, description = "参数2") int param2, boolean param3) {
+    public byte tool8(@Param(required = true, description = "参数1") String param1, @Param(required = false, description = "参数2") int param2, boolean param3) {
         return 0;
     }
 
     @Tool(description = "测试工具")
-    public ToolResult.ImageContent tool9(@ToolParam(required = true, description = "参数1") String param1, @ToolParam(required = false, description = "参数2") int param2, boolean param3) {
+    public ToolResult.ImageContent tool9(@Param(required = true, description = "参数1") String param1, @Param(required = false, description = "参数2") int param2, boolean param3) {
         return ToolResult.ofImage("data", "mimeType");
     }
 
     @Tool(description = "测试工具")
-    public ToolResult.TextContent tool10(@ToolParam(required = true, description = "参数1") String param1, @ToolParam(required = false, description = "参数2") int param2, boolean param3) {
+    public ToolResult.TextContent tool10(@Param(required = true, description = "参数1") String param1, @Param(required = false, description = "参数2") int param2, boolean param3) {
         return ToolResult.ofText("aaaaa");
     }
 
