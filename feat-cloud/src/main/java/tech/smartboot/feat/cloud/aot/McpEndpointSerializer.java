@@ -18,6 +18,7 @@ import tech.smartboot.feat.ai.mcp.server.McpServer;
 import tech.smartboot.feat.ai.mcp.server.model.ServerPrompt;
 import tech.smartboot.feat.ai.mcp.server.model.ServerResource;
 import tech.smartboot.feat.ai.mcp.server.model.ServerTool;
+import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
 import tech.smartboot.feat.cloud.annotation.mcp.Param;
 import tech.smartboot.feat.cloud.annotation.mcp.Prompt;
@@ -34,6 +35,7 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -88,7 +90,48 @@ final class McpEndpointSerializer extends AbstractSerializer {
     }
 
     public void serializeAutowired() {
-        super.serializeAutowired();
+        List<Element> autowiredFields = new ArrayList<>();
+        for (Element field : element.getEnclosedElements()) {
+            if (field.getAnnotation(Autowired.class) != null) {
+                autowiredFields.add(field);
+            }
+        }
+        for (Element field : autowiredFields) {
+            String name = field.getSimpleName().toString();
+            name = name.substring(0, 1).toUpperCase() + name.substring(1);
+
+            //判断是否存在setter方法
+            boolean hasSetter = false;
+            for (Element se : element.getEnclosedElements()) {
+                if (!("set" + name).equals(se.getSimpleName().toString())) {
+                    continue;
+                }
+                List<? extends VariableElement> list = ((ExecutableElement) se).getParameters();
+                if (list.size() != 1) {
+                    continue;
+                }
+                VariableElement param = list.get(0);
+                if (!param.asType().toString().equals(field.asType().toString())) {
+                    continue;
+                }
+                hasSetter = true;
+            }
+            if (hasSetter) {
+                if(field.asType().toString().equals(McpServer.class.getName())){
+                    printWriter.append("\t\tbean.set").append(name).append("(mcpServer);\n");
+                }else{
+                    printWriter.append("\t\tbean.set").append(name).append("(loadBean(\"").append(field.getSimpleName()).append("\", applicationContext));\n");
+                }
+
+            } else {
+                if(field.asType().toString().equals(McpServer.class.getName())){
+                    printWriter.append("\t\treflectAutowired(bean, \"").append(field.getSimpleName().toString()).append("\", mcpServer);\n");
+                }else{
+                    printWriter.append("\t\treflectAutowired(bean, \"").append(String.valueOf(field.getSimpleName())).append("\", loadBean(\"").append(field.getSimpleName().toString()).append("\", applicationContext));\n");
+                }
+            }
+        }
+        serializerValueSetter();
 
         if (FeatUtils.isNotEmpty(toolMethods) || FeatUtils.isNotEmpty(promptMethods)) {
 //            if (controller == null) {

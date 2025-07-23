@@ -143,7 +143,7 @@ abstract class AbstractSerializer implements Serializer {
             if (hasSetter) {
                 printWriter.append("\t\tbean.set").append(name).append("(loadBean(\"").append(field.getSimpleName()).append("\", applicationContext));\n");
             } else {
-                printWriter.append("\t\treflectAutowired(bean, \"").append(field.getSimpleName().toString()).append("\", applicationContext);\n");
+                printWriter.append("\t\treflectAutowired(bean, \"").append(String.valueOf(field.getSimpleName())).append("\", loadBean(\"").append(field.getSimpleName().toString()).append("\", applicationContext));\n");
             }
         }
         serializerValueSetter();

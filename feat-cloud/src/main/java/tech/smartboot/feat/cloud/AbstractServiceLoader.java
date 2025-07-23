@@ -206,9 +206,10 @@ public abstract class AbstractServiceLoader implements CloudService {
         return result;
     }
 
-    protected void reflectAutowired(Object bean, String fieldName, ApplicationContext context) throws NoSuchFieldException, IllegalAccessException {
+    protected void reflectAutowired(Object bean, String fieldName, Object val) throws NoSuchFieldException, IllegalAccessException {
         Field field = bean.getClass().getDeclaredField(fieldName);
         field.setAccessible(true);
-        field.set(bean, loadBean(fieldName, context));
+        field.set(bean, val);
     }
+
 }

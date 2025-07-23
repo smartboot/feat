@@ -15,6 +15,8 @@ import tech.smartboot.feat.ai.mcp.enums.PromptType;
 import tech.smartboot.feat.ai.mcp.enums.RoleEnum;
 import tech.smartboot.feat.ai.mcp.model.PromptMessage;
 import tech.smartboot.feat.ai.mcp.model.ToolResult;
+import tech.smartboot.feat.ai.mcp.server.McpServer;
+import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
 import tech.smartboot.feat.cloud.annotation.mcp.Param;
 import tech.smartboot.feat.cloud.annotation.mcp.Prompt;
@@ -31,6 +33,9 @@ import java.util.Base64;
         , mcpSseMessageEndpoint = "/main/sse/message"
         , mcpStreamableEndpoint = "/main/mcp")
 public class McpToolMainController {
+
+    @Autowired
+    private McpServer mcpServer;
 
     @Tool(description = "测试工具")
     public String tool1(@Param(required = true, description = "参数1") String param1, @Param(required = false, description = "参数2") int param2, boolean param3) {
@@ -122,4 +127,9 @@ public class McpToolMainController {
     public String resourceBin() {
         return "text";
     }
+
+//    @Resource(uri = "/resource/text1", name = "text", description = "text", isText = false)
+//    public ServerResource resourceBin1() {
+//        return ServerResource.ofBinary("/resource/text1", "text");
+//    }
 }
