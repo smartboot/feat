@@ -12,6 +12,7 @@ package tech.smartboot.feat.cloud.mcp;
 
 import tech.smartboot.feat.ai.mcp.model.ToolResult;
 import tech.smartboot.feat.ai.mcp.server.model.ServerTool;
+import tech.smartboot.feat.cloud.Serializer;
 import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
 import tech.smartboot.feat.cloud.annotation.mcp.Tool;
 import tech.smartboot.feat.cloud.annotation.mcp.ToolParam;
@@ -32,60 +33,50 @@ import java.util.stream.Collectors;
  * @author 三刀
  * @version v1.0 7/20/25
  */
-public class McpServerSerializer {
+public class McpServerSerializer implements Serializer {
     private final FeatYamlValueSerializer yamlValueSerializer;
     public static final String DEFAULT_BEAN_NAME = "mcpServer" + System.nanoTime();
+    private ProcessingEnvironment processingEnv;
 
-    public McpServerSerializer(FeatYamlValueSerializer yamlValueSerializer) {
+    public McpServerSerializer(ProcessingEnvironment processingEnv, FeatYamlValueSerializer yamlValueSerializer) {
+        this.processingEnv = processingEnv;
         this.yamlValueSerializer = yamlValueSerializer;
     }
 
-    public void serialize(ProcessingEnvironment processingEnv, PrintWriter printWriter, Element element) {
+    public void serializeAutowired(PrintWriter printWriter, Element element) {
         McpEndpoint controller = element.getAnnotation(McpEndpoint.class);
         List<Element> toolMethods = element.getEnclosedElements().stream().filter(e -> e.getAnnotation(Tool.class) != null).collect(Collectors.toList());
         if (FeatUtils.isNotEmpty(toolMethods)) {
             if (controller == null) {
                 throw new FeatException("@Tool is only supported for use in classes marked with the @McpEndpoint annotation!");
             }
-            printWriter.println("\t\ttech.smartboot.feat.ai.mcp.server.McpServer mcpServer = new tech.smartboot.feat.ai.mcp.server.McpServer(");
-            printWriter.println("\t\t\t\topts -> opts");
+            printWriter.println("\t\tmcpServer.getOptions()");
             //配置McpOptions
             if (FeatUtils.isNotBlank(controller.mcpStreamableEndpoint())) {
-                printWriter.append("\t\t\t\t\t\t.setMcpEndpoint(\"").append(controller.mcpStreamableEndpoint()).println("\")");
+                printWriter.append("\t\t\t\t.setMcpEndpoint(\"").append(controller.mcpStreamableEndpoint()).println("\")");
             }
             if (FeatUtils.isNotBlank(controller.mcpSseEndpoint())) {
-                printWriter.append("\t\t\t\t\t\t.setSseEndpoint(\"").append(controller.mcpSseEndpoint()).println("\")");
+                printWriter.append("\t\t\t\t.setSseEndpoint(\"").append(controller.mcpSseEndpoint()).println("\")");
             }
             if (FeatUtils.isNotBlank(controller.mcpSseMessageEndpoint())) {
-                printWriter.append("\t\t\t\t\t\t.setSseMessageEndpoint(\"").append(controller.mcpSseMessageEndpoint()).println("\")");
+                printWriter.append("\t\t\t\t.setSseMessageEndpoint(\"").append(controller.mcpSseMessageEndpoint()).println("\")");
             }
             if (controller.toolEnable()) {
-                printWriter.println("\t\t\t\t\t\t.toolEnable()");
+                printWriter.println("\t\t\t\t.toolEnable()");
             }
             if (controller.resourceEnable()) {
-                printWriter.println("\t\t\t\t\t\t.resourceEnable()");
+                printWriter.println("\t\t\t\t.resourceEnable()");
             }
             if (controller.loggingEnable()) {
-                printWriter.println("\t\t\t\t\t\t.loggingEnable()");
+                printWriter.println("\t\t\t\t.loggingEnable()");
             }
             if (controller.promptsEnable()) {
-                printWriter.println("\t\t\t\t\t\t.promptsEnable()");
+                printWriter.println("\t\t\t\t.promptsEnable()");
             }
-            printWriter.println("\t\t\t\t\t\t.getImplementation()");
-            printWriter.append("\t\t\t\t\t\t.setName(\"").append(controller.name()).println("\")");
-            printWriter.append("\t\t\t\t\t\t.setTitle(\"").append(controller.title()).println("\")");
-            printWriter.append("\t\t\t\t\t\t.setVersion(\"").append(controller.version()).println("\"));");
-
-            //注册Router
-            if (FeatUtils.isNotBlank(controller.mcpStreamableEndpoint())) {
-                printWriter.println("\t\tapplicationContext.getRouter().route(\"" + controller.mcpStreamableEndpoint() + "\", mcpServer.mcpHandler());");
-            }
-            if (FeatUtils.isNotBlank(controller.mcpSseEndpoint())) {
-                printWriter.println("\t\tapplicationContext.getRouter().route(\"" + controller.mcpSseEndpoint() + "\", mcpServer.sseHandler());");
-            }
-            if (FeatUtils.isNotBlank(controller.mcpSseMessageEndpoint())) {
-                printWriter.println("\t\tapplicationContext.getRouter().route(\"" + controller.mcpSseMessageEndpoint() + "\", mcpServer.sseMessageHandler());");
-            }
+            printWriter.println("\t\t\t\t.getImplementation()");
+            printWriter.append("\t\t\t\t.setName(\"").append(controller.name()).println("\")");
+            printWriter.append("\t\t\t\t.setTitle(\"").append(controller.title()).println("\")");
+            printWriter.append("\t\t\t\t.setVersion(\"").append(controller.version()).println("\");");
         }
         for (Element t : toolMethods) {
             ExecutableElement toolMethod = (ExecutableElement) t;
@@ -105,7 +96,7 @@ public class McpServerSerializer {
             serializeOutputSchema(printWriter, toolMethod.getReturnType());
 
             //doAction
-            serializeDoAction(processingEnv, printWriter, toolMethod, inputParams);
+            serializeDoAction(printWriter, toolMethod, inputParams);
 
             printWriter.println("\t\t\tmcpServer.addTool(tool);");
             printWriter.println("\t\t}");
@@ -113,7 +104,22 @@ public class McpServerSerializer {
 
     }
 
-    private void serializeDoAction(ProcessingEnvironment processingEnv, PrintWriter printWriter, ExecutableElement toolMethod, String inputParams) {
+    @Override
+    public void serializeRouter(PrintWriter printWriter, Element element) {
+        McpEndpoint mcpEndpoint = element.getAnnotation(McpEndpoint.class);
+        //注册Router
+        if (FeatUtils.isNotBlank(mcpEndpoint.mcpStreamableEndpoint())) {
+            printWriter.println("\t\tapplicationContext.getRouter().route(\"" + mcpEndpoint.mcpStreamableEndpoint() + "\", mcpServer.mcpHandler());");
+        }
+        if (FeatUtils.isNotBlank(mcpEndpoint.mcpSseEndpoint())) {
+            printWriter.println("\t\tapplicationContext.getRouter().route(\"" + mcpEndpoint.mcpSseEndpoint() + "\", mcpServer.sseHandler());");
+        }
+        if (FeatUtils.isNotBlank(mcpEndpoint.mcpSseMessageEndpoint())) {
+            printWriter.println("\t\tapplicationContext.getRouter().route(\"" + mcpEndpoint.mcpSseMessageEndpoint() + "\", mcpServer.sseMessageHandler());");
+        }
+    }
+
+    private void serializeDoAction(PrintWriter printWriter, ExecutableElement toolMethod, String inputParams) {
         TypeMirror returnType = toolMethod.getReturnType();
         printWriter.println("\t\t\ttool.doAction(ctx -> {");
         printWriter.println("\t\t\t\t" + returnType + " result = bean." + toolMethod.getSimpleName() + "(" + inputParams + ");");

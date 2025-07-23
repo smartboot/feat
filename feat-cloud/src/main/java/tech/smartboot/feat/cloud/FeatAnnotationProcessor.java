@@ -92,7 +92,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
 
     FileObject serviceFile;
     PrintWriter serviceWrite;
-    private boolean exception = false;
+    private Throwable exception = null;
     private final List<String> services = new ArrayList<>();
     private FeatYamlValueSerializer yamlValueSerializer;
 
@@ -109,7 +109,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         }
         System.out.println("processor init: " + this);
         yamlValueSerializer = new FeatYamlValueSerializer(processingEnv, services);
-        mcpServerSerializer = new McpServerSerializer(yamlValueSerializer);
+        mcpServerSerializer = new McpServerSerializer(processingEnv, yamlValueSerializer);
     }
 
     @Override
@@ -126,8 +126,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                 try {
                     createAptLoader(element, bean);
                 } catch (Throwable e) {
-                    System.err.println("createAptLoader error: " + element.getSimpleName() + " " + e.getMessage());
-                    exception = true;
+                    exception = e;
                 }
             }
         }
@@ -139,8 +138,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                 }
                 createAptLoader(element, controller);
             } catch (Throwable e) {
-                System.err.println("createAptLoader error: " + element.getSimpleName() + " " + e.getMessage());
-                exception = true;
+                exception = e;
             }
         }
 
@@ -149,8 +147,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             try {
                 createAptLoader(element, mcpEndpoint);
             } catch (Throwable e) {
-                System.err.println("createAptLoader error: " + element.getSimpleName() + " " + e.getMessage());
-                exception = true;
+                exception = e;
             }
         }
 
@@ -159,8 +156,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             try {
                 createAptLoader(element, mapper);
             } catch (Throwable e) {
-                System.err.println("createAptLoader error: " + element.getSimpleName() + " " + e.getMessage());
-                exception = true;
+                exception = e;
             }
         }
         // 如果不希望后续的处理器继续处理这些注解，返回 true，否则返回 false
@@ -169,7 +165,9 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         }
         serviceWrite.flush();
 
-        if (exception || yamlValueSerializer.isException()) {
+        Throwable throwable = exception == null ? yamlValueSerializer.isException() : exception;
+        if (throwable != null) {
+            throwable.printStackTrace();
             throw new FeatException("编译失败！请根据提示修复错误，或者联系开发者：https://gitee.com/smartboot/feat/issues");
         }
         return false;
@@ -239,7 +237,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         printWriter.append(generateAutoWriedMethod(element, annotation));
         printWriter.append(yamlValueSerializer.generateValueSetter(element));
         //注册MCP 服务
-        mcpServerSerializer.serialize(processingEnv, printWriter, element);
+        mcpServerSerializer.serializeAutowired(printWriter, element);
         printWriter.println("\t}");
         printWriter.println();
 
@@ -247,6 +245,10 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         Map<String, String> bytesCache = new HashMap<>();
         if (annotation instanceof Controller) {
             createController(element, (Controller) annotation, printWriter, bytesCache);
+        }
+        if (annotation instanceof McpEndpoint) {
+            //注册MCP 服务
+            mcpServerSerializer.serializeRouter(printWriter, element);
         }
         //扫描拦截器
         addInterceptor(element, printWriter);

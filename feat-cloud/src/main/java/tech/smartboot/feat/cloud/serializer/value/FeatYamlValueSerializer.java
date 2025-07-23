@@ -52,7 +52,7 @@ public class FeatYamlValueSerializer {
     private static final String CLASS_NAME = "FeatCloudOptionsBeanAptLoader";
     public static final String SERVICE_NAME = PACKAGE + "." + CLASS_NAME;
     private String config;
-    private boolean exception = false;
+    private Throwable exception;
     private final ProcessingEnvironment processingEnv;
     private final Set<String> availableTypes = new HashSet<>(Arrays.asList(String.class.getName(), int.class.getName()));
     private final Map<String, AbstractSerializer> serializers = new HashMap<>();
@@ -93,8 +93,7 @@ public class FeatYamlValueSerializer {
             createServerOptionsBean();
             services.add(SERVICE_NAME);
         } catch (Throwable e) {
-            logger.error("FeatYamlValueSerializer create server options bean failed", e);
-            exception = true;
+            exception = e;
         } finally {
             featFile.delete();
         }
@@ -216,7 +215,7 @@ public class FeatYamlValueSerializer {
             }
             if (!hasSetter) {
                 System.err.println("compiler err: no setter method for field[ " + field.getSimpleName() + " ] in class[ " + field.getEnclosingElement() + " ]");
-                exception = true;
+                exception = new FeatException("compiler err: no setter method for field[ " + field.getSimpleName() + " ] in class[ " + field.getEnclosingElement() + " ]");
                 return;
             }
 
@@ -226,17 +225,17 @@ public class FeatYamlValueSerializer {
                     stringBuilder.append("\t\tbean.set").append(name).append("(").append(serializer.serialize(field, paramValue)).append(");\n");
                 } catch (Throwable e) {
                     System.err.println(e.getMessage());
-                    exception = true;
+                    exception = e;
                 }
             } else {
                 System.err.println("compiler err: unsupported type [ " + fieldType + " ] for field[ " + field.getSimpleName() + " ] in class[ " + field.getEnclosingElement() + " ]");
-                exception = true;
+                exception = new FeatException("compiler err: unsupported type [ " + fieldType + " ] for field[ " + field.getSimpleName() + " ] in class[ " + field.getEnclosingElement() + " ]");
             }
         });
         return stringBuilder.toString();
     }
 
-    public boolean isException() {
+    public Throwable isException() {
         return exception;
     }
 
