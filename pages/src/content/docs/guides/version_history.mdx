@@ -17,14 +17,19 @@ import { Image } from '@astrojs/starlight/components';
     - 修复 Runlogger 未实现日志级别判定的问题。
     - 修复关闭进程时可能触发的 RunLogger 空指针问题。
     - 版本号的定义从 `ServerOptions.java` 迁移至 `Feat.java`。
-    - 新增 MCP 特性（孵化中）
+- **Feat AI：**
+    - 新增 MCP 规范实现
 - **Feat Cloud**
   - 新增`@HttpClient`注解，用于发起 HTTP 请求。
   - 支持响应结果为 bool 值的 HTTP 接口服务。
   - 预定义高频使用的byte数组，节省 APT 编译产生的常量bytes.
   - @Controller 增加配置项：gzip、gzipThreshold，用于配置gzip响应策略。
+  - 新增基于注解的 MCP Server 开发能力。
+  - 重构 AOT 代码，提升扩展性。
 ### 升级指南
+无
 ### 兼容性说明
+无
 
 ---
 
