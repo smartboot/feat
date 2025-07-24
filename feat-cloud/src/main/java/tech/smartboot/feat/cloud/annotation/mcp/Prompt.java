@@ -28,6 +28,8 @@ import java.lang.annotation.Target;
  *
  * @author 三刀
  * @version v1.0 7/21/25
+ * @see <a href="https://modelcontextprotocol.io/specification#prompts">MCP Prompts</a>
+ * @see <a href="https://modelcontextprotocol.io/specification#prompt">MCP Prompt Object</a>
  */
 @Target({ElementType.METHOD})
 @Retention(RetentionPolicy.SOURCE)
@@ -35,33 +37,45 @@ import java.lang.annotation.Target;
 public @interface Prompt {
     /**
      * 提示词名称，必须唯一
-     * 对应MCP协议中提示词的name字段
+     * 对应MCP协议中提示词的name字段，用于唯一标识一个提示词资源
+     * 
+     * @return 提示词名称
      */
     String name();
 
     /**
      * 提示词描述信息
-     * 对应MCP协议中提示词的description字段
+     * 对应MCP协议中提示词的description字段，用于向客户端说明提示词的用途
      * 默认值：空字符串
+     * 
+     * @return 提示词描述文本
      */
     String description() default "";
 
     /**
      * 提示词类型
-     * 对应MCP协议中提示词的type字段，定义提示词的内容类型
+     * 对应MCP协议中提示词的type字段，定义提示词的内容类型。
+     * 
+     * @return 提示词类型枚举值
+     * @see PromptType
      */
     PromptType type();
 
     /**
      * 提示词角色
-     * 对应MCP协议中提示词的role字段，默认为User角色
+     * 对应MCP协议中提示词的role字段，默认为User角色。该字段定义了提示词内容应该由谁（用户或AI）来处理
+     * 
+     * @return 提示词角色枚举值
+     * @see RoleEnum
      */
     RoleEnum role() default RoleEnum.User;
 
     /**
      * 提示词内容的MIME类型
-     * 对应MCP协议中提示词的mimeType字段
+     * 对应MCP协议中提示词的mimeType字段，用于指定提示词内容的格式类型
      * 默认值：空字符串
+     * 
+     * @return MIME类型字符串
      */
     String mineType() default "";
 }

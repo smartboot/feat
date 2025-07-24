@@ -25,6 +25,7 @@ import java.lang.annotation.Target;
  *
  * @author 三刀
  * @version v1.0 7/21/25
+ * @see <a href="https://modelcontextprotocol.io/specification#tool_call">MCP Tool Call</a>
  */
 @Target({ElementType.PARAMETER})
 @Retention(RetentionPolicy.SOURCE)
@@ -33,13 +34,18 @@ public @interface Param {
     /**
      * 参数是否必需
      * 对应JSON Schema中的required字段
+     * 在MCP协议中，此属性用于确定tools/call时参数是否必须提供
+     * @see <a href="https://json-schema.org/draft/2020-12/json-schema-validation.html#rfc.section.6.5.3">JSON Schema Required Fields</a>
      */
     boolean required();
 
     /**
      * 参数描述信息
      * 对应JSON Schema中的description字段
+     * 在MCP协议中，此属性用于向客户端描述参数的用途
      * 默认值：空字符串
+     * 
+     * @return 参数描述文本
      */
     String description() default "";
 }
