@@ -254,8 +254,10 @@ final class McpEndpointSerializer implements Serializer {
             printWriter.println("\t\t\t\treturn ToolResult.ofText(String.valueOf(result));");
         } else if (processingEnv.getTypeUtils().isSubtype(returnType, processingEnv.getElementUtils().getTypeElement(ToolResult.class.getName()).asType())) {
             printWriter.println("\t\t\t\treturn result;");
+        } else if (!returnType.toString().startsWith("java.")) {
+            printWriter.println("\t\t\t\treturn ToolResult.ofStructuredContent(JSONObject.from(result));");
         } else {
-            printWriter.println("\t\t\t\treturn null;");
+            throw new FeatException("unSupport returnType:" + returnType + " please check [" + element.toString() + "@" + toolMethod.getSimpleName() + "]");
         }
 
         printWriter.println("\t\t\t});");
