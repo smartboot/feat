@@ -120,9 +120,6 @@ final class McpEndpointSerializer implements Serializer {
     @Override
     public void serializePostConstruct() {
         if (FeatUtils.isNotEmpty(toolMethods) || FeatUtils.isNotEmpty(promptMethods)) {
-//            if (controller == null) {
-//                throw new FeatException("@Tool is only supported for use in classes marked with the @McpEndpoint annotation!");
-//            }
             printWriter.println("\t\tmcpServer.getOptions()");
             //配置McpOptions
             if (FeatUtils.isNotBlank(this.mcpEndpoint.mcpStreamableEndpoint())) {
@@ -229,6 +226,7 @@ final class McpEndpointSerializer implements Serializer {
             printWriter.println("\t\t\t);");
             printWriter.println("\t\t}");
         }
+        printWriter.println("\t\tprintlnMcp(mcpServer);");
     }
 
     @Override

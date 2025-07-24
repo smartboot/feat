@@ -12,6 +12,12 @@ package tech.smartboot.feat.cloud;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
+import tech.smartboot.feat.ai.mcp.model.ResourceTemplate;
+import tech.smartboot.feat.ai.mcp.server.McpOptions;
+import tech.smartboot.feat.ai.mcp.server.McpServer;
+import tech.smartboot.feat.ai.mcp.server.model.ServerPrompt;
+import tech.smartboot.feat.ai.mcp.server.model.ServerResource;
+import tech.smartboot.feat.ai.mcp.server.model.ServerTool;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.server.HttpRequest;
@@ -212,4 +218,78 @@ public abstract class AbstractServiceLoader implements CloudService {
         field.set(bean, val);
     }
 
+
+    protected void printlnMcp(McpServer mcpServer) {
+        McpOptions options = mcpServer.getOptions();
+        String name = options.getImplementation().getName();
+        String version = options.getImplementation().getVersion();
+        String title = options.getImplementation().getTitle();
+
+        String header = " MCP Server Information ";
+        int borderLength = Math.max(header.length(), 40);
+        StringBuilder borderBuilder = new StringBuilder(borderLength);
+        for (int i = 0; i < borderLength; i++) {
+            borderBuilder.append('=');
+        }
+        String border = borderBuilder.toString();
+
+        System.out.println(border);
+        System.out.println("\033[1;36m" + header + "\033[0m");
+        System.out.println(border);
+
+        // 服务器基本信息
+        System.out.println("\033[1;33mServer Name    \033[0m : " + name);
+        System.out.println("\033[1;33mServer Title   \033[0m : " + title);
+        System.out.println("\033[1;33mServer Version \033[0m : " + version);
+        System.out.println();
+
+        // 端点信息
+        System.out.println("\033[1;34mEndpoints:\033[0m");
+        System.out.println("  MCP Endpoint          : " + options.getMcpEndpoint());
+        System.out.println("  SSE Endpoint          : " + options.getSseEndpoint());
+        System.out.println("  SSE Message Endpoint  : " + options.getSseMessageEndpoint());
+        System.out.println();
+
+        // 功能启用状态
+        System.out.println("\033[1;34mFeatures:\033[0m");
+        System.out.println("  Logging    : " + (options.isLoggingEnable() ? "\033[0;32mENABLED\033[0m" : "\033[0;31mDISABLED\033[0m"));
+        System.out.println("  Prompts    : " + (options.isPromptsEnable() ? "\033[0;32mENABLED\033[0m" : "\033[0;31mDISABLED\033[0m"));
+        System.out.println("  Resources  : " + (options.isResourceEnable() ? "\033[0;32mENABLED\033[0m" : "\033[0;31mDISABLED\033[0m"));
+        System.out.println("  Tools      : " + (options.isToolEnable() ? "\033[0;32mENABLED\033[0m" : "\033[0;31mDISABLED\033[0m"));
+        System.out.println();
+
+        if (!mcpServer.getTools().isEmpty()) {
+            System.out.println("\033[1;34mTools(" + mcpServer.getTools().size() + "):\033[0m");
+            for (ServerTool tool : mcpServer.getTools()) {
+                System.out.println(" \033[0;32m|->\033[0m " + tool.getName() + ": " + tool.getDescription());
+            }
+            System.out.println();
+        }
+
+        if (!mcpServer.getPrompts().isEmpty()) {
+            System.out.println("\033[1;34mPrompts(" + mcpServer.getPrompts().size() + "):\033[0m");
+            for (ServerPrompt prompt : mcpServer.getPrompts()) {
+                System.out.println(" \033[0;32m|->\033[0m " + prompt.getName() + ": " + prompt.getDescription());
+            }
+            System.out.println();
+        }
+
+        if (!mcpServer.getResources().isEmpty()) {
+            System.out.println("\033[1;34mResources(" + mcpServer.getResources().size() + "):\033[0m");
+            for (ServerResource resource : mcpServer.getResources()) {
+                System.out.println(" \033[0;32m|->\033[0m " + resource.getName() + ": " + resource.getDescription());
+            }
+            System.out.println();
+        }
+
+        if (!mcpServer.getResourceTemplates().isEmpty()) {
+            System.out.println("\033[1;34mResource Templates(" + mcpServer.getResourceTemplates().size() + "):\033[0m");
+            for (ResourceTemplate template : mcpServer.getResourceTemplates()) {
+                System.out.println(" \033[0;32m|->\033[0m " + template.getName() + ": " + template.getDescription());
+            }
+            System.out.println();
+        }
+
+        System.out.println(border);
+    }
 }

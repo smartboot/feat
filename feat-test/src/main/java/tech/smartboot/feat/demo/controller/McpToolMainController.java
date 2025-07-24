@@ -33,38 +33,38 @@ import java.util.Base64;
 @Controller
 @McpEndpoint(mcpSseEndpoint = "/main/sse"
         , mcpSseMessageEndpoint = "/main/sse/message"
-        , mcpStreamableEndpoint = "/main/mcp")
+        , mcpStreamableEndpoint = "/main/mcp", loggingEnable = false)
 public class McpToolMainController {
 
     @Autowired
     private McpServer mcpServer;
 
-    @Tool(description = "测试工具")
+    @Tool(name = "tool1", description = "测试工具")
     public String tool1(@Param(required = true, description = "参数1") String param1, @Param(required = false, description = "参数2") int param2, boolean param3) {
         return "hello " + param1;
     }
 
-    @Tool(description = "测试工具")
+    @Tool(name = "tool2", description = "测试工具")
     public boolean tool2(@Param(required = true, description = "参数1") String param1, @Param(required = false, description = "参数2") int param2, boolean param3) {
         return true;
     }
 
-    @Tool(description = "测试工具")
+    @Tool(name = "tool3", description = "测试工具")
     public int tool3(@Param(required = true, description = "参数1") String param1, @Param(required = false, description = "参数2") int param2, boolean param3) {
         return 0;
     }
 
-    @Tool(description = "测试工具")
+    @Tool(name = "tool4", description = "测试工具")
     public float tool4(@Param(required = true, description = "参数1") String param1, @Param(required = false, description = "参数2") int param2, boolean param3) {
         return 0;
     }
 
-    @Tool(description = "测试工具")
+    @Tool(name = "tool5", description = "测试工具")
     public short tool5(@Param(required = true, description = "参数1") String param1, @Param(required = false, description = "参数2") int param2, boolean param3) {
         return 0;
     }
 
-    @Tool(description = "测试工具")
+    @Tool(name = "tool6", description = "测试工具")
     public long tool6(@Param(required = true, description = "参数1") String param1, @Param(required = false, description = "参数2") int param2, boolean param3) {
         return 0;
     }
