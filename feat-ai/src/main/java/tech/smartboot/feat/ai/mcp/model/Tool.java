@@ -76,11 +76,15 @@ public class Tool {
     }
 
     public static Property requiredNumberProperty(String name, String description) {
-        return new Property(name, PropertyType.Number, description, false);
+        return new Property(name, PropertyType.Number, description, true);
     }
 
     public static Property boolProperty(String name, String description) {
         return new Property(name, PropertyType.Boolean, description, false);
+    }
+
+    public static Property requiredBoolProperty(String name, String description) {
+        return new Property(name, PropertyType.Boolean, description, true);
     }
 
     public class Schema {
@@ -116,14 +120,14 @@ public class Tool {
     public static class Property {
         @JSONField(serialize = false)
         private final String name;
-        private final PropertyType type;
+        private final String type;
         private final String description;
         @JSONField(serialize = false)
         private final boolean required;
 
         Property(String name, PropertyType type, String description, boolean required) {
             this.name = name;
-            this.type = type;
+            this.type = type.getType();
             this.description = description;
             this.required = required;
         }
@@ -133,7 +137,7 @@ public class Tool {
         }
 
 
-        public PropertyType getType() {
+        public String getType() {
             return type;
         }
 

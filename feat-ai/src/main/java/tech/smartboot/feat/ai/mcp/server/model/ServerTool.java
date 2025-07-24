@@ -13,6 +13,7 @@ package tech.smartboot.feat.ai.mcp.server.model;
 import tech.smartboot.feat.ai.mcp.model.Tool;
 import tech.smartboot.feat.ai.mcp.model.ToolResult;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.function.Function;
 
@@ -35,9 +36,13 @@ public class ServerTool extends Tool {
             inputSchema = new Schema();
             inputSchema.setType("object");
             inputSchema.setProperties(new HashMap<>());
+            inputSchema.setRequired(new ArrayList<>());
         }
         for (Property input : inputs) {
             inputSchema.getProperties().put(input.getName(), input);
+            if (input.isRequired()) {
+                inputSchema.getRequired().add(input.getName());
+            }
         }
         return this;
     }
