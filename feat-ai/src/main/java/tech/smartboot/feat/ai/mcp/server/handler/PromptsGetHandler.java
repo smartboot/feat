@@ -12,9 +12,9 @@ package tech.smartboot.feat.ai.mcp.server.handler;
 
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
+import tech.smartboot.feat.ai.mcp.McpException;
 import tech.smartboot.feat.ai.mcp.model.PromptMessage;
 import tech.smartboot.feat.ai.mcp.server.McpServer;
-import tech.smartboot.feat.ai.mcp.McpException;
 import tech.smartboot.feat.ai.mcp.server.model.PromptContext;
 import tech.smartboot.feat.ai.mcp.server.model.ServerPrompt;
 import tech.smartboot.feat.core.server.HttpRequest;
@@ -40,8 +40,11 @@ public class PromptsGetHandler implements ServerHandler {
             throw new McpException(McpException.INTERNAL_ERROR, "Unknown prompt: " + promptName);
         }
         JSONObject result = new JSONObject();
-        PromptMessage<?> content = prompt.getAction().apply(promptContext);
-        result.put("messages", JSONArray.of(JSONObject.from(content)));
+        PromptMessage<?> promptMessage = prompt.getAction().apply(promptContext);
+        JSONObject message = new JSONObject();
+        message.put("role", promptMessage.getRole());
+        message.put("content", JSONObject.from(promptMessage.getContent()));
+        result.put("messages", JSONArray.of(message));
         result.put("description", prompt.getDescription());
         return result;
     }
