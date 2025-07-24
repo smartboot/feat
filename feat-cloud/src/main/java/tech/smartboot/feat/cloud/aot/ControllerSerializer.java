@@ -17,6 +17,7 @@ import tech.smartboot.feat.cloud.annotation.Param;
 import tech.smartboot.feat.cloud.annotation.PathParam;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.cloud.annotation.RequestMethod;
+import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
 import tech.smartboot.feat.cloud.aot.controller.JsonSerializer;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.exception.FeatException;
@@ -49,11 +50,46 @@ final class ControllerSerializer extends AbstractSerializer {
     private static final int RETURN_TYPE_STRING = 1;
     private static final int RETURN_TYPE_OBJECT = 2;
     private static final int RETURN_TYPE_BYTE_ARRAY = 3;
-
     private final Map<String, String> bytesCache = new HashMap<>();
+    private McpEndpointSerializer mcpEndpointSerializer;
 
     public ControllerSerializer(ProcessingEnvironment processingEnv, String config, Element element) throws IOException {
         super(processingEnv, config, element);
+        if (element.getAnnotation(McpEndpoint.class) != null) {
+            mcpEndpointSerializer = new McpEndpointSerializer(processingEnv, element, getPrintWriter());
+        }
+    }
+
+    @Override
+    public void serializeImport() {
+        if (mcpEndpointSerializer != null) {
+            mcpEndpointSerializer.serializeImport();
+        }
+        super.serializeImport();
+    }
+
+    @Override
+    public void serializeProperty() {
+        super.serializeProperty();
+        if (mcpEndpointSerializer != null) {
+            mcpEndpointSerializer.serializeProperty();
+        }
+    }
+
+    @Override
+    public void serializeAutowired() {
+        if (mcpEndpointSerializer != null) {
+            mcpEndpointSerializer.serializeAutowired();
+        }
+        super.serializeAutowired();
+    }
+
+    @Override
+    public void serializePostConstruct() {
+        super.serializePostConstruct();
+        if (mcpEndpointSerializer != null) {
+            mcpEndpointSerializer.serializePostConstruct();
+        }
     }
 
     @Override
@@ -264,6 +300,10 @@ final class ControllerSerializer extends AbstractSerializer {
                 }
                 printWriter.println("\t\t});");
             }
+        }
+
+        if (mcpEndpointSerializer != null) {
+            mcpEndpointSerializer.serializeRouter();
         }
         addInterceptor();
     }

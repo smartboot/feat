@@ -17,6 +17,7 @@ import tech.smartboot.feat.ai.mcp.model.PromptMessage;
 import tech.smartboot.feat.ai.mcp.model.ToolResult;
 import tech.smartboot.feat.ai.mcp.server.McpServer;
 import tech.smartboot.feat.cloud.annotation.Autowired;
+import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
 import tech.smartboot.feat.cloud.annotation.mcp.Param;
 import tech.smartboot.feat.cloud.annotation.mcp.Prompt;
@@ -29,6 +30,7 @@ import java.util.Base64;
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
+@Controller
 @McpEndpoint(mcpSseEndpoint = "/main/sse"
         , mcpSseMessageEndpoint = "/main/sse/message"
         , mcpStreamableEndpoint = "/main/mcp")

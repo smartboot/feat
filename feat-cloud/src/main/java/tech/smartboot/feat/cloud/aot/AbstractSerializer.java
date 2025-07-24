@@ -12,6 +12,7 @@ package tech.smartboot.feat.cloud.aot;
 
 import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.JSONPath;
+import tech.smartboot.feat.ai.mcp.server.McpServer;
 import tech.smartboot.feat.cloud.AbstractServiceLoader;
 import tech.smartboot.feat.cloud.ApplicationContext;
 import tech.smartboot.feat.cloud.annotation.Autowired;
@@ -19,6 +20,7 @@ import tech.smartboot.feat.cloud.annotation.Bean;
 import tech.smartboot.feat.cloud.annotation.PostConstruct;
 import tech.smartboot.feat.cloud.annotation.PreDestroy;
 import tech.smartboot.feat.cloud.annotation.Value;
+import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
 import tech.smartboot.feat.cloud.aot.value.FeatValueSerializer;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.exception.FeatException;
@@ -116,9 +118,14 @@ abstract class AbstractSerializer implements Serializer {
     public void serializeAutowired() {
         List<Element> autowiredFields = new ArrayList<>();
         for (Element field : element.getEnclosedElements()) {
-            if (field.getAnnotation(Autowired.class) != null) {
-                autowiredFields.add(field);
+            if (field.getAnnotation(Autowired.class) == null) {
+                continue;
             }
+            //McpServer特殊处理
+            if (field.asType().toString().equals(McpServer.class.getName()) && element.getAnnotation(McpEndpoint.class) != null) {
+                continue;
+            }
+            autowiredFields.add(field);
         }
         for (Element field : autowiredFields) {
             String name = field.getSimpleName().toString();

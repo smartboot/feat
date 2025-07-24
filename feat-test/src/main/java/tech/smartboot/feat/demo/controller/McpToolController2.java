@@ -11,9 +11,12 @@
 package tech.smartboot.feat.demo.controller;
 
 
+import org.springframework.web.bind.annotation.RequestParam;
 import tech.smartboot.feat.ai.mcp.model.ToolResult;
 import tech.smartboot.feat.ai.mcp.server.McpServer;
 import tech.smartboot.feat.cloud.annotation.Autowired;
+import tech.smartboot.feat.cloud.annotation.Controller;
+import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
 import tech.smartboot.feat.cloud.annotation.mcp.Param;
 import tech.smartboot.feat.cloud.annotation.mcp.Tool;
@@ -22,12 +25,18 @@ import tech.smartboot.feat.cloud.annotation.mcp.Tool;
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
+@Controller
 @McpEndpoint(mcpSseEndpoint = "/mcp/sse"
         , mcpSseMessageEndpoint = "/mcp/sse/message"
         , mcpStreamableEndpoint = "/mcp/message")
 public class McpToolController2 {
     @Autowired
     private McpServer mcpServer;
+
+    @RequestMapping("/afa/asdf/adsf/afd")
+    public String hello() {
+        return "hello ";
+    }
 
     @Tool(description = "测试工具")
     public String tool1(@Param(required = true, description = "参数1") String param1, @Param(required = false, description = "参数2") int param2, boolean param3) {

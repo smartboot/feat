@@ -35,7 +35,6 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -43,17 +42,20 @@ import java.util.stream.Collectors;
  * @author 三刀
  * @version v1.0 7/20/25
  */
-final class McpEndpointSerializer extends AbstractSerializer {
+final class McpEndpointSerializer implements Serializer {
     private final ProcessingEnvironment processingEnv;
     private final List<Element> toolMethods;
     private final List<Element> promptMethods;
     private final List<Element> resourceMethods;
-    private final McpEndpoint controller;
+    private final McpEndpoint mcpEndpoint;
+    private final PrintWriter printWriter;
+    private final Element element;
 
-    public McpEndpointSerializer(ProcessingEnvironment processingEnv, String config, Element element) throws IOException {
-        super(processingEnv, config, element);
+    public McpEndpointSerializer(ProcessingEnvironment processingEnv, Element element, PrintWriter printWriter) throws IOException {
         this.processingEnv = processingEnv;
-        controller = element.getAnnotation(McpEndpoint.class);
+        this.element = element;
+        this.printWriter = printWriter;
+        mcpEndpoint = element.getAnnotation(McpEndpoint.class);
         toolMethods = element.getEnclosedElements().stream().filter(e -> e.getAnnotation(Tool.class) != null).collect(Collectors.toList());
         promptMethods = element.getEnclosedElements().stream().filter(e -> e.getAnnotation(Prompt.class) != null).collect(Collectors.toList());
         resourceMethods = element.getEnclosedElements().stream().filter(e -> e.getAnnotation(Resource.class) != null).collect(Collectors.toList());
@@ -75,95 +77,79 @@ final class McpEndpointSerializer extends AbstractSerializer {
         if (FeatUtils.isNotEmpty(resourceMethods)) {
             printWriter.println("import " + ServerResource.class.getName() + ";");
         }
-        super.serializeImport();
     }
 
     @Override
     public void serializeProperty() {
         printWriter.println("\tprivate McpServer mcpServer = new McpServer();");
-        printWriter.println("\tprivate " + element.getSimpleName() + " bean = new " + element.getSimpleName() + "();");
+    }
+
+    /**
+     * 只处理McpServer注入
+     */
+    public void serializeAutowired() {
+        element.getEnclosedElements().stream().filter(field -> field.getAnnotation(Autowired.class) != null && field.asType().toString().equals(McpServer.class.getName()))
+                .forEach(field -> {
+                    String name = field.getSimpleName().toString();
+                    name = name.substring(0, 1).toUpperCase() + name.substring(1);
+
+                    //判断是否存在setter方法
+                    boolean hasSetter = false;
+                    for (Element se : element.getEnclosedElements()) {
+                        if (!("set" + name).equals(se.getSimpleName().toString())) {
+                            continue;
+                        }
+                        List<? extends VariableElement> list = ((ExecutableElement) se).getParameters();
+                        if (list.size() != 1) {
+                            continue;
+                        }
+                        VariableElement param = list.get(0);
+                        if (!param.asType().toString().equals(field.asType().toString())) {
+                            continue;
+                        }
+                        hasSetter = true;
+                    }
+                    if (hasSetter) {
+                        printWriter.append("\t\tbean.set").append(name).append("(mcpServer);\n");
+                    } else {
+                        printWriter.append("\t\treflectAutowired(bean, \"").append(field.getSimpleName().toString()).append("\", mcpServer);\n");
+                    }
+                });
     }
 
     @Override
-    public void serializeLoadBean() {
-
-    }
-
-    public void serializeAutowired() {
-        List<Element> autowiredFields = new ArrayList<>();
-        for (Element field : element.getEnclosedElements()) {
-            if (field.getAnnotation(Autowired.class) != null) {
-                autowiredFields.add(field);
-            }
-        }
-        for (Element field : autowiredFields) {
-            String name = field.getSimpleName().toString();
-            name = name.substring(0, 1).toUpperCase() + name.substring(1);
-
-            //判断是否存在setter方法
-            boolean hasSetter = false;
-            for (Element se : element.getEnclosedElements()) {
-                if (!("set" + name).equals(se.getSimpleName().toString())) {
-                    continue;
-                }
-                List<? extends VariableElement> list = ((ExecutableElement) se).getParameters();
-                if (list.size() != 1) {
-                    continue;
-                }
-                VariableElement param = list.get(0);
-                if (!param.asType().toString().equals(field.asType().toString())) {
-                    continue;
-                }
-                hasSetter = true;
-            }
-            if (hasSetter) {
-                if(field.asType().toString().equals(McpServer.class.getName())){
-                    printWriter.append("\t\tbean.set").append(name).append("(mcpServer);\n");
-                }else{
-                    printWriter.append("\t\tbean.set").append(name).append("(loadBean(\"").append(field.getSimpleName()).append("\", applicationContext));\n");
-                }
-
-            } else {
-                if(field.asType().toString().equals(McpServer.class.getName())){
-                    printWriter.append("\t\treflectAutowired(bean, \"").append(field.getSimpleName().toString()).append("\", mcpServer);\n");
-                }else{
-                    printWriter.append("\t\treflectAutowired(bean, \"").append(String.valueOf(field.getSimpleName())).append("\", loadBean(\"").append(field.getSimpleName().toString()).append("\", applicationContext));\n");
-                }
-            }
-        }
-        serializerValueSetter();
-
+    public void serializePostConstruct() {
         if (FeatUtils.isNotEmpty(toolMethods) || FeatUtils.isNotEmpty(promptMethods)) {
 //            if (controller == null) {
 //                throw new FeatException("@Tool is only supported for use in classes marked with the @McpEndpoint annotation!");
 //            }
             printWriter.println("\t\tmcpServer.getOptions()");
             //配置McpOptions
-            if (FeatUtils.isNotBlank(controller.mcpStreamableEndpoint())) {
-                printWriter.append("\t\t\t\t.setMcpEndpoint(\"").append(controller.mcpStreamableEndpoint()).println("\")");
+            if (FeatUtils.isNotBlank(this.mcpEndpoint.mcpStreamableEndpoint())) {
+                printWriter.append("\t\t\t\t.setMcpEndpoint(\"").append(this.mcpEndpoint.mcpStreamableEndpoint()).println("\")");
             }
-            if (FeatUtils.isNotBlank(controller.mcpSseEndpoint())) {
-                printWriter.append("\t\t\t\t.setSseEndpoint(\"").append(controller.mcpSseEndpoint()).println("\")");
+            if (FeatUtils.isNotBlank(this.mcpEndpoint.mcpSseEndpoint())) {
+                printWriter.append("\t\t\t\t.setSseEndpoint(\"").append(this.mcpEndpoint.mcpSseEndpoint()).println("\")");
             }
-            if (FeatUtils.isNotBlank(controller.mcpSseMessageEndpoint())) {
-                printWriter.append("\t\t\t\t.setSseMessageEndpoint(\"").append(controller.mcpSseMessageEndpoint()).println("\")");
+            if (FeatUtils.isNotBlank(this.mcpEndpoint.mcpSseMessageEndpoint())) {
+                printWriter.append("\t\t\t\t.setSseMessageEndpoint(\"").append(this.mcpEndpoint.mcpSseMessageEndpoint()).println("\")");
             }
-            if (controller.toolEnable()) {
+            if (this.mcpEndpoint.toolEnable()) {
                 printWriter.println("\t\t\t\t.toolEnable()");
             }
-            if (controller.resourceEnable()) {
+            if (this.mcpEndpoint.resourceEnable()) {
                 printWriter.println("\t\t\t\t.resourceEnable()");
             }
-            if (controller.loggingEnable()) {
+            if (this.mcpEndpoint.loggingEnable()) {
                 printWriter.println("\t\t\t\t.loggingEnable()");
             }
-            if (controller.promptsEnable()) {
+            if (this.mcpEndpoint.promptsEnable()) {
                 printWriter.println("\t\t\t\t.promptsEnable()");
             }
             printWriter.println("\t\t\t\t.getImplementation()");
-            printWriter.append("\t\t\t\t.setName(\"").append(controller.name()).println("\")");
-            printWriter.append("\t\t\t\t.setTitle(\"").append(controller.title()).println("\")");
-            printWriter.append("\t\t\t\t.setVersion(\"").append(controller.version()).println("\");");
+            printWriter.append("\t\t\t\t.setName(\"").append(this.mcpEndpoint.name()).println("\")");
+            printWriter.append("\t\t\t\t.setTitle(\"").append(this.mcpEndpoint.title()).println("\")");
+            printWriter.append("\t\t\t\t.setVersion(\"").append(this.mcpEndpoint.version()).println("\");");
         }
         for (Element t : toolMethods) {
             ExecutableElement toolMethod = (ExecutableElement) t;

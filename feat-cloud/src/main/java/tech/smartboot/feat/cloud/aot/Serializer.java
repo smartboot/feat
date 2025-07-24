@@ -18,11 +18,17 @@ import java.io.PrintWriter;
  * @version v1.0 7/23/25
  */
 interface Serializer {
-    PrintWriter getPrintWriter();
+    default PrintWriter getPrintWriter() {
+        throw new UnsupportedOperationException();
+    }
 
-    String packageName();
+    default String packageName() {
+        throw new UnsupportedOperationException();
+    }
 
-    String className();
+    default String className() {
+        throw new UnsupportedOperationException();
+    }
 
     default void serializeImport() {
     }

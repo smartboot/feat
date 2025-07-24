@@ -103,20 +103,19 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                 }
             }
         }
-        for (Element element : roundEnv.getElementsAnnotatedWith(Controller.class)) {
-            try {
-                if (element.getAnnotation(McpEndpoint.class) != null) {
-                    throw new FeatException("@Controller and @McpEndpoint cannot be used together!");
-                }
-                createAptLoader(new ControllerSerializer(processingEnv, config, element));
-            } catch (Throwable e) {
-                exception = e;
+
+        for (Element element : roundEnv.getElementsAnnotatedWith(McpEndpoint.class)) {
+            if (element.getAnnotation(Controller.class) == null) {
+                throw new FeatException("@McpEndpoint can only be used with @Controller!");
             }
         }
 
-        for (Element element : roundEnv.getElementsAnnotatedWith(McpEndpoint.class)) {
+        for (Element element : roundEnv.getElementsAnnotatedWith(Controller.class)) {
             try {
-                createAptLoader(new McpEndpointSerializer(processingEnv, config, element));
+//                if (element.getAnnotation(McpEndpoint.class) != null) {
+//                    throw new FeatException("@Controller and @McpEndpoint cannot be used together!");
+//                }
+                createAptLoader(new ControllerSerializer(processingEnv, config, element));
             } catch (Throwable e) {
                 exception = e;
             }
