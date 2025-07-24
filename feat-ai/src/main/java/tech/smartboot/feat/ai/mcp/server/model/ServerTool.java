@@ -22,6 +22,10 @@ public class ServerTool extends Tool {
 
     private ServerTool(String name) {
         super(name);
+        inputSchema = new Schema();
+        inputSchema.setType("object");
+        inputSchema.setProperties(new HashMap<>());
+        inputSchema.setRequired(new ArrayList<>());
     }
 
     public static ServerTool of(String name) {
@@ -32,12 +36,7 @@ public class ServerTool extends Tool {
         if (inputs == null) {
             return this;
         }
-        if (inputSchema == null) {
-            inputSchema = new Schema();
-            inputSchema.setType("object");
-            inputSchema.setProperties(new HashMap<>());
-            inputSchema.setRequired(new ArrayList<>());
-        }
+
         for (Property input : inputs) {
             inputSchema.getProperties().put(input.getName(), input);
             if (input.isRequired()) {

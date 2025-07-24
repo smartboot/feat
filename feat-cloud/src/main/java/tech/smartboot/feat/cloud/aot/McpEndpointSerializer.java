@@ -264,11 +264,11 @@ final class McpEndpointSerializer implements Serializer {
     }
 
     private void serializeOutputSchema(PrintWriter printWriter, TypeMirror returnType) {
-        if (returnType.getKind().isPrimitive()) {
-            printWriter.println("\t\t\ttool.outputSchema(" + ServerTool.class.getSimpleName() + ".stringProperty(\"result\", \"返回结果\"));");
-        } else {
-            printWriter.println("\t\t\ttool.outputSchema(" + ServerTool.class.getSimpleName() + ".stringProperty(\"result\", \"返回结果\"));");
-        }
+//        if (returnType.getKind().isPrimitive()) {
+//            printWriter.println("\t\t\ttool.outputSchema(" + ServerTool.class.getSimpleName() + ".stringProperty(\"result\", \"返回结果\"));");
+//        } else {
+//            printWriter.println("\t\t\ttool.outputSchema(" + ServerTool.class.getSimpleName() + ".stringProperty(\"result\", \"返回结果\"));");
+//        }
     }
 
     private String serializeInputSchema(PrintWriter printWriter, ExecutableElement toolMethod) {

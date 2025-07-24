@@ -11,6 +11,7 @@
 package tech.smartboot.feat.demo.controller;
 
 import tech.smartboot.feat.ai.mcp.enums.PromptType;
+import tech.smartboot.feat.ai.mcp.model.ToolResult;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
 import tech.smartboot.feat.cloud.annotation.mcp.Prompt;
@@ -103,5 +104,17 @@ public class McpDemoController {
     public String architectureDiagram() {
         // 返回图片的Base64编码
         return "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
+    }
+
+    // 返回文本内容
+    @Tool(description = "获取文本信息")
+    public ToolResult.TextContent getTextInfo() {
+        return ToolResult.ofText("这是文本内容");
+    }
+
+    // 返回图片内容
+    @Tool(description = "获取图片信息")
+    public ToolResult.ImageContent getImageInfo() {
+        return ToolResult.ofImage("base64-encoded-image-data", "image/png");
     }
 }
