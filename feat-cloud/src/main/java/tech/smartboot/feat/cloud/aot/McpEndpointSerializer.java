@@ -122,14 +122,14 @@ final class McpEndpointSerializer implements Serializer {
         if (FeatUtils.isNotEmpty(toolMethods) || FeatUtils.isNotEmpty(promptMethods)) {
             printWriter.println("\t\tmcpServer.getOptions()");
             //配置McpOptions
-            if (FeatUtils.isNotBlank(this.mcpEndpoint.mcpStreamableEndpoint())) {
-                printWriter.append("\t\t\t\t.setMcpEndpoint(\"").append(this.mcpEndpoint.mcpStreamableEndpoint()).println("\")");
+            if (FeatUtils.isNotBlank(this.mcpEndpoint.streamableEndpoint())) {
+                printWriter.append("\t\t\t\t.setMcpEndpoint(\"").append(this.mcpEndpoint.streamableEndpoint()).println("\")");
             }
-            if (FeatUtils.isNotBlank(this.mcpEndpoint.mcpSseEndpoint())) {
-                printWriter.append("\t\t\t\t.setSseEndpoint(\"").append(this.mcpEndpoint.mcpSseEndpoint()).println("\")");
+            if (FeatUtils.isNotBlank(this.mcpEndpoint.sseEndpoint())) {
+                printWriter.append("\t\t\t\t.setSseEndpoint(\"").append(this.mcpEndpoint.sseEndpoint()).println("\")");
             }
-            if (FeatUtils.isNotBlank(this.mcpEndpoint.mcpSseMessageEndpoint())) {
-                printWriter.append("\t\t\t\t.setSseMessageEndpoint(\"").append(this.mcpEndpoint.mcpSseMessageEndpoint()).println("\")");
+            if (FeatUtils.isNotBlank(this.mcpEndpoint.sseMessageEndpoint())) {
+                printWriter.append("\t\t\t\t.setSseMessageEndpoint(\"").append(this.mcpEndpoint.sseMessageEndpoint()).println("\")");
             }
             if (this.mcpEndpoint.toolEnable()) {
                 printWriter.println("\t\t\t\t.toolEnable()");
@@ -233,14 +233,14 @@ final class McpEndpointSerializer implements Serializer {
     public void serializeRouter() {
         McpEndpoint mcpEndpoint = element.getAnnotation(McpEndpoint.class);
         //注册Router
-        if (FeatUtils.isNotBlank(mcpEndpoint.mcpStreamableEndpoint())) {
-            printWriter.println("\t\tapplicationContext.getRouter().route(\"" + mcpEndpoint.mcpStreamableEndpoint() + "\", mcpServer.mcpHandler());");
+        if (FeatUtils.isNotBlank(mcpEndpoint.streamableEndpoint())) {
+            printWriter.println("\t\tapplicationContext.getRouter().route(\"" + mcpEndpoint.streamableEndpoint() + "\", mcpServer.mcpHandler());");
         }
-        if (FeatUtils.isNotBlank(mcpEndpoint.mcpSseEndpoint())) {
-            printWriter.println("\t\tapplicationContext.getRouter().route(\"" + mcpEndpoint.mcpSseEndpoint() + "\", mcpServer.sseHandler());");
+        if (FeatUtils.isNotBlank(mcpEndpoint.sseEndpoint())) {
+            printWriter.println("\t\tapplicationContext.getRouter().route(\"" + mcpEndpoint.sseEndpoint() + "\", mcpServer.sseHandler());");
         }
-        if (FeatUtils.isNotBlank(mcpEndpoint.mcpSseMessageEndpoint())) {
-            printWriter.println("\t\tapplicationContext.getRouter().route(\"" + mcpEndpoint.mcpSseMessageEndpoint() + "\", mcpServer.sseMessageHandler());");
+        if (FeatUtils.isNotBlank(mcpEndpoint.sseMessageEndpoint())) {
+            printWriter.println("\t\tapplicationContext.getRouter().route(\"" + mcpEndpoint.sseMessageEndpoint() + "\", mcpServer.sseMessageHandler());");
         }
     }
 

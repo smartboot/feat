@@ -21,17 +21,17 @@ import java.lang.annotation.Target;
 /**
  * 定义MCP（Management Control Plane）端点配置
  * 用于标识包含MCP服务配置的类
- * 
+ *
  * @author 三刀
  * @version v1.0 7/22/25
- * 
+ * <p>
  * name() - 服务名称，默认为"feat-mcp-server"
  * title() - 文档标题，默认为"Feat MCP Server"
  * version() - 版本号，默认使用Feat.VERSION
  * mcpSseEndpoint() - SSE端点路径，必须指定
  * mcpSseMessageEndpoint() - SSE消息端点路径，必须指定
  * mcpStreamableEndpoint() - 可流式传输的端点路径，必须指定
- * 
+ * <p>
  * 以下选项用于启用/禁用不同功能模块：
  * resourceEnable() - 资源管理功能，默认启用
  * resourceChangeNotification() - 资源变更通知，默认启用
@@ -68,19 +68,19 @@ public @interface McpEndpoint {
      * MCP SSE（Server-Sent Events）端点路径
      * 必须配置，用于客户端订阅服务器推送事件
      */
-    String mcpSseEndpoint();
+    String sseEndpoint();
 
     /**
      * MCP SSE消息端点路径
      * 必须配置，用于发送特定消息到已订阅的客户端
      */
-    String mcpSseMessageEndpoint();
+    String sseMessageEndpoint();
 
     /**
      * 可流式传输的端点路径
      * 必须配置，用于支持数据流式传输
      */
-    String mcpStreamableEndpoint();
+    String streamableEndpoint();
 
     /**
      * 是否启用资源管理功能

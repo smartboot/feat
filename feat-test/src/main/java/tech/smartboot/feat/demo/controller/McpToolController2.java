@@ -11,7 +11,6 @@
 package tech.smartboot.feat.demo.controller;
 
 
-import org.springframework.web.bind.annotation.RequestParam;
 import tech.smartboot.feat.ai.mcp.model.ToolResult;
 import tech.smartboot.feat.ai.mcp.server.McpServer;
 import tech.smartboot.feat.cloud.annotation.Autowired;
@@ -26,9 +25,9 @@ import tech.smartboot.feat.cloud.annotation.mcp.Tool;
  * @version v1.0.0
  */
 @Controller
-@McpEndpoint(mcpSseEndpoint = "/mcp/sse"
-        , mcpSseMessageEndpoint = "/mcp/sse/message"
-        , mcpStreamableEndpoint = "/mcp/message")
+@McpEndpoint(sseEndpoint = "/mcp/sse"
+        , sseMessageEndpoint = "/mcp/sse/message"
+        , streamableEndpoint = "/mcp/message")
 public class McpToolController2 {
     @Autowired
     private McpServer mcpServer;
