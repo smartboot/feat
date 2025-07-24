@@ -279,27 +279,45 @@ final class McpEndpointSerializer implements Serializer {
                 description = toolParam.description();
                 required = toolParam.required();
             }
-            if (param.asType().toString().equals("java.lang.String")) {
+            String paramType = param.asType().toString();
+            if (paramType.equals("java.lang.String")) {
                 if (required) {
                     printWriter.println("\t\t\ttool.inputSchema(" + ServerTool.class.getSimpleName() + ".requiredStringProperty(\"" + param.getSimpleName().toString() + "\", \"" + description + "\"));");
                 } else {
                     printWriter.println("\t\t\ttool.inputSchema(" + ServerTool.class.getSimpleName() + ".stringProperty(\"" + param.getSimpleName().toString() + "\", \"" + description + "\"));");
                 }
                 inputParams.append("ctx.getArguments().getString(\"").append(param.getSimpleName()).append("\"), ");
-            } else if (param.asType().toString().equals("int")) {
+            } else if (param.asType().getKind().isPrimitive()) {
+                if (boolean.class.getName().equals(paramType)) {
+                    if (required) {
+                        printWriter.println("\t\t\ttool.inputSchema(" + ServerTool.class.getSimpleName() + ".requiredBoolProperty(\"" + param.getSimpleName().toString() + "\", \"" + description + "\"));");
+                    } else {
+                        printWriter.println("\t\t\ttool.inputSchema(" + ServerTool.class.getSimpleName() + ".boolProperty(\"" + param.getSimpleName().toString() + "\", \"" + description + "\"));");
+                    }
+                } else {
+                    if (required) {
+                        printWriter.println("\t\t\ttool.inputSchema(" + ServerTool.class.getSimpleName() + ".requiredNumberProperty(\"" + param.getSimpleName().toString() + "\", \"" + description + "\"));");
+                    } else {
+                        printWriter.println("\t\t\ttool.inputSchema(" + ServerTool.class.getSimpleName() + ".numberProperty(\"" + param.getSimpleName().toString() + "\", \"" + description + "\"));");
+                    }
+                }
+                inputParams.append("ctx.getArguments().get").append(paramType.substring(0, 1).toUpperCase()).append(paramType.substring(1)).append("Value(\"").append(param.getSimpleName()).append("\"), ");
+            } else if (Long.class.getName().equals(paramType)) {
                 if (required) {
                     printWriter.println("\t\t\ttool.inputSchema(" + ServerTool.class.getSimpleName() + ".requiredNumberProperty(\"" + param.getSimpleName().toString() + "\", \"" + description + "\"));");
                 } else {
                     printWriter.println("\t\t\ttool.inputSchema(" + ServerTool.class.getSimpleName() + ".numberProperty(\"" + param.getSimpleName().toString() + "\", \"" + description + "\"));");
                 }
-                inputParams.append("ctx.getArguments().getIntValue(\"").append(param.getSimpleName()).append("\"), ");
-            } else if (param.asType().toString().equals("boolean")) {
+                inputParams.append("ctx.getArguments().getLong(\"").append(param.getSimpleName()).append("\"), ");
+            } else if (Boolean.class.getName().equals(paramType)) {
                 if (required) {
                     printWriter.println("\t\t\ttool.inputSchema(" + ServerTool.class.getSimpleName() + ".requiredBoolProperty(\"" + param.getSimpleName().toString() + "\", \"" + description + "\"));");
                 } else {
                     printWriter.println("\t\t\ttool.inputSchema(" + ServerTool.class.getSimpleName() + ".boolProperty(\"" + param.getSimpleName().toString() + "\", \"" + description + "\"));");
                 }
-                inputParams.append("ctx.getArguments().getBooleanValue(\"").append(param.getSimpleName()).append("\"), ");
+                inputParams.append("ctx.getArguments().getBoolean(\"").append(param.getSimpleName()).append("\"), ");
+            } else {
+                throw new FeatException("unSupport paramType:" + param.asType().toString() + " please check [" + element.toString() + "@" + toolMethod.getSimpleName() + "]");
             }
         }
 
