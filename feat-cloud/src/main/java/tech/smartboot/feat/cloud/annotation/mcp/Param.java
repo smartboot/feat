@@ -17,6 +17,12 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * MCP工具参数注解
+ * 
+ * 用于定义MCP工具的参数信息，对应MCP协议中tools/call操作的参数定义。
+ * 该注解定义了参数的必要性及描述信息，用于生成JSON Schema。
+ * 有关MCP协议tools相关操作的详细信息，请参考：https://modelcontextprotocol.io/specification#tool_call
+ *
  * @author 三刀
  * @version v1.0 7/21/25
  */
@@ -24,7 +30,16 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.SOURCE)
 @Documented
 public @interface Param {
+    /**
+     * 参数是否必需
+     * 对应JSON Schema中的required字段
+     */
     boolean required();
 
+    /**
+     * 参数描述信息
+     * 对应JSON Schema中的description字段
+     * 默认值：空字符串
+     */
     String description() default "";
 }
