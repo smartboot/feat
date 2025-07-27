@@ -107,7 +107,7 @@ final class McpEndpointSerializer implements Serializer {
             return;
         }
         if (mcpEndpoint.isDefault) {
-            printWriter.println("\t\tmcpServer = loadBean(\"mcpServer\", applicationContext);");
+            printWriter.println("\t\tmcpServer = loadBean(\"_mcpServer\", applicationContext);");
         }
 
         element.getEnclosedElements().stream().filter(field -> field.getAnnotation(Autowired.class) != null && field.asType().toString().equals(McpServer.class.getName())).forEach(field -> {
