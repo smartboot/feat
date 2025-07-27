@@ -30,10 +30,20 @@ final class ListSerializer extends AbstractSerializer {
 
     public void serialize(TypeMirror se, String obj, int i, DeclaredType parent) throws IOException {
         PrintWriter printWriter = jsonSerializer.getPrintWriter();
-        printWriter.append(JsonSerializer.headBlank(i)).println("if (" + obj + " != null) {");
-        printWriter.append(JsonSerializer.headBlank(i + 1)).println("os.write('[');");
+        printWriter.append(JsonSerializer.headBlank(i)).println("if (" + obj + " == null) {");
+        printWriter.append(JsonSerializer.headBlank(i + 1));
+        jsonSerializer.toBytesPool("null");
+        printWriter.append(JsonSerializer.headBlank(i)).println("} else {");
+        //List未指定泛型,直接移交给fastjson处理
+        if (((DeclaredType) se).getTypeArguments().isEmpty()) {
+            printWriter.println(JsonSerializer.headBlank(i + 1) + "os.write(JSON.toJSONBytes(" + obj + "));");
+            printWriter.append(JsonSerializer.headBlank(i)).println("}");
+            return;
+        }
 
         TypeMirror type = ((DeclaredType) se).getTypeArguments().get(0);
+        printWriter.append(JsonSerializer.headBlank(i + 1)).println("os.write('[');");
+
         //获取泛型参数
         if (parent != null) {
             List<? extends TypeMirror> typeKey = ((DeclaredType) (parent.asElement().asType())).getTypeArguments();
@@ -63,9 +73,7 @@ final class ListSerializer extends AbstractSerializer {
 
         printWriter.append(JsonSerializer.headBlank(i + 1)).println("}");
         printWriter.append(JsonSerializer.headBlank(i + 1)).println("os.write(']');");
-        printWriter.append(JsonSerializer.headBlank(i)).println("} else {");
-        printWriter.append(JsonSerializer.headBlank(i + 1));
-        jsonSerializer.toBytesPool("null");
+
         printWriter.append(JsonSerializer.headBlank(i)).println("}");
     }
 }

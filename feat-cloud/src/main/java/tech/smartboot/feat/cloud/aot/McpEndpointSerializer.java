@@ -19,6 +19,7 @@ import tech.smartboot.feat.ai.mcp.server.model.ServerPrompt;
 import tech.smartboot.feat.ai.mcp.server.model.ServerResource;
 import tech.smartboot.feat.ai.mcp.server.model.ServerTool;
 import tech.smartboot.feat.cloud.annotation.Autowired;
+import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
 import tech.smartboot.feat.cloud.annotation.mcp.Param;
 import tech.smartboot.feat.cloud.annotation.mcp.Prompt;
 import tech.smartboot.feat.cloud.annotation.mcp.Resource;
@@ -501,5 +502,18 @@ final class McpEndpointSerializer implements Serializer {
          * @see <a href="https://modelcontextprotocol.io/specification#logging">MCP Logging</a>
          */
         boolean loggingEnable;
+
+        void init(McpEndpoint mcpEndpoint) {
+            this.root = false;
+            this.name = mcpEndpoint.name();
+            this.title = mcpEndpoint.title();
+            this.version = mcpEndpoint.version();
+            this.sseEndpoint = mcpEndpoint.sseEndpoint();
+            this.sseMessageEndpoint = mcpEndpoint.sseMessageEndpoint();
+            this.resourceEnable = mcpEndpoint.resourceEnable();
+            this.toolEnable = mcpEndpoint.toolEnable();
+            this.promptsEnable = mcpEndpoint.promptsEnable();
+            this.loggingEnable = mcpEndpoint.loggingEnable();
+        }
     }
 }

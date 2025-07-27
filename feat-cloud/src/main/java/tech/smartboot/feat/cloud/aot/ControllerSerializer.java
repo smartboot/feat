@@ -59,17 +59,7 @@ final class ControllerSerializer extends AbstractSerializer {
         McpEndpoint mcpEndpoint = element.getAnnotation(McpEndpoint.class);
         McpEndpointSerializer.McpServerOption option = new McpEndpointSerializer.McpServerOption();
         if (mcpEndpoint != null) {
-            option.root = false;
-            option.name = mcpEndpoint.name();
-            option.title = mcpEndpoint.title();
-            option.version = mcpEndpoint.version();
-            option.sseEndpoint = mcpEndpoint.sseEndpoint();
-            option.sseMessageEndpoint = mcpEndpoint.sseMessageEndpoint();
-            option.resourceEnable = mcpEndpoint.resourceEnable();
-            option.toolEnable = mcpEndpoint.toolEnable();
-            option.promptsEnable = mcpEndpoint.promptsEnable();
-            option.loggingEnable = mcpEndpoint.loggingEnable();
-
+           option.init(mcpEndpoint);
         } else {
             option.root = true;
         }

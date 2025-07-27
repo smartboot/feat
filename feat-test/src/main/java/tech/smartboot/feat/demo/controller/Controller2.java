@@ -16,6 +16,9 @@ import tech.smartboot.feat.cloud.annotation.PathParam;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.core.server.Session;
 
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
@@ -43,4 +46,8 @@ public class Controller2 {
         return "hello " + param.getParam1();
     }
 
+    @RequestMapping("/list")
+    public List list() {
+        return Arrays.asList("aa");
+    }
 }
