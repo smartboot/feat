@@ -50,7 +50,7 @@ final class McpEndpointSerializer implements Serializer {
     private final McpServerOption mcpEndpoint;
     private final PrintWriter printWriter;
     private final Element element;
-    private boolean enable;
+
 
     public McpEndpointSerializer(ProcessingEnvironment processingEnv, McpServerOption option, Element element, PrintWriter printWriter) throws IOException {
         this.processingEnv = processingEnv;
@@ -60,19 +60,16 @@ final class McpEndpointSerializer implements Serializer {
         toolMethods = element.getEnclosedElements().stream().filter(e -> e.getAnnotation(Tool.class) != null).collect(Collectors.toList());
         promptMethods = element.getEnclosedElements().stream().filter(e -> e.getAnnotation(Prompt.class) != null).collect(Collectors.toList());
         resourceMethods = element.getEnclosedElements().stream().filter(e -> e.getAnnotation(Resource.class) != null).collect(Collectors.toList());
-        if (!option.root) {
-            this.enable = true;
-        } else if ((FeatUtils.isNotEmpty(toolMethods) || FeatUtils.isNotEmpty(promptMethods) || FeatUtils.isNotEmpty(resourceMethods))) {
-            this.enable = true;
+        if (option.isDefault && (FeatUtils.isNotEmpty(toolMethods) || FeatUtils.isNotEmpty(promptMethods) || FeatUtils.isNotEmpty(resourceMethods))) {
+            option.enable = false;
         }
-    }
-
-    public boolean isEnable() {
-        return enable;
     }
 
     @Override
     public void serializeImport() {
+        if (!mcpEndpoint.enable) {
+            return;
+        }
         printWriter.println("import " + McpServer.class.getName() + ";");
         if (FeatUtils.isNotEmpty(promptMethods)) {
             printWriter.println("import " + ServerPrompt.class.getName() + ";");
@@ -91,7 +88,10 @@ final class McpEndpointSerializer implements Serializer {
 
     @Override
     public void serializeProperty() {
-        if (mcpEndpoint.root) {
+        if (!mcpEndpoint.enable) {
+            return;
+        }
+        if (mcpEndpoint.isDefault) {
             printWriter.println("\tprivate McpServer mcpServer = null;");
         } else {
             printWriter.println("\tprivate McpServer mcpServer = new McpServer();");
@@ -103,41 +103,46 @@ final class McpEndpointSerializer implements Serializer {
      * 只处理McpServer注入
      */
     public void serializeAutowired() {
-        if (mcpEndpoint.root) {
+        if (!mcpEndpoint.enable) {
+            return;
+        }
+        if (mcpEndpoint.isDefault) {
             printWriter.println("\t\tmcpServer = loadBean(\"mcpServer\", applicationContext);");
         }
 
-        element.getEnclosedElements().stream().filter(field -> field.getAnnotation(Autowired.class) != null && field.asType().toString().equals(McpServer.class.getName()))
-                .forEach(field -> {
-                    String name = field.getSimpleName().toString();
-                    name = name.substring(0, 1).toUpperCase() + name.substring(1);
+        element.getEnclosedElements().stream().filter(field -> field.getAnnotation(Autowired.class) != null && field.asType().toString().equals(McpServer.class.getName())).forEach(field -> {
+            String name = field.getSimpleName().toString();
+            name = name.substring(0, 1).toUpperCase() + name.substring(1);
 
-                    //判断是否存在setter方法
-                    boolean hasSetter = false;
-                    for (Element se : element.getEnclosedElements()) {
-                        if (!("set" + name).equals(se.getSimpleName().toString())) {
-                            continue;
-                        }
-                        List<? extends VariableElement> list = ((ExecutableElement) se).getParameters();
-                        if (list.size() != 1) {
-                            continue;
-                        }
-                        VariableElement param = list.get(0);
-                        if (!param.asType().toString().equals(field.asType().toString())) {
-                            continue;
-                        }
-                        hasSetter = true;
-                    }
-                    if (hasSetter) {
-                        printWriter.append("\t\tbean.set").append(name).append("(mcpServer);\n");
-                    } else {
-                        printWriter.append("\t\treflectAutowired(bean, \"").append(field.getSimpleName().toString()).append("\", mcpServer);\n");
-                    }
-                });
+            //判断是否存在setter方法
+            boolean hasSetter = false;
+            for (Element se : element.getEnclosedElements()) {
+                if (!("set" + name).equals(se.getSimpleName().toString())) {
+                    continue;
+                }
+                List<? extends VariableElement> list = ((ExecutableElement) se).getParameters();
+                if (list.size() != 1) {
+                    continue;
+                }
+                VariableElement param = list.get(0);
+                if (!param.asType().toString().equals(field.asType().toString())) {
+                    continue;
+                }
+                hasSetter = true;
+            }
+            if (hasSetter) {
+                printWriter.append("\t\tbean.set").append(name).append("(mcpServer);\n");
+            } else {
+                printWriter.append("\t\treflectAutowired(bean, \"").append(field.getSimpleName().toString()).append("\", mcpServer);\n");
+            }
+        });
     }
 
     @Override
     public void serializePostConstruct() {
+        if (!mcpEndpoint.enable) {
+            return;
+        }
         if (FeatUtils.isNotEmpty(toolMethods) || FeatUtils.isNotEmpty(promptMethods)) {
             printWriter.println("\t\tmcpServer.getOptions()");
             //配置McpOptions
@@ -419,7 +424,11 @@ final class McpEndpointSerializer implements Serializer {
     }
 
     static class McpServerOption {
-        boolean root;
+        boolean enable = true;
+        /**
+         * 是否为默认MCP服务
+         */
+        boolean isDefault;
         /**
          * MCP服务名称
          * 对应MCP协议中服务的name字段
@@ -504,7 +513,7 @@ final class McpEndpointSerializer implements Serializer {
         boolean loggingEnable;
 
         void init(McpEndpoint mcpEndpoint) {
-            this.root = false;
+            this.isDefault = false;
             this.name = mcpEndpoint.name();
             this.title = mcpEndpoint.title();
             this.version = mcpEndpoint.version();

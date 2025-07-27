@@ -128,7 +128,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         //
         if (rootMcpEnable) {
             try {
-                createAptLoader(new RootMcpServerSerializer(processingEnv, config));
+                createAptLoader(new DefaultMcpServerSerializer(processingEnv, config));
             } catch (Throwable e) {
                 exception = e;
             }

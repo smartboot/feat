@@ -29,12 +29,12 @@ import java.io.Writer;
  * @author 三刀
  * @version v1.0 7/27/25
  */
-public class RootMcpServerSerializer implements Serializer {
+public class DefaultMcpServerSerializer implements Serializer {
     private static final String PACKAGE = "tech.smartboot.feat.sandao";
-    private static final String CLASS_NAME = "FeatRootMcpServerAptLoader";
+    private static final String CLASS_NAME = "FeatDefaultMcpServerAptLoader";
     private final PrintWriter printWriter;
 
-    public RootMcpServerSerializer(ProcessingEnvironment processingEnv, String config) throws IOException {
+    public DefaultMcpServerSerializer(ProcessingEnvironment processingEnv, String config) throws IOException {
         FileObject preFileObject = processingEnv.getFiler().getResource(StandardLocation.SOURCE_OUTPUT, PACKAGE, CLASS_NAME + ".java");
         File f = new File(preFileObject.toUri());
         if (f.exists()) {

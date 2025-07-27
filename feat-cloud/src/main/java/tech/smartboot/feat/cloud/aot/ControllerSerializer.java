@@ -10,6 +10,7 @@
 
 package tech.smartboot.feat.cloud.aot;
 
+import com.alibaba.fastjson2.JSONPath;
 import tech.smartboot.feat.cloud.AsyncResponse;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.InterceptorMapping;
@@ -52,63 +53,47 @@ final class ControllerSerializer extends AbstractSerializer {
     private static final int RETURN_TYPE_BYTE_ARRAY = 3;
     private final Map<String, String> bytesCache = new HashMap<>();
     private final McpEndpointSerializer mcpEndpointSerializer;
-    private final boolean rootMcpEnable;
+    private McpEndpointSerializer.McpServerOption mcpServerOption;
 
     public ControllerSerializer(ProcessingEnvironment processingEnv, String config, Element element) throws IOException {
         super(processingEnv, config, element);
         McpEndpoint mcpEndpoint = element.getAnnotation(McpEndpoint.class);
-        McpEndpointSerializer.McpServerOption option = new McpEndpointSerializer.McpServerOption();
+        mcpServerOption = new McpEndpointSerializer.McpServerOption();
         if (mcpEndpoint != null) {
-           option.init(mcpEndpoint);
+            mcpServerOption.init(mcpEndpoint);
         } else {
-            option.root = true;
+            mcpServerOption.isDefault = true;
+            mcpServerOption.enable = !"false".equals(JSONPath.eval(config, "$.server.mcp.server.enable"));
         }
-        mcpEndpointSerializer = new McpEndpointSerializer(processingEnv, option, element, getPrintWriter());
-        rootMcpEnable = mcpEndpointSerializer.isEnable() && option.root;
+        mcpEndpointSerializer = new McpEndpointSerializer(processingEnv, mcpServerOption, element, getPrintWriter());
     }
 
     public boolean rootMcpEnable() {
-        return rootMcpEnable;
+        return mcpServerOption.isDefault && mcpServerOption.enable;
     }
 
     @Override
     public void serializeImport() {
-        if (mcpEndpointSerializer.isEnable()) {
-            mcpEndpointSerializer.serializeImport();
-        }
+        mcpEndpointSerializer.serializeImport();
         super.serializeImport();
     }
 
     @Override
     public void serializeProperty() {
         super.serializeProperty();
-        if (mcpEndpointSerializer.isEnable()) {
-            mcpEndpointSerializer.serializeProperty();
-        }
-    }
-
-    @Override
-    public void serializeLoadBean() {
-        super.serializeLoadBean();
-        if (mcpEndpointSerializer.isEnable()) {
-            mcpEndpointSerializer.serializeLoadBean();
-        }
+        mcpEndpointSerializer.serializeProperty();
     }
 
     @Override
     public void serializeAutowired() {
-        if (mcpEndpointSerializer.isEnable()) {
-            mcpEndpointSerializer.serializeAutowired();
-        }
+        mcpEndpointSerializer.serializeAutowired();
         super.serializeAutowired();
     }
 
     @Override
     public void serializePostConstruct() {
         super.serializePostConstruct();
-        if (mcpEndpointSerializer.isEnable()) {
-            mcpEndpointSerializer.serializePostConstruct();
-        }
+        mcpEndpointSerializer.serializePostConstruct();
     }
 
     @Override
@@ -321,7 +306,7 @@ final class ControllerSerializer extends AbstractSerializer {
             }
         }
 
-        if (mcpEndpointSerializer.isEnable()) {
+        if (mcpServerOption.enable) {
             mcpEndpointSerializer.serializeRouter();
         }
         addInterceptor();
