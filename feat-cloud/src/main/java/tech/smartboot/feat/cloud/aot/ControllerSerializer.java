@@ -53,7 +53,7 @@ final class ControllerSerializer extends AbstractSerializer {
     private static final int RETURN_TYPE_BYTE_ARRAY = 3;
     private final Map<String, String> bytesCache = new HashMap<>();
     private final McpEndpointSerializer mcpEndpointSerializer;
-    private McpEndpointSerializer.McpServerOption mcpServerOption;
+    private final McpEndpointSerializer.McpServerOption mcpServerOption;
 
     public ControllerSerializer(ProcessingEnvironment processingEnv, String config, Element element) throws IOException {
         super(processingEnv, config, element);

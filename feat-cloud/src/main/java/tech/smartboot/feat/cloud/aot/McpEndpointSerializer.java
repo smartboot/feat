@@ -60,7 +60,7 @@ final class McpEndpointSerializer implements Serializer {
         toolMethods = element.getEnclosedElements().stream().filter(e -> e.getAnnotation(Tool.class) != null).collect(Collectors.toList());
         promptMethods = element.getEnclosedElements().stream().filter(e -> e.getAnnotation(Prompt.class) != null).collect(Collectors.toList());
         resourceMethods = element.getEnclosedElements().stream().filter(e -> e.getAnnotation(Resource.class) != null).collect(Collectors.toList());
-        if (option.isDefault && (FeatUtils.isNotEmpty(toolMethods) || FeatUtils.isNotEmpty(promptMethods) || FeatUtils.isNotEmpty(resourceMethods))) {
+        if (option.isDefault && (FeatUtils.isEmpty(toolMethods) && FeatUtils.isEmpty(promptMethods) && FeatUtils.isEmpty(resourceMethods))) {
             option.enable = false;
         }
     }
