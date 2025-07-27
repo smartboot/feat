@@ -62,7 +62,7 @@ public class DefaultMcpServerSerializer implements Serializer {
 
     @Override
     public void serializeLoadBean() {
-        printWriter.println("\t\tbean = new McpServer(); ");
+        printWriter.println("\t\tbean = new McpServer(opt -> opt.toolEnable()); ");
         printWriter.println("\t\tapplicationContext.addBean(\"_mcpServer\", bean);");
     }
 
