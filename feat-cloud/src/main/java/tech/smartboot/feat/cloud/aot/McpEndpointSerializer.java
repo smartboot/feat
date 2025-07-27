@@ -143,7 +143,7 @@ final class McpEndpointSerializer implements Serializer {
         if (!mcpEndpoint.enable) {
             return;
         }
-        if (FeatUtils.isNotEmpty(toolMethods) || FeatUtils.isNotEmpty(promptMethods)) {
+        if (!mcpEndpoint.isDefault && (FeatUtils.isNotEmpty(toolMethods) || FeatUtils.isNotEmpty(promptMethods))) {
             printWriter.println("\t\tmcpServer.getOptions()");
             //配置McpOptions
             if (FeatUtils.isNotBlank(this.mcpEndpoint.streamableEndpoint)) {
