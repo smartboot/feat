@@ -67,6 +67,13 @@ public class DefaultMcpServerSerializer implements Serializer {
     }
 
     @Override
+    public void serializeRouter() throws IOException {
+        printWriter.println("\t\tapplicationContext.getRouter().route(bean.getOptions().getSseEndpoint(), bean.sseHandler());");
+        printWriter.println("\t\tapplicationContext.getRouter().route(bean.getOptions().getSseMessageEndpoint(), bean.sseMessageHandler());");
+        printWriter.println("\t\tapplicationContext.getRouter().route(bean.getOptions().getMcpEndpoint(), bean.mcpHandler());");
+    }
+
+    @Override
     public PrintWriter getPrintWriter() {
         return printWriter;
     }
