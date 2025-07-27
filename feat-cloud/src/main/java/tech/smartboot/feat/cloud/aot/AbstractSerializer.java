@@ -20,7 +20,6 @@ import tech.smartboot.feat.cloud.annotation.Bean;
 import tech.smartboot.feat.cloud.annotation.PostConstruct;
 import tech.smartboot.feat.cloud.annotation.PreDestroy;
 import tech.smartboot.feat.cloud.annotation.Value;
-import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
 import tech.smartboot.feat.cloud.aot.value.FeatValueSerializer;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.exception.FeatException;
@@ -122,7 +121,7 @@ abstract class AbstractSerializer implements Serializer {
                 continue;
             }
             //McpServer特殊处理
-            if (field.asType().toString().equals(McpServer.class.getName()) && element.getAnnotation(McpEndpoint.class) != null) {
+            if (field.asType().toString().equals(McpServer.class.getName())) {
                 continue;
             }
             autowiredFields.add(field);

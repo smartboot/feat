@@ -19,7 +19,6 @@ import tech.smartboot.feat.ai.mcp.server.model.ServerPrompt;
 import tech.smartboot.feat.ai.mcp.server.model.ServerResource;
 import tech.smartboot.feat.ai.mcp.server.model.ServerTool;
 import tech.smartboot.feat.cloud.annotation.Autowired;
-import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
 import tech.smartboot.feat.cloud.annotation.mcp.Param;
 import tech.smartboot.feat.cloud.annotation.mcp.Prompt;
 import tech.smartboot.feat.cloud.annotation.mcp.Resource;
@@ -47,18 +46,28 @@ final class McpEndpointSerializer implements Serializer {
     private final List<Element> toolMethods;
     private final List<Element> promptMethods;
     private final List<Element> resourceMethods;
-    private final McpEndpoint mcpEndpoint;
+    private final McpServerOption mcpEndpoint;
     private final PrintWriter printWriter;
     private final Element element;
+    private boolean enable;
 
-    public McpEndpointSerializer(ProcessingEnvironment processingEnv, Element element, PrintWriter printWriter) throws IOException {
+    public McpEndpointSerializer(ProcessingEnvironment processingEnv, McpServerOption option, Element element, PrintWriter printWriter) throws IOException {
         this.processingEnv = processingEnv;
         this.element = element;
         this.printWriter = printWriter;
-        mcpEndpoint = element.getAnnotation(McpEndpoint.class);
+        mcpEndpoint = option;
         toolMethods = element.getEnclosedElements().stream().filter(e -> e.getAnnotation(Tool.class) != null).collect(Collectors.toList());
         promptMethods = element.getEnclosedElements().stream().filter(e -> e.getAnnotation(Prompt.class) != null).collect(Collectors.toList());
         resourceMethods = element.getEnclosedElements().stream().filter(e -> e.getAnnotation(Resource.class) != null).collect(Collectors.toList());
+        if (!option.root) {
+            this.enable = true;
+        } else if ((FeatUtils.isNotEmpty(toolMethods) || FeatUtils.isNotEmpty(promptMethods) || FeatUtils.isNotEmpty(resourceMethods))) {
+            this.enable = true;
+        }
+    }
+
+    public boolean isEnable() {
+        return enable;
     }
 
     @Override
@@ -81,13 +90,22 @@ final class McpEndpointSerializer implements Serializer {
 
     @Override
     public void serializeProperty() {
-        printWriter.println("\tprivate McpServer mcpServer = new McpServer();");
+        if (mcpEndpoint.root) {
+            printWriter.println("\tprivate McpServer mcpServer = null;");
+        } else {
+            printWriter.println("\tprivate McpServer mcpServer = new McpServer();");
+        }
+
     }
 
     /**
      * 只处理McpServer注入
      */
     public void serializeAutowired() {
+        if (mcpEndpoint.root) {
+            printWriter.println("\t\tmcpServer = loadBean(\"mcpServer\", applicationContext);");
+        }
+
         element.getEnclosedElements().stream().filter(field -> field.getAnnotation(Autowired.class) != null && field.asType().toString().equals(McpServer.class.getName()))
                 .forEach(field -> {
                     String name = field.getSimpleName().toString();
@@ -122,31 +140,31 @@ final class McpEndpointSerializer implements Serializer {
         if (FeatUtils.isNotEmpty(toolMethods) || FeatUtils.isNotEmpty(promptMethods)) {
             printWriter.println("\t\tmcpServer.getOptions()");
             //配置McpOptions
-            if (FeatUtils.isNotBlank(this.mcpEndpoint.streamableEndpoint())) {
-                printWriter.append("\t\t\t\t.setMcpEndpoint(\"").append(this.mcpEndpoint.streamableEndpoint()).println("\")");
+            if (FeatUtils.isNotBlank(this.mcpEndpoint.streamableEndpoint)) {
+                printWriter.append("\t\t\t\t.setMcpEndpoint(\"").append(this.mcpEndpoint.streamableEndpoint).println("\")");
             }
-            if (FeatUtils.isNotBlank(this.mcpEndpoint.sseEndpoint())) {
-                printWriter.append("\t\t\t\t.setSseEndpoint(\"").append(this.mcpEndpoint.sseEndpoint()).println("\")");
+            if (FeatUtils.isNotBlank(this.mcpEndpoint.sseEndpoint)) {
+                printWriter.append("\t\t\t\t.setSseEndpoint(\"").append(this.mcpEndpoint.sseEndpoint).println("\")");
             }
-            if (FeatUtils.isNotBlank(this.mcpEndpoint.sseMessageEndpoint())) {
-                printWriter.append("\t\t\t\t.setSseMessageEndpoint(\"").append(this.mcpEndpoint.sseMessageEndpoint()).println("\")");
+            if (FeatUtils.isNotBlank(this.mcpEndpoint.sseMessageEndpoint)) {
+                printWriter.append("\t\t\t\t.setSseMessageEndpoint(\"").append(this.mcpEndpoint.sseMessageEndpoint).println("\")");
             }
-            if (this.mcpEndpoint.toolEnable()) {
+            if (this.mcpEndpoint.toolEnable) {
                 printWriter.println("\t\t\t\t.toolEnable()");
             }
-            if (this.mcpEndpoint.resourceEnable()) {
+            if (this.mcpEndpoint.resourceEnable) {
                 printWriter.println("\t\t\t\t.resourceEnable()");
             }
-            if (this.mcpEndpoint.loggingEnable()) {
+            if (this.mcpEndpoint.loggingEnable) {
                 printWriter.println("\t\t\t\t.loggingEnable()");
             }
-            if (this.mcpEndpoint.promptsEnable()) {
+            if (this.mcpEndpoint.promptsEnable) {
                 printWriter.println("\t\t\t\t.promptsEnable()");
             }
             printWriter.println("\t\t\t\t.getImplementation()");
-            printWriter.append("\t\t\t\t.setName(\"").append(this.mcpEndpoint.name()).println("\")");
-            printWriter.append("\t\t\t\t.setTitle(\"").append(this.mcpEndpoint.title()).println("\")");
-            printWriter.append("\t\t\t\t.setVersion(\"").append(this.mcpEndpoint.version()).println("\");");
+            printWriter.append("\t\t\t\t.setName(\"").append(this.mcpEndpoint.name).println("\")");
+            printWriter.append("\t\t\t\t.setTitle(\"").append(this.mcpEndpoint.title).println("\")");
+            printWriter.append("\t\t\t\t.setVersion(\"").append(this.mcpEndpoint.version).println("\");");
         }
         for (Element t : toolMethods) {
             ExecutableElement toolMethod = (ExecutableElement) t;
@@ -231,16 +249,15 @@ final class McpEndpointSerializer implements Serializer {
 
     @Override
     public void serializeRouter() {
-        McpEndpoint mcpEndpoint = element.getAnnotation(McpEndpoint.class);
         //注册Router
-        if (FeatUtils.isNotBlank(mcpEndpoint.streamableEndpoint())) {
-            printWriter.println("\t\tapplicationContext.getRouter().route(\"" + mcpEndpoint.streamableEndpoint() + "\", mcpServer.mcpHandler());");
+        if (FeatUtils.isNotBlank(mcpEndpoint.streamableEndpoint)) {
+            printWriter.println("\t\tapplicationContext.getRouter().route(\"" + mcpEndpoint.streamableEndpoint + "\", mcpServer.mcpHandler());");
         }
-        if (FeatUtils.isNotBlank(mcpEndpoint.sseEndpoint())) {
-            printWriter.println("\t\tapplicationContext.getRouter().route(\"" + mcpEndpoint.sseEndpoint() + "\", mcpServer.sseHandler());");
+        if (FeatUtils.isNotBlank(mcpEndpoint.sseEndpoint)) {
+            printWriter.println("\t\tapplicationContext.getRouter().route(\"" + mcpEndpoint.sseEndpoint + "\", mcpServer.sseHandler());");
         }
-        if (FeatUtils.isNotBlank(mcpEndpoint.sseMessageEndpoint())) {
-            printWriter.println("\t\tapplicationContext.getRouter().route(\"" + mcpEndpoint.sseMessageEndpoint() + "\", mcpServer.sseMessageHandler());");
+        if (FeatUtils.isNotBlank(mcpEndpoint.sseMessageEndpoint)) {
+            printWriter.println("\t\tapplicationContext.getRouter().route(\"" + mcpEndpoint.sseMessageEndpoint + "\", mcpServer.sseMessageHandler());");
         }
     }
 
@@ -398,5 +415,91 @@ final class McpEndpointSerializer implements Serializer {
         }
 
         printWriter.println("\t\t\t\t\t})");
+    }
+
+    static class McpServerOption {
+        boolean root;
+        /**
+         * MCP服务名称
+         * 对应MCP协议中服务的name字段
+         * 默认值："feat-mcp-server"
+         */
+        String name;
+
+
+        /**
+         * MCP服务标题
+         * 对应MCP协议中服务的title字段
+         * 默认值："Feat MCP Server"
+         */
+        String title;
+
+
+        /**
+         * MCP服务版本
+         * 对应MCP协议中服务的version字段
+         * 默认值：Feat.VERSION
+         */
+        String version;
+
+        /**
+         * SSE端点地址
+         * 用于建立SSE连接的端点URL路径
+         * 对应MCP协议中的SSE通信机制
+         */
+        String sseEndpoint;
+
+        /**
+         * SSE消息端点地址
+         * 用于发送SSE消息的端点URL路径
+         * 对应MCP协议中的SSE消息传递机制
+         */
+        String sseMessageEndpoint;
+
+
+        /**
+         * 流式传输端点地址
+         * 用于支持流式数据传输的端点URL路径
+         * 对应MCP协议中的流式传输机制
+         */
+        String streamableEndpoint;
+
+        /**
+         * 资源功能开关
+         * 控制是否启用MCP资源(resources/list)功能
+         * 默认值：true(启用)
+         *
+         * @see <a href="https://modelcontextprotocol.io/specification#resources">MCP Resources</a>
+         */
+        boolean resourceEnable;
+
+        /**
+         * 工具功能开关
+         * 控制是否启用MCP工具(tools/list, tools/call)功能
+         * 默认值：true(启用)
+         *
+         * @see <a href="https://modelcontextprotocol.io/specification#tools">MCP Tools</a>
+         */
+        boolean toolEnable;
+
+
+        /**
+         * 提示词功能开关
+         * 控制是否启用MCP提示词(prompts/list)功能
+         * 默认值：true(启用)
+         *
+         * @see <a href="https://modelcontextprotocol.io/specification#prompts">MCP Prompts</a>
+         */
+        boolean promptsEnable;
+
+
+        /**
+         * 日志功能开关
+         * 控制是否启用MCP日志(logging)功能
+         * 默认值：true(启用)
+         *
+         * @see <a href="https://modelcontextprotocol.io/specification#logging">MCP Logging</a>
+         */
+        boolean loggingEnable;
     }
 }

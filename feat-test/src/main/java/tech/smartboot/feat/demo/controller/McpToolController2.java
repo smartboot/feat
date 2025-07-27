@@ -25,9 +25,6 @@ import tech.smartboot.feat.cloud.annotation.mcp.Tool;
  * @version v1.0.0
  */
 @Controller
-@McpEndpoint(sseEndpoint = "/mcp/sse"
-        , sseMessageEndpoint = "/mcp/sse/message"
-        , streamableEndpoint = "/mcp/message")
 public class McpToolController2 {
     @Autowired
     private McpServer mcpServer;
