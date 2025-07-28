@@ -37,6 +37,7 @@ import javax.lang.model.type.TypeMirror;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 /**
@@ -280,6 +281,10 @@ final class McpEndpointSerializer implements Serializer {
             printWriter.println("\t\t\t\treturn result;");
         } else if (AsyncResponse.class.getName().equals(returnType.toString())) {
             printWriter.println("\t\t\t\tresult.getFuture().thenAccept(rst -> {");
+            printWriter.println("\t\t\t\t\tctx.getFuture().complete(ToolResult.ofStructuredContent(JSONObject.parseObject(JSON.toJSONString(rst))));");
+            printWriter.println("\t\t\t\t});");
+        } else if (CompletableFuture.class.getName().equals(((DeclaredType) returnType).asElement().toString())) {
+            printWriter.println("\t\t\t\tresult.thenAccept(rst -> {");
             printWriter.println("\t\t\t\t\tctx.getFuture().complete(ToolResult.ofStructuredContent(JSONObject.parseObject(JSON.toJSONString(rst))));");
             printWriter.println("\t\t\t\t});");
         } else if (!returnType.toString().startsWith("java.")) {
