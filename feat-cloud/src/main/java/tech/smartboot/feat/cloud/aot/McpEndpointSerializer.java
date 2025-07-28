@@ -18,6 +18,7 @@ import tech.smartboot.feat.ai.mcp.server.McpServer;
 import tech.smartboot.feat.ai.mcp.server.model.ServerPrompt;
 import tech.smartboot.feat.ai.mcp.server.model.ServerResource;
 import tech.smartboot.feat.ai.mcp.server.model.ServerTool;
+import tech.smartboot.feat.cloud.AsyncResponse;
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
 import tech.smartboot.feat.cloud.annotation.mcp.Param;
@@ -277,6 +278,10 @@ final class McpEndpointSerializer implements Serializer {
             printWriter.println("\t\t\t\treturn ToolResult.ofText(String.valueOf(result));");
         } else if (processingEnv.getTypeUtils().isSubtype(returnType, processingEnv.getElementUtils().getTypeElement(ToolResult.class.getName()).asType())) {
             printWriter.println("\t\t\t\treturn result;");
+        } else if (AsyncResponse.class.getName().equals(returnType.toString())) {
+            printWriter.println("\t\t\t\tresult.getFuture().thenAccept(rst -> {");
+            printWriter.println("\t\t\t\t\tctx.getFuture().complete(ToolResult.ofStructuredContent(JSONObject.parseObject(JSON.toJSONString(rst))));");
+            printWriter.println("\t\t\t\t});");
         } else if (!returnType.toString().startsWith("java.")) {
             printWriter.println("\t\t\t\treturn ToolResult.ofStructuredContent(JSONObject.parseObject(JSON.toJSONString(result)));");
         } else {
