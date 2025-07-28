@@ -11,7 +11,10 @@
 package tech.smartboot.feat.ai.mcp.server.model;
 
 import com.alibaba.fastjson2.JSONObject;
+import tech.smartboot.feat.ai.mcp.model.ToolResult;
 import tech.smartboot.feat.core.server.HttpRequest;
+
+import java.util.concurrent.CompletableFuture;
 
 /**
  * @author 三刀 zhengjunweimail@163.com
@@ -20,6 +23,7 @@ import tech.smartboot.feat.core.server.HttpRequest;
 public class ToolContext {
     private final HttpRequest request;
     private final JSONObject arguments;
+    private final CompletableFuture<ToolResult> future = new CompletableFuture<>();
 
     public ToolContext(HttpRequest request, JSONObject arguments) {
         this.request = request;
@@ -32,5 +36,9 @@ public class ToolContext {
 
     public JSONObject getArguments() {
         return arguments;
+    }
+
+    public CompletableFuture<ToolResult> getFuture() {
+        return future;
     }
 }

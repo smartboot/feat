@@ -20,7 +20,7 @@ import tech.smartboot.feat.core.server.HttpRequest;
  */
 public class LoggingSetLevelHandler implements ServerHandler {
     @Override
-    public JSONObject apply(McpServer mcp, HttpRequest request, JSONObject jsonObject) {
+    public JSONObject handle(McpServer mcp, HttpRequest request, JSONObject jsonObject) {
         JSONObject params = jsonObject.getJSONObject("params");
         String level = params.getString("level");
 

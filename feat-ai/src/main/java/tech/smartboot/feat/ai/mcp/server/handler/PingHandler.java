@@ -20,7 +20,7 @@ import tech.smartboot.feat.core.server.HttpRequest;
  */
 public class PingHandler implements ServerHandler {
     @Override
-    public JSONObject apply(McpServer mcpServer, HttpRequest request, JSONObject jsonObject) {
+    public JSONObject handle(McpServer mcpServer, HttpRequest request, JSONObject jsonObject) {
         return new JSONObject();
     }
 }

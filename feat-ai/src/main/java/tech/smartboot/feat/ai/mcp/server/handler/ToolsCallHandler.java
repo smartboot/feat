@@ -12,23 +12,23 @@ package tech.smartboot.feat.ai.mcp.server.handler;
 
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
-import tech.smartboot.feat.ai.mcp.model.ToolCalledResult;
+import tech.smartboot.feat.ai.mcp.McpException;
 import tech.smartboot.feat.ai.mcp.enums.ToolResultType;
 import tech.smartboot.feat.ai.mcp.model.ToolResult;
 import tech.smartboot.feat.ai.mcp.server.McpServer;
-import tech.smartboot.feat.ai.mcp.McpException;
 import tech.smartboot.feat.ai.mcp.server.model.ServerTool;
 import tech.smartboot.feat.ai.mcp.server.model.ToolContext;
 import tech.smartboot.feat.core.server.HttpRequest;
+
+import java.util.concurrent.CompletableFuture;
 
 /**
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0 6/28/25
  */
 public class ToolsCallHandler implements ServerHandler {
-
     @Override
-    public JSONObject apply(McpServer mcp, HttpRequest request, JSONObject jsonObject) {
+    public CompletableFuture<JSONObject> asyncHandle(McpServer mcp, HttpRequest request, JSONObject jsonObject) {
         JSONObject params = jsonObject.getJSONObject("params");
         String toolName = params.getString("name");
         JSONObject toolParams = params.getJSONObject("arguments");
@@ -39,20 +39,34 @@ public class ToolsCallHandler implements ServerHandler {
         if (tool == null) {
             throw new McpException(McpException.INTERNAL_ERROR, "Unknown tool: " + toolName);
         }
-        JSONObject result = new JSONObject();
+        CompletableFuture<JSONObject> future = new CompletableFuture<>();
+
         try {
-            ToolResult content = tool.getAction().apply(toolContext);
-            if (ToolResultType.STRUCTURED_CONTENT.getType().equals(content.getType())) {
-                ToolResult.StructuredContent structuredContent = (ToolResult.StructuredContent) content;
-                result.put("content", JSONArray.of(JSONObject.from(ToolResult.ofText(structuredContent.getContent().toString()))));
-                result.put("structuredContent", structuredContent.getContent());
-            } else {
-                result.put("content", JSONArray.of(JSONObject.from(content)));
-            }
+            tool.getAction().accept(toolContext);
+            toolContext.getFuture().thenAccept(content -> {
+                JSONObject result = new JSONObject();
+                if (ToolResultType.STRUCTURED_CONTENT.getType().equals(content.getType())) {
+                    ToolResult.StructuredContent structuredContent = (ToolResult.StructuredContent) content;
+                    result.put("content", JSONArray.of(JSONObject.from(ToolResult.ofText(structuredContent.getContent().toString()))));
+                    result.put("structuredContent", structuredContent.getContent());
+                } else {
+                    result.put("content", JSONArray.of(JSONObject.from(content)));
+                }
+                future.complete(result);
+            });
         } catch (Throwable e) {
+            JSONObject result = new JSONObject();
             result.put("content", JSONArray.of(JSONObject.from(ToolResult.ofText(e.getMessage()))));
             result.put("isError", true);
+            future.complete(result);
         }
-        return result;
+        return future;
     }
+
+    @Override
+    public JSONObject handle(McpServer mcp, HttpRequest request, JSONObject jsonObject) {
+        throw new UnsupportedOperationException();
+    }
+
+
 }

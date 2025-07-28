@@ -12,18 +12,20 @@ package tech.smartboot.feat.ai.mcp.server;
 
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.Feat;
-import tech.smartboot.feat.ai.mcp.model.Tool;
 import tech.smartboot.feat.ai.mcp.enums.RoleEnum;
-import tech.smartboot.feat.ai.mcp.model.ToolCalledResult;
 import tech.smartboot.feat.ai.mcp.model.Prompt;
 import tech.smartboot.feat.ai.mcp.model.PromptMessage;
 import tech.smartboot.feat.ai.mcp.model.Resource;
 import tech.smartboot.feat.ai.mcp.model.ResourceTemplate;
+import tech.smartboot.feat.ai.mcp.model.Tool;
 import tech.smartboot.feat.ai.mcp.model.ToolResult;
 import tech.smartboot.feat.ai.mcp.server.model.ServerPrompt;
 import tech.smartboot.feat.ai.mcp.server.model.ServerResource;
 import tech.smartboot.feat.ai.mcp.server.model.ServerTool;
+import tech.smartboot.feat.ai.mcp.server.model.ToolContext;
 import tech.smartboot.feat.router.Router;
+
+import java.util.function.Consumer;
 
 /**
  * @author 三刀 zhengjunweimail@163.com
@@ -45,7 +47,7 @@ public class Demo {
         });
 
         McpServer mcp = new McpServer();
-        mcp.addTool(tool).addTool(ServerTool.of("errorTool").inputSchema(Tool.stringProperty("aa", "aa")).doAction(jsonObject -> {
+        mcp.addTool(tool).addTool(ServerTool.of("errorTool").inputSchema(Tool.stringProperty("aa", "aa")).doAction((Consumer<ToolContext>) toolContext -> {
             throw new IllegalStateException("exception...");
         })).addTool(structTool);
 

@@ -26,7 +26,7 @@ import tech.smartboot.feat.core.server.HttpRequest;
 public class ResourcesReadHandler implements ServerHandler {
 
     @Override
-    public JSONObject apply(McpServer mcp, HttpRequest request, JSONObject jsonObject) {
+    public JSONObject handle(McpServer mcp, HttpRequest request, JSONObject jsonObject) {
         JSONObject params = jsonObject.getJSONObject("params");
         String uri = params.getString("uri");
         ServerResource serverResource = mcp.getResources().stream().filter(r -> r.getUri().equals(uri)).findFirst().orElse(null);

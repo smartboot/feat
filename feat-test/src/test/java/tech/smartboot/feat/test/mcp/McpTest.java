@@ -29,8 +29,11 @@ import tech.smartboot.feat.ai.mcp.server.McpServer;
 import tech.smartboot.feat.ai.mcp.server.model.ServerPrompt;
 import tech.smartboot.feat.ai.mcp.server.model.ServerResource;
 import tech.smartboot.feat.ai.mcp.server.model.ServerTool;
+import tech.smartboot.feat.ai.mcp.server.model.ToolContext;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.router.Router;
+
+import java.util.function.Consumer;
 
 /**
  * @author 三刀 zhengjunweimail@163.com
@@ -58,7 +61,7 @@ public class McpTest {
         });
 
         mcp = new McpServer();
-        mcp.addTool(tool).addTool(ServerTool.of("errorTool").inputSchema(Tool.stringProperty("aa", "aa")).doAction(jsonObject -> {
+        mcp.addTool(tool).addTool(ServerTool.of("errorTool").inputSchema(Tool.stringProperty("aa", "aa")).doAction((Consumer<ToolContext>) jsonObject -> {
             throw new IllegalStateException("exception...");
         })).addTool(structTool);
 
@@ -129,7 +132,9 @@ public class McpTest {
 
     @Test
     public void callTool() throws Exception {
-        mcp.addTool(ServerTool.of("test_aaa").title("测试").description("测试").inputSchema(Tool.stringProperty("name", "用户名称"), Tool.requiredStringProperty("age", "用户年龄")).outputSchema(Tool.requiredNumberProperty("age", "年龄")).doAction(input -> ToolResult.ofText("aaa")));
+        mcp.addTool(ServerTool.of("test_aaa").title("测试").description("测试").inputSchema(Tool.stringProperty("name", "用户名称"), Tool.requiredStringProperty("age", "用户年龄")).outputSchema(Tool.requiredNumberProperty("age", "年龄")).doAction(toolContext -> {
+            return ToolResult.ofText("aaa");
+        }));
         ToolCalledResult result = sseClient.callTool("test_aaa");
         Assert.assertEquals("aaa", ((ToolResult.TextContent) (result.getContent().get(0))).getText());
         ToolCalledResult streamClient = sseClient.callTool("test_aaa");

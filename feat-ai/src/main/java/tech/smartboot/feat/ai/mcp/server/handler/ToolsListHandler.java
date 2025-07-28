@@ -24,7 +24,7 @@ import java.util.ArrayList;
 public class ToolsListHandler implements ServerHandler {
 
     @Override
-    public JSONObject apply(McpServer mcp, HttpRequest request, JSONObject jsonObject) {
+    public JSONObject handle(McpServer mcp, HttpRequest request, JSONObject jsonObject) {
         ToolListResponse response = new ToolListResponse();
         response.setTools(new ArrayList<>(mcp.getTools()));
         return JSONObject.from(response);

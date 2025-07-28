@@ -21,7 +21,7 @@ import tech.smartboot.feat.core.server.HttpRequest;
  */
 public class CompletionCompleteHandler implements ServerHandler {
     @Override
-    public JSONObject apply(McpServer mcp, HttpRequest request, JSONObject jsonObject) {
+    public JSONObject handle(McpServer mcp, HttpRequest request, JSONObject jsonObject) {
         JSONObject params = jsonObject.getJSONObject("params");
         JSONObject ref = params.getJSONObject("ref");
         JSONObject arguments = params.getJSONObject("arguments");

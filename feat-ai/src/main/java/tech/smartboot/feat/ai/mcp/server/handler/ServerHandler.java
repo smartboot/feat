@@ -14,11 +14,19 @@ import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.ai.mcp.server.McpServer;
 import tech.smartboot.feat.core.server.HttpRequest;
 
+import java.util.concurrent.CompletableFuture;
+
 /**
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0 6/28/25
  */
 public interface ServerHandler {
 
-    JSONObject apply(McpServer mcp, HttpRequest request, JSONObject jsonObject);
+    JSONObject handle(McpServer mcp, HttpRequest request, JSONObject jsonObject);
+
+    default CompletableFuture<JSONObject> asyncHandle(McpServer mcp, HttpRequest request, JSONObject jsonObject) {
+        CompletableFuture<JSONObject> future = new CompletableFuture<>();
+        future.complete(handle(mcp, request, jsonObject));
+        return future;
+    }
 }

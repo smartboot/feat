@@ -15,10 +15,11 @@ import tech.smartboot.feat.ai.mcp.model.ToolResult;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class ServerTool extends Tool {
-    private Function<ToolContext, ToolResult> action;
+    private Consumer<ToolContext> action;
 
     private ServerTool(String name) {
         super(name);
@@ -47,11 +48,16 @@ public class ServerTool extends Tool {
     }
 
     public ServerTool doAction(Function<ToolContext, ToolResult> action) {
+        this.action = toolContext -> toolContext.getFuture().complete(action.apply(toolContext));
+        return this;
+    }
+
+    public ServerTool doAction(Consumer<ToolContext> action) {
         this.action = action;
         return this;
     }
 
-    public Function<ToolContext, ToolResult> getAction() {
+    public Consumer<ToolContext> getAction() {
         return action;
     }
 

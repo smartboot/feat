@@ -24,7 +24,7 @@ import java.util.ArrayList;
 public class ListPromptsHandler implements ServerHandler {
 
     @Override
-    public JSONObject apply(McpServer mcp, HttpRequest request, JSONObject jsonObject) {
+    public JSONObject handle(McpServer mcp, HttpRequest request, JSONObject jsonObject) {
         PromptListResponse listResponse = new PromptListResponse();
         listResponse.setPrompts(new ArrayList<>(mcp.getPrompts()));
         return JSONObject.from(listResponse);

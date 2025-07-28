@@ -24,7 +24,7 @@ import java.util.ArrayList;
 public class ResourcesListHandler implements ServerHandler {
 
     @Override
-    public JSONObject apply(McpServer mcp, HttpRequest request, JSONObject jsonObject) {
+    public JSONObject handle(McpServer mcp, HttpRequest request, JSONObject jsonObject) {
         ResourceListResponse response = new ResourceListResponse();
         response.setResources(new ArrayList<>(mcp.getResources()));
         return JSONObject.from(response);

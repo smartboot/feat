@@ -25,7 +25,7 @@ import tech.smartboot.feat.core.server.HttpRequest;
  */
 public class PromptsGetHandler implements ServerHandler {
     @Override
-    public JSONObject apply(McpServer mcp, HttpRequest request, JSONObject jsonObject) {
+    public JSONObject handle(McpServer mcp, HttpRequest request, JSONObject jsonObject) {
         JSONObject params = jsonObject.getJSONObject("params");
         String promptName = params.getString("name");
         JSONObject promptParams = params.getJSONObject("arguments");

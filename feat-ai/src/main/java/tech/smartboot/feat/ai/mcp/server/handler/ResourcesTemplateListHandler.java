@@ -22,7 +22,7 @@ import tech.smartboot.feat.core.server.HttpRequest;
 public class ResourcesTemplateListHandler implements ServerHandler {
 
     @Override
-    public JSONObject apply(McpServer mcp, HttpRequest request, JSONObject jsonObject) {
+    public JSONObject handle(McpServer mcp, HttpRequest request, JSONObject jsonObject) {
         JSONObject result = new JSONObject();
         result.put("resourceTemplates", JSONArray.from(mcp.getResourceTemplates()));
         return result;

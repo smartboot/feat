@@ -45,6 +45,7 @@ import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.upgrade.sse.SSEUpgrade;
 import tech.smartboot.feat.core.server.upgrade.sse.SseEmitter;
+import tech.smartboot.feat.router.Context;
 import tech.smartboot.feat.router.RouterHandler;
 
 import java.io.IOException;
@@ -52,6 +53,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
@@ -181,7 +183,7 @@ public class McpServer {
         return sseEmitters;
     }
 
-    public Response jsonRpcHandle(StreamSession session, HttpRequest request) throws Throwable {
+    public CompletableFuture<Response> jsonRpcHandle(StreamSession session, HttpRequest request) throws Throwable {
         if (session == null) {
             throw new HttpException(HttpStatus.UNAUTHORIZED);
         }
@@ -220,7 +222,9 @@ public class McpServer {
                 initializeResponse.setServerInfo(options.getImplementation());
                 rsp.setResult(initializeResponse);
                 session.setState(StreamSession.STATE_INITIALIZED);
-                return rsp;
+                CompletableFuture<Response> response = new CompletableFuture<>();
+                response.complete(rsp);
+                return response;
             }
             case StreamSession.STATE_INITIALIZED: {
                 String json1 = FeatUtils.asString(request.getInputStream());
@@ -253,27 +257,39 @@ public class McpServer {
 
 
                     ServerHandler handler = handlers.get(method);
+                    CompletableFuture<Response> future = new CompletableFuture<>();
                     Response<JSONObject> response = new Response<>();
 
                     try {
-                        JSONObject result = handler.apply(this, request, jsonObject);
-                        response.setResult(result);
+                        CompletableFuture<JSONObject> result = handler.asyncHandle(this, request, jsonObject);
+                        result.thenAccept(rsp -> {
+                            response.setResult(rsp);
+                            future.complete(response);
+                        }).exceptionally(throwable -> {
+                            JSONObject error = new JSONObject();
+                            error.put("code", -32603);
+                            error.put("message", throwable.toString());
+                            response.setError(error);
+                            future.complete(response);
+                            return null;
+                        });
                     } catch (McpException e) {
                         JSONObject error = new JSONObject();
                         error.put("code", e.getCode());
                         error.put("message", e.getMessage());
                         error.put("data", e.getData());
                         response.setError(error);
+                        future.complete(response);
                     } catch (Throwable e) {
                         logger.error("", e);
                         JSONObject error = new JSONObject();
                         error.put("code", -32603);
                         error.put("message", e.toString());
                         response.setError(error);
-
+                        future.complete(response);
                     }
                     response.setId(jsonObject.getInteger("id"));
-                    return response;
+                    return future;
                 }
                 break;
             }
@@ -319,10 +335,12 @@ public class McpServer {
             StreamSession session = sseEmitters.get(ctx.Request.getParameter("session_id"));
             ctx.Response.setHttpStatus(HttpStatus.ACCEPTED);
             int preStatus = session.getState();
-            Response response = jsonRpcHandle(session, ctx.Request);
+            CompletableFuture<Response> response = jsonRpcHandle(session, ctx.Request);
             if (response != null) {
-                session.getSseEmitter().send(JSONObject.toJSONString(response), (Throwable throwable) -> {
-                    logger.error("send error", throwable);
+                response.thenAccept(rsp -> {
+                    session.getSseEmitter().send(JSONObject.toJSONString(rsp), (Throwable throwable) -> {
+                        logger.error("send error", throwable);
+                    });
                 });
             } else if (preStatus == StreamSession.STATE_INITIALIZED && session.getState() == StreamSession.STATE_READY) {
                 initialized(session);
@@ -331,50 +349,70 @@ public class McpServer {
     }
 
     public RouterHandler mcpHandler() {
-        return ctx -> {
-            HttpRequest request = ctx.Request;
-            String sessionId = request.getHeader(Request.HEADER_SESSION_ID);
+        return new RouterHandler() {
+            @Override
+            public void handle(Context ctx, CompletableFuture<Void> completableFuture) throws Throwable {
+                HttpRequest request = ctx.Request;
+                String sessionId = request.getHeader(Request.HEADER_SESSION_ID);
 
-            StreamSession session;
-            if (sessionId == null) {
-                session = new StreamSession();
-            } else {
-                session = sseEmitters.get(sessionId);
-            }
-            if (session == null) {
-                request.getResponse().setHttpStatus(HttpStatus.UNAUTHORIZED);
-                request.getResponse().close();
-                return;
-            }
-            if (request.getContentType() == null && HeaderValue.ContentType.EVENT_STREAM.equalsIgnoreCase(request.getHeader(HeaderName.ACCEPT))) {
-                if (session.getState() != StreamSession.STATE_READY) {
+                StreamSession session;
+                if (sessionId == null) {
+                    session = new StreamSession();
+                } else {
+                    session = sseEmitters.get(sessionId);
+                }
+                if (session == null) {
                     request.getResponse().setHttpStatus(HttpStatus.UNAUTHORIZED);
                     request.getResponse().close();
                     return;
                 }
-                request.upgrade(new SSEUpgrade() {
-                    @Override
-                    public void onOpen(SseEmitter sseEmitter) throws IOException {
-                        if (session.getSseEmitter() != null) {
-                            session.getSseEmitter().complete();
-                        }
-                        session.setSseEmitter(sseEmitter);
-                        initialized(session);
-                        System.out.println("onOpen");
+                if (request.getContentType() == null && HeaderValue.ContentType.EVENT_STREAM.equalsIgnoreCase(request.getHeader(HeaderName.ACCEPT))) {
+                    if (session.getState() != StreamSession.STATE_READY) {
+                        request.getResponse().setHttpStatus(HttpStatus.UNAUTHORIZED);
+                        request.getResponse().close();
+                        return;
                     }
-                });
-                return;
-            }
-            Response response = jsonRpcHandle(session, request);
-            if (response != null) {
-                byte[] bytes = JSON.toJSONBytes(response);
-                request.getResponse().setContentLength(bytes.length);
-                request.getResponse().setContentType(HeaderValue.ContentType.APPLICATION_JSON);
-                if (response.getResult() instanceof McpInitializeResponse) {
-                    request.getResponse().setHeader(Request.HEADER_SESSION_ID, session.getSessionId());
-                    sseEmitters.put(session.getSessionId(), session);
+                    request.upgrade(new SSEUpgrade() {
+                        @Override
+                        public void onOpen(SseEmitter sseEmitter) throws IOException {
+                            if (session.getSseEmitter() != null) {
+                                session.getSseEmitter().complete();
+                            }
+                            session.setSseEmitter(sseEmitter);
+                            initialized(session);
+                            System.out.println("onOpen");
+                        }
+                    });
+                    return;
                 }
-                request.getResponse().write(bytes);
+                CompletableFuture<Response> response = McpServer.this.jsonRpcHandle(session, request);
+                if (response != null) {
+                    response.thenAccept(rsp -> {
+                        try {
+                            byte[] bytes = JSON.toJSONBytes(rsp);
+                            request.getResponse().setContentLength(bytes.length);
+                            request.getResponse().setContentType(HeaderValue.ContentType.APPLICATION_JSON);
+                            if (rsp.getResult() instanceof McpInitializeResponse) {
+                                request.getResponse().setHeader(Request.HEADER_SESSION_ID, session.getSessionId());
+                                sseEmitters.put(session.getSessionId(), session);
+                            }
+                            request.getResponse().write(bytes);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        } finally {
+                            completableFuture.complete(null);
+                        }
+
+                    });
+
+                } else {
+                    completableFuture.complete(null);
+                }
+            }
+
+            @Override
+            public void handle(Context ctx) throws Throwable {
+                throw new IllegalStateException();
             }
         };
     }
