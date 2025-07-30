@@ -397,9 +397,9 @@ final class McpEndpointSerializer implements Serializer {
             if (prompt.type() == PromptType.TEXT) {
                 printWriter.println("\t\t\t\t\t\treturn PromptMessage.ofText(" + RoleEnum.class.getSimpleName() + "." + prompt.role() + ", result);");
             } else if (prompt.type() == PromptType.IMAGE) {
-                printWriter.println("\t\t\t\t\t\treturn PromptMessage.ofImage(" + RoleEnum.class.getSimpleName() + "." + prompt.role() + ", result, \"" + prompt.mineType() + "\");");
+                printWriter.println("\t\t\t\t\t\treturn PromptMessage.ofImage(" + RoleEnum.class.getSimpleName() + "." + prompt.role() + ", result, \"" + prompt.mimeType() + "\");");
             } else if (prompt.type() == PromptType.AUDIO) {
-                printWriter.println("\t\t\t\t\t\treturn PromptMessage.ofAudio(" + RoleEnum.class.getSimpleName() + "." + prompt.role() + ", result, \"" + prompt.mineType() + "\");");
+                printWriter.println("\t\t\t\t\t\treturn PromptMessage.ofAudio(" + RoleEnum.class.getSimpleName() + "." + prompt.role() + ", result, \"" + prompt.mimeType() + "\");");
             } else if (prompt.type() == PromptType.EMBEDDED_RESOURCE) {
                 throw new FeatException("When the type of the @Prompt annotation is PromptType.EMBEDDED_RESOURCE, the result must be returned via PromptMessage.ofEmbeddedResource. please check [" + element.toString() + "@" + promptMethod.getSimpleName() + "]");
             } else {

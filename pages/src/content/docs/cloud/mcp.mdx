@@ -56,25 +56,9 @@ public class DefaultMcpUsageController {
             }));
     }
 
-    @Tool(description = "测试工具")
-    public String tool1(@Param(required = true, description = "参数1") String param1,
-        @Param(required = false, description = "参数2") int param2,
-        boolean param3) {
-        return "hello " + param1;
-    }
-
-    @Tool(description = "测试工具")
-    public boolean tool2(@Param(required = true, description = "参数1") String param1,
-        @Param(required = false, description = "参数2") int param2,
-        boolean param3) {
-        return true;
-    }
-
-    @Tool(description = "测试工具")
-    public int tool3(@Param(required = true, description = "参数1") String param1,
-        @Param(required = false, description = "参数2") int param2,
-        boolean param3) {
-        return 0;
+    @Tool(description = "简单的问候工具")
+    public String greeting(@Param(required = true, description = "用户姓名") String name) {
+        return "你好，" + name + "！";
     }
 
     // 其他业务方法...
@@ -89,9 +73,6 @@ public class DefaultMcpUsageController {
 ### 使用示例
 
 下面是一个完整的 MCP Controller 示例，展示了如何使用所有 MCP 注解：
-
-<Tabs>
-<TabItem label="McpDemoController.java">
 
 ```java
 @Controller
@@ -109,32 +90,14 @@ public class McpDemoController {
      */
     @Tool(name = "getUserInfo", description = "根据用户ID获取用户信息")
     public UserInfo getUserInfo(
-        @Param(required = true, description = "用户ID") Long userId,
-        @Param(required = false, description = "是否包含详细信息") Boolean detailed
+        @Param(required = true, description = "用户ID") Long userId
     ) {
         // 实现获取用户信息的逻辑
         UserInfo user = new UserInfo();
         user.setId(userId);
         user.setName("User " + userId);
         user.setEmail(userId + "@example.com");
-
-        if (Boolean.TRUE.equals(detailed)) {
-            user.setPhone("13800138000");
-            user.setAddress("北京市朝阳区");
-        }
-
         return user;
-    }
-
-    /**
-     * 定义一个工具，用于计算两个数的和
-     */
-    @Tool(name = "addNumbers", description = "计算两个数的和")
-    public double addNumbers(
-        @Param(required = true, description = "第一个数") double a,
-        @Param(required = true, description = "第二个数") double b
-    ) {
-        return a + b;
     }
 
     /**
@@ -146,10 +109,9 @@ public class McpDemoController {
         type = PromptType.TEXT
     )
     public String codeReviewPrompt(
-        @Param(required = true, description = "编程语言") String language,
         @Param(required = true, description = "代码片段") String codeSnippet
     ) {
-        return String.format("请审查以下%s代码并提供改进建议：%s", language, codeSnippet);
+        return "请审查以下代码并提供改进建议：" + codeSnippet;
     }
 
     /**
@@ -169,76 +131,32 @@ public class McpDemoController {
             ## 命名规范
             1. 类名使用大驼峰命名法
             2. 方法名使用小驼峰命名法
-            3. 常量名使用全大写加下划线
-
+            
             ## 代码格式
             1. 缩进使用4个空格
             2. 行宽不超过120个字符
-            3. 方法之间空一行
             """;
-    }
-
-    /**
-     * 定义一个二进制资源
-     */
-    @Resource(
-        uri = "/resources/architecture.png",
-        name = "架构图",
-        description = "系统架构图",
-        mimeType = "image/png",
-        isText = false
-    )
-    public String architectureDiagram() {
-        // 返回图片的Base64编码
-        return "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
-    }
-
-    // 返回文本内容
-    @Tool(description = "获取文本信息")
-    public ToolResult.TextContent getTextInfo() {
-        return ToolResult.ofText("这是文本内容");
-    }
-
-    // 返回图片内容
-    @Tool(description = "获取图片信息")
-    public ToolResult.ImageContent getImageInfo() {
-        return ToolResult.ofImage("base64-encoded-image-data", "image/png");
     }
 }
 ```
-
-</TabItem>
-
-<TabItem label="UserInfo.java">
 
 ```java
 public class UserInfo {
     private Long id;
     private String name;
     private String email;
-    private String phone;
-    private String address;
-    
+
     // Getters and setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
-    
+
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
-    
+
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
-    
-    public String getPhone() { return phone; }
-    public void setPhone(String phone) { this.phone = phone; }
-    
-    public String getAddress() { return address; }
-    public void setAddress(String address) { this.address = address; }
 }
 ```
-
-</TabItem>
-</Tabs>
 
 
 ## 注解详解
@@ -305,7 +223,7 @@ public ToolResult.ImageContent getImageInfo() {
 | `description` | String | `""` | 提示词描述信息，对应 MCP 协议中提示词的 description 字段 |
 | `type` | PromptType | 必填 | 提示词类型，对应 MCP 协议中提示词的 type 字段 |
 | `role` | RoleEnum | `RoleEnum.User` | 提示词角色，对应 MCP 协议中提示词的 role 字段 |
-| `mineType` | String | `""` | 提示词内容的 MIME 类型，对应 MCP 协议中提示词的 mimeType 字段 |
+| `mimeType` | String | `""` | 提示词内容的 MIME 类型，对应 MCP 协议中提示词的 mimeType 字段 |
 
 MCP 支持多种提示词类型：
 
@@ -326,16 +244,7 @@ public String textPrompt() {
 // 图片提示词
 @Prompt(name = "imagePrompt", type = PromptType.IMAGE, mineType = "image/png")
 public String imagePrompt() {
-    return Base64.getEncoder().encodeToString(loadImageBytes());
-}
-
-// 嵌入式资源提示词
-@Prompt(name = "resourcePrompt", type = PromptType.EMBEDDED_RESOURCE)
-public PromptMessage resourcePrompt() {
-    return PromptMessage.ofEmbeddedResource(
-        RoleEnum.User,
-        Resource.of("file:///config.json", "配置文件", "application/json")
-    );
+    return "base64-encoded-image-data";
 }
 ```
 

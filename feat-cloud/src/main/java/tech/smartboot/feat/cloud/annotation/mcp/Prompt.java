@@ -77,5 +77,5 @@ public @interface Prompt {
      * 
      * @return MIME类型字符串
      */
-    String mineType() default "";
+    String mimeType() default "";
 }

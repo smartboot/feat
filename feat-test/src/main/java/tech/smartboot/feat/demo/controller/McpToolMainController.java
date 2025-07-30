@@ -100,12 +100,12 @@ public class McpToolMainController {
         return 1;
     }
 
-    @Prompt(name = "prompt3", description = "测试提示", type = PromptType.IMAGE, mineType = "bbb")
+    @Prompt(name = "prompt3", description = "测试提示", type = PromptType.IMAGE, mimeType = "bbb")
     public String prompt3(@Param(required = true, description = "参数1") String param1, @Param(required = false, description = "参数2") int param2) {
         return Base64.getEncoder().encodeToString("aasdfadsfa".getBytes());
     }
 
-    @Prompt(name = "prompt4", description = "测试提示", type = PromptType.AUDIO, mineType = "aaa")
+    @Prompt(name = "prompt4", description = "测试提示", type = PromptType.AUDIO, mimeType = "aaa")
     public String prompt4(@Param(required = true, description = "参数1") String param1, @Param(required = false, description = "参数2") int param2) {
         return Base64.getEncoder().encodeToString("aasdfadsfa".getBytes());
     }
