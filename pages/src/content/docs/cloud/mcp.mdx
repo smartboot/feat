@@ -9,14 +9,19 @@ import { TabItem, Tabs } from "@astrojs/starlight/components";
 
 <CheckAuthorize/>
 
-Feat Cloud 提供 零配置 与 可扩展 两套方式来构建 MCP 服务，帮助 AI 助手快速获取上下文信息、调用工具或读取提示词。
+Model Context Protocol (MCP) 是一种开放协议，允许 AI 系统与应用程序安全地交换信息和工具。Feat Cloud 提供了完整的 MCP 支持，包括：
 
-- 默认 MCP 服务器（零配置）：框架扫描源码，自动注册工具、提示词、资源。
-- 自定义 MCP 服务端点（可扩展）：通过注解精细控制服务名称、端点、能力开关等。
+- **工具 (Tools)**: 允许 AI 助手调用应用程序中的功能
+- **提示词 (Prompts)**: 提供预定义的提示词模板
+- **资源 (Resources)**: 共享文本或二进制资源
 
+Feat Cloud 提供两种 MCP 服务构建方式：
+
+1. **默认 MCP 服务器（零配置）**：框架自动创建 MCP 服务器实例
+2. **自定义 MCP 服务端点（可扩展）**：通过注解精细控制服务配置
 
 ## 默认 MCP Server（推荐）
-只要`Controller`类中出现 任意 @Tool、@Prompt 或 @Resource 注解，Feat Cloud 就会在启动时为你生成一个默认 MCP 服务器实例，无需额外配置。
+只要`Controller`类中出现 任意 @Tool、@Prompt 或 @Resource 注解，Feat Cloud 就会在源码编译期时为你生成一个默认 MCP 服务器实例，无需额外配置。
 
 ### 快速上手
 ```java
@@ -52,7 +57,7 @@ public class DefaultMcpUsageController {
     }
 
     @Tool(description = "测试工具")
-        public String tool1(@Param(required = true, description = "参数1") String param1,
+    public String tool1(@Param(required = true, description = "参数1") String param1,
         @Param(required = false, description = "参数2") int param2,
         boolean param3) {
         return "hello " + param1;
@@ -284,7 +289,7 @@ public ToolResult.ImageContent getImageInfo() {
 ```
 
 ### @Param
-`@Param` 注解用于定义 MCP 工具的参数信息，对应 MCP 协议中 tools/call 操作的参数定义。
+`@Param` 注解用于定义 MCP 工具的参数信息。
 
 | 参数 | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
@@ -292,7 +297,7 @@ public ToolResult.ImageContent getImageInfo() {
 | `description` | String | `""` | 参数描述信息，对应 JSON Schema 中的 description 字段 |
 
 ### @Prompt
-`@Prompt` 注解用于定义 MCP 提示词资源，对应 MCP 协议中 prompts/list 操作的提示词定义。
+`@Prompt` 注解用于定义 MCP 提示词资源。
 
 | 参数 | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
@@ -347,3 +352,5 @@ public PromptMessage resourcePrompt() {
 
 
 ## 小结
+
+通过 Feat Cloud 提供的 MCP 支持，您可以轻松地为 AI 助手提供上下文信息和工具能力。默认 MCP 服务器适合快速上手，而自定义 MCP 服务端点则提供了更精细的控制能力。根据您的具体需求选择合适的方案即可。
