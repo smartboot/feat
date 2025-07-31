@@ -8,7 +8,9 @@ import org.springframework.web.bind.annotation.RestController;
 @SpringBootApplication
 public class SpringBootApp {
     public static void main(String[] args) {
+        long start = System.currentTimeMillis();
         SpringApplication.run(SpringBootApp.class, args);
+        System.out.println("启动时间：" + (System.currentTimeMillis() - start));
     }
 
     @RestController

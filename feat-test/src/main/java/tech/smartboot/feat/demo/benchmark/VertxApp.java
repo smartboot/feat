@@ -8,8 +8,10 @@ import io.vertx.ext.web.Router;
 public class VertxApp extends AbstractVerticle {
 
     public static void main(String[] args) {
+        long start = System.currentTimeMillis();
         Vertx vertx = Vertx.vertx();
         vertx.deployVerticle(new VertxApp());
+        System.out.println("启动时间：" + (System.currentTimeMillis() - start));
     }
 
     @Override

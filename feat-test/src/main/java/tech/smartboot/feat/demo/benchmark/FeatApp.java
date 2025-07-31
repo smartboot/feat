@@ -36,10 +36,12 @@ public class FeatApp {
     }
 
     public static void main(String[] args) {
+        long start = System.currentTimeMillis();
         // 定义服务器接受的消息类型以及各类消息对应的处理器
         FeatCloud.cloudServer(options -> {
             options
                     .setPackages("tech.smartboot.feat.demo.benchmark");
         }).listen(8082);
+        System.out.println("启动耗时:" + (System.currentTimeMillis() - start));
     }
 }
