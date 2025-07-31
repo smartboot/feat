@@ -147,6 +147,9 @@
                         <goals>
                             <goal>jar-no-fork</goal>
                         </goals>
+                        <configuration>
+                            <skipSource>true</skipSource>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -158,6 +161,7 @@
                     <!--<links>https://docs.oracle.com/javase/7/docs/api/</links>-->
                     <show>public</show>
                     <failOnError>false</failOnError>
+                    <skip>true</skip>
                 </configuration>
                 <executions>
                     <execution>

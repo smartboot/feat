@@ -47,7 +47,7 @@ import java.util.List;
  * @version v1.0.0
  */
 public class ServerOptions {
-
+    private long startTime = System.currentTimeMillis();
     private int port = 8080;
 
     private String host = "0.0.0.0";
@@ -539,5 +539,14 @@ public class ServerOptions {
     public ServerOptions host(String host) {
         this.host = host;
         return this;
+    }
+
+    public ServerOptions startTime(long startTime) {
+        this.startTime = startTime;
+        return this;
+    }
+
+    public long getStartTime() {
+        return startTime;
     }
 }
