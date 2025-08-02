@@ -48,17 +48,23 @@ public final class JsonSerializer {
         jsonFieldSerializerMap.put(String.class.getName(), new StringSerializer(this));
         jsonFieldSerializerMap.put(Date.class.getName(), new DateSerializer(this));
         jsonFieldSerializerMap.put(Timestamp.class.getName(), new DateSerializer(this));
-        jsonFieldSerializerMap.put(int.class.getName(), new IntSerializer(this, IntSerializer.TYPE_INT));
-        jsonFieldSerializerMap.put(long.class.getName(), new IntSerializer(this, IntSerializer.TYPE_LONG));
-        jsonFieldSerializerMap.put(short.class.getName(), new IntSerializer(this, IntSerializer.TYPE_SHORT));
-        jsonFieldSerializerMap.put(byte.class.getName(), new IntSerializer(this, IntSerializer.TYPE_BYTE));
-        jsonFieldSerializerMap.put(Integer.class.getName(), new IntegerSerializer(this, IntegerSerializer.TYPE_INT));
-        jsonFieldSerializerMap.put(Long.class.getName(), new IntegerSerializer(this, IntegerSerializer.TYPE_LONG));
-        jsonFieldSerializerMap.put(Short.class.getName(), new IntegerSerializer(this, IntegerSerializer.TYPE_SHORT));
-        jsonFieldSerializerMap.put(Byte.class.getName(), new IntegerSerializer(this, IntegerSerializer.TYPE_BYTE));
-        jsonFieldSerializerMap.put(float.class.getName(), new NumberSerializer(this));
-        jsonFieldSerializerMap.put(double.class.getName(), new NumberSerializer(this));
-        jsonFieldSerializerMap.put(char.class.getName(), new CharSerializer(this));
+        jsonFieldSerializerMap.put(int.class.getName(), new PrimitiveSerializer(this, PrimitiveSerializer.TYPE_INT));
+        jsonFieldSerializerMap.put(long.class.getName(), new PrimitiveSerializer(this, PrimitiveSerializer.TYPE_LONG));
+        jsonFieldSerializerMap.put(short.class.getName(), new PrimitiveSerializer(this, PrimitiveSerializer.TYPE_SHORT));
+        jsonFieldSerializerMap.put(byte.class.getName(), new PrimitiveSerializer(this, PrimitiveSerializer.TYPE_BYTE));
+        jsonFieldSerializerMap.put(float.class.getName(), new PrimitiveSerializer(this, PrimitiveSerializer.TYPE_FLOAT));
+        jsonFieldSerializerMap.put(double.class.getName(), new PrimitiveSerializer(this, PrimitiveSerializer.TYPE_DOUBLE));
+        jsonFieldSerializerMap.put(char.class.getName(), new PrimitiveSerializer(this, PrimitiveSerializer.TYPE_CHAR));
+
+        jsonFieldSerializerMap.put(Integer.class.getName(), new WrapsPrimitiveSerializer(this, WrapsPrimitiveSerializer.TYPE_INT));
+        jsonFieldSerializerMap.put(Long.class.getName(), new WrapsPrimitiveSerializer(this, WrapsPrimitiveSerializer.TYPE_LONG));
+        jsonFieldSerializerMap.put(Short.class.getName(), new WrapsPrimitiveSerializer(this, WrapsPrimitiveSerializer.TYPE_SHORT));
+        jsonFieldSerializerMap.put(Byte.class.getName(), new WrapsPrimitiveSerializer(this, WrapsPrimitiveSerializer.TYPE_BYTE));
+        jsonFieldSerializerMap.put(Float.class.getName(), new WrapsPrimitiveSerializer(this, WrapsPrimitiveSerializer.TYPE_FLOAT));
+        jsonFieldSerializerMap.put(Double.class.getName(), new WrapsPrimitiveSerializer(this, WrapsPrimitiveSerializer.TYPE_DOUBLE));
+        jsonFieldSerializerMap.put(Character.class.getName(), new WrapsPrimitiveSerializer(this, WrapsPrimitiveSerializer.TYPE_CHAR));
+
+
         this.printWriter = printWriter;
     }
 
