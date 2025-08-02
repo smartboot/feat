@@ -39,7 +39,7 @@ final class WrapsPrimitiveSerializer extends AbstractSerializer {
         jsonSerializer.toBytesPool("\"" + getFieldName(se) + "\":");
         printWriter.append(JsonSerializer.headBlank(deep));
         String value = obj + ".get" + se.getSimpleName().toString().substring(0, 1).toUpperCase() + se.getSimpleName().toString().substring(1) + "()";
-        printWriter.append("if ( ").append(value).println(" == null ){");
+        printWriter.append("if (").append(value).println(" == null){");
         printWriter.append(JsonSerializer.headBlank(deep + 1));
         printWriter.println("os.write(b_null);");
         printWriter.append(JsonSerializer.headBlank(deep));

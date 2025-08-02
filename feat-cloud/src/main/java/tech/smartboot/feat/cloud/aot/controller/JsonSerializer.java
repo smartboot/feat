@@ -39,7 +39,10 @@ import java.util.Set;
  */
 public final class JsonSerializer {
     private final Map<String, AbstractSerializer> jsonFieldSerializerMap = new HashMap<>();
+
     private final Map<String, String> byteCache = new HashMap<>();
+    private final ListSerializer listSerializer;
+    private final MapSerializer mapSerializer;
     private final PrintWriter printWriter;
 
     public JsonSerializer(PrintWriter printWriter) {
@@ -64,7 +67,8 @@ public final class JsonSerializer {
         jsonFieldSerializerMap.put(Double.class.getName(), new WrapsPrimitiveSerializer(this, WrapsPrimitiveSerializer.TYPE_DOUBLE));
         jsonFieldSerializerMap.put(Character.class.getName(), new WrapsPrimitiveSerializer(this, WrapsPrimitiveSerializer.TYPE_CHAR));
 
-
+        listSerializer = new ListSerializer(this);
+        mapSerializer = new MapSerializer(this);
         this.printWriter = printWriter;
     }
 
@@ -85,10 +89,10 @@ public final class JsonSerializer {
 //            return;
             throw new UnsupportedEncodingException();
         } else if (typeMirror.toString().startsWith("java.util.List") || typeMirror.toString().startsWith("java.util.Collection")) {
-            new ListSerializer(this).serialize(typeMirror, obj, i, parent);
+            listSerializer.serialize(typeMirror, obj, i, parent);
             return;
         } else if (typeMirror.toString().startsWith("java.util.Map")) {
-            new MapSerializer(this).serialize(typeMirror, obj, i, parent);
+            mapSerializer.serialize(typeMirror, obj, i, parent);
             return;
         } else if (typeMirror.toString().endsWith(".JSONObject")) {
             printWriter.println(headBlank(i) + "if (" + obj + " != null) {");

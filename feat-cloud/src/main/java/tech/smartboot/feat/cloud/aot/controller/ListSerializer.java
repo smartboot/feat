@@ -30,10 +30,15 @@ final class ListSerializer extends AbstractSerializer {
 
     public void serialize(TypeMirror se, String obj, int i, DeclaredType parent) throws IOException {
         PrintWriter printWriter = jsonSerializer.getPrintWriter();
-        printWriter.append(JsonSerializer.headBlank(i)).println("if (" + obj + " == null) {");
-        printWriter.append(JsonSerializer.headBlank(i + 1));
-        jsonSerializer.toBytesPool("null");
-        printWriter.append(JsonSerializer.headBlank(i)).println("} else if (" + obj + ".isEmpty()) {");
+        if (parent == null) {
+            printWriter.append(JsonSerializer.headBlank(i)).println("if (" + obj + " == null) {");
+            printWriter.append(JsonSerializer.headBlank(i + 1));
+            jsonSerializer.toBytesPool("null");
+            printWriter.append(JsonSerializer.headBlank(i)).println("} else if (" + obj + ".isEmpty()) {");
+        } else {
+            printWriter.append(JsonSerializer.headBlank(i)).println("if (" + obj + ".isEmpty()) {");
+        }
+
         printWriter.append(JsonSerializer.headBlank(i + 1));
         jsonSerializer.toBytesPool("[]");
         printWriter.append(JsonSerializer.headBlank(i)).println("} else {");
