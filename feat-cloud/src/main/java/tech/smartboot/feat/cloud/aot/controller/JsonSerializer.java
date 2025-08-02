@@ -26,7 +26,6 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -44,7 +43,8 @@ public final class JsonSerializer {
     private final PrintWriter printWriter;
 
     public JsonSerializer(PrintWriter printWriter) {
-        jsonFieldSerializerMap.put(boolean.class.getName(), new BooleanSerializer(this));
+        jsonFieldSerializerMap.put(boolean.class.getName(), new BoolSerializer(this));
+        jsonFieldSerializerMap.put(Boolean.class.getName(), new BooleanSerializer(this));
         jsonFieldSerializerMap.put(String.class.getName(), new StringSerializer(this));
         jsonFieldSerializerMap.put(Date.class.getName(), new DateSerializer(this));
         jsonFieldSerializerMap.put(Timestamp.class.getName(), new DateSerializer(this));
@@ -151,11 +151,6 @@ public final class JsonSerializer {
             AbstractSerializer serializer = jsonFieldSerializerMap.get(type.toString());
             if (serializer != null) {
                 serializer.serialize(se, obj, i);
-            } else if (Arrays.asList("int", "short", "byte", "long", "float", "double", "char", "java.lang.Integer", "java.lang.Short", "java.lang.Byte", "java.lang.Long", "java.lang.Float", "java.lang.Double").contains(type.toString())) {
-                printWriter.append(headBlank(i));
-                toBytesPool("\"" + fieldName + "\":");
-                printWriter.append(headBlank(i));
-                printWriter.append("os.write(String.valueOf(").append(obj).append(".get").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).println("()).getBytes());");
             } else {
                 printWriter.append(headBlank(i));
                 toBytesPool("\"" + fieldName + "\":");

@@ -13,9 +13,9 @@ package tech.smartboot.feat.cloud.aot.controller;
 import javax.lang.model.element.Element;
 import java.io.PrintWriter;
 
-final class BooleanSerializer extends AbstractSerializer {
+final class BoolSerializer extends AbstractSerializer {
 
-    public BooleanSerializer(JsonSerializer jsonSerializer) {
+    public BoolSerializer(JsonSerializer jsonSerializer) {
         super(jsonSerializer);
     }
 
@@ -23,13 +23,7 @@ final class BooleanSerializer extends AbstractSerializer {
     public void serialize(Element se, String obj, int deep) {
         PrintWriter printWriter = jsonSerializer.getPrintWriter();
         String fieldName = getFieldName(se);
-        String value = obj + ".get" + se.getSimpleName().toString().substring(0, 1).toUpperCase() + se.getSimpleName().toString().substring(1) + "()";
-        printWriter.append(JsonSerializer.headBlank(deep));
-        printWriter.append("if (").append(value).println(" == null) {");
-        printWriter.append(JsonSerializer.headBlank(deep + 1));
-        jsonSerializer.toBytesPool("\"" + fieldName + "\":null");
-        printWriter.append(JsonSerializer.headBlank(deep));
-        printWriter.println("} else if (" + value + ") { ");
+        printWriter.append(JsonSerializer.headBlank(deep)).append("if (").append(obj).append(".is").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).println("()) {");
         printWriter.append(JsonSerializer.headBlank(deep + 1));
         jsonSerializer.toBytesPool("\"" + fieldName + "\":true");
 
