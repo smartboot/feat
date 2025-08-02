@@ -177,13 +177,13 @@ public final class JsonSerializer {
             if (withComma) {
                 printWriter.println("os.write(b_success_false);");
             } else {
-                printWriter.println("os.write(b_success_false,1,b_success_false.length-1);");
+                printWriter.println("os.write(b_success_false, 1, b_success_false.length - 1);");
             }
         } else if ("\"success\":true".equals(value)) {
             if (withComma) {
                 printWriter.println("os.write(b_success_true);");
             } else {
-                printWriter.println("os.write(b_success_true,1,b_success_true.length-1);");
+                printWriter.println("os.write(b_success_true, 1, b_success_true.length - 1);");
             }
         } else if ("null".equals(value)) {
             printWriter.println("os.write(b_null);");
@@ -191,19 +191,19 @@ public final class JsonSerializer {
             if (withComma) {
                 printWriter.println("os.write(b_message);");
             } else {
-                printWriter.println("os.write(b_message,1,b_message.length-1);");
+                printWriter.println("os.write(b_message, 1, b_message.length - 1);");
             }
         } else if ("\"data\":".equals(value)) {
             if (withComma) {
                 printWriter.println("os.write(b_data);");
             } else {
-                printWriter.println("os.write(b_data,1,b_data.length-1);");
+                printWriter.println("os.write(b_data, 1, b_data.length - 1);");
             }
         } else if ("\"code\":".equals(value)) {
             if (withComma) {
                 printWriter.println("os.write(b_code);");
             } else {
-                printWriter.println("os.write(b_code,1,b_code.length-1);");
+                printWriter.println("os.write(b_code, 1, b_code.length - 1);");
             }
         } else if ("[]".equals(value)) {
             printWriter.println("os.write(b_empty_list);");
@@ -215,7 +215,7 @@ public final class JsonSerializer {
             if (withComma) {
                 printWriter.append("os.write(").append(key).println(");");
             } else {
-                printWriter.append("os.write(").append(key).println(",1," + key + ".length-1);");
+                printWriter.append("os.write(").append(key).println(", 1, " + key + ".length - 1);");
             }
         }
     }
