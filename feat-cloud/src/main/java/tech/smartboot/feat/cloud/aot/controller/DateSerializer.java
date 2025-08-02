@@ -32,13 +32,15 @@ final class DateSerializer extends AbstractSerializer {
         printWriter.append("java.util.Date " + fieldName + " = ").append(obj).append(".get").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).println("();");
         printWriter.append(JsonSerializer.headBlank(deep));
         printWriter.println("if (" + fieldName + " != null) {");
-        if (jsonField != null && FeatUtils.isNotBlank(jsonField.format())) {
+        if (jsonField == null || FeatUtils.isBlank(jsonField.format())) {
+            printWriter.append(JsonSerializer.headBlank(deep + 1)).println("os.write(String.valueOf(" + fieldName + ".getTime()).getBytes());");
+        } else if ("yyyy-MM-dd HH:mm:ss".equals(jsonField.format())) {
+            printWriter.append(JsonSerializer.headBlank(deep + 1)).println("writeDate(os, " + fieldName + ");");
+        } else {
             printWriter.append(JsonSerializer.headBlank(deep + 1)).println("java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat(\"" + jsonField.format() + "\");");
             printWriter.append(JsonSerializer.headBlank(deep + 1)).println("os.write('\"');");
             printWriter.append(JsonSerializer.headBlank(deep + 1)).println("os.write(sdf.format(" + fieldName + ").getBytes());");
             printWriter.append(JsonSerializer.headBlank(deep + 1)).println("os.write('\"');");
-        } else {
-            printWriter.append(JsonSerializer.headBlank(deep + 1)).println("os.write(String.valueOf(" + fieldName + ".getTime()).getBytes());");
         }
 
 //                printWriter.println("os.write('\"');");

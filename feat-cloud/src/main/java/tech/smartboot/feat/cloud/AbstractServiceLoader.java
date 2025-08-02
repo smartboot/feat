@@ -28,6 +28,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -44,6 +46,7 @@ public abstract class AbstractServiceLoader implements CloudService {
     protected static final byte[] b_empty_map = {'{', '}'};
     protected static final byte[] b_empty_list = {'[', ']'};
     protected ThreadLocal<ByteArrayOutputStream> outputStream = ThreadLocal.withInitial(() -> new ByteArrayOutputStream(1024));
+    protected ThreadLocal<byte[]> dateFormat = ThreadLocal.withInitial(() -> new byte[]{'"', '0', '0', '0', '0', '-', '0', '0', '-', '0', '0', ' ', '0', '0', ':', '0', '0', ':', '0', '0', '"'});
 
     protected JSONObject getParams(HttpRequest request) {
         try {
@@ -123,7 +126,16 @@ public abstract class AbstractServiceLoader implements CloudService {
     }
 
     protected void writeChar(OutputStream out, char value) throws IOException {
-        out.write((String.valueOf(value)).getBytes());
+        out.write('"');
+        if (value == '"') {
+            out.write('\\');
+            out.write('"');
+        } else if (value >= 32 && value < 127) {
+            out.write(value);
+        } else {
+            out.write(String.format("\\u%04x", (int) value).getBytes());
+        }
+        out.write('"');
     }
 
     protected void writeNumber(OutputStream out, float value) throws IOException {
@@ -138,8 +150,7 @@ public abstract class AbstractServiceLoader implements CloudService {
         } else if (value < 0) {
             out.write('-');
             value = (byte) -value;
-        }
-        if (value < 10) {
+        } else if (value < 10) {
             out.write('0' + value);
         } else if (value < 100) {
             out.write('0' + value / 10);
@@ -149,6 +160,38 @@ public abstract class AbstractServiceLoader implements CloudService {
             out.write('0' + value / 10 % 10);
             out.write('0' + value % 10);
         }
+    }
+
+    protected void writeDate(OutputStream out, Date value) throws IOException {
+        byte[] bytes = dateFormat.get();
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(value);
+        int v = calendar.get(Calendar.YEAR);
+        bytes[1] = (byte) (v / 1000 + '0');
+        bytes[2] = (byte) (v / 100 % 10 + '0');
+        bytes[3] = (byte) (v / 10 % 10 + '0');
+        bytes[4] = (byte) (v % 10 + '0');
+
+        v = calendar.get(Calendar.MONTH) + 1;
+        bytes[6] = (byte) (v / 10 + '0');
+        bytes[7] = (byte) (v % 10 + '0');
+
+        v = calendar.get(Calendar.DAY_OF_MONTH);
+        bytes[9] = (byte) (v / 10 + '0');
+        bytes[10] = (byte) (v % 10 + '0');
+
+        v = calendar.get(Calendar.HOUR_OF_DAY);
+        bytes[12] = (byte) (v / 10 + '0');
+        bytes[13] = (byte) (v % 10 + '0');
+
+        v = calendar.get(Calendar.MINUTE);
+        bytes[15] = (byte) (v / 10 + '0');
+        bytes[16] = (byte) (v % 10 + '0');
+
+        v = calendar.get(Calendar.SECOND);
+        bytes[18] = (byte) (v / 10 + '0');
+        bytes[19] = (byte) (v % 10 + '0');
+        out.write(bytes);
     }
 
     protected void writeInt(OutputStream out, int value) throws IOException {

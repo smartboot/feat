@@ -10,6 +10,9 @@
 
 package tech.smartboot.feat.demo.controller;
 
+import com.alibaba.fastjson2.annotation.JSONField;
+
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -27,7 +30,7 @@ public class TestParam0<T, K> {
     private float param7;
     private double param8;
     private boolean param9;
-    private char param10;
+    private char param10='"';
     private Integer param11;
     private Byte param12;
     private Short param13;
@@ -40,6 +43,11 @@ public class TestParam0<T, K> {
     private List param19;
     private Map param20;
     private Map<String, String> param21;
+
+    private Date param22;
+
+    @JSONField(format = "yyyy-MM-dd HH:mm:ss")
+    private Date param23 = new Date();
 
     public T getParam1() {
         return param1;
@@ -207,5 +215,21 @@ public class TestParam0<T, K> {
 
     public void setParam21(Map<String, String> param21) {
         this.param21 = param21;
+    }
+
+    public Date getParam22() {
+        return param22;
+    }
+
+    public void setParam22(Date param22) {
+        this.param22 = param22;
+    }
+
+    public Date getParam23() {
+        return param23;
+    }
+
+    public void setParam23(Date param23) {
+        this.param23 = param23;
     }
 }
