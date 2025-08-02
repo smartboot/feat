@@ -116,6 +116,18 @@ public abstract class AbstractServiceLoader implements CloudService {
         }
     }
 
+    protected void writeNumber(OutputStream out, double value) throws IOException {
+        out.write(String.valueOf(value).getBytes());
+    }
+
+    protected void writeChar(OutputStream out, char value) throws IOException {
+        out.write((String.valueOf(value)).getBytes());
+    }
+
+    protected void writeNumber(OutputStream out, float value) throws IOException {
+        out.write(String.valueOf(value).getBytes());
+    }
+
     protected void writeByte(OutputStream out, byte value) throws IOException {
         if (value == 0) {
             out.write('0');

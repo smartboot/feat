@@ -53,6 +53,9 @@ public final class JsonSerializer {
         jsonFieldSerializerMap.put(short.class.getName(), new IntSerializer(this, IntSerializer.TYPE_SHORT));
         jsonFieldSerializerMap.put(byte.class.getName(), new IntSerializer(this, IntSerializer.TYPE_BYTE));
         jsonFieldSerializerMap.put(long.class.getName(), new IntSerializer(this, IntSerializer.TYPE_LONG));
+        jsonFieldSerializerMap.put(float.class.getName(), new NumberSerializer(this));
+        jsonFieldSerializerMap.put(double.class.getName(), new NumberSerializer(this));
+        jsonFieldSerializerMap.put(char.class.getName(), new CharSerializer(this));
         this.printWriter = printWriter;
     }
 

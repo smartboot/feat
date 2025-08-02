@@ -29,7 +29,7 @@ import java.util.ServiceLoader;
  */
 public class ApplicationContext {
     private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationContext.class);
-    private final Map<String, Object> namedBeans = new HashMap<>();
+    private Map<String, Object> namedBeans = new HashMap<>();
 
     private final Router router = new Router(new HttpStaticResourceHandler(new FileServerOptions().baseDir("classpath:static")));
     private final CloudOptions options;
@@ -66,6 +66,8 @@ public class ApplicationContext {
         for (CloudService service : services) {
             service.router(this, router);
         }
+        //释放内存
+        namedBeans = null;
     }
 
     private boolean isIgnore(CloudService aptLoader) {
