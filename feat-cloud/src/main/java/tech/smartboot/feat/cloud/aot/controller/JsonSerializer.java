@@ -88,7 +88,7 @@ public final class JsonSerializer {
             new ListSerializer(this).serialize(typeMirror, obj, i, parent);
             return;
         } else if (typeMirror.toString().startsWith("java.util.Map")) {
-            printWriter.println("os.write(new JSONObject(" + obj + ").toString().getBytes());");
+            new MapSerializer(this).serialize(typeMirror, obj, i, parent);
             return;
         } else if (typeMirror.toString().endsWith(".JSONObject")) {
             printWriter.println(headBlank(i) + "if (" + obj + " != null) {");
@@ -187,6 +187,10 @@ public final class JsonSerializer {
             printWriter.println("os.write(b_data);");
         } else if ("\"code\":".equals(value)) {
             printWriter.println("os.write(b_code);");
+        } else if ("[]".equals(value)) {
+            printWriter.println("os.write(b_empty_list);");
+        } else if ("{}".equals(value)) {
+            printWriter.println("os.write(b_empty_map);");
         } else {
             String key = ("b_" + value.hashCode()).replace("-", "$");
             byteCache.put(key, "private static final byte[] " + key + " = " + toBytesStr(value) + ";");

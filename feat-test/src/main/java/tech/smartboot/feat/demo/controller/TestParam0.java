@@ -11,6 +11,7 @@
 package tech.smartboot.feat.demo.controller;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author 三刀 zhengjunweimail@163.com
@@ -35,6 +36,9 @@ public class TestParam0<T, K> {
     private Double param16;
     private Boolean param17;
     private Character param18;
+
+    private List param19;
+    private Map param20;
 
     public T getParam1() {
         return param1;
@@ -178,5 +182,21 @@ public class TestParam0<T, K> {
 
     public void setParam18(Character param18) {
         this.param18 = param18;
+    }
+
+    public List getParam19() {
+        return param19;
+    }
+
+    public void setParam19(List param19) {
+        this.param19 = param19;
+    }
+
+    public Map getParam20() {
+        return param20;
+    }
+
+    public void setParam20(Map param20) {
+        this.param20 = param20;
     }
 }

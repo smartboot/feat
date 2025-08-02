@@ -33,6 +33,9 @@ final class ListSerializer extends AbstractSerializer {
         printWriter.append(JsonSerializer.headBlank(i)).println("if (" + obj + " == null) {");
         printWriter.append(JsonSerializer.headBlank(i + 1));
         jsonSerializer.toBytesPool("null");
+        printWriter.append(JsonSerializer.headBlank(i)).println("} else if (" + obj + ".isEmpty()) {");
+        printWriter.append(JsonSerializer.headBlank(i + 1));
+        jsonSerializer.toBytesPool("[]");
         printWriter.append(JsonSerializer.headBlank(i)).println("} else {");
         //List未指定泛型,直接移交给fastjson处理
         if (((DeclaredType) se).getTypeArguments().isEmpty()) {

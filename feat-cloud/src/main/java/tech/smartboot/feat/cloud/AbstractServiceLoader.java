@@ -41,6 +41,8 @@ public abstract class AbstractServiceLoader implements CloudService {
     protected static final byte[] b_code = {'"', 'c', 'o', 'd', 'e', '"', ':'};
     protected static final byte[] b_message = {'"', 'm', 'e', 's', 's', 'a', 'g', 'e', '"', ':'};
     protected static final byte[] b_success_true = {'"', 's', 'u', 'c', 'c', 'e', 's', 's', '"', ':', 't', 'r', 'u', 'e'};
+    protected static final byte[] b_empty_map = {'{', '}'};
+    protected static final byte[] b_empty_list = {'[', ']'};
     protected ThreadLocal<ByteArrayOutputStream> outputStream = ThreadLocal.withInitial(() -> new ByteArrayOutputStream(1024));
 
     protected JSONObject getParams(HttpRequest request) {
