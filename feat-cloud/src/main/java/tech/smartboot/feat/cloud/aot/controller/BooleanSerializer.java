@@ -23,7 +23,7 @@ final class BooleanSerializer extends AbstractSerializer {
     public void serialize(Element se, String obj, int deep) {
         PrintWriter printWriter = jsonSerializer.getPrintWriter();
         String fieldName = getFieldName(se);
-        printWriter.append(JsonSerializer.headBlank(deep) + "if (" + obj + ".is").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).println("()) {");
+        printWriter.append(JsonSerializer.headBlank(deep)).append("if (").append(obj).append(".is").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).println("()) {");
         printWriter.append(JsonSerializer.headBlank(deep + 1));
         jsonSerializer.toBytesPool("\"" + fieldName + "\":true");
 
