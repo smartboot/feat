@@ -20,22 +20,22 @@ final class BooleanSerializer extends AbstractSerializer {
     }
 
     @Override
-    public void serialize(Element se, String obj, int deep) {
+    public void serialize(Element se, String obj, int deep, boolean withComma) {
         PrintWriter printWriter = jsonSerializer.getPrintWriter();
         String fieldName = getFieldName(se);
         String value = obj + ".get" + se.getSimpleName().toString().substring(0, 1).toUpperCase() + se.getSimpleName().toString().substring(1) + "()";
         printWriter.append(JsonSerializer.headBlank(deep));
         printWriter.append("if (").append(value).println(" == null) {");
         printWriter.append(JsonSerializer.headBlank(deep + 1));
-        jsonSerializer.toBytesPool("\"" + fieldName + "\":null");
+        jsonSerializer.toBytesPool("\"" + fieldName + "\":null", withComma);
         printWriter.append(JsonSerializer.headBlank(deep));
         printWriter.println("} else if (" + value + ") { ");
         printWriter.append(JsonSerializer.headBlank(deep + 1));
-        jsonSerializer.toBytesPool("\"" + fieldName + "\":true");
+        jsonSerializer.toBytesPool("\"" + fieldName + "\":true", withComma);
 
         printWriter.println(JsonSerializer.headBlank(deep) + "} else {");
         printWriter.append(JsonSerializer.headBlank(deep + 1));
-        jsonSerializer.toBytesPool("\"" + fieldName + "\":false");
+        jsonSerializer.toBytesPool("\"" + fieldName + "\":false", withComma);
 
         printWriter.println(JsonSerializer.headBlank(deep) + "}");
     }

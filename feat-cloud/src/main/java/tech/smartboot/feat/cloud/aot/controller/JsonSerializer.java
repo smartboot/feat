@@ -105,9 +105,6 @@ public final class JsonSerializer {
         }
         printWriter.println(headBlank(i) + "os.write('{');");
 
-
-        int j = i * 10;
-
         List<Element> elements = new ArrayList<>();
         //当子类存在相同字段时，子类的字段会覆盖父类的字段
         Set<String> fields = new HashSet<>();
@@ -137,12 +134,8 @@ public final class JsonSerializer {
             temp = ((TypeElement) ((DeclaredType) temp).asElement()).getSuperclass();
         }
 
+        boolean withComma = false;
         for (Element se : elements) {
-            if (j++ > i * 10) {
-                printWriter.append(headBlank(i));
-                printWriter.println("os.write(',');");
-            }
-
             TypeMirror type = se.asType();
             if (se.asType().getKind() == TypeKind.TYPEVAR) {
                 type = ((DeclaredType) typeMirror).getTypeArguments().get(0);
@@ -154,10 +147,10 @@ public final class JsonSerializer {
             }
             AbstractSerializer serializer = jsonFieldSerializerMap.get(type.toString());
             if (serializer != null) {
-                serializer.serialize(se, obj, i);
+                serializer.serialize(se, obj, i, withComma);
             } else {
                 printWriter.append(headBlank(i));
-                toBytesPool("\"" + fieldName + "\":");
+                toBytesPool("\"" + fieldName + "\":", withComma);
                 String filedName = obj + ".get" + se.getSimpleName().toString().substring(0, 1).toUpperCase() + se.getSimpleName().toString().substring(1) + "()";
                 printWriter.append(headBlank(i)).println("if (" + filedName + " == null) {");
                 printWriter.append(headBlank(i + 1));
@@ -166,6 +159,7 @@ public final class JsonSerializer {
                 serialize(type, filedName, i + 1, (DeclaredType) typeMirror);
                 printWriter.append(headBlank(i)).println("}");
             }
+            withComma = true;
         }
         printWriter.append(headBlank(i)).println("os.write('}');");
     }
@@ -178,28 +172,56 @@ public final class JsonSerializer {
         return sb.toString();
     }
 
-    public void toBytesPool(String value) {
+    public void toBytesPool(String value, boolean withComma) {
         if ("\"success\":false".equals(value)) {
-            printWriter.println("os.write(b_success_false);");
+            if (withComma) {
+                printWriter.println("os.write(b_success_false);");
+            } else {
+                printWriter.println("os.write(b_success_false,1,b_success_false.length-1);");
+            }
         } else if ("\"success\":true".equals(value)) {
-            printWriter.println("os.write(b_success_true);");
+            if (withComma) {
+                printWriter.println("os.write(b_success_true);");
+            } else {
+                printWriter.println("os.write(b_success_true,1,b_success_true.length-1);");
+            }
         } else if ("null".equals(value)) {
             printWriter.println("os.write(b_null);");
         } else if ("\"message\":".equals(value)) {
-            printWriter.println("os.write(b_message);");
+            if (withComma) {
+                printWriter.println("os.write(b_message);");
+            } else {
+                printWriter.println("os.write(b_message,1,b_message.length-1);");
+            }
         } else if ("\"data\":".equals(value)) {
-            printWriter.println("os.write(b_data);");
+            if (withComma) {
+                printWriter.println("os.write(b_data);");
+            } else {
+                printWriter.println("os.write(b_data,1,b_data.length-1);");
+            }
         } else if ("\"code\":".equals(value)) {
-            printWriter.println("os.write(b_code);");
+            if (withComma) {
+                printWriter.println("os.write(b_code);");
+            } else {
+                printWriter.println("os.write(b_code,1,b_code.length-1);");
+            }
         } else if ("[]".equals(value)) {
             printWriter.println("os.write(b_empty_list);");
         } else if ("{}".equals(value)) {
             printWriter.println("os.write(b_empty_map);");
         } else {
             String key = ("b_" + value.hashCode()).replace("-", "$");
-            byteCache.put(key, "private static final byte[] " + key + " = " + toBytesStr(value) + ";");
-            printWriter.append("os.write(").append(key).println(");");
+            byteCache.put(key, "private static final byte[] " + key + " = " + toBytesStr("," + value) + ";");
+            if (withComma) {
+                printWriter.append("os.write(").append(key).println(");");
+            } else {
+                printWriter.append("os.write(").append(key).println(",1," + key + ".length-1);");
+            }
         }
+    }
+
+    public void toBytesPool(String value) {
+        toBytesPool(value, false);
     }
 
     private String toBytesStr(String str) {

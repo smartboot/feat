@@ -33,10 +33,10 @@ final class PrimitiveSerializer extends AbstractSerializer {
     }
 
     @Override
-    public void serialize(Element se, String obj, int deep) {
+    public void serialize(Element se, String obj, int deep, boolean withComma) {
         PrintWriter printWriter = jsonSerializer.getPrintWriter();
         printWriter.append(JsonSerializer.headBlank(deep));
-        jsonSerializer.toBytesPool("\"" + getFieldName(se) + "\":");
+        jsonSerializer.toBytesPool("\"" + getFieldName(se) + "\":", withComma);
         printWriter.append(JsonSerializer.headBlank(deep));
         switch (type) {
             case TYPE_BYTE:

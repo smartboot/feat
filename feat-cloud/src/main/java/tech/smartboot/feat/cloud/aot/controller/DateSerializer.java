@@ -22,12 +22,12 @@ final class DateSerializer extends AbstractSerializer {
     }
 
     @Override
-    public void serialize(Element se, String obj, int deep) {
+    public void serialize(Element se, String obj, int deep, boolean withComma) {
         PrintWriter printWriter = jsonSerializer.getPrintWriter();
         String fieldName = getFieldName(se);
         JSONField jsonField = se.getAnnotation(JSONField.class);
         printWriter.append(JsonSerializer.headBlank(deep));
-        jsonSerializer.toBytesPool("\"" + fieldName + "\":");
+        jsonSerializer.toBytesPool("\"" + fieldName + "\":", withComma);
         printWriter.append(JsonSerializer.headBlank(deep));
         printWriter.append("java.util.Date " + fieldName + " = ").append(obj).append(".get").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).println("();");
         printWriter.append(JsonSerializer.headBlank(deep));

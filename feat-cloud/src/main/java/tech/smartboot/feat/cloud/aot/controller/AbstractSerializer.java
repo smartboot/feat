@@ -19,7 +19,7 @@ import javax.lang.model.type.TypeMirror;
 import java.io.IOException;
 
 abstract class AbstractSerializer {
-    public void serialize(Element se, String obj, int deep) {
+    public void serialize(Element se, String obj, int deep, boolean withComma) {
         throw new UnsupportedOperationException();
     }
 

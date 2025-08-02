@@ -33,10 +33,10 @@ final class WrapsPrimitiveSerializer extends AbstractSerializer {
     }
 
     @Override
-    public void serialize(Element se, String obj, int deep) {
+    public void serialize(Element se, String obj, int deep, boolean withComma) {
         PrintWriter printWriter = jsonSerializer.getPrintWriter();
         printWriter.append(JsonSerializer.headBlank(deep));
-        jsonSerializer.toBytesPool("\"" + getFieldName(se) + "\":");
+        jsonSerializer.toBytesPool("\"" + getFieldName(se) + "\":", withComma);
         printWriter.append(JsonSerializer.headBlank(deep));
         String value = obj + ".get" + se.getSimpleName().toString().substring(0, 1).toUpperCase() + se.getSimpleName().toString().substring(1) + "()";
         printWriter.append("if (").append(value).println(" == null){");

@@ -39,6 +39,7 @@ public class TestParam0<T, K> {
 
     private List param19;
     private Map param20;
+    private Map<String, String> param21;
 
     public T getParam1() {
         return param1;
@@ -198,5 +199,13 @@ public class TestParam0<T, K> {
 
     public void setParam20(Map param20) {
         this.param20 = param20;
+    }
+
+    public Map<String, String> getParam21() {
+        return param21;
+    }
+
+    public void setParam21(Map<String, String> param21) {
+        this.param21 = param21;
     }
 }
