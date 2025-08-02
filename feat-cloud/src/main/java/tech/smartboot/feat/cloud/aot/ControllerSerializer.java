@@ -143,7 +143,13 @@ final class ControllerSerializer extends AbstractSerializer {
                     returnTypeInt = RETURN_TYPE_OBJECT;
                 }
 
-                printWriter.println("\t\tSystem.out.println(\" \\u001B[32m|->\\u001B[0m " + requestURL + " ==> " + element.getSimpleName() + "@" + se.getSimpleName() + "\");");
+//                printWriter.println("\t\tSystem.out.print(\" \\u001B[32m|->\\u001B[0m " + requestURL + " ==> " + element.getSimpleName() + "@" + se.getSimpleName() + "\");");
+                printWriter.println("\t\tSystem.out.print(\" \\u001B[32m|->\\u001B[0m \");");
+                printWriter.println("\t\tSystem.out.print(\"" + requestURL + "\");");
+                printWriter.println("\t\tSystem.out.print(\" ==> \");");
+                printWriter.println("\t\tSystem.out.print(\"" + element.getSimpleName() + "\");");
+                printWriter.println("\t\tSystem.out.print(\"@\");");
+                printWriter.println("\t\tSystem.out.println(\"" + se.getSimpleName() + "\");");
                 if (!requestURL.contains(":") && !requestURL.contains("*") && requestURL.length() < ByteTree.MAX_DEPTH) {
                     printWriter.println("\t\tapplicationContext.getOptions().getUriByteTree().addNode(\"" + requestURL + "\");");
                 }
