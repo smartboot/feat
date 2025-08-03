@@ -252,7 +252,9 @@ final class McpEndpointSerializer implements Serializer {
             printWriter.println("\t\t\t);");
             printWriter.println("\t\t}");
         }
-        printWriter.println("\t\tprintlnMcp(mcpServer);");
+        printWriter.println("\t\tif (applicationContext.getOptions().devMode()) {");
+        printWriter.println("\t\t\tprintlnMcp(mcpServer);");
+        printWriter.println("\t\t}");
     }
 
     @Override
