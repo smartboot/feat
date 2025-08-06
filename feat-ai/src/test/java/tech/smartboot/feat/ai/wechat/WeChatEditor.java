@@ -38,7 +38,7 @@ public class WeChatEditor extends BaseChat {
             opts
 //                    .model("qwen2.5:3b")
 //                    .baseUrl("http://localhost:11434/v1") // Ollama本地服务地址
-                    .model(ModelMeta.GITEE_AI_DeepSeek_R1_Distill_Qwen_32B)
+                    .model(ModelMeta.GiteeAI.DeepSeek_R1_Distill_Qwen_32B)
 //                    .debug(true)
             ;
         });

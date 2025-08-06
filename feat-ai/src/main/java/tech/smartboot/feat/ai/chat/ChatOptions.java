@@ -8,8 +8,9 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.ai;
+package tech.smartboot.feat.ai.chat;
 
+import tech.smartboot.feat.ai.ModelMeta;
 import tech.smartboot.feat.ai.chat.entity.Function;
 import tech.smartboot.feat.ai.chat.entity.ResponseFormat;
 import tech.smartboot.feat.ai.vendor.GiteeAI;
@@ -21,8 +22,8 @@ import java.util.Map;
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
-public class Options {
-    public static final String ENV_API_KEY = "FEATAI_API_KEY";
+public class ChatOptions {
+    public static final String ENV_API_KEY = "FEAT_AI_API_KEY";
     /**
      * Gitee AI服务的基础URL
      */
@@ -31,7 +32,7 @@ public class Options {
     /**
      * AI服务的基础URL，优先从环境变量FEATAI_BASE_URL获取，默认使用Gitee AI服务
      */
-    private String baseUrl = System.getenv("FEATAI_BASE_URL") != null ? System.getenv("FEAT_AI_BASE_URL") : GiteeAI.BASE_URL;
+    private String baseUrl = System.getenv("FEAT_AI_BASE_URL") != null ? System.getenv("FEAT_AI_BASE_URL") : GiteeAI.BASE_URL;
 
     /**
      * AI模型名称
@@ -76,7 +77,7 @@ public class Options {
         return baseUrl;
     }
 
-    public Options baseUrl(String baseUrl) {
+    public ChatOptions baseUrl(String baseUrl) {
         this.baseUrl = baseUrl;
         return this;
     }
@@ -85,12 +86,12 @@ public class Options {
         return model;
     }
 
-    public Options model(String model) {
+    public ChatOptions model(String model) {
         this.model = model;
         return this;
     }
 
-    public Options model(ModelMeta model) {
+    public ChatOptions model(ModelMeta model) {
         return baseUrl(model.getVendor()).model(model.getModel());
     }
 
@@ -98,7 +99,7 @@ public class Options {
         return apiKey;
     }
 
-    public Options apiKey(String apiKey) {
+    public ChatOptions apiKey(String apiKey) {
         this.apiKey = apiKey;
         return this;
     }
@@ -107,7 +108,7 @@ public class Options {
         return functions;
     }
 
-    public Options addFunction(Function function) {
+    public ChatOptions addFunction(Function function) {
         this.functions.put(function.getName(), function);
         return this;
     }
@@ -116,7 +117,7 @@ public class Options {
         return system;
     }
 
-    public Options system(String system) {
+    public ChatOptions system(String system) {
         this.system = system;
         return this;
     }
@@ -125,7 +126,7 @@ public class Options {
         return debug;
     }
 
-    public Options debug(boolean debug) {
+    public ChatOptions debug(boolean debug) {
         this.debug = debug;
         return this;
     }
@@ -134,7 +135,7 @@ public class Options {
         return ignoreUnSupportedTool;
     }
 
-    public Options ignoreUnSupportedTool(boolean ignoreUnSupportedTool) {
+    public ChatOptions ignoreUnSupportedTool(boolean ignoreUnSupportedTool) {
         this.ignoreUnSupportedTool = ignoreUnSupportedTool;
         return this;
     }
@@ -143,12 +144,12 @@ public class Options {
         return headers;
     }
 
-    public Options addHeader(String key, String value) {
+    public ChatOptions addHeader(String key, String value) {
         this.headers.put(key, value);
         return this;
     }
 
-    public Options responseFormat(ResponseFormat responseFormat) {
+    public ChatOptions responseFormat(ResponseFormat responseFormat) {
         this.responseFormat = responseFormat;
         return this;
     }

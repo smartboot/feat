@@ -13,7 +13,6 @@ package tech.smartboot.feat.ai.chat;
 import com.alibaba.fastjson2.JSON;
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.ai.ModelMeta;
-import tech.smartboot.feat.ai.Options;
 import tech.smartboot.feat.ai.chat.entity.ChatRequest;
 import tech.smartboot.feat.ai.chat.entity.ChatStreamResponse;
 import tech.smartboot.feat.ai.chat.entity.ChatWholeResponse;
@@ -47,10 +46,10 @@ import java.util.function.Consumer;
  * @version v1.0.0
  */
 public class ChatModel {
-    private final Options options;
+    private final ChatOptions options;
     private final List<Message> history = new ArrayList<>();
 
-    public ChatModel(Options options) {
+    public ChatModel(ChatOptions options) {
         if (options.baseUrl().endsWith("/")) {
             options.baseUrl(options.baseUrl().substring(0, options.baseUrl().length() - 1));
         }

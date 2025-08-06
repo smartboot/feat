@@ -10,6 +10,9 @@
 
 package tech.smartboot.feat.ai;
 
+import tech.smartboot.feat.ai.chat.ChatOptions;
+import tech.smartboot.feat.ai.vendor.OllamaVendor;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -19,11 +22,20 @@ import java.util.Map;
  */
 public class ModelMeta {
     private static final Map<String, Map<String, ModelMeta>> modelMetas = new HashMap<>();
-    public static final ModelMeta GITEE_AI_DeepSeek_R1 = new ModelMeta(Options.AI_VENDOR_GITEE, "DeepSeek-R1", false);
-    public static final ModelMeta GITEE_AI_DeepSeek_R1_Distill_Qwen_32B = new ModelMeta(Options.AI_VENDOR_GITEE, "DeepSeek-R1-Distill-Qwen-32B", false);
-    public static final ModelMeta GITEE_AI_Qwen2_5_72B_Instruct = new ModelMeta(Options.AI_VENDOR_GITEE, "Qwen2.5-72B-Instruct", true);
-    public static final ModelMeta GITEE_AI_Qwen2_5_32B_Instruct = new ModelMeta(Options.AI_VENDOR_GITEE, "Qwen2.5-32B-Instruct", false);
-    public static final ModelMeta GITEE_AI_Qwen3_4B = new ModelMeta(Options.AI_VENDOR_GITEE, "Qwen3-4B", false);
+
+    public interface GiteeAI {
+        ModelMeta DeepSeek_R1 = new ModelMeta(ChatOptions.AI_VENDOR_GITEE, "DeepSeek-R1", false);
+        ModelMeta DeepSeek_R1_Distill_Qwen_32B = new ModelMeta(ChatOptions.AI_VENDOR_GITEE, "DeepSeek-R1-Distill-Qwen-32B", false);
+        ModelMeta Qwen2_5_72B_Instruct = new ModelMeta(ChatOptions.AI_VENDOR_GITEE, "Qwen2.5-72B-Instruct", true);
+        ModelMeta Qwen2_5_32B_Instruct = new ModelMeta(ChatOptions.AI_VENDOR_GITEE, "Qwen2.5-32B-Instruct", false);
+        ModelMeta Qwen3_4B = new ModelMeta(ChatOptions.AI_VENDOR_GITEE, "Qwen3-4B", false);
+    }
+
+    public interface Ollama {
+        ModelMeta Qwen2_5_05B = new ModelMeta(OllamaVendor.BASE_URL, "qwen2.5:0.5b", false);
+        ModelMeta Qwen2_5_3B = new ModelMeta(OllamaVendor.BASE_URL, "qwen2.5:3b", false);
+    }
+
 
     /**
      * 服务商

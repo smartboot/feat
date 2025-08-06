@@ -8,13 +8,15 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.cloud.annotation;
+package tech.smartboot.feat.ai.vendor;
 
 /**
- * @author 三刀 zhengjunweimail@163.com
- * @version v1.0.0
+ * @author 三刀
+ * @version v1.0 8/6/25
  */
-public enum Scope {
-
-    URL_PATH, URL_PARAM, BODY, HEADER
+public class OllamaVendor {
+    /**
+     * Gitee AI服务的基础URL
+     */
+    public static final String BASE_URL = "http://localhost:11434/v1";
 }

@@ -14,7 +14,6 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import org.smartboot.socket.timer.HashedWheelTimer;
 import tech.smartboot.feat.Feat;
-import tech.smartboot.feat.ai.chat.ChatModel;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpPost;
 import tech.smartboot.feat.core.client.HttpResponse;
@@ -144,14 +143,6 @@ public class GiteeAI {
         return future;
     }
 
-    public ChatModel chatModel(Consumer<ChatOptions> consumer) {
-        ChatOptions options = new ChatOptions();
-        consumer.accept(options);
-        options.apiKey(apiKey);
-        options.baseUrl(BASE_URL);
-        consumer.accept(options);
-        return new ChatModel(options);
-    }
 
     /**
      * 计算文件的MD5哈希值

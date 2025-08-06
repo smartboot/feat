@@ -41,7 +41,7 @@ public class PromptTemplate {
 
         @Override
         public List<String> suggestedModels() {
-            return Arrays.asList(ModelMeta.GITEE_AI_Qwen2_5_32B_Instruct.getModel());
+            return Arrays.asList(ModelMeta.GiteeAI.Qwen2_5_32B_Instruct.getModel());
         }
     };
 
@@ -64,7 +64,7 @@ public class PromptTemplate {
 
         @Override
         public List<String> suggestedModels() {
-            return Arrays.asList(ModelMeta.GITEE_AI_Qwen2_5_32B_Instruct.getModel());
+            return Arrays.asList(ModelMeta.GiteeAI.Qwen2_5_32B_Instruct.getModel());
         }
     };
     /**
@@ -86,7 +86,7 @@ public class PromptTemplate {
 
         @Override
         public List<String> suggestedModels() {
-            return Arrays.asList(ModelMeta.GITEE_AI_Qwen2_5_32B_Instruct.getModel());
+            return Arrays.asList(ModelMeta.GiteeAI.Qwen2_5_32B_Instruct.getModel());
         }
     };
 
@@ -112,7 +112,7 @@ public class PromptTemplate {
 
         @Override
         public List<String> suggestedModels() {
-            return Arrays.asList(ModelMeta.GITEE_AI_Qwen2_5_32B_Instruct.getModel());
+            return Arrays.asList(ModelMeta.GiteeAI.Qwen2_5_32B_Instruct.getModel());
         }
     };
 

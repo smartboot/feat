@@ -54,7 +54,7 @@ public class ProjectDocumentDemo extends BaseChat {
 
 
         ChatModel chatModel = FeatAI.chatModel(opts -> {
-            opts.model(ModelMeta.GITEE_AI_DeepSeek_R1_Distill_Qwen_32B)
+            opts.model(ModelMeta.GiteeAI.DeepSeek_R1_Distill_Qwen_32B)
                     .debug(false)
             ;
         });

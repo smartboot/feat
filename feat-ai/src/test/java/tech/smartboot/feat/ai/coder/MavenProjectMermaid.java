@@ -35,7 +35,7 @@ public class MavenProjectMermaid extends BaseChat {
             opts
 //                    .model("qwen2.5:3b")
 //                    .baseUrl("http://localhost:11434/v1") // Ollama本地服务地址
-                    .model(ModelMeta.GITEE_AI_Qwen2_5_32B_Instruct)
+                    .model(ModelMeta.GiteeAI.Qwen2_5_32B_Instruct)
                     .debug(true)
             ;
         });

@@ -11,6 +11,7 @@
 package tech.smartboot.feat.ai.demo;
 
 import tech.smartboot.feat.ai.FeatAI;
+import tech.smartboot.feat.ai.ModelMeta;
 import tech.smartboot.feat.ai.chat.ChatModel;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
@@ -23,8 +24,7 @@ public class OllamaDemo {
     public static void main(String[] args) {
         // 初始化Feat AI
         ChatModel chatModel = FeatAI.chatModel(opts -> {
-            opts.model("deepseek-r1:32b")
-                    .baseUrl("http://localhost:11434/v1") // Ollama本地服务地址
+            opts.model(ModelMeta.Ollama.Qwen2_5_05B)
                     .system("你是一个擅长生成藏头诗的诗人。")
                     .debug(false);
         });
