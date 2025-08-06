@@ -11,7 +11,7 @@
 package tech.smartboot.feat.ai.coder;
 
 import tech.smartboot.feat.ai.FeatAI;
-import tech.smartboot.feat.ai.ModelMeta;
+import tech.smartboot.feat.ai.chat.ModelVendor;
 import tech.smartboot.feat.ai.chat.ChatModel;
 import tech.smartboot.feat.ai.chat.prompt.PromptTemplate;
 import tech.smartboot.feat.ai.demo.BaseChat;
@@ -32,7 +32,7 @@ public class ProjectCoder extends BaseChat {
     public static void main(String[] args) throws IOException {
 
         ChatModel chatModel = FeatAI.chatModel(opts -> {
-            opts.model(ModelMeta.Ollama.Qwen2_5_3B)
+            opts.model(ModelVendor.Ollama.Qwen2_5_3B)
                     .debug(false);
         });
 

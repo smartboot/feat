@@ -12,7 +12,6 @@ package tech.smartboot.feat.ai.chat;
 
 import com.alibaba.fastjson2.JSON;
 import tech.smartboot.feat.Feat;
-import tech.smartboot.feat.ai.ModelMeta;
 import tech.smartboot.feat.ai.chat.entity.ChatRequest;
 import tech.smartboot.feat.ai.chat.entity.ChatStreamResponse;
 import tech.smartboot.feat.ai.chat.entity.ChatWholeResponse;
@@ -28,8 +27,8 @@ import tech.smartboot.feat.core.client.HttpPost;
 import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.client.stream.ServerSentEventStream;
 import tech.smartboot.feat.core.client.stream.Stream;
-import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.FeatUtils;
+import tech.smartboot.feat.core.common.HeaderName;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -185,14 +184,6 @@ public class ChatModel {
 
 
     private HttpPost chat0(String content, List<String> tools, boolean stream) {
-        ModelMeta modelMeta = ModelMeta.get(options.baseUrl(), options.getModel());
-        if (modelMeta != null && !modelMeta.isToolSupport() && !tools.isEmpty()) {
-            if (options.isIgnoreUnSupportedTool()) {
-                tools.clear();
-            } else {
-                throw new RuntimeException("模型 " + options.getModel() + " 不支持工具");
-            }
-        }
         System.out.println("我：" + content);
         ChatRequest request = new ChatRequest();
         request.setModel(options.getModel());

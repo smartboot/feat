@@ -10,7 +10,6 @@
 
 package tech.smartboot.feat.ai.chat;
 
-import tech.smartboot.feat.ai.ModelMeta;
 import tech.smartboot.feat.ai.chat.entity.Function;
 import tech.smartboot.feat.ai.chat.entity.ResponseFormat;
 import tech.smartboot.feat.ai.vendor.GiteeAI;
@@ -91,8 +90,8 @@ public class ChatOptions {
         return this;
     }
 
-    public ChatOptions model(ModelMeta model) {
-        return baseUrl(model.getVendor()).model(model.getModel());
+    public ChatOptions model(ModelVendor model) {
+        return baseUrl(model.getBaseUrl()).model(model.getModel());
     }
 
     public String getApiKey() {

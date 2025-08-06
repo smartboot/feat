@@ -11,7 +11,7 @@
 package tech.smartboot.feat.ai.demo;
 
 import tech.smartboot.feat.ai.FeatAI;
-import tech.smartboot.feat.ai.ModelMeta;
+import tech.smartboot.feat.ai.chat.ModelVendor;
 import tech.smartboot.feat.ai.chat.ChatModel;
 
 import java.io.IOException;
@@ -22,7 +22,7 @@ import java.io.IOException;
  */
 public class ChatDemo {
     public static void main(String[] args) throws IOException {
-        ChatModel chatModel = FeatAI.chatModel(opts -> opts.model(ModelMeta.GiteeAI.Qwen2_5_72B_Instruct));
+        ChatModel chatModel = FeatAI.chatModel(opts -> opts.model(ModelVendor.GiteeAI.Qwen2_5_72B_Instruct));
         chatModel.chat("你好，请自我介绍一下。", rsp -> {
             System.out.println("rsp: " + rsp.getContent());
             System.out.println("usage: " + rsp.getUsage());
