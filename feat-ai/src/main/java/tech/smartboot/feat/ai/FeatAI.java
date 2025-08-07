@@ -14,6 +14,8 @@ import tech.smartboot.feat.ai.chat.ChatModel;
 import tech.smartboot.feat.ai.chat.ChatOptions;
 import tech.smartboot.feat.ai.embedding.EmbeddingModel;
 import tech.smartboot.feat.ai.embedding.EmbeddingOptions;
+import tech.smartboot.feat.ai.reranker.RerankerModel;
+import tech.smartboot.feat.ai.reranker.RerankerOptions;
 
 import java.util.function.Consumer;
 
@@ -32,5 +34,11 @@ public class FeatAI {
         EmbeddingModel embeddingModel = new EmbeddingModel();
         consumer.accept(embeddingModel.options());
         return embeddingModel;
+    }
+
+    public static RerankerModel reranker(Consumer<RerankerOptions> consumer) {
+        RerankerModel model = new RerankerModel();
+        consumer.accept(model.options());
+        return model;
     }
 }

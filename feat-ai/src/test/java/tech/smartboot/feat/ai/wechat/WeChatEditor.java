@@ -11,7 +11,7 @@
 package tech.smartboot.feat.ai.wechat;
 
 import tech.smartboot.feat.ai.FeatAI;
-import tech.smartboot.feat.ai.chat.ModelVendor;
+import tech.smartboot.feat.ai.chat.ChatModelVendor;
 import tech.smartboot.feat.ai.chat.ChatModel;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
@@ -38,7 +38,7 @@ public class WeChatEditor extends BaseChat {
             opts
 //                    .model("qwen2.5:3b")
 //                    .baseUrl("http://localhost:11434/v1") // Ollama本地服务地址
-                    .model(ModelVendor.GiteeAI.DeepSeek_R1_Distill_Qwen_32B)
+                    .model(ChatModelVendor.GiteeAI.DeepSeek_R1_Distill_Qwen_32B)
 //                    .debug(true)
             ;
         });

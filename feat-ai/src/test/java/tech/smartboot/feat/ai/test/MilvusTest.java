@@ -13,7 +13,7 @@ package tech.smartboot.feat.ai.test;
 import org.junit.Before;
 import org.junit.Test;
 import tech.smartboot.feat.ai.FeatAI;
-import tech.smartboot.feat.ai.embedding.ModelVendor;
+import tech.smartboot.feat.ai.embedding.EmbeddingModelVendor;
 import tech.smartboot.feat.ai.vector.Document;
 import tech.smartboot.feat.ai.vector.expression.Expression;
 import tech.smartboot.feat.ai.vector.milvus.Collection;
@@ -33,7 +33,7 @@ public class MilvusTest {
     @Before
     public void init() {
         milvus = new Milvus("http://localhost:19530", opt -> opt.debug(true).embeddingModel(FeatAI.embedding(embedOpt -> {
-            embedOpt.baseUrl("http://localhost:11434/v1").model(ModelVendor.Ollama.nomic_embed_text).debug(true);
+            embedOpt.baseUrl("http://localhost:11434/v1").model(EmbeddingModelVendor.Ollama.nomic_embed_text).debug(true);
         })));
     }
 

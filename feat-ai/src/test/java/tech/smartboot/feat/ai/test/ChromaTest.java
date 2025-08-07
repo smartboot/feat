@@ -15,7 +15,7 @@ import org.junit.Before;
 import org.junit.Test;
 import tech.smartboot.feat.ai.FeatAI;
 import tech.smartboot.feat.ai.chat.ChatModel;
-import tech.smartboot.feat.ai.embedding.ModelVendor;
+import tech.smartboot.feat.ai.embedding.EmbeddingModelVendor;
 import tech.smartboot.feat.ai.vector.Document;
 import tech.smartboot.feat.ai.vector.chroma.Chroma;
 import tech.smartboot.feat.ai.vector.chroma.Collection;
@@ -38,7 +38,7 @@ public class ChromaTest {
     @Before
     public void init() {
         chroma = new Chroma("http://localhost:8000", opt -> opt.debug(true).embeddingModel(FeatAI.embedding(embedOpt -> {
-            embedOpt.baseUrl("http://localhost:11434/v1").model(ModelVendor.Ollama.nomic_embed_text).debug(true);
+            embedOpt.baseUrl("http://localhost:11434/v1").model(EmbeddingModelVendor.Ollama.nomic_embed_text).debug(true);
         })));
     }
 

@@ -10,7 +10,7 @@
 
 package tech.smartboot.feat.ai.chat.prompt;
 
-import tech.smartboot.feat.ai.chat.ModelVendor;
+import tech.smartboot.feat.ai.chat.ChatModelVendor;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.exception.FeatException;
 
@@ -41,7 +41,7 @@ public class PromptTemplate {
 
         @Override
         public List<String> suggestedModels() {
-            return Arrays.asList(ModelVendor.GiteeAI.Qwen2_5_32B_Instruct.getModel());
+            return Arrays.asList(ChatModelVendor.GiteeAI.Qwen2_5_32B_Instruct.model());
         }
     };
 
@@ -64,7 +64,7 @@ public class PromptTemplate {
 
         @Override
         public List<String> suggestedModels() {
-            return Arrays.asList(ModelVendor.GiteeAI.Qwen2_5_32B_Instruct.getModel());
+            return Arrays.asList(ChatModelVendor.GiteeAI.Qwen2_5_32B_Instruct.model());
         }
     };
     /**
@@ -86,7 +86,7 @@ public class PromptTemplate {
 
         @Override
         public List<String> suggestedModels() {
-            return Arrays.asList(ModelVendor.GiteeAI.Qwen2_5_32B_Instruct.getModel());
+            return Arrays.asList(ChatModelVendor.GiteeAI.Qwen2_5_32B_Instruct.model());
         }
     };
 
@@ -112,7 +112,7 @@ public class PromptTemplate {
 
         @Override
         public List<String> suggestedModels() {
-            return Arrays.asList(ModelVendor.GiteeAI.Qwen2_5_32B_Instruct.getModel());
+            return Arrays.asList(ChatModelVendor.GiteeAI.Qwen2_5_32B_Instruct.model());
         }
     };
 

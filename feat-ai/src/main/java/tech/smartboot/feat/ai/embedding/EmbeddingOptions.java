@@ -36,8 +36,8 @@ public class EmbeddingOptions extends AbstractOptions {
         return this;
     }
 
-    public EmbeddingOptions model(ModelVendor model) {
-        return baseUrl(model.getVendor()).model(model.getModel());
+    public EmbeddingOptions model(EmbeddingModelVendor model) {
+        return baseUrl(model.baseUrl()).model(model.model());
     }
 
 

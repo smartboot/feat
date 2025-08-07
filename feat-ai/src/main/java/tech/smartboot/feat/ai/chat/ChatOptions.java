@@ -55,8 +55,8 @@ public class ChatOptions extends AbstractOptions {
         return this;
     }
 
-    public ChatOptions model(ModelVendor model) {
-        return baseUrl(model.getBaseUrl()).model(model.getModel());
+    public ChatOptions model(ChatModelVendor model) {
+        return baseUrl(model.baseUrl()).model(model.model());
     }
 
 

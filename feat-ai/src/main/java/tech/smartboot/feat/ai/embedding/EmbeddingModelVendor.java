@@ -10,80 +10,56 @@
 
 package tech.smartboot.feat.ai.embedding;
 
-import java.util.HashMap;
-import java.util.Map;
+import tech.smartboot.feat.ai.Vendor;
 
 /**
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
-public class ModelVendor {
-    private static final Map<String, Map<String, ModelVendor>> modelMetas = new HashMap<>();
+public abstract class EmbeddingModelVendor extends Vendor {
 
 
-    /**
-     * 服务商
-     */
-    private final String vendor;
-    /**
-     * 模型名称
-     */
-    private final String model;
-
-
-    public ModelVendor(String vendor, String model) {
-        this.vendor = vendor;
-        this.model = model;
-        modelMetas.computeIfAbsent(vendor, k -> new HashMap<>()).putIfAbsent(model, this);
-    }
-
-    public String getVendor() {
-        return vendor;
-    }
-
-    public String getModel() {
-        return model;
+    EmbeddingModelVendor(String baseUrl, String model) {
+        super(baseUrl, model);
     }
 
 
-    public static ModelVendor get(String vendor, String model) {
-        return modelMetas.getOrDefault(vendor, new HashMap<>()).getOrDefault(model, null);
-    }
-
-    public interface Gitee {
-        String BASE_URL = "https://ai.gitee.com/v1/";
+    public static class GiteeAI extends EmbeddingModelVendor {
         /**
          * Qwen3‑Embedding‑8B 是 Qwen 系列推出的大规模嵌入模型，专注于生成高质量、多语言及代码向量，支持多种下游任务中的语义匹配与信息检索需求。
          */
-        ModelVendor Qwen3_Embedding_8B = new ModelVendor(BASE_URL, "Qwen3-Embedding-8B");
+        public static final EmbeddingModelVendor Qwen3_Embedding_8B = new GiteeAI("Qwen3-Embedding-8B");
         /**
          * Qwen3-Embedding-4B 是一款多语言、多模态任务通用的高性能文本和代码嵌入模型，适用于语义搜索、跨语言检索和信息匹配等场景。
          */
-        ModelVendor Qwen3_Embedding_4B = new ModelVendor(BASE_URL, "Qwen3-Embedding-4B");
+        public static final EmbeddingModelVendor Qwen3_Embedding_4B = new GiteeAI("Qwen3-Embedding-4B");
 
         /**
          * Qwen3‑Embedding‑0.6B 是一款多语言文本嵌入模型，支持用户自定义输出维度，擅长跨语言和代码检索任务，并与同系列重排序模型联合使用可通过指令微调以提升特定场景表现
          */
-        ModelVendor Qwen3_Embedding_06B = new ModelVendor(BASE_URL, "Qwen3-Embedding-0.6B");
+        public static final EmbeddingModelVendor Qwen3_Embedding_06B = new GiteeAI("Qwen3-Embedding-0.6B");
 
-        ModelVendor bce_embedding_base_v1 = new ModelVendor(BASE_URL, "bce-embedding-base_v1");
-        ModelVendor bge_small_zh_v1_5 = new ModelVendor(BASE_URL, "bge-small-zh-v1.5");
-        ModelVendor bge_large_zh_v1_5 = new ModelVendor(BASE_URL, "bge-large-zh-v1.5");
-        ModelVendor BGE_M3 = new ModelVendor(BASE_URL, "bge-m3");
+        public static final EmbeddingModelVendor bce_embedding_base_v1 = new GiteeAI("bce-embedding-base_v1");
+        public static final EmbeddingModelVendor bge_small_zh_v1_5 = new GiteeAI("bge-small-zh-v1.5");
+        public static final EmbeddingModelVendor bge_large_zh_v1_5 = new GiteeAI("bge-large-zh-v1.5");
+        public static final EmbeddingModelVendor BGE_M3 = new GiteeAI("bge-m3");
 
+        GiteeAI(String model) {
+            super("https://ai.gitee.com/v1/", model);
+        }
     }
 
     /**
      * Ollama 模型
      */
-    public interface Ollama {
+    public static class Ollama extends EmbeddingModelVendor {
         /**
          * A high-performing open embedding model with a large token context window.
          * <p>
          * nomic-embed-text 是一个大上下文长度的文本编码器，
          * 它超越了 OpenAItext-embedding-ada-002 并 text-embedding-3-small 短上下文任务和长上下文任务的性能。
          */
-        String nomic_embed_text = "nomic-embed-text";
+        public static final EmbeddingModelVendor nomic_embed_text = new Ollama("nomic-embed-text");
 
         /**
          * State-of-the-art large embedding model from mixedbread.ai
@@ -93,11 +69,15 @@ public class ModelVendor {
          * <p>
          * mxbae-embed-size 在没有 MTEB 数据重叠的情况下进行了训练，这表明该模型在多个领域、任务和文本长度上具有良好的泛化性。
          */
-        String mxbai_embed_large = "mxbai-embed-large";
+        public static final EmbeddingModelVendor mxbai_embed_large = new Ollama("mxbai-embed-large");
 
         /**
          * A suite of text embedding models by Snowflake, optimized for performance.
          */
-        String snowflake_arctic_embed = "snowflake-arctic-embed";
+        public static final EmbeddingModelVendor snowflake_arctic_embed = new Ollama("snowflake-arctic-embed");
+
+        Ollama(String model) {
+            super("http://localhost:11434/v1", model);
+        }
     }
 }

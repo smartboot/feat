@@ -15,7 +15,7 @@ import org.junit.Before;
 import org.junit.Test;
 import tech.smartboot.feat.ai.FeatAI;
 import tech.smartboot.feat.ai.embedding.EmbeddingModel;
-import tech.smartboot.feat.ai.embedding.ModelVendor;
+import tech.smartboot.feat.ai.embedding.EmbeddingModelVendor;
 import tech.smartboot.feat.ai.vector.ChromaVectorStore;
 import tech.smartboot.feat.ai.vector.Document;
 import tech.smartboot.feat.ai.vector.SearchRequest;
@@ -38,7 +38,7 @@ public class VectorStoreTest {
     @Before
     public void init() {
         EmbeddingModel embeddingModel = FeatAI.embedding(embedOpt -> {
-            embedOpt.baseUrl("http://localhost:11434/v1").model(ModelVendor.Ollama.nomic_embed_text).debug(true);
+            embedOpt.baseUrl("http://localhost:11434/v1").model(EmbeddingModelVendor.Ollama.nomic_embed_text).debug(true);
         });
         vectorStore = VectorStore.chroma(opt -> {
             opt.setUrl("http://localhost:8000").collectionName("my_collection").debug(true).embeddingModel(embeddingModel);

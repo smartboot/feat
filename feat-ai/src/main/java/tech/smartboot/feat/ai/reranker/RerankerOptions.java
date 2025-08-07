@@ -36,8 +36,8 @@ public class RerankerOptions extends AbstractOptions {
         return this;
     }
 
-    public RerankerOptions model(ModelVendor model) {
-        return baseUrl(model.getVendor()).model(model.getModel());
+    public RerankerOptions model(RerankerModelVendor model) {
+        return baseUrl(model.baseUrl()).model(model.model());
     }
 
 

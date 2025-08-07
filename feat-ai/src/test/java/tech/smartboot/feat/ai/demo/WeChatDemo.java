@@ -12,7 +12,7 @@ package tech.smartboot.feat.ai.demo;
 
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.ai.FeatAI;
-import tech.smartboot.feat.ai.chat.ModelVendor;
+import tech.smartboot.feat.ai.chat.ChatModelVendor;
 import tech.smartboot.feat.ai.chat.ChatModel;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
@@ -51,7 +51,7 @@ public class WeChatDemo extends BaseChat {
         StringBuilder demoBuilder = new StringBuilder();
         loadSource(new File("feat-ai/src/test/java/tech/smartboot/feat/ai/test/"), demoBuilder);
         ChatModel chatModel = FeatAI.chatModel(opts -> {
-            opts.model(ModelVendor.GiteeAI.DeepSeek_R1_Distill_Qwen_32B).system("你是一个负责Feat微信公众号的编辑人员，你的任务是根据用户要求编写微信公众号文章。"
+            opts.model(ChatModelVendor.GiteeAI.DeepSeek_R1_Distill_Qwen_32B).system("你是一个负责Feat微信公众号的编辑人员，你的任务是根据用户要求编写微信公众号文章。"
                                     + "Feat参考内容为：\n" + stringBuilder
                                     + "\n FeatClient的实现源码为：\n" + sourceBuilder
 //                    + "\n 示例代码为：" + demoBuilder
@@ -92,7 +92,7 @@ public class WeChatDemo extends BaseChat {
                                 throw new RuntimeException(e);
                             }
                             FeatAI.chatModel(opts -> {
-                                opts.model(ModelVendor.GiteeAI.DeepSeek_R1_Distill_Qwen_32B).system("你是一个负责Feat微信公众号的编辑人员，你的任务是根据用户要求编写微信公众号文章。").debug(true);
+                                opts.model(ChatModelVendor.GiteeAI.DeepSeek_R1_Distill_Qwen_32B).system("你是一个负责Feat微信公众号的编辑人员，你的任务是根据用户要求编写微信公众号文章。").debug(true);
                             }).chatStream("站在读者角度，优化大模型生成的微信公众号文章：\n" + content, new StreamResponseCallback() {
 
                                 @Override
