@@ -11,10 +11,14 @@
 package tech.smartboot.feat.ai.demo;
 
 import tech.smartboot.feat.ai.FeatAI;
-import tech.smartboot.feat.ai.chat.ChatModelVendor;
 import tech.smartboot.feat.ai.chat.ChatModel;
+import tech.smartboot.feat.ai.chat.ChatModelVendor;
+import tech.smartboot.feat.ai.chat.entity.Function;
+import tech.smartboot.feat.ai.chat.entity.ResponseFormat;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
+
+import java.util.Arrays;
 
 /**
  * @author 三刀 zhengjunweimail@163.com
@@ -26,7 +30,9 @@ public class OllamaDemo {
         ChatModel chatModel = FeatAI.chatModel(opts -> {
             opts.model(ChatModelVendor.Ollama.Qwen2_5_05B)
                     .system("你是一个擅长生成藏头诗的诗人。")
-                    .debug(false);
+                    .addFunction(Function.of("aa"))
+                    .responseFormat(ResponseFormat.JSON)
+                    .debug(true);
         });
 
         // 用户输入的藏头关键词
@@ -35,6 +41,7 @@ public class OllamaDemo {
         // 向AI发送请求
         chatModel.chatStream(
                 "根据以下关键词生成一首藏头诗：" + String.join(",", keywords),
+                Arrays.asList("aa"),
                 new StreamResponseCallback() {
                     @Override
                     public void onStreamResponse(String content) {

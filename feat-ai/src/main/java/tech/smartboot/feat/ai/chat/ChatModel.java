@@ -11,8 +11,8 @@
 package tech.smartboot.feat.ai.chat;
 
 import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.Feat;
-import tech.smartboot.feat.ai.chat.entity.ChatRequest;
 import tech.smartboot.feat.ai.chat.entity.ChatStreamResponse;
 import tech.smartboot.feat.ai.chat.entity.ChatWholeResponse;
 import tech.smartboot.feat.ai.chat.entity.Message;
@@ -185,15 +185,17 @@ public class ChatModel {
 
     private HttpPost chat0(String content, List<String> tools, boolean stream) {
         System.out.println("我：" + content);
-        ChatRequest request = new ChatRequest();
-        request.setModel(options.model());
-        request.setStream(stream);
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("model", options.model());
+        jsonObject.put("stream", stream);
         Message message = new Message();
         message.setContent(content);
         message.setRole("user");
         history.add(message);
-        request.setMessages(history);
-        request.setResponseFormat(options.responseFormat());
+        jsonObject.put("messages", history);
+        if (options.responseFormat() != null) {
+            jsonObject.put("response_format", JSONObject.of("type", options.responseFormat().getType()));
+        }
 
         List<Tool> toolList = new ArrayList<>();
         for (String tool : tools) {
@@ -206,8 +208,8 @@ public class ChatModel {
             toolList.add(t);
         }
         if (!toolList.isEmpty()) {
-            request.setTools(toolList);
-            request.setToolChoice("auto");
+            jsonObject.put("tools", toolList);
+            jsonObject.put("tool_choice", "auto");
         }
 
 
@@ -218,7 +220,7 @@ public class ChatModel {
                 header.add(HeaderName.AUTHORIZATION, "Bearer " + options.apiKey());
             }
             options.getHeaders().forEach(header::add);
-        }, request);
+        }, jsonObject);
         post.onFailure(throwable -> throwable.printStackTrace()).submit();
         return post;
     }
