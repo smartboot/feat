@@ -38,7 +38,7 @@ public class RerankerModel {
 
     public List<float[]> rerank(String query, List<String> documents, int topN) {
         JSONObject object = new JSONObject();
-        object.put("model", options.getModel());
+        object.put("model", options.model());
         object.put("query", query);
         object.put("top_n", topN);
         object.put("documents", documents);
@@ -47,8 +47,8 @@ public class RerankerModel {
             opts.debug(options.isDebug());
         });
         HttpPost httpPost = httpClient.post("/v1/embeddings").header(header -> {
-            if (FeatUtils.isNotBlank(options.getApiKey())) {
-                header.add(HeaderName.AUTHORIZATION, "Bearer " + options.getApiKey());
+            if (FeatUtils.isNotBlank(options.apiKey())) {
+                header.add(HeaderName.AUTHORIZATION, "Bearer " + options.apiKey());
             }
             header.add(HeaderName.CONTENT_TYPE, "application/json").add(HeaderName.CONTENT_LENGTH, bytes.length);
         });

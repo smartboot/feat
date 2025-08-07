@@ -10,9 +10,9 @@
 
 package tech.smartboot.feat.ai.chat;
 
+import tech.smartboot.feat.ai.AbstractOptions;
 import tech.smartboot.feat.ai.chat.entity.Function;
 import tech.smartboot.feat.ai.chat.entity.ResponseFormat;
-import tech.smartboot.feat.ai.vendor.GiteeAI;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,37 +21,13 @@ import java.util.Map;
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
-public class ChatOptions {
-    public static final String ENV_API_KEY = "FEAT_AI_API_KEY";
-    /**
-     * Gitee AI服务的基础URL
-     */
-    public static final String AI_VENDOR_GITEE = GiteeAI.BASE_URL;
-
-    /**
-     * AI服务的基础URL，优先从环境变量FEATAI_BASE_URL获取，默认使用Gitee AI服务
-     */
-    private String baseUrl = System.getenv("FEAT_AI_BASE_URL") != null ? System.getenv("FEAT_AI_BASE_URL") : GiteeAI.BASE_URL;
-
-    /**
-     * AI模型名称
-     */
-    private String model;
-
-    /**
-     * API密钥，优先从环境变量FEATAI_API_KEY获取
-     */
-    private String apiKey = System.getenv(ENV_API_KEY);
+public class ChatOptions extends AbstractOptions {
 
     /**
      * 系统提示信息
      */
     private String system;
 
-    /**
-     * 是否启用调试模式
-     */
-    private boolean debug;
 
     /**
      * 是否忽略不支持的工具
@@ -59,10 +35,6 @@ public class ChatOptions {
      */
     private boolean ignoreUnSupportedTool = false;
 
-    /**
-     * 请求头信息映射
-     */
-    private final Map<String, String> headers = new HashMap<>();
 
     /**
      * 功能函数映射，用于存储可用的AI功能函数
@@ -72,21 +44,14 @@ public class ChatOptions {
     private ResponseFormat responseFormat;
 
 
-    public String baseUrl() {
-        return baseUrl;
-    }
-
     public ChatOptions baseUrl(String baseUrl) {
-        this.baseUrl = baseUrl;
+        super.baseUrl(baseUrl);
         return this;
     }
 
-    public String getModel() {
-        return model;
-    }
 
     public ChatOptions model(String model) {
-        this.model = model;
+        super.model(model);
         return this;
     }
 
@@ -94,12 +59,9 @@ public class ChatOptions {
         return baseUrl(model.getBaseUrl()).model(model.getModel());
     }
 
-    public String getApiKey() {
-        return apiKey;
-    }
 
     public ChatOptions apiKey(String apiKey) {
-        this.apiKey = apiKey;
+        super.apiKey(apiKey);
         return this;
     }
 
@@ -121,12 +83,9 @@ public class ChatOptions {
         return this;
     }
 
-    public boolean isDebug() {
-        return debug;
-    }
 
     public ChatOptions debug(boolean debug) {
-        this.debug = debug;
+        super.debug(debug);
         return this;
     }
 
@@ -139,12 +98,8 @@ public class ChatOptions {
         return this;
     }
 
-    public Map<String, String> getHeaders() {
-        return headers;
-    }
-
     public ChatOptions addHeader(String key, String value) {
-        this.headers.put(key, value);
+        super.addHeader(key, value);
         return this;
     }
 

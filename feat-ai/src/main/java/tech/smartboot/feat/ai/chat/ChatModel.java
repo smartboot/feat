@@ -186,7 +186,7 @@ public class ChatModel {
     private HttpPost chat0(String content, List<String> tools, boolean stream) {
         System.out.println("我：" + content);
         ChatRequest request = new ChatRequest();
-        request.setModel(options.getModel());
+        request.setModel(options.model());
         request.setStream(stream);
         Message message = new Message();
         message.setContent(content);
@@ -214,8 +214,8 @@ public class ChatModel {
         HttpPost post = Feat.postJson(options.baseUrl() + "/chat/completions", opts -> {
             opts.debug(options.isDebug());
         }, header -> {
-            if (FeatUtils.isNotBlank(options.getApiKey())) {
-                header.add(HeaderName.AUTHORIZATION, "Bearer " + options.getApiKey());
+            if (FeatUtils.isNotBlank(options.apiKey())) {
+                header.add(HeaderName.AUTHORIZATION, "Bearer " + options.apiKey());
             }
             options.getHeaders().forEach(header::add);
         }, request);

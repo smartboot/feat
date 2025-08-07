@@ -18,9 +18,9 @@ import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpPost;
 import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.client.HttpRest;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.exception.FeatException;
-import tech.smartboot.feat.core.common.FeatUtils;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -35,7 +35,7 @@ public class EmbeddingModel {
 
     public List<float[]> embed(List<String> documents) {
         JSONObject object = new JSONObject();
-        object.put("model", options.getModel());
+        object.put("model", options.model());
         object.put("input", documents);
         object.put("encoding_format", "float");
         object.put("dimensions", 1);
@@ -44,8 +44,8 @@ public class EmbeddingModel {
             opts.debug(options.isDebug());
         });
         HttpPost httpPost = httpClient.post("/v1/embeddings").header(header -> {
-            if (FeatUtils.isNotBlank(options.getApiKey())) {
-                header.add(HeaderName.AUTHORIZATION, "Bearer " + options.getApiKey());
+            if (FeatUtils.isNotBlank(options.apiKey())) {
+                header.add(HeaderName.AUTHORIZATION, "Bearer " + options.apiKey());
             }
             header.add(HeaderName.CONTENT_TYPE, "application/json").add(HeaderName.CONTENT_LENGTH, bytes.length);
         });
