@@ -43,7 +43,7 @@ public class EmbeddingTest {
     @Test
     public void testOllama() {
         //调用Ollama的Embedding模型
-        EmbeddingModel embeddingModel = FeatAI.embedding(opt -> opt.baseUrl("http://localhost:11434/v1").model(EmbeddingModelVendor.Ollama.nomic_embed_text));
+        EmbeddingModel embeddingModel = FeatAI.embedding(opt -> opt.model(EmbeddingModelVendor.Ollama.nomic_embed_text));
         List<float[]> embeds = embeddingModel.embed(Arrays.asList("Hello World", "你好"));
         embeds.forEach(embed -> System.out.println(Arrays.toString(embed)));
     }
