@@ -10,7 +10,7 @@
 
 package tech.smartboot.feat.ai.chat;
 
-import tech.smartboot.feat.ai.AbstractOptions;
+import tech.smartboot.feat.ai.Options;
 import tech.smartboot.feat.ai.chat.entity.Function;
 import tech.smartboot.feat.ai.chat.entity.ResponseFormat;
 
@@ -21,7 +21,7 @@ import java.util.Map;
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
-public class ChatOptions extends AbstractOptions {
+public class ChatOptions extends Options {
 
     /**
      * 系统提示信息

@@ -10,13 +10,13 @@
 
 package tech.smartboot.feat.ai.embedding;
 
-import tech.smartboot.feat.ai.AbstractOptions;
+import tech.smartboot.feat.ai.Options;
 
 /**
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
-public class EmbeddingOptions extends AbstractOptions {
+public class EmbeddingOptions extends Options {
 
 
     public EmbeddingOptions debug(boolean debug) {

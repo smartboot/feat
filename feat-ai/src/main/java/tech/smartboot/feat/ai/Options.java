@@ -19,7 +19,7 @@ import java.util.Map;
  * @author 三刀
  * @version v1.0 8/7/25
  */
-public abstract class AbstractOptions {
+public abstract class Options {
     public static final String ENV_API_KEY = "FEAT_AI_API_KEY";
     /**
      * AI服务的基础URL，优先从环境变量FEATAI_BASE_URL获取，默认使用Gitee AI服务
@@ -50,7 +50,7 @@ public abstract class AbstractOptions {
         return baseUrl;
     }
 
-    public AbstractOptions baseUrl(String baseUrl) {
+    public Options baseUrl(String baseUrl) {
         this.baseUrl = baseUrl;
         return this;
     }
@@ -59,7 +59,7 @@ public abstract class AbstractOptions {
         return model;
     }
 
-    public AbstractOptions model(String model) {
+    public Options model(String model) {
         this.model = model;
         return this;
     }
@@ -68,7 +68,7 @@ public abstract class AbstractOptions {
         return apiKey;
     }
 
-    public AbstractOptions apiKey(String apiKey) {
+    public Options apiKey(String apiKey) {
         this.apiKey = apiKey;
         return this;
     }
@@ -77,7 +77,7 @@ public abstract class AbstractOptions {
         return debug;
     }
 
-    public AbstractOptions debug(boolean debug) {
+    public Options debug(boolean debug) {
         this.debug = debug;
         return this;
     }
@@ -87,7 +87,7 @@ public abstract class AbstractOptions {
     }
 
 
-    public AbstractOptions addHeader(String key, String value) {
+    public Options addHeader(String key, String value) {
         this.headers.put(key, value);
         return this;
     }
