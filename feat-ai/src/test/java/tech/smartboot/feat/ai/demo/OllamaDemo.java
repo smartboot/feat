@@ -46,9 +46,17 @@ public class OllamaDemo {
 
                     @Override
                     public void onCompletion(ResponseMessage responseMessage) {
-                        System.out.println(responseMessage.getContent());
+//                        System.out.println(responseMessage.getContent());
                         System.out.println("\n生成完成！");
                     }
+                }
+        );
+
+        chatModel.chat(
+                "根据以下关键词生成一首藏头诗：" + String.join(",", keywords),
+                responseMessage -> {
+                    System.out.println(responseMessage.getContent());
+                    System.out.println("\n生成完成！");
                 }
         );
     }

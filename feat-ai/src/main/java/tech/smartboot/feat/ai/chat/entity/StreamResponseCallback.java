@@ -19,7 +19,7 @@ package tech.smartboot.feat.ai.chat.entity;
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
-public interface StreamResponseCallback extends ResponseCallback {
+public interface StreamResponseCallback {
     /**
      * 当流式响应完成时调用此方法
      * <p>

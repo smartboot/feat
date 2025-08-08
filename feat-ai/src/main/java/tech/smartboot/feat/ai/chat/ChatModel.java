@@ -16,7 +16,6 @@ import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.ai.chat.entity.ChatStreamResponse;
 import tech.smartboot.feat.ai.chat.entity.ChatWholeResponse;
 import tech.smartboot.feat.ai.chat.entity.Message;
-import tech.smartboot.feat.ai.chat.entity.ResponseCallback;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 import tech.smartboot.feat.ai.chat.entity.StreamChoice;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
@@ -160,7 +159,7 @@ public class ChatModel {
         return future;
     }
 
-    public void chat(String content, List<String> tools, ResponseCallback callback) {
+    public void chat(String content, List<String> tools, Consumer<ResponseMessage> callback) {
         HttpPost post = chat0(content, tools, false);
 
         post.onSuccess(response -> {
@@ -169,7 +168,7 @@ public class ChatModel {
                 responseMessage.setRole(Message.ROLE_ASSISTANT);
                 responseMessage.setError(response.body());
                 responseMessage.setSuccess(false);
-                callback.onCompletion(responseMessage);
+                callback.accept(responseMessage);
                 return;
             }
             ChatWholeResponse chatResponse = JSON.parseObject(response.body(), ChatWholeResponse.class);
@@ -178,7 +177,7 @@ public class ChatModel {
             responseMessage.setUsage(chatResponse.getUsage());
             responseMessage.setPromptLogprobs(chatResponse.getPromptLogprobs());
             responseMessage.setSuccess(true);
-            callback.onCompletion(responseMessage);
+            callback.accept(responseMessage);
         });
     }
 
@@ -225,11 +224,11 @@ public class ChatModel {
         return post;
     }
 
-    public void chat(String content, String tool, ResponseCallback callback) {
+    public void chat(String content, String tool, Consumer<ResponseMessage> callback) {
         chat(content, Collections.singletonList(tool), callback);
     }
 
-    public void chat(String content, ResponseCallback callback) {
+    public void chat(String content, Consumer<ResponseMessage> callback) {
         chat(content, Collections.emptyList(), callback);
     }
 
@@ -239,7 +238,7 @@ public class ChatModel {
         return future;
     }
 
-    public void chat(Prompt prompt, Consumer<Map<String, String>> data, ResponseCallback callback) {
+    public void chat(Prompt prompt, Consumer<Map<String, String>> data, Consumer<ResponseMessage> callback) {
         Map<String, String> params = new HashMap<>();
         data.accept(params);
         history.clear();
