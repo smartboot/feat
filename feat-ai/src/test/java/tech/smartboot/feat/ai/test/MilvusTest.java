@@ -33,7 +33,7 @@ public class MilvusTest {
     @Before
     public void init() {
         milvus = new Milvus("http://localhost:19530", opt -> opt.debug(true).embeddingModel(FeatAI.embedding(embedOpt -> {
-            embedOpt.baseUrl("http://localhost:11434/v1").model(EmbeddingModelVendor.Ollama.nomic_embed_text).debug(true);
+            embedOpt.model(EmbeddingModelVendor.Ollama.nomic_embed_text).debug(true);
         })));
     }
 

@@ -210,7 +210,9 @@ public class ChatModel {
             jsonObject.put("tools", toolList);
             jsonObject.put("tool_choice", "auto");
         }
-
+        if (options.getPreRequest() != null) {
+            options.getPreRequest().preRequest(this, jsonObject);
+        }
 
         HttpPost post = Feat.postJson(options.baseUrl() + "/chat/completions", opts -> {
             opts.debug(options.isDebug());
@@ -266,4 +268,7 @@ public class ChatModel {
         chatStream(prompt.prompt(params), callback);
     }
 
+    public ChatOptions getOptions() {
+        return options;
+    }
 }

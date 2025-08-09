@@ -38,7 +38,7 @@ public class ChromaTest {
     @Before
     public void init() {
         chroma = new Chroma("http://localhost:8000", opt -> opt.debug(true).embeddingModel(FeatAI.embedding(embedOpt -> {
-            embedOpt.baseUrl("http://localhost:11434/v1").model(EmbeddingModelVendor.Ollama.nomic_embed_text).debug(true);
+            embedOpt.model(EmbeddingModelVendor.Ollama.nomic_embed_text).debug(true);
         })));
     }
 

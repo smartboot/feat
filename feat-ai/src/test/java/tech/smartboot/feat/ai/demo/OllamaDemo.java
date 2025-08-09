@@ -25,10 +25,11 @@ public class OllamaDemo {
     public static void main(String[] args) {
         // 初始化Feat AI
         ChatModel chatModel = FeatAI.chatModel(opts -> {
-            opts.model(ChatModelVendor.Ollama.Qwen2_5_05B)
+            opts.model(ChatModelVendor.Ollama.Qwen3_06B)
                     .system("你是一个擅长生成藏头诗的诗人。")
                     .addFunction(Function.of("aa"))
 //                    .responseFormat(ResponseFormat.JSON)
+                    .noThink(true)
                     .debug(true);
         });
 
@@ -36,21 +37,21 @@ public class OllamaDemo {
         String[] keywords = {"情", "人", "节", "快", "乐"};
 
         // 向AI发送请求
-        chatModel.chatStream(
-                "根据以下关键词生成一首藏头诗：" + String.join(",", keywords),
-                new StreamResponseCallback() {
-                    @Override
-                    public void onStreamResponse(String content) {
-                        System.out.print(content);
-                    }
-
-                    @Override
-                    public void onCompletion(ResponseMessage responseMessage) {
-//                        System.out.println(responseMessage.getContent());
-                        System.out.println("\n生成完成！");
-                    }
-                }
-        );
+//        chatModel.chatStream(
+//                "根据以下关键词生成一首藏头诗：" + String.join(",", keywords),
+//                new StreamResponseCallback() {
+//                    @Override
+//                    public void onStreamResponse(String content) {
+//                        System.out.print(content);
+//                    }
+//
+//                    @Override
+//                    public void onCompletion(ResponseMessage responseMessage) {
+////                        System.out.println(responseMessage.getContent());
+//                        System.out.println("\n生成完成！");
+//                    }
+//                }
+//        );
 
         chatModel.chat(
                 "根据以下关键词生成一首藏头诗：" + String.join(",", keywords),

@@ -10,13 +10,15 @@
 
 package tech.smartboot.feat.ai.chat;
 
+import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.ai.Vendor;
 
 /**
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
-public abstract class ChatModelVendor extends Vendor {
+public class ChatModelVendor extends Vendor {
+    private final PreRequest preRequest;
 
     public static class GiteeAI extends ChatModelVendor {
         public static final ChatModelVendor DeepSeek_R1 = new GiteeAI("DeepSeek-R1");
@@ -34,12 +36,34 @@ public abstract class ChatModelVendor extends Vendor {
         public static final ChatModelVendor Qwen2_5_05B = new Ollama("qwen2.5:0.5b");
         public static final ChatModelVendor Qwen2_5_3B = new Ollama("qwen2.5:3b");
 
+        public static final ChatModelVendor Qwen3_06B = new Ollama("qwen3:0.6b", new PreRequest() {
+            @Override
+            public void preRequest(ChatModel chatModel, JSONObject jsonObject) {
+                if (chatModel.getOptions().isNoThink()) {
+                    jsonObject.getJSONArray("messages").add(JSONObject.of("role", "user", "content", "/no_think"));
+                }
+            }
+        });
+
         Ollama(String model) {
-            super("http://localhost:11434/v1", model);
+            super(model, null);
+        }
+
+        Ollama(String model, PreRequest consumer) {
+            super("http://localhost:11434/v1", model, consumer);
         }
     }
 
     ChatModelVendor(String baseUrl, String model) {
+        this(baseUrl, model, null);
+    }
+
+    ChatModelVendor(String baseUrl, String model, PreRequest request) {
         super(baseUrl, model);
+        this.preRequest = request;
+    }
+
+    public PreRequest getPreRequest() {
+        return preRequest;
     }
 }
