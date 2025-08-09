@@ -11,13 +11,13 @@
 package tech.smartboot.feat.ai.chat;
 
 import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
+import com.alibaba.fastjson2.TypeReference;
 import tech.smartboot.feat.Feat;
-import tech.smartboot.feat.ai.chat.entity.ChatStreamResponse;
 import tech.smartboot.feat.ai.chat.entity.ChatWholeResponse;
 import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
-import tech.smartboot.feat.ai.chat.entity.StreamChoice;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
 import tech.smartboot.feat.ai.chat.entity.Tool;
 import tech.smartboot.feat.ai.chat.entity.ToolCall;
@@ -28,6 +28,8 @@ import tech.smartboot.feat.core.client.stream.ServerSentEventStream;
 import tech.smartboot.feat.core.client.stream.Stream;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
+import tech.smartboot.feat.core.common.logging.Logger;
+import tech.smartboot.feat.core.common.logging.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -44,6 +46,7 @@ import java.util.function.Consumer;
  * @version v1.0.0
  */
 public class ChatModel {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ChatModel.class);
     private final ChatOptions options;
     private final List<Message> history = new ArrayList<>();
 
@@ -83,7 +86,7 @@ public class ChatModel {
                             ResponseMessage responseMessage = new ResponseMessage();
                             responseMessage.setRole(Message.ROLE_ASSISTANT);
                             responseMessage.setContent(contentBuilder.toString());
-                            responseMessage.setToolCalls(toolCallMap.values());
+                            responseMessage.setToolCalls(new ArrayList<>(toolCallMap.values()));
                             responseMessage.setSuccess(true);
                             consumer.onCompletion(responseMessage);
                             if (!responseMessage.isDiscard()) {
@@ -94,14 +97,32 @@ public class ChatModel {
                             }
                             return;
                         }
-                        ChatStreamResponse object = JSON.parseObject(data, ChatStreamResponse.class);
-                        StreamChoice choice = object.getChoice();
-                        if (choice.getDelta().getContent() != null) {
-                            consumer.onStreamResponse(choice.getDelta().getContent());
-                            contentBuilder.append(choice.getDelta().getContent());
+                        JSONObject object = JSON.parseObject(data);
+                        //最后一个可能为空
+                        JSONArray choices = object.getJSONArray("choices");
+                        if (choices == null || choices.isEmpty()) {
+                            return;
                         }
-                        if (choice.getDelta().getToolCalls() != null) {
-                            for (ToolCall toolCall : choice.getDelta().getToolCalls()) {
+                        JSONObject choice = choices.getJSONObject(0);
+                        JSONObject delta = choice.getJSONObject("delta");
+                        if (delta == null) {
+                            LOGGER.error("delta is null");
+                            return;
+                        }
+                        String content = delta.getString("content");
+                        if (content != null) {
+                            consumer.onStreamResponse(content);
+                            contentBuilder.append(content);
+                        }
+                        String reasoningContent = delta.getString("reasoning_content");
+                        if (reasoningContent != null) {
+                            consumer.onStreamResponse(reasoningContent);
+                            contentBuilder.append(reasoningContent);
+                        }
+                        List<ToolCall> toolCalls = delta.getObject("tool_calls", new TypeReference<List<ToolCall>>() {
+                        });
+                        if (FeatUtils.isNotEmpty(toolCalls)) {
+                            for (ToolCall toolCall : toolCalls) {
                                 ToolCall tool = toolCallMap.computeIfAbsent(toolCall.getIndex(), k -> {
                                     ToolCall t = new ToolCall();
                                     t.setFunction(new HashMap<>());

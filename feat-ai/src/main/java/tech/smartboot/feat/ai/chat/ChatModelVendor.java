@@ -19,48 +19,51 @@ import tech.smartboot.feat.ai.Vendor;
  */
 public class ChatModelVendor extends Vendor {
     private final PreRequest preRequest;
+    private final boolean thinkSupport;
+    private final boolean functionCallSupport;
 
     public static class GiteeAI extends ChatModelVendor {
-        public static final ChatModelVendor DeepSeek_R1 = new GiteeAI("DeepSeek-R1");
-        public static final ChatModelVendor DeepSeek_R1_Distill_Qwen_32B = new GiteeAI("DeepSeek-R1-Distill-Qwen-32B");
-        public static final ChatModelVendor Qwen2_5_72B_Instruct = new GiteeAI("Qwen2.5-72B-Instruct");
-        public static final ChatModelVendor Qwen2_5_32B_Instruct = new GiteeAI("Qwen2.5-32B-Instruct");
-        public static final ChatModelVendor Qwen3_4B = new GiteeAI("Qwen3-4B");
+        public static final ChatModelVendor DeepSeek_R1 = new GiteeAI("DeepSeek-R1", false, true);
+        public static final ChatModelVendor DeepSeek_R1_Distill_Qwen_32B = new GiteeAI("DeepSeek-R1-Distill-Qwen-32B", false, false);
+        public static final ChatModelVendor Qwen2_5_72B_Instruct = new GiteeAI("Qwen2.5-72B-Instruct", false, true);
+        public static final ChatModelVendor Qwen2_5_32B_Instruct = new GiteeAI("Qwen2.5-32B-Instruct", false, false);
+        public static final ChatModelVendor Qwen3_235B_A22B_Instruct_2507 = new GiteeAI("Qwen3-235B-A22B-Instruct-2507", false, true);
+        public static final ChatModelVendor Qwen3_4B = new GiteeAI("Qwen3-4B", true, false);
 
-        GiteeAI(String model) {
-            super("https://ai.gitee.com/v1/", model);
+
+        GiteeAI(String model, boolean thinkSupport, boolean functionCallSupport) {
+            super("https://ai.gitee.com/v1/", model, thinkSupport, functionCallSupport, (chatModel, jsonObject) -> {
+                if (chatModel.getOptions().isNoThink()) {
+                    jsonObject.getJSONArray("messages").add(JSONObject.of("role", "user", "content", "/no_think"));
+                }
+//            if (jsonObject.containsKey("tools")) {
+//                jsonObject.remove("tool_choice");
+//            }
+            });
         }
     }
 
     public static class Ollama extends ChatModelVendor {
-        public static final ChatModelVendor Qwen2_5_05B = new Ollama("qwen2.5:0.5b");
-        public static final ChatModelVendor Qwen2_5_3B = new Ollama("qwen2.5:3b");
+        public static final ChatModelVendor Qwen2_5_05B = new Ollama("qwen2.5:0.5b", false, false);
+        public static final ChatModelVendor Qwen2_5_3B = new Ollama("qwen2.5:3b", false, false);
 
-        public static final ChatModelVendor Qwen3_06B = new Ollama("qwen3:0.6b", new PreRequest() {
-            @Override
-            public void preRequest(ChatModel chatModel, JSONObject jsonObject) {
-                if (chatModel.getOptions().isNoThink()) {
+        public static final ChatModelVendor Qwen3_06B = new Ollama("qwen3:0.6b", true, false);
+
+
+        Ollama(String model, boolean thinkSupport, boolean functionCallSupport) {
+            super("http://localhost:11434/v1", model, thinkSupport, functionCallSupport, (chatModel, jsonObject) -> {
+                if (thinkSupport && chatModel.getOptions().isNoThink()) {
                     jsonObject.getJSONArray("messages").add(JSONObject.of("role", "user", "content", "/no_think"));
                 }
-            }
-        });
-
-        Ollama(String model) {
-            super(model, null);
-        }
-
-        Ollama(String model, PreRequest consumer) {
-            super("http://localhost:11434/v1", model, consumer);
+            });
         }
     }
 
-    ChatModelVendor(String baseUrl, String model) {
-        this(baseUrl, model, null);
-    }
-
-    ChatModelVendor(String baseUrl, String model, PreRequest request) {
+    ChatModelVendor(String baseUrl, String model, boolean thinkSupport, boolean functionCallSupport, PreRequest request) {
         super(baseUrl, model);
         this.preRequest = request;
+        this.thinkSupport = thinkSupport;
+        this.functionCallSupport = functionCallSupport;
     }
 
     public PreRequest getPreRequest() {

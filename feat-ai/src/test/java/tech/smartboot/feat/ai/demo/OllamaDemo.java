@@ -30,28 +30,28 @@ public class OllamaDemo {
                     .addFunction(Function.of("aa"))
 //                    .responseFormat(ResponseFormat.JSON)
                     .noThink(true)
-                    .debug(true);
+                    .debug(false);
         });
 
         // 用户输入的藏头关键词
         String[] keywords = {"情", "人", "节", "快", "乐"};
 
         // 向AI发送请求
-//        chatModel.chatStream(
-//                "根据以下关键词生成一首藏头诗：" + String.join(",", keywords),
-//                new StreamResponseCallback() {
-//                    @Override
-//                    public void onStreamResponse(String content) {
-//                        System.out.print(content);
-//                    }
-//
-//                    @Override
-//                    public void onCompletion(ResponseMessage responseMessage) {
-////                        System.out.println(responseMessage.getContent());
-//                        System.out.println("\n生成完成！");
-//                    }
-//                }
-//        );
+        chatModel.chatStream(
+                "根据以下关键词生成一首藏头诗：" + String.join(",", keywords),
+                new StreamResponseCallback() {
+                    @Override
+                    public void onStreamResponse(String content) {
+                        System.out.print(content);
+                    }
+
+                    @Override
+                    public void onCompletion(ResponseMessage responseMessage) {
+//                        System.out.println(responseMessage.getContent());
+                        System.out.println("\n生成完成！");
+                    }
+                }
+        );
 
         chatModel.chat(
                 "根据以下关键词生成一首藏头诗：" + String.join(",", keywords),

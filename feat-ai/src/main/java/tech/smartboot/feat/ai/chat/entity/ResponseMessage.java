@@ -12,7 +12,7 @@ package tech.smartboot.feat.ai.chat.entity;
 
 import com.alibaba.fastjson2.annotation.JSONField;
 
-import java.util.Collection;
+import java.util.List;
 
 /**
  * @author 三刀 zhengjunweimail@163.com
@@ -22,7 +22,7 @@ public class ResponseMessage extends Message {
     private boolean success;
     private String error;
     @JSONField(name = "tool_calls")
-    private Collection<ToolCall> toolCalls;
+    private List<ToolCall> toolCalls;
 
     @JSONField(deserialize = false, serialize = false)
     private Usage usage;
@@ -33,11 +33,11 @@ public class ResponseMessage extends Message {
      */
     private boolean discard = false;
 
-    public Collection<ToolCall> getToolCalls() {
+    public List<ToolCall> getToolCalls() {
         return toolCalls;
     }
 
-    public void setToolCalls(Collection<ToolCall> toolCalls) {
+    public void setToolCalls(List<ToolCall> toolCalls) {
         this.toolCalls = toolCalls;
     }
 
