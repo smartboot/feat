@@ -10,6 +10,8 @@
 
 package tech.smartboot.feat.ai.chat.entity;
 
+import com.alibaba.fastjson2.annotation.JSONField;
+
 /**
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
@@ -30,6 +32,8 @@ public class Message {
 
     private String role;
     private String content;
+    @JSONField(name = "reasoning_content")
+    private String reasoningContent;
 
     public String getRole() {
         return role;
@@ -45,5 +49,13 @@ public class Message {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public String getReasoningContent() {
+        return reasoningContent;
+    }
+
+    public void setReasoningContent(String reasoningContent) {
+        this.reasoningContent = reasoningContent;
     }
 }

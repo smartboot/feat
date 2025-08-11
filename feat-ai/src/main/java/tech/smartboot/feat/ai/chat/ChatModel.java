@@ -136,6 +136,9 @@ public class ChatModel {
                                 }
                                 if (toolCall.getFunction() != null) {
                                     toolCall.getFunction().forEach((k, v) -> {
+                                        if (v == null) {
+                                            return;
+                                        }
                                         String preV = tool.getFunction().get(k);
                                         if (FeatUtils.isNotBlank(preV)) {
                                             tool.getFunction().put(k, preV + v);

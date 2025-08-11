@@ -52,4 +52,56 @@ public class GiteeTest {
         Assert.assertEquals(1, tools.size());
         Assert.assertEquals("get_weather", tools.get(0).getFunction().get("name"));
     }
+
+    @Test
+    public void test2() throws InterruptedException, ExecutionException {
+        CompletableFuture<List<ToolCall>> future = new CompletableFuture<>();
+        ChatModel chatModel = FeatAI.chatModel(opts -> opts.model(ChatModelVendor.GiteeAI.Kimi_K2_Instruct)
+                .addFunction(
+                        Function.of("get_weather")
+                                .description("获取天气信息")
+                                .addParam("city", "城市名称", "string", true))
+                .noThink(false).debug(false));
+
+        chatModel.chatStream("今天杭州天气如何", Arrays.asList("get_weather"), new StreamResponseCallback() {
+            @Override
+            public void onStreamResponse(String content) {
+                System.out.printf(content);
+            }
+
+            @Override
+            public void onCompletion(ResponseMessage responseMessage) {
+                future.complete(responseMessage.getToolCalls());
+            }
+        });
+        List<ToolCall> tools = future.get();
+        Assert.assertEquals(1, tools.size());
+        Assert.assertEquals("get_weather", tools.get(0).getFunction().get("name"));
+    }
+
+    @Test
+    public void test3() throws InterruptedException, ExecutionException {
+        CompletableFuture<List<ToolCall>> future = new CompletableFuture<>();
+        ChatModel chatModel = FeatAI.chatModel(opts -> opts.model(ChatModelVendor.GiteeAI.DeepSeek_R1)
+                .noThink(true).debug(true));
+
+//        chatModel.chatStream("你是谁", new StreamResponseCallback() {
+//            @Override
+//            public void onStreamResponse(String content) {
+//                System.out.printf(content);
+//            }
+//
+//            @Override
+//            public void onCompletion(ResponseMessage responseMessage) {
+//                future.complete(responseMessage.getToolCalls());
+//            }
+//        });
+        chatModel.chat("你是谁",rsp->{
+            System.out.println(rsp.getContent());
+            future.complete(rsp.getToolCalls());
+        });
+        List<ToolCall> tools = future.get();
+        Assert.assertEquals(1, tools.size());
+        Assert.assertEquals("get_weather", tools.get(0).getFunction().get("name"));
+    }
 }
