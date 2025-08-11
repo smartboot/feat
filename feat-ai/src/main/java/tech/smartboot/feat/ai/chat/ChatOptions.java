@@ -45,7 +45,7 @@ public class ChatOptions extends Options {
 
     private boolean noThink;
 
-    private ChatModelVendor modelVendor;
+    private ChatModelVendor model;
 
     public ChatOptions baseUrl(String baseUrl) {
         super.baseUrl(baseUrl);
@@ -54,7 +54,7 @@ public class ChatOptions extends Options {
 
 
     public ChatOptions model(ChatModelVendor model) {
-        this.modelVendor = model;
+        this.model = model;
         return baseUrl(model.baseUrl());
     }
 
@@ -120,7 +120,7 @@ public class ChatOptions extends Options {
         return noThink;
     }
 
-    public ChatModelVendor getModelVendor() {
-        return modelVendor;
+    public ChatModelVendor getModel() {
+        return model;
     }
 }

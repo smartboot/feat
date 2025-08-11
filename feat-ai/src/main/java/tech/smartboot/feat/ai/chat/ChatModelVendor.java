@@ -21,40 +21,42 @@ import tech.smartboot.feat.core.common.FeatUtils;
  * @version v1.0.0
  */
 public class ChatModelVendor extends Vendor {
+    public static final int CAPABILITY_THINK = 1;
+    public static final int CAPABILITY_FUNCTION_CALL = 1 << 1;
     private final PreRequest preRequest;
-    private final boolean thinkSupport;
-    private final boolean functionCallSupport;
+    private final int capability;
 
     public static class GiteeAI extends ChatModelVendor {
         //暂时屏蔽，function call表现不如预期
-        public static final ChatModelVendor DeepSeek_R1 = new GiteeAI("DeepSeek-R1", true, true, new PreRequest() {
+        public static final ChatModelVendor DeepSeek_R1 = new GiteeAI("DeepSeek-R1", CAPABILITY_THINK | CAPABILITY_FUNCTION_CALL, new PreRequest() {
             @Override
-            public void preRequest(ChatModel chatModel, JSONObject jsonObject) {
+            public void preRequest(ChatModel chatModel, ChatModelVendor modelVendor, JSONObject jsonObject) {
                 if (FeatUtils.isBlank(chatModel.getOptions().apiKey())) {
                     throw new IllegalArgumentException("apiKey is null, please set it via environment variable " + Options.ENV_API_KEY);
                 }
                 if (chatModel.getOptions().isNoThink()) {
                     jsonObject.getJSONArray("messages").add(0, JSONObject.of("role", Message.ROLE_SYSTEM, "content", "请直接给出最终答案，不允许展示任何思考过程、分析步骤或解释，仅返回结果。"));
+                    jsonObject.put("system_prompt", "请直接给出最终答案，不允许展示任何思考过程、分析步骤或解释，仅返回结果。");
                 }
             }
         });
-        public static final ChatModelVendor Kimi_K2_Instruct = new GiteeAI("Kimi-K2-Instruct", false, true);
-        public static final ChatModelVendor DeepSeek_R1_Distill_Qwen_32B = new GiteeAI("DeepSeek-R1-Distill-Qwen-32B", false, false);
-        public static final ChatModelVendor Qwen2_5_72B_Instruct = new GiteeAI("Qwen2.5-72B-Instruct", false, true);
-        public static final ChatModelVendor Qwen2_5_32B_Instruct = new GiteeAI("Qwen2.5-32B-Instruct", false, false);
-        public static final ChatModelVendor Qwen3_235B_A22B_Instruct_2507 = new GiteeAI("Qwen3-235B-A22B-Instruct-2507", false, true);
-        public static final ChatModelVendor Qwen3_4B = new GiteeAI("Qwen3-4B", true, false);
+        public static final ChatModelVendor Kimi_K2_Instruct = new GiteeAI("Kimi-K2-Instruct", CAPABILITY_FUNCTION_CALL);
+        public static final ChatModelVendor DeepSeek_R1_Distill_Qwen_32B = new GiteeAI("DeepSeek-R1-Distill-Qwen-32B", 0);
+        public static final ChatModelVendor Qwen2_5_72B_Instruct = new GiteeAI("Qwen2.5-72B-Instruct", CAPABILITY_FUNCTION_CALL);
+        public static final ChatModelVendor Qwen2_5_32B_Instruct = new GiteeAI("Qwen2.5-32B-Instruct", 0);
+        public static final ChatModelVendor Qwen3_235B_A22B_Instruct_2507 = new GiteeAI("Qwen3-235B-A22B-Instruct-2507", CAPABILITY_THINK | CAPABILITY_FUNCTION_CALL);
+        public static final ChatModelVendor Qwen3_4B = new GiteeAI("Qwen3-4B", CAPABILITY_THINK);
 
-        GiteeAI(String model, boolean thinkSupport, boolean functionCallSupport, PreRequest request) {
-            super("https://ai.gitee.com/v1/", model, thinkSupport, functionCallSupport, request);
+        GiteeAI(String model, int capability, PreRequest request) {
+            super("https://ai.gitee.com/v1/", model, capability, request);
         }
 
-        GiteeAI(String model, boolean thinkSupport, boolean functionCallSupport) {
-            this(model, thinkSupport, functionCallSupport, (chatModel, jsonObject) -> {
+        GiteeAI(String model, int capability) {
+            this(model, capability, (chatModel, modelVendor, jsonObject) -> {
                 if (FeatUtils.isBlank(chatModel.getOptions().apiKey())) {
                     throw new IllegalArgumentException("apiKey is null, please set it via environment variable " + Options.ENV_API_KEY);
                 }
-                if (chatModel.getOptions().isNoThink()) {
+                if (modelVendor.hasCapability(ChatModelVendor.CAPABILITY_THINK) && chatModel.getOptions().isNoThink()) {
                     jsonObject.getJSONArray("messages").add(JSONObject.of("role", "user", "content", "/no_think"));
                 }
             });
@@ -64,50 +66,41 @@ public class ChatModelVendor extends Vendor {
     public static class Ollama extends ChatModelVendor {
         private static final PreRequest qwen_pre_request = new PreRequest() {
             @Override
-            public void preRequest(ChatModel chatModel, JSONObject jsonObject) {
-                if (chatModel.getOptions().getModelVendor().thinkSupport && chatModel.getOptions().isNoThink()) {
+            public void preRequest(ChatModel chatModel, ChatModelVendor modelVendor, JSONObject jsonObject) {
+                if (chatModel.getOptions().getModel().hasCapability(ChatModelVendor.CAPABILITY_THINK) && chatModel.getOptions().isNoThink()) {
                     jsonObject.getJSONArray("messages").add(JSONObject.of("role", "user", "content", "/no_think"));
-                }
-                if (!chatModel.getOptions().getModelVendor().isFunctionCallSupport() && jsonObject.containsKey("tools")) {
-                    jsonObject.remove("tools");
-                    jsonObject.remove("tool_choice");
                 }
             }
         };
-        public static final ChatModelVendor Qwen2_5_05B = new Ollama("qwen2.5:0.5b", false, false);
-        public static final ChatModelVendor Qwen2_5_3B = new Ollama("qwen2.5:3b", false, false);
+        public static final ChatModelVendor Qwen2_5_05B = new Ollama("qwen2.5:0.5b", 0);
+        public static final ChatModelVendor Qwen2_5_3B = new Ollama("qwen2.5:3b", 0);
 
-        public static final ChatModelVendor Qwen3_06B = new Ollama("qwen3:0.6b", true, false);
+        public static final ChatModelVendor Qwen3_06B = new Ollama("qwen3:0.6b", CAPABILITY_THINK);
 
-        public static final ChatModelVendor Deepseek_r1_1_5B = new Ollama("deepseek-r1:1.5b", true, false);
-        public static final ChatModelVendor Deepseek_r1_7B = new Ollama("deepseek-r1:7b", true, false);
+        public static final ChatModelVendor Deepseek_r1_1_5B = new Ollama("deepseek-r1:1.5b", 0);
+        public static final ChatModelVendor Deepseek_r1_7B = new Ollama("deepseek-r1:7b", CAPABILITY_THINK);
 
 
-        Ollama(String model, boolean thinkSupport, boolean functionCallSupport) {
-            super("http://localhost:11434/v1", model, thinkSupport, functionCallSupport, (chatModel, jsonObject) -> {
-                if (thinkSupport && chatModel.getOptions().isNoThink()) {
+        Ollama(String model, int capability) {
+            super("http://localhost:11434/v1", model, capability, (chatModel, modelVendor, jsonObject) -> {
+                if (modelVendor.hasCapability(ChatModelVendor.CAPABILITY_THINK) && chatModel.getOptions().isNoThink()) {
                     jsonObject.getJSONArray("messages").add(JSONObject.of("role", "user", "content", "/no_think"));
-                }
-                if (!functionCallSupport && jsonObject.containsKey("tools")) {
-                    jsonObject.remove("tools");
-                    jsonObject.remove("tool_choice");
                 }
             });
         }
     }
 
-    ChatModelVendor(String baseUrl, String model, boolean thinkSupport, boolean functionCallSupport, PreRequest request) {
+    ChatModelVendor(String baseUrl, String model, int capability, PreRequest request) {
         super(baseUrl, model);
         this.preRequest = request;
-        this.thinkSupport = thinkSupport;
-        this.functionCallSupport = functionCallSupport;
+        this.capability = capability;
     }
 
-    public PreRequest getPreRequest() {
+    PreRequest getPreRequest() {
         return preRequest;
     }
 
-    public boolean isFunctionCallSupport() {
-        return functionCallSupport;
+    public boolean hasCapability(int capability) {
+        return (this.capability & capability) != 0;
     }
 }

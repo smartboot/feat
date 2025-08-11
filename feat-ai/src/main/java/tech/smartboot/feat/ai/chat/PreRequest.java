@@ -17,5 +17,5 @@ import com.alibaba.fastjson2.JSONObject;
  * @version v1.0 8/8/25
  */
 public interface PreRequest {
-    void preRequest(ChatModel chatModel, JSONObject jsonObject);
+    void preRequest(ChatModel chatModel, ChatModelVendor modelVendor, JSONObject jsonObject);
 }

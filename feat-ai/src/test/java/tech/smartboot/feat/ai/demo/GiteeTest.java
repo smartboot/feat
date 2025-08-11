@@ -35,7 +35,7 @@ public class GiteeTest {
         CompletableFuture<List<ToolCall>> countDownLatch = new CompletableFuture<>();
         ChatModel chatModel = FeatAI.chatModel(opts -> opts.model(ChatModelVendor.GiteeAI.Qwen3_235B_A22B_Instruct_2507)
                 .addFunction(Function.of("get_weather").description("获取天气信息").addParam("city", "城市名称", "string", true))
-                .noThink(true).debug(true));
+                .noThink(false).debug(true));
 
         chatModel.chatStream("今天杭州天气如何", Arrays.asList("get_weather"), new StreamResponseCallback() {
             @Override
@@ -82,26 +82,14 @@ public class GiteeTest {
     @Test
     public void test3() throws InterruptedException, ExecutionException {
         CompletableFuture<List<ToolCall>> future = new CompletableFuture<>();
-        ChatModel chatModel = FeatAI.chatModel(opts -> opts.model(ChatModelVendor.GiteeAI.DeepSeek_R1)
+        ChatModel chatModel = FeatAI.chatModel(opts -> opts.model(ChatModelVendor.GiteeAI.Qwen3_4B)
                 .noThink(true).debug(true));
 
-//        chatModel.chatStream("你是谁", new StreamResponseCallback() {
-//            @Override
-//            public void onStreamResponse(String content) {
-//                System.out.printf(content);
-//            }
-//
-//            @Override
-//            public void onCompletion(ResponseMessage responseMessage) {
-//                future.complete(responseMessage.getToolCalls());
-//            }
-//        });
-        chatModel.chat("你是谁",rsp->{
+        chatModel.chat("你是谁", rsp -> {
+            System.out.println(rsp.getReasoningContent());
             System.out.println(rsp.getContent());
             future.complete(rsp.getToolCalls());
         });
-        List<ToolCall> tools = future.get();
-        Assert.assertEquals(1, tools.size());
-        Assert.assertEquals("get_weather", tools.get(0).getFunction().get("name"));
+        future.get();
     }
 }
