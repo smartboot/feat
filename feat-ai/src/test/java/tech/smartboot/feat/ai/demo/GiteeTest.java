@@ -82,7 +82,7 @@ public class GiteeTest {
     @Test
     public void test3() throws InterruptedException, ExecutionException {
         CompletableFuture<List<ToolCall>> future = new CompletableFuture<>();
-        ChatModel chatModel = FeatAI.chatModel(opts -> opts.model(ChatModelVendor.GiteeAI.Qwen3_4B)
+        ChatModel chatModel = FeatAI.chatModel(opts -> opts.model(ChatModelVendor.GiteeAI.DeepSeek_R1)
                 .noThink(true).debug(true));
 
         chatModel.chat("你是谁", rsp -> {

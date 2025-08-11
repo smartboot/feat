@@ -28,14 +28,6 @@ public class ChatOptions extends Options {
      */
     private String system;
 
-
-    /**
-     * 是否忽略不支持的工具
-     * 当设置为true时，遇到不支持的工具会跳过而不是抛出异常
-     */
-    private boolean ignoreUnSupportedTool = false;
-
-
     /**
      * 功能函数映射，用于存储可用的AI功能函数
      */
@@ -45,6 +37,9 @@ public class ChatOptions extends Options {
 
     private boolean noThink;
 
+    /**
+     * 模型供应商
+     */
     private ChatModelVendor model;
 
     public ChatOptions baseUrl(String baseUrl) {
@@ -85,15 +80,6 @@ public class ChatOptions extends Options {
 
     public ChatOptions debug(boolean debug) {
         super.debug(debug);
-        return this;
-    }
-
-    public boolean isIgnoreUnSupportedTool() {
-        return ignoreUnSupportedTool;
-    }
-
-    public ChatOptions ignoreUnSupportedTool(boolean ignoreUnSupportedTool) {
-        this.ignoreUnSupportedTool = ignoreUnSupportedTool;
         return this;
     }
 
