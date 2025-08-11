@@ -209,7 +209,7 @@ public class ChatModel {
     private HttpPost chat0(String content, List<String> tools, boolean stream) {
         System.out.println("我：" + content);
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put("model", options.model());
+        jsonObject.put("model", options.getModelVendor().model());
         jsonObject.put("stream", stream);
         Message message = new Message();
         message.setContent(content);
@@ -234,8 +234,8 @@ public class ChatModel {
             jsonObject.put("tools", toolList);
             jsonObject.put("tool_choice", "auto");
         }
-        if (options.getPreRequest() != null) {
-            options.getPreRequest().preRequest(this, jsonObject);
+        if (options.getModelVendor().getPreRequest() != null) {
+            options.getModelVendor().getPreRequest().preRequest(this, jsonObject);
         }
 
         HttpPost post = Feat.postJson(options.baseUrl() + "/chat/completions", opts -> {

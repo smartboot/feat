@@ -38,7 +38,7 @@ public class RerankerModel {
 
     public List<float[]> rerank(String query, List<String> documents, int topN) {
         JSONObject object = new JSONObject();
-        object.put("model", options.model());
+        object.put("model", options.model().model());
         object.put("query", query);
         object.put("top_n", topN);
         object.put("documents", documents);

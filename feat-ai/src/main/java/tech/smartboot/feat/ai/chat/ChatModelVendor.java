@@ -34,19 +34,11 @@ public class ChatModelVendor extends Vendor {
                     throw new IllegalArgumentException("apiKey is null, please set it via environment variable " + Options.ENV_API_KEY);
                 }
                 if (chatModel.getOptions().isNoThink()) {
-                    jsonObject.getJSONArray("messages").add(0,JSONObject.of("role", Message.ROLE_SYSTEM, "content", "请直接给出最终答案，不允许展示任何思考过程、分析步骤或解释，仅返回结果。"));
+                    jsonObject.getJSONArray("messages").add(0, JSONObject.of("role", Message.ROLE_SYSTEM, "content", "请直接给出最终答案，不允许展示任何思考过程、分析步骤或解释，仅返回结果。"));
                 }
             }
         });
         public static final ChatModelVendor Kimi_K2_Instruct = new GiteeAI("Kimi-K2-Instruct", false, true);
-//        public static final ChatModelVendor ERNIE_X1_Turbo = new GiteeAI("ERNIE-X1-Turbo", false, true, new PreRequest() {
-//            @Override
-//            public void preRequest(ChatModel chatModel, JSONObject jsonObject) {
-//                if (chatModel.getOptions().isNoThink()) {
-//                    jsonObject.getJSONArray("messages").add(0, JSONObject.of("role", Message.ROLE_SYSTEM, "content", "请直接给出最终答案，无需任何分析、解释或思考过程，保持回答简洁明了。"));
-//                }
-//            }
-//        });
         public static final ChatModelVendor DeepSeek_R1_Distill_Qwen_32B = new GiteeAI("DeepSeek-R1-Distill-Qwen-32B", false, false);
         public static final ChatModelVendor Qwen2_5_72B_Instruct = new GiteeAI("Qwen2.5-72B-Instruct", false, true);
         public static final ChatModelVendor Qwen2_5_32B_Instruct = new GiteeAI("Qwen2.5-32B-Instruct", false, false);
@@ -70,16 +62,35 @@ public class ChatModelVendor extends Vendor {
     }
 
     public static class Ollama extends ChatModelVendor {
+        private static final PreRequest qwen_pre_request = new PreRequest() {
+            @Override
+            public void preRequest(ChatModel chatModel, JSONObject jsonObject) {
+                if (chatModel.getOptions().getModelVendor().thinkSupport && chatModel.getOptions().isNoThink()) {
+                    jsonObject.getJSONArray("messages").add(JSONObject.of("role", "user", "content", "/no_think"));
+                }
+                if (!chatModel.getOptions().getModelVendor().isFunctionCallSupport() && jsonObject.containsKey("tools")) {
+                    jsonObject.remove("tools");
+                    jsonObject.remove("tool_choice");
+                }
+            }
+        };
         public static final ChatModelVendor Qwen2_5_05B = new Ollama("qwen2.5:0.5b", false, false);
         public static final ChatModelVendor Qwen2_5_3B = new Ollama("qwen2.5:3b", false, false);
 
         public static final ChatModelVendor Qwen3_06B = new Ollama("qwen3:0.6b", true, false);
+
+        public static final ChatModelVendor Deepseek_r1_1_5B = new Ollama("deepseek-r1:1.5b", true, false);
+        public static final ChatModelVendor Deepseek_r1_7B = new Ollama("deepseek-r1:7b", true, false);
 
 
         Ollama(String model, boolean thinkSupport, boolean functionCallSupport) {
             super("http://localhost:11434/v1", model, thinkSupport, functionCallSupport, (chatModel, jsonObject) -> {
                 if (thinkSupport && chatModel.getOptions().isNoThink()) {
                     jsonObject.getJSONArray("messages").add(JSONObject.of("role", "user", "content", "/no_think"));
+                }
+                if (!functionCallSupport && jsonObject.containsKey("tools")) {
+                    jsonObject.remove("tools");
+                    jsonObject.remove("tool_choice");
                 }
             });
         }
@@ -94,5 +105,9 @@ public class ChatModelVendor extends Vendor {
 
     public PreRequest getPreRequest() {
         return preRequest;
+    }
+
+    public boolean isFunctionCallSupport() {
+        return functionCallSupport;
     }
 }

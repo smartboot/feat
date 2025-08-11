@@ -14,7 +14,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import tech.smartboot.feat.ai.FeatAI;
-import tech.smartboot.feat.ai.chat.ChatModel;
+import tech.smartboot.feat.ai.embedding.EmbeddingModel;
 import tech.smartboot.feat.ai.embedding.EmbeddingModelVendor;
 import tech.smartboot.feat.ai.vector.Document;
 import tech.smartboot.feat.ai.vector.chroma.Chroma;
@@ -89,12 +89,10 @@ public class ChromaTest {
 
     @Test
     public void testEmbedding() {
-        ChatModel chatModel = FeatAI.chatModel(opt -> opt.debug(true).model("nomic-embed-text")
-                .baseUrl("http://localhost:11434/v1") // Ollama本地服务地址
+        EmbeddingModel chatModel = FeatAI.embedding(opt -> opt.debug(true).model(EmbeddingModelVendor.Ollama.nomic_embed_text)
         );
-        chatModel.chat("aaa", resp -> {
-            System.out.println(resp.getContent());
-        });
+        float[] embed = chatModel.embed("aaa");
+        System.out.println(Arrays.toString(embed));
     }
 
     @Test

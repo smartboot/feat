@@ -26,10 +26,6 @@ public abstract class Options {
      */
     private String baseUrl = System.getenv("FEAT_AI_BASE_URL") != null ? System.getenv("FEAT_AI_BASE_URL") : GiteeAI.BASE_URL;
 
-    /**
-     * AI模型名称
-     */
-    private String model;
 
     /**
      * API密钥，优先从环境变量FEATAI_API_KEY获取
@@ -52,15 +48,6 @@ public abstract class Options {
 
     public Options baseUrl(String baseUrl) {
         this.baseUrl = baseUrl;
-        return this;
-    }
-
-    public final String model() {
-        return model;
-    }
-
-    public Options model(String model) {
-        this.model = model;
         return this;
     }
 

@@ -45,7 +45,7 @@ public class ChatOptions extends Options {
 
     private boolean noThink;
 
-    private PreRequest preRequest;
+    private ChatModelVendor modelVendor;
 
     public ChatOptions baseUrl(String baseUrl) {
         super.baseUrl(baseUrl);
@@ -53,13 +53,9 @@ public class ChatOptions extends Options {
     }
 
 
-    public ChatOptions model(String model) {
-        super.model(model);
-        return this;
-    }
-
     public ChatOptions model(ChatModelVendor model) {
-        return baseUrl(model.baseUrl()).model(model.model()).preRequest(model.getPreRequest());
+        this.modelVendor = model;
+        return baseUrl(model.baseUrl());
     }
 
 
@@ -124,12 +120,7 @@ public class ChatOptions extends Options {
         return noThink;
     }
 
-    public ChatOptions preRequest(PreRequest preRequest) {
-        this.preRequest = preRequest;
-        return this;
-    }
-
-    public PreRequest getPreRequest() {
-        return preRequest;
+    public ChatModelVendor getModelVendor() {
+        return modelVendor;
     }
 }

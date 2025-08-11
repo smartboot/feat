@@ -18,6 +18,7 @@ import tech.smartboot.feat.ai.Options;
  */
 public class RerankerOptions extends Options {
 
+    private RerankerModelVendor model;
 
     public RerankerOptions debug(boolean debug) {
         super.debug(debug);
@@ -31,15 +32,14 @@ public class RerankerOptions extends Options {
     }
 
 
-    public RerankerOptions model(String model) {
-        super.model(model);
-        return this;
-    }
-
     public RerankerOptions model(RerankerModelVendor model) {
-        return baseUrl(model.baseUrl()).model(model.model());
+        this.model = model;
+        return baseUrl(model.baseUrl());
     }
 
+    public RerankerModelVendor model() {
+        return model;
+    }
 
     public RerankerOptions apiKey(String apiKey) {
         super.apiKey(apiKey);

@@ -17,7 +17,10 @@ import tech.smartboot.feat.ai.Options;
  * @version v1.0.0
  */
 public class EmbeddingOptions extends Options {
-
+    /**
+     * AI模型名称
+     */
+    private String model;
 
     public EmbeddingOptions debug(boolean debug) {
         super.debug(debug);
@@ -32,8 +35,12 @@ public class EmbeddingOptions extends Options {
 
 
     public EmbeddingOptions model(String model) {
-        super.model(model);
+        this.model = model;
         return this;
+    }
+
+    public String model() {
+        return model;
     }
 
     public EmbeddingOptions model(EmbeddingModelVendor model) {
