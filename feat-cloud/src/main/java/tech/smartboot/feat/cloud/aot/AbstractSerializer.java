@@ -71,9 +71,6 @@ abstract class AbstractSerializer implements Serializer {
         printWriter = new PrintWriter(writer);
     }
 
-    public Element getElement() {
-        return element;
-    }
 
     public PrintWriter getPrintWriter() {
         return printWriter;

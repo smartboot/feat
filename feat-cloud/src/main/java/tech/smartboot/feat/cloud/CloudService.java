@@ -28,7 +28,4 @@ public interface CloudService {
 
     void router(ApplicationContext context, Router router);
 
-    default int order() {
-        return 0;
-    }
 }

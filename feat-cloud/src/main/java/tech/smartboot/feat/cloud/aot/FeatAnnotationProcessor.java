@@ -77,10 +77,6 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             serviceFile = processingEnv.getFiler().createResource(StandardLocation.CLASS_OUTPUT, "", "META-INF/services/" + CloudService.class.getName());
             serviceWrite = new PrintWriter(serviceFile.openWriter());
             System.out.println("processor init: " + this);
-            //注入 feat.yaml 配置
-            if (FeatUtils.length(config) > 2) {
-                createAptLoader(new CloudOptionsSerializer(processingEnv, config));
-            }
         } catch (Throwable e) {
             throw new FeatException(e);
         }
@@ -142,6 +138,13 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             }
         }
         // 如果不希望后续的处理器继续处理这些注解，返回 true，否则返回 false
+        try {
+            List<String> list = new ArrayList<>(services);
+            services.clear();
+            createAptLoader(new CloudOptionsSerializer(processingEnv, config,list));
+        } catch (Throwable e) {
+            exception = e;
+        }
         for (String service : services) {
             serviceWrite.println(service);
         }

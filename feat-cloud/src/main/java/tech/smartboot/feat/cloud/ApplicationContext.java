@@ -51,7 +51,6 @@ public class ApplicationContext {
             }
             services.add(service);
         }
-        services.sort(Comparator.comparingInt(CloudService::order));
         for (CloudService service : services) {
             service.loadBean(this);
         }
@@ -62,7 +61,7 @@ public class ApplicationContext {
         for (CloudService service : services) {
             service.postConstruct(this);
         }
-        if(options.devMode()){
+        if (options.devMode()) {
             System.out.println("\u001B[32mFeat Router:\u001B[0m");
         }
         for (CloudService service : services) {
