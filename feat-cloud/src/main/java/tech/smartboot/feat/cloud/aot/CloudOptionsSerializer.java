@@ -131,7 +131,7 @@ final class CloudOptionsSerializer implements Serializer {
         }
         for (String service : services) {
             String simpleClass = service.substring(service.lastIndexOf(".") + 1);
-            printWriter.println("\t\tif (acceptService(applicationContext, " + simpleClass + ".class)) {");
+            printWriter.println("\t\tif (acceptService(applicationContext, \"" + service + "\")) {");
             printWriter.append("\t\t\t").append(CloudService.class.getSimpleName()).append(" service = new ").append(simpleClass).println("();");
             printWriter.println("\t\t\tservice.loadBean(applicationContext);");
             printWriter.println("\t\t\tservices.add(service);");

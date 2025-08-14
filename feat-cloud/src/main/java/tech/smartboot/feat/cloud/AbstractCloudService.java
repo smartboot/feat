@@ -350,10 +350,10 @@ public abstract class AbstractCloudService implements CloudService {
         System.out.println(border);
     }
 
-    protected final boolean acceptService(ApplicationContext context, Class<? extends CloudService> clazz) {
+    protected final boolean acceptService(ApplicationContext context, String clazzName) {
         if (context.getOptions().getPackages() != null && context.getOptions().getPackages().length > 0) {
             for (String pkg : context.getOptions().getPackages()) {
-                if (clazz.getName().startsWith(pkg)) {
+                if (clazzName.startsWith(pkg)) {
                     return true;
                 }
             }
