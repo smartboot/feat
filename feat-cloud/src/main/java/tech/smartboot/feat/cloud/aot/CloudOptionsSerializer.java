@@ -58,15 +58,27 @@ final class CloudOptionsSerializer implements Serializer {
         PACKAGE = "tech.smartboot.feat.build.v" + date;
         CLASS_NAME = "FeatApplication";
 
+        //清理build目录
         FileObject preFileObject = processingEnv.getFiler().getResource(StandardLocation.SOURCE_OUTPUT, packageName(), className() + ".java");
-        File f = new File(preFileObject.toUri());
-        if (f.exists()) {
-            f.delete();
-        }
+        File buildDir = new File(preFileObject.toUri()).getParentFile().getParentFile();
+        deleteBuildDir(buildDir);
 
         JavaFileObject javaFileObject = processingEnv.getFiler().createSourceFile(packageName() + "." + className());
         Writer writer = javaFileObject.openWriter();
         printWriter = new PrintWriter(writer);
+    }
+
+    private void deleteBuildDir(File dir) {
+        if (!dir.isDirectory()) {
+            return;
+        }
+        File[] files = dir.listFiles();
+        for (File file : files) {
+            if (file.isDirectory()) {
+                deleteBuildDir(file);
+            }
+            file.delete();
+        }
     }
 
     @Override
@@ -120,7 +132,9 @@ final class CloudOptionsSerializer implements Serializer {
         for (String service : services) {
             String simpleClass = service.substring(service.lastIndexOf(".") + 1);
             printWriter.println("\t\tif (acceptService(applicationContext, " + simpleClass + ".class)) {");
-            printWriter.println("\t\t\tservices.add(new " + simpleClass + "());");
+            printWriter.append("\t\t\t").append(CloudService.class.getSimpleName()).append(" service = new ").append(simpleClass).println("();");
+            printWriter.println("\t\t\tservice.loadBean(applicationContext);");
+            printWriter.println("\t\t\tservices.add(service);");
             printWriter.println("\t\t}");
         }
     }
