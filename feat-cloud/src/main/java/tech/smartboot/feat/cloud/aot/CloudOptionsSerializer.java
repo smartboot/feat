@@ -13,6 +13,7 @@ package tech.smartboot.feat.cloud.aot;
 import com.alibaba.fastjson2.JSONPath;
 import tech.smartboot.feat.cloud.AbstractServiceLoader;
 import tech.smartboot.feat.cloud.ApplicationContext;
+import tech.smartboot.feat.cloud.CloudService;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.server.ServerOptions;
@@ -41,8 +42,8 @@ import java.util.Set;
  */
 final class CloudOptionsSerializer implements Serializer {
     private static final Logger logger = LoggerFactory.getLogger(CloudOptionsSerializer.class);
-    private static final String PACKAGE = "tech.smartboot.feat.sandao";
-    private static final String CLASS_NAME = "FeatCloudOptionsBeanAptLoader";
+    private final String PACKAGE;
+    private final String CLASS_NAME;
     private final String config;
     private final Set<String> availableTypes = new HashSet<>(Arrays.asList(String.class.getName(), int.class.getName()));
 
@@ -52,6 +53,10 @@ final class CloudOptionsSerializer implements Serializer {
     public CloudOptionsSerializer(ProcessingEnvironment processingEnv, String config, List<String> services) throws Throwable {
         this.config = config;
         this.services = services;
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+        String date = sdf.format(new Date());
+        PACKAGE = "tech.smartboot.feat.build.v" + date;
+        CLASS_NAME = "FeatApplication";
 
         FileObject preFileObject = processingEnv.getFiler().getResource(StandardLocation.SOURCE_OUTPUT, packageName(), className() + ".java");
         File f = new File(preFileObject.toUri());
@@ -83,6 +88,9 @@ final class CloudOptionsSerializer implements Serializer {
         printWriter.println("import " + AbstractServiceLoader.class.getName() + ";");
         printWriter.println("import " + ApplicationContext.class.getName() + ";");
         printWriter.println("import " + Router.class.getName() + ";");
+        printWriter.println("import " + CloudService.class.getName() + ";");
+        printWriter.println("import " + List.class.getName() + ";");
+        printWriter.println("import " + ArrayList.class.getName() + ";");
         for (String service : services) {
             printWriter.println("import " + service + ";");
         }
@@ -90,18 +98,7 @@ final class CloudOptionsSerializer implements Serializer {
 
     @Override
     public void serializeProperty() {
-        List<String> list = new ArrayList<>();
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
-        String date = sdf.format(new Date());
-        int i = 0;
-        for (String service : services) {
-            String simpleClass = service.substring(service.lastIndexOf(".") + 1);
-            String propertyName = "feat_" + date + "_" + i++;
-            list.add(propertyName);
-            printWriter.println("\tprivate " + simpleClass + " " + propertyName + " = new " + simpleClass + "();");
-        }
-        services.clear();
-        services.addAll(list);
+        printWriter.println("\tprivate List<" + CloudService.class.getSimpleName() + "> services = new " + ArrayList.class.getSimpleName() + "(" + services.size() + ");");
     }
 
     @Override
@@ -121,35 +118,38 @@ final class CloudOptionsSerializer implements Serializer {
             printWriter.println("\t\tapplicationContext.getOptions()." + field.getName() + "(" + obj + ");");
         }
         for (String service : services) {
-            printWriter.append("\t\t").append(service).println(".loadBean(applicationContext);");
+            String simpleClass = service.substring(service.lastIndexOf(".") + 1);
+            printWriter.println("\t\tif (acceptService(applicationContext, " + simpleClass + ".class)) {");
+            printWriter.println("\t\t\tservices.add(new " + simpleClass + "());");
+            printWriter.println("\t\t}");
         }
     }
 
     @Override
     public void serializeAutowired() {
-        for (String service : services) {
-            printWriter.append("\t\t").append(service).println(".autowired(applicationContext);");
-        }
+        printWriter.println("\t\tfor (CloudService service : services) {");
+        printWriter.println("\t\t\tservice.autowired(applicationContext);");
+        printWriter.println("\t\t}");
     }
 
     @Override
     public void serializeRouter() throws IOException {
-        for (String service : services) {
-            printWriter.append("\t\t").append(service).println(".router(applicationContext, router);");
-        }
+        printWriter.println("\t\tfor (CloudService service : services) {");
+        printWriter.println("\t\t\tservice.router(applicationContext, router);");
+        printWriter.println("\t\t}");
     }
 
     @Override
     public void serializePostConstruct() {
-        for (String service : services) {
-            printWriter.append("\t\t").append(service).println(".postConstruct(applicationContext);");
-        }
+        printWriter.println("\t\tfor (CloudService service : services) {");
+        printWriter.println("\t\t\tservice.postConstruct(applicationContext);");
+        printWriter.println("\t\t}");
     }
 
     @Override
     public void serializeDestroy() {
-        for (String service : services) {
-            printWriter.append("\t\t").append(service).println(".destroy();");
-        }
+        printWriter.println("\t\tfor (CloudService service : services) {");
+        printWriter.println("\t\t\tservice.destroy();");
+        printWriter.println("\t\t}");
     }
 }

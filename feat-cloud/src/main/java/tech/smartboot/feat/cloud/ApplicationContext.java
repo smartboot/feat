@@ -17,7 +17,6 @@ import tech.smartboot.feat.fileserver.HttpStaticResourceHandler;
 import tech.smartboot.feat.router.Router;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,9 +45,6 @@ public class ApplicationContext {
 
     public void start() throws Throwable {
         for (CloudService service : ServiceLoader.load(CloudService.class)) {
-            if (isIgnore(service)) {
-                continue;
-            }
             services.add(service);
         }
         for (CloudService service : services) {
@@ -69,18 +65,6 @@ public class ApplicationContext {
         }
         //释放内存
         namedBeans = null;
-    }
-
-    private boolean isIgnore(CloudService aptLoader) {
-        if (options.getPackages() != null && options.getPackages().length > 0) {
-            for (String pkg : options.getPackages()) {
-                if (aptLoader.getClass().getName().startsWith(pkg)) {
-                    return false;
-                }
-            }
-            return true;
-        }
-        return false;
     }
 
     public void addBean(String name, Object object) {
