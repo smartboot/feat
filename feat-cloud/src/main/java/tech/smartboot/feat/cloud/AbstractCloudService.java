@@ -36,7 +36,7 @@ import java.util.concurrent.CompletableFuture;
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
-public abstract class AbstractServiceLoader implements CloudService {
+public abstract class AbstractCloudService implements CloudService {
     protected static final byte[] b_success_false = {',', '"', 's', 'u', 'c', 'c', 'e', 's', 's', '"', ':', 'f', 'a', 'l', 's', 'e'};
     protected static final byte[] b_data = {',', '"', 'd', 'a', 't', 'a', '"', ':'};
     protected static final byte[] b_null = {'n', 'u', 'l', 'l'};

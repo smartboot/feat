@@ -11,7 +11,7 @@
 package tech.smartboot.feat.cloud.aot;
 
 import com.alibaba.fastjson2.JSONPath;
-import tech.smartboot.feat.cloud.AbstractServiceLoader;
+import tech.smartboot.feat.cloud.AbstractCloudService;
 import tech.smartboot.feat.cloud.ApplicationContext;
 import tech.smartboot.feat.cloud.CloudService;
 import tech.smartboot.feat.core.common.logging.Logger;
@@ -97,7 +97,7 @@ final class CloudOptionsSerializer implements Serializer {
     }
 
     public void serializeImport() {
-        printWriter.println("import " + AbstractServiceLoader.class.getName() + ";");
+        printWriter.println("import " + AbstractCloudService.class.getName() + ";");
         printWriter.println("import " + ApplicationContext.class.getName() + ";");
         printWriter.println("import " + Router.class.getName() + ";");
         printWriter.println("import " + CloudService.class.getName() + ";");

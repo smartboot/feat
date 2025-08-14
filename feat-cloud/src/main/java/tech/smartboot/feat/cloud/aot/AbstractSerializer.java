@@ -13,7 +13,7 @@ package tech.smartboot.feat.cloud.aot;
 import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.JSONPath;
 import tech.smartboot.feat.ai.mcp.server.McpServer;
-import tech.smartboot.feat.cloud.AbstractServiceLoader;
+import tech.smartboot.feat.cloud.AbstractCloudService;
 import tech.smartboot.feat.cloud.ApplicationContext;
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Bean;
@@ -57,7 +57,7 @@ abstract class AbstractSerializer implements Serializer {
         this.config = config;
         this.element = element;
         this.packageName = element.getEnclosingElement().toString();
-        this.className = element.getSimpleName() + "BeanAptLoader";
+        this.className = element.getSimpleName() + "CloudService";
         this.processingEnv = processingEnv;
 
         FileObject preFileObject = processingEnv.getFiler().getResource(StandardLocation.SOURCE_OUTPUT, packageName, className + ".java");
@@ -77,7 +77,7 @@ abstract class AbstractSerializer implements Serializer {
     }
 
     public void serializeImport() {
-        printWriter.println("import " + AbstractServiceLoader.class.getName() + ";");
+        printWriter.println("import " + AbstractCloudService.class.getName() + ";");
         printWriter.println("import " + ApplicationContext.class.getName() + ";");
         printWriter.println("import " + Router.class.getName() + ";");
         printWriter.println("import " + JSONObject.class.getName() + ";");

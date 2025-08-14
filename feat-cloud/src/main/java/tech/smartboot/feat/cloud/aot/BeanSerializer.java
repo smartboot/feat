@@ -25,15 +25,6 @@ final class BeanSerializer extends AbstractSerializer {
         super(processingEnv, config, element);
     }
 
-    @Override
-    public void serializeProperty() {
-        super.serializeProperty();
-
-        printWriter.println();
-        printWriter.println("\tpublic int order() {");
-        printWriter.println("\t\treturn " + element.getAnnotation(Bean.class).order() + ";");
-        printWriter.println("\t}");
-    }
 
     @Override
     public void serializeLoadBean() {
@@ -44,5 +35,10 @@ final class BeanSerializer extends AbstractSerializer {
             beanName = annotation.value();
         }
         printWriter.println("\t\tapplicationContext.addBean(\"" + beanName + "\", bean);");
+    }
+
+    @Override
+    public int order() {
+        return element.getAnnotation(Bean.class).order();
     }
 }

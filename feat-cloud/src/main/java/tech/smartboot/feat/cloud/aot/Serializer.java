@@ -56,4 +56,8 @@ interface Serializer {
 
     default void serializeDestroy() {
     }
+
+    default int order() {
+        return 0;
+    }
 }

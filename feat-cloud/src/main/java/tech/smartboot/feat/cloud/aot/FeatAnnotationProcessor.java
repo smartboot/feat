@@ -13,13 +13,12 @@ package tech.smartboot.feat.cloud.aot;
 import com.alibaba.fastjson2.JSONObject;
 import org.apache.ibatis.annotations.Mapper;
 import org.yaml.snakeyaml.Yaml;
-import tech.smartboot.feat.cloud.AbstractServiceLoader;
+import tech.smartboot.feat.cloud.AbstractCloudService;
 import tech.smartboot.feat.cloud.CloudService;
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Bean;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
-import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.router.Router;
 
@@ -39,6 +38,7 @@ import java.io.PrintWriter;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -66,7 +66,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
     FileObject serviceFile;
     PrintWriter serviceWrite;
     private Throwable exception = null;
-    private final List<String> services = new ArrayList<>();
+    private final List<BeanUnit> services = new ArrayList<>();
     private String config;
 
     @Override
@@ -137,16 +137,20 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                 exception = e;
             }
         }
-        // 如果不希望后续的处理器继续处理这些注解，返回 true，否则返回 false
+
         try {
-            List<String> list = new ArrayList<>(services);
+            services.sort(Comparator.comparingInt(o -> o.order));
+            List<String> list = new ArrayList<>(services.size());
+            for (BeanUnit beanUnit : services) {
+                list.add(beanUnit.name);
+            }
             services.clear();
-            createAptLoader(new CloudOptionsSerializer(processingEnv, config,list));
+            createAptLoader(new CloudOptionsSerializer(processingEnv, config, list));
         } catch (Throwable e) {
             exception = e;
         }
-        for (String service : services) {
-            serviceWrite.println(service);
+        for (BeanUnit service : services) {
+            serviceWrite.println(service.name);
         }
         serviceWrite.flush();
 
@@ -154,19 +158,20 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             exception.printStackTrace();
             throw new FeatException("编译失败！请根据提示修复错误，或者联系开发者：https://gitee.com/smartboot/feat/issues");
         }
+        // 如果不希望后续的处理器继续处理这些注解，返回 true，否则返回 false
         return false;
     }
 
     private <T extends Annotation> void createAptLoader(Serializer serializer) throws IOException {
         //生成service配置
-        services.add(serializer.packageName() + "." + serializer.className());
+        services.add(new BeanUnit(serializer.packageName() + "." + serializer.className(), serializer.order()));
 
         PrintWriter printWriter = serializer.getPrintWriter();
         printWriter.println("package " + serializer.packageName() + ";");
         printWriter.println();
         serializer.serializeImport();
         printWriter.println();
-        printWriter.println("public class " + serializer.className() + " extends " + AbstractServiceLoader.class.getSimpleName() + " {");
+        printWriter.println("public class " + serializer.className() + " extends " + AbstractCloudService.class.getSimpleName() + " {");
         printWriter.println();
         serializer.serializeProperty();
         printWriter.println();
@@ -222,5 +227,15 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
 
         Yaml yaml = new Yaml();
         return JSONObject.from(yaml.load(featYaml.openInputStream())).toJSONString();
+    }
+
+    static class BeanUnit {
+        String name;
+        int order;
+
+        public BeanUnit(String name, int order) {
+            this.name = name;
+            this.order = order;
+        }
     }
 }

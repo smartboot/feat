@@ -12,7 +12,7 @@ package tech.smartboot.feat.cloud.aot;
 
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.ai.mcp.server.McpServer;
-import tech.smartboot.feat.cloud.AbstractServiceLoader;
+import tech.smartboot.feat.cloud.AbstractCloudService;
 import tech.smartboot.feat.cloud.ApplicationContext;
 import tech.smartboot.feat.router.Router;
 
@@ -47,7 +47,7 @@ public class DefaultMcpServerSerializer implements Serializer {
     }
 
     public void serializeImport() {
-        printWriter.println("import " + AbstractServiceLoader.class.getName() + ";");
+        printWriter.println("import " + AbstractCloudService.class.getName() + ";");
         printWriter.println("import " + ApplicationContext.class.getName() + ";");
         printWriter.println("import " + Router.class.getName() + ";");
         printWriter.println("import " + JSONObject.class.getName() + ";");
