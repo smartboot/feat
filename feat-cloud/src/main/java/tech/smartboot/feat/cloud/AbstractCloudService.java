@@ -52,7 +52,7 @@ public abstract class AbstractCloudService implements CloudService {
 
     protected JSONObject getParams(HttpRequest request) {
         try {
-            if (request.getContentType() != null && request.getContentType().startsWith("application/json")) {
+            if (request.getContentType() != null && request.getContentType().startsWith(HeaderValue.ContentType.APPLICATION_JSON)) {
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
                 byte[] bytes = new byte[1024];
                 int len = 0;

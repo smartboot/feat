@@ -21,6 +21,7 @@ import tech.smartboot.feat.cloud.annotation.RequestMethod;
 import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
 import tech.smartboot.feat.cloud.aot.controller.JsonSerializer;
 import tech.smartboot.feat.core.common.FeatUtils;
+import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.utils.ByteTree;
 import tech.smartboot.feat.core.server.HttpRequest;
@@ -76,6 +77,7 @@ final class ControllerSerializer extends AbstractSerializer {
     public void serializeImport() {
         mcpEndpointSerializer.serializeImport();
         super.serializeImport();
+        printWriter.println("import " + HeaderValue.class.getName() + ";");
     }
 
     @Override
@@ -270,7 +272,7 @@ final class ControllerSerializer extends AbstractSerializer {
                         } else if (int.class.getName().equals(returnType.toString())) {
                             printWriter.println("\t\t\twriteInt(ctx.Response.getOutputStream(), rst);");
                         } else if (boolean.class.getName().equals(returnType.toString())) {
-                            printWriter.println("\t\t\tctx.Response.setContentType(\"application/json\");");
+                            printWriter.println("\t\t\tctx.Response.setContentType(HeaderValue.ContentType.APPLICATION_JSON);");
                             printWriter.println("\t\t\tif (rst) {");
                             printWriter.println("\t\t\tctx.Response.setContentLength(4);");
                             printWriter.println("\t\t\t} else {");
@@ -282,7 +284,7 @@ final class ControllerSerializer extends AbstractSerializer {
                             JsonSerializer jsonSerializer = new JsonSerializer(printWriter);
                             jsonSerializer.serialize(returnType, "rst", 0, null);
                             bytesCache.putAll(jsonSerializer.getByteCache());
-                            printWriter.println("\t\t\tctx.Response.setContentType(\"application/json\");");
+                            printWriter.println("\t\t\tctx.Response.setContentType(HeaderValue.ContentType.APPLICATION_JSON);");
                             if (gzip) {
                                 printWriter.println("\t\t\tbyte[] bytes = os.toByteArray();");
                                 printWriter.println("\t\t\tif (bytes.length > " + gzipThreshold + ") {");
