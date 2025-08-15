@@ -14,6 +14,7 @@ import com.alibaba.fastjson2.JSONPath;
 import tech.smartboot.feat.cloud.AbstractCloudService;
 import tech.smartboot.feat.cloud.ApplicationContext;
 import tech.smartboot.feat.cloud.CloudService;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.server.ServerOptions;
@@ -127,7 +128,11 @@ final class CloudOptionsSerializer implements Serializer {
             if (obj == null) {
                 continue;
             }
-            printWriter.println("\t\tapplicationContext.getOptions()." + field.getName() + "(" + obj + ");");
+            if (field.getType() == int.class) {
+                printWriter.println("\t\tapplicationContext.getOptions()." + field.getName() + "(" + FeatUtils.class.getName() + ".toInt(System.getenv(\"FEAT_SERVER_" + field.getName().toUpperCase() + "\")," + obj + "));");
+            } else {
+                printWriter.println("\t\tapplicationContext.getOptions()." + field.getName() + "(" + obj + ");");
+            }
         }
         for (String service : services) {
             String simpleClass = service.substring(service.lastIndexOf(".") + 1);

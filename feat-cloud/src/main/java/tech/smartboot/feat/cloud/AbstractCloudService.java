@@ -45,6 +45,8 @@ public abstract class AbstractCloudService implements CloudService {
     protected static final byte[] b_success_true = {',', '"', 's', 'u', 'c', 'c', 'e', 's', 's', '"', ':', 't', 'r', 'u', 'e'};
     protected static final byte[] b_empty_map = {'{', '}'};
     protected static final byte[] b_empty_list = {'[', ']'};
+    private static final byte[] TRUE = new byte[]{'t', 'r', 'u', 'e'};
+    private static final byte[] FALSE = new byte[]{'f', 'a', 'l', 's', 'e'};
     protected static final ThreadLocal<ByteArrayOutputStream> outputStream = ThreadLocal.withInitial(() -> new ByteArrayOutputStream(1024));
     protected static final ThreadLocal<byte[]> dateFormat = ThreadLocal.withInitial(() -> new byte[]{'"', '0', '0', '0', '0', '-', '0', '0', '-', '0', '0', ' ', '0', '0', ':', '0', '0', ':', '0', '0', '"'});
 
@@ -110,8 +112,7 @@ public abstract class AbstractCloudService implements CloudService {
         writeInt(out, value);
     }
 
-    private static final byte[] TRUE = new byte[]{'t', 'r', 'u', 'e'};
-    private static final byte[] FALSE = new byte[]{'f', 'a', 'l', 's', 'e'};
+
 
     protected void writeBool(OutputStream out, boolean value) throws IOException {
         if (value) {
