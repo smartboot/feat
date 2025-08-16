@@ -73,12 +73,13 @@ All dependencies use the latest stable versions to ensure optimal security and p
 Compared to other mainstream Java frameworks, Feat excels in the following areas:
 
 | Metric | Feat | Spring Boot | Vert.x |
-|--------|------|--------------|--------|
-| Startup Time | <100ms | >2000ms | ~500ms |
-| Memory Usage | Low | High | Medium |
-| Requests per Second | High | Medium | High |
-| Response Latency | Extremely Low | Medium | Low |
+|--------|------|-------------|--------|
+| Startup Time | <100ms | ~700ms      | ~500ms |
+| Memory Usage | Low | High        | Medium |
+| Requests per Second | High | Medium      | High |
+| Response Latency | Extremely Low | Medium      | Low |
 
+![](./performance.svg)
 ---
 
 ## Documentation & Community
