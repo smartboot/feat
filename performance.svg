@@ -82,7 +82,9 @@
     <!-- Feat+JVM (8MB) -->
     <g transform="translate(100 185)">
         <text x="0" y="-5" font-size="12">Feat+JVM</text>
-        <use href="#column-template" x="0" y="0" style="color: #4096ff;"/>
+        <use href="#column-template" x="0" y="0" style="color: #4096ff;">
+            <animate attributeName="opacity" values="0.7;1;0.7" dur="2s" repeatCount="indefinite"/>
+        </use>
         <rect x="0" y="0" width="20" height="20" fill="#1677ff" rx="2">
         </rect>
         <rect x="0" y="25" width="20" height="20" fill="#1677ff" rx="2">
@@ -92,12 +94,25 @@
         <rect x="0" y="75" width="20" height="20" fill="#1677ff" rx="2">
         </rect>
 
-        <use href="#column-template" x="25" y="0" style="color: #4096ff;"/>
-        <use href="#column-template" x="50" y="0" style="color: #4096ff;"/>
-        <use href="#column-template" x="75" y="0" style="color: #4096ff;"/>
-        <use href="#column-template" x="100" y="0" style="color: #4096ff;"/>
-        <use href="#column-template" x="125" y="0" style="color: #4096ff;"/>
-        <use href="#column-template" x="150" y="0" style="color: #4096ff;"/>
+        <use href="#column-template" x="25" y="0" style="color: #4096ff;">
+            <animate attributeName="opacity" values="0.7;1;0.7" dur="2s" repeatCount="indefinite"/>
+        </use>
+        <use href="#column-template" x="50" y="0" style="color: #4096ff;">
+            <animate attributeName="opacity" values="0.7;1;0.7" dur="2s" repeatCount="indefinite"/>
+
+        </use>
+        <use href="#column-template" x="75" y="0" style="color: #4096ff;">
+            <animate attributeName="opacity" values="0.7;1;0.7" dur="2s" repeatCount="indefinite"/>
+        </use>
+        <use href="#column-template" x="100" y="0" style="color: #4096ff;">
+            <animate attributeName="opacity" values="0.7;1;0.7" dur="2s" repeatCount="indefinite"/>
+        </use>
+        <use href="#column-template" x="125" y="0" style="color: #4096ff;">
+            <animate attributeName="opacity" values="0.7;1;0.7" dur="2s" repeatCount="indefinite"/>
+        </use>
+        <use href="#column-template" x="150" y="0" style="color: #4096ff;">
+            <animate attributeName="opacity" values="0.7;1;0.7" dur="2s" repeatCount="indefinite"/>
+        </use>
         <rect x="150" y="125" width="20" height="20" fill="#e0e0e0" rx="2">
         </rect>
         <rect x="150" y="150" width="20" height="20" fill="#e0e0e0" rx="2">
@@ -116,7 +131,9 @@
         <text x="0" y="-5" font-size="12">SpringBoot</text>
         <use href="#column-template" x="0" y="0" style="color: #389e0d;"/>
         <use href="#column-template" x="25" y="0" style="color: #389e0d;"/>
-        <use href="#column-template" x="50" y="0" style="color: #52c41a;"/>
+        <use href="#column-template" x="50" y="0" style="color: #52c41a;">
+            <animate attributeName="opacity" values="0.7;1;0.7" dur="2s" repeatCount="indefinite"/>
+        </use>
         <rect x="50" y="0" width="20" height="20" fill="#389e0d" rx="2">
         </rect>
         <rect x="50" y="25" width="20" height="20" fill="#389e0d" rx="2">
@@ -127,18 +144,42 @@
         </rect>
         <rect x="50" y="100" width="20" height="20" fill="#389e0d" rx="2">
         </rect>
-        <use href="#column-template" x="75" y="0" style="color: #52c41a;"/>
-        <use href="#column-template" x="100" y="0" style="color: #52c41a;"/>
-        <use href="#column-template" x="125" y="0" style="color: #52c41a;"/>
-        <use href="#column-template" x="150" y="0" style="color: #52c41a;"/>
-        <use href="#column-template" x="175" y="0" style="color: #52c41a;"/>
-        <use href="#column-template" x="200" y="0" style="color: #52c41a;"/>
-        <use href="#column-template" x="225" y="0" style="color: #52c41a;"/>
-        <use href="#column-template" x="250" y="0" style="color: #52c41a;"/>
-        <use href="#column-template" x="275" y="0" style="color: #52c41a;"/>
-        <use href="#column-template" x="300" y="0" style="color: #52c41a;"/>
-        <use href="#column-template" x="325" y="0" style="color: #52c41a;"/>
-        <use href="#column-template" x="350" y="0" style="color: #52c41a;"/>
+        <use href="#column-template" x="75" y="0" style="color: #52c41a;">
+            <animate attributeName="opacity" values="0.7;1;0.7" dur="2s" repeatCount="indefinite"/>
+        </use>
+        <use href="#column-template" x="100" y="0" style="color: #52c41a;">
+            <animate attributeName="opacity" values="0.7;1;0.7" dur="2s" repeatCount="indefinite"/>
+        </use>
+        <use href="#column-template" x="125" y="0" style="color: #52c41a;">
+            <animate attributeName="opacity" values="0.7;1;0.7" dur="2s" repeatCount="indefinite"/>
+        </use>
+        <use href="#column-template" x="150" y="0" style="color: #52c41a;">
+            <animate attributeName="opacity" values="0.7;1;0.7" dur="2s" repeatCount="indefinite"/>
+        </use>
+        <use href="#column-template" x="175" y="0" style="color: #52c41a;">
+            <animate attributeName="opacity" values="0.7;1;0.7" dur="2s" repeatCount="indefinite"/>
+        </use>
+        <use href="#column-template" x="200" y="0" style="color: #52c41a;">
+            <animate attributeName="opacity" values="0.7;1;0.7" dur="2s" repeatCount="indefinite"/>
+        </use>
+        <use href="#column-template" x="225" y="0" style="color: #52c41a;">
+            <animate attributeName="opacity" values="0.7;1;0.7" dur="2s" repeatCount="indefinite"/>
+        </use>
+        <use href="#column-template" x="250" y="0" style="color: #52c41a;">
+            <animate attributeName="opacity" values="0.7;1;0.7" dur="2s" repeatCount="indefinite"/>
+        </use>
+        <use href="#column-template" x="275" y="0" style="color: #52c41a;">
+            <animate attributeName="opacity" values="0.7;1;0.7" dur="2s" repeatCount="indefinite"/>
+        </use>
+        <use href="#column-template" x="300" y="0" style="color: #52c41a;">
+            <animate attributeName="opacity" values="0.7;1;0.7" dur="2s" repeatCount="indefinite"/>
+        </use>
+        <use href="#column-template" x="325" y="0" style="color: #52c41a;">
+            <animate attributeName="opacity" values="0.7;1;0.7" dur="2s" repeatCount="indefinite"/>
+        </use>
+        <use href="#column-template" x="350" y="0" style="color: #52c41a;">
+            <animate attributeName="opacity" values="0.7;1;0.7" dur="2s" repeatCount="indefinite"/>
+        </use>
         <rect x="350" y="100" width="20" height="20" fill="#e0e0e0" rx="2">
         </rect>
         <rect x="350" y="125" width="20" height="20" fill="#e0e0e0" rx="2">
