@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg width="850" height="550" viewBox="0 0 800 550" xmlns="http://www.w3.org/2000/svg" style="font-family:Arial">
     <!-- 标题 -->
-    <text x="400" y="20" font-size="16" font-weight="bold" text-anchor="middle">框架性能对比</text>
+    <text x="400" y="20" font-size="16" font-weight="bold" text-anchor="middle">Feat boasts unparalleled performance</text>
 
-    <g transform="translate(200 35)">
+    <g transform="translate(220 35)">
         <!-- 图例 -->
         <rect x="0" y="0" width="15" height="15" fill="#fa541c" rx="2"/>
         <text x="20" y="12" font-size="12">Feat+Native</text>
@@ -35,8 +35,8 @@
         <text x="715" y="65" font-size="10" fill="#000">700 ms</text>
     </g>
     <!-- 内存对比标题 -->
-    <text x="20" y="160" font-size="14" font-weight="bold">运行内存</text>
-    <text x="80" y="160" font-size="10" fill="#888888">（JVM运行内存为实际使用量，受GC影响呈周期性浮动。）</text>
+    <text x="20" y="160" font-size="14" font-weight="bold">Memory Usage</text>
+    <text x="120" y="160" font-size="10" fill="#888888">（The JVM running memory is the used heap size, with periodic fluctuations due to GC.）</text>
     <line x1="20" y1="165" x2="760" y2="165" stroke="#bfbfbf" stroke-width="1"/>
     <!-- 列生成模板 (每列10个方块) -->
     <symbol id="column-template">
