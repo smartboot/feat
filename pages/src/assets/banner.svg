@@ -94,7 +94,7 @@
     <circle cx="0" cy="0" r="75" fill="url(#featureGradient)" filter="url(#glow)">
       <animate attributeName="r" values="73;77;73" dur="5s" repeatCount="indefinite" />
     </circle>
-    <text x="0" y="0" font-family="Arial, sans-serif" font-size="24" fill="white" text-anchor="middle" dominant-baseline="middle" filter="url(#glow)">灵活</text>
+        <text x="0" y="0" font-family="Arial, sans-serif" font-size="24" fill="white" text-anchor="middle" dominant-baseline="middle" filter="url(#glow)">Free</text>
   </g>
 
   <!-- 右上角 - 高效 -->
@@ -102,7 +102,7 @@
     <circle cx="0" cy="0" r="68" fill="url(#featureGradient)" filter="url(#glow)">
       <animate attributeName="r" values="66;70;66" dur="5s" begin="1s" repeatCount="indefinite" />
     </circle>
-    <text x="0" y="0" font-family="Arial, sans-serif" font-size="24" fill="white" text-anchor="middle" dominant-baseline="middle" filter="url(#glow)">高效</text>
+    <text x="0" y="0" font-family="Arial, sans-serif" font-size="24" fill="white" text-anchor="middle" dominant-baseline="middle" filter="url(#glow)">Elastic</text>
   </g>
 
   <!-- 左下角 - 适应性 -->
@@ -110,7 +110,7 @@
     <circle cx="0" cy="0" r="70" fill="url(#featureGradient)" filter="url(#glow)">
       <animate attributeName="r" values="68;72;68" dur="5s" begin="2s" repeatCount="indefinite" />
     </circle>
-    <text x="0" y="0" font-family="Arial, sans-serif" font-size="24" fill="white" text-anchor="middle" dominant-baseline="middle" filter="url(#glow)">适应性</text>
+    <text x="0" y="0" font-family="Arial, sans-serif" font-size="24" fill="white" text-anchor="middle" dominant-baseline="middle" filter="url(#glow)">Advanced</text>
   </g>
 
   <!-- 右下角 - 稳定 -->
@@ -118,7 +118,7 @@
     <circle cx="0" cy="0" r="72" fill="url(#featureGradient)" filter="url(#glow)">
       <animate attributeName="r" values="70;74;70" dur="5s" begin="3s" repeatCount="indefinite" />
     </circle>
-    <text x="0" y="0" font-family="Arial, sans-serif" font-size="24" fill="white" text-anchor="middle" dominant-baseline="middle" filter="url(#glow)">稳定</text>
+    <text x="0" y="0" font-family="Arial, sans-serif" font-size="24" fill="white" text-anchor="middle" dominant-baseline="middle" filter="url(#glow)">Tiny</text>
   </g>
 
   <!-- 标题文本 -->
