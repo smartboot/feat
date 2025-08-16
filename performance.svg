@@ -16,7 +16,7 @@
     <!-- 启动耗时对比 -->
 
     <g transform="translate(10 60)">
-        <text x="10" y="0" font-size="14" font-weight="bold">Boot cost</text>
+        <text x="10" y="0" font-size="14" font-weight="bold">Startup Time</text>
         <line x1="10" y1="10" x2="750" y2="10" stroke="#bfbfbf" stroke-width="1"/>
         <rect x="10" y="15" width="8" height="15" fill="#fa541c" rx="2">
             <animate attributeName="width" from="0" to="8" dur="0.8s" fill="freeze"/>
