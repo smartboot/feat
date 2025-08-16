@@ -18,6 +18,7 @@ import tech.smartboot.feat.ai.mcp.server.McpServer;
 import tech.smartboot.feat.ai.mcp.server.model.ServerPrompt;
 import tech.smartboot.feat.ai.mcp.server.model.ServerResource;
 import tech.smartboot.feat.ai.mcp.server.model.ServerTool;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.server.HttpRequest;
@@ -87,7 +88,7 @@ public abstract class AbstractCloudService implements CloudService {
                 byte[] bytes = JSONObject.toJSONString(result).getBytes();
                 ctx.Response.setContentType(HeaderValue.ContentType.APPLICATION_JSON);
                 if (bytes.length > threshold) {
-                    bytes = tech.smartboot.feat.core.common.FeatUtils.gzip(bytes);
+                    bytes = FeatUtils.gzip(bytes);
                     ctx.Response.setHeader("Content-Encoding", "gzip");
                 }
                 ctx.Response.setContentLength(bytes.length);
@@ -212,6 +213,10 @@ public abstract class AbstractCloudService implements CloudService {
             out.write('0' + value);
         } else if (value < 100) {
             out.write('0' + value / 10);
+            out.write('0' + value % 10);
+        } else if (value < 1000) {
+            out.write('0' + value / 100);
+            out.write('0' + value / 10 % 10);
             out.write('0' + value % 10);
         } else {
             // 用于存储转换后的数字字符
