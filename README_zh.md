@@ -78,11 +78,8 @@ Feat 框架各模块的主要三方包依赖如下：
 | 每秒请求数 | 高 | 中           | 高 |
 | 响应延迟 | 极低 | 中           | 低 |
 
-<center>
-<h2>Feat boasts unparalleled performance</h2>
 
 ![](./pages/src/assets/performance.svg)
-</center>
 
 ## 文档与社区
 
