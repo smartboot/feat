@@ -79,7 +79,7 @@ Compared to other mainstream Java frameworks, Feat excels in the following areas
 | Requests per Second | High | Medium      | High |
 | Response Latency | Extremely Low | Medium      | Low |
 
-![](./performance.svg)
+![](./pages/src/assets/performance.svg)
 ---
 
 ## Documentation & Community

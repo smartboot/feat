@@ -78,7 +78,7 @@ Feat 框架各模块的主要三方包依赖如下：
 | 每秒请求数 | 高 | 中           | 高 |
 | 响应延迟 | 极低 | 中           | 低 |
 
-![](./performance.svg)
+![](./pages/src/assets/performance.svg)
 ## 文档与社区
 
 ### 📚 学习资源
