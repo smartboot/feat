@@ -1,10 +1,10 @@
-<img src="feat_rect_logo.svg" width="20%" height="20%"/>
+[//]: # (<img src="feat_rect_logo.svg" width="20%" height="20%"/>)
 
 
-[![AGPL License](https://img.shields.io/badge/license-AGPL-blue.svg)](http://www.gnu.org/licenses/agpl-3.0)
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/smartboot/feat)
 
 # Feat - 高性能Java Web服务框架
+[![AGPL License](https://img.shields.io/badge/license-AGPL-blue.svg)](http://www.gnu.org/licenses/agpl-3.0)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/smartboot/feat)
 
 有点像 Vert.x，又有点像 SpringBoot 的 Java Web 服务开发框架
 
