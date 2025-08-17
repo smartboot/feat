@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg width="850" height="550" viewBox="0 0 800 550" xmlns="http://www.w3.org/2000/svg" style="font-family:Arial">
+<svg width="780" height="460" viewBox="0 0 780 460" xmlns="http://www.w3.org/2000/svg" style="font-family:Arial">
     <!-- 标题 -->
-    <text x="400" y="20" font-size="16" font-weight="bold" text-anchor="middle">Feat boasts unparalleled performance</text>
+    <text x="400" y="20" font-size="24" font-weight="bold" text-anchor="middle">Feat boasts unparalleled performance</text>
 
     <g transform="translate(220 35)">
         <!-- 图例 -->
