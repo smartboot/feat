@@ -80,7 +80,7 @@ Compared to other mainstream Java frameworks, Feat excels in the following areas
 | Response Latency | Extremely Low | Medium      | Low |
 
 <center>
-## Feat boasts unparalleled performance
+<h2>Feat boasts unparalleled performance</h2>
 
 ![](./pages/src/assets/performance.svg)
 </center>
