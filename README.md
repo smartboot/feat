@@ -8,6 +8,8 @@
 
 Somewhat like Vert.x, and somewhat like Spring Boot, Feat is a Java web service development framework.
 
+![](./pages/src/assets/performance.svg)
+
 ### 🚀 Enterprise Value of Feat
 
 | Advantage | Description |
@@ -79,8 +81,6 @@ Compared to other mainstream Java frameworks, Feat excels in the following areas
 | Requests per Second | High | Medium      | High |
 | Response Latency | Extremely Low | Medium      | Low |
 
-
-![](./pages/src/assets/performance.svg)
 
 ---
 
