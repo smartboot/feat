@@ -2,13 +2,32 @@
 import {defineConfig} from 'astro/config';
 import starlight from '@astrojs/starlight';
 import starlightImageZoomPlugin from "starlight-image-zoom";
+import starlightScrollToTop from 'starlight-scroll-to-top';
 
 // https://astro.build/config
 export default defineConfig({
     site: 'https://smartboot.tech/',
     base: '/feat',
     trailingSlash: "always",
-    integrations: [
+    integrations: [starlightScrollToTop({
+        // Button position
+        position: 'left',
+        // Tooltip text
+        tooltipText: 'Back to top',
+        showTooltip: true,
+        // Use smooth scrolling
+        smoothScroll: true,
+        // Visibility threshold (show after scrolling 20% down)
+        threshold: 20,
+        // Customize the SVG icon
+        svgPath: 'M25 42 12 29 42 29Z',
+        svgStrokeWidth: 1,
+        borderRadius: '50',
+        // Show scroll progress ring
+        showProgressRing: true,
+        // Customize progress ring color
+        progressRingColor: '#ff6b6b',
+    }),
         starlight({
             title: 'FEAT',
             logo: {
@@ -58,7 +77,10 @@ export default defineConfig({
           `
                 }
             ],
-            social: [{icon: 'github', label: 'GitHub', href: 'https://github.com/smartboot/feat'},],
+            social: [
+                {icon: 'github', label: 'GitHub', href: 'https://github.com/smartboot/feat'},
+                {icon: 'seti:git', label: 'Gitee', href: 'https://gitee.com/smartboot/feat'}
+            ],
             plugins: [starlightImageZoomPlugin()],
             // 为此网站设置英语为默认语言。
             defaultLocale: 'root',

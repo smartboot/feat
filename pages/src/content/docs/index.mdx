@@ -1,3 +1,4 @@
+
 ---
 title: Feat
 description: 一款高性能、低资源消耗的Java Web服务开发框架
@@ -14,6 +15,7 @@ hero:
 
 import { Card, CardGrid,LinkCard,LinkButton } from '@astrojs/starlight/components';
 import FeatUsers from '../../components/FeatUsers.astro'
+import {ContributorList} from "starlight-contributor-list";
 
 <FeatUsers/>
 
@@ -33,7 +35,7 @@ public class Application {
 
 ## 产品特色
 
-<CardGrid stagger>
+<CardGrid>
 	<Card title="<span style='color:#ffffff;background-color:#fa541c;border-bottom: 2px solid #fa541c'> &nbsp;F&nbsp;</span><span style='color:#fa541c;border-bottom: 2px solid #fa541c'>ree</span>" icon="seti:happenings">
         基于AGPL-3.0开源协议，保障技术透明与社区共建。合规授权企业可自由商用，共建开放生态。
 	</Card>
@@ -52,6 +54,9 @@ public class Application {
     <h2>Feat boasts unparalleled performance</h2>
     ![](../../assets/performance.svg)
 </center>
+
+## Contributors
+<ContributorList githubRepo="smartboot/feat"/>
 
 ## 生态项目
 <CardGrid>
@@ -90,3 +95,4 @@ public class Application {
         zhengjunweimail @163.com
     </LinkButton>
 </center>
+
