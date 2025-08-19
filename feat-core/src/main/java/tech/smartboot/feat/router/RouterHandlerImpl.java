@@ -10,8 +10,8 @@
 
 package tech.smartboot.feat.router;
 
-import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.FeatUtils;
+import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.impl.HttpEndpoint;
@@ -47,7 +47,7 @@ final class RouterHandlerImpl implements HttpHandler {
         List<PathIndex> pathIndexes = new ArrayList<>();
         for (int i = 0; i < path.length; i++) {
             if (path[i].startsWith(":")) {
-                pathIndexes.add(new PathIndex(path[i], i));
+                pathIndexes.add(new PathIndex(path[i].substring(1), i));
             }
         }
         if (pathIndexes.isEmpty()) {
@@ -87,9 +87,9 @@ final class RouterHandlerImpl implements HttpHandler {
             for (PathIndex pathIndex : pathIndexes) {
                 //此时说明是最后一个路径，并且是空字符串
                 if (pathIndex.index == path.length) {
-                    params.put(pathIndex.path.substring(1), "");
+                    params.put(pathIndex.path, "");
                 } else {
-                    params.put(pathIndex.path.substring(1), path[pathIndex.index]);
+                    params.put(pathIndex.path, path[pathIndex.index]);
                 }
 
             }
