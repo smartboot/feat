@@ -3,7 +3,6 @@ import {defineConfig} from 'astro/config';
 import starlight from '@astrojs/starlight';
 import starlightImageZoomPlugin from "starlight-image-zoom";
 import starlightScrollToTop from 'starlight-scroll-to-top';
-import starlightFullViewMode from 'starlight-fullview-mode'
 
 
 // https://astro.build/config
@@ -65,9 +64,7 @@ export default defineConfig({
                 {icon: 'github', label: 'GitHub', href: 'https://github.com/smartboot/feat'},
                 {icon: 'seti:git', label: 'Gitee', href: 'https://gitee.com/smartboot/feat'}
             ],
-            plugins: [starlightImageZoomPlugin(),starlightFullViewMode({
-                leftSidebarEnabled: true,  rightSidebarEnabled: true
-            }),starlightScrollToTop({
+            plugins: [starlightImageZoomPlugin(),starlightScrollToTop({
                 // Button position
                 // Tooltip text
                 tooltipText: 'Back to top',
