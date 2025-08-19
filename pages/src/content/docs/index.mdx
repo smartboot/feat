@@ -4,7 +4,7 @@ title: Feat
 description: 一款高性能、低资源消耗的Java Web服务开发框架
 template: splash
 hero:
-  tagline: 有点像 <b>Vert.x</b>，又有点像 <b>SpringBoot</b> 的 <u><b>AI Native</b></u> Java Web 服务开发框架
+  tagline: 运行性能超 <b>Vert.x</b>，开发体验近似 <b>SpringBoot</b> ，以 <b>AI 原生</b> 和 <b>云原生</b> 双引擎驱动的现代化 Java Web 服务开发框架
   image:
     file: ../../assets/banner.svg
   actions:
@@ -19,19 +19,6 @@ import {ContributorList} from "starlight-contributor-list";
 
 <FeatUsers/>
 
-```java title="Application.java"
-@Controller
-public class Application {
-    @RequestMapping("/")
-    public String helloWorld() {
-        return "hello Feat Cloud";
-    }
-
-    public static void main(String[] args) {
-        Feat.cloudServer().listen();
-    }
-}
-```
 
 ## 产品特色
 
@@ -49,6 +36,20 @@ public class Application {
         微内核架构，基于自研smart-socket通信引擎。冷启动耗时低于 100ms，极致性能与资源效率的完美平衡。
 	</Card>
 </CardGrid>
+
+```java title="Application.java"
+@Controller
+public class Application {
+    @RequestMapping("/")
+    public String helloWorld() {
+        return "hello Feat Cloud";
+    }
+
+    public static void main(String[] args) {
+        Feat.cloudServer().listen();
+    }
+}
+```
 
 <center>
     <h2>Feat boasts unparalleled performance</h2>
