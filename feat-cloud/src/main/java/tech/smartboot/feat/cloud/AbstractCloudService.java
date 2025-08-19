@@ -114,7 +114,6 @@ public abstract class AbstractCloudService implements CloudService {
     }
 
 
-
     protected void writeBool(OutputStream out, boolean value) throws IOException {
         if (value) {
             out.write(TRUE);
@@ -366,5 +365,9 @@ public abstract class AbstractCloudService implements CloudService {
             return false;
         }
         return true;
+    }
+
+    protected static void printRouter(String router, String controller, String method) {
+        System.out.println(" \u001B[32m|->\u001B[0m " + router + " ==> " + controller + "@" + method);
     }
 }

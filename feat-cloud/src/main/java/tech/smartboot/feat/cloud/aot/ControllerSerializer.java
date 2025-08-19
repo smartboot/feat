@@ -147,13 +147,7 @@ final class ControllerSerializer extends AbstractSerializer {
 
 //                printWriter.println("\t\tSystem.out.print(\" \\u001B[32m|->\\u001B[0m " + requestURL + " ==> " + element.getSimpleName() + "@" + se.getSimpleName() + "\");");
                 printWriter.println("\t\tif (applicationContext.getOptions().devMode()) {");
-                printWriter.println("\t\t\tString a1 = \" \\u001B[32m|->\\u001B[0m \";");
-                printWriter.println("\t\t\tString a2 = \"" + requestURL + "\";");
-                printWriter.println("\t\t\tString a3 = \" ==> \";");
-                printWriter.println("\t\t\tString a4 = \"" + element.getSimpleName() + "\";");
-                printWriter.println("\t\t\tString a5 = \"@\";");
-                printWriter.println("\t\t\tString a6 = \"" + se.getSimpleName() + "\";");
-                printWriter.println("\t\t\tSystem.out.println(a1 + a2 + a3 + a4 + a5 + a6);");
+                printWriter.println("\t\t\tprintRouter(\"" + requestURL + "\", \"" + element.getSimpleName() + "\", \"" + se.getSimpleName() + "\");");
                 printWriter.println("\t\t}");
                 if (!requestURL.contains(":") && !requestURL.contains("*") && requestURL.length() < ByteTree.MAX_DEPTH) {
                     printWriter.println("\t\tapplicationContext.getOptions().getUriByteTree().addNode(\"" + requestURL + "\");");
