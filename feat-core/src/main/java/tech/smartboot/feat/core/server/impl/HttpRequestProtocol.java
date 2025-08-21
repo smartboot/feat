@@ -21,7 +21,6 @@ import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.utils.ByteTree;
-import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.ServerOptions;
 import tech.smartboot.feat.core.server.waf.WAF;
@@ -112,15 +111,12 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
                     throw new HttpException(HttpStatus.BAD_REQUEST, "Unsupported HTTP version");
                 } else {
                     byte minor = byteBuffer.get(byteBuffer.position() + 7);
-                    switch (minor) {
-                        case '0':
-                            request.setProtocol(HttpProtocol.HTTP_10);
-                            break;
-                        case '1':
-                            request.setProtocol(HttpProtocol.HTTP_11);
-                            break;
-                        default:
-                            throw new HttpException(HttpStatus.BAD_REQUEST);
+                    if (minor == '0') {
+                        request.setProtocol(HttpProtocol.HTTP_10);
+                    } else if (minor == '1') {
+                        request.setProtocol(HttpProtocol.HTTP_11);
+                    } else {
+                        throw new HttpException(HttpStatus.BAD_REQUEST);
                     }
                 }
 
