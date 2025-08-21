@@ -19,7 +19,6 @@ import tech.smartboot.feat.core.common.HttpMethod;
 import tech.smartboot.feat.core.common.HttpProtocol;
 import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.io.FeatOutputStream;
-import tech.smartboot.feat.core.server.ServerOptions;
 
 import java.io.IOException;
 import java.util.Map;
@@ -74,7 +73,7 @@ final class HttpOutputStream extends FeatOutputStream {
             return;
         }
 
-        boolean hasHeader = hasHeader();
+        boolean hasHeader = response.getHeaders().size() > 0;
         //输出http状态行、contentType,contentLength、Transfer-Encoding、server等信息
         writeHeadPart(hasHeader);
         if (hasHeader) {
@@ -84,9 +83,6 @@ final class HttpOutputStream extends FeatOutputStream {
         committed = true;
     }
 
-    private boolean hasHeader() {
-        return response.getHeaders().size() > 0;
-    }
 
     private void writeHeaders() throws IOException {
         for (Map.Entry<String, HeaderValue> entry : response.getHeaders().entrySet()) {
