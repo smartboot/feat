@@ -107,9 +107,9 @@ final class HttpOutputStream extends FeatOutputStream {
         }
         boolean fastWrite = request.getProtocol() == HttpProtocol.HTTP_11 && response.isFastFlag() && contentType != null;
         if (fastWrite && HeaderValue.ContentType.TEXT_PLAIN_UTF8.equals(contentType)) {
-            writeTextPlainHeadPart(hasHeader, contentLength);
+            fastWriteHeadPart(hasHeader, contentLength, TEXT_PLAIN_FAST_WRITE_BYTES, PLAIN_CONTENT_LENGTH_INDEX);
         } else if (fastWrite && HeaderValue.ContentType.APPLICATION_JSON.equals(contentType)) {
-            writeApplicationJsonHeadPart(hasHeader, contentLength);
+            fastWriteHeadPart(hasHeader, contentLength, APPLICATION_JSON_FAST_WRITE_BYTES, JSON_CONTENT_LENGTH_INDEX);
         } else {
             writeCommonHeadPart(hasHeader, contentType, contentLength);
         }
@@ -152,32 +152,9 @@ final class HttpOutputStream extends FeatOutputStream {
         }
     }
 
-    private void writeApplicationJsonHeadPart(boolean hasHeader, long contentLength) throws IOException {
+    private void fastWriteHeadPart(boolean hasHeader, long contentLength, byte[] bytes, int contentLengthIndex) throws IOException {
         if (chunkedSupport) {
-            writeBuffer.write(APPLICATION_JSON_FAST_WRITE_BYTES, 0, JSON_CONTENT_LENGTH_INDEX);
-            if (hasHeader) {
-                writeBuffer.write(CHUNKED, 0, CHUNKED.length - 2);
-            } else {
-                writeBuffer.write(CHUNKED);
-            }
-        } else {
-            if (contentLength >= 0) {
-                writeBuffer.write(APPLICATION_JSON_FAST_WRITE_BYTES);
-                writeLongString(contentLength);
-            } else {
-                writeBuffer.write(APPLICATION_JSON_FAST_WRITE_BYTES, 0, JSON_CONTENT_LENGTH_INDEX);
-            }
-            if (hasHeader) {
-                writeBuffer.write(FeatUtils.CRLF_BYTES);
-            } else {
-                writeBuffer.write(FeatUtils.CRLF_CRLF_BYTES);
-            }
-        }
-    }
-
-    private void writeTextPlainHeadPart(boolean hasHeader, long contentLength) throws IOException {
-        if (chunkedSupport) {
-            writeBuffer.write(TEXT_PLAIN_FAST_WRITE_BYTES, 0, PLAIN_CONTENT_LENGTH_INDEX);
+            writeBuffer.write(bytes, 0, contentLengthIndex);
             if (hasHeader) {
                 writeBuffer.write(CHUNKED, 0, CHUNKED.length - 2);
             } else {
@@ -187,10 +164,10 @@ final class HttpOutputStream extends FeatOutputStream {
         }
 
         if (contentLength >= 0) {
-            writeBuffer.write(TEXT_PLAIN_FAST_WRITE_BYTES);
+            writeBuffer.write(bytes);
             writeLongString(contentLength);
         } else {
-            writeBuffer.write(TEXT_PLAIN_FAST_WRITE_BYTES, 0, PLAIN_CONTENT_LENGTH_INDEX);
+            writeBuffer.write(bytes, 0, contentLengthIndex);
         }
         if (hasHeader) {
             writeBuffer.write(FeatUtils.CRLF_BYTES);
