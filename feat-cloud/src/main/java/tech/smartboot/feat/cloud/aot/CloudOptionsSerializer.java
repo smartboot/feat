@@ -11,10 +11,12 @@
 package tech.smartboot.feat.cloud.aot;
 
 import com.alibaba.fastjson2.JSONPath;
+import org.yaml.snakeyaml.Yaml;
 import tech.smartboot.feat.cloud.AbstractCloudService;
 import tech.smartboot.feat.cloud.ApplicationContext;
 import tech.smartboot.feat.cloud.CloudService;
 import tech.smartboot.feat.core.common.FeatUtils;
+import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.server.ServerOptions;
@@ -26,12 +28,22 @@ import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
+import java.security.KeyFactory;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.Signature;
+import java.security.spec.X509EncodedKeySpec;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -50,6 +62,7 @@ final class CloudOptionsSerializer implements Serializer {
 
     private final PrintWriter printWriter;
     private final List<String> services;
+    private License license;
 
     public CloudOptionsSerializer(ProcessingEnvironment processingEnv, String config, List<String> services) throws Throwable {
         this.config = config;
@@ -67,6 +80,117 @@ final class CloudOptionsSerializer implements Serializer {
         JavaFileObject javaFileObject = processingEnv.getFiler().createSourceFile(packageName() + "." + className());
         Writer writer = javaFileObject.openWriter();
         printWriter = new PrintWriter(writer);
+
+        //license验签
+        loadFeatYaml();
+    }
+
+    public static void main(String[] args) throws Exception {
+        // 1. 生成密钥对（同上）
+        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("EC");
+        keyGen.initialize(256);
+        KeyPair keyPair = keyGen.generateKeyPair();
+        PrivateKey privateKey = keyPair.getPrivate();
+        //公钥转成字符串
+        String publicKeyString = Base64.getEncoder().encodeToString(keyPair.getPublic().getEncoded());
+        System.out.println("Public Key: " + publicKeyString);
+
+        // 2. 要签名的数据
+        String data = "smart-mqtt";
+        byte[] dataBytes = data.getBytes();
+
+        // 3. 签名
+        Signature ecdsaSign = Signature.getInstance("SHA256withECDSA");
+        ecdsaSign.initSign(privateKey);
+        ecdsaSign.update(dataBytes);
+        byte[] signature = ecdsaSign.sign();
+
+        System.out.println("Signature: " + Base64.getEncoder().encodeToString(signature));
+
+        // 4. 验签
+        Signature ecdsaVerify = Signature.getInstance("SHA256withECDSA");
+        // 公钥初始化publicKeyString
+        PublicKey publicKey = KeyFactory.getInstance("EC").generatePublic(new X509EncodedKeySpec(Base64.getDecoder().decode(publicKeyString)));
+        ecdsaVerify.initVerify(publicKey);
+        ecdsaVerify.update(dataBytes);
+        boolean isVerified = ecdsaVerify.verify(signature);
+        System.out.println("Signature verified: " + isVerified); // 应输出 true
+
+
+    }
+
+
+    private void loadFeatYaml() {
+        InputStream inputStream = CloudOptionsSerializer.class.getClassLoader().getResourceAsStream("feat_users.yaml");
+        if (inputStream == null) {
+            throw new FeatException("") {
+                @Override
+                public void printStackTrace() {
+                    System.err.println("################# ERROR ##############");
+                    System.err.println("ERROR: Compilation environment exception. Please check if the correct version of feat-cloud-starter is depended on.");
+                    System.err.println("######################################");
+                }
+            };
+        }
+        Yaml yaml = new Yaml();
+
+        FeatLicenseRepository featUsers = yaml.loadAs(inputStream, FeatLicenseRepository.class);
+        Object yamlLicense = JSONPath.eval(config, "$.license");
+        String localLicense;
+        if (yamlLicense == null) {
+            localLicense = System.getenv("FEAT_LICENSE");
+        } else {
+            localLicense = yamlLicense.toString();
+        }
+        //无license
+        if (FeatUtils.isEmpty(localLicense)) {
+            return;
+        }
+        String[] array = FeatUtils.split(localLicense, "_");
+        if (array.length != 2) {
+            throw new FeatException("") {
+                @Override
+                public void printStackTrace() {
+                    System.err.println("################# ERROR ##############");
+                    System.err.println("invalid Feat License: " + localLicense);
+                    System.err.println("######################################");
+                }
+            };
+        }
+
+
+        license = featUsers.getUsers().get(array[0]);
+        if (license == null) {
+            throw new RuntimeException("license is invalid");
+        }
+        try {
+            Signature ecdsaVerify = Signature.getInstance("SHA256withECDSA");
+            PublicKey publicKey = KeyFactory.getInstance("EC").generatePublic(new X509EncodedKeySpec(Base64.getDecoder().decode(array[1])));
+            ecdsaVerify.initVerify(publicKey);
+            ecdsaVerify.update(license.getName().getBytes(StandardCharsets.UTF_8));
+            if (!ecdsaVerify.verify(Base64.getDecoder().decode(license.getLicense()))) {
+                throw new FeatException("") {
+                    @Override
+                    public void printStackTrace() {
+                        System.err.println("################# ERROR ##############");
+                        System.err.println("invalid Feat License: " + localLicense);
+                        System.err.println("######################################");
+                    }
+                };
+            }
+        } catch (FeatException e) {
+            throw e;
+        } catch (Throwable e) {
+            throw new FeatException("") {
+                @Override
+                public void printStackTrace() {
+                    System.err.println("################# ERROR ##############");
+                    System.err.println("Feat License Check ERROR: " + e.getMessage());
+                    System.err.println("######################################");
+                }
+            };
+        }
+
     }
 
     private void deleteBuildDir(File dir) {
