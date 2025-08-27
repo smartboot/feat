@@ -121,7 +121,7 @@ final class CloudOptionsSerializer implements Serializer {
         boolean isVerified = ecdsaVerify.verify(signature);
         System.out.println("Signature verified: " + isVerified); // 应输出 true
 
-        String licenseNum = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+        String licenseNum = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"))+"000001";
         System.out.println("feat-users配置:");
         System.out.println("\tnum: " + licenseNum);
         System.out.println("\tname: " + data);
