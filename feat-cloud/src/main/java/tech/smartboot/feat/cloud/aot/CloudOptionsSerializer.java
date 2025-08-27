@@ -163,6 +163,7 @@ final class CloudOptionsSerializer implements Serializer {
         if (license == null) {
             throw new RuntimeException("license is invalid");
         }
+        license.setNum(array[0]);
         try {
             Signature ecdsaVerify = Signature.getInstance("SHA256withECDSA");
             PublicKey publicKey = KeyFactory.getInstance("EC").generatePublic(new X509EncodedKeySpec(Base64.getDecoder().decode(array[1])));
@@ -240,6 +241,12 @@ final class CloudOptionsSerializer implements Serializer {
 
     @Override
     public void serializeLoadBean() {
+        if (license == null) {
+            printWriter.println("\t\tSystem.err.println(\"该软件未获得 Feat 正式商业授权, 请在 AGPL3.0 的协议框架下合规使用 Feat.\");");
+        } else {
+            printWriter.println("\t\tSystem.out.println(\"\\u001B[32mFeat License校验通过! 授权编号:" + license.getNum() + " 授予对象:" + license.getName() + "\\u001B[0m\");");
+        }
+
         for (Field field : ServerOptions.class.getDeclaredFields()) {
             Class<?> type = field.getType();
             if (type.isArray()) {
