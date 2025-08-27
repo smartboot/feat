@@ -41,6 +41,8 @@ import java.security.PublicKey;
 import java.security.Signature;
 import java.security.spec.X509EncodedKeySpec;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
@@ -96,10 +98,10 @@ final class CloudOptionsSerializer implements Serializer {
         PrivateKey privateKey = keyPair.getPrivate();
         //公钥转成字符串
         String publicKeyString = Base64.getEncoder().encodeToString(keyPair.getPublic().getEncoded());
-        System.out.println("Public Key: " + publicKeyString);
+//        System.out.println("Public Key: " + publicKeyString);
 
         // 2. 要签名的数据
-        String data = "smart-mqtt";
+        String data = "smartboot开源组织";
         byte[] dataBytes = data.getBytes();
 
         // 3. 签名
@@ -108,7 +110,7 @@ final class CloudOptionsSerializer implements Serializer {
         ecdsaSign.update(dataBytes);
         byte[] signature = ecdsaSign.sign();
 
-        System.out.println("Signature: " + Base64.getEncoder().encodeToString(signature));
+//        System.out.println("Signature: " + Base64.getEncoder().encodeToString(signature));
 
         // 4. 验签
         Signature ecdsaVerify = Signature.getInstance("SHA256withECDSA");
@@ -119,6 +121,14 @@ final class CloudOptionsSerializer implements Serializer {
         boolean isVerified = ecdsaVerify.verify(signature);
         System.out.println("Signature verified: " + isVerified); // 应输出 true
 
+        String licenseNum = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+        System.out.println("feat-users配置:");
+        System.out.println("\tnum: " + licenseNum);
+        System.out.println("\tname: " + data);
+        System.out.println("\tlicense: " + Base64.getEncoder().encodeToString(signature));
+
+        System.out.println("feat.yml配置:");
+        System.out.println("\tlicense: " + licenseNum + "_" + publicKeyString);
 
     }
 
@@ -243,7 +253,7 @@ final class CloudOptionsSerializer implements Serializer {
         if (license == null) {
             printWriter.println("\t\tSystem.out.println(\"\\u001B[31m温馨提示：存在未经商业授权的依赖模块, 请确保在 AGPL 3.0 的协议框架下合法合规使用 Feat.\\u001B[0m\");");
         } else {
-            printWriter.println("\t\tSystem.out.println(\"\\u001B[32mFeat License verification passed! License No:" + license.getNum() + " Granted for:" + license.getName() + "\\u001B[0m\");");
+            printWriter.println("\t\tSystem.out.println(\"\\u001B[32mFeat License verification passed! License No:\\033[4m" + license.getNum() + "\\u001B[0m\\u001B[32m Granted for:\\033[4m" + license.getName() + "\\u001B[0m\");");
         }
         printWriter.println("\t}");
         printWriter.println();
