@@ -36,6 +36,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.annotation.Annotation;
+import java.time.LocalDateTime;
+import java.time.Year;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -171,6 +174,15 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         printWriter.println();
         serializer.serializeImport();
         printWriter.println();
+        //添加版权注释
+        printWriter.println("/**");
+        printWriter.println(" * Please do not modify the currently generated code, otherwise it will be overwritten!");
+        printWriter.println(" * Copyright (c) 2022-" + Year.now().getValue() + " smartboot.tech All Rights Reserved.");
+        printWriter.println(" *");
+        printWriter.println(" * @Description: " + serializer.className());
+        printWriter.println(" * @Author: 三刀 zhengjunweimail@163.com");
+        printWriter.println(" * @Date: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        printWriter.println(" */");
         printWriter.println("public class " + serializer.className() + " extends " + AbstractCloudService.class.getSimpleName() + " {");
         printWriter.println();
         serializer.serializeProperty();

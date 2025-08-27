@@ -76,6 +76,9 @@ final class CloudOptionsSerializer implements Serializer {
         FileObject preFileObject = processingEnv.getFiler().getResource(StandardLocation.SOURCE_OUTPUT, packageName(), className() + ".java");
         File buildDir = new File(preFileObject.toUri()).getParentFile().getParentFile();
         deleteBuildDir(buildDir);
+        preFileObject = processingEnv.getFiler().getResource(StandardLocation.CLASS_OUTPUT, packageName(), className() + ".class");
+        buildDir = new File(preFileObject.toUri()).getParentFile().getParentFile();
+        deleteBuildDir(buildDir);
 
         JavaFileObject javaFileObject = processingEnv.getFiler().createSourceFile(packageName() + "." + className());
         Writer writer = javaFileObject.openWriter();
@@ -236,17 +239,19 @@ final class CloudOptionsSerializer implements Serializer {
 
     @Override
     public void serializeProperty() {
+        printWriter.println("\tstatic {");
+        if (license == null) {
+            printWriter.println("\t\tSystem.out.println(\"\\u001B[31m温馨提示：存在未经商业授权的依赖模块, 请确保在 AGPL 3.0 的协议框架下合法合规使用 Feat.\\u001B[0m\");");
+        } else {
+            printWriter.println("\t\tSystem.out.println(\"\\u001B[32mFeat License verification passed! License No:" + license.getNum() + " Granted for:" + license.getName() + "\\u001B[0m\");");
+        }
+        printWriter.println("\t}");
+        printWriter.println();
         printWriter.println("\tprivate List<" + CloudService.class.getSimpleName() + "> services = new " + ArrayList.class.getSimpleName() + "(" + services.size() + ");");
     }
 
     @Override
     public void serializeLoadBean() {
-        if (license == null) {
-            printWriter.println("\t\tSystem.err.println(\"该软件未获得 Feat 正式商业授权, 请在 AGPL3.0 的协议框架下合规使用 Feat.\");");
-        } else {
-            printWriter.println("\t\tSystem.out.println(\"\\u001B[32mFeat License校验通过! 授权编号:" + license.getNum() + " 授予对象:" + license.getName() + "\\u001B[0m\");");
-        }
-
         for (Field field : ServerOptions.class.getDeclaredFields()) {
             Class<?> type = field.getType();
             if (type.isArray()) {
