@@ -65,6 +65,7 @@ final class CloudOptionsSerializer implements Serializer {
     private final PrintWriter printWriter;
     private final List<String> services;
     private License license;
+    private String modelName;
 
     public CloudOptionsSerializer(ProcessingEnvironment processingEnv, String config, List<String> services) throws Throwable {
         this.config = config;
@@ -81,6 +82,20 @@ final class CloudOptionsSerializer implements Serializer {
         preFileObject = processingEnv.getFiler().getResource(StandardLocation.CLASS_OUTPUT, packageName(), className() + ".class");
         buildDir = new File(preFileObject.toUri()).getParentFile().getParentFile();
         deleteBuildDir(buildDir);
+
+        File f = new File(processingEnv.getFiler().getResource(StandardLocation.SOURCE_OUTPUT, "", className() + ".java").toUri()).getParentFile();
+        if (f != null) {
+            f = f.getParentFile();
+            if (f.exists()) {
+                f = f.getParentFile();
+                if (f.exists()) {
+                    f = f.getParentFile();
+                    if (f != null) {
+                        modelName = f.getName();
+                    }
+                }
+            }
+        }
 
         JavaFileObject javaFileObject = processingEnv.getFiler().createSourceFile(packageName() + "." + className());
         Writer writer = javaFileObject.openWriter();
@@ -121,7 +136,7 @@ final class CloudOptionsSerializer implements Serializer {
         boolean isVerified = ecdsaVerify.verify(signature);
         System.out.println("Signature verified: " + isVerified); // 应输出 true
 
-        String licenseNum = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"))+"000001";
+        String licenseNum = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "000001";
         System.out.println("feat-users配置:");
         System.out.println("\tnum: " + licenseNum);
         System.out.println("\tname: " + data);
@@ -251,9 +266,18 @@ final class CloudOptionsSerializer implements Serializer {
     public void serializeProperty() {
         printWriter.println("\tstatic {");
         if (license == null) {
-            printWriter.println("\t\tSystem.out.println(\"\\u001B[31m温馨提示：存在未经商业授权的依赖模块, 请确保在 AGPL 3.0 的协议框架下合法合规使用 Feat.\\u001B[0m\");");
+            if (FeatUtils.isBlank(modelName)) {
+                printWriter.println("\t\tSystem.out.println(\"\\u001B[31m温馨提示：存在未经商业授权的依赖模块, 请确保在 AGPL 3.0 的协议框架下合法合规使用 Feat.\\u001B[0m\");");
+            } else {
+                printWriter.println("\t\tSystem.out.println(\"\\u001B[31m温馨提示：当前服务所依赖的模块[\\033[4m" + modelName + "\\u001B[0m]\\u001B[31m尚未获得商业授权, 请确保在 AGPL 3.0 的协议框架下合法合规使用 Feat.\\u001B[0m\");");
+            }
         } else {
-            printWriter.println("\t\tSystem.out.println(\"\\u001B[32mFeat License verification passed! License No:\\033[4m" + license.getNum() + "\\u001B[0m\\u001B[32m Granted for:\\033[4m" + license.getName() + "\\u001B[0m\");");
+            if (FeatUtils.isBlank(modelName)) {
+                printWriter.println("\t\tSystem.out.println(\"\\u001B[32mFeat License verification passed! License No:\\033[4m" + license.getNum() + "\\u001B[0m\\u001B[32m Granted for:\\033[4m" + license.getName() + "\\u001B[0m\");");
+            } else {
+                printWriter.println("\t\tSystem.out.println(\"\\u001B[32mThe dependent module [" + modelName + "] has passed Feat License verification! License No:\\033[4m" + license.getNum() + "\\u001B[0m\\u001B[32m Granted for:\\033[4m" + license.getName() + "\\u001B[0m\");");
+            }
+
         }
         printWriter.println("\t}");
         printWriter.println();
