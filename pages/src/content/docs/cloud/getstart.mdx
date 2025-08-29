@@ -69,7 +69,7 @@ public class FeatCloudDemo {
 
 
 ### 1. 静态转码
-以 FeatCloudDemo 为例，开发人员编写的源代码在编译时经过一次静态转码，生成了一个新的 java 文件 `FeatCloudDemoBeanAptLoader.java`。
+以 FeatCloudDemo 为例，开发人员编写的源代码在编译时经过一次静态转码，生成了一个新的 java 文件 `FeatCloudDemoCloudService.java`。
 <Tabs>
     <TabItem label="源代码">
         ``` java title=FeatCloudDemo.java
@@ -81,23 +81,21 @@ public class FeatCloudDemo {
             }
 
             public static void main(String[] args) {
-                Feat.cloudServer().listen();
+                FeatCloud.cloudServer().listen();
             }
         }
         ```
     </TabItem>
     <TabItem label="静态转码">
-        ```java title=FeatCloudDemoBeanAptLoader.java
-        public class FeatCloudDemoBeanAptLoader extends AbstractServiceLoader {
+        ```java title=FeatCloudDemoCloudService.java
+        public class FeatCloudDemoCloudService extends AbstractCloudService {
             private FeatCloudDemo bean;
 
             public void loadBean(ApplicationContext applicationContext) throws Throwable {
-                bean = new FeatCloudDemo();
-                applicationContext.addBean("featCloudDemo", bean);
+                bean = new FeatCloudDemo(); 
             }
 
-            public void autowired(ApplicationContext applicationContext) {
-
+            public void autowired(ApplicationContext applicationContext) throws Throwable {
             }
 
             public void router(ApplicationContext applicationContext, Router router) {
@@ -131,7 +129,7 @@ Controller 在编译时完成转码后，下一步便是需要在程序启动后
 
 Controller 静态转码所生成的类文件默认实现了 `tech.smartboot.feat.cloud.service.CloudService` 接口，同时会自动生成一个 service 文件：
 
-**`META-INF/services/tech.smartboot.feat.cloud.service.CloudService`**
+**`META-INF/services/tech.smartboot.feat.cloud.CloudService`**
 
 当调用 ApplicationContext@start 方法时：
 1. 首先通过 **ServiceLoader.load(CloudService.class)** 加载所有实现了 **CloudService** 接口的类。并根据 `isIgnore` 规则过滤出有效的服务。
