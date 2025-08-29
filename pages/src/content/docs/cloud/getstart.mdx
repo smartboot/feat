@@ -52,7 +52,7 @@ public class FeatCloudDemo {
     }
 
     public static void main(String[] args) {
-        Feat.cloudServer().listen();
+        FeatCloud.cloudServer().listen();
     }
 }
 ```
@@ -100,12 +100,12 @@ public class FeatCloudDemo {
 
             }
 
-            public void router(Router router) {
-                router.route("/cloud", req -> {
+            public void router(ApplicationContext applicationContext, Router router) {
+                router.route("/cloud", ctx -> {
                     String rst = bean.helloWorld();
                     byte[] bytes = rst.getBytes("UTF-8");
-                    req.getResponse().setContentLength(bytes.length);
-                    req.getResponse().write(bytes);
+                    ctx.Response.setContentLength(bytes.length);
+                    ctx.Response.write(bytes);
                 });
             }
 
@@ -166,7 +166,7 @@ Controller 静态转码所生成的类文件默认实现了 `tech.smartboot.feat
                     service.postConstruct(this);
                 }
                 for (CloudService service : services) {
-                    service.router(router);
+                    service.router(this, router);
                 }
             }
 
@@ -185,7 +185,7 @@ Controller 静态转码所生成的类文件默认实现了 `tech.smartboot.feat
 
             void destroy() throws Throwable;
 
-            void router(Router router);
+            void router(ApplicationContext context, Router router);
         }
         ```
     </TabItem>
@@ -265,7 +265,7 @@ public class BeanDemo{
 public class FeatCloudDemo {
 
     public static void main(String[] args) {
-        Feat.cloudServer(opts -> opts.addExternalBean("beanDemo", new BeanDemo()))
+        Feat.cloudServer(opts -> opts.registerBean("beanDemo", new BeanDemo()))
             .listen();
     }
 }
@@ -276,7 +276,7 @@ public class FeatCloudDemo {
 
 该注解用于填充 Bean 或者 Controller 的属性，类似于 Spring 中的 `@Autowired`。
 
-**注意：因为技术方面的原因，现阶段需要显示提供属性的 setter 方法。**
+**注意：Feat Cloud 在处理 @Autowired 注解时，会优先寻找对应的 setter 方法，如果没有找到，则会通过反射方式直接注入属性值。**
 ```java "@Autowired" "setHello"
 @Bean
 public class FeatBeanDemo {
@@ -284,7 +284,7 @@ public class FeatBeanDemo {
     private String hello;
 
     public static void main(String[] args) {
-        Feat.cloudServer(opts -> opts.addExternalBean("hello", "你好~")).listen();
+        Feat.cloudServer(opts -> opts.registerBean("hello", "你好~")).listen();
     }
 
     public void setHello(String hello) {
