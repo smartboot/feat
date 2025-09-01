@@ -151,7 +151,8 @@ public abstract class AbstractCloudService implements CloudService {
         } else if (value < 0) {
             out.write('-');
             value = (byte) -value;
-        } else if (value < 10) {
+        }
+        if (value < 10) {
             out.write('0' + value);
         } else if (value < 100) {
             out.write('0' + value / 10);
