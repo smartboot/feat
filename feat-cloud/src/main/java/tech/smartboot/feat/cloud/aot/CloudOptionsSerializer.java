@@ -83,6 +83,10 @@ final class CloudOptionsSerializer implements Serializer {
         buildDir = new File(preFileObject.toUri()).getParentFile().getParentFile();
         deleteBuildDir(buildDir);
 
+        //清理feat.yaml文件
+        deleteFeatYamlFile(processingEnv);
+
+
         File f = new File(processingEnv.getFiler().getResource(StandardLocation.SOURCE_OUTPUT, "", className() + ".java").toUri()).getParentFile();
         if (f != null) {
             f = f.getParentFile();
@@ -103,6 +107,18 @@ final class CloudOptionsSerializer implements Serializer {
 
         //license验签
         loadFeatYaml();
+    }
+
+    private static void deleteFeatYamlFile(ProcessingEnvironment processingEnv) throws IOException {
+        File buildDir;
+        buildDir = new File(processingEnv.getFiler().getResource(StandardLocation.CLASS_OUTPUT, "", "feat.yml").toUri());
+        if (buildDir.exists()) {
+            buildDir.delete();
+        }
+        buildDir = new File(processingEnv.getFiler().getResource(StandardLocation.CLASS_OUTPUT, "", "feat.yaml").toUri());
+        if (buildDir.exists()) {
+            buildDir.delete();
+        }
     }
 
     public static void main(String[] args) throws Exception {
