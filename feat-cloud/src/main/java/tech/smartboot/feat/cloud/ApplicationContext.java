@@ -57,9 +57,7 @@ public class ApplicationContext {
         for (CloudService service : services) {
             service.postConstruct(this);
         }
-        if (options.devMode()) {
-            System.out.println("\u001B[32mFeat Router:\u001B[0m");
-        }
+        System.out.println("\u001B[32mFeat Router:\u001B[0m");
         for (CloudService service : services) {
             service.router(this, router);
         }

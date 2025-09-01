@@ -23,10 +23,6 @@ import java.util.Map;
 public class CloudOptions extends ServerOptions {
     private String[] packages;
     private final Map<String, Object> externalBeans = new HashMap<>();
-    /**
-     * 是否为开发模式,启动时输出详细信息
-     */
-    private boolean devMode;
 
     String[] getPackages() {
         return packages;
@@ -49,12 +45,4 @@ public class CloudOptions extends ServerOptions {
         return this;
     }
 
-    public boolean devMode() {
-        return devMode;
-    }
-
-    public CloudOptions devMode(boolean devMode) {
-        this.devMode = devMode;
-        return this;
-    }
 }
