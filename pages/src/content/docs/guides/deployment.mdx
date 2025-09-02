@@ -28,6 +28,11 @@ Feat 应用可以通过 Maven 的 `maven-shade-plugin` 插件打包成一个包�
                         <goal>shade</goal>
                     </goals>
                     <configuration>
+                        <!-- 采用追加的方式 -->
+                        <transformer
+                                implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                            <resource>META-INF/services/tech.smartboot.feat.cloud.CloudService</resource>
+                        </transformer>
                         <transformers>
                             <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                 <mainClass>your.package.MainClass</mainClass>

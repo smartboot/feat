@@ -38,8 +38,13 @@
                         </goals>
                         <configuration>
                             <transformers>
+                                <!-- 采用追加的方式 -->
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                    <resource>META-INF/services/tech.smartboot.feat.cloud.CloudService</resource>
+                                </transformer>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>FeatCloudDemo</mainClass>
+                                    <mainClass>tech.smartboot.feat.demo.helloworld.FeatCloudDemo</mainClass>
                                 </transformer>
                             </transformers>
                         </configuration>
