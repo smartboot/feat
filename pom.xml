@@ -36,6 +36,11 @@
             </dependency>
             <dependency>
                 <groupId>tech.smartboot.feat</groupId>
+                <artifactId>feat-cloud-aot</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>tech.smartboot.feat</groupId>
                 <artifactId>feat-cloud-starter</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -253,5 +258,6 @@
         <module>feat-test</module>
         <module>feat-cloud</module>
         <module>feat-ai</module>
+        <module>feat-cloud-aot</module>
     </modules>
 </project>
