@@ -8,7 +8,7 @@
  *  without special permission from the smartboot organization.
  */
 
-import tech.smartboot.feat.cloud.FeatCloud;
+package tech.smartboot.feat.demo.helloworld;import tech.smartboot.feat.cloud.FeatCloud;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 
