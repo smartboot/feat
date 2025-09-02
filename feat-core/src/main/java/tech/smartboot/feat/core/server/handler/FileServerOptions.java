@@ -8,7 +8,7 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.fileserver;
+package tech.smartboot.feat.core.server.handler;
 
 import tech.smartboot.feat.core.server.ServerOptions;
 
@@ -23,11 +23,12 @@ public class FileServerOptions extends ServerOptions {
      * 若设置为true，则允许以目录列表的形式展现
      */
     private boolean autoIndex = false;
-    /**
-     * 代理配置
-     */
-    private final ProxyOptions proxyOptions = new ProxyOptions();
 
+    /**
+     * //     * 代理配置
+     * //
+     */
+//    private final ProxyOptions proxyOptions = new ProxyOptions();
     public String baseDir() {
         return baseDir;
     }
@@ -50,7 +51,7 @@ public class FileServerOptions extends ServerOptions {
         return super.getWriteBufferSize();
     }
 
-    public ProxyOptions proxyOptions() {
-        return proxyOptions;
-    }
+//    public ProxyOptions proxyOptions() {
+//        return proxyOptions;
+//    }
 }

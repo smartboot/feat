@@ -12,6 +12,7 @@ package tech.smartboot.feat.fileserver;
 
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.core.common.FeatUtils;
+import tech.smartboot.feat.core.server.handler.HttpStaticResourceHandler;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -42,6 +43,7 @@ public class Bootstrap {
             return;
         }
         String baseDir = path.toFile().getCanonicalPath();
-        Feat.fileServer(opts -> opts.autoIndex(autoIndex).baseDir(baseDir)).listen();
+        Feat.httpServer().httpHandler(new HttpStaticResourceHandler(opt -> opt.autoIndex(autoIndex).baseDir(baseDir))).listen();
     }
+
 }

@@ -11,6 +11,7 @@
 package tech.smartboot.feat.demo;
 
 import tech.smartboot.feat.Feat;
+import tech.smartboot.feat.core.server.handler.HttpStaticResourceHandler;
 
 /**
  * @author 三刀 zhengjunweimail@163.com
@@ -18,6 +19,6 @@ import tech.smartboot.feat.Feat;
  */
 public class FileServerDemo {
     public static void main(String[] args) {
-        Feat.fileServer(opts -> opts.autoIndex(true)).listen();
+        Feat.httpServer().httpHandler(new HttpStaticResourceHandler(opt -> opt.autoIndex(true))).listen();
     }
 }

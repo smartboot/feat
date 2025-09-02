@@ -12,8 +12,7 @@ package tech.smartboot.feat.cloud;
 
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
-import tech.smartboot.feat.fileserver.FileServerOptions;
-import tech.smartboot.feat.fileserver.HttpStaticResourceHandler;
+import tech.smartboot.feat.core.server.handler.HttpStaticResourceHandler;
 import tech.smartboot.feat.router.Router;
 
 import java.util.ArrayList;
@@ -30,7 +29,7 @@ public class ApplicationContext {
     private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationContext.class);
     private Map<String, Object> namedBeans = new HashMap<>();
 
-    private final Router router = new Router(new HttpStaticResourceHandler(new FileServerOptions().baseDir("classpath:static")));
+    private final Router router = new Router(new HttpStaticResourceHandler(opt -> opt.baseDir("classpath:static")));
     private final CloudOptions options;
 
     private final List<CloudService> services = new ArrayList<>();

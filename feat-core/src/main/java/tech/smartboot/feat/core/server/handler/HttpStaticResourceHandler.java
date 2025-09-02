@@ -8,7 +8,7 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.fileserver;
+package tech.smartboot.feat.core.server.handler;
 
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
@@ -21,7 +21,6 @@ import tech.smartboot.feat.core.common.io.FeatOutputStream;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.common.utils.Mimetypes;
-import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
@@ -55,9 +54,10 @@ public class HttpStaticResourceHandler implements HttpHandler {
     private String classPath;
     private final ClassLoader classLoader;
 
-    public HttpStaticResourceHandler(FileServerOptions options) {
+    public HttpStaticResourceHandler(Consumer<FileServerOptions> consumer) {
         try {
-            this.options = options;
+            this.options = new FileServerOptions();
+            consumer.accept(this.options);
             this.classLoader = Thread.currentThread().getContextClassLoader();
             if (options.baseDir().startsWith("classpath:")) {
                 this.classPath = options.baseDir().substring("classpath:".length());

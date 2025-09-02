@@ -19,13 +19,8 @@ import tech.smartboot.feat.core.client.WebSocketClient;
 import tech.smartboot.feat.core.client.WebSocketListener;
 import tech.smartboot.feat.core.client.WebSocketOptions;
 import tech.smartboot.feat.core.common.HeaderValue;
-import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.ServerOptions;
-import tech.smartboot.feat.fileserver.FileServerOptions;
-import tech.smartboot.feat.fileserver.HttpStaticResourceHandler;
-import tech.smartboot.feat.fileserver.ProxyHandler;
-import tech.smartboot.feat.router.Router;
 
 import java.io.IOException;
 import java.util.function.Consumer;
@@ -81,31 +76,6 @@ public class Feat {
         return httpServer(opt);
     }
 
-    /**
-     * 创建一个文件服务器实例，用于提供静态资源服务和反向代理功能。
-     * 该方法对标nginx的静态文件服务功能，支持：
-     * <ul>
-     *   <li>静态资源托管</li>
-     *   <li>反向代理</li>
-     *   <li>路由规则配置</li>
-     * </ul>
-     *
-     * @param options 文件服务器配置选项消费者函数
-     * @return 返回配置完成的HttpServer实例
-     */
-    public static HttpServer fileServer(Consumer<FileServerOptions> options) {
-        FileServerOptions opt = new FileServerOptions();
-        options.accept(opt);
-        // 创建静态资源处理器
-        HttpHandler handler = new HttpStaticResourceHandler(opt);
-        // 如果配置了代理规则，创建路由器并添加代理处理器
-        if (!opt.proxyOptions().getProxyRules().isEmpty()) {
-            Router router = new Router(handler);
-            opt.proxyOptions().getProxyRules().forEach(rule -> router.route(rule.getLocation(), new ProxyHandler(rule)));
-            handler = router;
-        }
-        return httpServer(opt).httpHandler(handler);
-    }
 
     /**
      * 创建一个JSON POST请求，使用默认的请求头。

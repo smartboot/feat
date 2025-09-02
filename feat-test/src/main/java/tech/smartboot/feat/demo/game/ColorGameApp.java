@@ -11,7 +11,7 @@
 package tech.smartboot.feat.demo.game;
 
 import tech.smartboot.feat.Feat;
-import tech.smartboot.feat.core.server.HttpServer;
+import tech.smartboot.feat.core.server.handler.HttpStaticResourceHandler;
 
 /**
  * 一个适合3岁小朋友玩的颜色匹配游戏
@@ -22,14 +22,7 @@ import tech.smartboot.feat.core.server.HttpServer;
 public class ColorGameApp {
 
     public static void main(String[] args) {
-        // 创建文件服务器，用于提供静态资源
-        HttpServer server = Feat.fileServer(options -> {
-            // 设置静态资源目录
-            options.baseDir("classpath:static/game");
-        });
-
-        // 启动服务器，监听8080端口
-        server.listen(8080);
+        Feat.httpServer().httpHandler(new HttpStaticResourceHandler(opt -> opt.baseDir("classpath:static/game"))).listen(8080);
 
         System.out.println("颜色游戏已启动，请访问 http://localhost:8080");
     }
