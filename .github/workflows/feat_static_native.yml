@@ -44,7 +44,7 @@ jobs:
       - name: Build Feat
         run: mvn -B install --file pom.xml -DskipTests
       - name: Build Feat Static
-        run: mvn -B install --file deploy/feat_static/pom.xml -DskipTests
+        run: mvn -B install --file demo/feat_static/pom.xml -DskipTests
 
       - uses: graalvm/setup-graalvm@v1
         with:
@@ -55,7 +55,7 @@ jobs:
 
       - name: Build and run HelloWorld.java
         run: |
-          native-image -jar deploy/feat_static/target/feat_static-*.jar
+          native-image -jar demo/feat_static/target/feat_static-*.jar
 #          ./helloworld
 
       - name: Upload binary

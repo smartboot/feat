@@ -32,10 +32,10 @@ jobs:
       - name: Build Feat
         run: mvn -B install --file pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
       - name: Build Feat Static
-        run: mvn -B install --file deploy/feat_static/pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
+        run: mvn -B install --file demo/feat_static/pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
       - name: 上传 feat-static 制品
         uses: actions/upload-artifact@v4
         with:
           name: feat-static-${{ github.ref_name }}
           compression-level: 0
-          path: deploy/feat_static/target/feat_static-*.jar
+          path: demo/feat_static/target/feat_static-*.jar
