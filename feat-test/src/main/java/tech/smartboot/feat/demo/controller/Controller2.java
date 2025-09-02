@@ -56,4 +56,9 @@ public class Controller2 {
     public Object object() {
         return Arrays.asList("aa");
     }
+
+    @RequestMapping("/objects")
+    public Object[] objects() {
+        return null;
+    }
 }

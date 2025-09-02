@@ -12,6 +12,7 @@ package tech.smartboot.feat.cloud.aot.controller;
 
 import com.alibaba.fastjson2.annotation.JSONField;
 import tech.smartboot.feat.core.common.FeatUtils;
+import tech.smartboot.feat.core.common.exception.FeatException;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -23,7 +24,6 @@ import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
@@ -84,11 +84,17 @@ public final class JsonSerializer {
             return;
         }
         if (typeMirror instanceof ArrayType) {
-//            printWriter.append("os.write('[');");
-//            printWriter.append("for (" + typeMirror + ")");
-//            printWriter.append("os.write(']');");
-//            return;
-            throw new UnsupportedEncodingException();
+            printWriter.println(headBlank(i) + "if (" + obj + " == null) {");
+            printWriter.append(headBlank(i + 1));
+            toBytesPool("null");
+
+            printWriter.println(headBlank(i) + "} else if (" + obj + ".length == 0) {");
+            printWriter.append(headBlank(i + 1));
+            toBytesPool("[]");
+            printWriter.println(headBlank(i) + "} else {");
+            printWriter.println(headBlank(i + 1) + "os.write(JSON.toJSONBytes(" + obj + "));");
+            printWriter.println(headBlank(i) + "}");
+            return;
         } else if (typeMirror.toString().startsWith("java.util.List") || typeMirror.toString().startsWith("java.util.Collection")) {
             listSerializer.serialize(typeMirror, obj, i, parent);
             return;
@@ -104,7 +110,7 @@ public final class JsonSerializer {
             printWriter.println(headBlank(i) + "}");
             return;
         }
-        printWriter.println(headBlank(i) + "os.write('{');");
+
 
         List<Element> elements = new ArrayList<>();
         //当子类存在相同字段时，子类的字段会覆盖父类的字段
@@ -135,6 +141,11 @@ public final class JsonSerializer {
             temp = ((TypeElement) ((DeclaredType) temp).asElement()).getSuperclass();
         }
 
+        if (elements.isEmpty()) {
+            throw new FeatException("");
+        }
+
+        printWriter.println(headBlank(i) + "os.write('{');");
         boolean withComma = false;
         for (Element se : elements) {
             TypeMirror type = se.asType();
