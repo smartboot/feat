@@ -18,6 +18,9 @@
         <artifactId>feat-parent</artifactId>
         <version>1.2.2</version>
     </parent>
+    <description>
+        This module is used to provide AOT compilation capabilities for the Feat Cloud module. When using it, it is recommended to set the scope of this module to provided in pom.xml to reduce the size of the finally generated jar package.
+    </description>
 
     <artifactId>feat-cloud-aot</artifactId>
 

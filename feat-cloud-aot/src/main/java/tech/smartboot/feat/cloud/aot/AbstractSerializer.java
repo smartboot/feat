@@ -57,7 +57,11 @@ abstract class AbstractSerializer implements Serializer {
         this.config = config;
         this.element = element;
         this.packageName = element.getEnclosingElement().asType().toString();
+        if (FeatUtils.isBlank(packageName)) {
+            throw new FeatException("Compilation for class " + element.getSimpleName() + " with an empty package is not supported. Please declare a valid package (e.g., 'com.example.service') for the class.");
+        }
         this.className = element.getSimpleName() + "CloudService";
+
         this.processingEnv = processingEnv;
 
         FileObject preFileObject = processingEnv.getFiler().getResource(StandardLocation.SOURCE_OUTPUT, packageName, className + ".java");
@@ -66,7 +70,7 @@ abstract class AbstractSerializer implements Serializer {
             f.delete();
         }
 
-        JavaFileObject javaFileObject = FeatUtils.isBlank(packageName) ? processingEnv.getFiler().createSourceFile(className) : processingEnv.getFiler().createSourceFile(packageName + "." + className);
+        JavaFileObject javaFileObject = processingEnv.getFiler().createSourceFile(packageName + "." + className);
         Writer writer = javaFileObject.openWriter();
         printWriter = new PrintWriter(writer);
     }

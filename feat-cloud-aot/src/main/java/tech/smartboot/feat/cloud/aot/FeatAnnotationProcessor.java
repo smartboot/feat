@@ -168,9 +168,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
 
     private <T extends Annotation> void createAptLoader(Serializer serializer) throws IOException {
         //生成service配置
-        if (FeatUtils.isNotBlank(serializer.packageName())) {
-            services.add(new BeanUnit(serializer.packageName() + "." + serializer.className(), serializer.order()));
-        }
+        services.add(new BeanUnit(serializer.packageName() + "." + serializer.className(), serializer.order()));
 
 
         PrintWriter printWriter = serializer.getPrintWriter();
