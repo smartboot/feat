@@ -56,7 +56,7 @@ abstract class AbstractSerializer implements Serializer {
     public AbstractSerializer(ProcessingEnvironment processingEnv, String config, Element element) throws IOException {
         this.config = config;
         this.element = element;
-        this.packageName = element.getEnclosingElement().toString();
+        this.packageName = element.getEnclosingElement().asType().toString();
         this.className = element.getSimpleName() + "CloudService";
         this.processingEnv = processingEnv;
 
@@ -66,7 +66,7 @@ abstract class AbstractSerializer implements Serializer {
             f.delete();
         }
 
-        JavaFileObject javaFileObject = processingEnv.getFiler().createSourceFile(packageName + "." + className);
+        JavaFileObject javaFileObject = FeatUtils.isBlank(packageName) ? processingEnv.getFiler().createSourceFile(className) : processingEnv.getFiler().createSourceFile(packageName + "." + className);
         Writer writer = javaFileObject.openWriter();
         printWriter = new PrintWriter(writer);
     }

@@ -19,6 +19,7 @@ import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Bean;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.router.Router;
 
@@ -167,10 +168,16 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
 
     private <T extends Annotation> void createAptLoader(Serializer serializer) throws IOException {
         //生成service配置
-        services.add(new BeanUnit(serializer.packageName() + "." + serializer.className(), serializer.order()));
+        if (FeatUtils.isNotBlank(serializer.packageName())) {
+            services.add(new BeanUnit(serializer.packageName() + "." + serializer.className(), serializer.order()));
+        }
+
 
         PrintWriter printWriter = serializer.getPrintWriter();
-        printWriter.println("package " + serializer.packageName() + ";");
+        if (FeatUtils.isNotBlank(serializer.packageName())) {
+            printWriter.println("package " + serializer.packageName() + ";");
+        }
+
         printWriter.println();
         serializer.serializeImport();
         printWriter.println();
