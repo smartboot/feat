@@ -74,10 +74,11 @@ public final class JsonSerializer {
 
     public void serialize(final TypeMirror typeMirror, String obj, int i, DeclaredType parent) throws IOException {
         //深层级采用JSON框架序列化，防止循环引用
-        if (i > 4) {
+        if (i > 4 || typeMirror.toString().equals(Object.class.getName())) {
             printWriter.println(headBlank(i) + "if (" + obj + " != null) {");
             printWriter.println(headBlank(i + 1) + "os.write(JSON.toJSONBytes(" + obj + "));");
             printWriter.println(headBlank(i) + "} else {");
+            printWriter.append(headBlank(i + 1));
             toBytesPool("null");
             printWriter.println(headBlank(i) + "}");
             return;

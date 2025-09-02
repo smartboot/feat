@@ -50,4 +50,10 @@ public class Controller2 {
     public List list() {
         return Arrays.asList("aa");
     }
+
+
+    @RequestMapping("/object")
+    public Object object() {
+        return Arrays.asList("aa");
+    }
 }
