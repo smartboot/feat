@@ -30,7 +30,6 @@
         <dependency>
             <groupId>tech.smartboot.feat</groupId>
             <artifactId>feat-cloud-aot</artifactId>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>tech.smartboot.feat</groupId>
