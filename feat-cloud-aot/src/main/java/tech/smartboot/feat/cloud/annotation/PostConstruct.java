@@ -15,14 +15,14 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import static java.lang.annotation.RetentionPolicy.SOURCE;
 
 /**
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
 @Documented
-@Retention(RUNTIME)
+@Retention(SOURCE)
 @Target(METHOD)
 public @interface PostConstruct {
 }
