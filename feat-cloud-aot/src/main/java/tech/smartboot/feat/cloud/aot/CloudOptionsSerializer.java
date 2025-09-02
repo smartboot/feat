@@ -289,13 +289,13 @@ final class CloudOptionsSerializer implements Serializer {
             }
         } else {
             if (FeatUtils.isBlank(modelName)) {
-                printWriter.println("\t\tSystem.out.println(\"\\u001B[32mFeat License verification passed! License No:\\033[4m" + license.getNum() + "\\u001B[0m\\u001B[32m Granted for:\\033[4m" + license.getName() + "\\u001B[0m\");");
+                printWriter.println("\t\tSystem.out.println(\"\\u001B[32mFeat License verification passed! License No: \\033[4m" + license.getNum() + "\\u001B[0m\\u001B[32m Granted for:\\033[4m" + license.getName() + "\\u001B[0m\");");
             } else {
                 printWriter.println("\t\tSystem.out.print(\"\\u001B[32mThe dependent module [\");");
                 printWriter.println("\t\tSystem.out.print(\"" + modelName + "\");");
-                printWriter.println("\t\tSystem.out.print(\"] has passed Feat License verification! License No:\\033[4m\\u001B[1m\");");
+                printWriter.println("\t\tSystem.out.print(\"] has passed Feat License verification! License No: \\033[4m\\u001B[1m\");");
                 printWriter.println("\t\tSystem.out.print(\"" + license.getNum() + "\");");
-                printWriter.println("\t\tSystem.out.print(\"\\u001B[0m\\u001B[32m Granted for:\\033[4m\\u001B[1m\");");
+                printWriter.println("\t\tSystem.out.print(\"\\u001B[0m\\u001B[32m Granted for: \\033[4m\\u001B[1m\");");
                 printWriter.println("\t\tSystem.out.print(\"" + license.getName() + "\");");
                 printWriter.println("\t\tSystem.out.println(\"\\u001B[0m\");");
 //                printWriter.println("\t\tSystem.out.println(\"\\u001B[32mThe dependent module [" + modelName + "] has passed Feat License verification! License No:\\033[4m" + license.getNum() + "\\u001B[0m\\u001B[32m Granted for:\\033[4m" + license.getName() + "\\u001B[0m\");");
