@@ -64,8 +64,9 @@ public class McpOptions {
         return sseEndpoint;
     }
 
-    public void setSseEndpoint(String sseEndpoint) {
+    public McpOptions setSseEndpoint(String sseEndpoint) {
         this.sseEndpoint = sseEndpoint;
+		return this;
     }
 
 
