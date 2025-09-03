@@ -46,7 +46,10 @@ final class SseTransport extends Transport {
         super(options);
         httpClient = new HttpClient(options.getBaseUrl());
         sseClient = new HttpClient(options.getBaseUrl());
-        sseClient.post(options.getSseEndpoint()).header(header -> header.set(HeaderName.ACCEPT, HeaderValue.ContentType.EVENT_STREAM).set(HeaderName.CACHE_CONTROL.getName(), HeaderValue.NO_CACHE).set(HeaderName.CONNECTION.getName(), HeaderValue.Connection.KEEPALIVE)).onResponseBody(new ServerSentEventStream() {
+        sseClient.post(options.getSseEndpoint()).header(header -> {
+            options.getHeaders().forEach(header::set);
+            header.set(HeaderName.ACCEPT, HeaderValue.ContentType.EVENT_STREAM).set(HeaderName.CACHE_CONTROL.getName(), HeaderValue.NO_CACHE).set(HeaderName.CONNECTION.getName(), HeaderValue.Connection.KEEPALIVE);
+        }).onResponseBody(new ServerSentEventStream() {
             @Override
             public void onEvent(HttpResponse httpResponse, Map<String, String> event) {
                 String e = event.get(ServerSentEventStream.EVENT);
@@ -123,6 +126,7 @@ final class SseTransport extends Transport {
         request.setMethod(method);
         byte[] body = JSONObject.toJSONString(request).getBytes();
         httpClient.post(endpoint).header(header -> {
+            options.getHeaders().forEach(header::set);
             header.setContentType(HeaderValue.ContentType.APPLICATION_JSON).setContentLength(body.length);
             if (FeatUtils.isNotBlank(sessionId)) {
                 header.set(Request.HEADER_SESSION_ID, sessionId);

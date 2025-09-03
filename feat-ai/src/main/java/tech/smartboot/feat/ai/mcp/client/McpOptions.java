@@ -16,7 +16,9 @@ import tech.smartboot.feat.ai.mcp.model.Implementation;
 import tech.smartboot.feat.ai.mcp.model.Roots;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 /**
@@ -33,6 +35,7 @@ public class McpOptions {
     private boolean elicitation;
     private JSONObject experimental;
     private List<Roots> rootsList;
+    private Map<String, String> headers = Collections.emptyMap();
     private Consumer<String> notificationHandler = (method) -> {
     };
 
@@ -118,5 +121,17 @@ public class McpOptions {
 
     void setNotificationHandler(Consumer<String> notificationHandler) {
         this.notificationHandler = notificationHandler;
+    }
+
+    public McpOptions header(Map<String, String> header) {
+        if (header == null) {
+            throw new NullPointerException();
+        }
+        this.headers = header;
+        return this;
+    }
+
+    Map<String, String> getHeaders() {
+        return headers;
     }
 }

@@ -186,8 +186,16 @@ public class FeatUtils {
         return collection == null || collection.isEmpty();
     }
 
+    public static <K, V> boolean isEmpty(Map<K, V> map) {
+        return map == null || map.isEmpty();
+    }
+
     public static <T> boolean isNotEmpty(Collection<T> collection) {
         return !isEmpty(collection);
+    }
+
+    public static <K, V> boolean isNotEmpty(Map<K, V> map) {
+        return !isEmpty(map);
     }
 
     public static final String GZIP_ENCODE_UTF_8 = "UTF-8";

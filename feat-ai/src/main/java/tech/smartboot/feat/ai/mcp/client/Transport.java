@@ -52,6 +52,7 @@ abstract class Transport {
         CompletableFuture<HttpResponse> future = new CompletableFuture<>();
         byte[] body = JSONObject.toJSONString(request).getBytes();
         httpRest.header(header -> {
+            options.getHeaders().forEach(header::set);
             header.setContentType(HeaderValue.ContentType.APPLICATION_JSON).setContentLength(body.length);
             if (FeatUtils.isNotBlank(sessionId)) {
                 header.set(Request.HEADER_SESSION_ID, sessionId);

@@ -48,30 +48,28 @@ final class StreamableTransport extends Transport {
 
     @Override
     void initialized() {
-        sseClient.post(options.getMcpEndpoint()).header(header ->
-                        header.set(HeaderName.ACCEPT, HeaderValue.ContentType.EVENT_STREAM)
-                                .set(HeaderName.CACHE_CONTROL.getName(), HeaderValue.NO_CACHE)
-                                .set(HeaderName.CONNECTION.getName(), HeaderValue.Connection.KEEPALIVE)
-                                .set(Request.HEADER_SESSION_ID, sessionId))
-                .onResponseBody(new ServerSentEventStream() {
-                    @Override
-                    public void onEvent(HttpResponse httpResponse, Map<String, String> event) {
-                        String e = event.get(ServerSentEventStream.EVENT);
-                        String data = event.get(ServerSentEventStream.DATA);
+        sseClient.post(options.getMcpEndpoint()).header(header -> {
+            options.getHeaders().forEach(header::set);
+            header.set(HeaderName.ACCEPT, HeaderValue.ContentType.EVENT_STREAM).set(HeaderName.CACHE_CONTROL.getName(), HeaderValue.NO_CACHE).set(HeaderName.CONNECTION.getName(), HeaderValue.Connection.KEEPALIVE).set(Request.HEADER_SESSION_ID, sessionId);
+        }).onResponseBody(new ServerSentEventStream() {
+            @Override
+            public void onEvent(HttpResponse httpResponse, Map<String, String> event) {
+                String e = event.get(ServerSentEventStream.EVENT);
+                String data = event.get(ServerSentEventStream.DATA);
 
-                        JSONObject jsonObject = JSONObject.parseObject(data);
-                        Response<JSONObject> response = handleServerRequest(jsonObject);
-                        if (response != null) {
-                            doRequest(httpClient.post(options.getMcpEndpoint()), response);
-                            return;
-                        }
-                        options.getNotificationHandler().accept(jsonObject.getString("method"));
-                        logger.warn("unexpected event: " + e + " data: " + data);
-                    }
-                }).onFailure(throwable -> {
-                    System.out.println("sse error");
-                    throwable.printStackTrace();
-                }).submit();
+                JSONObject jsonObject = JSONObject.parseObject(data);
+                Response<JSONObject> response = handleServerRequest(jsonObject);
+                if (response != null) {
+                    doRequest(httpClient.post(options.getMcpEndpoint()), response);
+                    return;
+                }
+                options.getNotificationHandler().accept(jsonObject.getString("method"));
+                logger.warn("unexpected event: " + e + " data: " + data);
+            }
+        }).onFailure(throwable -> {
+            System.out.println("sse error");
+            throwable.printStackTrace();
+        }).submit();
     }
 
     @Override
@@ -108,6 +106,7 @@ final class StreamableTransport extends Transport {
         request.setMethod(method);
         byte[] body = JSONObject.toJSONString(request).getBytes();
         httpClient.post(options.getMcpEndpoint()).header(header -> {
+            options.getHeaders().forEach(header::set);
             header.setContentType(HeaderValue.ContentType.APPLICATION_JSON).setContentLength(body.length);
             if (FeatUtils.isNotBlank(sessionId)) {
                 header.set(Request.HEADER_SESSION_ID, sessionId);
