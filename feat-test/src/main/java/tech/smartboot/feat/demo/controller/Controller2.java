@@ -41,7 +41,7 @@ public class Controller2 {
         return "hello " + a;
     }
 
-    @RequestMapping("/object")
+    @RequestMapping("/string")
     public String object(TestParam param) {
         return "hello " + param.getParam1();
     }
