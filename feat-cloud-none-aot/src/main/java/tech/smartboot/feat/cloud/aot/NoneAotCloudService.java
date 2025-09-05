@@ -13,6 +13,7 @@ package tech.smartboot.feat.cloud.aot;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
+import tech.smartboot.feat.ai.mcp.server.McpServer;
 import tech.smartboot.feat.cloud.AbstractCloudService;
 import tech.smartboot.feat.cloud.ApplicationContext;
 import tech.smartboot.feat.cloud.annotation.Autowired;
@@ -37,7 +38,9 @@ import java.lang.reflect.Proxy;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -49,6 +52,8 @@ public class NoneAotCloudService extends AbstractCloudService {
     private List<Object> beans = new ArrayList<>();
     private List<Object> controllers = new ArrayList<>();
     private List<Object> mappers = new ArrayList<>();
+    private Map<Object, McpServer> mcpServers = new HashMap<>();
+    private McpServer rootMcpServer = new McpServer();
 
     @Override
     public void loadBean(ApplicationContext context) throws Throwable {
@@ -71,7 +76,28 @@ public class NoneAotCloudService extends AbstractCloudService {
             } else if (clazz.isAnnotationPresent(Controller.class)) {
                 Constructor constructor = clazz.getDeclaredConstructor();
                 constructor.setAccessible(true);
-                controllers.add(constructor.newInstance());
+                Object constructorBean = constructor.newInstance();
+                controllers.add(constructorBean);
+                McpEndpoint mcpEndpoint = clazz.getDeclaredAnnotation(McpEndpoint.class);
+                if (mcpEndpoint != null) {
+                    McpServer mcpServer = new McpServer(opt -> {
+                        opt.getImplementation().setName(mcpEndpoint.name()).setTitle(mcpEndpoint.title()).setVersion(mcpEndpoint.version());
+                        opt.setMcpEndpoint(mcpEndpoint.streamableEndpoint()).setSseEndpoint(mcpEndpoint.sseEndpoint()).setSseMessageEndpoint(mcpEndpoint.sseMessageEndpoint());
+                        if (mcpEndpoint.resourceEnable()) {
+                            opt.resourceEnable();
+                        }
+                        if (mcpEndpoint.toolEnable()) {
+                            opt.toolEnable();
+                        }
+                        if (mcpEndpoint.promptsEnable()) {
+                            opt.promptsEnable();
+                        }
+                        if (mcpEndpoint.loggingEnable()) {
+                            opt.loggingEnable();
+                        }
+                    });
+                    mcpServers.put(constructorBean, mcpServer);
+                }
             } else if (clazz.isAnnotationPresent(Mapper.class)) {
                 Object bean = Proxy.newProxyInstance(clazz.getClassLoader(), new Class[]{clazz}, (proxy, method, args) -> {
                     SqlSessionFactory sqlSessionFactory = context.getBean("sqlSessionFactory");
@@ -109,9 +135,16 @@ public class NoneAotCloudService extends AbstractCloudService {
         for (Object bean : list) {
             for (Field field : bean.getClass().getDeclaredFields()) {
                 Autowired autowired = field.getAnnotation(Autowired.class);
-                if (autowired != null) {
+                if (autowired == null) {
+                    continue;
+                }
+                if (field.getType() == McpServer.class) {
+                    McpServer mcpServer = mcpServers.containsKey(bean) ? mcpServers.get(bean) : rootMcpServer;
+                    reflectAutowired(bean, field.getName(), mcpServer);
+                } else {
                     reflectAutowired(bean, field.getName(), loadBean(field.getName(), context));
                 }
+
             }
         }
     }
@@ -125,6 +158,7 @@ public class NoneAotCloudService extends AbstractCloudService {
             for (Method method : bean.getClass().getDeclaredMethods()) {
                 PostConstruct annotation = method.getAnnotation(PostConstruct.class);
                 if (annotation != null) {
+                    method.setAccessible(true);
                     method.invoke(bean);
                 }
             }
@@ -155,7 +189,7 @@ public class NoneAotCloudService extends AbstractCloudService {
                 if (requestMapping == null) {
                     continue;
                 }
-                printRouter(requestMapping.value(), controller.getClass().getName(), method.getName());
+
                 String url = controllerAnnotation.value().startsWith("/") ? controllerAnnotation.value() : "/" + controllerAnnotation.value();
                 if (!url.endsWith("/")) {
                     url = url + "/";
@@ -165,6 +199,7 @@ public class NoneAotCloudService extends AbstractCloudService {
                 } else {
                     url = url + requestMapping.value();
                 }
+                printRouter(url, controller.getClass().getName(), method.getName());
                 RouterHandler handler = new RouterHandler() {
                     @Override
                     public void handle(Context ctx) throws Throwable {
