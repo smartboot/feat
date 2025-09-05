@@ -18,14 +18,21 @@ import tech.smartboot.feat.cloud.ApplicationContext;
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Bean;
 import tech.smartboot.feat.cloud.annotation.Controller;
+import tech.smartboot.feat.cloud.annotation.PostConstruct;
+import tech.smartboot.feat.cloud.annotation.PreDestroy;
+import tech.smartboot.feat.cloud.annotation.RequestMapping;
+import tech.smartboot.feat.cloud.annotation.RequestMethod;
 import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
 import tech.smartboot.feat.core.common.FeatUtils;
+import tech.smartboot.feat.router.Context;
 import tech.smartboot.feat.router.Router;
+import tech.smartboot.feat.router.RouterHandler;
 
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.URL;
 import java.util.ArrayList;
@@ -54,23 +61,26 @@ public class NoneAotCloudService extends AbstractCloudService {
         annotations.add(McpEndpoint.class);
         List<Class> classes = scanBean(annotations);
 
-        for (Class clazz : classes) {
+        for (Class<?> clazz : classes) {
             if (clazz.isAnnotationPresent(Bean.class)) {
+                Bean beanAnnotation = clazz.getDeclaredAnnotation(Bean.class);
                 Object bean = clazz.newInstance();
                 beans.add(bean);
-                String beanName = clazz.getSimpleName().toString().substring(0, 1).toLowerCase() + clazz.getSimpleName().toString().substring(1);
+                String beanName = FeatUtils.isBlank(beanAnnotation.value()) ? clazz.getSimpleName().toString().substring(0, 1).toLowerCase() + clazz.getSimpleName().toString().substring(1) : beanAnnotation.value();
                 context.addBean(beanName, bean);
             } else if (clazz.isAnnotationPresent(Controller.class)) {
                 Constructor constructor = clazz.getDeclaredConstructor();
                 constructor.setAccessible(true);
                 controllers.add(constructor.newInstance());
             } else if (clazz.isAnnotationPresent(Mapper.class)) {
-                mappers.add(Proxy.newProxyInstance(clazz.getClassLoader(), new Class[]{clazz}, (proxy, method, args) -> {
+                Object bean = Proxy.newProxyInstance(clazz.getClassLoader(), new Class[]{clazz}, (proxy, method, args) -> {
                     SqlSessionFactory sqlSessionFactory = context.getBean("sqlSessionFactory");
                     try (SqlSession session = sqlSessionFactory.openSession(true)) {
                         return method.invoke(session.getMapper(clazz), args);
                     }
-                }));
+                });
+                mappers.add(bean);
+                context.addBean(clazz.getSimpleName().substring(0, 1).toLowerCase() + clazz.getSimpleName().substring(1), bean);
             } else if (clazz.isAnnotationPresent(McpEndpoint.class)) {
                 throw new RuntimeException("@McpEndpoint can only be used with @Controller!");
             }
@@ -83,6 +93,20 @@ public class NoneAotCloudService extends AbstractCloudService {
         list.addAll(controllers);
         list.addAll(beans);
         for (Object bean : list) {
+            for (Method method : bean.getClass().getDeclaredMethods()) {
+                Bean beanAnnotation = method.getAnnotation(Bean.class);
+                if (beanAnnotation != null) {
+                    Object o = method.invoke(bean);
+                    if (FeatUtils.isNotBlank(beanAnnotation.value())) {
+                        context.addBean(beanAnnotation.value(), o);
+                    } else {
+                        context.addBean(method.getReturnType().getSimpleName().substring(0, 1).toLowerCase() + method.getReturnType().getSimpleName().substring(1), o);
+                    }
+                }
+            }
+        }
+
+        for (Object bean : list) {
             for (Field field : bean.getClass().getDeclaredFields()) {
                 Autowired autowired = field.getAnnotation(Autowired.class);
                 if (autowired != null) {
@@ -94,17 +118,68 @@ public class NoneAotCloudService extends AbstractCloudService {
 
     @Override
     public void postConstruct(ApplicationContext context) throws Throwable {
-
+        List<Object> list = new ArrayList<>();
+        list.addAll(controllers);
+        list.addAll(beans);
+        for (Object bean : list) {
+            for (Method method : bean.getClass().getDeclaredMethods()) {
+                PostConstruct annotation = method.getAnnotation(PostConstruct.class);
+                if (annotation != null) {
+                    method.invoke(bean);
+                }
+            }
+        }
     }
 
     @Override
     public void destroy() throws Throwable {
-
+        List<Object> list = new ArrayList<>();
+        list.addAll(controllers);
+        list.addAll(beans);
+        for (Object bean : list) {
+            for (Method method : bean.getClass().getDeclaredMethods()) {
+                PreDestroy annotation = method.getAnnotation(PreDestroy.class);
+                if (annotation != null) {
+                    method.invoke(bean);
+                }
+            }
+        }
     }
 
     @Override
     public void router(ApplicationContext context, Router router) {
+        for (Object controller : controllers) {
+            Controller controllerAnnotation = controller.getClass().getAnnotation(Controller.class);
+            for (Method method : controller.getClass().getDeclaredMethods()) {
+                RequestMapping requestMapping = method.getAnnotation(RequestMapping.class);
+                if (requestMapping == null) {
+                    continue;
+                }
+                printRouter(requestMapping.value(), controller.getClass().getName(), method.getName());
+                String url = controllerAnnotation.value().startsWith("/") ? controllerAnnotation.value() : "/" + controllerAnnotation.value();
+                if (!url.endsWith("/")) {
+                    url = url + "/";
+                }
+                if (requestMapping.value().startsWith("/")) {
+                    url = url + requestMapping.value().substring(1);
+                } else {
+                    url = url + requestMapping.value();
+                }
+                RouterHandler handler = new RouterHandler() {
+                    @Override
+                    public void handle(Context ctx) throws Throwable {
 
+                    }
+                };
+                if (requestMapping.method().length == 0) {
+                    router.route(url, handler);
+                } else {
+                    for (RequestMethod requestMethod : requestMapping.method()) {
+                        router.route(url, requestMethod.name(), handler);
+                    }
+                }
+            }
+        }
     }
 
     private List<Class> scanBean(List<Class> annotations) {
