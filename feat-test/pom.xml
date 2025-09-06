@@ -51,4 +51,28 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+    <profiles>
+        <profile>
+            <id>dev</id>
+            <dependencies>
+                <dependency>
+                    <groupId>tech.smartboot.feat</groupId>
+                    <artifactId>feat-cloud-starter</artifactId>
+                    <exclusions>
+                        <exclusion>
+                            <groupId>tech.smartboot.feat</groupId>
+                            <artifactId>feat-cloud-aot</artifactId>
+                        </exclusion>
+                    </exclusions>
+                </dependency>
+                <dependency>
+                    <groupId>tech.smartboot.feat</groupId>
+                    <artifactId>feat-cloud-none-aot</artifactId>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>prod</id>
+        </profile>
+    </profiles>
 </project>

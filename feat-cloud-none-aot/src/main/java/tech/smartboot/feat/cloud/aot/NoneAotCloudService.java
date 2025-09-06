@@ -64,7 +64,13 @@ public class NoneAotCloudService extends AbstractCloudService {
     @Override
     public void loadBean(ApplicationContext context) throws Throwable {
         //扫描Bean
-        System.out.println("开始加载Bean");
+        System.err.println("===================================================================");
+        System.err.println("=                                                                 =");
+        System.err.println("=  WARNING: This is NoneAotCloudService running in development    =");
+        System.err.println("=           mode. For production environments, please use AOT     =");
+        System.err.println("=           compilation.                                          =");
+        System.err.println("=                                                                 =");
+        System.err.println("===================================================================");
         List<Class> annotations = new ArrayList<>();
         annotations.add(Bean.class);
         annotations.add(Controller.class);
