@@ -19,13 +19,16 @@ import tech.smartboot.feat.cloud.ApplicationContext;
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Bean;
 import tech.smartboot.feat.cloud.annotation.Controller;
+import tech.smartboot.feat.cloud.annotation.InterceptorMapping;
 import tech.smartboot.feat.cloud.annotation.PostConstruct;
 import tech.smartboot.feat.cloud.annotation.PreDestroy;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.cloud.annotation.RequestMethod;
 import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
 import tech.smartboot.feat.core.common.FeatUtils;
+import tech.smartboot.feat.router.Chain;
 import tech.smartboot.feat.router.Context;
+import tech.smartboot.feat.router.Interceptor;
 import tech.smartboot.feat.router.Router;
 import tech.smartboot.feat.router.RouterHandler;
 
@@ -41,6 +44,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -186,35 +190,53 @@ public class NoneAotCloudService extends AbstractCloudService {
             Controller controllerAnnotation = controller.getClass().getAnnotation(Controller.class);
             for (Method method : controller.getClass().getDeclaredMethods()) {
                 RequestMapping requestMapping = method.getAnnotation(RequestMapping.class);
-                if (requestMapping == null) {
-                    continue;
-                }
+                if (requestMapping != null) {
+                    String url = getFullUrl(controllerAnnotation.value(), requestMapping.value());
+                    printRouter(url, controller.getClass().getName(), method.getName());
+                    RouterHandler handler = new RouterHandler() {
+                        @Override
+                        public void handle(Context ctx) throws Throwable {
 
-                String url = controllerAnnotation.value().startsWith("/") ? controllerAnnotation.value() : "/" + controllerAnnotation.value();
-                if (!url.endsWith("/")) {
-                    url = url + "/";
-                }
-                if (requestMapping.value().startsWith("/")) {
-                    url = url + requestMapping.value().substring(1);
-                } else {
-                    url = url + requestMapping.value();
-                }
-                printRouter(url, controller.getClass().getName(), method.getName());
-                RouterHandler handler = new RouterHandler() {
-                    @Override
-                    public void handle(Context ctx) throws Throwable {
-
-                    }
-                };
-                if (requestMapping.method().length == 0) {
-                    router.route(url, handler);
-                } else {
-                    for (RequestMethod requestMethod : requestMapping.method()) {
-                        router.route(url, requestMethod.name(), handler);
+                        }
+                    };
+                    if (requestMapping.method().length == 0) {
+                        router.route(url, handler);
+                    } else {
+                        for (RequestMethod requestMethod : requestMapping.method()) {
+                            router.route(url, requestMethod.name(), handler);
+                        }
                     }
                 }
+                InterceptorMapping interceptorMapping = method.getAnnotation(InterceptorMapping.class);
+                if (interceptorMapping != null) {
+                    List<String> urls = new ArrayList<>();
+                    for (String url : interceptorMapping.value()) {
+                        urls.add(getFullUrl(controllerAnnotation.value(), url));
+                    }
+                    router.addInterceptors(urls, new Interceptor() {
+
+                        @Override
+                        public void intercept(Context context, CompletableFuture<Void> completableFuture, Chain chain) throws Throwable {
+
+                        }
+                    });
+                }
+
             }
         }
+    }
+
+    private static String getFullUrl(String baseURL, String tailUrl) {
+        String url = baseURL.startsWith("/") ? baseURL : "/" + baseURL;
+        if (!url.endsWith("/")) {
+            url = url + "/";
+        }
+        if (tailUrl.startsWith("/")) {
+            url = url + tailUrl.substring(1);
+        } else {
+            url = url + tailUrl;
+        }
+        return url;
     }
 
     private List<Class> scanBean(List<Class> annotations) {
