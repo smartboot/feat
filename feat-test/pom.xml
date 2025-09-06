@@ -67,7 +67,7 @@
                 </dependency>
                 <dependency>
                     <groupId>tech.smartboot.feat</groupId>
-                    <artifactId>feat-cloud-none-aot</artifactId>
+                    <artifactId>feat-cloud-aot-vm</artifactId>
                 </dependency>
             </dependencies>
         </profile>
