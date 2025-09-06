@@ -19,7 +19,7 @@
         <version>1.2.2</version>
     </parent>
 
-    <artifactId>feat-cloud-none-aot</artifactId>
+    <artifactId>feat-cloud-aot-vm</artifactId>
 
     <dependencies>
         <dependency>
