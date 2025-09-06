@@ -51,10 +51,12 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 /**
+ * AOT 虚拟机
+ *
  * @author 三刀
  * @version v1.0 9/4/25
  */
-public class NoneAotCloudService extends AbstractCloudService {
+public class AotVMCloudService extends AbstractCloudService {
     private List<Object> beans = new ArrayList<>();
     private List<Object> controllers = new ArrayList<>();
     private List<Object> mappers = new ArrayList<>();
@@ -66,9 +68,9 @@ public class NoneAotCloudService extends AbstractCloudService {
         //扫描Bean
         System.err.println("===================================================================");
         System.err.println("=                                                                 =");
-        System.err.println("=  WARNING: This is NoneAotCloudService running in development    =");
-        System.err.println("=           mode. For production environments, please use AOT     =");
-        System.err.println("=           compilation.                                          =");
+        System.err.println("=  WARNING: Current application is running in AOT virtual mode    =");
+        System.err.println("=           It is strongly incompatible with production           =");
+        System.err.println("=           environments. Do not use in production!               =");
         System.err.println("=                                                                 =");
         System.err.println("===================================================================");
         List<Class> annotations = new ArrayList<>();
