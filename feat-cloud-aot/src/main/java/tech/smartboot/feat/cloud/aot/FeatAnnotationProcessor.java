@@ -157,6 +157,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             serviceWrite.println(service.name);
         }
         serviceWrite.flush();
+        serviceWrite.close();
 
         if (exception != null) {
             exception.printStackTrace();
