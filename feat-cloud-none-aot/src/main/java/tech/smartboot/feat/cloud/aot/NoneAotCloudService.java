@@ -10,6 +10,7 @@
 
 package tech.smartboot.feat.cloud.aot;
 
+import com.alibaba.fastjson2.JSONObject;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -20,13 +21,14 @@ import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Bean;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.InterceptorMapping;
+import tech.smartboot.feat.cloud.annotation.Param;
+import tech.smartboot.feat.cloud.annotation.PathParam;
 import tech.smartboot.feat.cloud.annotation.PostConstruct;
 import tech.smartboot.feat.cloud.annotation.PreDestroy;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.cloud.annotation.RequestMethod;
 import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
 import tech.smartboot.feat.core.common.FeatUtils;
-import tech.smartboot.feat.router.Chain;
 import tech.smartboot.feat.router.Context;
 import tech.smartboot.feat.router.Interceptor;
 import tech.smartboot.feat.router.Router;
@@ -36,6 +38,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.URL;
@@ -44,7 +47,6 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -193,10 +195,12 @@ public class NoneAotCloudService extends AbstractCloudService {
                 if (requestMapping != null) {
                     String url = getFullUrl(controllerAnnotation.value(), requestMapping.value());
                     printRouter(url, controller.getClass().getName(), method.getName());
+                    final Object controllerInstance = controller;
+                    final Method methodInstance = method;
                     RouterHandler handler = new RouterHandler() {
                         @Override
                         public void handle(Context ctx) throws Throwable {
-
+                            invokeControllerMethod(controllerInstance, methodInstance, ctx);
                         }
                     };
                     if (requestMapping.method().length == 0) {
@@ -213,13 +217,14 @@ public class NoneAotCloudService extends AbstractCloudService {
                     for (String url : interceptorMapping.value()) {
                         urls.add(getFullUrl(controllerAnnotation.value(), url));
                     }
-                    router.addInterceptors(urls, new Interceptor() {
-
-                        @Override
-                        public void intercept(Context context, CompletableFuture<Void> completableFuture, Chain chain) throws Throwable {
-
-                        }
-                    });
+                    // 调用拦截器方法，应该返回一个Interceptor实例
+                    method.setAccessible(true);
+                    try {
+                        Interceptor interceptor = (Interceptor) method.invoke(controller);
+                        router.addInterceptors(urls, interceptor);
+                    } catch (IllegalAccessException | InvocationTargetException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
 
             }
@@ -309,5 +314,155 @@ public class NoneAotCloudService extends AbstractCloudService {
         } catch (ClassNotFoundException e) {
             // 忽略无法加载的类
         }
+    }
+
+    /**
+     * 调用控制器方法，处理参数解析和返回值
+     */
+    private void invokeControllerMethod(Object controller, Method method, Context ctx) throws Throwable {
+        method.setAccessible(true);
+
+        // 准备方法参数
+        Object[] args = prepareMethodArguments(method, ctx);
+
+        // 调用方法
+        Object result = method.invoke(controller, args);
+
+        // 处理返回值
+        handleMethodResult(result, method.getReturnType(), ctx);
+    }
+
+    /**
+     * 准备方法参数
+     */
+    private Object[] prepareMethodArguments(Method method, Context ctx) throws Exception {
+        Class<?>[] parameterTypes = method.getParameterTypes();
+        java.lang.annotation.Annotation[][] parameterAnnotations = method.getParameterAnnotations();
+        Object[] args = new Object[parameterTypes.length];
+
+        JSONObject jsonObject = null;
+        boolean needJsonParams = false;
+
+        // 首先检查是否需要解析JSON参数
+        for (int i = 0; i < parameterTypes.length; i++) {
+            Class<?> paramType = parameterTypes[i];
+            if (paramType != tech.smartboot.feat.core.server.HttpRequest.class &&
+                    paramType != tech.smartboot.feat.core.server.HttpResponse.class &&
+                    paramType != tech.smartboot.feat.core.server.Session.class &&
+                    !hasPathParamAnnotation(parameterAnnotations[i])) {
+                needJsonParams = true;
+                break;
+            }
+        }
+
+        if (needJsonParams) {
+            jsonObject = getParams(ctx.Request);
+        }
+
+        // 逐个处理参数
+        for (int i = 0; i < parameterTypes.length; i++) {
+            Class<?> paramType = parameterTypes[i];
+            java.lang.annotation.Annotation[] annotations = parameterAnnotations[i];
+
+            if (paramType == tech.smartboot.feat.core.server.HttpRequest.class) {
+                args[i] = ctx.Request;
+            } else if (paramType == tech.smartboot.feat.core.server.HttpResponse.class) {
+                args[i] = ctx.Response;
+            } else if (paramType == tech.smartboot.feat.core.server.Session.class) {
+                args[i] = ctx.session();
+            } else {
+                PathParam pathParam = getPathParamAnnotation(annotations);
+                if (pathParam != null) {
+                    args[i] = ctx.pathParam(pathParam.value());
+                } else {
+                    // 处理JSON参数或查询参数
+                    Param param = getParamAnnotation(annotations);
+                    if (param != null) {
+                        args[i] = jsonObject.getObject(param.value(), paramType);
+                    } else {
+                        // 如果没有@Param注解，尝试将整个JSON转换为该类型
+                        if (paramType.getName().startsWith("java")) {
+                            throw new RuntimeException("Java内置类型参数必须使用@Param注解");
+                        }
+                        args[i] = jsonObject.to(paramType);
+                    }
+                }
+            }
+        }
+
+        return args;
+    }
+
+    /**
+     * 处理方法返回值
+     */
+    private void handleMethodResult(Object result, Class<?> returnType, Context ctx) throws Exception {
+        if (result == null || returnType == void.class || returnType == Void.class) {
+            return;
+        }
+
+        if (returnType == String.class) {
+            byte[] bytes = ((String) result).getBytes("UTF-8");
+            ctx.Response.setContentLength(bytes.length);
+            ctx.Response.write(bytes);
+        } else if (returnType == byte[].class) {
+            byte[] bytes = (byte[]) result;
+            ctx.Response.setContentLength(bytes.length);
+            ctx.Response.write(bytes);
+        } else if (returnType == int.class || returnType == Integer.class) {
+            String str = String.valueOf(result);
+            byte[] bytes = str.getBytes("UTF-8");
+            ctx.Response.setContentLength(bytes.length);
+            ctx.Response.write(bytes);
+        } else if (returnType == boolean.class || returnType == Boolean.class) {
+            ctx.Response.setContentType(tech.smartboot.feat.core.common.HeaderValue.ContentType.APPLICATION_JSON);
+            String json = String.valueOf(result);
+            byte[] bytes = json.getBytes("UTF-8");
+            ctx.Response.setContentLength(bytes.length);
+            ctx.Response.write(bytes);
+        } else {
+            // 处理对象类型，序列化为JSON
+            ctx.Response.setContentType(tech.smartboot.feat.core.common.HeaderValue.ContentType.APPLICATION_JSON);
+            String json = com.alibaba.fastjson2.JSON.toJSONString(result);
+            byte[] bytes = json.getBytes("UTF-8");
+            ctx.Response.setContentLength(bytes.length);
+            ctx.Response.write(bytes);
+        }
+    }
+
+    /**
+     * 检查参数注解中是否有PathParam
+     */
+    private boolean hasPathParamAnnotation(java.lang.annotation.Annotation[] annotations) {
+        for (java.lang.annotation.Annotation annotation : annotations) {
+            if (annotation instanceof PathParam) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 获取PathParam注解
+     */
+    private PathParam getPathParamAnnotation(java.lang.annotation.Annotation[] annotations) {
+        for (java.lang.annotation.Annotation annotation : annotations) {
+            if (annotation instanceof PathParam) {
+                return (PathParam) annotation;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 获取Param注解
+     */
+    private Param getParamAnnotation(java.lang.annotation.Annotation[] annotations) {
+        for (java.lang.annotation.Annotation annotation : annotations) {
+            if (annotation instanceof Param) {
+                return (Param) annotation;
+            }
+        }
+        return null;
     }
 }
