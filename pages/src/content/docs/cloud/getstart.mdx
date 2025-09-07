@@ -1,6 +1,6 @@
 ---
 title: 开始使用
-description: 一款企业级 Web 服务开发框架
+description: Feat Cloud 快速入门教程与环境配置
 sidebar:
     order: 1
 ---
@@ -11,7 +11,7 @@ import demo from './img/demo.png';
 import lifecycle from './img/lifecycle.svg';
 import {Aside, TabItem, Tabs} from "@astrojs/starlight/components";
 
-Feat Cloud 提供了一种面向企业级应用开发的解决方案，它的定位有点像 SpringBoot。
+Feat Cloud 提供了一种面向企业级应用开发的解决方案，类似于 SpringBoot 但更加优化。
 
 **设计方面**：Feat Cloud 尽最大可能保留了 SpringBoot 的使用习惯，以此降低开发者的学习成本。
 
@@ -62,17 +62,17 @@ public class FeatCloudDemo {
 
 ## 核心特性
 
-Feat Cloud 是基于注解的方式进行服务开发，与传统框架在运行时解析注解不同，**Feat Cloud 在编译时对代码进行静态分析**，实现了以下核心优势：
+Feat Cloud 是基于注解的服务开发框架，与传统框架在运行时解析注解不同，**Feat Cloud 在编译时对代码进行静态分析**，实现以下核心优势：
 
-### 🚀 零反射架构
+### 🚀 AOT 编译优化
 - 运用 APT（Annotation Processing Tool）技术
 - 编译期生成优化代码，消除运行时反射开销
 - 结合 ServiceLoader 实现零配置服务加载
 
-### ⚡ 极致性能
-- 启动时间 < 100ms
-- 极低内存占用
-- 高并发处理能力
+### ⚡ 高性能特性
+- 快速启动：无需类扫描和注解解析
+- 低内存占用：减少运行时元数据缓存
+- 高并发处理能力：基于 smart-socket 的异步非阻塞网络通信
 
 ### 🔧 开发友好
 - 保持 SpringBoot 使用习惯

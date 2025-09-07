@@ -1,6 +1,6 @@
 ---
-title: AOT 编译原理
-description: 深度解析Feat框架AOT编译机制的核心原理
+title: AOT 编译原理与实践
+description: 深度解析Feat框架AOT编译机制的核心原理与实践教程
 sidebar:
     order: 2
 ---
@@ -15,14 +15,14 @@ import { TabItem, Tabs, Aside } from "@astrojs/starlight/components";
 
 Feat框架通过AOT（Ahead-of-Time）编译技术实现零反射的运行时环境，相比传统Java框架在运行时的反射操作，Feat在编译期就完成了所有的代码生成和优化工作。
 
-### 性能对比
+### 核心优势
 
-| 指标 | Spring Boot | Feat Cloud | 性能提升 |
-|------|-------------|------------|----------|
-| **启动时间** | 3-10秒 | \<100ms | **30-100倍** |
-| **内存占用** | 200-500MB | 50-100MB | **4-5倍** |
-| **反射开销** | 高 | 无 | **零开销** |
-| **GraalVM支持** | 复杂 | 原生支持 | **原生兼容** |
+| 特性 | 传统框架 | Feat Cloud |
+|------|---------|------------|
+| **编译期优化** | 运行时反射解析 | 编译期静态生成代码 |
+| **启动性能** | 需要类扫描和注解解析 | 直接加载预生成代码 |
+| **内存效率** | 运行时元数据缓存 | 编译期优化，减少运行时开销 |
+| **GraalVM支持** | 需要复杂配置 | 原生兼容 |
 
 ## 技术架构
 
@@ -48,9 +48,9 @@ graph TD
 | 特性 | AOT模式 | AOT VM模式 |
 |------|---------|------------|
 | **编译期优化** | ✅ 完全静态生成 | ❌ 运行时处理 |
-| **启动性能** | 🚀 极快（\<100ms） | ⚡ 中等 |
+| **启动性能** | 🚀 毫秒级启动 | ⚡ 快速启动 |
 | **运行性能** | 🚀 最优 | ⚡ 良好 |
-| **开发体验** | 🔧 需重编译 | 🔄 热重载 |
+| **开发体验** | 🔧 需重编译 | 🔄 支持热重载 |
 | **适用场景** | 🏭 生产环境 | 🧪 开发测试 |
 
 ## 注解处理机制
@@ -77,6 +77,8 @@ sequenceDiagram
 
 ### 支持的注解类型
 
+实际的注解处理器支持以下注解：
+
 ```java
 @Override
 public Set<String> getSupportedAnnotationTypes() {
@@ -89,6 +91,8 @@ public Set<String> getSupportedAnnotationTypes() {
     return types;
 }
 ```
+
+这些注解会在编译期被扫描，并生成对应的初始化代码。
 
 ## 代码生成体系
 
@@ -130,48 +134,59 @@ classDiagram
 2. **内联优化**：将简单的方法调用直接内联到生成代码中
 3. **类型特化**：针对具体类型生成优化的序列化代码
 
-## 代码转换示例
+## 实际代码转换示例
 
-以Controller为例，展示AOT编译的代码转换过程：
+让我们通过一个真实的示例来看AOT编译的代码转换过程：
 
 <Tabs>
     <TabItem label="源代码">
-        ```java title="UserController.java"
-        @Controller("api")
-        public class UserController {
-            @Autowired
-            private UserService userService;
+        ```java title="Demo2Controller.java"
+        @Controller("demo2")
+        public class Demo2Controller {
             
-            @RequestMapping("/users/:id")
-            public User getUser(@PathParam("id") Long id) {
-                return userService.getUserById(id);
+            @RequestMapping("/param1")
+            public String test2(@Param("param") String param) {
+                return "hello " + param;
+            }
+            
+            @RequestMapping("/param3")
+            public String test4(TestParam param) {
+                return "hello " + param.getParam1() + " " + param.getParam2();
             }
         }
         ```
     </TabItem>
     
     <TabItem label="生成代码">
-        ```java title="UserControllerCloudService.java"
-        public class UserControllerCloudService extends AbstractCloudService {
-            private UserController bean;
+        ```java title="Demo2ControllerCloudService.java"
+        /**
+         * Copyright (c) 2022-2025 smartboot.tech All Rights Reserved.
+         * @Author: 三刀 zhengjunweimail@163.com
+         */
+        public class Demo2ControllerCloudService extends AbstractCloudService {
+            private Demo2Controller bean;
             
             public void loadBean(ApplicationContext applicationContext) throws Throwable {
-                bean = new UserController(); // 直接new，无反射
-            }
-            
-            public void autowired(ApplicationContext applicationContext) throws Throwable {
-                // 直接调用setter方法，避免反射
-                bean.setUserService(applicationContext.getBean("userService"));
+                bean = new Demo2Controller(); // 直接实例化，无反射
             }
             
             public void router(ApplicationContext applicationContext, Router router) {
-                router.route("/api/users/:id", ctx -> {
-                    Long id = Long.valueOf(ctx.pathParam("id"));
-                    User result = bean.getUser(id);
-                    
-                    // 直接序列化响应，无反射开销
-                    byte[] bytes = JSON.toJSONString(result).getBytes("UTF-8");
-                    ctx.Response.setContentType("application/json");
+                // 生成路由映射代码
+                router.route("/demo2/param1", ctx -> {
+                    JSONObject jsonObject = getParams(ctx.Request);
+                    String param0 = jsonObject.getObject("param", String.class);
+                    String rst = bean.test2(param0);
+                    byte[] bytes = rst.getBytes("UTF-8");
+                    ctx.Response.setContentLength(bytes.length);
+                    ctx.Response.write(bytes);
+                });
+                
+                router.route("/demo2/param3", ctx -> {
+                    JSONObject jsonObject = getParams(ctx.Request);
+                    TestParam param0 = jsonObject.to(TestParam.class);
+                    String rst = bean.test4(param0);
+                    byte[] bytes = rst.getBytes("UTF-8");
+                    ctx.Response.setContentLength(bytes.length);
                     ctx.Response.write(bytes);
                 });
             }
@@ -182,10 +197,11 @@ classDiagram
 
 ### 关键优化点
 
-1. **零反射Bean实例化**：直接生成`new`调用
-2. **零反射依赖注入**：直接生成setter调用
-3. **预编译路由**：编译期生成路由映射代码
-4. **类型安全**：编译期确定参数类型
+1. **零反射Bean实例化**：直接生成`new Demo2Controller()`调用
+2. **零反射依赖注入**：直接生成Bean获取和设置代码
+3. **预编译路由**：编译期生成完整的路由处理逻辑
+4. **类型安全**：编译期确定参数类型，避免运行时类型转换
+5. **性能优化**：生成专用的序列化和反序列化代码
 
 ## SPI服务发现
 
@@ -203,9 +219,9 @@ graph LR
     H --> I[依次执行生命周期]
 `} />
 
-## AOT VM模式
+## AOT VM模式详解
 
-AOT VM模式为开发阶段设计，在运行时模拟AOT编译行为，提供与AOT模式一致的API体验：
+AOT VM模式专为开发阶段设计，通过`AotVMCloudService`在运行时模拟AOT编译行为：
 
 <Mermaid code={`
 flowchart TD
@@ -219,6 +235,24 @@ flowchart TD
     F --> G[动态路由注册]
     G --> H[运行时请求处理]
 `} />
+
+### 实际使用示例
+
+```java title="NoneAotCloudServiceTest.java"
+// 创建AOT VM服务
+AotVMCloudService noneAotService = new AotVMCloudService();
+
+// 配置包扫描路径
+CloudOptions options = new CloudOptions();
+options.setPackages("tech.smartboot.feat.cloud.test");
+ApplicationContext context = new ApplicationContext(options);
+
+// 手动执行服务初始化流程
+noneAotService.loadBean(context);
+noneAotService.autowired(context);
+noneAotService.postConstruct(context);
+noneAotService.router(context, router);
+```
 
 ## 生命周期管理
 
@@ -251,10 +285,42 @@ stateDiagram-v2
 `} />
 
 
-## 结论
+## 实战建议
 
-Feat框架通过AOT编译和AOT VM双模式设计，成功解决了Java应用性能与开发效率的平衡问题。AOT模式通过编译期静态优化实现了极致的运行性能，而AOT VM模式则保证了开发阶段的灵活性和调试便利性。
+Feat框架通过AOT编译和AOT VM双模式设计，为不同场景提供了最优解决方案：
+
+### 开发阶段
+
+- 使用AOT VM模式（`feat-cloud-aot-vm`依赖）
+- 支持热重载和快速调试
+- 无需重编译即可看到代码更改效果
+
+### 生产部署
+
+- 使用AOT模式（`feat-cloud-starter`依赖）
+- 获得最佳的启动性能和运行效率
+- 适合容器化和云原生部署
+
+### 模式切换
+
+在Maven中通过不同的依赖来切换模式：
+
+```xml
+<!-- 开发模式 -->
+<dependency>
+    <groupId>tech.smartboot.feat</groupId>
+    <artifactId>feat-cloud-aot-vm</artifactId>
+    <version>${feat.version}</version>
+</dependency>
+
+<!-- 生产模式 -->
+<dependency>
+    <groupId>tech.smartboot.feat</groupId>
+    <artifactId>feat-cloud-starter</artifactId>
+    <version>${feat.version}</version>
+</dependency>
+```
 
 <Aside type="tip">
-**实战建议**：在项目初期使用AOT VM模式快速开发和调试，在性能测试和生产部署阶段切换到AOT模式以获得最佳性能表现。
+**实战建议**：开发时使用AOT VM模式提高调试效率，部署时切换到AOT模式获得最佳性能。两种模式的API完全兼容，切换成本极低。
 </Aside>
