@@ -60,355 +60,100 @@ public class FeatCloudDemo {
 <img src={demo.src} alt="hello world" width="60%" className="shadow"/>
 
 
-## 工作原理
-从上面的代码可以看出，Feat Cloud 是基于注解的方式进行服务开发的。
-通常来说，框架会在运行时解析注解并生成对应的服务。
+## 核心特性
 
-但是，Feat Cloud 却是在编译时对代码进行静态分析，生成对应的服务。
-其核心原理是**运用了 APT（Annotation Processing Tool）技术，并结合 ServiceLoader 实现了 0 反射的服务加载机制**。
+Feat Cloud 是基于注解的方式进行服务开发，与传统框架在运行时解析注解不同，**Feat Cloud 在编译时对代码进行静态分析**，实现了以下核心优势：
 
+### 🚀 零反射架构
+- 运用 APT（Annotation Processing Tool）技术
+- 编译期生成优化代码，消除运行时反射开销
+- 结合 ServiceLoader 实现零配置服务加载
 
-### 1. 静态转码
-以 FeatCloudDemo 为例，开发人员编写的源代码在编译时经过一次静态转码，生成了一个新的 java 文件 `FeatCloudDemoCloudService.java`。
-<Tabs>
-    <TabItem label="源代码">
-        ``` java title=FeatCloudDemo.java
-        @Controller
-        public class FeatCloudDemo {
-            @RequestMapping("/cloud")
-            public String helloWorld() {
-                return "hello Feat Cloud";
-            }
+### ⚡ 极致性能
+- 启动时间 < 100ms
+- 极低内存占用
+- 高并发处理能力
 
-            public static void main(String[] args) {
-                FeatCloud.cloudServer().listen();
-            }
-        }
-        ```
-    </TabItem>
-    <TabItem label="静态转码">
-        ```java title=FeatCloudDemoCloudService.java
-        public class FeatCloudDemoCloudService extends AbstractCloudService {
-            private FeatCloudDemo bean;
+### 🔧 开发友好
+- 保持 SpringBoot 使用习惯
+- 支持 AOT 和 AOT VM 双模式
+- 完善的依赖注入和生命周期管理
 
-            public void loadBean(ApplicationContext applicationContext) throws Throwable {
-                bean = new FeatCloudDemo(); 
-            }
+<Aside type="tip">
+**深入了解技术原理**：想要了解 Feat Cloud 的 AOT 编译机制、代码生成过程等技术细节，请参考 [AOT 编译和 AOT 虚拟机](/feat/cloud/aot/) 章节。
+</Aside>
 
-            public void autowired(ApplicationContext applicationContext) throws Throwable {
-            }
+## 快速上手指南
 
-            public void router(ApplicationContext applicationContext, Router router) {
-                router.route("/cloud", ctx -> {
-                    String rst = bean.helloWorld();
-                    byte[] bytes = rst.getBytes("UTF-8");
-                    ctx.Response.setContentLength(bytes.length);
-                    ctx.Response.write(bytes);
-                });
-            }
+### 运行模式选择
 
-            public void destroy() throws Throwable {
-            }
+Feat Cloud 提供两种运行模式：
 
-            public void postConstruct(ApplicationContext applicationContext) throws Throwable {}
-            }
-        ```
-    </TabItem>
+- **AOT 模式**：适用于生产环境，极致性能，零反射
+- **AOT VM 模式**：适用于开发环境，保持热重载能力
 
-</Tabs>
+默认情况下，框架会自动选择合适的模式。开发阶段建议使用 AOT VM 模式以提高开发效率。
 
-可以从静态转码后的代码中看出，对于 bean 的实例化，是通过 `new` 关键字进行的，而不是通过反射。
+## Bean 生命周期管理
 
-对于路由的配置，也是通过调用 Feat Server 中的 Router 方法进行的，也不是通过反射。
-
-因此，**Feat Cloud 可以在提供优雅的开发体验的同时，也极大地保留了 Feat Server 框架的性能优势。**
-
-----
-### 2. 服务载入
-Controller 在编译时完成转码后，下一步便是需要在程序启动后能够被正确加载，此处需要用到的技术便是 `java.util.ServiceLoader`。
-
-Controller 静态转码所生成的类文件默认实现了 `tech.smartboot.feat.cloud.service.CloudService` 接口，同时会自动生成一个 service 文件：
-
-**`META-INF/services/tech.smartboot.feat.cloud.CloudService`**
-
-当调用 ApplicationContext@start 方法时：
-1. 首先通过 **ServiceLoader.load(CloudService.class)** 加载所有实现了 **CloudService** 接口的类。并根据 `isIgnore` 规则过滤出有效的服务。
-2. 遍历所有服务，调用其 `loadBean` 方法，完成 bean 的实例化。
-3. 遍历所有服务，调用其 `autowired` 方法，完成各实例的依赖注入。
-4. 遍历所有服务，调用其 `postConstruct` 方法，完成各实例的初始化。
-5. 遍历所有服务，调用其 `router` 方法，完成 Controller 路由的配置。
-
-<Tabs>
-    <TabItem label="ApplicationContext.java">
-
-        ```java title=ApplicationContext.java "ServiceLoader.load" "isIgnore(service)" "service.loadBean" "service.autowired" "service.postConstruct" "service.router"
-        public class ApplicationContext {
-
-            ...
-
-            public void start() throws Throwable {
-                for (CloudService service : ServiceLoader.load(CloudService.class)) {
-                    if (isIgnore(service)) {
-                        continue;
-                    }
-                    services.add(service);
-                }
-                for (CloudService service : services) {
-                    service.loadBean(this);
-                }
-
-                for (CloudService service : services) {
-                    service.autowired(this);
-                }
-                for (CloudService service : services) {
-                    service.postConstruct(this);
-                }
-                for (CloudService service : services) {
-                    service.router(this, router);
-                }
-            }
-
-            ...
-        }
-        ```
-    </TabItem>
-    <TabItem label="CloudService.java">
-        ```java title=CloudService.java
-        public interface CloudService {
-            void loadBean(ApplicationContext context) throws Throwable;
-
-            void autowired(ApplicationContext context);
-
-            void postConstruct(ApplicationContext context) throws Throwable;
-
-            void destroy() throws Throwable;
-
-            void router(ApplicationContext context, Router router);
-        }
-        ```
-    </TabItem>
-</Tabs>
-
-----
-
-### 3. 启动服务
-在这个步骤中，由于 `ApplicationContext@start` 中已经完成了所有服务的实例化、依赖注入、初始化、路由配置等工作，因此，最后一步便是将 Router 实例设置到 HttpServer 中，启动服务。
-
-```java title=Feat.java "application.start();" "application.destroy();" "application::destroy" "application.getRouter()"
-public static HttpServer cloudServer(Consumer<CloudOptions> options) {
-    CloudOptions opt = new CloudOptions();
-    options.accept(opt);
-    opt.serverName("feat-cloud");
-    ApplicationContext application = new ApplicationContext(opt);
-    opt.getExternalBeans().forEach(application::addBean);
-    application.start();
-
-    HttpServer server = Feat.httpServer(opt);
-    ...
-    server.httpHandler(application.getRouter());
-    return server;
-}
-```
-----
-
-### 4. 生命周期
-在 Feat Cloud 中对于托管的实例的生命周期管理可分为：**创建** -> **属性填充** -> **初始化** -> **使用** -> **销毁** 几个核心阶段。下图直观展示了 Bean 的完整生命周期流程：
+Feat Cloud 中对于托管的实例的生命周期管理分为：**创建** -> **属性填充** -> **初始化** -> **使用** -> **销毁** 几个核心阶段。
 
 <img src={lifecycle.src} alt="Feat Cloud 生命周期" width="100%" className="shadow"/>
 
+### 核心注解
 
-#### 创建实例
-Feat Cloud 通过 **@Bean** 和 **@Controller** 注解来定义实例对象。
-##### 方式1
-在某个 class 上添加注解 `@Bean`。Feat Cloud 启动时会自动创建该 Bean，bean 的名称默认为类名首字母小写。
-```java {1}
+#### @Bean / @Controller
+用于定义需要托管的实例对象。
+
+```java
 @Bean
-public class BeanDemo{
-
+public class UserService {
+    // 业务逻辑
 }
-```
-如果需要自定义 bean 的名称，可以通过 `value` 属性来指定。例如：@Bean("beanDemo2")
 
-```java {1}
-@Bean("beanDemo2")
-public class BeanDemo{
-
-}
-```
-
-@Controller 是一种特殊的 Bean，它没有 bean 名称的概念。
-我们认为一个 Controller 的核心功能就是提供 HTTP 服务，而不是成一个可被外部依赖的 bean 对象。
-```java {1}
 @Controller
-public class ControllerDemo{
-
-}
-```
-
-##### 方式2
-在 Bean/Controller 的中通过 `@Bean` 注解定义 Bean 方法。
-若未在 @Bean 中指定 bean 的名称，则默认为方法名。
-```java {3}
-@Bean
-public class BeanDemo{
-    @Bean
-    public BeanDemo beanDemo2(){
-        return new BeanDemo();
+public class UserController {
+    @RequestMapping("/users")
+    public String getUsers() {
+        return "users";
     }
 }
 ```
-##### 方式3
-服务启动时通过`addExternalBean`方法添加外部 Bean。
-```java "addExternalBean"
-public class FeatCloudDemo {
 
-    public static void main(String[] args) {
-        Feat.cloudServer(opts -> opts.registerBean("beanDemo", new BeanDemo()))
-            .listen();
-    }
-}
-```
-**注意：@Autowired、@PostConstruct、@PreDestroy 等注解的相关特性不在此类 Bean 中生效。**
+#### @Autowired
+用于依赖注入，支持循环依赖。
 
-#### @Autowired：属性填充
-
-该注解用于填充 Bean 或者 Controller 的属性，类似于 Spring 中的 `@Autowired`。
-
-**注意：Feat Cloud 在处理 @Autowired 注解时，会优先寻找对应的 setter 方法，如果没有找到，则会通过反射方式直接注入属性值。**
-```java "@Autowired" "setHello"
+```java
 @Bean
-public class FeatBeanDemo {
+public class UserController {
     @Autowired
-    private String hello;
-
-    public static void main(String[] args) {
-        Feat.cloudServer(opts -> opts.registerBean("hello", "你好~")).listen();
-    }
-
-    public void setHello(String hello) {
-        this.hello = hello;
+    private UserService userService;  // 自动注入
+    
+    // setter 方法（可选）
+    public void setUserService(UserService userService) {
+        this.userService = userService;
     }
 }
 ```
-#### @PostConstruct：初始化
 
-同 Spring 中的 `@PostConstruct` 注解，在 Bean 完成实例化和属性填充后被调用。
-```java "@PostConstruct"
+#### @PostConstruct / @PreDestroy
+用于生命周期管理。
+
+```java
 @Bean
-public class FeatBeanDemo {
-    @Autowired
-    private String hello;
-
+public class DatabaseService {
     @PostConstruct
     public void init() {
-        System.out.println(hello);
+        // 初始化数据库连接
     }
-
-    public static void main(String[] args) {
-        Feat.cloudServer(opts -> opts.addExternalBean("hello", "你好~")).listen();
-    }
-
-    public void setHello(String hello) {
-        this.hello = hello;
-    }
-}
-```
-#### 使用 Bean
-
-在 Feat Cloud 中，可以通过 `@Autowired` 注解来注入和使用其他 Bean。Bean 之间可以相互依赖，形成依赖关系图。
-
-```java "@Autowired" "otherBean"
-@Bean
-public class BeanDemo {
-    @Autowired
-    private OtherBean otherBean;
-
-    public void useOtherBean() {
-        // 使用注入的 otherBean
-        otherBean.doSomething();
-    }
-
-    public void setOtherBean(OtherBean otherBean) {
-        this.otherBean = otherBean;
-    }
-}
-
-@Bean
-public class OtherBean {
-    public void doSomething() {
-        System.out.println("OtherBean is doing something");
-    }
-}
-```
-
-##### 循环依赖
-
-Feat Cloud 支持 Bean 之间的循环依赖。当两个或多个 Bean 相互依赖时，Feat Cloud 能够正确处理这种情况，确保所有 Bean 都能正确初始化。
-
-```java "beanA" "beanB"
-@Bean
-public class BeanA {
-    @Autowired
-    private BeanB beanB;
-
-    public void setBeaB(BeanB beanB) {
-        this.beanB = beanB;
-    }
-}
-
-@Bean
-public class BeanB {
-    @Autowired
-    private BeanA beanA;
-
-    public void setBeanA(BeanA beanA) {
-        this.beanA = beanA;
-    }
-}
-```
-
-##### Bean 的作用域
-
-目前 Feat Cloud 中的 Bean 默认都是单例的，即在整个应用中只有一个实例。这意味着无论在哪里注入这个 Bean，获取到的都是同一个实例。
-
-#### @PreDestroy：销毁
-
-@PreDestroy 作用于 Bean 或者 Controller 内部 public 方法上，类似于 Spring 中的 `@PreDestroy`。当应用关闭时，Feat Cloud 会调用标记了 @PreDestroy 注解的方法，以便 Bean 可以释放资源或执行其他清理操作。
-
-```java "@PreDestroy" "destroy"
-@Bean
-public class ResourceBean {
-    private Resource resource;
-
-    @PostConstruct
-    public void init() {
-        // 初始化资源
-        resource = new Resource();
-        System.out.println("资源已初始化");
-    }
-
+    
     @PreDestroy
     public void destroy() {
         // 释放资源
-        if (resource != null) {
-            resource.close();
-            System.out.println("资源已释放");
-        }
-    }
-
-    // 资源类示例
-    private class Resource {
-        public void close() {
-            // 关闭资源的逻辑
-        }
     }
 }
 ```
 
-##### 销毁时机
-
-当以下情况发生时，@PreDestroy 注解的方法会被调用：
-
-1. 应用正常关闭时（如调用 `System.exit()`）
-2. 通过 JVM 的 shutdown hook 关闭应用时
-3. 在 Feat Cloud 中，当调用 `server.shutdown()` 方法时
+<Aside type="note">
+**注意**：所有 Bean 默认都是单例的，在整个应用中只有一个实例。
+</Aside>
