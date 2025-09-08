@@ -83,6 +83,11 @@ public final class JsonSerializer {
             printWriter.println(headBlank(i) + "}");
             return;
         }
+        if (typeMirror.toString().equals(Void.class.getName())) {
+            printWriter.println(headBlank(i) + "//void类型按null处理");
+            printWriter.println(headBlank(i) + "os.write(b_null);");
+            return;
+        }
         if (typeMirror instanceof ArrayType) {
             printWriter.println(headBlank(i) + "if (" + obj + " == null) {");
             printWriter.append(headBlank(i + 1));
