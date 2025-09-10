@@ -182,6 +182,8 @@ final class ControllerSerializer extends AbstractSerializer {
                         params.append("ctx.Response");
                     } else if (param.asType().toString().equals(Session.class.getName())) {
                         params.append("ctx.session()");
+                    } else if (param.asType().toString().equals(Context.class.getName())) {
+                        params.append("ctx");
                     } else if (param.getAnnotation(PathParam.class) != null) {
                         PathParam pathParam = param.getAnnotation(PathParam.class);
                         params.append("ctx.pathParam(\"" + pathParam.value() + "\")");
