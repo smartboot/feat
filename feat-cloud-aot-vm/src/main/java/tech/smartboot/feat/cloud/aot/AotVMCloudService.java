@@ -176,6 +176,16 @@ public class AotVMCloudService extends AbstractCloudService {
                     for (int i = 0; i < parameters.length; i++) {
                         String paramName = parameters[i].getName();
                         if (FeatUtils.startsWith(paramName, "arg")) {
+                            System.err.println("方法参数名称无法解析，请确保已开启maven-compiler-plugin的parameters选项");
+                            System.err.println("示例配置:");
+                            System.err.println("<plugin>");
+                            System.err.println("    <groupId>org.apache.maven.plugins</groupId>");
+                            System.err.println("    <artifactId>maven-compiler-plugin</artifactId>");
+                            System.err.println("    <configuration>");
+                            System.err.println("\033[1;31m        <parameters>true</parameters>\033[0m");
+                            System.err.println("    </configuration>");
+                            System.err.println("</plugin>");
+
                             throw new FeatException("方法参数名称无法解析，请确保已开启maven-compiler-plugin的parameters选项");
                         }
                         args[i] = context.getBean(paramName);
