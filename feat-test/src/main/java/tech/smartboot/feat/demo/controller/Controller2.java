@@ -15,6 +15,7 @@ import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.PathParam;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.core.server.Session;
+import tech.smartboot.feat.router.Context;
 
 import java.util.Arrays;
 import java.util.List;
@@ -59,6 +60,11 @@ public class Controller2 {
 
     @RequestMapping("/objects")
     public Object[] objects() {
+        return null;
+    }
+
+    @RequestMapping("/context")
+    public Object[] context(Context content) {
         return null;
     }
 }

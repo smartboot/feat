@@ -42,6 +42,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -112,19 +113,23 @@ public class AotVMCloudService extends AbstractCloudService {
                     });
                     mcpServers.put(constructorBean, mcpServer);
                 }
-            } else if (clazz.isAnnotationPresent(Mapper.class)) {
-                Object bean = Proxy.newProxyInstance(clazz.getClassLoader(), new Class[]{clazz}, (proxy, method, args) -> {
-                    SqlSessionFactory sqlSessionFactory = context.getBean("sqlSessionFactory");
-                    try (SqlSession session = sqlSessionFactory.openSession(true)) {
-                        return method.invoke(session.getMapper(clazz), args);
-                    }
-                });
-                mappers.add(bean);
-                context.addBean(clazz.getSimpleName().substring(0, 1).toLowerCase() + clazz.getSimpleName().substring(1), bean);
             } else if (clazz.isAnnotationPresent(McpEndpoint.class)) {
                 throw new RuntimeException("@McpEndpoint can only be used with @Controller!");
             }
         }
+        controllers.forEach(controller -> initMethodBean(context, controller));
+        beans.forEach(bean -> initMethodBean(context, bean));
+
+        classes.stream().filter(clazz -> clazz.isAnnotationPresent(Mapper.class)).forEach(clazz -> {
+            SqlSessionFactory sqlSessionFactory = context.getBean("sessionFactory");
+            Object bean = Proxy.newProxyInstance(clazz.getClassLoader(), new Class[]{clazz}, (proxy, method, args) -> {
+                try (SqlSession session = sqlSessionFactory.openSession(true)) {
+                    return method.invoke(session.getMapper(clazz), args);
+                }
+            });
+            mappers.add(bean);
+            context.addBean(clazz.getSimpleName().substring(0, 1).toLowerCase() + clazz.getSimpleName().substring(1), bean);
+        });
     }
 
     @Override
@@ -132,19 +137,9 @@ public class AotVMCloudService extends AbstractCloudService {
         List<Object> list = new ArrayList<>();
         list.addAll(controllers);
         list.addAll(beans);
-        for (Object bean : list) {
-            for (Method method : bean.getClass().getDeclaredMethods()) {
-                Bean beanAnnotation = method.getAnnotation(Bean.class);
-                if (beanAnnotation != null) {
-                    Object o = method.invoke(bean);
-                    if (FeatUtils.isNotBlank(beanAnnotation.value())) {
-                        context.addBean(beanAnnotation.value(), o);
-                    } else {
-                        context.addBean(method.getReturnType().getSimpleName().substring(0, 1).toLowerCase() + method.getReturnType().getSimpleName().substring(1), o);
-                    }
-                }
-            }
-        }
+//        for (Object bean : list) {
+//            initMethodBean(context, bean);
+//        }
 
         for (Object bean : list) {
             for (Field field : bean.getClass().getDeclaredFields()) {
@@ -159,6 +154,38 @@ public class AotVMCloudService extends AbstractCloudService {
                     reflectAutowired(bean, field.getName(), loadBean(field.getName(), context));
                 }
 
+            }
+        }
+    }
+
+    private static void initMethodBean(ApplicationContext context, Object bean) {
+        for (Method method : bean.getClass().getDeclaredMethods()) {
+            Bean beanAnnotation = method.getAnnotation(Bean.class);
+            if (beanAnnotation != null) {
+                try {
+                    Object o;
+                    // 检查方法是否有参数
+                    if (method.getParameterCount() > 0) {
+                        // 创建参数数组，从ApplicationContext中获取相应的bean
+                        Object[] args = new Object[method.getParameterCount()];
+                        java.lang.reflect.Parameter[] parameters = method.getParameters();
+                        for (int i = 0; i < parameters.length; i++) {
+                            String paramName = parameters[i].getName();
+                            args[i] = context.getBean(paramName);
+                        }
+                        o = method.invoke(bean, args);
+                    } else {
+                        // 原有逻辑，无参数方法
+                        o = method.invoke(bean);
+                    }
+                    if (FeatUtils.isNotBlank(beanAnnotation.value())) {
+                        context.addBean(beanAnnotation.value(), o);
+                    } else {
+                        context.addBean(method.getName(), o);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
@@ -254,15 +281,34 @@ public class AotVMCloudService extends AbstractCloudService {
 
     private List<Class> scanBean(List<Class> annotations) {
         List<Class> classes = new ArrayList<>();
-        String packagePath = "./";
         try {
-            Enumeration<URL> resources = Thread.currentThread().getContextClassLoader().getResources(packagePath);
-            while (resources.hasMoreElements()) {
-                URL resource = resources.nextElement();
-                if (resource.getProtocol().equals("file")) {
-                    scanClassesInDirectory("", new File(resource.getFile()), classes, annotations);
-                } else if (resource.getProtocol().equals("jar")) {
-                    scanClassesInJar(resource, "", classes, annotations);
+            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+            // 处理URLClassLoader的特殊情况
+            if (classLoader instanceof URLClassLoader) {
+                URLClassLoader urlClassLoader = (URLClassLoader) classLoader;
+                // 直接获取URLClassLoader中的所有URL
+                URL[] urls = urlClassLoader.getURLs();
+
+                for (URL url : urls) {
+                    String protocol = url.getProtocol();
+
+                    if (protocol.equals("file")) {
+                        scanClassesInDirectory("", new File(url.getFile()), classes, annotations);
+                    } else if (protocol.equals("jar")) {
+                        scanClassesInJar(url, "", classes, annotations);
+                    }
+                }
+            } else {
+                // 非URLClassLoader，使用常规方法
+                Enumeration<URL> rootUrls = classLoader.getResources("");
+                while (rootUrls.hasMoreElements()) {
+                    URL url = rootUrls.nextElement();
+                    // 处理逻辑与之前相同...
+                    if (url.getProtocol().equals("file")) {
+                        scanClassesInDirectory("", new File(url.getFile()), classes, annotations);
+                    } else if (url.getProtocol().equals("jar")) {
+                        scanClassesInJar(url, "", classes, annotations);
+                    }
                 }
             }
         } catch (IOException e) {
@@ -274,6 +320,21 @@ public class AotVMCloudService extends AbstractCloudService {
 
     private void scanClassesInDirectory(String packageName, File directory, List<Class> classes, List<Class> annotations) {
         if (!directory.exists()) {
+            return;
+        }
+        if (directory.isFile() && directory.getName().endsWith(".jar")) {
+            try (JarFile jarFile = new JarFile(directory)) {
+                Enumeration<JarEntry> entries = jarFile.entries();
+                while (entries.hasMoreElements()) {
+                    JarEntry entry = entries.nextElement();
+                    if (entry.getName().startsWith(packageName) && entry.getName().endsWith(".class")) {
+                        String className = entry.getName().replace('/', '.').substring(0, entry.getName().length() - 6);
+                        checkAndAddClass(className, classes, annotations);
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             return;
         }
         File[] files = directory.listFiles();
@@ -319,7 +380,7 @@ public class AotVMCloudService extends AbstractCloudService {
                     break;
                 }
             }
-        } catch (ClassNotFoundException e) {
+        } catch (ClassNotFoundException | UnsupportedClassVersionError | NoClassDefFoundError e) {
             // 忽略无法加载的类
         }
     }
