@@ -29,6 +29,7 @@ import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.cloud.annotation.RequestMethod;
 import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
 import tech.smartboot.feat.core.common.FeatUtils;
+import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.router.Context;
 import tech.smartboot.feat.router.Interceptor;
 import tech.smartboot.feat.router.Router;
@@ -117,8 +118,12 @@ public class AotVMCloudService extends AbstractCloudService {
                 throw new RuntimeException("@McpEndpoint can only be used with @Controller!");
             }
         }
-        controllers.forEach(controller -> initMethodBean(context, controller));
-        beans.forEach(bean -> initMethodBean(context, bean));
+        for (Object controller : controllers) {
+            initMethodBean(context, controller);
+        }
+        for (Object o : beans) {
+            initMethodBean(context, o);
+        }
 
         classes.stream().filter(clazz -> clazz.isAnnotationPresent(Mapper.class)).forEach(clazz -> {
             SqlSessionFactory sqlSessionFactory = context.getBean("sessionFactory");
@@ -158,33 +163,32 @@ public class AotVMCloudService extends AbstractCloudService {
         }
     }
 
-    private static void initMethodBean(ApplicationContext context, Object bean) {
+    private static void initMethodBean(ApplicationContext context, Object bean) throws InvocationTargetException, IllegalAccessException {
         for (Method method : bean.getClass().getDeclaredMethods()) {
             Bean beanAnnotation = method.getAnnotation(Bean.class);
             if (beanAnnotation != null) {
-                try {
-                    Object o;
-                    // 检查方法是否有参数
-                    if (method.getParameterCount() > 0) {
-                        // 创建参数数组，从ApplicationContext中获取相应的bean
-                        Object[] args = new Object[method.getParameterCount()];
-                        java.lang.reflect.Parameter[] parameters = method.getParameters();
-                        for (int i = 0; i < parameters.length; i++) {
-                            String paramName = parameters[i].getName();
-                            args[i] = context.getBean(paramName);
+                Object o;
+                // 检查方法是否有参数
+                if (method.getParameterCount() > 0) {
+                    // 创建参数数组，从ApplicationContext中获取相应的bean
+                    Object[] args = new Object[method.getParameterCount()];
+                    java.lang.reflect.Parameter[] parameters = method.getParameters();
+                    for (int i = 0; i < parameters.length; i++) {
+                        String paramName = parameters[i].getName();
+                        if (FeatUtils.startsWith(paramName, "arg")) {
+                            throw new FeatException("方法参数名称无法解析，请确保已开启maven-compiler-plugin的parameters选项");
                         }
-                        o = method.invoke(bean, args);
-                    } else {
-                        // 原有逻辑，无参数方法
-                        o = method.invoke(bean);
+                        args[i] = context.getBean(paramName);
                     }
-                    if (FeatUtils.isNotBlank(beanAnnotation.value())) {
-                        context.addBean(beanAnnotation.value(), o);
-                    } else {
-                        context.addBean(method.getName(), o);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
+                    o = method.invoke(bean, args);
+                } else {
+                    // 原有逻辑，无参数方法
+                    o = method.invoke(bean);
+                }
+                if (FeatUtils.isNotBlank(beanAnnotation.value())) {
+                    context.addBean(beanAnnotation.value(), o);
+                } else {
+                    context.addBean(method.getName(), o);
                 }
             }
         }
