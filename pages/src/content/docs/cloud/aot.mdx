@@ -186,9 +186,7 @@ graph LR
 
 ## AOT虚拟机
 
-**AOT 虚拟机**(AOT VM) 模式专为开发阶段设计，通过`AotVMCloudService`在运行时模拟AOT编译行为，提供与AOT模式一致的API体验。
-
-### 运行机制
+**AOT VM模式**专为开发阶段设计，通过运行时反射模拟AOT编译行为，提供与AOT模式一致的API体验。
 
 <Mermaid code={`
 flowchart TD
@@ -203,23 +201,6 @@ flowchart TD
     G --> H[运行时请求处理]
 `} />
 
-### 实际使用示例
-
-```java title="NoneAotCloudServiceTest.java"
-// 创建AOT VM服务
-AotVMCloudService noneAotService = new AotVMCloudService();
-
-// 配置包扫描路径
-CloudOptions options = new CloudOptions();
-options.setPackages("tech.smartboot.feat.cloud.test");
-ApplicationContext context = new ApplicationContext(options);
-
-// 手动执行服务初始化流程
-noneAotService.loadBean(context);
-noneAotService.autowired(context);
-noneAotService.postConstruct(context);
-noneAotService.router(context, router);
-```
 
 ### 生命周期管理
 
@@ -255,92 +236,59 @@ stateDiagram-v2
 
 | 特性 | AOT模式 | AOT VM模式 |
 |------|---------|------------|
-| **编译期优化** | ✅ 完全静态生成 | ❌ 运行时处理 |
-| **启动性能** | 🚀 毫秒级启动 | ⚡ 快速启动 |
-| **运行性能** | 🚀 最优 | ⚡ 良好 |
-| **开发体验** | 🔧 需重编译 | 🔄 支持热重载 |
+| **编译期优化** | ✅ 静态生成 | ❌ 运行时处理 |
+| **启动性能** | 🚀 毫秒级 | ⚡ 快速 |
+| **开发体验** | 🔧 需重编译 | 🔄 热重载 |
 | **适用场景** | 🏭 生产环境 | 🧪 开发测试 |
-
-### 模式选择建议
-
-Feat框架的双模式设计为不同场景提供了最优解决方案：
-
-**开发阶段：**
-- 使用AOT VM模式（`feat-cloud-aot-vm`依赖）
-- 支持热重载和快速调试
-- 无需重编译即可看到代码更改效果
-
-**生产部署：**
-- 使用AOT模式（`feat-cloud-starter`依赖）
-- 获得最佳的启动性能和运行效率
-- 适合容器化和云原生部署
-
-**模式切换：**
-
-```xml
-<!-- 开发模式 -->
-<dependency>
-    <groupId>tech.smartboot.feat</groupId>
-    <artifactId>feat-cloud-aot-vm</artifactId>
-    <version>${feat.version}</version>
-</dependency>
-
-<!-- 生产模式 -->
-<dependency>
-    <groupId>tech.smartboot.feat</groupId>
-    <artifactId>feat-cloud-starter</artifactId>
-    <version>${feat.version}</version>
-</dependency>
-```
-
-<Aside type="tip">
-**实战建议**：开发时使用AOT VM模式提高调试效率，部署时切换到AOT模式获得最佳性能。两种模式的API完全兼容，切换成本极低。
-</Aside>
 
 ### 启用AOT VM模式
 
 要启用AOT VM模式，需要对Maven项目进行以下配置：
 
-首先，在`maven-compiler-plugin`中添加以下配置：
+1. 在`maven-compiler-plugin`中添加配置：
 
-```xml
-<plugin>
-    <groupId>org.apache.maven.plugins</groupId>
-    <artifactId>maven-compiler-plugin</artifactId>
-    <configuration>
-        <parameters>true</parameters>
-    </configuration>
-</plugin>
-```
+    ```xml
+    <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+            <parameters>true</parameters>
+        </configuration>
+    </plugin>
+    ```
 
-然后，添加以下profiles配置：
+2. 添加profiles配置：
 
-```xml
-<profiles>
-    <profile>
-        <id>feat-aot-vm</id>
-        <dependencies>
-            <dependency>
-                <groupId>tech.smartboot.feat</groupId>
-                <artifactId>feat-cloud-starter</artifactId>
-                <version>${feat.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>tech.smartboot.feat</groupId>
-                        <artifactId>feat-cloud-aot</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>tech.smartboot.feat</groupId>
-                <artifactId>feat-cloud-aot-vm</artifactId>
-                <version>${feat.version}</version>
-            </dependency>
-        </dependencies>
-    </profile>
-</profiles>
-```
+    ```xml
+    <profiles>
+        <profile>
+            <id>feat-aot-vm</id>
+            <dependencies>
+                <dependency>
+                    <groupId>tech.smartboot.feat</groupId>
+                    <artifactId>feat-cloud-starter</artifactId>
+                    <version>${feat.version}</version>
+                    <exclusions>
+                        <exclusion>
+                            <groupId>tech.smartboot.feat</groupId>
+                            <artifactId>feat-cloud-aot</artifactId>
+                        </exclusion>
+                    </exclusions>
+                </dependency>
+                <dependency>
+                    <groupId>tech.smartboot.feat</groupId>
+                    <artifactId>feat-cloud-aot-vm</artifactId>
+                    <version>${feat.version}</version>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
+    ```
 
-最后， 在 IDEA 中勾选相应的 profile 以激活该 AOT VM 模式：
+3. 在IDEA中勾选相应的profile以激活AOT VM模式
+    ![](./img/idea_aot_vm.png)
 
-![](./img/idea_aot_vm.png)
+
+<Aside type="tip">
+    **实战建议**：开发时使用AOT VM模式提高调试效率，部署时切换到AOT模式获得最佳性能。两种模式的API完全兼容，切换成本极低。
+</Aside>
