@@ -296,3 +296,51 @@ Feat框架的双模式设计为不同场景提供了最优解决方案：
 <Aside type="tip">
 **实战建议**：开发时使用AOT VM模式提高调试效率，部署时切换到AOT模式获得最佳性能。两种模式的API完全兼容，切换成本极低。
 </Aside>
+
+### 启用AOT VM模式
+
+要启用AOT VM模式，需要对Maven项目进行以下配置：
+
+首先，在`maven-compiler-plugin`中添加以下配置：
+
+```xml
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <configuration>
+        <parameters>true</parameters>
+    </configuration>
+</plugin>
+```
+
+然后，添加以下profiles配置：
+
+```xml
+<profiles>
+    <profile>
+        <id>feat-aot-vm</id>
+        <dependencies>
+            <dependency>
+                <groupId>tech.smartboot.feat</groupId>
+                <artifactId>feat-cloud-starter</artifactId>
+                <version>${feat.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>tech.smartboot.feat</groupId>
+                        <artifactId>feat-cloud-aot</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>tech.smartboot.feat</groupId>
+                <artifactId>feat-cloud-aot-vm</artifactId>
+                <version>${feat.version}</version>
+            </dependency>
+        </dependencies>
+    </profile>
+</profiles>
+```
+
+最后， 在 IDEA 中勾选相应的 profile 以激活该 AOT VM 模式：
+
+![](./img/idea_aot_vm.png)
