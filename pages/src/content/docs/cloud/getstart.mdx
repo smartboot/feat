@@ -17,6 +17,31 @@ Feat Cloud 提供了一种面向企业级应用开发的解决方案，类似于
 
 **技术方面**：Feat Cloud 在编译期对代码进行静态分析，最大化提升服务运行性能，降低资源消耗。
 
+## 核心特性
+
+Feat Cloud 是基于注解的服务开发框架，与传统框架在运行时解析注解不同，**Feat Cloud 在编译时对代码进行静态分析**，实现以下核心优势：
+
+### 🚀 AOT 编译优化
+- 运用 APT（Annotation Processing Tool）技术
+- 编译期生成优化代码，消除运行时反射开销
+- 结合 ServiceLoader 实现零配置服务加载
+
+### ⚡ 高性能特性
+- 快速启动：无需类扫描和注解解析
+- 低内存占用：减少运行时元数据缓存
+- 高并发处理能力：基于 smart-socket 的异步非阻塞网络通信
+
+### 🔧 开发友好
+- 保持 SpringBoot 使用习惯
+- 支持 **AOT** 和 **AOT虚拟机** 双模式
+- 完善的依赖注入和生命周期管理
+
+<Aside type="tip">
+    **深入了解技术原理**：想要了解 Feat Cloud 的 AOT 编译机制、代码生成过程等技术细节，请参考 [AOT 编译和 AOT 虚拟机](/feat/cloud/aot/) 章节。
+</Aside>
+
+
+
 ## 准备工作
 
 ### 引入 Maven 依赖
@@ -40,6 +65,12 @@ Feat Cloud 提供了一种面向企业级应用开发的解决方案，类似于
 勾选`Delegate IDE build/run actions to Maven` 并点击 `OK` 保存配置。
 
 <img src={idea_setting.src} alt="hello world" width="60%" className="shadow"/>
+<Aside type="tip">
+    这是一种比较常规的配置方式，确保了本地开发环境与正式生产环境的代码一致性。
+    虽然程序拥有极高的运行效率，但每次运行都需要进行全量 AOT 编译，无法享受 IDEA 自动增量编译带来的便利性，一定程度上损失了开发体验。
+    此时可考虑启用 [AOT 虚拟机](/feat/cloud/aot/#aot虚拟机) 改善本地开发体验。
+</Aside>
+
 
 ## 快速启动
 在 Maven 工程中创建一个 `FeatCloudDemo.java` 文件，添加以下代码：
@@ -59,27 +90,4 @@ public class FeatCloudDemo {
 启动程序，打开浏览器访问 `http://localhost:8080/cloud`。
 <img src={demo.src} alt="hello world" width="60%" className="shadow"/>
 
-
-## 核心特性
-
-Feat Cloud 是基于注解的服务开发框架，与传统框架在运行时解析注解不同，**Feat Cloud 在编译时对代码进行静态分析**，实现以下核心优势：
-
-### 🚀 AOT 编译优化
-- 运用 APT（Annotation Processing Tool）技术
-- 编译期生成优化代码，消除运行时反射开销
-- 结合 ServiceLoader 实现零配置服务加载
-
-### ⚡ 高性能特性
-- 快速启动：无需类扫描和注解解析
-- 低内存占用：减少运行时元数据缓存
-- 高并发处理能力：基于 smart-socket 的异步非阻塞网络通信
-
-### 🔧 开发友好
-- 保持 SpringBoot 使用习惯
-- 支持 **AOT** 和 **AOT虚拟机** 双模式
-- 完善的依赖注入和生命周期管理
-
-<Aside type="tip">
-**深入了解技术原理**：想要了解 Feat Cloud 的 AOT 编译机制、代码生成过程等技术细节，请参考 [AOT 编译和 AOT 虚拟机](/feat/cloud/aot/) 章节。
-</Aside>
 
