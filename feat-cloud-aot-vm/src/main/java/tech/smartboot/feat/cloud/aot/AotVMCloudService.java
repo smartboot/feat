@@ -30,6 +30,8 @@ import tech.smartboot.feat.cloud.annotation.RequestMethod;
 import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.exception.FeatException;
+import tech.smartboot.feat.core.common.logging.Logger;
+import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.router.Context;
 import tech.smartboot.feat.router.Interceptor;
 import tech.smartboot.feat.router.Router;
@@ -59,6 +61,7 @@ import java.util.jar.JarFile;
  * @version v1.0 9/4/25
  */
 public class AotVMCloudService extends AbstractCloudService {
+    private static final Logger logger = LoggerFactory.getLogger(AotVMCloudService.class);
     private List<Object> beans = new ArrayList<>();
     private List<Object> controllers = new ArrayList<>();
     private List<Object> mappers = new ArrayList<>();
@@ -249,6 +252,7 @@ public class AotVMCloudService extends AbstractCloudService {
                     RouterHandler handler = new RouterHandler() {
                         @Override
                         public void handle(Context ctx) throws Throwable {
+                            logger.warn("当前请求正处于AOT虚拟机模式运行，请勿在生产环境中使用！request: {} controller: {} method: {}", ctx.Request.getRequestURI(), controllerInstance.getClass().getSimpleName(), methodInstance.getName());
                             invokeControllerMethod(controllerInstance, methodInstance, ctx);
                         }
                     };
