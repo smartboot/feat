@@ -11,6 +11,9 @@
 package tech.smartboot.feat.cloud.aot;
 
 import tech.smartboot.feat.cloud.annotation.Bean;
+import tech.smartboot.feat.cloud.annotation.InterceptorMapping;
+import tech.smartboot.feat.cloud.annotation.RequestMapping;
+import tech.smartboot.feat.core.common.exception.FeatException;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
@@ -23,6 +26,14 @@ import java.io.IOException;
 final class BeanSerializer extends AbstractSerializer {
     public BeanSerializer(ProcessingEnvironment processingEnv, String config, Element element) throws IOException {
         super(processingEnv, config, element);
+        for (Element e : element.getEnclosedElements()) {
+            if (e.getAnnotation(InterceptorMapping.class) != null) {
+                throw new FeatException("Bean can not be used with InterceptorMapping");
+            }
+            if (e.getAnnotation(RequestMapping.class) != null) {
+                throw new FeatException("Bean can not be used with RequestMapping");
+            }
+        }
     }
 
 
