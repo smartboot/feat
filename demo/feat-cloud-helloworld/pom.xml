@@ -15,12 +15,12 @@
         <dependency>
             <groupId>tech.smartboot.feat</groupId>
             <artifactId>feat-cloud-starter</artifactId>
-            <version>1.2.2</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>tech.smartboot.feat</groupId>
             <artifactId>feat-cloud-aot</artifactId>
-            <version>1.2.2</version>
+            <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
