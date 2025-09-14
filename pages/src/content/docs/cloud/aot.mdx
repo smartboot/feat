@@ -227,36 +227,30 @@ stateDiagram-v2
 
 要启用AOT VM模式，需要对Maven项目进行以下配置：
 
-1. 在`maven-compiler-plugin`中添加配置：
-
-    ```xml
-    <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-            <parameters>true</parameters>
-        </configuration>
-    </plugin>
-    ```
-
-2. 添加profiles配置：
+1. 添加profiles配置：
 
     ```xml
     <profiles>
         <profile>
             <id>feat-aot-vm</id>
+            <properties>
+                <!-- 必须为true,以便 AOT VM 运行时识别方法参数名 -->
+                <maven.compiler.parameters>true</maven.compiler.parameters>
+            </properties>
             <dependencies>
                 <dependency>
                     <groupId>tech.smartboot.feat</groupId>
                     <artifactId>feat-cloud-starter</artifactId>
                     <version>${feat.version}</version>
                     <exclusions>
+                        <!-- 禁用 AOT 组件 -->
                         <exclusion>
                             <groupId>tech.smartboot.feat</groupId>
                             <artifactId>feat-cloud-aot</artifactId>
                         </exclusion>
                     </exclusions>
                 </dependency>
+                <!-- 启用 AOT VM 组件 -->
                 <dependency>
                     <groupId>tech.smartboot.feat</groupId>
                     <artifactId>feat-cloud-aot-vm</artifactId>
@@ -267,7 +261,7 @@ stateDiagram-v2
     </profiles>
     ```
 
-3. 在IDEA中勾选相应的profile以激活AOT VM模式
+2. 在IDEA中勾选相应的profile以激活AOT VM模式
     ![](./img/idea_aot_vm.png)
 
 
