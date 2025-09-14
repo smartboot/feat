@@ -1,0 +1,899 @@
+---
+// LicenseGenerator.astro - Feat框架License生成器
+---
+
+<div class="license-generator">
+    <div class="generator-header">
+        <h2>🔐 Feat License 生成器</h2>
+        <p>为 Feat 框架生成商业授权许可证</p>
+    </div>
+
+    <div class="form-section">
+        <div class="input-group">
+            <label for="licenseName">授权对象名称:</label>
+            <input 
+                type="text" 
+                id="licenseName" 
+                placeholder="请输入授权对象名称，如：smartboot开源组织"
+                value="smartboot开源组织"
+            />
+        </div>
+
+        <div class="input-group">
+            <label for="licenseNumber">许可证编号:</label>
+            <div class="input-with-button">
+                <input 
+                    type="text" 
+                    id="licenseNumber" 
+                    placeholder="企业统一社会信用代码或开源项目仓库地址，如：91110000123456789X 或 github.com/smartboot/feat"
+                />
+                <button id="autoGenerateBtn" class="auto-generate-btn">时间编号</button>
+            </div>
+            <div class="license-examples">
+                <span class="example-label">示例：</span>
+                <code class="example-code">91110000123456789X</code>（统一社会信用代码）
+                <code class="example-code">github.com/smartboot/feat</code>（仓库地址）
+                <code class="example-code">20241201000001</code>（时间编号）
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button id="generateBtn" class="generate-btn">生成许可证</button>
+            <button id="verifyBtn" class="verify-btn" disabled>验证许可证</button>
+        </div>
+    </div>
+
+    <div class="results-section" id="resultsSection" style="display: none;">
+        <div class="result-group">
+            <h3>📋 feat_users.yaml 配置:</h3>
+            <pre id="featUsersConfig" class="config-output"></pre>
+            <button class="copy-btn" data-target="featUsersConfig">复制</button>
+        </div>
+
+        <div class="result-group">
+            <h3>⚙️ feat.yml 配置:</h3>
+            <pre id="featYmlConfig" class="config-output"></pre>
+            <button class="copy-btn" data-target="featYmlConfig">复制</button>
+        </div>
+
+        <div class="result-group">
+            <h3>🔑 密钥信息:</h3>
+            <div class="key-info">
+                <div class="key-item">
+                    <label>公钥 (Public Key):</label>
+                    <textarea id="publicKey" readonly></textarea>
+                    <button class="copy-btn" data-target="publicKey">复制</button>
+                </div>
+                <div class="key-item">
+                    <label>私钥 (Private Key) - 请妥善保管:</label>
+                    <textarea id="privateKey" readonly></textarea>
+                    <button class="copy-btn" data-target="privateKey">复制</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="verification-section" id="verificationSection">
+            <h3>✅ 验证结果:</h3>
+            <div id="verificationResult" class="verification-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🧪 兼容性测试:</h3>
+            <p class="test-description">使用默认测试数据 "smartboot开源组织" 验证与Java版本的兼容性</p>
+            <button id="testBtn" class="test-btn">运行兼容性测试</button>
+            <div id="testResult" class="test-result" style="display: none;"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+import { ec as EC } from 'elliptic';
+
+class LicenseGenerator {
+    constructor() {
+        this.ec = new EC('p256');
+        this.keyPair = null;
+        this.signature = null;
+        this.licenseName = '';
+        this.licenseNumber = '';
+        
+        this.initEventListeners();
+        this.generateLicenseNumber();
+    }
+
+    initEventListeners() {
+        const generateBtn = document.getElementById('generateBtn');
+        const verifyBtn = document.getElementById('verifyBtn');
+        const testBtn = document.getElementById('testBtn');
+        const autoGenerateBtn = document.getElementById('autoGenerateBtn');
+        const copyBtns = document.querySelectorAll('.copy-btn');
+        const licenseNameInput = document.getElementById('licenseName');
+        const licenseNumberInput = document.getElementById('licenseNumber');
+
+        generateBtn?.addEventListener('click', () => this.generateLicense());
+        verifyBtn?.addEventListener('click', () => this.verifyLicense());
+        testBtn?.addEventListener('click', () => this.runCompatibilityTest());
+        autoGenerateBtn?.addEventListener('click', () => this.generateLicenseNumber());
+        
+        copyBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => this.copyToClipboard(e.target.dataset.target));
+        });
+
+        licenseNameInput?.addEventListener('input', (e) => {
+            this.licenseName = e.target.value;
+        });
+        
+        licenseNumberInput?.addEventListener('input', (e) => {
+            this.licenseNumber = e.target.value;
+        });
+    }
+
+    generateLicenseNumber() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        this.licenseNumber = `${year}${month}${day}000001`;
+        
+        const licenseNumberInput = document.getElementById('licenseNumber');
+        if (licenseNumberInput) {
+            licenseNumberInput.value = this.licenseNumber;
+        }
+    }
+
+    // 验证许可证编号格式
+    // validateLicenseNumber(licenseNumber) {
+    //     // 1. 统一社会信用代码（18位：前17位是数字，最后1位是数字或大写字母X）
+    //     const creditCodePattern = /^[0-9]{17}[0-9X]$/;
+    //     if (creditCodePattern.test(licenseNumber)) {
+    //         return true;
+    //     }
+    //
+    //     // 2. 仓库地址格式（支持 github.com/user/repo、gitlab.com/user/repo 等）
+    //     const repoUrlPattern = /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/[a-zA-Z0-9._-]+/[a-zA-Z0-9._-]+$/;
+    //     if (repoUrlPattern.test(licenseNumber)) {
+    //         return true;
+    //     }
+    //
+    //     // 3. 时间编号格式（14位数字）
+    //     const timeCodePattern = /^\d{14}$/;
+    //     if (timeCodePattern.test(licenseNumber)) {
+    //         return true;
+    //     }
+    //
+    //     // 4. 支持其他自定义格式（长度在 6-50 之间的字符串）
+    //     if (licenseNumber.length >= 6 && licenseNumber.length <= 50) {
+    //         return true;
+    //     }
+    //
+    //     return false;
+    // }
+
+    async generateLicense() {
+        try {
+            // 获取授权名称
+            const licenseNameInput = document.getElementById('licenseName');
+            this.licenseName = licenseNameInput?.value || 'smartboot开源组织';
+            
+            // 获取许可证编号
+            const licenseNumberInput = document.getElementById('licenseNumber');
+            this.licenseNumber = licenseNumberInput?.value || '';
+
+            if (!this.licenseName.trim()) {
+                alert('请输入授权对象名称');
+                return;
+            }
+            
+            if (!this.licenseNumber.trim()) {
+                alert('请输入许可证编号（统一社会信用代码、仓库地址或时间编号）');
+                return;
+            }
+            
+            // 验证许可证编号格式（支持多种格式）
+            // if (!this.validateLicenseNumber(this.licenseNumber)) {
+            //     alert('许可证编号格式不正确！\n\n支持的格式：\n1. 统一社会信用代码（18位）\n2. 仓库地址（如 github.com/user/repo）\n3. 时间编号（14位数字）');
+            //     return;
+            // }
+
+            // 1. 生成 ECDSA 密钥对 (P-256 曲线，对应Java的EC 256位)
+            this.keyPair = this.ec.genKeyPair();
+
+            // 2. 获取公钥 (DER格式，Base64编码 - 匹配Java的实现)
+            const publicKeyDER = this.getPublicKeyDER();
+            const publicKeyBase64 = this.arrayBufferToBase64(publicKeyDER);
+
+            // 3. 对授权名称进行签名 (匹配Java的SHA256withECDSA)
+            // Java使用的是data.getBytes()，默认使用系统编码，这里使用UTF-8确保一致性
+            const messageBytes = new TextEncoder().encode(this.licenseName);
+            const messageHash = await this.sha256(messageBytes);
+            this.signature = this.keyPair.sign(Array.from(new Uint8Array(messageHash)));
+            const signatureBase64 = this.signatureToBase64(this.signature);
+
+            // 4. 显示结果
+            this.displayResults(publicKeyBase64, signatureBase64);
+
+            // 启用验证按钮
+            document.getElementById('verifyBtn').disabled = false;
+
+        } catch (error) {
+            console.error('生成许可证时出错:', error);
+            alert('生成许可证时出错: ' + error.message);
+        }
+    }
+
+    // 将椭圆曲线公钥转换为DER格式 (匹配Java的X509EncodedKeySpec格式)
+    getPublicKeyDER() {
+        const publicKeyPoint = this.keyPair.getPublic();
+        const x = publicKeyPoint.getX().toArray('be', 32);
+        const y = publicKeyPoint.getY().toArray('be', 32);
+        
+        // P-256曲线的DER编码格式
+        // SEQUENCE { SEQUENCE { OBJECT IDENTIFIER, NULL }, BIT STRING }
+        const algorithmIdentifier = new Uint8Array([
+            0x30, 0x13, // SEQUENCE, length 19
+            0x06, 0x07, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x02, 0x01, // ecPublicKey OID
+            0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07 // prime256v1 OID
+        ]);
+        
+        const publicKeyBytes = new Uint8Array([0x04, ...x, ...y]); // 未压缩格式
+        const bitString = new Uint8Array([0x03, publicKeyBytes.length + 1, 0x00, ...publicKeyBytes]);
+        
+        const derBytes = new Uint8Array([
+            0x30, algorithmIdentifier.length + bitString.length, // SEQUENCE
+            ...algorithmIdentifier,
+            ...bitString
+        ]);
+        
+        return derBytes;
+    }
+
+    // SHA256 哈希函数
+    async sha256(data) {
+        return await crypto.subtle.digest('SHA-256', data);
+    }
+
+    // 将签名转换为Base64格式
+    signatureToBase64(signature) {
+        // 将r和s值转换为DER编码的ASN.1格式 (匹配Java的签名格式)
+        const r = signature.r.toArray('be');
+        const s = signature.s.toArray('be');
+        
+        const rLen = r.length;
+        const sLen = s.length;
+        
+        // DER编码: SEQUENCE { INTEGER r, INTEGER s }
+        const derSig = new Uint8Array([
+            0x30, rLen + sLen + 4, // SEQUENCE
+            0x02, rLen, ...r,      // INTEGER r
+            0x02, sLen, ...s       // INTEGER s
+        ]);
+        
+        return this.arrayBufferToBase64(derSig);
+    }
+
+    // ArrayBuffer转Base64
+    arrayBufferToBase64(buffer) {
+        const bytes = new Uint8Array(buffer);
+        let binary = '';
+        for (let i = 0; i < bytes.byteLength; i++) {
+            binary += String.fromCharCode(bytes[i]);
+        }
+        return btoa(binary);
+    }
+
+    // 显示生成结果
+    displayResults(publicKeyBase64, signatureBase64) {
+        // feat_users.yaml 配置
+        const featUsersConfig = `users:
+  ${this.licenseNumber}:
+    num: ${this.licenseNumber}
+    name: ${this.licenseName}
+    license: ${signatureBase64}`;
+
+        // feat.yml 配置
+        const featYmlConfig = `license: ${this.licenseNumber}_${publicKeyBase64}`;
+
+        // 显示配置
+        document.getElementById('featUsersConfig').textContent = featUsersConfig;
+        document.getElementById('featYmlConfig').textContent = featYmlConfig;
+        
+        // 显示密钥信息
+        document.getElementById('publicKey').value = publicKeyBase64;
+        document.getElementById('privateKey').value = this.keyPair.getPrivate('hex');
+        
+        // 显示结果区域
+        document.getElementById('resultsSection').style.display = 'block';
+    }
+
+    // 验证许可证
+    async verifyLicense() {
+        try {
+            if (!this.keyPair || !this.signature) {
+                alert('请先生成许可证');
+                return;
+            }
+
+            // 对授权名称进行哈希
+            const messageBytes = new TextEncoder().encode(this.licenseName);
+            const messageHash = await this.sha256(messageBytes);
+            
+            // 验证签名
+            const isValid = this.keyPair.verify(Array.from(new Uint8Array(messageHash)), this.signature);
+            
+            const resultDiv = document.getElementById('verificationResult');
+            if (isValid) {
+                resultDiv.innerHTML = '<span class="success">✅ 许可证验证通过！</span>';
+                resultDiv.className = 'verification-result success';
+            } else {
+                resultDiv.innerHTML = '<span class="error">❌ 许可证验证失败！</span>';
+                resultDiv.className = 'verification-result error';
+            }
+
+        } catch (error) {
+            console.error('验证许可证时出错:', error);
+            alert('验证许可证时出错: ' + error.message);
+        }
+    }
+
+    // 复制到剪贴板
+    async copyToClipboard(targetId) {
+        try {
+            const element = document.getElementById(targetId);
+            const text = element.tagName === 'TEXTAREA' ? element.value : element.textContent;
+            
+            await navigator.clipboard.writeText(text);
+            
+            // 显示复制成功提示
+            const btn = document.querySelector(`[data-target="${targetId}"]`);
+            const originalText = btn.textContent;
+            btn.textContent = '已复制!';
+            btn.style.background = '#10b981';
+            
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.style.background = '';
+            }, 2000);
+            
+        } catch (error) {
+            alert('复制失败: ' + error.message);
+        }
+    }
+
+    // 兼容性测试
+    async runCompatibilityTest() {
+        const testResultDiv = document.getElementById('testResult');
+        testResultDiv.style.display = 'block';
+        testResultDiv.innerHTML = '<div class="loading">🔄 运行测试中...</div>';
+        
+        try {
+            // 使用固定的测试数据
+            const testName = 'smartboot开源组织';
+            
+            // 生成多个签名进行对比
+            const results = [];
+            for (let i = 0; i < 3; i++) {
+                const keyPair = this.ec.genKeyPair();
+                const messageBytes = new TextEncoder().encode(testName);
+                const messageHash = await this.sha256(messageBytes);
+                const signature = keyPair.sign(Array.from(new Uint8Array(messageHash)));
+                
+                // 验证签名
+                const isValid = keyPair.verify(Array.from(new Uint8Array(messageHash)), signature);
+                
+                results.push({
+                    iteration: i + 1,
+                    publicKey: this.arrayBufferToBase64(this.getPublicKeyDERFromKeyPair(keyPair)),
+                    signature: this.signatureToBase64(signature),
+                    valid: isValid
+                });
+            }
+            
+            // 显示测试结果
+            let html = `
+                <div class="test-summary">
+                    <h4>📦 测试结果摘要</h4>
+                    <p><strong>测试数据:</strong> "${testName}"</p>
+                    <p><strong>生成次数:</strong> ${results.length}</p>
+                    <p><strong>验证结果:</strong> ${results.filter(r => r.valid).length}/${results.length} 成功</p>
+                </div>
+                <div class="test-details">
+                    <h4>🔍 详细结果</h4>
+            `;
+            
+            results.forEach(result => {
+                html += `
+                    <div class="test-item ${result.valid ? 'success' : 'error'}">
+                        <h5>第 ${result.iteration} 次测试 ${result.valid ? '✅' : '❌'}</h5>
+                        <div class="test-data">
+                            <div><strong>公钥:</strong> <code>${result.publicKey.substring(0, 40)}...</code></div>
+                            <div><strong>签名:</strong> <code>${result.signature.substring(0, 40)}...</code></div>
+                            <div><strong>验证:</strong> <span class="status ${result.valid ? 'success' : 'error'}">${result.valid ? '通过' : '失败'}</span></div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            
+            if (results.every(r => r.valid)) {
+                html += '<div class="test-conclusion success">✅ 所有测试通过！算法实现正确。</div>';
+            } else {
+                html += '<div class="test-conclusion error">❌ 存在测试失败，请检查算法实现。</div>';
+            }
+            
+            testResultDiv.innerHTML = html;
+            
+        } catch (error) {
+            testResultDiv.innerHTML = `<div class="test-conclusion error">❌ 测试失败: ${error.message}</div>`;
+        }
+    }
+
+    // 从密钥对获取DER格式公钥
+    getPublicKeyDERFromKeyPair(keyPair) {
+        const publicKeyPoint = keyPair.getPublic();
+        const x = publicKeyPoint.getX().toArray('be', 32);
+        const y = publicKeyPoint.getY().toArray('be', 32);
+        
+        // P-256曲线的DER编码格式
+        const algorithmIdentifier = new Uint8Array([
+            0x30, 0x13,
+            0x06, 0x07, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x02, 0x01,
+            0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07
+        ]);
+        
+        const publicKeyBytes = new Uint8Array([0x04, ...x, ...y]);
+        const bitString = new Uint8Array([0x03, publicKeyBytes.length + 1, 0x00, ...publicKeyBytes]);
+        
+        const derBytes = new Uint8Array([
+            0x30, algorithmIdentifier.length + bitString.length,
+            ...algorithmIdentifier,
+            ...bitString
+        ]);
+        
+        return derBytes;
+    }
+}
+
+// 初始化许可证生成器
+document.addEventListener('DOMContentLoaded', () => {
+    new LicenseGenerator();
+});
+</script>
+
+<style>
+.license-generator {
+    max-width: 1000px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.generator-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.generator-header h2 {
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.generator-header p {
+    color: #64748b;
+    font-size: 1.1rem;
+}
+
+.form-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.input-group {
+    margin-bottom: 1.5rem;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.input-with-button {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.input-with-button input {
+    flex: 1;
+}
+
+.auto-generate-btn {
+    padding: 0.75rem 1rem;
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.auto-generate-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.license-examples {
+    margin-top: 0.75rem;
+    padding: 0.75rem;
+    background: #f8fafc;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+.example-label {
+    font-weight: 600;
+    color: #374151;
+}
+
+.example-code {
+    background: #e2e8f0;
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+    font-family: 'Monaco', 'Menlo', monospace;
+    color: #4f46e5;
+    margin: 0 0.25rem;
+    display: inline-block;
+}
+
+.input-group input[readonly] {
+    background-color: #f9fafb;
+    color: #6b7280;
+}
+
+.button-group {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+.generate-btn, .verify-btn {
+    padding: 0.75rem 2rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.generate-btn {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    color: white;
+}
+
+.generate-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+}
+
+.verify-btn {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+}
+
+.verify-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+}
+
+.verify-btn:disabled {
+    background: #d1d5db;
+    cursor: not-allowed;
+}
+
+.results-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.result-group {
+    margin-bottom: 2rem;
+    position: relative;
+}
+
+.result-group h3 {
+    color: #1e293b;
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
+}
+
+.config-output {
+    background: #1e293b;
+    color: #e2e8f0;
+    padding: 1.5rem;
+    border-radius: 8px;
+    font-family: 'Monaco', 'Menlo', monospace;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    overflow-x: auto;
+    margin-bottom: 0.5rem;
+    white-space: pre-wrap;
+}
+
+.key-info {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.key-item {
+    position: relative;
+}
+
+.key-item label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+.key-item textarea {
+    width: 100%;
+    height: 80px;
+    padding: 0.75rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-family: 'Monaco', 'Menlo', monospace;
+    font-size: 0.85rem;
+    resize: vertical;
+    background: #f9fafb;
+}
+
+.copy-btn {
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 0.5rem 1rem;
+    background: #6b7280;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.copy-btn:hover {
+    background: #374151;
+}
+
+.verification-section {
+    padding: 1.5rem;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 2px solid #e2e8f0;
+}
+
+.verification-result {
+    padding: 1rem;
+    border-radius: 6px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.verification-result.success {
+    background: #d1fae5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+}
+
+.verification-result.error {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fca5a5;
+}
+
+.test-section {
+    padding: 1.5rem;
+    background: #fefce8;
+    border-radius: 8px;
+    border: 2px solid #fde047;
+    margin-top: 1rem;
+}
+
+.test-description {
+    color: #a16207;
+    margin-bottom: 1rem;
+    font-style: italic;
+}
+
+.test-btn {
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.test-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(245, 158, 11, 0.3);
+}
+
+.test-result {
+    margin-top: 1.5rem;
+    padding: 1.5rem;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+.loading {
+    text-align: center;
+    color: #6b7280;
+    font-weight: 600;
+}
+
+.test-summary {
+    padding: 1rem;
+    background: #f3f4f6;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+}
+
+.test-summary h4 {
+    margin-bottom: 0.5rem;
+    color: #374151;
+}
+
+.test-summary p {
+    margin: 0.25rem 0;
+    color: #6b7280;
+}
+
+.test-details h4 {
+    margin-bottom: 1rem;
+    color: #374151;
+}
+
+.test-item {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 6px;
+    border: 1px solid #e5e7eb;
+}
+
+.test-item.success {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+}
+
+.test-item.error {
+    background: #fef2f2;
+    border-color: #fecaca;
+}
+
+.test-item h5 {
+    margin-bottom: 0.75rem;
+    color: #374151;
+}
+
+.test-data div {
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.test-data code {
+    background: #f9fafb;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-family: 'Monaco', 'Menlo', monospace;
+    color: #6b7280;
+}
+
+.status.success {
+    color: #16a34a;
+    font-weight: 600;
+}
+
+.status.error {
+    color: #dc2626;
+    font-weight: 600;
+}
+
+.test-conclusion {
+    padding: 1rem;
+    border-radius: 6px;
+    text-align: center;
+    font-weight: 600;
+    margin-top: 1rem;
+}
+
+.test-conclusion.success {
+    background: #dcfce7;
+    color: #16a34a;
+    border: 1px solid #bbf7d0;
+}
+
+.test-conclusion.error {
+    background: #fee2e2;
+    color: #dc2626;
+    border: 1px solid #fca5a5;
+}
+
+@media (max-width: 768px) {
+    .license-generator {
+        margin: 1rem;
+        padding: 1rem;
+    }
+    
+    .button-group {
+        flex-direction: column;
+    }
+    
+    .key-info {
+        grid-template-columns: 1fr;
+    }
+    
+    .input-with-button {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .input-with-button input {
+        order: 1;
+    }
+    
+    .auto-generate-btn {
+        order: 2;
+        align-self: stretch;
+    }
+    
+    .license-examples {
+        font-size: 0.75rem;
+    }
+    
+    .example-code {
+        display: block;
+        margin: 0.25rem 0;
+        word-break: break-all;
+    }
+}
+</style>
