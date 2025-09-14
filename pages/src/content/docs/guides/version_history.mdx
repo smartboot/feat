@@ -7,21 +7,26 @@ sidebar:
 
 import { Image } from '@astrojs/starlight/components';
 
-## v1.3.0 (孵化中)
+## v1.3.0 (2025-09-14)
 ### 版本特性
 - **Feat Core：**
-    - 将静态资源服务迁移至示例模块
+    - 将静态资源服务迁移至示例模块。
+    - `FeatUtils` 增加 `isEmpty` 和 `isNotEmpty` 方法。
+    - 优化部分 Http 编解码逻辑。
+    - 优化 Router 路径参数解析性能。
 - **Feat AI：**
+    - 更加规范、统一的接口定义。
 - **Feat Cloud**
     - 引入编译期 LICENSE 授权验证机制，帮助用户提前规避合格风险。
-    - `feat.yaml` 支持多环境配置，可通过`feat.profiles.active`激活。
     - 剥离 AOT 相关代码作为独立模块，仅在编译器依赖，缩减最终包体积。
     - 针对无 package 的 AOT 编译主动触发异常提示。
+    - 增加 AOT VM 模块，提升本地开发环境的运行体验。
 
 ### 升级指南
 无
 ### 兼容性说明
-无
+1. Feat AI 模版存在多出接口定义及配置参数的重构。
+2. 原 feat-cloud 中的 AOT 相关代码剥离成独立模块，保留原包路径定义，基本保持兼容性。
 
 ## v1.2.0 (2025-07-24)
 
