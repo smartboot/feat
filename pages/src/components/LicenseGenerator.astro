@@ -31,15 +31,26 @@
             </div>
             <div class="license-examples">
                 <span class="example-label">示例：</span>
-                <code class="example-code">91110000123456789X</code>（统一社会信用代码）
-                <code class="example-code">github.com/smartboot/feat</code>（仓库地址）
-                <code class="example-code">20241201000001</code>（时间编号）
+                <div class="example-item">
+                    <span class="example-type">企业：</span>
+                    <code class="example-code">91110000123456789X</code>
+                    <span class="example-desc">统一社会信用代码</span>
+                </div>
+                <div class="example-item">
+                    <span class="example-type">开源项目：</span>
+                    <code class="example-code">github.com/smartboot/feat</code>
+                    <span class="example-desc">仓库地址</span>
+                </div>
+                <div class="example-item">
+                    <span class="example-type">其他：</span>
+                    <code class="example-code">20241201000001</code>
+                    <span class="example-desc">时间编号</span>
+                </div>
             </div>
         </div>
 
         <div class="button-group">
             <button id="generateBtn" class="generate-btn">生成许可证</button>
-            <button id="verifyBtn" class="verify-btn" disabled>验证许可证</button>
         </div>
     </div>
 
@@ -71,18 +82,6 @@
                 </div>
             </div>
         </div>
-
-        <div class="verification-section" id="verificationSection">
-            <h3>✅ 验证结果:</h3>
-            <div id="verificationResult" class="verification-result"></div>
-        </div>
-
-        <div class="test-section">
-            <h3>🧪 兼容性测试:</h3>
-            <p class="test-description">使用默认测试数据 "smartboot开源组织" 验证与Java版本的兼容性</p>
-            <button id="testBtn" class="test-btn">运行兼容性测试</button>
-            <div id="testResult" class="test-result" style="display: none;"></div>
-        </div>
     </div>
 </div>
 
@@ -98,21 +97,16 @@ class LicenseGenerator {
         this.licenseNumber = '';
         
         this.initEventListeners();
-        this.generateLicenseNumber();
     }
 
     initEventListeners() {
         const generateBtn = document.getElementById('generateBtn');
-        const verifyBtn = document.getElementById('verifyBtn');
-        const testBtn = document.getElementById('testBtn');
         const autoGenerateBtn = document.getElementById('autoGenerateBtn');
         const copyBtns = document.querySelectorAll('.copy-btn');
         const licenseNameInput = document.getElementById('licenseName');
         const licenseNumberInput = document.getElementById('licenseNumber');
 
         generateBtn?.addEventListener('click', () => this.generateLicense());
-        verifyBtn?.addEventListener('click', () => this.verifyLicense());
-        testBtn?.addEventListener('click', () => this.runCompatibilityTest());
         autoGenerateBtn?.addEventListener('click', () => this.generateLicenseNumber());
         
         copyBtns.forEach(btn => {
@@ -141,33 +135,6 @@ class LicenseGenerator {
         }
     }
 
-    // 验证许可证编号格式
-    // validateLicenseNumber(licenseNumber) {
-    //     // 1. 统一社会信用代码（18位：前17位是数字，最后1位是数字或大写字母X）
-    //     const creditCodePattern = /^[0-9]{17}[0-9X]$/;
-    //     if (creditCodePattern.test(licenseNumber)) {
-    //         return true;
-    //     }
-    //
-    //     // 2. 仓库地址格式（支持 github.com/user/repo、gitlab.com/user/repo 等）
-    //     const repoUrlPattern = /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/[a-zA-Z0-9._-]+/[a-zA-Z0-9._-]+$/;
-    //     if (repoUrlPattern.test(licenseNumber)) {
-    //         return true;
-    //     }
-    //
-    //     // 3. 时间编号格式（14位数字）
-    //     const timeCodePattern = /^\d{14}$/;
-    //     if (timeCodePattern.test(licenseNumber)) {
-    //         return true;
-    //     }
-    //
-    //     // 4. 支持其他自定义格式（长度在 6-50 之间的字符串）
-    //     if (licenseNumber.length >= 6 && licenseNumber.length <= 50) {
-    //         return true;
-    //     }
-    //
-    //     return false;
-    // }
 
     async generateLicense() {
         try {
@@ -212,8 +179,6 @@ class LicenseGenerator {
             // 4. 显示结果
             this.displayResults(publicKeyBase64, signatureBase64);
 
-            // 启用验证按钮
-            document.getElementById('verifyBtn').disabled = false;
 
         } catch (error) {
             console.error('生成许可证时出错:', error);
@@ -305,35 +270,6 @@ class LicenseGenerator {
         document.getElementById('resultsSection').style.display = 'block';
     }
 
-    // 验证许可证
-    async verifyLicense() {
-        try {
-            if (!this.keyPair || !this.signature) {
-                alert('请先生成许可证');
-                return;
-            }
-
-            // 对授权名称进行哈希
-            const messageBytes = new TextEncoder().encode(this.licenseName);
-            const messageHash = await this.sha256(messageBytes);
-            
-            // 验证签名
-            const isValid = this.keyPair.verify(Array.from(new Uint8Array(messageHash)), this.signature);
-            
-            const resultDiv = document.getElementById('verificationResult');
-            if (isValid) {
-                resultDiv.innerHTML = '<span class="success">✅ 许可证验证通过！</span>';
-                resultDiv.className = 'verification-result success';
-            } else {
-                resultDiv.innerHTML = '<span class="error">❌ 许可证验证失败！</span>';
-                resultDiv.className = 'verification-result error';
-            }
-
-        } catch (error) {
-            console.error('验证许可证时出错:', error);
-            alert('验证许可证时出错: ' + error.message);
-        }
-    }
 
     // 复制到剪贴板
     async copyToClipboard(targetId) {
@@ -359,99 +295,7 @@ class LicenseGenerator {
         }
     }
 
-    // 兼容性测试
-    async runCompatibilityTest() {
-        const testResultDiv = document.getElementById('testResult');
-        testResultDiv.style.display = 'block';
-        testResultDiv.innerHTML = '<div class="loading">🔄 运行测试中...</div>';
-        
-        try {
-            // 使用固定的测试数据
-            const testName = 'smartboot开源组织';
-            
-            // 生成多个签名进行对比
-            const results = [];
-            for (let i = 0; i < 3; i++) {
-                const keyPair = this.ec.genKeyPair();
-                const messageBytes = new TextEncoder().encode(testName);
-                const messageHash = await this.sha256(messageBytes);
-                const signature = keyPair.sign(Array.from(new Uint8Array(messageHash)));
-                
-                // 验证签名
-                const isValid = keyPair.verify(Array.from(new Uint8Array(messageHash)), signature);
-                
-                results.push({
-                    iteration: i + 1,
-                    publicKey: this.arrayBufferToBase64(this.getPublicKeyDERFromKeyPair(keyPair)),
-                    signature: this.signatureToBase64(signature),
-                    valid: isValid
-                });
-            }
-            
-            // 显示测试结果
-            let html = `
-                <div class="test-summary">
-                    <h4>📦 测试结果摘要</h4>
-                    <p><strong>测试数据:</strong> "${testName}"</p>
-                    <p><strong>生成次数:</strong> ${results.length}</p>
-                    <p><strong>验证结果:</strong> ${results.filter(r => r.valid).length}/${results.length} 成功</p>
-                </div>
-                <div class="test-details">
-                    <h4>🔍 详细结果</h4>
-            `;
-            
-            results.forEach(result => {
-                html += `
-                    <div class="test-item ${result.valid ? 'success' : 'error'}">
-                        <h5>第 ${result.iteration} 次测试 ${result.valid ? '✅' : '❌'}</h5>
-                        <div class="test-data">
-                            <div><strong>公钥:</strong> <code>${result.publicKey.substring(0, 40)}...</code></div>
-                            <div><strong>签名:</strong> <code>${result.signature.substring(0, 40)}...</code></div>
-                            <div><strong>验证:</strong> <span class="status ${result.valid ? 'success' : 'error'}">${result.valid ? '通过' : '失败'}</span></div>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            html += '</div>';
-            
-            if (results.every(r => r.valid)) {
-                html += '<div class="test-conclusion success">✅ 所有测试通过！算法实现正确。</div>';
-            } else {
-                html += '<div class="test-conclusion error">❌ 存在测试失败，请检查算法实现。</div>';
-            }
-            
-            testResultDiv.innerHTML = html;
-            
-        } catch (error) {
-            testResultDiv.innerHTML = `<div class="test-conclusion error">❌ 测试失败: ${error.message}</div>`;
-        }
-    }
 
-    // 从密钥对获取DER格式公钥
-    getPublicKeyDERFromKeyPair(keyPair) {
-        const publicKeyPoint = keyPair.getPublic();
-        const x = publicKeyPoint.getX().toArray('be', 32);
-        const y = publicKeyPoint.getY().toArray('be', 32);
-        
-        // P-256曲线的DER编码格式
-        const algorithmIdentifier = new Uint8Array([
-            0x30, 0x13,
-            0x06, 0x07, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x02, 0x01,
-            0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07
-        ]);
-        
-        const publicKeyBytes = new Uint8Array([0x04, ...x, ...y]);
-        const bitString = new Uint8Array([0x03, publicKeyBytes.length + 1, 0x00, ...publicKeyBytes]);
-        
-        const derBytes = new Uint8Array([
-            0x30, algorithmIdentifier.length + bitString.length,
-            ...algorithmIdentifier,
-            ...bitString
-        ]);
-        
-        return derBytes;
-    }
 }
 
 // 初始化许可证生成器
@@ -701,132 +545,12 @@ document.addEventListener('DOMContentLoaded', () => {
     background: #374151;
 }
 
-.verification-section {
-    padding: 1.5rem;
-    background: #f8fafc;
-    border-radius: 8px;
-    border: 2px solid #e2e8f0;
-}
-
-.verification-result {
-    padding: 1rem;
-    border-radius: 6px;
-    font-weight: 600;
-    text-align: center;
-}
-
-.verification-result.success {
-    background: #d1fae5;
-    color: #065f46;
-    border: 1px solid #a7f3d0;
-}
-
-.verification-result.error {
-    background: #fee2e2;
-    color: #991b1b;
-    border: 1px solid #fca5a5;
-}
-
-.test-section {
-    padding: 1.5rem;
-    background: #fefce8;
-    border-radius: 8px;
-    border: 2px solid #fde047;
-    margin-top: 1rem;
-}
-
-.test-description {
-    color: #a16207;
-    margin-bottom: 1rem;
-    font-style: italic;
-}
-
-.test-btn {
-    padding: 0.75rem 1.5rem;
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.test-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(245, 158, 11, 0.3);
-}
-
-.test-result {
-    margin-top: 1.5rem;
-    padding: 1.5rem;
-    background: white;
-    border-radius: 8px;
-    border: 1px solid #e5e7eb;
-}
-
 .loading {
     text-align: center;
     color: #6b7280;
     font-weight: 600;
 }
 
-.test-summary {
-    padding: 1rem;
-    background: #f3f4f6;
-    border-radius: 6px;
-    margin-bottom: 1rem;
-}
-
-.test-summary h4 {
-    margin-bottom: 0.5rem;
-    color: #374151;
-}
-
-.test-summary p {
-    margin: 0.25rem 0;
-    color: #6b7280;
-}
-
-.test-details h4 {
-    margin-bottom: 1rem;
-    color: #374151;
-}
-
-.test-item {
-    padding: 1rem;
-    margin-bottom: 1rem;
-    border-radius: 6px;
-    border: 1px solid #e5e7eb;
-}
-
-.test-item.success {
-    background: #f0fdf4;
-    border-color: #bbf7d0;
-}
-
-.test-item.error {
-    background: #fef2f2;
-    border-color: #fecaca;
-}
-
-.test-item h5 {
-    margin-bottom: 0.75rem;
-    color: #374151;
-}
-
-.test-data div {
-    margin-bottom: 0.5rem;
-    font-size: 0.9rem;
-}
-
-.test-data code {
-    background: #f9fafb;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    font-family: 'Monaco', 'Menlo', monospace;
-    color: #6b7280;
-}
 
 .status.success {
     color: #16a34a;
@@ -838,25 +562,6 @@ document.addEventListener('DOMContentLoaded', () => {
     font-weight: 600;
 }
 
-.test-conclusion {
-    padding: 1rem;
-    border-radius: 6px;
-    text-align: center;
-    font-weight: 600;
-    margin-top: 1rem;
-}
-
-.test-conclusion.success {
-    background: #dcfce7;
-    color: #16a34a;
-    border: 1px solid #bbf7d0;
-}
-
-.test-conclusion.error {
-    background: #fee2e2;
-    color: #dc2626;
-    border: 1px solid #fca5a5;
-}
 
 @media (max-width: 768px) {
     .license-generator {
