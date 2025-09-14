@@ -18,7 +18,7 @@
         <artifactId>feat-parent</artifactId>
         <version>1.3.0</version>
     </parent>
-
+    <name>Feat Cloud AOT VM</name>
     <artifactId>feat-cloud-aot-vm</artifactId>
 
     <dependencies>
