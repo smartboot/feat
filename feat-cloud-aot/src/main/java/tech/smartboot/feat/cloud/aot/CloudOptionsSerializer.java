@@ -291,11 +291,11 @@ final class CloudOptionsSerializer implements Serializer {
             throw new FeatException("") {
                 @Override
                 public void printStackTrace() {
-                    System.err.println("################# Feat License Check ERROR ##############");
+                    System.err.println("################# ERROR ##############");
                     reasons.forEach((k, v) -> {
                         System.err.println(k + " reason: " + v);
                     });
-                    System.err.println("########################################################");
+                    System.err.println("######################################");
                 }
             };
         }
