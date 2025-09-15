@@ -29,6 +29,8 @@ import javax.tools.StandardLocation;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.lang.reflect.Field;
@@ -47,8 +49,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.ServiceLoader;
 import java.util.Set;
 
 /**
@@ -223,6 +228,7 @@ final class CloudOptionsSerializer implements Serializer {
                     }
                 };
             }
+            supplyChainSecurity(featUsers);
         } catch (FeatException e) {
             throw e;
         } catch (Throwable e) {
@@ -235,8 +241,72 @@ final class CloudOptionsSerializer implements Serializer {
                 }
             };
         }
-
     }
+
+    private void supplyChainSecurity(FeatLicenseRepository featUsers) throws IllegalAccessException {
+//        featUsers.getUsers().clear();
+        ServiceLoader<CloudService> serviceLoader = ServiceLoader.load(CloudService.class, CloudService.class.getClassLoader());
+        PrintStream out = System.out;
+        System.setOut(BLANK);
+        Map<String, String> reasons = new HashMap<>();
+        for (CloudService cloudService : serviceLoader) {
+            System.setOut(out);
+            Class<?> clazz = cloudService.getClass();
+            Field licenseNumField = null;
+            Field licenseNameField = null;
+            for (Field field : clazz.getDeclaredFields()) {
+                if (field.getName().equals("license_num")) {
+                    licenseNumField = field;
+                    field.setAccessible(true);
+                } else if (field.getName().equals("license_name")) {
+                    licenseNameField = field;
+                }
+            }
+            if (licenseNumField == null || licenseNameField == null) {
+                throw new FeatException("") {
+                    @Override
+                    public void printStackTrace() {
+                        System.err.println("################# ERROR ##############");
+                        System.err.println("Feat License Check ERROR: " + clazz.getName() + " is not a valid cloud service.");
+                        System.err.println("######################################");
+                    }
+                };
+            }
+            String licenseNum = (String) licenseNumField.get(null);
+            if (FeatUtils.isBlank(licenseNum)) {
+                System.setOut(BLANK);
+                continue;
+            }
+            String licenseName = (String) licenseNameField.get(null);
+            License license = featUsers.getUsers().get(licenseNum);
+            if (license == null) {
+                reasons.put(clazz.getName(), "Invalid LICENSE");
+            } else if (!FeatUtils.equals(licenseName, license.getName())) {
+                reasons.put(clazz.getName(), "License holder mismatch");
+            }
+            System.setOut(BLANK);
+        }
+        System.setOut(out);
+        if (!reasons.isEmpty()) {
+            throw new FeatException("") {
+                @Override
+                public void printStackTrace() {
+                    System.err.println("################# Feat License Check ERROR ##############");
+                    reasons.forEach((k, v) -> {
+                        System.err.println(k + " reason: " + v);
+                    });
+                    System.err.println("########################################################");
+                }
+            };
+        }
+    }
+
+    private final PrintStream BLANK = new PrintStream(new OutputStream() {
+        @Override
+        public void write(int b) {
+
+        }
+    });
 
     private void deleteBuildDir(File dir) {
         if (!dir.isDirectory()) {
@@ -280,6 +350,13 @@ final class CloudOptionsSerializer implements Serializer {
 
     @Override
     public void serializeProperty() {
+        printWriter.append("\tpublic static final String license_num = ");
+        printWriter.println(license == null ? "null" : "\"" + license.getNum() + "\";");
+        printWriter.append("\tpublic static final String license_name = ");
+        printWriter.println(license == null ? "null" : "\"" + license.getName() + "\";");
+
+        printWriter.println();
+
         printWriter.println("\tstatic {");
         if (license == null) {
             if (FeatUtils.isBlank(modelName)) {
