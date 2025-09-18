@@ -106,10 +106,10 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
                 byte major = byteBuffer.get(byteBuffer.position() + 5);
                 if (major == HTTP_VERSION_1) {
                     byte minor = byteBuffer.get(byteBuffer.position() + 7);
-                    if (minor == HTTP_VERSION_0) {
-                        request.setProtocol(HttpProtocol.HTTP_10);
-                    } else if (minor == HTTP_VERSION_1) {
+                    if (minor == HTTP_VERSION_1) {
                         request.setProtocol(HttpProtocol.HTTP_11);
+                    } else if (minor == HTTP_VERSION_0) {
+                        request.setProtocol(HttpProtocol.HTTP_10);
                     } else {
                         throw new HttpException(HttpStatus.BAD_REQUEST);
                     }
