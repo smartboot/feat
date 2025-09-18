@@ -10,8 +10,6 @@
 
 package tech.smartboot.feat.core.common;
 
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
@@ -22,7 +20,7 @@ import java.util.TreeMap;
  * @version v1.0.0
  */
 public class Cookie {
-    private static final String TSPECIALS;
+    private static final String TSPECIALS = "/()<>@,;:\\\"[]?={} \t";
     private static final String DOMAIN = "Domain"; // ;Domain=VALUE ... domain that sees cookie
     private static final String MAX_AGE = "Max-Age"; // ;Max-Age=VALUE ... cookies auto-expire
     private static final String PATH = "Path"; // ;Path=VALUE ... URLs that see the cookie
@@ -34,19 +32,6 @@ public class Cookie {
     private String value;
     private Map<String, String> attributes = null;
 
-    static {
-        boolean enforced = AccessController.doPrivileged(new PrivilegedAction<Boolean>() {
-            @Override
-            public Boolean run() {
-                return Boolean.valueOf(System.getProperty("org.glassfish.web.rfc2109_cookie_names_enforced", "true"));
-            }
-        });
-        if (enforced) {
-            TSPECIALS = "/()<>@,;:\\\"[]?={} \t";
-        } else {
-            TSPECIALS = ",; ";
-        }
-    }
 
     public Cookie(final String name, final String value) {
         this.name = name;
