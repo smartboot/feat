@@ -35,6 +35,9 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpRequestProtocol.class);
     private final ServerOptions options;
     private static final ByteTree.EndMatcher URI_END_MATCHER = endByte -> (endByte == ' ' || endByte == '?');
+    private static final byte HTTP_VERSION_0 = '0';
+    private static final byte HTTP_VERSION_1 = '1';
+    private static final byte HTTP_VERSION_2 = '2';
 
     public HttpRequestProtocol(ServerOptions options) {
         this.options = options;
@@ -101,23 +104,23 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
                     break;
                 }
                 byte major = byteBuffer.get(byteBuffer.position() + 5);
-                if (major == '2') {
+                if (major == HTTP_VERSION_1) {
+                    byte minor = byteBuffer.get(byteBuffer.position() + 7);
+                    if (minor == HTTP_VERSION_0) {
+                        request.setProtocol(HttpProtocol.HTTP_10);
+                    } else if (minor == HTTP_VERSION_1) {
+                        request.setProtocol(HttpProtocol.HTTP_11);
+                    } else {
+                        throw new HttpException(HttpStatus.BAD_REQUEST);
+                    }
+                } else if (major == HTTP_VERSION_2) {
                     request.setProtocol(HttpProtocol.HTTP_2);
-                } else if (major != '1') {
+                } else {
                     byte[] bytes = new byte[byteBuffer.limit()];
                     byteBuffer.position(0);
                     byteBuffer.get(bytes);
                     LOGGER.error("Unsupported HTTP version, remote:{}, method:{}, uri:{} , data:{} ", request.getRemoteAddr(), request.getMethod(), request.getUri(), org.smartboot.socket.util.StringUtils.toHexString(bytes));
                     throw new HttpException(HttpStatus.BAD_REQUEST, "Unsupported HTTP version");
-                } else {
-                    byte minor = byteBuffer.get(byteBuffer.position() + 7);
-                    if (minor == '0') {
-                        request.setProtocol(HttpProtocol.HTTP_10);
-                    } else if (minor == '1') {
-                        request.setProtocol(HttpProtocol.HTTP_11);
-                    } else {
-                        throw new HttpException(HttpStatus.BAD_REQUEST);
-                    }
                 }
 
                 byteBuffer.position(byteBuffer.position() + 9);
