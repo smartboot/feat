@@ -25,9 +25,9 @@
                 <input 
                     type="text" 
                     id="licenseNumber" 
-                    placeholder="企业统一社会信用代码或开源项目仓库地址，如：91110000123456789X 或 github.com/smartboot/feat"
+                    placeholder="企业统一社会信用代码或开源项目仓库地址，例如：91110000123456789X 或 github.com/smartboot/feat"
                 />
-                <button id="autoGenerateBtn" class="auto-generate-btn">自定义编号</button>
+                <button id="autoGenerateBtn" class="auto-generate-btn">自动生成编号</button>
             </div>
             <div class="license-examples">
                 <span class="example-label">许可证编号示例：</span>
@@ -64,17 +64,30 @@
                     <div class="instruction-item">
                         <h4>📋 License 申报方式：</h4>
                         <p>1. Fork <a href="https://gitee.com/smartboot/feat" target="_blank">Feat 主仓库</a> 到您的个人账户下</p>
-                        <p>2. 将以下License配置添加到项目中的 <code>feat-cloud-aot/src/main/resources/feat_users.yaml</code> 文件中：</p>
+                        <p>2. 将以下License配置添加到项目中的 <a href="https://gitee.com/smartboot/feat/blob/master/feat-cloud-aot/src/main/resources/feat_users.yaml" target="_blank"><code>feat-cloud-aot/src/main/resources/feat_users.yaml</code></a> 文件中：</p>
                         <pre id="featUsersConfig" class="config-output"></pre>
                         <p>3. 提交更改并推送至您的 Fork 仓库</p>
                         <p>4. 向 Feat 主仓库提交 <a href="https://gitee.com/smartboot/feat/pulls" target="_blank">Pull Request</a></p>
                         <p>5. 将 PR 地址通过公司邮箱发送至 <a href="mailto:zhengjunweimail@163.com">zhengjunweimail@163.com</a></p>
                     </div>
                     <div class="instruction-item">
-                        <h4>⚙️ 秘钥配置方式：</h4>
-                        <p>方式一：将以下秘钥配置添加到项目的 <code>feat.yml</code> 文件中：</p>
+                        <h4>✅ 本地测试建议：</h4>
+                        <p><b>重要提醒：</b>在正式提交 LICENSE 申报之前，强烈建议您先在本地环境中完成测试验证。</p>
+                        <p><b>测试方式：</b></p>
+                        <ol>
+                            <li>将生成的用户配置添加到 <code>feat-cloud-aot/src/main/resources/feat_users.yaml</code> 文件中</li>
+                            <li>在 Feat 项目根目录执行 <code>mvn install</code> 命令使配置在本地生效</li>
+                            <li>在您的项目中配置生成的许可证信息（添加到 <code>feat.yml</code> 文件中或设置为系统环境变量）</li>
+                            <li>启动您的 Feat 应用程序</li>
+                            <li>观察启动日志，如果出现类似 <code>Feat License verification passed!</code> 的绿色提示信息，则表示许可证验证通过</li>
+                        </ol>
+                        <p>只有本地测试通过后，再进行 LICENSE 申报提交。</p>
+                    </div>
+                    <div class="instruction-item">
+                        <h4>⚙️ 许可证配置方式：</h4>
+                        <p><b>方式一(不推荐)：</b>将以下许可证信息添加到项目的 <code>feat.yml</code> 文件中：</p>
                         <pre id="featYmlConfig" class="config-output"></pre>
-                        <p>方式二：出于安全考虑，强烈建议将秘钥保存为系统环境变量：FEAT_LICENSE</p>
+                        <p><b>方式二（推荐）：</b>出于安全考虑，强烈建议将许可证信息保存为系统环境变量：FEAT_LICENSE</p>
                         <h4>🔧 系统环境变量配置示例：</h4>
                         
                         <!-- Tab导航 -->
