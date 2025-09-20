@@ -160,11 +160,11 @@ class Options<T> {
         return plugins;
     }
 
-    public boolean isHttps() {
+    final boolean isHttps() {
         return https;
     }
 
-    public Options<T> setHttps(boolean https) {
+    Options<T> setHttps(boolean https) {
         this.https = https;
         return this;
     }

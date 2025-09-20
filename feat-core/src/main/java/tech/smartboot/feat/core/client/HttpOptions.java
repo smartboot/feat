@@ -22,8 +22,6 @@ import java.util.List;
 public class HttpOptions extends Options<HttpResponse> {
 
 
-    private boolean https = false;
-
     public HttpOptions(String host, int port) {
         super(host, port);
     }
@@ -83,12 +81,9 @@ public class HttpOptions extends Options<HttpResponse> {
         return super.getPlugins();
     }
 
-    public boolean isHttps() {
-        return https;
-    }
 
-    public HttpOptions setHttps(boolean https) {
-        this.https = https;
+    HttpOptions setHttps(boolean https) {
+        super.setHttps(https);
         return this;
     }
 
