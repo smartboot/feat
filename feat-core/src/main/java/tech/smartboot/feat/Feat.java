@@ -18,6 +18,9 @@ import tech.smartboot.feat.core.client.HttpPost;
 import tech.smartboot.feat.core.client.WebSocketClient;
 import tech.smartboot.feat.core.client.WebSocketListener;
 import tech.smartboot.feat.core.client.WebSocketOptions;
+import tech.smartboot.feat.core.client.sse.SseClient;
+import tech.smartboot.feat.core.client.sse.SseClientBuilder;
+import tech.smartboot.feat.core.client.sse.SseOptions;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.ServerOptions;
@@ -167,5 +170,28 @@ public class Feat {
         options.accept(webSocketClient.options());
         webSocketClient.connect(listener);
         return webSocketClient;
+    }
+
+    /**
+     * 创建一个SSE客户端连接，使用默认配置。
+     *
+     * @param url SSE服务器地址
+     * @return 返回配置完成的SseClientBuilder实例
+     */
+    public static SseClientBuilder sse(String url) {
+        return new SseClientBuilder(url);
+    }
+
+    /**
+     * 创建一个SSE客户端连接，支持自定义配置选项。
+     *
+     * @param url SSE服务器地址
+     * @param options SSE配置选项消费者函数
+     * @return 返回配置完成的SseClient实例
+     */
+    public static SseClient sse(String url, Consumer<SseOptions> options) {
+        SseClientBuilder builder = new SseClientBuilder(url);
+        builder.options(options);
+        return builder.build();
     }
 }
