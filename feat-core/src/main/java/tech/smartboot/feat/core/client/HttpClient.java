@@ -115,6 +115,15 @@ public final class HttpClient {
         return new HttpGet(rest);
     }
 
+    public HttpRest rest(String method) {
+        if (method == null) {
+            throw new IllegalArgumentException("method is null");
+        }
+        if (uri == null) {
+            throw new UnsupportedOperationException("this method only support on constructor: HttpClient(String url)");
+        }
+        return rest0(uri).setMethod(method);
+    }
 
     public HttpRest rest(String method, String uri) {
         if (method == null) {

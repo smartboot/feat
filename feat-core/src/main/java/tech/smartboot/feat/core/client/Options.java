@@ -14,7 +14,9 @@ import org.smartboot.socket.extension.plugins.Plugin;
 
 import java.nio.channels.AsynchronousChannelGroup;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author 三刀 zhengjunweimail@163.com
@@ -67,6 +69,11 @@ class Options<T> {
      * 绑定线程池资源组
      */
     private AsynchronousChannelGroup group;
+
+    /**
+     * 自定义请求头
+     */
+    private Map<String, String> headers = new HashMap<>();
 
     public Options(String host, int port) {
         this.host = host;
@@ -185,6 +192,27 @@ class Options<T> {
 
     public Options<T> idleTimeout(int idleTimeout) {
         this.idleTimeout = idleTimeout;
+        return this;
+    }
+
+    public final Map<String, String> getHeaders() {
+        return headers;
+    }
+
+    public Options<T> setHeaders(Map<String, String> headers) {
+        this.headers = headers;
+        return this;
+    }
+
+    /**
+     * 添加请求头
+     *
+     * @param name  头名称
+     * @param value 头值
+     * @return this
+     */
+    public Options<T> addHeader(String name, String value) {
+        this.headers.put(name, value);
         return this;
     }
 }

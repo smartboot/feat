@@ -98,4 +98,10 @@ public final class HttpOptions extends Options<HttpResponse> {
         super.idleTimeout(idleTimeout);
         return this;
     }
+
+    @Override
+    public HttpOptions addHeader(String name, String value) {
+        super.addHeader(name, value);
+        return this;
+    }
 }
