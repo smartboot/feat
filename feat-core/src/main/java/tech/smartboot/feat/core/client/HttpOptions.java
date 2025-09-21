@@ -14,6 +14,7 @@ import org.smartboot.socket.extension.plugins.Plugin;
 
 import java.nio.channels.AsynchronousChannelGroup;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author 三刀 zhengjunweimail@163.com
@@ -96,6 +97,12 @@ public final class HttpOptions extends Options<HttpResponse> {
     @Override
     public HttpOptions idleTimeout(int idleTimeout) {
         super.idleTimeout(idleTimeout);
+        return this;
+    }
+
+    @Override
+    public HttpOptions setHeaders(Map<String, String> headers) {
+        super.setHeaders(headers);
         return this;
     }
 

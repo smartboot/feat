@@ -200,7 +200,7 @@ class Options<T> {
     }
 
     public Options<T> setHeaders(Map<String, String> headers) {
-        this.headers = headers;
+        this.headers.putAll(headers);
         return this;
     }
 

@@ -83,6 +83,7 @@ public class SseClient {
             request.header(h -> {
                 h.set(HeaderName.ACCEPT, "text/event-stream");
                 h.set(HeaderName.CACHE_CONTROL, "no-cache");
+                h.set(HeaderName.CONNECTION, "keep-alive");
 
                 // 添加Last-Event-ID头部（如果有）
                 String eventId = lastEventId.get();
