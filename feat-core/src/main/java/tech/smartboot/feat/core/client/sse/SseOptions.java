@@ -13,6 +13,8 @@ package tech.smartboot.feat.core.client.sse;
 import tech.smartboot.feat.core.client.HttpOptions;
 import tech.smartboot.feat.core.common.HttpMethod;
 
+import java.util.function.Predicate;
+
 /**
  * SSE客户端配置选项
  *
@@ -20,6 +22,14 @@ import tech.smartboot.feat.core.common.HttpMethod;
  * @version v1.0.0
  */
 public class SseOptions {
+    /**
+     * 接受所有事件
+     */
+    public static final Predicate<SseEvent> EVENT_FILTER_ACCEPT_ALL = sseEvent -> true;
+    /**
+     * 拒绝所有事件
+     */
+    public static final Predicate<SseEvent> EVENT_FILTER_REJECT_ALL = sseEvent -> false;
     private String method = HttpMethod.GET;
 
     /**
@@ -31,7 +41,7 @@ public class SseOptions {
     /**
      * 事件过滤器
      */
-    private EventFilter eventFilter = EventFilter.acceptAll();
+    private Predicate<SseEvent> eventFilter = EVENT_FILTER_ACCEPT_ALL;
 
     /**
      * 断点续传的最后事件ID
@@ -58,11 +68,11 @@ public class SseOptions {
         return this;
     }
 
-    EventFilter getEventFilter() {
+    Predicate<SseEvent> getEventFilter() {
         return eventFilter;
     }
 
-    public SseOptions eventFilter(EventFilter eventFilter) {
+    public SseOptions eventFilter(Predicate<SseEvent> eventFilter) {
         this.eventFilter = eventFilter;
         return this;
     }

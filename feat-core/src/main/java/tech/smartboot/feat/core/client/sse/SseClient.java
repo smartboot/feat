@@ -31,6 +31,7 @@ import java.util.function.Consumer;
  * @version v1.0.0
  */
 public class SseClient {
+
     private final String url;
     private final SseOptions options;
     private final AtomicReference<ConnectionState> state = new AtomicReference<>(ConnectionState.DISCONNECTED);
@@ -253,7 +254,7 @@ public class SseClient {
                 SseEvent sseEvent = new SseEvent(id, type, data, retry, event);
 
                 // 应用事件过滤器
-                if (!options.getEventFilter().accept(sseEvent)) {
+                if (!options.getEventFilter().test(sseEvent)) {
                     return;
                 }
 

@@ -11,7 +11,6 @@
 package tech.smartboot.feat.demo.sse;
 
 import tech.smartboot.feat.Feat;
-import tech.smartboot.feat.core.client.sse.EventFilter;
 import tech.smartboot.feat.core.client.sse.RetryPolicy;
 import tech.smartboot.feat.core.client.sse.SseClient;
 
@@ -141,9 +140,8 @@ public class SseClientBasicDemo {
         System.out.println("\\n=== 事件过滤处理示例 ===");
 
         // 创建只接受特定类型事件的过滤器
-        EventFilter notificationFilter = EventFilter.byType("notification");
 
-        SseClient client = Feat.sse("http://example.com/events", opt -> opt.eventFilter(notificationFilter));
+        SseClient client = Feat.sse("http://example.com/events", opt -> opt.eventFilter(sseEvent -> "notification".equals(sseEvent.getType())));
 
         // 注册事件处理器
         client.onData(event -> {
