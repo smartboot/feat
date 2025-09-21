@@ -10,93 +10,54 @@
 
 package tech.smartboot.feat.core.client.sse;
 
-import java.util.HashMap;
-import java.util.Map;
+import tech.smartboot.feat.core.client.HttpOptions;
+import tech.smartboot.feat.core.common.HttpMethod;
 
 /**
  * SSE客户端配置选项
- * 
+ *
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
 public class SseOptions {
-    
-    /**
-     * 连接超时(毫秒)
-     */
-    private long connectionTimeout = 10000;
-    
-    /**
-     * 读取超时(毫秒)
-     */
-    private long readTimeout = 0; // 0表示无超时
-    
+    private String method = HttpMethod.GET;
+
     /**
      * 重连策略
      */
     private RetryPolicy retryPolicy = RetryPolicy.defaultPolicy();
-    
-    /**
-     * 心跳配置
-     */
-    private HeartbeatConfig heartbeatConfig = HeartbeatConfig.disabled();
-    
+
+
     /**
      * 事件过滤器
      */
     private EventFilter eventFilter = EventFilter.acceptAll();
-    
+
     /**
      * 断点续传的最后事件ID
      */
     private String lastEventId;
-    
-    /**
-     * 自定义请求头
-     */
-    private Map<String, String> headers = new HashMap<>();
-    
+
     /**
      * 是否启用自动重连
      */
     private boolean autoReconnect = true;
+    private final HttpOptions httpOptions;
 
-    public SseOptions() {
+    SseOptions(HttpOptions httpOptions) {
+        this.httpOptions = httpOptions;
     }
 
-    public long getConnectionTimeout() {
-        return connectionTimeout;
-    }
-
-    public SseOptions setConnectionTimeout(long connectionTimeout) {
-        this.connectionTimeout = connectionTimeout;
-        return this;
-    }
-
-    public long getReadTimeout() {
-        return readTimeout;
-    }
-
-    public SseOptions setReadTimeout(long readTimeout) {
-        this.readTimeout = readTimeout;
-        return this;
+    public HttpOptions httpOptions() {
+        return httpOptions;
     }
 
     public RetryPolicy getRetryPolicy() {
         return retryPolicy;
     }
 
-    public SseOptions setRetryPolicy(RetryPolicy retryPolicy) {
+    public SseOptions retryPolicy(RetryPolicy retryPolicy) {
         this.retryPolicy = retryPolicy;
-        return this;
-    }
-
-    public HeartbeatConfig getHeartbeatConfig() {
-        return heartbeatConfig;
-    }
-
-    public SseOptions setHeartbeatConfig(HeartbeatConfig heartbeatConfig) {
-        this.heartbeatConfig = heartbeatConfig;
         return this;
     }
 
@@ -104,7 +65,7 @@ public class SseOptions {
         return eventFilter;
     }
 
-    public SseOptions setEventFilter(EventFilter eventFilter) {
+    public SseOptions eventFilter(EventFilter eventFilter) {
         this.eventFilter = eventFilter;
         return this;
     }
@@ -113,38 +74,28 @@ public class SseOptions {
         return lastEventId;
     }
 
-    public SseOptions setLastEventId(String lastEventId) {
+    public SseOptions lastEventId(String lastEventId) {
         this.lastEventId = lastEventId;
         return this;
     }
 
-    public Map<String, String> getHeaders() {
-        return headers;
-    }
-
-    public SseOptions setHeaders(Map<String, String> headers) {
-        this.headers = headers;
-        return this;
-    }
-    
-    /**
-     * 添加请求头
-     * 
-     * @param name 头名称
-     * @param value 头值
-     * @return this
-     */
-    public SseOptions addHeader(String name, String value) {
-        this.headers.put(name, value);
-        return this;
-    }
 
     public boolean isAutoReconnect() {
         return autoReconnect;
     }
 
-    public SseOptions setAutoReconnect(boolean autoReconnect) {
+    public SseOptions autoReconnect(boolean autoReconnect) {
         this.autoReconnect = autoReconnect;
+        return this;
+    }
+
+
+    public String getMethod() {
+        return method;
+    }
+
+    public SseOptions setMethod(String method) {
+        this.method = method;
         return this;
     }
 }
