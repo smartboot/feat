@@ -177,6 +177,7 @@ public final class HttpClient {
         request.setUri(uri);
         request.addHeader(HeaderName.HOST, hostHeader);
         request.setProtocol(HttpProtocol.HTTP_11.getProtocol());
+        options.getHeaders().forEach(request::addHeader);
 
         httpRestImpl.getCompletableFuture().thenAccept(httpResponse -> {
             boolean close = !HeaderValue.Connection.KEEPALIVE.equalsIgnoreCase(httpResponse.getHeader(HeaderName.CONNECTION));
