@@ -57,7 +57,7 @@ public class SseClientBasicDemo {
 
         // 使用Feat工厂方法创建SSE客户端
         SseClient client = Feat.sse("http://example.com/events", opt -> {
-            opt.autoReconnect(true).httpOptions().connectTimeout(10000);
+            opt.retryPolicy(RetryPolicy.defaultPolicy()).httpOptions().connectTimeout(10000);
         });
 
         // 注册事件处理器

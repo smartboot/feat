@@ -25,7 +25,7 @@ public class SseOptions {
     /**
      * 重连策略
      */
-    private RetryPolicy retryPolicy = RetryPolicy.defaultPolicy();
+    private RetryPolicy retryPolicy = RetryPolicy.noRetry();
 
 
     /**
@@ -38,10 +38,7 @@ public class SseOptions {
      */
     private String lastEventId;
 
-    /**
-     * 是否启用自动重连
-     */
-    private boolean autoReconnect = true;
+
     private final HttpOptions httpOptions;
 
     SseOptions(HttpOptions httpOptions) {
@@ -78,17 +75,6 @@ public class SseOptions {
         this.lastEventId = lastEventId;
         return this;
     }
-
-
-    public boolean isAutoReconnect() {
-        return autoReconnect;
-    }
-
-    public SseOptions autoReconnect(boolean autoReconnect) {
-        this.autoReconnect = autoReconnect;
-        return this;
-    }
-
 
     public String getMethod() {
         return method;

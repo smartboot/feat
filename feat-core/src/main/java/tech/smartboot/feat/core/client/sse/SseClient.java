@@ -50,13 +50,7 @@ public class SseClient {
         this.url = url;
         this.httpClient = new HttpClient(url);
         this.options = new SseOptions(httpClient.options());
-        if (count.getAndIncrement() == 0) {
-            timer = new HashedWheelTimer(r -> {
-                Thread thread = new Thread(r, "SSE-Client-Scheduler");
-                thread.setDaemon(true);
-                return thread;
-            });
-        }
+
 
         // 设置初始的lastEventId
         if (options.getLastEventId() != null) {
@@ -68,6 +62,13 @@ public class SseClient {
     public void connect() {
         if (connectExecuted) {
             throw new IllegalStateException("The connect() method can only be called once per client instance.");
+        }
+        if (count.getAndIncrement() == 0) {
+            timer = new HashedWheelTimer(r -> {
+                Thread thread = new Thread(r, "SSE-Client-Scheduler");
+                thread.setDaemon(true);
+                return thread;
+            });
         }
         connectExecuted = true;
         doConnect();
@@ -131,10 +132,6 @@ public class SseClient {
     }
 
     private void scheduleReconnect() {
-        if (!options.isAutoReconnect() || !options.getRetryPolicy().isRetryOnError()) {
-            return;
-        }
-
         int currentRetryCount = retryCount.incrementAndGet();
         if (!options.getRetryPolicy().shouldRetry(currentRetryCount)) {
             changeState(ConnectionState.FAILED);

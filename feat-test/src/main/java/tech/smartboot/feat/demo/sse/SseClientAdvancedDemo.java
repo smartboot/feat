@@ -11,10 +11,10 @@
 package tech.smartboot.feat.demo.sse;
 
 import tech.smartboot.feat.Feat;
-import tech.smartboot.feat.core.client.sse.SseClient;
 import tech.smartboot.feat.core.client.sse.ConnectionListener;
 import tech.smartboot.feat.core.client.sse.ConnectionState;
 import tech.smartboot.feat.core.client.sse.RetryPolicy;
+import tech.smartboot.feat.core.client.sse.SseClient;
 import tech.smartboot.feat.core.client.sse.SseEvent;
 
 import java.util.concurrent.CountDownLatch;
@@ -60,7 +60,7 @@ public class SseClientAdvancedDemo {
         RetryPolicy aggressiveRetry = new RetryPolicy().setMaxRetries(5).setInitialDelay(1000).setMaxDelay(10000).setBackoffMultiplier(1.5).setRetryOnError(true);
 
         SseClient client = Feat.sse("http://unreliable-server.com/events", opt -> {
-            opt.retryPolicy(aggressiveRetry).autoReconnect(true);
+            opt.retryPolicy(aggressiveRetry);
         });
 
         // 监听连接状态变化
@@ -204,7 +204,7 @@ public class SseClientAdvancedDemo {
     }
 
     private static SseClient createClientForEndpoint(String name, String url) {
-        SseClient client = Feat.sse(url, opt -> opt.autoReconnect(true).httpOptions().connectTimeout(8000));
+        SseClient client = Feat.sse(url, opt -> opt.retryPolicy(RetryPolicy.defaultPolicy()).httpOptions().connectTimeout(8000));
 
         client.onData(event -> {
             System.out.println("[" + name + "] 接收事件: " + event.getData());

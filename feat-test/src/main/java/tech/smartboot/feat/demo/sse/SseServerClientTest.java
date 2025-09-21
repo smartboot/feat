@@ -258,7 +258,7 @@ public class SseServerClientTest {
         AtomicInteger statusCount = new AtomicInteger(0);
 
         SseClient client = Feat.sse(SERVER_URL + "/advanced-events", options -> {
-            options.autoReconnect(true).httpOptions().connectTimeout(5000);
+            options.retryPolicy(RetryPolicy.defaultPolicy()).httpOptions().connectTimeout(5000);
         });
 
         // 注册不同类型的事件处理器
@@ -364,7 +364,7 @@ public class SseServerClientTest {
         // 配置积极的重连策略
         RetryPolicy retryPolicy = new RetryPolicy().setMaxRetries(3).setInitialDelay(1000).setBackoffMultiplier(1.5);
 
-        SseClient client = Feat.sse(SERVER_URL + "/unstable-events", opt -> opt.retryPolicy(retryPolicy).autoReconnect(true));
+        SseClient client = Feat.sse(SERVER_URL + "/unstable-events", opt -> opt.retryPolicy(retryPolicy));
 
         AtomicInteger eventCount = new AtomicInteger(0);
 
@@ -408,7 +408,7 @@ public class SseServerClientTest {
      * 创建测试客户端
      */
     private static SseClient createTestClient(String name, String url) {
-        SseClient client = Feat.sse(url, opt -> opt.autoReconnect(true).httpOptions().connectTimeout(5000));
+        SseClient client = Feat.sse(url, opt -> opt.retryPolicy(RetryPolicy.defaultPolicy()).httpOptions().connectTimeout(5000));
 
         client.onData(event -> {
             System.out.println("[" + name + "] 接收: " + event.getData());

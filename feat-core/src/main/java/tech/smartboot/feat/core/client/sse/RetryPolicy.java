@@ -12,36 +12,31 @@ package tech.smartboot.feat.core.client.sse;
 
 /**
  * SSE重连策略配置
- * 
+ *
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
 public class RetryPolicy {
-    
+
     /**
      * 最大重连次数，-1表示无限重连
      */
     private int maxRetries = 5;
-    
+
     /**
      * 初始重连延迟(毫秒)
      */
     private long initialDelay = 1000;
-    
+
     /**
      * 最大重连延迟(毫秒)
      */
     private long maxDelay = 30000;
-    
+
     /**
      * 退避倍数
      */
     private double backoffMultiplier = 1.5;
-    
-    /**
-     * 错误时是否重连
-     */
-    private boolean retryOnError = true;
 
     public RetryPolicy() {
     }
@@ -51,12 +46,11 @@ public class RetryPolicy {
         this.initialDelay = initialDelay;
         this.maxDelay = maxDelay;
         this.backoffMultiplier = backoffMultiplier;
-        this.retryOnError = retryOnError;
     }
 
     /**
      * 计算下次重连延迟时间
-     * 
+     *
      * @param retryCount 当前重试次数
      * @return 延迟时间(毫秒)
      */
@@ -67,10 +61,10 @@ public class RetryPolicy {
         long delay = (long) (initialDelay * Math.pow(backoffMultiplier, retryCount));
         return Math.min(delay, maxDelay);
     }
-    
+
     /**
      * 检查是否允许重连
-     * 
+     *
      * @param retryCount 当前重试次数
      * @return 是否允许重连
      */
@@ -114,36 +108,27 @@ public class RetryPolicy {
         return this;
     }
 
-    public boolean isRetryOnError() {
-        return retryOnError;
-    }
-
-    public RetryPolicy setRetryOnError(boolean retryOnError) {
-        this.retryOnError = retryOnError;
-        return this;
-    }
-
     /**
      * 创建默认重连策略
-     * 
+     *
      * @return 默认重连策略
      */
     public static RetryPolicy defaultPolicy() {
         return new RetryPolicy();
     }
-    
+
     /**
      * 创建无重连策略
-     * 
+     *
      * @return 无重连策略
      */
     public static RetryPolicy noRetry() {
         return new RetryPolicy(0, 0, 0, 1.0, false);
     }
-    
+
     /**
      * 创建无限重连策略
-     * 
+     *
      * @return 无限重连策略
      */
     public static RetryPolicy infiniteRetry() {
