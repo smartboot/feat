@@ -88,7 +88,7 @@ public class SseClientAdvancedDemo {
         }).connect();
 
         Thread.sleep(8000);
-        client.disconnect();
+        client.close();
     }
 
     /**
@@ -122,7 +122,7 @@ public class SseClientAdvancedDemo {
             // 模拟在接收到3个事件后连接中断
             if (count >= 3) {
                 System.out.println("[断点续传] 模拟连接中断...");
-                client.disconnect();
+                client.close();
             }
         });
 
@@ -147,7 +147,7 @@ public class SseClientAdvancedDemo {
         }).connect();
 
         Thread.sleep(3000);
-        client.disconnect();
+        client.close();
     }
 
     /**
@@ -194,9 +194,9 @@ public class SseClientAdvancedDemo {
         Thread.sleep(5000);
 
         // 关闭所有连接
-        notificationClient.disconnect();
-        updatesClient.disconnect();
-        alertsClient.disconnect();
+        notificationClient.close();
+        updatesClient.close();
+        alertsClient.close();
 
         System.out.println("[多连接] 所有连接已关闭");
     }
@@ -259,7 +259,7 @@ public class SseClientAdvancedDemo {
         // 打印最终统计信息
         stats.printFinalStatistics();
 
-        client.disconnect();
+        client.close();
     }
 
     /**

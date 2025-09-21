@@ -90,7 +90,7 @@ public class SseClientBasicDemo {
         Thread.sleep(5000);
 
         // 断开连接
-        client.disconnect();
+        client.close();
         System.out.println("SSE连接已断开");
     }
 
@@ -148,7 +148,7 @@ public class SseClientBasicDemo {
 
         Thread.sleep(3000);
 
-        client.disconnect();
+        client.close();
     }
 
     /**
@@ -176,7 +176,7 @@ public class SseClientBasicDemo {
 
         Thread.sleep(3000);
 
-        client.disconnect();
+        client.close();
     }
 
     /**
@@ -224,7 +224,7 @@ public class SseClientBasicDemo {
 
         Thread.sleep(5000);
 
-        client.disconnect();
+        client.close();
 
         System.out.println("\\n=== 所有示例执行完毕 ===");
     }

@@ -139,6 +139,6 @@ final class SseTransport extends Transport {
     public void close() {
         latch.countDown();
         httpClient.close();
-        sseClient.disconnect();
+        sseClient.close();
     }
 }

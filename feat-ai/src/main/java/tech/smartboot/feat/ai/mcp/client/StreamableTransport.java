@@ -122,6 +122,6 @@ final class StreamableTransport extends Transport {
     @Override
     public void close() {
         httpClient.close();
-        sseClient.disconnect();
+        sseClient.close();
     }
 }

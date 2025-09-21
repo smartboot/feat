@@ -243,7 +243,7 @@ public class SseServerClientTest {
         // 等待接收事件
         latch.await(10, TimeUnit.SECONDS);
 
-        client.disconnect();
+        client.close();
         System.out.println("[基础客户端] 测试完成，共接收 " + eventCount.get() + " 个事件");
     }
 
@@ -295,7 +295,7 @@ public class SseServerClientTest {
         // 等待接收所有事件
         Thread.sleep(12000);
 
-        client.disconnect();
+        client.close();
     }
 
     /**
@@ -348,9 +348,9 @@ public class SseServerClientTest {
         Thread.sleep(5000);
 
         // 关闭所有客户端
-        client1.disconnect();
-        client2.disconnect();
-        client3.disconnect();
+        client1.close();
+        client2.close();
+        client3.close();
 
         System.out.println("[多客户端] 所有客户端已断开");
     }
@@ -400,7 +400,7 @@ public class SseServerClientTest {
         // 等待连接中断和重连尝试
         Thread.sleep(8000);
 
-        client.disconnect();
+        client.close();
         System.out.println("[重连测试] 测试完成，共接收 " + eventCount.get() + " 个事件");
     }
 

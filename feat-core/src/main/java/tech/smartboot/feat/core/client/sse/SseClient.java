@@ -152,7 +152,7 @@ public class SseClient {
     }
 
 
-    public void disconnect() {
+    public void close() {
         changeState(ConnectionState.DISCONNECTED);
 
         if (httpClient != null) {
