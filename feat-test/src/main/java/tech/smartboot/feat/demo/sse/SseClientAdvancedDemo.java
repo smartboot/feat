@@ -57,7 +57,7 @@ public class SseClientAdvancedDemo {
         System.out.println("=== 自动重连机制演示 ===");
 
         // 配置积极的重连策略
-        RetryPolicy aggressiveRetry = new RetryPolicy().setMaxRetries(5).setInitialDelay(1000).setMaxDelay(10000).setBackoffMultiplier(1.5).setRetryOnError(true);
+        RetryPolicy aggressiveRetry = new RetryPolicy().setMaxRetries(5).setInitialDelay(1000).setMaxDelay(10000).setBackoffMultiplier(1.5);
 
         SseClient client = Feat.sse("http://unreliable-server.com/events", opt -> {
             opt.retryPolicy(aggressiveRetry);
@@ -139,9 +139,7 @@ public class SseClientAdvancedDemo {
 
         client.onData(event -> {
             System.out.println("[断点续传] 续传事件, ID: " + event.getId() + ", 数据: " + event.getData());
-        });
-
-        client.onConnection(new ConnectionListener() {
+        }).onConnection(new ConnectionListener() {
             @Override
             public void onOpen(SseClient client) {
                 System.out.println("[断点续传] 断点续传连接已建立");

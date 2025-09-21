@@ -104,8 +104,7 @@ public class SseClientBasicDemo {
         RetryPolicy retryPolicy = new RetryPolicy()
                 .setMaxRetries(10)
                 .setInitialDelay(2000)
-                .setBackoffMultiplier(2.0)
-                .setRetryOnError(true);
+                .setBackoffMultiplier(2.0);
 
         // 使用函数式配置创建客户端
         SseClient client = Feat.sse("http://example.com/events", options -> {
@@ -186,7 +185,7 @@ public class SseClientBasicDemo {
     public static void connectionStateMonitoring() throws Exception {
         System.out.println("\\n=== 连接状态监听示例 ===");
 
-        SseClient client = Feat.sse("http://example.com/events", opt -> opt.autoReconnect(true));
+        SseClient client = Feat.sse("http://example.com/events", opt -> opt.retryPolicy(RetryPolicy.defaultPolicy()));
 
         // 注册连接监听器
         client.onConnection(new ConnectionListener() {

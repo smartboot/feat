@@ -117,8 +117,6 @@ public class SseClient {
     }
 
     private void handleConnectionError(Throwable error) {
-        changeState(ConnectionState.FAILED);
-
         if (connectionListener != null) {
             connectionListener.onError(this, error);
         }
@@ -126,7 +124,10 @@ public class SseClient {
         if (onError != null) {
             onError.accept(error);
         }
-
+        if (state.get() == ConnectionState.DISCONNECTED) {
+            return;
+        }
+        changeState(ConnectionState.FAILED);
         // 尝试重连
         scheduleReconnect();
     }
@@ -143,7 +144,7 @@ public class SseClient {
 
         timer.schedule(() -> {
             if (state.get() == ConnectionState.RECONNECTING) {
-                state.set(ConnectionState.DISCONNECTED);
+                state.set(ConnectionState.CONNECTING);
                 doConnect();
             }
         }, delay, TimeUnit.MILLISECONDS);
