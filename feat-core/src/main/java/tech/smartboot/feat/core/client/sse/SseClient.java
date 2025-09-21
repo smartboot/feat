@@ -39,7 +39,10 @@ public class SseClient {
     private final AtomicInteger retryCount = new AtomicInteger(0);
 
     private volatile Consumer<Throwable> onError = Throwable::printStackTrace;
-    private volatile ConnectionListener connectionListener;
+    private volatile Consumer<SseClient> onOpen = client -> {
+    };
+    private volatile Consumer<SseClient> onClose = client -> {
+    };
     private final HttpClient httpClient;
 
     private static HashedWheelTimer timer;
@@ -100,9 +103,7 @@ public class SseClient {
                     retryCount.set(0);
 
                     // 通知连接成功
-                    if (connectionListener != null) {
-                        connectionListener.onOpen(this);
-                    }
+                    onOpen.accept(this);
                 } else {
                     String error = "HTTP " + resp.statusCode() + ": " + resp.getReasonPhrase();
                     handleConnectionError(new RuntimeException(error));
@@ -118,13 +119,7 @@ public class SseClient {
     }
 
     private void handleConnectionError(Throwable error) {
-        if (connectionListener != null) {
-            connectionListener.onError(this, error);
-        }
-
-        if (onError != null) {
-            onError.accept(error);
-        }
+        onError.accept(error);
         if (state.get() == ConnectionState.DISCONNECTED) {
             return;
         }
@@ -158,18 +153,12 @@ public class SseClient {
         if (httpClient != null) {
             try {
                 httpClient.close();
-            } catch (Exception e) {
-                // 忽略关闭异常
             } finally {
                 if (count.decrementAndGet() == 0) {
                     timer.shutdown();
                     timer = null;
                 }
             }
-        }
-
-        if (connectionListener != null) {
-            connectionListener.onClose(this, "Manual disconnect");
         }
     }
 
@@ -184,18 +173,24 @@ public class SseClient {
         return onEvent("message", handler);
     }
 
+    /**
+     * 连接打开时触发
+     *
+     */
+    public SseClient onOpen(Consumer<SseClient> consumer) {
+        this.onOpen = consumer;
+        return this;
+    }
 
     public SseClient onError(Consumer<Throwable> onError) {
         this.onError = onError;
         return this;
     }
 
-
-    public SseClient onConnection(ConnectionListener listener) {
-        this.connectionListener = listener;
+    public SseClient onClose(Consumer<SseClient> consumer) {
+        this.onClose = consumer;
         return this;
     }
-
 
     public boolean isConnected() {
         return state.get() == ConnectionState.CONNECTED;
@@ -222,10 +217,7 @@ public class SseClient {
     }
 
     private void changeState(ConnectionState newState) {
-        ConnectionState oldState = state.getAndSet(newState);
-        if (oldState != newState && connectionListener != null) {
-            connectionListener.onStateChange(this, oldState, newState);
-        }
+        state.getAndSet(newState);
     }
 
     /**

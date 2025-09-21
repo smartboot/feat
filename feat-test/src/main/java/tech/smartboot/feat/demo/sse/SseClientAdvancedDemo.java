@@ -11,8 +11,6 @@
 package tech.smartboot.feat.demo.sse;
 
 import tech.smartboot.feat.Feat;
-import tech.smartboot.feat.core.client.sse.ConnectionListener;
-import tech.smartboot.feat.core.client.sse.ConnectionState;
 import tech.smartboot.feat.core.client.sse.RetryPolicy;
 import tech.smartboot.feat.core.client.sse.SseClient;
 import tech.smartboot.feat.core.client.sse.SseEvent;
@@ -64,27 +62,16 @@ public class SseClientAdvancedDemo {
         });
 
         // 监听连接状态变化
-        client.onConnection(new ConnectionListener() {
-            @Override
-            public void onStateChange(SseClient client, ConnectionState oldState, ConnectionState newState) {
-                System.out.println("[重连演示] 状态变化: " + oldState + " -> " + newState);
-            }
-
-            @Override
-            public void onError(SseClient client, Throwable error) {
-                System.out.println("[重连演示] 连接错误，将自动重连: " + error.getMessage());
-            }
+        client.onError(error -> {
+            System.out.println("[重连演示] 连接错误，将自动重连: " + error.getMessage());
         });
 
         client.onData(event -> {
             System.out.println("[重连演示] 接收事件: " + event.getData());
         });
 
-        client.onConnection(new ConnectionListener() {
-            @Override
-            public void onError(SseClient client, Throwable error) {
-                System.out.println("[重连演示] 初始连接失败，重连机制将启动");
-            }
+        client.onError(error -> {
+            System.out.println("[重连演示] 初始连接失败，重连机制将启动");
         }).connect();
 
         Thread.sleep(8000);
@@ -139,11 +126,8 @@ public class SseClientAdvancedDemo {
 
         client.onData(event -> {
             System.out.println("[断点续传] 续传事件, ID: " + event.getId() + ", 数据: " + event.getData());
-        }).onConnection(new ConnectionListener() {
-            @Override
-            public void onOpen(SseClient client) {
-                System.out.println("[断点续传] 断点续传连接已建立");
-            }
+        }).onOpen(c -> {
+            System.out.println("[断点续传] 断点续传连接已建立");
         }).connect();
 
         Thread.sleep(3000);
@@ -164,24 +148,9 @@ public class SseClientAdvancedDemo {
         // 启动所有连接
         CountDownLatch allConnected = new CountDownLatch(3);
 
-        notificationClient.onConnection(new ConnectionListener() {
-            @Override
-            public void onOpen(SseClient client) {
-                allConnected.countDown();
-            }
-        }).connect();
-        updatesClient.onConnection(new ConnectionListener() {
-            @Override
-            public void onOpen(SseClient client) {
-                allConnected.countDown();
-            }
-        }).connect();
-        alertsClient.onConnection(new ConnectionListener() {
-            @Override
-            public void onOpen(SseClient client) {
-                allConnected.countDown();
-            }
-        }).connect();
+        notificationClient.onOpen(c -> allConnected.countDown()).connect();
+        updatesClient.onOpen(c -> allConnected.countDown()).connect();
+        alertsClient.onOpen(c -> allConnected.countDown()).connect();
 
         // 等待所有连接建立
         if (allConnected.await(10, TimeUnit.SECONDS)) {
@@ -206,18 +175,8 @@ public class SseClientAdvancedDemo {
 
         client.onData(event -> {
             System.out.println("[" + name + "] 接收事件: " + event.getData());
-        });
-
-        client.onConnection(new ConnectionListener() {
-            @Override
-            public void onOpen(SseClient client) {
-                System.out.println("[" + name + "] 连接已打开");
-            }
-
-            @Override
-            public void onClose(SseClient client, String reason) {
-                System.out.println("[" + name + "] 连接已关闭: " + reason);
-            }
+        }).onOpen(c -> {
+            System.out.println("[" + name + "] 连接已打开");
         });
 
         return client;
@@ -243,15 +202,8 @@ public class SseClientAdvancedDemo {
             }
         });
 
-        client.onError(error -> {
-            stats.recordError(error);
-        });
-
-        client.onConnection(new ConnectionListener() {
-            @Override
-            public void onOpen(SseClient client) {
-                System.out.println("[统计监控] 开始事件监控...");
-            }
+        client.onError(error -> stats.recordError(error)).onOpen(c -> {
+            System.out.println("[统计监控] 开始事件监控...");
         }).connect();
 
         Thread.sleep(10000);

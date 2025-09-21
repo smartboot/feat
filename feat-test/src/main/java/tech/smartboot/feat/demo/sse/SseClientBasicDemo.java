@@ -11,11 +11,9 @@
 package tech.smartboot.feat.demo.sse;
 
 import tech.smartboot.feat.Feat;
-import tech.smartboot.feat.core.client.sse.SseClient;
-import tech.smartboot.feat.core.client.sse.ConnectionListener;
-import tech.smartboot.feat.core.client.sse.ConnectionState;
 import tech.smartboot.feat.core.client.sse.EventFilter;
 import tech.smartboot.feat.core.client.sse.RetryPolicy;
+import tech.smartboot.feat.core.client.sse.SseClient;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -71,20 +69,10 @@ public class SseClientBasicDemo {
         // 注册错误处理器
         client.onError(error -> {
             System.err.println("连接发生错误: " + error.getMessage());
-        });
+        }).onOpen(c -> System.out.println("SSE连接已建立"));
 
         // 建立连接
-        client.onConnection(new ConnectionListener() {
-            @Override
-            public void onOpen(SseClient client) {
-                System.out.println("SSE连接已建立");
-            }
-
-            @Override
-            public void onError(SseClient client, Throwable error) {
-                System.err.println("连接失败: " + error.getMessage());
-            }
-        }).connect();
+        client.connect();
 
         // 等待一段时间接收事件
         Thread.sleep(5000);
@@ -132,12 +120,7 @@ public class SseClientBasicDemo {
         // 建立连接并处理
         CountDownLatch latch = new CountDownLatch(1);
 
-        client.onConnection(new ConnectionListener() {
-            @Override
-            public void onOpen(SseClient client) {
-                System.out.println("高级配置SSE连接已建立");
-            }
-        }).connect();
+        client.onOpen(c -> System.out.println("高级配置SSE连接已建立")).connect();
 
         // 等待连接建立
         latch.await(10, TimeUnit.SECONDS);
@@ -167,12 +150,7 @@ public class SseClientBasicDemo {
             System.out.println("过滤后的通知事件: " + event.getData());
         });
 
-        client.onConnection(new ConnectionListener() {
-            @Override
-            public void onOpen(SseClient client) {
-                System.out.println("事件过滤SSE连接已建立");
-            }
-        }).connect();
+        client.onOpen(c -> System.out.println("事件过滤SSE连接已建立")).connect();
 
         Thread.sleep(3000);
 
@@ -188,39 +166,15 @@ public class SseClientBasicDemo {
         SseClient client = Feat.sse("http://example.com/events", opt -> opt.retryPolicy(RetryPolicy.defaultPolicy()));
 
         // 注册连接监听器
-        client.onConnection(new ConnectionListener() {
-            @Override
-            public void onOpen(SseClient client) {
-                System.out.println("连接已打开: " + client.getUrl());
-            }
-
-            @Override
-            public void onClose(SseClient client, String reason) {
-                System.out.println("连接已关闭, 原因: " + reason);
-            }
-
-            @Override
-            public void onError(SseClient client, Throwable error) {
-                System.out.println("连接错误: " + error.getMessage());
-            }
-
-            @Override
-            public void onStateChange(SseClient client, ConnectionState oldState, ConnectionState newState) {
-                System.out.println("连接状态变化: " + oldState + " -> " + newState);
-            }
-        });
+        client.onOpen(c -> System.out.println("连接已打开: " + c.getUrl()))
+                .onError(error -> System.out.println("连接错误: " + error.getMessage())).onClose(c -> System.out.println("连接已关闭: " + c.getUrl()));
 
         // 注册事件处理器
         client.onData(event -> {
             System.out.println("监控模式下接收事件: " + event.getData());
         });
 
-        client.onConnection(new ConnectionListener() {
-            @Override
-            public void onOpen(SseClient client) {
-                System.out.println("监控模式SSE连接已打开");
-            }
-        }).connect();
+        client.connect();
 
         Thread.sleep(5000);
 

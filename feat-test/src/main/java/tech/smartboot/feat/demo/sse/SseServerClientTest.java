@@ -11,10 +11,8 @@
 package tech.smartboot.feat.demo.sse;
 
 import tech.smartboot.feat.Feat;
-import tech.smartboot.feat.core.client.sse.SseClient;
-import tech.smartboot.feat.core.client.sse.ConnectionListener;
-import tech.smartboot.feat.core.client.sse.ConnectionState;
 import tech.smartboot.feat.core.client.sse.RetryPolicy;
+import tech.smartboot.feat.core.client.sse.SseClient;
 import tech.smartboot.feat.core.server.upgrade.sse.SSEUpgrade;
 import tech.smartboot.feat.core.server.upgrade.sse.SseEmitter;
 
@@ -226,17 +224,7 @@ public class SseServerClientTest {
             System.err.println("[基础客户端] 错误: " + error.getMessage());
         });
 
-        client.onConnection(new ConnectionListener() {
-            @Override
-            public void onOpen(SseClient client) {
-                System.out.println("[基础客户端] 连接已建立");
-            }
-
-            @Override
-            public void onClose(SseClient client, String reason) {
-                System.out.println("[基础客户端] 连接已关闭: " + reason);
-            }
-        });
+        client.onOpen(c -> System.out.println("[基础客户端] 连接已打开")).onClose(c -> System.out.println("[基础客户端] 连接已关闭: " + c));
 
         client.connect();
 
@@ -277,17 +265,9 @@ public class SseServerClientTest {
             System.out.println("[高级客户端] 状态事件 #" + count + ": " + event.getData());
         });
 
-        client.onConnection(new ConnectionListener() {
-            @Override
-            public void onOpen(SseClient client) {
-                System.out.println("[高级客户端] 连接已建立");
-            }
-
-            @Override
-            public void onClose(SseClient client, String reason) {
-                System.out.println("[高级客户端] 连接已关闭: " + reason);
-                System.out.println("[高级客户端] 事件统计 - 通知:" + notificationCount.get() + ", 更新:" + updateCount.get() + ", 状态:" + statusCount.get());
-            }
+        client.onOpen(c -> System.out.println("[高级客户端] 连接已打开")).onClose(c -> {
+            System.out.println("[高级客户端] 连接已关闭: " + c);
+            System.out.println("[高级客户端] 事件统计 - 通知:" + notificationCount.get() + ", 更新:" + updateCount.get() + ", 状态:" + statusCount.get());
         });
 
         client.connect();
@@ -312,28 +292,19 @@ public class SseServerClientTest {
         // 同时启动所有客户端
         CountDownLatch allConnected = new CountDownLatch(3);
 
-        client1.onConnection(new ConnectionListener() {
-            @Override
-            public void onOpen(SseClient client) {
-                System.out.println("[多客户端] 客户端1连接成功");
-                allConnected.countDown();
-            }
+        client1.onOpen(c -> {
+            System.out.println("[多客户端] 客户端1连接成功");
+            allConnected.countDown();
         });
 
-        client2.onConnection(new ConnectionListener() {
-            @Override
-            public void onOpen(SseClient client) {
-                System.out.println("[多客户端] 客户端2连接成功");
-                allConnected.countDown();
-            }
+        client2.onOpen(c -> {
+            System.out.println("[多客户端] 客户端2连接成功");
+            allConnected.countDown();
         });
 
-        client3.onConnection(new ConnectionListener() {
-            @Override
-            public void onOpen(SseClient client) {
-                System.out.println("[多客户端] 客户端3连接成功");
-                allConnected.countDown();
-            }
+        client3.onOpen(c -> {
+            System.out.println("[多客户端] 客户端3连接成功");
+            allConnected.countDown();
         });
 
         client1.connect();
@@ -369,32 +340,10 @@ public class SseServerClientTest {
         AtomicInteger eventCount = new AtomicInteger(0);
 
         client.onData(event -> {
-            int count = eventCount.incrementAndGet();
-            System.out.println("[重连测试] 接收事件 #" + count + ": " + event.getData());
-        });
-
-        client.onConnection(new ConnectionListener() {
-            @Override
-            public void onOpen(SseClient client) {
-                System.out.println("[重连测试] 连接已建立");
-            }
-
-            @Override
-            public void onClose(SseClient client, String reason) {
-                System.out.println("[重连测试] 连接已关闭: " + reason);
-            }
-
-            @Override
-            public void onError(SseClient client, Throwable error) {
-                System.out.println("[重连测试] 连接错误，准备重连: " + error.getMessage());
-            }
-
-            @Override
-            public void onStateChange(SseClient client, ConnectionState oldState, ConnectionState newState) {
-                System.out.println("[重连测试] 状态变化: " + oldState + " -> " + newState);
-            }
-        });
-
+                    int count = eventCount.incrementAndGet();
+                    System.out.println("[重连测试] 接收事件 #" + count + ": " + event.getData());
+                }).onOpen(c -> System.out.println("[重连测试] 连接已打开")).onClose(c -> System.out.println("[重连测试] 连接已关闭: " + c))
+                .onError(error -> System.out.println("[重连测试] 错误: " + error.getMessage()));
         client.connect();
 
         // 等待连接中断和重连尝试
