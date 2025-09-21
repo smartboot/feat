@@ -54,7 +54,7 @@ public class RetryPolicy {
      * @param retryCount 当前重试次数
      * @return 延迟时间(毫秒)
      */
-    public long calculateDelay(int retryCount) {
+    long calculateDelay(int retryCount) {
         if (retryCount <= 0) {
             return initialDelay;
         }
@@ -68,7 +68,7 @@ public class RetryPolicy {
      * @param retryCount 当前重试次数
      * @return 是否允许重连
      */
-    public boolean shouldRetry(int retryCount) {
+    boolean shouldRetry(int retryCount) {
         return maxRetries == -1 || retryCount < maxRetries;
     }
 

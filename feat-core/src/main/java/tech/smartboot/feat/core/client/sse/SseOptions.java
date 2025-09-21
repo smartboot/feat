@@ -49,7 +49,7 @@ public class SseOptions {
         return httpOptions;
     }
 
-    public RetryPolicy getRetryPolicy() {
+    RetryPolicy getRetryPolicy() {
         return retryPolicy;
     }
 
@@ -58,7 +58,7 @@ public class SseOptions {
         return this;
     }
 
-    public EventFilter getEventFilter() {
+    EventFilter getEventFilter() {
         return eventFilter;
     }
 
@@ -67,7 +67,7 @@ public class SseOptions {
         return this;
     }
 
-    public String getLastEventId() {
+    String getLastEventId() {
         return lastEventId;
     }
 
@@ -76,7 +76,7 @@ public class SseOptions {
         return this;
     }
 
-    public String getMethod() {
+    String getMethod() {
         return method;
     }
 

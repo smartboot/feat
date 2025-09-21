@@ -18,9 +18,7 @@ import tech.smartboot.feat.ai.mcp.model.Response;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.client.HttpRest;
-import tech.smartboot.feat.core.client.sse.EventHandler;
 import tech.smartboot.feat.core.client.sse.SseClient;
-import tech.smartboot.feat.core.client.sse.SseEvent;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpMethod;
@@ -58,18 +56,16 @@ final class StreamableTransport extends Transport {
         sseClient.getOptions()
                 .setMethod(HttpMethod.POST)
                 .httpOptions().setHeaders(options.getHeaders()).addHeader(Request.HEADER_SESSION_ID, sessionId);
-        sseClient.onData(new EventHandler() {
-            @Override
-            public void onEvent(SseEvent event) {
-                JSONObject jsonObject = JSONObject.parseObject(event.getData());
-                Response<JSONObject> response = handleServerRequest(jsonObject);
-                if (response != null) {
-                    doRequest(httpClient.post(options.getMcpEndpoint()), response);
-                    return;
-                }
-                options.getNotificationHandler().accept(jsonObject.getString("method"));
-                logger.warn("unexpected event: " + event.getType() + " data: " + event.getData());
+        sseClient.onData(event -> {
+            JSONObject jsonObject = JSONObject.parseObject(event.getData());
+            Response<JSONObject> response = handleServerRequest(jsonObject);
+            if (response != null) {
+                doRequest(httpClient.post(options.getMcpEndpoint()), response);
+                return;
             }
+            options.getNotificationHandler().accept(jsonObject.getString("method"));
+            logger.warn("unexpected event: " + event.getType() + " data: " + event.getData());
+
         }).onError(throwable -> {
             System.out.println("sse error");
             throwable.printStackTrace();

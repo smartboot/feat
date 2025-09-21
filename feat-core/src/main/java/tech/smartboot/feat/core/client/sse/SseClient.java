@@ -34,7 +34,7 @@ public class SseClient {
     private final String url;
     private final SseOptions options;
     private final AtomicReference<ConnectionState> state = new AtomicReference<>(ConnectionState.DISCONNECTED);
-    private final Map<String, EventHandler> eventHandlers = new ConcurrentHashMap<>();
+    private final Map<String, Consumer<SseEvent>> eventHandlers = new ConcurrentHashMap<>();
     private final AtomicReference<String> lastEventId = new AtomicReference<>();
     private final AtomicInteger retryCount = new AtomicInteger(0);
 
@@ -174,13 +174,13 @@ public class SseClient {
     }
 
 
-    public SseClient onEvent(String eventType, EventHandler handler) {
+    public SseClient onEvent(String eventType, Consumer<SseEvent> handler) {
         eventHandlers.put(eventType != null ? eventType : "message", handler);
         return this;
     }
 
 
-    public SseClient onData(EventHandler handler) {
+    public SseClient onData(Consumer<SseEvent> handler) {
         return onEvent("message", handler);
     }
 
@@ -267,7 +267,7 @@ public class SseClient {
 
                 // 查找对应的事件处理器
                 String eventType = type != null ? type : "message";
-                EventHandler handler = eventHandlers.get(eventType);
+                Consumer<SseEvent> handler = eventHandlers.get(eventType);
 
                 // 如果没有找到特定类型的处理器，尝试使用默认处理器
                 if (handler == null) {
@@ -277,7 +277,7 @@ public class SseClient {
                 // 执行事件处理器
                 if (handler != null) {
                     try {
-                        handler.onEvent(sseEvent);
+                        handler.accept(sseEvent);
                     } catch (Exception e) {
                         if (onError != null) {
                             onError.accept(e);
