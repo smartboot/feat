@@ -18,16 +18,17 @@ import tech.smartboot.feat.ai.mcp.model.Response;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.client.HttpRest;
-import tech.smartboot.feat.core.client.stream.ServerSentEventStream;
+import tech.smartboot.feat.core.client.sse.EventHandler;
+import tech.smartboot.feat.core.client.sse.SseClient;
+import tech.smartboot.feat.core.client.sse.SseEvent;
 import tech.smartboot.feat.core.common.FeatUtils;
-import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
+import tech.smartboot.feat.core.common.HttpMethod;
 import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -37,39 +38,42 @@ import java.util.concurrent.CompletableFuture;
 final class StreamableTransport extends Transport {
     private static final Logger logger = LoggerFactory.getLogger(StreamableTransport.class);
     private HttpClient httpClient;
-    private HttpClient sseClient;
+    private SseClient sseClient;
 
 
     public StreamableTransport(McpOptions options) {
         super(options);
         httpClient = new HttpClient(options.getBaseUrl());
-        sseClient = new HttpClient(options.getBaseUrl());
+        String sseUrl = options.getBaseUrl().endsWith("/") ? options.getBaseUrl() : options.getBaseUrl() + "/";
+        if (options.getSseEndpoint().charAt(0) == '/') {
+            sseUrl += options.getMcpEndpoint().substring(1);
+        } else {
+            sseUrl += options.getMcpEndpoint();
+        }
+        sseClient = new SseClient(sseUrl);
     }
 
     @Override
     void initialized() {
-        sseClient.post(options.getMcpEndpoint()).header(header -> {
-            options.getHeaders().forEach(header::set);
-            header.set(HeaderName.ACCEPT, HeaderValue.ContentType.EVENT_STREAM).set(HeaderName.CACHE_CONTROL.getName(), HeaderValue.NO_CACHE).set(HeaderName.CONNECTION.getName(), HeaderValue.Connection.KEEPALIVE).set(Request.HEADER_SESSION_ID, sessionId);
-        }).onResponseBody(new ServerSentEventStream() {
+        sseClient.getOptions()
+                .setMethod(HttpMethod.POST)
+                .httpOptions().setHeaders(options.getHeaders()).addHeader(Request.HEADER_SESSION_ID, sessionId);
+        sseClient.onData(new EventHandler() {
             @Override
-            public void onEvent(HttpResponse httpResponse, Map<String, String> event) {
-                String e = event.get(ServerSentEventStream.EVENT);
-                String data = event.get(ServerSentEventStream.DATA);
-
-                JSONObject jsonObject = JSONObject.parseObject(data);
+            public void onEvent(SseEvent event) {
+                JSONObject jsonObject = JSONObject.parseObject(event.getData());
                 Response<JSONObject> response = handleServerRequest(jsonObject);
                 if (response != null) {
                     doRequest(httpClient.post(options.getMcpEndpoint()), response);
                     return;
                 }
                 options.getNotificationHandler().accept(jsonObject.getString("method"));
-                logger.warn("unexpected event: " + e + " data: " + data);
+                logger.warn("unexpected event: " + event.getType() + " data: " + event.getData());
             }
-        }).onFailure(throwable -> {
+        }).onError(throwable -> {
             System.out.println("sse error");
             throwable.printStackTrace();
-        }).submit();
+        }).connect();
     }
 
     @Override
@@ -118,6 +122,6 @@ final class StreamableTransport extends Transport {
     @Override
     public void close() {
         httpClient.close();
-        sseClient.close();
+        sseClient.disconnect();
     }
 }

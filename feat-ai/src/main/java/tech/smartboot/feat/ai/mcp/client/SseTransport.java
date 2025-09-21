@@ -12,15 +12,16 @@ package tech.smartboot.feat.ai.mcp.client;
 
 import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.TypeReference;
+import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.ai.mcp.McpException;
 import tech.smartboot.feat.ai.mcp.model.Request;
 import tech.smartboot.feat.ai.mcp.model.Response;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpResponse;
-import tech.smartboot.feat.core.client.stream.ServerSentEventStream;
+import tech.smartboot.feat.core.client.sse.SseClient;
 import tech.smartboot.feat.core.common.FeatUtils;
-import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
+import tech.smartboot.feat.core.common.HttpMethod;
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
@@ -37,7 +38,7 @@ import java.util.concurrent.CountDownLatch;
 final class SseTransport extends Transport {
     private static final Logger LOGGER = LoggerFactory.getLogger(SseTransport.class);
     private final HttpClient httpClient;
-    private final HttpClient sseClient;
+    private final SseClient sseClient;
     private String endpoint;
     private CountDownLatch latch = new CountDownLatch(1);
     private final Map<Integer, CompletableFuture<Response<JSONObject>>> responseCallbacks = new ConcurrentHashMap<>();
@@ -45,50 +46,49 @@ final class SseTransport extends Transport {
     public SseTransport(McpOptions options) {
         super(options);
         httpClient = new HttpClient(options.getBaseUrl());
-        sseClient = new HttpClient(options.getBaseUrl());
-        sseClient.post(options.getSseEndpoint()).header(header -> {
-            options.getHeaders().forEach(header::set);
-            header.set(HeaderName.ACCEPT, HeaderValue.ContentType.EVENT_STREAM).set(HeaderName.CACHE_CONTROL.getName(), HeaderValue.NO_CACHE).set(HeaderName.CONNECTION.getName(), HeaderValue.Connection.KEEPALIVE);
-        }).onResponseBody(new ServerSentEventStream() {
-            @Override
-            public void onEvent(HttpResponse httpResponse, Map<String, String> event) {
-                String e = event.get(ServerSentEventStream.EVENT);
-                String data = event.get(ServerSentEventStream.DATA);
-                if ("endpoint".equals(e)) {
-                    endpoint = data;
-                    latch.countDown();
-                } else {
-                    JSONObject jsonObject = JSONObject.parseObject(data);
+        String sseUrl = options.getBaseUrl().endsWith("/") ? options.getBaseUrl() : options.getBaseUrl() + "/";
+        if (options.getSseEndpoint().charAt(0) == '/') {
+            sseUrl += options.getSseEndpoint().substring(1);
+        } else {
+            sseUrl += options.getSseEndpoint();
+        }
+        sseClient = Feat.sse(sseUrl, opt -> {
+            opt.setMethod(HttpMethod.POST).httpOptions().setHeaders(options.getHeaders());
+        }).onEvent("endpoint", event -> {
+            endpoint = event.getData();
+            latch.countDown();
+        }).onData(event -> {
+            String data = event.getData();
+            JSONObject jsonObject = JSONObject.parseObject(data);
 
-                    Response<JSONObject> response = handleServerRequest(jsonObject);
-                    if (response != null) {
-                        try {
-                            doRequest(httpClient.post(endpoint), response);
-                        } catch (Throwable throwable) {
-                            LOGGER.error("send error", throwable);
-                        }
-                        return;
-                    }
-                    response = jsonObject.to(new TypeReference<Response<JSONObject>>() {
-                    });
-                    if (response.getId() == null) {
-                        System.out.println("no id");
-                        return;
-                    }
-                    CompletableFuture<Response<JSONObject>> future = responseCallbacks.remove(response.getId());
-                    if (future != null) {
-                        if (response.getError() != null) {
-                            future.completeExceptionally(new McpException(response.getError().getInteger("code"), response.getError().getString("message")));
-                        } else {
-                            future.complete(response);
-                        }
-                    }
+            Response<JSONObject> response = handleServerRequest(jsonObject);
+            if (response != null) {
+                try {
+                    doRequest(httpClient.post(endpoint), response);
+                } catch (Throwable throwable) {
+                    LOGGER.error("send error", throwable);
+                }
+                return;
+            }
+            response = jsonObject.to(new TypeReference<Response<JSONObject>>() {
+            });
+            if (response.getId() == null) {
+                System.out.println("no id");
+                return;
+            }
+            CompletableFuture<Response<JSONObject>> future = responseCallbacks.remove(response.getId());
+            if (future != null) {
+                if (response.getError() != null) {
+                    future.completeExceptionally(new McpException(response.getError().getInteger("code"), response.getError().getString("message")));
+                } else {
+                    future.complete(response);
                 }
             }
-        }).onFailure(throwable -> {
+        }).onError(throwable -> {
             System.out.println("sse error");
             throwable.printStackTrace();
-        }).submit();
+        });
+        sseClient.connect();
     }
 
     @Override
@@ -139,6 +139,6 @@ final class SseTransport extends Transport {
     public void close() {
         latch.countDown();
         httpClient.close();
-        sseClient.close();
+        sseClient.disconnect();
     }
 }
