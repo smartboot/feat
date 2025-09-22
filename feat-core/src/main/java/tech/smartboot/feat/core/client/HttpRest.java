@@ -10,7 +10,6 @@
 
 package tech.smartboot.feat.core.client;
 
-import tech.smartboot.feat.core.client.sse.SseClient;
 import tech.smartboot.feat.core.client.stream.Stream;
 
 import java.util.concurrent.CompletableFuture;

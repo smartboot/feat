@@ -8,10 +8,8 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.core.client.sse;
+package tech.smartboot.feat.core.client;
 
-import tech.smartboot.feat.core.client.HttpResponse;
-import tech.smartboot.feat.core.client.HttpRest;
 import tech.smartboot.feat.core.client.stream.ServerSentEventStream;
 
 import java.util.Map;
@@ -24,7 +22,7 @@ import java.util.function.Consumer;
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
-public class SseClient {
+public final class SseClient {
 
     private final Map<String, Consumer<SseEvent>> eventHandlers = new ConcurrentHashMap<>();
 
@@ -38,7 +36,7 @@ public class SseClient {
 
     private boolean connectExecuted = false;
 
-    public SseClient(HttpRest rest) {
+    SseClient(HttpRest rest) {
         this.httpRest = rest;
     }
 
@@ -48,10 +46,6 @@ public class SseClient {
             throw new IllegalStateException("The submit() method can only be called once per client instance.");
         }
         connectExecuted = true;
-        doConnect();
-    }
-
-    private void doConnect() {
         try {
             // 设置事件流处理器
             httpRest.onResponseHeader(resp -> {

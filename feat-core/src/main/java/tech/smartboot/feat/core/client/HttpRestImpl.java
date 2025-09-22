@@ -13,7 +13,6 @@ package tech.smartboot.feat.core.client;
 import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.client.impl.HttpRequestImpl;
 import tech.smartboot.feat.core.client.impl.HttpResponseImpl;
-import tech.smartboot.feat.core.client.sse.SseClient;
 import tech.smartboot.feat.core.client.stream.Stream;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.exception.FeatException;

@@ -8,7 +8,7 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.core.client.sse;
+package tech.smartboot.feat.core.client;
 
 import tech.smartboot.feat.core.client.stream.ServerSentEventStream;
 
