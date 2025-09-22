@@ -10,10 +10,6 @@
 
 package tech.smartboot.feat.core.client.sse;
 
-import tech.smartboot.feat.core.common.HttpMethod;
-
-import java.util.function.Predicate;
-
 /**
  * SSE客户端配置选项
  *
@@ -21,26 +17,7 @@ import java.util.function.Predicate;
  * @version v1.0.0
  */
 public class SseOptions {
-    /**
-     * 接受所有事件
-     */
-    public static final Predicate<SseEvent> EVENT_FILTER_ACCEPT_ALL = sseEvent -> true;
-    /**
-     * 拒绝所有事件
-     */
-    public static final Predicate<SseEvent> EVENT_FILTER_REJECT_ALL = sseEvent -> false;
-    private String method = HttpMethod.GET;
 
-    /**
-     * 重连策略
-     */
-    private RetryPolicy retryPolicy = RetryPolicy.noRetry();
-
-
-    /**
-     * 事件过滤器
-     */
-    private Predicate<SseEvent> eventFilter = EVENT_FILTER_ACCEPT_ALL;
 
     /**
      * 断点续传的最后事件ID
@@ -52,24 +29,6 @@ public class SseOptions {
     }
 
 
-    RetryPolicy getRetryPolicy() {
-        return retryPolicy;
-    }
-
-    public SseOptions retryPolicy(RetryPolicy retryPolicy) {
-        this.retryPolicy = retryPolicy;
-        return this;
-    }
-
-    Predicate<SseEvent> getEventFilter() {
-        return eventFilter;
-    }
-
-    public SseOptions eventFilter(Predicate<SseEvent> eventFilter) {
-        this.eventFilter = eventFilter;
-        return this;
-    }
-
     String getLastEventId() {
         return lastEventId;
     }
@@ -79,12 +38,4 @@ public class SseOptions {
         return this;
     }
 
-    String getMethod() {
-        return method;
-    }
-
-    public SseOptions setMethod(String method) {
-        this.method = method;
-        return this;
-    }
 }

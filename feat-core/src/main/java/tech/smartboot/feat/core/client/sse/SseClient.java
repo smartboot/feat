@@ -10,16 +10,12 @@
 
 package tech.smartboot.feat.core.client.sse;
 
-import org.smartboot.socket.timer.HashedWheelTimer;
 import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.client.HttpRest;
 import tech.smartboot.feat.core.client.stream.ServerSentEventStream;
-import tech.smartboot.feat.core.common.HeaderName;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
@@ -32,20 +28,17 @@ import java.util.function.Consumer;
 public class SseClient {
 
     private final SseOptions options;
-    private final AtomicReference<ConnectionState> state = new AtomicReference<>(ConnectionState.DISCONNECTED);
     private final Map<String, Consumer<SseEvent>> eventHandlers = new ConcurrentHashMap<>();
     private final AtomicReference<String> lastEventId = new AtomicReference<>();
-    private final AtomicInteger retryCount = new AtomicInteger(0);
 
     private volatile Consumer<Throwable> onError = Throwable::printStackTrace;
     private volatile Consumer<SseClient> onOpen = client -> {
     };
     private volatile Consumer<SseClient> onClose = client -> {
     };
+
     private final HttpRest httpRest;
 
-    private static HashedWheelTimer timer;
-    private final static AtomicInteger count = new AtomicInteger(0);
     private boolean connectExecuted = false;
 
     public SseClient(HttpRest rest) {
@@ -62,14 +55,7 @@ public class SseClient {
 
     public void submit() {
         if (connectExecuted) {
-            throw new IllegalStateException("The connect() method can only be called once per client instance.");
-        }
-        if (count.getAndIncrement() == 0) {
-            timer = new HashedWheelTimer(r -> {
-                Thread thread = new Thread(r, "SSE-Client-Scheduler");
-                thread.setDaemon(true);
-                return thread;
-            });
+            throw new IllegalStateException("The submit() method can only be called once per client instance.");
         }
         connectExecuted = true;
         doConnect();
@@ -77,33 +63,12 @@ public class SseClient {
 
     private void doConnect() {
         try {
-            // 创建GET请求
-
-            // 设置SSE相关头部
-            httpRest.header(h -> {
-                h.set(HeaderName.ACCEPT, "text/event-stream");
-                h.set(HeaderName.CACHE_CONTROL, "no-cache");
-                h.set(HeaderName.CONNECTION, "keep-alive");
-
-                // 添加Last-Event-ID头部（如果有）
-                String eventId = lastEventId.get();
-                if (eventId != null) {
-                    h.add("Last-Event-ID", eventId);
-                }
-            });
-
             // 设置事件流处理器
             httpRest.onResponseHeader(resp -> {
-                if (resp.statusCode() == 200) {
+                if (resp.statusCode() == 200 && resp.getContentType().startsWith("text/event-stream")) {
                     httpRest.onResponseBody(new SseEventStreamImpl());
-                    changeState(ConnectionState.CONNECTED);
-                    retryCount.set(0);
-
                     // 通知连接成功
                     onOpen.accept(this);
-                } else {
-                    String error = "HTTP " + resp.statusCode() + ": " + resp.getReasonPhrase();
-                    handleConnectionError(new RuntimeException(error));
                 }
             });
 
@@ -115,46 +80,14 @@ public class SseClient {
         }
     }
 
+
     private void handleConnectionError(Throwable error) {
         onError.accept(error);
-        if (state.get() == ConnectionState.DISCONNECTED) {
-            return;
-        }
-        changeState(ConnectionState.FAILED);
-        // 尝试重连
-        scheduleReconnect();
     }
-
-    private void scheduleReconnect() {
-        int currentRetryCount = retryCount.incrementAndGet();
-        if (!options.getRetryPolicy().shouldRetry(currentRetryCount)) {
-            changeState(ConnectionState.FAILED);
-            return;
-        }
-
-        long delay = options.getRetryPolicy().calculateDelay(currentRetryCount);
-        changeState(ConnectionState.RECONNECTING);
-
-        timer.schedule(() -> {
-            if (state.get() == ConnectionState.RECONNECTING) {
-                state.set(ConnectionState.CONNECTING);
-                doConnect();
-            }
-        }, delay, TimeUnit.MILLISECONDS);
-    }
-
 
     public void close() {
-        changeState(ConnectionState.DISCONNECTED);
-
-        try {
-            httpRest.close();
-        } finally {
-            if (count.decrementAndGet() == 0) {
-                timer.shutdown();
-                timer = null;
-            }
-        }
+        httpRest.close();
+        onClose.accept(this);
     }
 
 
@@ -187,15 +120,6 @@ public class SseClient {
         return this;
     }
 
-    public boolean isConnected() {
-        return state.get() == ConnectionState.CONNECTED;
-    }
-
-
-    public ConnectionState getConnectionState() {
-        return state.get();
-    }
-
 
     public String getLastEventId() {
         return lastEventId.get();
@@ -204,10 +128,6 @@ public class SseClient {
 
     public SseOptions getOptions() {
         return options;
-    }
-
-    private void changeState(ConnectionState newState) {
-        state.getAndSet(newState);
     }
 
     /**
@@ -241,11 +161,6 @@ public class SseClient {
 
                 // 创建事件对象
                 SseEvent sseEvent = new SseEvent(id, type, data, retry, event);
-
-                // 应用事件过滤器
-                if (!options.getEventFilter().test(sseEvent)) {
-                    return;
-                }
 
                 // 查找对应的事件处理器
                 String eventType = type != null ? type : "message";

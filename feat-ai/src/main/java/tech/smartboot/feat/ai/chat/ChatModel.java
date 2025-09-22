@@ -23,16 +23,11 @@ import tech.smartboot.feat.ai.chat.entity.Tool;
 import tech.smartboot.feat.ai.chat.entity.ToolCall;
 import tech.smartboot.feat.ai.chat.prompt.Prompt;
 import tech.smartboot.feat.core.client.HttpPost;
-import tech.smartboot.feat.core.client.HttpResponse;
-import tech.smartboot.feat.core.client.stream.ServerSentEventStream;
-import tech.smartboot.feat.core.client.stream.Stream;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -71,106 +66,88 @@ public class ChatModel {
         chatStream(content, Collections.emptyList(), consumer);
     }
 
-    public void chatStream(String content, List<String> tools, StreamResponseCallback consumer) {
-        HttpPost post = chat0(content, tools, true);
+    public void chatStream(String chat, List<String> tools, StreamResponseCallback consumer) {
+        HttpPost post = chat0(chat, tools, true);
         StringBuilder contentBuilder = new StringBuilder();
         Map<Integer, ToolCall> toolCallMap = new HashMap<>();
 
-        post.onResponseHeader(resp -> {
-            if (resp.statusCode() == 200) {
-                post.onResponseBody(new ServerSentEventStream() {
-                    @Override
-                    public void onEvent(HttpResponse httpResponse, Map<String, String> event) {
-                        String data = event.get(ServerSentEventStream.DATA);
-                        if ("[DONE]".equals(data) || FeatUtils.isBlank(data)) {
-                            ResponseMessage responseMessage = new ResponseMessage();
-                            responseMessage.setRole(Message.ROLE_ASSISTANT);
-                            responseMessage.setContent(contentBuilder.toString());
-                            responseMessage.setToolCalls(new ArrayList<>(toolCallMap.values()));
-                            responseMessage.setSuccess(true);
-                            consumer.onCompletion(responseMessage);
-                            if (!responseMessage.isDiscard()) {
-                                Message message = new Message();
-                                message.setRole(Message.ROLE_ASSISTANT);
-                                message.setContent(contentBuilder.toString());
-                                history.add(message);
+        post.onSuccess(response -> {
+                    ResponseMessage responseMessage = new ResponseMessage();
+                    responseMessage.setRole(Message.ROLE_ASSISTANT);
+                    responseMessage.setError(response.body());
+                    responseMessage.setSuccess(false);
+                    consumer.onCompletion(responseMessage);
+                })
+                .toSseClient().onData(event -> {
+                    String data = event.getData();
+                    if ("[DONE]".equals(data) || FeatUtils.isBlank(data)) {
+                        ResponseMessage responseMessage = new ResponseMessage();
+                        responseMessage.setRole(Message.ROLE_ASSISTANT);
+                        responseMessage.setContent(contentBuilder.toString());
+                        responseMessage.setToolCalls(new ArrayList<>(toolCallMap.values()));
+                        responseMessage.setSuccess(true);
+                        consumer.onCompletion(responseMessage);
+                        if (!responseMessage.isDiscard()) {
+                            Message message = new Message();
+                            message.setRole(Message.ROLE_ASSISTANT);
+                            message.setContent(contentBuilder.toString());
+                            history.add(message);
+                        }
+                        return;
+                    }
+                    JSONObject object = JSON.parseObject(data);
+                    //最后一个可能为空
+                    JSONArray choices = object.getJSONArray("choices");
+                    if (choices == null || choices.isEmpty()) {
+                        return;
+                    }
+                    JSONObject choice = choices.getJSONObject(0);
+                    JSONObject delta = choice.getJSONObject("delta");
+                    if (delta == null) {
+                        LOGGER.error("delta is null");
+                        return;
+                    }
+                    String content = delta.getString("content");
+                    if (content != null) {
+                        consumer.onStreamResponse(content);
+                        contentBuilder.append(content);
+                    }
+                    String reasoningContent = delta.getString("reasoning_content");
+                    if (reasoningContent != null) {
+                        consumer.onStreamResponse(reasoningContent);
+                        contentBuilder.append(reasoningContent);
+                    }
+                    List<ToolCall> toolCalls = delta.getObject("tool_calls", new TypeReference<List<ToolCall>>() {
+                    });
+                    if (FeatUtils.isNotEmpty(toolCalls)) {
+                        for (ToolCall toolCall : toolCalls) {
+                            ToolCall tool = toolCallMap.computeIfAbsent(toolCall.getIndex(), k -> {
+                                ToolCall t = new ToolCall();
+                                t.setFunction(new HashMap<>());
+                                return t;
+                            });
+                            if (FeatUtils.isNotBlank(toolCall.getId())) {
+                                tool.setId(toolCall.getId());
                             }
-                            return;
-                        }
-                        JSONObject object = JSON.parseObject(data);
-                        //最后一个可能为空
-                        JSONArray choices = object.getJSONArray("choices");
-                        if (choices == null || choices.isEmpty()) {
-                            return;
-                        }
-                        JSONObject choice = choices.getJSONObject(0);
-                        JSONObject delta = choice.getJSONObject("delta");
-                        if (delta == null) {
-                            LOGGER.error("delta is null");
-                            return;
-                        }
-                        String content = delta.getString("content");
-                        if (content != null) {
-                            consumer.onStreamResponse(content);
-                            contentBuilder.append(content);
-                        }
-                        String reasoningContent = delta.getString("reasoning_content");
-                        if (reasoningContent != null) {
-                            consumer.onStreamResponse(reasoningContent);
-                            contentBuilder.append(reasoningContent);
-                        }
-                        List<ToolCall> toolCalls = delta.getObject("tool_calls", new TypeReference<List<ToolCall>>() {
-                        });
-                        if (FeatUtils.isNotEmpty(toolCalls)) {
-                            for (ToolCall toolCall : toolCalls) {
-                                ToolCall tool = toolCallMap.computeIfAbsent(toolCall.getIndex(), k -> {
-                                    ToolCall t = new ToolCall();
-                                    t.setFunction(new HashMap<>());
-                                    return t;
+                            if (FeatUtils.isNotBlank(toolCall.getType())) {
+                                tool.setType(toolCall.getType());
+                            }
+                            if (toolCall.getFunction() != null) {
+                                toolCall.getFunction().forEach((k, v) -> {
+                                    if (v == null) {
+                                        return;
+                                    }
+                                    String preV = tool.getFunction().get(k);
+                                    if (FeatUtils.isNotBlank(preV)) {
+                                        tool.getFunction().put(k, preV + v);
+                                    } else {
+                                        tool.getFunction().put(k, v);
+                                    }
                                 });
-                                if (FeatUtils.isNotBlank(toolCall.getId())) {
-                                    tool.setId(toolCall.getId());
-                                }
-                                if (FeatUtils.isNotBlank(toolCall.getType())) {
-                                    tool.setType(toolCall.getType());
-                                }
-                                if (toolCall.getFunction() != null) {
-                                    toolCall.getFunction().forEach((k, v) -> {
-                                        if (v == null) {
-                                            return;
-                                        }
-                                        String preV = tool.getFunction().get(k);
-                                        if (FeatUtils.isNotBlank(preV)) {
-                                            tool.getFunction().put(k, preV + v);
-                                        } else {
-                                            tool.getFunction().put(k, v);
-                                        }
-                                    });
-                                }
                             }
                         }
                     }
-                });
-            } else {
-                post.onResponseBody(new Stream() {
-                    final ByteArrayOutputStream sb = new ByteArrayOutputStream();
-
-                    @Override
-                    public void stream(HttpResponse response, byte[] bytes, boolean end) throws IOException {
-                        sb.write(bytes);
-                        if (end) {
-                            ResponseMessage responseMessage = new ResponseMessage();
-                            responseMessage.setRole(Message.ROLE_ASSISTANT);
-                            responseMessage.setError(sb.toString());
-                            responseMessage.setSuccess(false);
-                            consumer.onCompletion(responseMessage);
-                        }
-                    }
-
-                });
-            }
-        });
-
+                }).submit();
     }
 
     public CompletableFuture<ResponseMessage> chat(String content) {
@@ -202,7 +179,7 @@ public class ChatModel {
             responseMessage.setPromptLogprobs(chatResponse.getPromptLogprobs());
             responseMessage.setSuccess(true);
             callback.accept(responseMessage);
-        });
+        }).submit();
     }
 
 
@@ -246,7 +223,7 @@ public class ChatModel {
             }
             options.getHeaders().forEach(header::add);
         }, jsonObject);
-        post.onFailure(throwable -> throwable.printStackTrace()).submit();
+        post.onFailure(throwable -> throwable.printStackTrace());
         return post;
     }
 

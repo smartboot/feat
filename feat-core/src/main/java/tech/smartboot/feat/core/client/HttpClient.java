@@ -24,10 +24,12 @@ import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpProtocol;
 import tech.smartboot.feat.core.common.exception.FeatException;
 
+import java.nio.ByteBuffer;
 import java.util.Base64;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.function.Consumer;
 
 /**
  * @author 三刀 zhengjunweimail@163.com
@@ -148,6 +150,26 @@ public final class HttpClient {
                     CompletableFuture future = super.getCompletableFuture();
                     future.completeExceptionally(e);
                     return future;
+                }
+
+                @Override
+                public RequestBody body() {
+                    return new RequestBody() {
+                        @Override
+                        public RequestBody write(byte[] bytes, int offset, int len) {
+                            return this;
+                        }
+
+                        @Override
+                        public void transferFrom(ByteBuffer buffer, Consumer<RequestBody> consumer) {
+
+                        }
+
+                        @Override
+                        public RequestBody flush() {
+                            return this;
+                        }
+                    };
                 }
             };
         }

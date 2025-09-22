@@ -41,11 +41,24 @@ public interface HttpRest {
     CompletableFuture<HttpResponse> submit();
 
 
+    /**
+     * 转换为SseClient以处理Server-Sent Events
+     * 若响应非SSE，会当做普通Http处理
+     *
+     * @return SseClient
+     */
     default SseClient toSseClient() {
         return toSseClient(options -> {
         });
     }
 
+    /**
+     * 转换为SseClient以处理Server-Sent Events
+     * 若响应非SSE，会当做普通Http处理
+     *
+     * @param options Sse配置选项
+     * @return SseClient
+     */
     SseClient toSseClient(Consumer<SseOptions> options);
 
 
