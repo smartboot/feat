@@ -82,13 +82,13 @@ public class SseClient {
 
 
     public SseClient onEvent(String eventType, Consumer<SseEvent> handler) {
-        eventHandlers.put(eventType != null ? eventType : "message", handler);
+        eventHandlers.put(eventType != null ? eventType : ServerSentEventStream.DEFAULT_EVENT, handler);
         return this;
     }
 
 
     public SseClient onData(Consumer<SseEvent> handler) {
-        return onEvent("message", handler);
+        return onEvent(ServerSentEventStream.DEFAULT_EVENT, handler);
     }
 
     /**
@@ -118,32 +118,16 @@ public class SseClient {
 
         public void onEvent(HttpResponse httpResponse, Map<String, String> event) {
             try {
-                // 解析事件字段
-                String id = event.get("id");
-                String type = event.get("event");
-                String data = event.get("data");
-                String retryStr = event.get("retry");
-
-                // 解析重连间隔
-                Long retry = null;
-                if (retryStr != null) {
-                    try {
-                        retry = Long.parseLong(retryStr);
-                    } catch (NumberFormatException e) {
-                        // 忽略无效的重连间隔
-                    }
-                }
-
                 // 创建事件对象
-                SseEvent sseEvent = new SseEvent(id, type, data, retry, event);
+                SseEvent sseEvent = new SseEvent(event);
 
                 // 查找对应的事件处理器
-                String eventType = type != null ? type : "message";
+                String eventType = sseEvent.getType() != null ? sseEvent.getType() : ServerSentEventStream.DEFAULT_EVENT;
                 Consumer<SseEvent> handler = eventHandlers.get(eventType);
 
                 // 如果没有找到特定类型的处理器，尝试使用默认处理器
                 if (handler == null) {
-                    handler = eventHandlers.get("message");
+                    handler = eventHandlers.get(ServerSentEventStream.DEFAULT_EVENT);
                 }
 
                 // 执行事件处理器

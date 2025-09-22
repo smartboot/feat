@@ -10,7 +10,8 @@
 
 package tech.smartboot.feat.core.client.sse;
 
-import java.time.LocalDateTime;
+import tech.smartboot.feat.core.client.stream.ServerSentEventStream;
+
 import java.util.Map;
 
 /**
@@ -21,42 +22,13 @@ import java.util.Map;
  */
 public class SseEvent {
 
-    /**
-     * 事件ID
-     */
-    private final String id;
-
-    /**
-     * 事件类型
-     */
-    private final String type;
-
-    /**
-     * 事件数据
-     */
-    private final String data;
-
-    /**
-     * 重连间隔建议(毫秒)
-     */
-    private final Long retry;
-
-    /**
-     * 接收时间戳
-     */
-    private final LocalDateTime timestamp;
 
     /**
      * 原始事件字段映射
      */
     private final Map<String, String> rawFields;
 
-    public SseEvent(String id, String type, String data, Long retry, Map<String, String> rawFields) {
-        this.id = id;
-        this.type = type;
-        this.data = data;
-        this.retry = retry;
-        this.timestamp = LocalDateTime.now();
+    public SseEvent(Map<String, String> rawFields) {
         this.rawFields = rawFields;
     }
 
@@ -66,7 +38,7 @@ public class SseEvent {
      * @return 事件ID，可能为null
      */
     public String getId() {
-        return id;
+        return rawFields.get(ServerSentEventStream.ID);
     }
 
     /**
@@ -75,7 +47,7 @@ public class SseEvent {
      * @return 事件类型，可能为null（默认为message类型）
      */
     public String getType() {
-        return type;
+        return rawFields.get(ServerSentEventStream.EVENT);
     }
 
     /**
@@ -84,7 +56,7 @@ public class SseEvent {
      * @return 事件数据
      */
     public String getData() {
-        return data;
+        return rawFields.get(ServerSentEventStream.DATA);
     }
 
     /**
@@ -93,16 +65,16 @@ public class SseEvent {
      * @return 重连间隔（毫秒），可能为null
      */
     public Long getRetry() {
+        String retryStr = rawFields.get(ServerSentEventStream.RETRY);
+        Long retry = null;
+        if (retryStr != null) {
+            try {
+                retry = Long.parseLong(retryStr);
+            } catch (NumberFormatException e) {
+                // 忽略无效的重连间隔
+            }
+        }
         return retry;
-    }
-
-    /**
-     * 获取接收时间戳
-     *
-     * @return 事件接收时间
-     */
-    public LocalDateTime getTimestamp() {
-        return timestamp;
     }
 
     public String getComment() {
@@ -114,18 +86,7 @@ public class SseEvent {
      *
      * @return 原始字段映射
      */
-    public Map<String, String> getRawFields() {
-        return rawFields;
-    }
-
-    @Override
-    public String toString() {
-        return "SseEvent{" +
-                "id='" + id + '\'' +
-                ", type='" + type + '\'' +
-                ", data='" + data + '\'' +
-                ", retry=" + retry +
-                ", timestamp=" + timestamp +
-                '}';
-    }
+//    public Map<String, String> getRawFields() {
+//        return rawFields;
+//    }
 }

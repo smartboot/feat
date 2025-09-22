@@ -28,8 +28,9 @@ public abstract class ServerSentEventStream implements Stream {
     private static final int STATE_END_CHECK = 4;
     public static final String DATA = "data";
     public static final String EVENT = "event";
-    public static final String TYPE = "type";
     public static final String ID = "id";
+    public static final String RETRY = "retry";
+    public static final String DEFAULT_EVENT = "message";
     private final ByteArrayOutputStream baos = new ByteArrayOutputStream();
     private final Map<String, String> event = new HashMap<>();
 
