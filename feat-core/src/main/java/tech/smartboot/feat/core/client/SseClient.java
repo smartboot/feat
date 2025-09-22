@@ -46,22 +46,49 @@ public final class SseClient {
             throw new IllegalStateException("The submit() method can only be called once per client instance.");
         }
         connectExecuted = true;
-        try {
-            // 设置事件流处理器
-            httpRest.onResponseHeader(resp -> {
-                if (resp.statusCode() == 200 && resp.getContentType().startsWith("text/event-stream")) {
-                    httpRest.onResponseBody(new SseEventStreamImpl());
-                    // 通知连接成功
-                    onOpen.accept(this);
-                }
-            });
+        // 设置事件流处理器
+        httpRest.onResponseHeader(resp -> {
+            if (resp.statusCode() == 200 && resp.getContentType().startsWith("text/event-stream")) {
+                httpRest.onResponseBody(new ServerSentEventStream() {
+                    public void onEvent(HttpResponse httpResponse, Map<String, String> event) {
+                        try {
+                            // 创建事件对象
+                            SseEvent sseEvent = new SseEvent(event);
 
-            // 发送请求
-            httpRest.onFailure(this::handleConnectionError).submit();
+                            // 查找对应的事件处理器
+                            String eventType = sseEvent.getType() != null ? sseEvent.getType() : ServerSentEventStream.DEFAULT_EVENT;
+                            Consumer<SseEvent> handler = eventHandlers.get(eventType);
 
-        } catch (Exception e) {
-            handleConnectionError(e);
-        }
+                            // 如果没有找到特定类型的处理器，尝试使用默认处理器
+                            if (handler == null) {
+                                handler = eventHandlers.get(ServerSentEventStream.DEFAULT_EVENT);
+                            }
+
+                            // 执行事件处理器
+                            if (handler != null) {
+                                try {
+                                    handler.accept(sseEvent);
+                                } catch (Exception e) {
+                                    if (onError != null) {
+                                        onError.accept(e);
+                                    }
+                                }
+                            }
+
+                        } catch (Throwable e) {
+                            if (onError != null) {
+                                onError.accept(e);
+                            }
+                        }
+                    }
+                });
+                // 通知连接成功
+                onOpen.accept(this);
+            }
+        });
+
+        // 发送请求
+        httpRest.onFailure(this::handleConnectionError).submit();
     }
 
 
@@ -102,44 +129,5 @@ public final class SseClient {
     public SseClient onClose(Consumer<SseClient> consumer) {
         this.onClose = consumer;
         return this;
-    }
-
-    /**
-     * SSE事件流实现
-     */
-    private class SseEventStreamImpl extends ServerSentEventStream {
-
-
-        public void onEvent(HttpResponse httpResponse, Map<String, String> event) {
-            try {
-                // 创建事件对象
-                SseEvent sseEvent = new SseEvent(event);
-
-                // 查找对应的事件处理器
-                String eventType = sseEvent.getType() != null ? sseEvent.getType() : ServerSentEventStream.DEFAULT_EVENT;
-                Consumer<SseEvent> handler = eventHandlers.get(eventType);
-
-                // 如果没有找到特定类型的处理器，尝试使用默认处理器
-                if (handler == null) {
-                    handler = eventHandlers.get(ServerSentEventStream.DEFAULT_EVENT);
-                }
-
-                // 执行事件处理器
-                if (handler != null) {
-                    try {
-                        handler.accept(sseEvent);
-                    } catch (Exception e) {
-                        if (onError != null) {
-                            onError.accept(e);
-                        }
-                    }
-                }
-
-            } catch (Exception e) {
-                if (onError != null) {
-                    onError.accept(e);
-                }
-            }
-        }
     }
 }
