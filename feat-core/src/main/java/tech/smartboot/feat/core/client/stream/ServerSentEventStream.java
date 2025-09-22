@@ -60,7 +60,9 @@ public abstract class ServerSentEventStream implements Stream {
                         valuePos = i;
                         state = STATE_LF;
                     }
-                    break;
+                    if (b != '\n') { //空value的情况
+                        break;
+                    }
                 case STATE_LF:
                     if (b == '\n') {
                         event.put(new String(bytes, keyPos, colonPos - keyPos), new String(bytes, valuePos, i - valuePos));
@@ -72,9 +74,11 @@ public abstract class ServerSentEventStream implements Stream {
                     if (b == '\n') {
                         keyPos = i + 1;
                         //结束
-//                        System.out.println(event);
                         onEvent(response, event);
                         event.clear();
+                    } else if (b == ':') { // comment
+                        colonPos = i;
+                        state = STATE_COLON_RIGHT_TRIM;
                     } else {
                         state = STATE_COLON;
                     }
