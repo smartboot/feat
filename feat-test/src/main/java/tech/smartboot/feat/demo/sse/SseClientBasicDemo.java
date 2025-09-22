@@ -11,6 +11,7 @@
 package tech.smartboot.feat.demo.sse;
 
 import tech.smartboot.feat.Feat;
+import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.sse.RetryPolicy;
 import tech.smartboot.feat.core.client.sse.SseClient;
 
@@ -53,8 +54,9 @@ public class SseClientBasicDemo {
         System.out.println("=== 基础SSE客户端使用示例 ===");
 
         // 使用Feat工厂方法创建SSE客户端
-        SseClient client = Feat.sse("http://example.com/events", opt -> {
-            opt.retryPolicy(RetryPolicy.defaultPolicy()).httpOptions().connectTimeout(10000);
+        HttpClient httpClient = Feat.httpClient("http://example.com/events", opt -> opt.connectTimeout(10000));
+        SseClient client = httpClient.get().toSseClient(opt -> {
+            opt.retryPolicy(RetryPolicy.defaultPolicy());
         });
 
         // 注册事件处理器
@@ -71,7 +73,7 @@ public class SseClientBasicDemo {
         }).onOpen(c -> System.out.println("SSE连接已建立"));
 
         // 建立连接
-        client.connect();
+        client.submit();
 
         // 等待一段时间接收事件
         Thread.sleep(5000);
@@ -94,14 +96,9 @@ public class SseClientBasicDemo {
                 .setBackoffMultiplier(2.0);
 
         // 使用函数式配置创建客户端
-        SseClient client = Feat.sse("http://example.com/events", options -> {
-            options.retryPolicy(retryPolicy)
-                    .lastEventId("last-received-event-id")
-                    .httpOptions()
-                    .connectTimeout(15000)
-                    .addHeader("Authorization", "Bearer your-token")
-                    .addHeader("User-Agent", "Feat-SSE-Client/1.0");
-        });
+        HttpClient httpClient = Feat.httpClient("http://example.com/events", opt -> opt.connectTimeout(15000).addHeader("Authorization", "Bearer your-token").addHeader("User-Agent", "Feat-SSE-Client/1.0"));
+        SseClient client = httpClient.get().toSseClient(options -> options.retryPolicy(retryPolicy)
+                .lastEventId("last-received-event-id"));
 
         // 注册多种类型的事件处理器
         client.onEvent("notification", event -> {
@@ -119,7 +116,7 @@ public class SseClientBasicDemo {
         // 建立连接并处理
         CountDownLatch latch = new CountDownLatch(1);
 
-        client.onOpen(c -> System.out.println("高级配置SSE连接已建立")).connect();
+        client.onOpen(c -> System.out.println("高级配置SSE连接已建立")).submit();
 
         // 等待连接建立
         latch.await(10, TimeUnit.SECONDS);
@@ -140,15 +137,15 @@ public class SseClientBasicDemo {
         System.out.println("\\n=== 事件过滤处理示例 ===");
 
         // 创建只接受特定类型事件的过滤器
-
-        SseClient client = Feat.sse("http://example.com/events", opt -> opt.eventFilter(sseEvent -> "notification".equals(sseEvent.getType())));
+        HttpClient httpClient = Feat.httpClient("http://example.com/events");
+        SseClient client = httpClient.get().toSseClient(opt -> opt.eventFilter(sseEvent -> "notification".equals(sseEvent.getType())));
 
         // 注册事件处理器
         client.onData(event -> {
             System.out.println("过滤后的通知事件: " + event.getData());
         });
 
-        client.onOpen(c -> System.out.println("事件过滤SSE连接已建立")).connect();
+        client.onOpen(c -> System.out.println("事件过滤SSE连接已建立")).submit();
 
         Thread.sleep(3000);
 
@@ -161,18 +158,19 @@ public class SseClientBasicDemo {
     public static void connectionStateMonitoring() throws Exception {
         System.out.println("\\n=== 连接状态监听示例 ===");
 
-        SseClient client = Feat.sse("http://example.com/events", opt -> opt.retryPolicy(RetryPolicy.defaultPolicy()));
+        HttpClient httpClient = Feat.httpClient("http://example.com/events");
+        SseClient client = httpClient.get().toSseClient(opt -> opt.retryPolicy(RetryPolicy.defaultPolicy()));
 
         // 注册连接监听器
-        client.onOpen(c -> System.out.println("连接已打开: " + c.getUrl()))
-                .onError(error -> System.out.println("连接错误: " + error.getMessage())).onClose(c -> System.out.println("连接已关闭: " + c.getUrl()));
+        client.onOpen(c -> System.out.println("连接已打开"))
+                .onError(error -> System.out.println("连接错误: " + error.getMessage())).onClose(c -> System.out.println("连接已关闭"));
 
         // 注册事件处理器
         client.onData(event -> {
             System.out.println("监控模式下接收事件: " + event.getData());
         });
 
-        client.connect();
+        client.submit();
 
         Thread.sleep(5000);
 

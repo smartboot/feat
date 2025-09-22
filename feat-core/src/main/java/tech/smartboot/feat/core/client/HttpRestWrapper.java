@@ -10,6 +10,8 @@
 
 package tech.smartboot.feat.core.client;
 
+import tech.smartboot.feat.core.client.sse.SseClient;
+import tech.smartboot.feat.core.client.sse.SseOptions;
 import tech.smartboot.feat.core.client.stream.Stream;
 
 import java.util.concurrent.CompletableFuture;
@@ -39,6 +41,11 @@ class HttpRestWrapper implements HttpRest {
     @Override
     public CompletableFuture<HttpResponse> submit() {
         return rest.submit();
+    }
+
+    @Override
+    public SseClient toSseClient(Consumer<SseOptions> options) {
+        return rest.toSseClient(options);
     }
 
     @Override
@@ -79,6 +86,11 @@ class HttpRestWrapper implements HttpRest {
     @Override
     public HttpRest addQueryParam(String name, int value) {
         return rest.addQueryParam(name, value);
+    }
+
+    @Override
+    public void close() {
+        rest.close();
     }
 
 }

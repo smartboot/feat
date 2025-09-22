@@ -18,10 +18,8 @@ import tech.smartboot.feat.ai.mcp.model.Request;
 import tech.smartboot.feat.ai.mcp.model.Response;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpResponse;
-import tech.smartboot.feat.core.client.sse.SseClient;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderValue;
-import tech.smartboot.feat.core.common.HttpMethod;
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
@@ -38,7 +36,7 @@ import java.util.concurrent.CountDownLatch;
 final class SseTransport extends Transport {
     private static final Logger LOGGER = LoggerFactory.getLogger(SseTransport.class);
     private final HttpClient httpClient;
-    private final SseClient sseClient;
+    private final HttpClient sseClient;
     private String endpoint;
     private CountDownLatch latch = new CountDownLatch(1);
     private final Map<Integer, CompletableFuture<Response<JSONObject>>> responseCallbacks = new ConcurrentHashMap<>();
@@ -46,49 +44,46 @@ final class SseTransport extends Transport {
     public SseTransport(McpOptions options) {
         super(options);
         httpClient = new HttpClient(options.getBaseUrl());
-        String sseUrl = options.getBaseUrl().endsWith("/") ? options.getBaseUrl() : options.getBaseUrl() + "/";
-        if (options.getSseEndpoint().charAt(0) == '/') {
-            sseUrl += options.getSseEndpoint().substring(1);
-        } else {
-            sseUrl += options.getSseEndpoint();
-        }
-        sseClient = Feat.sse(sseUrl, opt -> {
-            opt.setMethod(HttpMethod.POST).httpOptions().setHeaders(options.getHeaders());
-        }).onEvent("endpoint", event -> {
-            endpoint = event.getData();
-            latch.countDown();
-        }).onData(event -> {
-            String data = event.getData();
-            JSONObject jsonObject = JSONObject.parseObject(data);
-
-            Response<JSONObject> response = handleServerRequest(jsonObject);
-            if (response != null) {
-                try {
-                    doRequest(httpClient.post(endpoint), response);
-                } catch (Throwable throwable) {
-                    LOGGER.error("send error", throwable);
-                }
-                return;
-            }
-            response = jsonObject.to(new TypeReference<Response<JSONObject>>() {
-            });
-            if (response.getId() == null) {
-                System.out.println("no id");
-                return;
-            }
-            CompletableFuture<Response<JSONObject>> future = responseCallbacks.remove(response.getId());
-            if (future != null) {
-                if (response.getError() != null) {
-                    future.completeExceptionally(new McpException(response.getError().getInteger("code"), response.getError().getString("message")));
-                } else {
-                    future.complete(response);
-                }
-            }
-        }).onError(throwable -> {
-            System.out.println("sse error");
-            throwable.printStackTrace();
+        sseClient = Feat.httpClient(options.getBaseUrl(), opt -> {
+            opt.setHeaders(options.getHeaders());
         });
-        sseClient.connect();
+        sseClient.post(options.getSseEndpoint())
+                .toSseClient()
+                .onEvent("endpoint", event -> {
+                    endpoint = event.getData();
+                    latch.countDown();
+                })
+                .onData(event -> {
+                    String data = event.getData();
+                    JSONObject jsonObject = JSONObject.parseObject(data);
+
+                    Response<JSONObject> response = handleServerRequest(jsonObject);
+                    if (response != null) {
+                        try {
+                            doRequest(httpClient.post(endpoint), response);
+                        } catch (Throwable throwable) {
+                            LOGGER.error("send error", throwable);
+                        }
+                        return;
+                    }
+                    response = jsonObject.to(new TypeReference<Response<JSONObject>>() {
+                    });
+                    if (response.getId() == null) {
+                        System.out.println("no id");
+                        return;
+                    }
+                    CompletableFuture<Response<JSONObject>> future = responseCallbacks.remove(response.getId());
+                    if (future != null) {
+                        if (response.getError() != null) {
+                            future.completeExceptionally(new McpException(response.getError().getInteger("code"), response.getError().getString("message")));
+                        } else {
+                            future.complete(response);
+                        }
+                    }
+                }).onError(throwable -> {
+                    System.out.println("sse error");
+                    throwable.printStackTrace();
+                }).submit();
     }
 
     @Override

@@ -11,7 +11,6 @@
 package tech.smartboot.feat.core.client.sse;
 
 import org.smartboot.socket.timer.HashedWheelTimer;
-import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.client.HttpRest;
 import tech.smartboot.feat.core.client.stream.ServerSentEventStream;
@@ -32,7 +31,6 @@ import java.util.function.Consumer;
  */
 public class SseClient {
 
-    private final String url;
     private final SseOptions options;
     private final AtomicReference<ConnectionState> state = new AtomicReference<>(ConnectionState.DISCONNECTED);
     private final Map<String, Consumer<SseEvent>> eventHandlers = new ConcurrentHashMap<>();
@@ -44,16 +42,15 @@ public class SseClient {
     };
     private volatile Consumer<SseClient> onClose = client -> {
     };
-    private final HttpClient httpClient;
+    private final HttpRest httpRest;
 
     private static HashedWheelTimer timer;
     private final static AtomicInteger count = new AtomicInteger(0);
     private boolean connectExecuted = false;
 
-    public SseClient(String url) {
-        this.url = url;
-        this.httpClient = new HttpClient(url);
-        this.options = new SseOptions(httpClient.options());
+    public SseClient(HttpRest rest) {
+        this.httpRest = rest;
+        this.options = new SseOptions();
 
 
         // 设置初始的lastEventId
@@ -63,7 +60,7 @@ public class SseClient {
     }
 
 
-    public void connect() {
+    public void submit() {
         if (connectExecuted) {
             throw new IllegalStateException("The connect() method can only be called once per client instance.");
         }
@@ -81,10 +78,9 @@ public class SseClient {
     private void doConnect() {
         try {
             // 创建GET请求
-            HttpRest request = httpClient.rest(options.getMethod());
 
             // 设置SSE相关头部
-            request.header(h -> {
+            httpRest.header(h -> {
                 h.set(HeaderName.ACCEPT, "text/event-stream");
                 h.set(HeaderName.CACHE_CONTROL, "no-cache");
                 h.set(HeaderName.CONNECTION, "keep-alive");
@@ -97,9 +93,9 @@ public class SseClient {
             });
 
             // 设置事件流处理器
-            request.onResponseHeader(resp -> {
+            httpRest.onResponseHeader(resp -> {
                 if (resp.statusCode() == 200) {
-                    request.onResponseBody(new SseEventStreamImpl());
+                    httpRest.onResponseBody(new SseEventStreamImpl());
                     changeState(ConnectionState.CONNECTED);
                     retryCount.set(0);
 
@@ -112,7 +108,7 @@ public class SseClient {
             });
 
             // 发送请求
-            request.onFailure(this::handleConnectionError).submit();
+            httpRest.onFailure(this::handleConnectionError).submit();
 
         } catch (Exception e) {
             handleConnectionError(e);
@@ -151,14 +147,12 @@ public class SseClient {
     public void close() {
         changeState(ConnectionState.DISCONNECTED);
 
-        if (httpClient != null) {
-            try {
-                httpClient.close();
-            } finally {
-                if (count.decrementAndGet() == 0) {
-                    timer.shutdown();
-                    timer = null;
-                }
+        try {
+            httpRest.close();
+        } finally {
+            if (count.decrementAndGet() == 0) {
+                timer.shutdown();
+                timer = null;
             }
         }
     }
@@ -205,11 +199,6 @@ public class SseClient {
 
     public String getLastEventId() {
         return lastEventId.get();
-    }
-
-
-    public String getUrl() {
-        return url;
     }
 
 

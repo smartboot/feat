@@ -15,17 +15,19 @@ import tech.smartboot.feat.core.client.Header;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpOptions;
 import tech.smartboot.feat.core.client.HttpPost;
-import tech.smartboot.feat.core.client.sse.SseClient;
-import tech.smartboot.feat.core.client.sse.SseOptions;
+import tech.smartboot.feat.core.client.HttpRest;
 import tech.smartboot.feat.core.client.WebSocketClient;
 import tech.smartboot.feat.core.client.WebSocketListener;
 import tech.smartboot.feat.core.client.WebSocketOptions;
+import tech.smartboot.feat.core.client.sse.SseClient;
+import tech.smartboot.feat.core.client.sse.SseOptions;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.ServerOptions;
 
 import java.io.IOException;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * Feat框架的核心工具类，提供HTTP服务器、文件服务器、HTTP客户端和WebSocket等功能的快速构建方法。
@@ -104,6 +106,11 @@ public class Feat {
         }, header, body);
     }
 
+    public static HttpClient httpClient(String baseUrl) {
+        return httpClient(baseUrl, options -> {
+        });
+    }
+
     /**
      * 创建HTTP客户端实例。
      *
@@ -169,23 +176,5 @@ public class Feat {
         options.accept(webSocketClient.options());
         webSocketClient.connect(listener);
         return webSocketClient;
-    }
-
-    public static SseClient sse(String url) {
-        return sse(url, options -> {
-        });
-    }
-
-    /**
-     * 创建一个SSE客户端连接，支持自定义配置选项。
-     *
-     * @param url     SSE服务器地址
-     * @param options SSE配置选项消费者函数
-     * @return 返回配置完成的SseClient实例
-     */
-    public static SseClient sse(String url, Consumer<SseOptions> options) {
-        SseClient sseClient = new SseClient(url);
-        options.accept(sseClient.getOptions());
-        return sseClient;
     }
 }

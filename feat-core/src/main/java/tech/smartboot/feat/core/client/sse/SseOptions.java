@@ -10,7 +10,6 @@
 
 package tech.smartboot.feat.core.client.sse;
 
-import tech.smartboot.feat.core.client.HttpOptions;
 import tech.smartboot.feat.core.common.HttpMethod;
 
 import java.util.function.Predicate;
@@ -49,15 +48,9 @@ public class SseOptions {
     private String lastEventId;
 
 
-    private final HttpOptions httpOptions;
-
-    SseOptions(HttpOptions httpOptions) {
-        this.httpOptions = httpOptions;
+    SseOptions() {
     }
 
-    public HttpOptions httpOptions() {
-        return httpOptions;
-    }
 
     RetryPolicy getRetryPolicy() {
         return retryPolicy;

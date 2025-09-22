@@ -13,6 +13,8 @@ package tech.smartboot.feat.core.client;
 import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.client.impl.HttpRequestImpl;
 import tech.smartboot.feat.core.client.impl.HttpResponseImpl;
+import tech.smartboot.feat.core.client.sse.SseClient;
+import tech.smartboot.feat.core.client.sse.SseOptions;
 import tech.smartboot.feat.core.client.stream.Stream;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.exception.FeatException;
@@ -155,6 +157,14 @@ class HttpRestImpl implements HttpRest {
     }
 
     @Override
+    public SseClient toSseClient(Consumer<SseOptions> options) {
+        SseClient sseClient = new SseClient(this);
+        options.accept(sseClient.getOptions());
+        return sseClient;
+    }
+
+
+    @Override
     public HttpRest onResponseHeader(Consumer<HttpResponse> resp) {
         response.headerCompleted(resp);
         return this;
@@ -260,6 +270,11 @@ class HttpRestImpl implements HttpRest {
     @Override
     public HttpRest addQueryParam(String name, int value) {
         return addQueryParam(name, String.valueOf(value));
+    }
+
+    @Override
+    public void close() {
+        response.getSession().close();
     }
 
     private void commitCheck() {

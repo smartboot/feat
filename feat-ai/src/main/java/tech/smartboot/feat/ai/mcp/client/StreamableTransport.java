@@ -12,16 +12,15 @@ package tech.smartboot.feat.ai.mcp.client;
 
 import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.TypeReference;
+import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.ai.mcp.McpException;
 import tech.smartboot.feat.ai.mcp.model.Request;
 import tech.smartboot.feat.ai.mcp.model.Response;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.client.HttpRest;
-import tech.smartboot.feat.core.client.sse.SseClient;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderValue;
-import tech.smartboot.feat.core.common.HttpMethod;
 import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.logging.Logger;
@@ -36,7 +35,7 @@ import java.util.concurrent.CompletableFuture;
 final class StreamableTransport extends Transport {
     private static final Logger logger = LoggerFactory.getLogger(StreamableTransport.class);
     private HttpClient httpClient;
-    private SseClient sseClient;
+    private HttpClient sseClient;
 
 
     public StreamableTransport(McpOptions options) {
@@ -48,28 +47,31 @@ final class StreamableTransport extends Transport {
         } else {
             sseUrl += options.getMcpEndpoint();
         }
-        sseClient = new SseClient(sseUrl);
+        sseClient = Feat.httpClient(options.getBaseUrl());
     }
 
     @Override
     void initialized() {
-        sseClient.getOptions()
-                .setMethod(HttpMethod.POST)
-                .httpOptions().setHeaders(options.getHeaders()).addHeader(Request.HEADER_SESSION_ID, sessionId);
-        sseClient.onData(event -> {
-            JSONObject jsonObject = JSONObject.parseObject(event.getData());
-            Response<JSONObject> response = handleServerRequest(jsonObject);
-            if (response != null) {
-                doRequest(httpClient.post(options.getMcpEndpoint()), response);
-                return;
-            }
-            options.getNotificationHandler().accept(jsonObject.getString("method"));
-            logger.warn("unexpected event: " + event.getType() + " data: " + event.getData());
+        sseClient.post(options.getMcpEndpoint())
+                .header(header -> {
+                    options.getHeaders().forEach(header::set);
+                    header.set(Request.HEADER_SESSION_ID, sessionId);
+                })
+                .toSseClient()
+                .onData(event -> {
+                    JSONObject jsonObject = JSONObject.parseObject(event.getData());
+                    Response<JSONObject> response = handleServerRequest(jsonObject);
+                    if (response != null) {
+                        doRequest(httpClient.post(options.getMcpEndpoint()), response);
+                        return;
+                    }
+                    options.getNotificationHandler().accept(jsonObject.getString("method"));
+                    logger.warn("unexpected event: " + event.getType() + " data: " + event.getData());
 
-        }).onError(throwable -> {
-            System.out.println("sse error");
-            throwable.printStackTrace();
-        }).connect();
+                }).onError(throwable -> {
+                    System.out.println("sse error");
+                    throwable.printStackTrace();
+                }).submit();
     }
 
     @Override

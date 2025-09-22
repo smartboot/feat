@@ -10,6 +10,8 @@
 
 package tech.smartboot.feat.core.client;
 
+import tech.smartboot.feat.core.client.sse.SseClient;
+import tech.smartboot.feat.core.client.sse.SseOptions;
 import tech.smartboot.feat.core.client.stream.Stream;
 
 import java.util.concurrent.CompletableFuture;
@@ -37,6 +39,15 @@ public interface HttpRest {
      * @return Future
      */
     CompletableFuture<HttpResponse> submit();
+
+
+    default SseClient toSseClient() {
+        return toSseClient(options -> {
+        });
+    }
+
+    SseClient toSseClient(Consumer<SseOptions> options);
+
 
     /**
      * 当响应头接收完毕时触发
@@ -72,4 +83,8 @@ public interface HttpRest {
 
     HttpRest addQueryParam(String name, int value);
 
+    /**
+     * 关闭HttpRest
+     */
+    void close();
 }
