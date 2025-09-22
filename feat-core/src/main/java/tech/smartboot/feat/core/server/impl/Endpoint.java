@@ -22,7 +22,6 @@ import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.common.io.BodyInputStream;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
-import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.ServerOptions;
@@ -99,6 +98,7 @@ public abstract class Endpoint implements Reset {
      * 最近一次IO时间
      */
     protected long latestIo;
+    private String charset;
 
     protected Endpoint(AioSession aioSession, ServerOptions options) {
         this.aioSession = aioSession;
@@ -289,7 +289,17 @@ public abstract class Endpoint implements Reset {
         if (contentType != null) {
             return contentType;
         }
-        contentType = getHeader(HeaderName.CONTENT_TYPE);
+        String type = getHeader(HeaderName.CONTENT_TYPE);
+        int split = type.indexOf(";");
+        if (split == -1) {
+            contentType = type;
+        } else {
+            contentType = type.substring(0, split);
+            split = type.indexOf("charset=", split);
+            if (split != -1) {
+                charset = FeatUtils.substringAfter(type, "charset=");
+            }
+        }
         return contentType;
     }
 
@@ -344,7 +354,7 @@ public abstract class Endpoint implements Reset {
                     while ((len = inputStream.read(bytes)) != -1) {
                         outputStream.write(bytes, 0, len);
                     }
-                    FeatUtils.decodeParamString(outputStream.toString(), parameters);
+                    FeatUtils.decodeParamString(outputStream.toString(getCharacterEncoding()), parameters);
                 }
             } catch (IOException e) {
                 LOGGER.error("getParameterValues error", e);
@@ -416,7 +426,14 @@ public abstract class Endpoint implements Reset {
 
 
     public final String getCharacterEncoding() {
-        return "utf8";
+        if (charset != null) {
+            return charset;
+        }
+        getContentType();
+        if (charset == null) {
+            charset = "utf8";
+        }
+        return charset;
     }
 
 
