@@ -14,7 +14,6 @@ import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.client.impl.HttpRequestImpl;
 import tech.smartboot.feat.core.client.impl.HttpResponseImpl;
 import tech.smartboot.feat.core.client.sse.SseClient;
-import tech.smartboot.feat.core.client.sse.SseOptions;
 import tech.smartboot.feat.core.client.stream.Stream;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.exception.FeatException;
@@ -157,10 +156,8 @@ class HttpRestImpl implements HttpRest {
     }
 
     @Override
-    public SseClient toSseClient(Consumer<SseOptions> options) {
-        SseClient sseClient = new SseClient(this);
-        options.accept(sseClient.getOptions());
-        return sseClient;
+    public SseClient toSseClient() {
+        return new SseClient(this);
     }
 
 

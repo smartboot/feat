@@ -15,19 +15,15 @@ import tech.smartboot.feat.core.client.Header;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpOptions;
 import tech.smartboot.feat.core.client.HttpPost;
-import tech.smartboot.feat.core.client.HttpRest;
 import tech.smartboot.feat.core.client.WebSocketClient;
 import tech.smartboot.feat.core.client.WebSocketListener;
 import tech.smartboot.feat.core.client.WebSocketOptions;
-import tech.smartboot.feat.core.client.sse.SseClient;
-import tech.smartboot.feat.core.client.sse.SseOptions;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.core.server.ServerOptions;
 
 import java.io.IOException;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 /**
  * Feat框架的核心工具类，提供HTTP服务器、文件服务器、HTTP客户端和WebSocket等功能的快速构建方法。

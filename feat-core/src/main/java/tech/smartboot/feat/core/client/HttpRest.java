@@ -11,7 +11,6 @@
 package tech.smartboot.feat.core.client;
 
 import tech.smartboot.feat.core.client.sse.SseClient;
-import tech.smartboot.feat.core.client.sse.SseOptions;
 import tech.smartboot.feat.core.client.stream.Stream;
 
 import java.util.concurrent.CompletableFuture;
@@ -47,19 +46,7 @@ public interface HttpRest {
      *
      * @return SseClient
      */
-    default SseClient toSseClient() {
-        return toSseClient(options -> {
-        });
-    }
-
-    /**
-     * 转换为SseClient以处理Server-Sent Events
-     * 若响应非SSE，会当做普通Http处理
-     *
-     * @param options Sse配置选项
-     * @return SseClient
-     */
-    SseClient toSseClient(Consumer<SseOptions> options);
+    SseClient toSseClient();
 
 
     /**

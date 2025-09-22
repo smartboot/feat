@@ -16,7 +16,6 @@ import tech.smartboot.feat.core.client.stream.ServerSentEventStream;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 /**
@@ -27,9 +26,7 @@ import java.util.function.Consumer;
  */
 public class SseClient {
 
-    private final SseOptions options;
     private final Map<String, Consumer<SseEvent>> eventHandlers = new ConcurrentHashMap<>();
-    private final AtomicReference<String> lastEventId = new AtomicReference<>();
 
     private volatile Consumer<Throwable> onError = Throwable::printStackTrace;
     private volatile Consumer<SseClient> onOpen = client -> {
@@ -43,13 +40,6 @@ public class SseClient {
 
     public SseClient(HttpRest rest) {
         this.httpRest = rest;
-        this.options = new SseOptions();
-
-
-        // 设置初始的lastEventId
-        if (options.getLastEventId() != null) {
-            this.lastEventId.set(options.getLastEventId());
-        }
     }
 
 
@@ -120,16 +110,6 @@ public class SseClient {
         return this;
     }
 
-
-    public String getLastEventId() {
-        return lastEventId.get();
-    }
-
-
-    public SseOptions getOptions() {
-        return options;
-    }
-
     /**
      * SSE事件流实现
      */
@@ -143,11 +123,6 @@ public class SseClient {
                 String type = event.get("event");
                 String data = event.get("data");
                 String retryStr = event.get("retry");
-
-                // 更新最后事件ID
-                if (id != null) {
-                    lastEventId.set(id);
-                }
 
                 // 解析重连间隔
                 Long retry = null;
