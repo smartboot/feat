@@ -11,9 +11,14 @@
 package tech.smartboot.feat.core.common.io;
 
 import org.smartboot.socket.transport.AioSession;
+import tech.smartboot.feat.core.server.HttpRequest;
+import tech.smartboot.feat.core.server.HttpResponse;
+import tech.smartboot.feat.core.server.impl.HttpEndpoint;
+import tech.smartboot.feat.core.server.impl.Upgrade;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
 /**
@@ -22,10 +27,7 @@ import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
  */
 public abstract class BodyInputStream extends InputStream {
     public static final BodyInputStream EMPTY_INPUT_STREAM = new BodyInputStream(null) {
-        @Override
-        public void setReadListener(ReadListener listener) {
-            throw new IllegalStateException();
-        }
+
 
         @Override
         public int read(byte[] b, int off, int len) {
@@ -48,12 +50,19 @@ public abstract class BodyInputStream extends InputStream {
     protected static final int FLAG_LISTENER_READY = 1;
     protected static final int FLAG_FINISHED = 1 << 1;
     protected static final int FLAG_CLOSED = 1 << 2;
+    private final HttpEndpoint request;
 
 
     protected static final AtomicIntegerFieldUpdater<BodyInputStream> stateUpdater = AtomicIntegerFieldUpdater.newUpdater(BodyInputStream.class, "state");
 
-    public BodyInputStream(AioSession session) {
-        this.session = session;
+    public BodyInputStream(HttpEndpoint request) {
+        if (request != null) {
+            this.session = request.getAioSession();
+            this.request = request;
+        } else {
+            this.session = null;
+            this.request = null;
+        }
     }
 
 
@@ -77,7 +86,59 @@ public abstract class BodyInputStream extends InputStream {
      *
      * @param listener
      */
-    public abstract void setReadListener(ReadListener listener);
+    public final void setReadListener(ReadListener listener) {
+        if (listener == null) {
+            throw new NullPointerException();
+        }
+        if (this.readListener != null) {
+            throw new IllegalStateException();
+        }
+        readListener = new ReadListener() {
+            @Override
+            public void onDataAvailable() throws IOException {
+                setFlags(FLAG_LISTENER_READY);
+                listener.onDataAvailable();
+                clearFlags(FLAG_LISTENER_READY);
+                if (isFinished()) {
+                    listener.onAllDataRead();
+                }
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                listener.onError(t);
+            }
+        };
+        Upgrade upgrade = request.getUpgrade() == null ? new Upgrade() {
+            @Override
+            public void init(HttpRequest request, HttpResponse response) throws IOException {
+
+            }
+
+            @Override
+            public void onBodyStream(ByteBuffer buffer) {
+
+            }
+        } : request.getUpgrade();
+        request.setUpgrade(new Upgrade() {
+
+            @Override
+            public void init(HttpRequest request, HttpResponse response) throws IOException {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public void onBodyStream(ByteBuffer buffer) {
+                try {
+                    readListener.onDataAvailable();
+                } catch (Throwable throwable) {
+                    readListener.onError(throwable);
+                } finally {
+                    upgrade.onBodyStream(buffer);
+                }
+            }
+        });
+    }
 
     public final ReadListener getReadListener() {
         return readListener;

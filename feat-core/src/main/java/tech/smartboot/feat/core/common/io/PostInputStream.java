@@ -13,6 +13,7 @@ package tech.smartboot.feat.core.common.io;
 import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.exception.HttpException;
+import tech.smartboot.feat.core.server.impl.HttpEndpoint;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -25,7 +26,7 @@ public class PostInputStream extends BodyInputStream {
     private final long maxPayload;
     private long remaining;
 
-    public PostInputStream(AioSession session, long contentLength, long maxPayload) {
+    public PostInputStream(HttpEndpoint session, long contentLength, long maxPayload) {
         super(session);
         this.remaining = contentLength;
         this.maxPayload = maxPayload;
@@ -55,15 +56,7 @@ public class PostInputStream extends BodyInputStream {
                 throw new IllegalStateException();
             }
         } else if (remaining > 0 && !byteBuffer.hasRemaining()) {
-            try {
-                session.read();
-            } catch (IOException e) {
-                if (readListener != null) {
-                    readListener.onError(e);
-                }
-                throw e;
-            }
-
+            session.read();
         }
         int readLength = Math.min(len, byteBuffer.remaining());
         if (remaining < readLength) {
@@ -81,35 +74,5 @@ public class PostInputStream extends BodyInputStream {
         } else {
             return readLength;
         }
-    }
-
-    public void setReadListener(ReadListener listener) {
-        if (listener == null) {
-            throw new NullPointerException();
-        }
-        if (this.readListener != null) {
-            throw new IllegalStateException();
-        }
-        this.readListener = new ReadListener() {
-            @Override
-            public void onDataAvailable() throws IOException {
-                setFlags(FLAG_LISTENER_READY);
-                listener.onDataAvailable();
-                clearFlags(FLAG_LISTENER_READY);
-                if (remaining == 0) {
-                    listener.onAllDataRead();
-                }
-            }
-
-            @Override
-            public void onAllDataRead() throws IOException {
-                listener.onAllDataRead();
-            }
-
-            @Override
-            public void onError(Throwable t) {
-                listener.onError(t);
-            }
-        };
     }
 }

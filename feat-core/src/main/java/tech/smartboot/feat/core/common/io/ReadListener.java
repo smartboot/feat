@@ -19,12 +19,18 @@ import java.util.EventListener;
  */
 public interface ReadListener extends EventListener {
 
-    void onDataAvailable() throws IOException;
+    default void onDataAvailable() throws IOException {
+        throw new UnsupportedOperationException();
+    }
 
 
-    void onAllDataRead() throws IOException;
+    default void onAllDataRead() throws IOException {
+        throw new UnsupportedOperationException();
+    }
 
 
-    void onError(Throwable t);
+    default void onError(Throwable t) {
+        throw new UnsupportedOperationException();
+    }
 
 }

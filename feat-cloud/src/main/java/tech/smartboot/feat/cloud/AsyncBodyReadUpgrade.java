@@ -10,10 +10,8 @@
 
 package tech.smartboot.feat.cloud;
 
-import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.common.DecodeState;
 import tech.smartboot.feat.core.common.io.BodyInputStream;
-import tech.smartboot.feat.core.common.io.ReadListener;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.impl.HttpEndpoint;
@@ -53,21 +51,17 @@ public class AsyncBodyReadUpgrade extends Upgrade {
         if (buffer.hasRemaining()) {
             return;
         }
-        request.setInputStream(new AsyncBodyInputStream(request.getAioSession()));
+        request.setInputStream(new AsyncBodyInputStream(request));
         request.getDecodeState().setState(DecodeState.STATE_BODY_ASYNC_READING_DONE);
         request.setUpgrade(null);
         buffer.flip();
     }
 
     private class AsyncBodyInputStream extends BodyInputStream {
-        public AsyncBodyInputStream(AioSession session) {
+        public AsyncBodyInputStream(HttpEndpoint session) {
             super(session);
         }
 
-        @Override
-        public void setReadListener(ReadListener listener) {
-            throw new IllegalStateException();
-        }
 
         @Override
         public int available() {

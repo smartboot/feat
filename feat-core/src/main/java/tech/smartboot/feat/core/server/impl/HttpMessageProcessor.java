@@ -30,7 +30,6 @@ import tech.smartboot.feat.core.server.ServerOptions;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -73,10 +72,10 @@ public final class HttpMessageProcessor extends AbstractMessageProcessor<HttpEnd
                     if (upgrade != null) {
                         upgrade.onBodyStream(session.readBuffer());
                         if (decodeState.getState() == DecodeState.STATE_BODY_ASYNC_READING_DONE) {
-                            onBodyStream(session.readBuffer(), request);
+                            onBodyStream(request);
                         }
                     } else {
-                        onBodyStream(session.readBuffer(), request);
+                        onBodyStream(request);
                     }
                     break;
                 }
@@ -227,20 +226,14 @@ public final class HttpMessageProcessor extends AbstractMessageProcessor<HttpEnd
         }
     }
 
-    public void onBodyStream(ByteBuffer buffer, HttpEndpoint request) {
+    public void onBodyStream(HttpEndpoint request) {
         AbstractResponse response = request.getResponse();
         try {
-            if (request.getInputStream().getReadListener() != null) {
-                if (buffer.hasRemaining()) {
-                    request.getInputStream().getReadListener().onDataAvailable();
-                }
-                return;
-            }
             CompletableFuture<Void> future = new CompletableFuture<>();
             boolean keepAlive = isKeepAlive(request, response);
             request.setKeepAlive(keepAlive);
             request.getServerHandler().handle(request, future);
-            if (request.getUpgrade() == null) {
+            if (request.getUpgrade() == null || request.getInputStream().getReadListener() != null) {
                 finishHttpHandle(request, future);
             }
         } catch (Throwable e) {

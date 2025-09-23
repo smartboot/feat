@@ -10,10 +10,10 @@
 
 package tech.smartboot.feat.core.common.io;
 
-import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.exception.HttpException;
+import tech.smartboot.feat.core.server.impl.HttpEndpoint;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -42,7 +42,7 @@ public class ChunkedInputStream extends BodyInputStream {
     private String trailerName;
     private int chunkedRemaining;
 
-    public ChunkedInputStream(AioSession session, long maxPayload, Consumer<Map<String, String>> consumer) {
+    public ChunkedInputStream(HttpEndpoint session, long maxPayload, Consumer<Map<String, String>> consumer) {
         super(session);
         this.remainingThreshold = maxPayload;
         this.consumer = consumer;
@@ -191,50 +191,6 @@ public class ChunkedInputStream extends BodyInputStream {
             }
         }
         byteBuffer.reset();
-    }
-
-    public void setReadListener(ReadListener listener) {
-        if (listener == null) {
-            throw new NullPointerException();
-        }
-        if (this.readListener != null) {
-            throw new IllegalStateException();
-        }
-        this.readListener = new ReadListener() {
-            @Override
-            public void onDataAvailable() throws IOException {
-                //异步情况下静默解析trailerFields
-                if (anyAreSet(state, FLAG_CHUNKED_TRAILER)) {
-                    parseTrailerFields();
-                }
-                if (anyAreSet(state, FLAG_FINISHED)) {
-                    return;
-                }
-                readChunkedLength();
-                //不足chunkedLength解码
-                if (anyAreSet(state, FLAG_READ_CHUNKED_LENGTH)) {
-                    return;
-                }
-                if (chunkedRemaining > 0 && session.readBuffer().hasRemaining()) {
-                    setFlags(FLAG_LISTENER_READY);
-                    listener.onDataAvailable();
-                    clearFlags(FLAG_LISTENER_READY);
-                }
-                if (anyAreSet(state, FLAG_FINISHED)) {
-                    listener.onAllDataRead();
-                }
-            }
-
-            @Override
-            public void onAllDataRead() throws IOException {
-                listener.onAllDataRead();
-            }
-
-            @Override
-            public void onError(Throwable t) {
-                listener.onError(t);
-            }
-        };
     }
 
 }

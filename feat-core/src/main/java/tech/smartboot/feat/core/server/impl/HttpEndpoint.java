@@ -126,14 +126,14 @@ public final class HttpEndpoint extends Endpoint implements HttpRequest, Reset {
 
         //如果一个消息即存在传输译码（Transfer-Encoding）头域并且也 Content-Length 头域，后者会被忽略。
         if (HeaderValue.TransferEncoding.CHUNKED.equalsIgnoreCase(getHeader(HeaderName.TRANSFER_ENCODING))) {
-            return inputStream = new ChunkedInputStream(aioSession, remainingThreshold, stringStringMap -> this.trailerFields = stringStringMap);
+            return inputStream = new ChunkedInputStream(this, remainingThreshold, stringStringMap -> this.trailerFields = stringStringMap);
         }
 
         long contentLength = getContentLength();
         if (contentLength > 0) {
-            inputStream = new PostInputStream(aioSession, contentLength, remainingThreshold);
+            inputStream = new PostInputStream(this, contentLength, remainingThreshold);
         } else if (getHeader(HeaderName.UPGRADE) != null) {
-            inputStream = new PostInputStream(aioSession, Long.MAX_VALUE, Long.MAX_VALUE);
+            inputStream = new PostInputStream(this, Long.MAX_VALUE, Long.MAX_VALUE);
         } else {
             inputStream = BodyInputStream.EMPTY_INPUT_STREAM;
         }

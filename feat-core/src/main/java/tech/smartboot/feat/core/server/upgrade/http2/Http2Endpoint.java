@@ -15,7 +15,6 @@ import tech.smartboot.feat.core.common.HttpMethod;
 import tech.smartboot.feat.core.common.HttpProtocol;
 import tech.smartboot.feat.core.common.Reset;
 import tech.smartboot.feat.core.common.io.BodyInputStream;
-import tech.smartboot.feat.core.common.io.ReadListener;
 import tech.smartboot.feat.core.common.multipart.MultipartConfig;
 import tech.smartboot.feat.core.common.multipart.Part;
 import tech.smartboot.feat.core.server.HttpRequest;
@@ -124,10 +123,6 @@ public class Http2Endpoint extends Endpoint implements HttpRequest, Reset {
     public void bodyDone() {
         ByteArrayInputStream inputStream = new ByteArrayInputStream(body.toByteArray());
         bodyInputStream = new BodyInputStream(null) {
-            @Override
-            public void setReadListener(ReadListener listener) {
-                throw new UnsupportedOperationException();
-            }
 
             @Override
             public int read(byte[] b, int off, int len) throws IOException {
