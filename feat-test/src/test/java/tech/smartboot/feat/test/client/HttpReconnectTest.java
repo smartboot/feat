@@ -64,16 +64,13 @@ public class HttpReconnectTest {
                     .header(h -> h.keepalive(true))
                     .onSuccess(response -> {
                         System.out.println(response.body());
-                        httpClient.close();
-                    })
-                    .onFailure(throwable -> {
-                        httpClient.close();
                     })
                     .submit();
             if (i % 3 == 0) {
                 Thread.sleep(10);
             }
         }
+        httpClient.close();
     }
 
     @After

@@ -290,6 +290,9 @@ public abstract class Endpoint implements Reset {
             return contentType;
         }
         String type = getHeader(HeaderName.CONTENT_TYPE);
+        if (type == null) {
+            return null;
+        }
         int split = type.indexOf(";");
         if (split == -1) {
             contentType = type;

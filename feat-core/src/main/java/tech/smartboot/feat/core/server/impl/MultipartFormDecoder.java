@@ -17,7 +17,6 @@ import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.common.multipart.MultipartConfig;
 import tech.smartboot.feat.core.common.multipart.PartImpl;
 import tech.smartboot.feat.core.common.utils.ByteTree;
-import tech.smartboot.feat.core.common.FeatUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
@@ -48,7 +47,8 @@ class MultipartFormDecoder {
     private long writeFileSize;
 
     public MultipartFormDecoder(HttpEndpoint request, MultipartConfig configElement) {
-        this.boundary = ("--" + request.getContentType().substring(request.getContentType().indexOf("boundary=") + 9)).getBytes();
+        String contentType = request.getHeader(HeaderName.CONTENT_TYPE.getName());
+        this.boundary = ("--" + contentType.substring(contentType.indexOf("boundary=") + 9)).getBytes();
         this.multipartConfig = configElement;
     }
 
@@ -60,6 +60,9 @@ class MultipartFormDecoder {
                 }
                 for (byte b : boundary) {
                     if (byteBuffer.get() != b) {
+                        byte[] bytes = new byte[byteBuffer.remaining()];
+                        byteBuffer.get(bytes);
+                        System.out.println("boundary: " + new String(bytes));
                         throw new HttpException(HttpStatus.BAD_REQUEST);
                     }
                 }
