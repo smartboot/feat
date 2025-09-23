@@ -46,7 +46,7 @@ Feat SSEClient 的核心接口包括以下几个部分：
 要使用 SSE 客户端，首先需要通过 HttpClient 的 toSseClient() 方法转换：
 
 ```java
-HttpClient client = new HttpClient("http://localhost:8080");
+HttpClient client = Feat.httpClient("http://localhost:8080");
 SseClient sseClient = client.get("/sse").toSseClient();
 ```
 
@@ -91,6 +91,7 @@ public void close()
 以下是一个简单的示例，展示了如何使用 Feat SSEClient 连接 SSE 服务器并处理消息：
 
 ```java
+import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.SseClient;
 import tech.smartboot.feat.core.client.SseEvent;
@@ -98,11 +99,10 @@ import tech.smartboot.feat.core.client.SseEvent;
 public class SSEClientDemo {
     public static void main(String[] args) {
         // 创建 HttpClient 实例
-        HttpClient httpClient = new HttpClient("http://localhost:8080");
+        HttpClient httpClient = Feat.httpClient("http://localhost:8080");
         
         // 转换为 SSE 客户端
         SseClient sseClient = httpClient.get("/events")
-                .header(header -> header.add("Accept", "text/event-stream"))
                 .toSseClient();
         
         // 注册默认事件处理器
@@ -132,16 +132,16 @@ public class SSEClientDemo {
 SSE 支持不同的事件类型，可以通过 onEvent 方法处理特定类型的事件：
 
 ```java
+import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.SseClient;
 import tech.smartboot.feat.core.client.SseEvent;
 
 public class SSEEventTypesDemo {
     public static void main(String[] args) {
-        HttpClient httpClient = new HttpClient("http://localhost:8080");
+        HttpClient httpClient = Feat.httpClient("http://localhost:8080");
         
         SseClient sseClient = httpClient.get("/events")
-                .header(header -> header.add("Accept", "text/event-stream"))
                 .toSseClient();
         
         // 处理默认消息事件
@@ -168,23 +168,21 @@ public class SSEEventTypesDemo {
 如果需要自定义连接参数，可以通过 HttpClient 进行配置：
 
 ```java
+import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.SseClient;
 
 public class SSEAdvancedConfigDemo {
     public static void main(String[] args) {
-        HttpClient httpClient = new HttpClient("http://localhost:8080");
-        
-        // 配置 HttpClient
-        httpClient.options()
-                .connectTimeout(5000) // 设置连接超时时间为 5 秒
-                .readBufferSize(8192) // 设置读缓冲区大小为 8 KB
-                .debug(true); // 开启调试模式
+        HttpClient httpClient = Feat.httpClient("http://localhost:8080", opt -> {
+                    opt.connectTimeout(5000) // 设置连接超时时间为 5 秒
+                       .readBufferSize(8192) // 设置读缓冲区大小为 8 KB
+                       .debug(true); // 开启调试模式
+                });
         
         SseClient sseClient = httpClient.get("/events")
                 // 添加自定义请求头
                 .header(header -> {
-                    header.add("Accept", "text/event-stream");
                     header.add("Authorization", "Bearer your-token");
                     header.add("Last-Event-ID", "event-123");
                 })
@@ -207,15 +205,15 @@ public class SSEAdvancedConfigDemo {
 当不再需要 SSE 连接时，可以手动关闭它：
 
 ```java
+import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.SseClient;
 
 public class SSECloseDemo {
     public static void main(String[] args) throws InterruptedException {
-        HttpClient httpClient = new HttpClient("http://localhost:8080");
+        HttpClient httpClient = Feat.httpClient("http://localhost:8080");
         
         SseClient sseClient = httpClient.get("/events")
-                .header(header -> header.add("Accept", "text/event-stream"))
                 .toSseClient()
                 .onData(event -> {
                     System.out.println("收到数据: " + event.getData());
@@ -242,6 +240,7 @@ public class SSECloseDemo {
 在生产环境中，网络问题可能导致连接断开，建议实现重连机制：
 
 ```java
+import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.SseClient;
 import java.util.concurrent.Executors;
@@ -256,10 +255,9 @@ public class SSEReconnectDemo {
     }
     
     private static void connectSSE() {
-        HttpClient httpClient = new HttpClient("http://localhost:8080");
+        HttpClient httpClient = Feat.httpClient("http://localhost:8080");
         
         SseClient sseClient = httpClient.get("/events")
-                .header(header -> header.add("Accept", "text/event-stream"))
                 .toSseClient()
                 .onData(event -> {
                     System.out.println("收到数据: " + event.getData());
@@ -289,6 +287,7 @@ public class SSEReconnectDemo {
 确保在应用程序关闭时正确释放资源：
 
 ```java
+import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.SseClient;
 
@@ -308,10 +307,9 @@ public class SSEResourceManagementDemo {
     }
     
     private static void connectSSE() {
-        HttpClient httpClient = new HttpClient("http://localhost:8080");
+        HttpClient httpClient = Feat.httpClient("http://localhost:8080");
         
         sseClient = httpClient.get("/events")
-                .header(header -> header.add("Accept", "text/event-stream"))
                 .toSseClient()
                 .onData(event -> {
                     System.out.println("收到数据: " + event.getData());
