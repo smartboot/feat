@@ -109,6 +109,7 @@ public abstract class BodyInputStream extends InputStream {
                 listener.onError(t);
             }
         };
+        //复用Upgrade的能力实现ReadListener
         Upgrade upgrade = request.getUpgrade() == null ? new Upgrade() {
             @Override
             public void init(HttpRequest request, HttpResponse response) throws IOException {
