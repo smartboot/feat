@@ -186,7 +186,7 @@ final class ControllerSerializer extends AbstractSerializer {
                         params.append("ctx");
                     } else if (param.getAnnotation(PathParam.class) != null) {
                         PathParam pathParam = param.getAnnotation(PathParam.class);
-                        params.append("ctx.pathParam(\"" + pathParam.value() + "\")");
+                        params.append("ctx.pathParam(\"").append(pathParam.value()).append("\")");
                     } else {
                         if (i == 0) {
                             newParams.append("\t\t\tJSONObject jsonObject = getParams(ctx.Request);\n");
