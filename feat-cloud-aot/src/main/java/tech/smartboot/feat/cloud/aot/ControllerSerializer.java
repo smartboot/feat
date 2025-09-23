@@ -11,6 +11,7 @@
 package tech.smartboot.feat.cloud.aot;
 
 import com.alibaba.fastjson2.JSONPath;
+import tech.smartboot.feat.cloud.AsyncBodyReadUpgrade;
 import tech.smartboot.feat.cloud.AsyncResponse;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.InterceptorMapping;
@@ -27,6 +28,7 @@ import tech.smartboot.feat.core.common.utils.ByteTree;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.Session;
+import tech.smartboot.feat.core.server.impl.HttpEndpoint;
 import tech.smartboot.feat.router.Context;
 import tech.smartboot.feat.router.RouterHandler;
 
@@ -78,6 +80,10 @@ final class ControllerSerializer extends AbstractSerializer {
         mcpEndpointSerializer.serializeImport();
         super.serializeImport();
         printWriter.println("import " + HeaderValue.class.getName() + ";");
+        printWriter.println("import " + RouterHandler.class.getName() + ";");
+        printWriter.println("import " + HttpEndpoint.class.getName() + ";");
+        printWriter.println("import " + IOException.class.getName() + ";");
+        printWriter.println("import " + AsyncBodyReadUpgrade.class.getName() + ";");
     }
 
     @Override
@@ -162,9 +168,12 @@ final class ControllerSerializer extends AbstractSerializer {
                     printWriter.println("\t\t\t@Override");
                     printWriter.println("\t\t\tpublic void handle(" + Context.class.getName() + " ctx, " + CompletableFuture.class.getName() + "<Void> completableFuture) throws Throwable {");
                 } else {
-                    printWriter.println("\t\trouter.route(\"" + requestURL + "\"" + routeMethods + ", ctx -> {");
+                    printWriter.println("\t\trouter.route(\"" + requestURL + "\"" + routeMethods + ", new RouterHandler() {");
+                    printWriter.println("\t\t\t@Override");
+                    printWriter.println("\t\t\tpublic void handle(" + Context.class.getName() + " ctx) throws Throwable {");
                 }
 
+                boolean hasBody = false;
 
                 boolean first = true;
                 StringBuilder newParams = new StringBuilder();
@@ -189,13 +198,14 @@ final class ControllerSerializer extends AbstractSerializer {
                         params.append("ctx.pathParam(\"").append(pathParam.value()).append("\")");
                     } else {
                         if (i == 0) {
-                            newParams.append("\t\t\tJSONObject jsonObject = getParams(ctx.Request);\n");
+                            hasBody = true;
+                            newParams.append("\t\t\t\tJSONObject jsonObject = getParams(ctx.Request);\n");
                         }
                         Param paramAnnotation = param.getAnnotation(Param.class);
                         if (paramAnnotation == null && param.asType().toString().startsWith("java")) {
                             throw new FeatException("the param of " + element.getSimpleName() + "@" + se.getSimpleName() + " is not allowed to be empty.");
                         }
-                        newParams.append("\t\t\t");
+                        newParams.append("\t\t\t\t");
                         if (paramAnnotation != null) {
                             if (param.asType().toString().startsWith(List.class.getName())) {
                                 newParams.append(param.asType().toString()).append(" param").append(i).append(" = jsonObject.getObject(\"").append(paramAnnotation.value()).append("\", java.util" + ".List.class);");
@@ -217,19 +227,19 @@ final class ControllerSerializer extends AbstractSerializer {
 
                 switch (returnTypeInt) {
                     case RETURN_TYPE_VOID:
-                        printWriter.print("\t\t\tbean." + se.getSimpleName() + "(");
+                        printWriter.print("\t\t\t\tbean." + se.getSimpleName() + "(");
                         break;
                     case RETURN_TYPE_STRING:
-                        printWriter.print("\t\t\tString rst = bean." + se.getSimpleName() + "(");
+                        printWriter.print("\t\t\t\tString rst = bean." + se.getSimpleName() + "(");
                         break;
                     case RETURN_TYPE_BYTE_ARRAY:
-                        printWriter.print("\t\t\tbyte[] bytes = bean." + se.getSimpleName() + "(");
+                        printWriter.print("\t\t\t\tbyte[] bytes = bean." + se.getSimpleName() + "(");
                         break;
                     case RETURN_TYPE_OBJECT:
                         if (async) {
-                            printWriter.print("\t");
+                            printWriter.print("\t\t");
                         }
-                        printWriter.print("\t\t\t" + returnType + " rst = bean." + se.getSimpleName() + "(");
+                        printWriter.print("\t\t\t\t" + returnType + " rst = bean." + se.getSimpleName() + "(");
                         break;
                     default:
                         throw new RuntimeException("不支持的返回类型");
@@ -245,52 +255,52 @@ final class ControllerSerializer extends AbstractSerializer {
                     case RETURN_TYPE_VOID:
                         break;
                     case RETURN_TYPE_STRING:
-                        printWriter.println("\t\t\tbyte[] bytes = rst.getBytes(\"UTF-8\"); ");
+                        printWriter.println("\t\t\t\tbyte[] bytes = rst.getBytes(\"UTF-8\"); ");
                     case RETURN_TYPE_BYTE_ARRAY:
                         if (gzip) {
-                            printWriter.println("\t\t\tif(bytes.length > " + gzipThreshold + ") {");
-                            printWriter.println("\t\t\t\tbytes = " + FeatUtils.class.getName() + ".gzip(bytes);");
-                            printWriter.println("\t\t\t\tctx.Response.setHeader(\"Content-Encoding\", \"gzip\");");
-                            printWriter.println("\t\t\t}");
+                            printWriter.println("\t\t\t\tif(bytes.length > " + gzipThreshold + ") {");
+                            printWriter.println("\t\t\t\t\tbytes = " + FeatUtils.class.getName() + ".gzip(bytes);");
+                            printWriter.println("\t\t\t\t\tctx.Response.setHeader(\"Content-Encoding\", \"gzip\");");
+                            printWriter.println("\t\t\t\t}");
                         }
-                        printWriter.println("\t\t\tctx.Response.setContentLength(bytes.length);");
-                        printWriter.println("\t\t\tctx.Response.write(bytes);");
+                        printWriter.println("\t\t\t\tctx.Response.setContentLength(bytes.length);");
+                        printWriter.println("\t\t\t\tctx.Response.write(bytes);");
                         break;
                     case RETURN_TYPE_OBJECT:
                         if (AsyncResponse.class.getName().equals(returnType.toString())) {
                             if (gzip) {
-                                printWriter.println("\t\t\t\tgzipResponse(rst, ctx, completableFuture, " + gzipThreshold + ");");
+                                printWriter.println("\t\t\t\t\tgzipResponse(rst, ctx, completableFuture, " + gzipThreshold + ");");
                             } else {
-                                printWriter.println("\t\t\t\tresponse(rst, ctx, completableFuture);");
+                                printWriter.println("\t\t\t\t\tresponse(rst, ctx, completableFuture);");
                             }
-                            printWriter.println("\t\t\t}");
+                            printWriter.println("\t\t\t\t}");
                         } else if (int.class.getName().equals(returnType.toString())) {
-                            printWriter.println("\t\t\twriteInt(ctx.Response.getOutputStream(), rst);");
+                            printWriter.println("\t\t\t\twriteInt(ctx.Response.getOutputStream(), rst);");
                         } else if (boolean.class.getName().equals(returnType.toString())) {
-                            printWriter.println("\t\t\tctx.Response.setContentType(HeaderValue.ContentType.APPLICATION_JSON);");
-                            printWriter.println("\t\t\tif (rst) {");
-                            printWriter.println("\t\t\tctx.Response.setContentLength(4);");
-                            printWriter.println("\t\t\t} else {");
-                            printWriter.println("\t\t\tctx.Response.setContentLength(5);");
-                            printWriter.println("\t\t\t}");
-                            printWriter.println("\t\t\twriteBool(ctx.Response.getOutputStream(), rst);");
+                            printWriter.println("\t\t\t\tctx.Response.setContentType(HeaderValue.ContentType.APPLICATION_JSON);");
+                            printWriter.println("\t\t\t\tif (rst) {");
+                            printWriter.println("\t\t\t\tctx.Response.setContentLength(4);");
+                            printWriter.println("\t\t\t\t} else {");
+                            printWriter.println("\t\t\t\tctx.Response.setContentLength(5);");
+                            printWriter.println("\t\t\t\t}");
+                            printWriter.println("\t\t\t\twriteBool(ctx.Response.getOutputStream(), rst);");
                         } else {
-                            printWriter.println("\t\t\tjava.io.ByteArrayOutputStream os = getOutputStream();");
+                            printWriter.println("\t\t\t\tjava.io.ByteArrayOutputStream os = getOutputStream();");
                             JsonSerializer jsonSerializer = new JsonSerializer(printWriter);
                             jsonSerializer.serialize(returnType, "rst", 0, null);
                             bytesCache.putAll(jsonSerializer.getByteCache());
-                            printWriter.println("\t\t\tctx.Response.setContentType(HeaderValue.ContentType.APPLICATION_JSON);");
+                            printWriter.println("\t\t\t\tctx.Response.setContentType(HeaderValue.ContentType.APPLICATION_JSON);");
                             if (gzip) {
-                                printWriter.println("\t\t\tbyte[] bytes = os.toByteArray();");
-                                printWriter.println("\t\t\tif (bytes.length > " + gzipThreshold + ") {");
-                                printWriter.println("\t\t\t\tbytes = " + FeatUtils.class.getName() + ".gzip(bytes);");
-                                printWriter.println("\t\t\t\tctx.Response.setHeader(\"Content-Encoding\", \"gzip\");");
-                                printWriter.println("\t\t\t}");
-                                printWriter.println("\t\t\tctx.Response.setContentLength(bytes.length);");
-                                printWriter.println("\t\t\tctx.Response.write(bytes);");
+                                printWriter.println("\t\t\t\tbyte[] bytes = os.toByteArray();");
+                                printWriter.println("\t\t\t\tif (bytes.length > " + gzipThreshold + ") {");
+                                printWriter.println("\t\t\t\t\tbytes = " + FeatUtils.class.getName() + ".gzip(bytes);");
+                                printWriter.println("\t\t\t\t\tctx.Response.setHeader(\"Content-Encoding\", \"gzip\");");
+                                printWriter.println("\t\t\t\t}");
+                                printWriter.println("\t\t\t\tctx.Response.setContentLength(bytes.length);");
+                                printWriter.println("\t\t\t\tctx.Response.write(bytes);");
                             } else {
-                                printWriter.println("\t\t\tctx.Response.setContentLength(os.size());");
-                                printWriter.println("\t\t\tos.writeTo(ctx.Response.getOutputStream());");
+                                printWriter.println("\t\t\t\tctx.Response.setContentLength(os.size());");
+                                printWriter.println("\t\t\t\tos.writeTo(ctx.Response.getOutputStream());");
                             }
                         }
 
@@ -307,6 +317,14 @@ final class ControllerSerializer extends AbstractSerializer {
 //                            break;
                     default:
                         throw new RuntimeException("不支持的返回类型");
+                }
+                printWriter.println("\t\t\t}");
+
+                if (hasBody) {
+                    printWriter.println("\t\t\t@Override");
+                    printWriter.println("\t\t\tpublic void onHeaderComplete(HttpEndpoint request) throws IOException {");
+                    printWriter.println("\t\t\t\tbodyAsyncRead(request);");
+                    printWriter.println("\t\t\t}");
                 }
                 printWriter.println("\t\t});");
             }

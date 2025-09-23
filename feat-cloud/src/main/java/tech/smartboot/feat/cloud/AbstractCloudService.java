@@ -20,8 +20,11 @@ import tech.smartboot.feat.ai.mcp.server.model.ServerResource;
 import tech.smartboot.feat.ai.mcp.server.model.ServerTool;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderValue;
+import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.exception.FeatException;
+import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.server.HttpRequest;
+import tech.smartboot.feat.core.server.impl.HttpEndpoint;
 import tech.smartboot.feat.router.Context;
 
 import java.io.ByteArrayOutputStream;
@@ -50,6 +53,25 @@ public abstract class AbstractCloudService implements CloudService {
     private static final byte[] FALSE = new byte[]{'f', 'a', 'l', 's', 'e'};
     protected static final ThreadLocal<ByteArrayOutputStream> outputStream = ThreadLocal.withInitial(() -> new ByteArrayOutputStream(1024));
     protected static final ThreadLocal<byte[]> dateFormat = ThreadLocal.withInitial(() -> new byte[]{'"', '0', '0', '0', '0', '-', '0', '0', '-', '0', '0', ' ', '0', '0', ':', '0', '0', ':', '0', '0', '"'});
+
+    protected void bodyAsyncRead(HttpEndpoint request) {
+        long contentLength = request.getContentLength();
+        if (contentLength < 0) {
+            return;
+        }
+        if (contentLength > request.getOptions().getMaxRequestSize()) {
+            throw new HttpException(HttpStatus.PAYLOAD_TOO_LARGE);
+        }
+        //仅面向 1MB 以内的请求进行body异步读取
+        if (contentLength > 1024 * 1024) {
+            return;
+        }
+        String contentType = request.getContentType();
+        if (contentType == null || !(contentType.startsWith(HeaderValue.ContentType.X_WWW_FORM_URLENCODED) || contentType.startsWith(HeaderValue.ContentType.APPLICATION_JSON))) {
+            return;
+        }
+        request.setUpgrade(new AsyncBodyReadUpgrade(request, (int)contentLength));
+    }
 
     protected JSONObject getParams(HttpRequest request) {
         try {

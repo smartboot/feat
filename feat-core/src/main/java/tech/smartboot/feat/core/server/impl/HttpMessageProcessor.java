@@ -72,6 +72,9 @@ public final class HttpMessageProcessor extends AbstractMessageProcessor<HttpEnd
                     Upgrade upgrade = request.getUpgrade();
                     if (upgrade != null) {
                         upgrade.onBodyStream(session.readBuffer());
+                        if (decodeState.getState() == DecodeState.STATE_BODY_ASYNC_READING_DONE) {
+                            onBodyStream(session.readBuffer(), request);
+                        }
                     } else {
                         onBodyStream(session.readBuffer(), request);
                     }

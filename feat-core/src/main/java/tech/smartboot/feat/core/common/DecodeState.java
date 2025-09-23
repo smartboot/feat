@@ -29,6 +29,10 @@ public class DecodeState {
     public static final int STATE_BODY = 10;
     public static final int STATE_BODY_READING_MONITOR = 11;
     public static final int STATE_BODY_READING_CALLBACK = 12;
+    /**
+     * body 异步读取完成
+     */
+    public static final int STATE_BODY_ASYNC_READING_DONE = 13;
 
     public static final int STATE_METHOD = 14;
     public static final int STATE_URI = 15;
