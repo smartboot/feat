@@ -62,10 +62,6 @@ public abstract class AbstractCloudService implements CloudService {
         if (contentLength > request.getOptions().getMaxRequestSize()) {
             throw new HttpException(HttpStatus.PAYLOAD_TOO_LARGE);
         }
-        //仅面向 1MB 以内的请求进行body异步读取
-        if (contentLength > 1024 * 1024) {
-            return;
-        }
         String contentType = request.getContentType();
         if (contentType == null || !(contentType.startsWith(HeaderValue.ContentType.X_WWW_FORM_URLENCODED) || contentType.startsWith(HeaderValue.ContentType.APPLICATION_JSON))) {
             return;
