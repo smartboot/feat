@@ -42,19 +42,36 @@ public interface HttpRest {
 
     /**
      * 转换为SseClient以处理Server-Sent Events
-     * 若响应非SSE，会当做普通Http处理
+     * <p>若响应非SSE，会当做普通Http处理</p>
+     * <p>注意：该方法和onResponseHeader会相互覆盖，后注册的会覆盖先注册的。
+     * 同时如果服务器响应为有效的SSE格式，系统将自动切换到SSE处理模式，
+     * 此时onResponseBody注册的Stream处理器将不会被触发。</p>
      *
-     * @return SseClient
+     * @param consumer SseClient消费者，用于配置SSE事件处理器
+     * @return HttpRest
      */
     default HttpRest onSSE(Consumer<SseClient> consumer) {
         return onSSE(resp -> resp.statusCode() == 200 && resp.getContentType().startsWith("text/event-stream"), consumer);
     }
 
+    /**
+     * 转换为SseClient以处理Server-Sent Events
+     * <p>只有当响应满足predicate条件时才会切换到SSE处理模式。
+     * 若响应不满足条件，会当做普通Http处理</p>
+     * <p>注意：该方法和onResponseHeader会相互覆盖，后注册的会覆盖先注册的。
+     * 同时如果服务器响应为有效的SSE格式，系统将自动切换到SSE处理模式，
+     * 此时onResponseBody注册的Stream处理器将不会被触发。</p>
+     *
+     * @param predicate 判断是否为SSE响应的条件，只有满足条件时才会启用SSE处理模式
+     * @param consumer  SseClient消费者，用于配置各类SSE事件处理器
+     * @return HttpRest
+     */
     HttpRest onSSE(Predicate<HttpResponse> predicate, Consumer<SseClient> consumer);
 
 
     /**
      * 当响应头接收完毕时触发
+     * <p>注意：该方法和onSSE会相互覆盖，后注册的会覆盖先注册的</p>
      *
      * @param resp 响应头
      * @return HttpRest
@@ -63,8 +80,10 @@ public interface HttpRest {
 
     /**
      * 流式接收响应体
+     * <p>注意：如果同时注册了onSSE相关监听器，且服务器响应为有效的SSE格式(text/event-stream)，
+     * 系统将自动切换到SSE处理模式，此时onResponseBody注册的Stream处理器将不会被触发。</p>
      *
-     * @param streaming 响应体
+     * @param streaming 响应体流处理器
      * @return HttpRest
      */
     HttpRest onResponseBody(Stream streaming);
