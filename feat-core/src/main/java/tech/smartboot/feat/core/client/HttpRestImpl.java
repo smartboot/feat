@@ -277,6 +277,12 @@ class HttpRestImpl implements HttpRest {
         response.getSession().close();
     }
 
+    @Override
+    public HttpRest onClose(Runnable runnable) {
+        completableFuture.thenRun(runnable);
+        return this;
+    }
+
     private void commitCheck() {
         if (commit) {
             throw new IllegalStateException("http request has been commit!");

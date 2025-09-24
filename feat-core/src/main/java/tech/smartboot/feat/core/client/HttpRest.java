@@ -110,4 +110,6 @@ public interface HttpRest {
      * 关闭HttpRest
      */
     void close();
+
+    HttpRest onClose(Runnable runnable);
 }

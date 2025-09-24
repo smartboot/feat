@@ -63,4 +63,10 @@ public final class HttpPost extends HttpRestWrapper {
         super.header(header);
         return this;
     }
+
+    @Override
+    public HttpRest onClose(Runnable runnable) {
+        super.onClose(runnable);
+        return this;
+    }
 }

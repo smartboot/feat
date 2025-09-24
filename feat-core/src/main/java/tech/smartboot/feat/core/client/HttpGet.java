@@ -53,4 +53,10 @@ public class HttpGet extends HttpRestWrapper {
     public RequestBody body() {
         throw new UnsupportedOperationException("GET method does not support body");
     }
+
+    @Override
+    public HttpGet onClose(Runnable runnable) {
+        super.onClose(runnable);
+        return this;
+    }
 }

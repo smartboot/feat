@@ -92,4 +92,8 @@ class HttpRestWrapper implements HttpRest {
         rest.close();
     }
 
+    @Override
+    public HttpRest onClose(Runnable runnable) {
+        return rest.onClose(runnable);
+    }
 }
