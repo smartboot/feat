@@ -65,7 +65,21 @@ public final class HttpClient {
      */
     private final HttpMessageProcessor processor = new HttpMessageProcessor();
     private final String uri;
+    /**
+     * 记录最后一次使用连接的时间戳，用于连接空闲超时检测
+     * <p>
+     * 当创建新的HTTP请求时会更新此时间戳，监控任务会定期检查此值
+     * 以判断连接是否已空闲超过指定时间（默认30秒）
+     * </p>
+     */
     private long latestTime = System.currentTimeMillis();
+    /**
+     * 连接监控定时任务
+     * <p>
+     * 用于定期清理空闲连接的定时任务引用，通过双重检查锁定确保
+     * 系统中只有一个监控任务在运行，避免资源浪费
+     * </p>
+     */
     private volatile TimerTask timerTask;
 
     public HttpClient(String url) {
