@@ -103,7 +103,7 @@ public class SimpleSseTest {
         String url = "http://localhost:" + SERVER_PORT;
 
         AtomicInteger eventCount = new AtomicInteger(0);
-        Feat.httpClient(url, opt -> opt.debug(true)).get().toSseClient().onData(event -> {
+        Feat.httpClient(url, opt -> opt.debug(true)).get().onSSE(sse -> sse.onData(event -> {
             int count = eventCount.incrementAndGet();
             System.out.println("[客户端] 接收事件 #" + count);
             System.out.println("    ID: " + event.getId());
@@ -113,7 +113,7 @@ public class SimpleSseTest {
             System.out.println();
         }).onOpen(sseClient -> {
             System.out.println("[客户端] 监听成功，开始接收事件...");
-        }).onError(throwable -> {
+        })).onFailure(throwable -> {
             System.err.println("[客户端] 监听失败: " + throwable.getMessage());
             throwable.printStackTrace();
         }).submit();

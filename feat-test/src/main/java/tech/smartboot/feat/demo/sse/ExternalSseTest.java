@@ -45,7 +45,7 @@ public class ExternalSseTest {
         // 使用公开的SSE测试服务
         String url = "https://sse.dev/test";
 
-        Feat.httpClient(url, opt -> opt.debug(true)).get().toSseClient().onData(event -> {
+        Feat.httpClient(url, opt -> opt.debug(true)).get().onSSE(sse -> sse.onData(event -> {
             int count = eventCount.incrementAndGet();
 
             System.out.println("\\n[事件 #" + count + "]");
@@ -59,7 +59,7 @@ public class ExternalSseTest {
                 System.out.println("\\n已接收10个事件，测试结束");
                 System.exit(0);
             }
-        }).onError(error -> {
+        })).onFailure(error -> {
             System.err.println("❌ 发生错误: " + error.getMessage());
             error.printStackTrace();
         }).submit();

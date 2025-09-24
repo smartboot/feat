@@ -14,6 +14,7 @@ import tech.smartboot.feat.core.client.stream.Stream;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 /**
  * @author 三刀 zhengjunweimail@163.com
@@ -45,7 +46,11 @@ public interface HttpRest {
      *
      * @return SseClient
      */
-    SseClient toSseClient();
+    default HttpRest onSSE(Consumer<SseClient> consumer) {
+        return onSSE(resp -> resp.statusCode() == 200 && resp.getContentType().startsWith("text/event-stream"), consumer);
+    }
+
+    HttpRest onSSE(Predicate<HttpResponse> predicate, Consumer<SseClient> consumer);
 
 
     /**

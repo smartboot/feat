@@ -78,7 +78,7 @@ public class ChatModel {
                     responseMessage.setSuccess(false);
                     consumer.onCompletion(responseMessage);
                 })
-                .toSseClient().onData(event -> {
+                .onSSE(sse -> sse.onData(event -> {
                     String data = event.getData();
                     if ("[DONE]".equals(data) || FeatUtils.isBlank(data)) {
                         ResponseMessage responseMessage = new ResponseMessage();
@@ -147,7 +147,7 @@ public class ChatModel {
                             }
                         }
                     }
-                }).submit();
+                })).submit();
     }
 
     public CompletableFuture<ResponseMessage> chat(String content) {

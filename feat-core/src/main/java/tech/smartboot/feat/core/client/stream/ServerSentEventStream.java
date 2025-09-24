@@ -94,5 +94,5 @@ public abstract class ServerSentEventStream implements Stream {
         }
     }
 
-    public abstract void onEvent(HttpResponse httpResponse, Map<String, String> event);
+    public abstract void onEvent(HttpResponse httpResponse, Map<String, String> event) throws IOException;
 }

@@ -12,9 +12,11 @@ package tech.smartboot.feat.core.client;
 
 import tech.smartboot.feat.core.client.stream.ServerSentEventStream;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 /**
  * SSE客户端实现类
@@ -26,59 +28,33 @@ public final class SseClient {
 
     private final Map<String, Consumer<SseEvent>> eventHandlers = new ConcurrentHashMap<>();
 
-    private volatile Consumer<Throwable> onError = Throwable::printStackTrace;
     private volatile Consumer<SseClient> onOpen = client -> {
-    };
-    private volatile Consumer<SseClient> onClose = client -> {
     };
 
     private final HttpRest httpRest;
 
-    private boolean connectExecuted = false;
-
-    SseClient(HttpRest rest) {
+    SseClient(Predicate<HttpResponse> predicate, HttpRest rest) {
         this.httpRest = rest;
-    }
-
-
-    public void submit() {
-        if (connectExecuted) {
-            throw new IllegalStateException("The submit() method can only be called once per client instance.");
-        }
-        connectExecuted = true;
         // 设置事件流处理器
         httpRest.onResponseHeader(resp -> {
-            if (resp.statusCode() == 200 && resp.getContentType().startsWith("text/event-stream")) {
+            if (predicate.test(resp)) {
                 httpRest.onResponseBody(new ServerSentEventStream() {
-                    public void onEvent(HttpResponse httpResponse, Map<String, String> event) {
-                        try {
-                            // 创建事件对象
-                            SseEvent sseEvent = new SseEvent(event);
+                    public void onEvent(HttpResponse httpResponse, Map<String, String> event) throws IOException {
+                        // 创建事件对象
+                        SseEvent sseEvent = new SseEvent(event);
 
-                            // 查找对应的事件处理器
-                            String eventType = sseEvent.getType() != null ? sseEvent.getType() : ServerSentEventStream.DEFAULT_EVENT;
-                            Consumer<SseEvent> handler = eventHandlers.get(eventType);
+                        // 查找对应的事件处理器
+                        String eventType = sseEvent.getType() != null ? sseEvent.getType() : ServerSentEventStream.DEFAULT_EVENT;
+                        Consumer<SseEvent> handler = eventHandlers.get(eventType);
 
-                            // 如果没有找到特定类型的处理器，尝试使用默认处理器
-                            if (handler == null) {
-                                handler = eventHandlers.get(ServerSentEventStream.DEFAULT_EVENT);
-                            }
+                        // 如果没有找到特定类型的处理器，尝试使用默认处理器
+                        if (handler == null) {
+                            handler = eventHandlers.get(ServerSentEventStream.DEFAULT_EVENT);
+                        }
 
-                            // 执行事件处理器
-                            if (handler != null) {
-                                try {
-                                    handler.accept(sseEvent);
-                                } catch (Exception e) {
-                                    if (onError != null) {
-                                        onError.accept(e);
-                                    }
-                                }
-                            }
-
-                        } catch (Throwable e) {
-                            if (onError != null) {
-                                onError.accept(e);
-                            }
+                        // 执行事件处理器
+                        if (handler != null) {
+                            handler.accept(sseEvent);
                         }
                     }
                 });
@@ -86,19 +62,6 @@ public final class SseClient {
                 onOpen.accept(this);
             }
         });
-
-        // 发送请求
-        httpRest.onFailure(this::handleConnectionError).submit();
-    }
-
-
-    private void handleConnectionError(Throwable error) {
-        onError.accept(error);
-    }
-
-    public void close() {
-        httpRest.close();
-        onClose.accept(this);
     }
 
 
@@ -118,16 +81,6 @@ public final class SseClient {
      */
     public SseClient onOpen(Consumer<SseClient> consumer) {
         this.onOpen = consumer;
-        return this;
-    }
-
-    public SseClient onError(Consumer<Throwable> onError) {
-        this.onError = onError;
-        return this;
-    }
-
-    public SseClient onClose(Consumer<SseClient> consumer) {
-        this.onClose = consumer;
         return this;
     }
 }

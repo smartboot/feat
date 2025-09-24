@@ -48,42 +48,39 @@ final class SseTransport extends Transport {
             opt.setHeaders(options.getHeaders());
         });
         sseClient.post(options.getSseEndpoint())
-                .toSseClient()
-                .onEvent("endpoint", event -> {
-                    endpoint = event.getData();
-                    latch.countDown();
-                })
-                .onData(event -> {
-                    String data = event.getData();
-                    JSONObject jsonObject = JSONObject.parseObject(data);
+                .onSSE(sse -> sse.onEvent("endpoint", event -> {
+                            endpoint = event.getData();
+                            latch.countDown();
+                        })
+                        .onData(event -> {
+                            String data = event.getData();
+                            JSONObject jsonObject = JSONObject.parseObject(data);
 
-                    Response<JSONObject> response = handleServerRequest(jsonObject);
-                    if (response != null) {
-                        try {
-                            doRequest(httpClient.post(endpoint), response);
-                        } catch (Throwable throwable) {
-                            LOGGER.error("send error", throwable);
-                        }
-                        return;
-                    }
-                    response = jsonObject.to(new TypeReference<Response<JSONObject>>() {
-                    });
-                    if (response.getId() == null) {
-                        System.out.println("no id");
-                        return;
-                    }
-                    CompletableFuture<Response<JSONObject>> future = responseCallbacks.remove(response.getId());
-                    if (future != null) {
-                        if (response.getError() != null) {
-                            future.completeExceptionally(new McpException(response.getError().getInteger("code"), response.getError().getString("message")));
-                        } else {
-                            future.complete(response);
-                        }
-                    }
-                }).onError(throwable -> {
-                    System.out.println("sse error");
-                    throwable.printStackTrace();
-                }).submit();
+                            Response<JSONObject> response = handleServerRequest(jsonObject);
+                            if (response != null) {
+                                try {
+                                    doRequest(httpClient.post(endpoint), response);
+                                } catch (Throwable throwable) {
+                                    LOGGER.error("send error", throwable);
+                                }
+                                return;
+                            }
+                            response = jsonObject.to(new TypeReference<Response<JSONObject>>() {
+                            });
+                            if (response.getId() == null) {
+                                System.out.println("no id");
+                                return;
+                            }
+                            CompletableFuture<Response<JSONObject>> future = responseCallbacks.remove(response.getId());
+                            if (future != null) {
+                                if (response.getError() != null) {
+                                    future.completeExceptionally(new McpException(response.getError().getInteger("code"), response.getError().getString("message")));
+                                } else {
+                                    future.complete(response);
+                                }
+                            }
+                        }))
+                .submit();
     }
 
     @Override

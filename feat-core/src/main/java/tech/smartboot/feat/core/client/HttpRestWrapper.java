@@ -14,6 +14,7 @@ import tech.smartboot.feat.core.client.stream.Stream;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 /**
  * @author 三刀 zhengjunweimail@163.com
@@ -42,8 +43,8 @@ class HttpRestWrapper implements HttpRest {
     }
 
     @Override
-    public SseClient toSseClient() {
-        return rest.toSseClient();
+    public HttpRest onSSE(Predicate<HttpResponse> predicate, Consumer<SseClient> consumer) {
+        return rest.onSSE(predicate, consumer);
     }
 
     @Override

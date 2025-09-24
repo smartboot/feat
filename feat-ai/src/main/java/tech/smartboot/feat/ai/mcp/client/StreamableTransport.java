@@ -57,8 +57,7 @@ final class StreamableTransport extends Transport {
                     options.getHeaders().forEach(header::set);
                     header.set(Request.HEADER_SESSION_ID, sessionId);
                 })
-                .toSseClient()
-                .onData(event -> {
+                .onSSE(sse -> sse.onData(event -> {
                     JSONObject jsonObject = JSONObject.parseObject(event.getData());
                     Response<JSONObject> response = handleServerRequest(jsonObject);
                     if (response != null) {
@@ -68,7 +67,8 @@ final class StreamableTransport extends Transport {
                     options.getNotificationHandler().accept(jsonObject.getString("method"));
                     logger.warn("unexpected event: " + event.getType() + " data: " + event.getData());
 
-                }).onError(throwable -> {
+                }))
+                .onFailure(throwable -> {
                     System.out.println("sse error");
                     throwable.printStackTrace();
                 }).submit();

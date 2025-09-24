@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 /**
  * @author 三刀 zhengjunweimail@163.com
@@ -154,9 +155,12 @@ class HttpRestImpl implements HttpRest {
 
     }
 
+
     @Override
-    public SseClient toSseClient() {
-        return new SseClient(this);
+    public HttpRest onSSE(Predicate<HttpResponse> predicate, Consumer<SseClient> consumer) {
+        SseClient sse = new SseClient(predicate, this);
+        consumer.accept(sse);
+        return this;
     }
 
 
