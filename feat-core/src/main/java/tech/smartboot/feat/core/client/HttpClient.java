@@ -15,6 +15,8 @@ import org.smartboot.socket.extension.plugins.Plugin;
 import org.smartboot.socket.extension.plugins.SslPlugin;
 import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
 import org.smartboot.socket.extension.ssl.factory.ClientSSLContextFactory;
+import org.smartboot.socket.timer.HashedWheelTimer;
+import org.smartboot.socket.timer.TimerTask;
 import org.smartboot.socket.transport.AioQuickClient;
 import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.client.impl.HttpRequestImpl;
@@ -29,6 +31,7 @@ import java.util.Base64;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 /**
@@ -62,6 +65,8 @@ public final class HttpClient {
      */
     private final HttpMessageProcessor processor = new HttpMessageProcessor();
     private final String uri;
+    private long latestTime = System.currentTimeMillis();
+    private volatile TimerTask timerTask;
 
     public HttpClient(String url) {
         int schemaIndex = url.indexOf("://");
@@ -138,6 +143,7 @@ public final class HttpClient {
         if (closed) {
             throw new FeatException("client closed");
         }
+        latestTime = System.currentTimeMillis();
         HttpRestImpl httpRestImpl;
         try {
             AioQuickClient client = acquireConnection();
@@ -274,7 +280,55 @@ public final class HttpClient {
             client.start(options.group());
         }
         clients.put(client, client);
+        startConnectionMonitor();
         return client;
+    }
+
+    /**
+     * 启动连接监控任务，用于清理无效连接和空闲连接
+     *
+     * <p>该方法会启动一个定时任务，每隔1分钟执行一次检查：
+     * <ul>
+     *   <li>如果连接超过30秒没有被使用，则将其关闭</li>
+     *   <li>如果所有连接都已关闭，则取消监控任务</li>
+     *   <li>如果任务取消后又有新连接创建，则重新启动监控任务</li>
+     * </ul>
+     *
+     * @see #releaseConnection(AioQuickClient)
+     * @see #acquireConnection()
+     */
+    private void startConnectionMonitor() {
+        // 使用双重检查锁定确保只有一个监控任务在运行
+        if (timerTask != null) {
+            return;
+        }
+        synchronized (this) {
+            if (timerTask != null) {
+                return;
+            }
+            timerTask = HashedWheelTimer.DEFAULT_TIMER.scheduleWithFixedDelay(() -> {
+                long time = latestTime;
+                // 如果超过30秒没有使用连接，则清理可复用连接队列中的连接
+                if (System.currentTimeMillis() - time > 30 * 1000) {
+                    AioQuickClient c;
+                    // 当latestTime没有更新且队列中还有连接时，持续清理
+                    while (time == latestTime && (c = resuingClients.poll()) != null) {
+                        System.out.println("release...");
+                        releaseConnection(c);
+                    }
+                }
+                // 如果没有活动连接，则取消监控任务
+                if (clients.isEmpty()) {
+                    TimerTask oldTask = timerTask;
+                    timerTask = null;
+                    oldTask.cancel();
+                    // 取消任务后再次检查是否有新连接加入，如果有则重新启动监控任务
+                    if (!clients.isEmpty()) {
+                        startConnectionMonitor();
+                    }
+                }
+            }, 1, TimeUnit.MINUTES);
+        }
     }
 
     private void releaseConnection(AioQuickClient client) {
