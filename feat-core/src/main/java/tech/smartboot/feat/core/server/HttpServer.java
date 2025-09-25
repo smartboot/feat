@@ -145,7 +145,7 @@ public class HttpServer {
         options.getByteCache().addNode(HeaderValue.ContentType.APPLICATION_JSON_UTF8);
         options.getByteCache().addNode(HeaderValue.ContentType.TEXT_HTML_UTF8);
         options.getByteCache().addNode(HeaderValue.ContentType.TEXT_PLAIN_UTF8);
-        options.getByteCache().addNode("no-cache");
+        options.getByteCache().addNode(HeaderValue.NO_CACHE);
     }
 
     /**

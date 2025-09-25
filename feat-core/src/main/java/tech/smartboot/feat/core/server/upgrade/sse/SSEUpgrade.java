@@ -10,6 +10,8 @@
 
 package tech.smartboot.feat.core.server.upgrade.sse;
 
+import tech.smartboot.feat.core.common.HeaderName;
+import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.impl.Upgrade;
@@ -27,9 +29,9 @@ public abstract class SSEUpgrade extends Upgrade {
     @Override
     public void init(HttpRequest request, HttpResponse response) throws IOException {
         response = request.getResponse();
-        response.setHeader("Content-Type", "text/event-stream");
-        response.setHeader("Cache-Control", "no-cache");
-        response.setHeader("Connection", "keep-alive");
+        response.setHeader(HeaderName.CONTENT_TYPE, HeaderValue.ContentType.EVENT_STREAM);
+        response.setHeader(HeaderName.CACHE_CONTROL, HeaderValue.NO_CACHE);
+        response.setHeader(HeaderName.CONNECTION, HeaderValue.Connection.keepalive);
         response.setHeader("Access-Control-Allow-Origin", "*");
         response.getOutputStream().flush();
         SseEmitter sseEmitter = new SseEmitter(this.request.getAioSession());
