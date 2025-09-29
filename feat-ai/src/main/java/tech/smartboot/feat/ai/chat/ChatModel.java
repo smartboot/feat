@@ -179,7 +179,7 @@ public class ChatModel {
             responseMessage.setPromptLogprobs(chatResponse.getPromptLogprobs());
             responseMessage.setSuccess(true);
             callback.accept(responseMessage);
-        }).submit();
+        }).onFailure(Throwable::printStackTrace).submit();
     }
 
 
