@@ -24,7 +24,6 @@ public class MultipartConfig {
     private String location;
     private long maxFileSize;
     private long maxRequestSize;
-    private int fileSizeThreshold;
 
     public MultipartConfig() {
     }
@@ -35,9 +34,8 @@ public class MultipartConfig {
      * @param location          the directory location where files will be stored
      * @param maxFileSize       the maximum size allowed for uploaded files
      * @param maxRequestSize    the maximum size allowed for multipart/form-data requests
-     * @param fileSizeThreshold the size threshold after which files will be written to disk
      */
-    public MultipartConfig(String location, long maxFileSize, long maxRequestSize, int fileSizeThreshold) {
+    public MultipartConfig(String location, long maxFileSize, long maxRequestSize) {
         if (location == null) {
             this.location = "";
         } else {
@@ -49,7 +47,6 @@ public class MultipartConfig {
 
         this.maxFileSize = maxFileSize;
         this.maxRequestSize = maxRequestSize;
-        this.fileSizeThreshold = fileSizeThreshold;
     }
 
 
@@ -80,13 +77,4 @@ public class MultipartConfig {
         return this.maxRequestSize;
     }
 
-    /**
-     * Gets the size threshold after which files will be written to disk. A value of zero means files must always be written
-     * to disk.
-     *
-     * @return the size threshold after which files will be written to disk
-     */
-    public int getFileSizeThreshold() {
-        return this.fileSizeThreshold;
-    }
 }
