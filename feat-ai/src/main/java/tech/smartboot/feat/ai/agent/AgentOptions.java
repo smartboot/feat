@@ -13,6 +13,7 @@ package tech.smartboot.feat.ai.agent;
 import tech.smartboot.feat.ai.agent.memory.AgentMemory;
 import tech.smartboot.feat.ai.agent.memory.DefaultAgentMemory;
 import tech.smartboot.feat.ai.chat.ChatModelVendor;
+import tech.smartboot.feat.ai.chat.prompt.Prompt;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 
@@ -40,7 +41,8 @@ public class AgentOptions {
     /**
      * 模型供应商
      */
-    private ChatModelVendor vendor = ChatModelVendor.GiteeAI.Qwen3_4B;
+//    private ChatModelVendor vendor = ChatModelVendor.GiteeAI.Qwen3_235B_A22B_Instruct_2507;
+    private ChatModelVendor vendor = ChatModelVendor.Ollama.Deepseek_r1_7B;
 
     /**
      * Agent记忆
@@ -61,6 +63,7 @@ public class AgentOptions {
      * 最大记忆检索数量
      */
     private int maxMemoryRetrievalCount = 5;
+    private Prompt prompt;
 
     public static AgentOptions create() {
         return new AgentOptions();
@@ -159,6 +162,15 @@ public class AgentOptions {
 
     public int getMaxMemoryRetrievalCount() {
         return maxMemoryRetrievalCount;
+    }
+
+    public Prompt getPrompt() {
+        return prompt;
+    }
+
+    public AgentOptions prompt(Prompt prompt) {
+        this.prompt = prompt;
+        return this;
     }
 
     /**

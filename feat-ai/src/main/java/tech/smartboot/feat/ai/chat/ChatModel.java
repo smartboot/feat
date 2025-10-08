@@ -207,9 +207,13 @@ public class ChatModel {
             t.setFunction(options.functions().get(tool));
             toolList.add(t);
         }
-        if (options.getModel().hasCapability(ChatModelVendor.CAPABILITY_FUNCTION_CALL) && !toolList.isEmpty()) {
-            jsonObject.put("tools", toolList);
-            jsonObject.put("tool_choice", "auto");
+        if (!toolList.isEmpty()) {
+            if (options.getModel().hasCapability(ChatModelVendor.CAPABILITY_FUNCTION_CALL)) {
+                jsonObject.put("tools", toolList);
+                jsonObject.put("tool_choice", "auto");
+            } else {
+                LOGGER.warn("current model:{} unSupport function call.", options.getModel().model());
+            }
         }
         if (options.getModel().getPreRequest() != null) {
             options.getModel().getPreRequest().preRequest(this, options.getModel(), jsonObject);
@@ -245,13 +249,6 @@ public class ChatModel {
         Map<String, String> params = new HashMap<>();
         data.accept(params);
         history.clear();
-        if (FeatUtils.isNotBlank(prompt.role())) {
-            options.system(prompt.role());
-            Message message = new Message();
-            message.setRole(Message.ROLE_SYSTEM);
-            message.setContent(options.getSystem());
-            history.add(message);
-        }
         chat(prompt.prompt(params), callback);
     }
 
@@ -259,13 +256,6 @@ public class ChatModel {
         Map<String, String> params = new HashMap<>();
         data.accept(params);
         history.clear();
-        if (FeatUtils.isNotBlank(prompt.role())) {
-            options.system(prompt.role());
-            Message message = new Message();
-            message.setRole(Message.ROLE_SYSTEM);
-            message.setContent(options.getSystem());
-            history.add(message);
-        }
         chatStream(prompt.prompt(params), callback);
     }
 

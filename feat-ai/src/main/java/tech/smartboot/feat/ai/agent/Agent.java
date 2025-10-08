@@ -13,12 +13,12 @@ package tech.smartboot.feat.ai.agent;
 import tech.smartboot.feat.ai.agent.memory.AgentMemory;
 import tech.smartboot.feat.ai.agent.memory.Memory;
 import tech.smartboot.feat.ai.agent.tool.ToolExecutor;
+import tech.smartboot.feat.ai.chat.ChatModel;
 import tech.smartboot.feat.ai.chat.entity.Message;
-import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
 
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
+import java.util.Map;
 
 /**
  * AI Agent核心接口定义
@@ -48,7 +48,8 @@ public interface Agent {
      *
      * @return ChatModel实例
      */
-    tech.smartboot.feat.ai.chat.ChatModel getChatModel();
+    ChatModel getChatModel();
+
 
     /**
      * 获取Agent记忆
@@ -58,22 +59,12 @@ public interface Agent {
     AgentMemory getMemory();
 
     /**
-     * 执行对话（支持工具调用）
-     *
-     * @param content 用户输入内容
-     * @param options 对话选项
-     * @return 异步响应
-     */
-    CompletableFuture<ResponseMessage> chat(String content, ChatOptions options);
-
-    /**
      * 执行流式对话（支持工具调用）
      *
-     * @param content  用户输入内容
-     * @param options  对话选项
+     * @param input    用户输入内容
      * @param callback 流式响应回调
      */
-    void chatStream(String content, ChatOptions options, StreamResponseCallback callback);
+    void execute(Map<String, String> input, StreamResponseCallback callback);
 
     /**
      * 添加工具执行器

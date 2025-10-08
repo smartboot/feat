@@ -10,43 +10,45 @@
 
 package tech.smartboot.feat.ai.chat.prompt;
 
-import java.util.Collections;
+import tech.smartboot.feat.core.common.FeatUtils;
+import tech.smartboot.feat.core.common.exception.FeatException;
+
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
-public interface Prompt {
-    /**
-     * 建议使用的模型, 可多个
-     *
-     * @return 模型
-     */
-    default List<String> suggestedModels() {
-        return Collections.emptyList();
-    }
+public class Prompt {
+    private final String promptFile;
 
-    /**
-     * 角色
-     * @return 角色
-     */
-    default String role() {
-        return "";
+    private final List<String> paramNames;
+
+    public Prompt(String promptFile, List<String> params) {
+        this.promptFile = promptFile;
+        this.paramNames = params;
     }
 
     /**
      * 提示词
+     *
      * @param params 提示词参数
      * @return 提示词
      */
-    String prompt(Map<String, String> params);
+    public final String prompt(Map<String, String> params) {
+        String prompt = FeatUtils.getResourceAsString("feat-prompts/" + promptFile);
+        if (prompt == null) {
+            throw new FeatException("prompt: " + promptFile + " not found");
+        }
+        for (String param : paramNames) {
+            String value = params.get(param);
+            if (value == null) {
+                throw new FeatException("param: " + param + " not found");
+            }
+            prompt = prompt.replace("{{" + param + "}}", params.get(param));
+        }
+        return prompt;
+    }
 
-    /**
-     * 提示词参数
-     * @return 参数
-     */
-    Set<String> params();
 }

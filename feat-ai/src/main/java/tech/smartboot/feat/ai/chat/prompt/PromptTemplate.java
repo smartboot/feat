@@ -10,128 +10,42 @@
 
 package tech.smartboot.feat.ai.chat.prompt;
 
-import tech.smartboot.feat.ai.chat.ChatModelVendor;
-import tech.smartboot.feat.core.common.FeatUtils;
-import tech.smartboot.feat.core.common.exception.FeatException;
-
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
 public class PromptTemplate {
-    public static Prompt MAVEN_PROJECT_MERMAID = new Prompt() {
-        private final Set<String> prompts = new HashSet<>(Arrays.asList("file_list"));
+    public static final String PARAM_SYSTEM_PROMPT = "system_prompt";
+    public static final String PARAM_TOOLS = "tools";
+    public static final String PARAM_QUERY = "query";
+    public static final Prompt GENERAL_AGENT_PROMPT = new Prompt("general_agent.tpl", Arrays.asList(PARAM_SYSTEM_PROMPT, PARAM_TOOLS, PARAM_QUERY));
 
-        @Override
-        public String prompt(Map<String, String> params) {
-            String prompt = getPromptTpl("maven_project_mermaid.tpl");
-            return mergePrompt(prompt, params(), params);
-        }
+    /**
+     * 执行计划规划师提示词模板
+     */
+    public static final Prompt EXECUTION_PLANNER = new Prompt("execution_planner.tpl", Arrays.asList("user_request", "agents"));
 
-        @Override
-        public Set<String> params() {
-            return prompts;
-        }
-
-        @Override
-        public List<String> suggestedModels() {
-            return Arrays.asList(ChatModelVendor.GiteeAI.Qwen2_5_32B_Instruct.model());
-        }
-    };
+    public static Prompt MAVEN_PROJECT_MERMAID = new Prompt("maven_project_mermaid.tpl", Arrays.asList("file_list"));
 
     /**
      * 微信公众号文章编辑器
      */
-    public static Prompt WECHAT_EDITOR = new Prompt() {
-        private final Set<String> prompts = new HashSet<>(Arrays.asList("topic", "reference"));
-
-        @Override
-        public String prompt(Map<String, String> params) {
-            String prompt = getPromptTpl("wechat_editor.tpl");
-            return mergePrompt(prompt, params(), params);
-        }
-
-        @Override
-        public Set<String> params() {
-            return prompts;
-        }
-
-        @Override
-        public List<String> suggestedModels() {
-            return Arrays.asList(ChatModelVendor.GiteeAI.Qwen2_5_32B_Instruct.model());
-        }
-    };
+    public static Prompt WECHAT_EDITOR = new Prompt("wechat_editor.tpl", Arrays.asList("topic", "reference"));
     /**
      * 项目代码生成器
      */
-    public static final Prompt PROJECT_CODER = new Prompt() {
-        private final Set<String> prompts = new HashSet<>(Arrays.asList("input", "reference"));
+    public static final Prompt PROJECT_CODER = new Prompt("project_coder.tpl", Arrays.asList("input", "reference"));
 
-        @Override
-        public String prompt(Map<String, String> params) {
-            String prompt = getPromptTpl("project_coder.tpl");
-            return mergePrompt(prompt, params(), params);
-        }
-
-        @Override
-        public Set<String> params() {
-            return prompts;
-        }
-
-        @Override
-        public List<String> suggestedModels() {
-            return Arrays.asList(ChatModelVendor.GiteeAI.Qwen2_5_32B_Instruct.model());
-        }
-    };
 
     /**
      * 项目文档编辑器
      */
-    public static Prompt PROJECT_DOCUMENT_EDITOR = new Prompt() {
-        public static final String FIELD_INPUT = "input";
-        public static final String FIELD_REF_SOURCE = "ref_source";
-        public static final String FIELD_REF_DOC = "ref_doc";
-        private final Set<String> prompts = new HashSet<>(Arrays.asList(FIELD_INPUT, FIELD_REF_SOURCE, FIELD_REF_DOC));
+    public static final String FIELD_INPUT = "input";
+    public static final String FIELD_REF_SOURCE = "ref_source";
+    public static final String FIELD_REF_DOC = "ref_doc";
+    public static Prompt PROJECT_DOCUMENT_EDITOR = new Prompt("project_document_editor.tpl", Arrays.asList(FIELD_INPUT, FIELD_REF_SOURCE, FIELD_REF_DOC));
 
-        @Override
-        public String prompt(Map<String, String> params) {
-            String prompt = getPromptTpl("project_document_editor.tpl");
-            return mergePrompt(prompt, params(), params);
-        }
 
-        @Override
-        public Set<String> params() {
-            return prompts;
-        }
-
-        @Override
-        public List<String> suggestedModels() {
-            return Arrays.asList(ChatModelVendor.GiteeAI.Qwen2_5_32B_Instruct.model());
-        }
-    };
-
-    private static String mergePrompt(String prompt, Set<String> params, Map<String, String> data) {
-        for (String param : params) {
-            String value = data.get(param);
-            if (value == null) {
-                throw new FeatException("param: " + param + " not found");
-            }
-            prompt = prompt.replace("{{" + param + "}}", data.get(param));
-        }
-        return prompt;
-    }
-
-    private static String getPromptTpl(String fileName) {
-        String prompt = FeatUtils.getResourceAsString("feat-prompts/" + fileName);
-        if (prompt == null) {
-            throw new FeatException("prompt: " + fileName + " not found");
-        }
-        return prompt;
-    }
 }
