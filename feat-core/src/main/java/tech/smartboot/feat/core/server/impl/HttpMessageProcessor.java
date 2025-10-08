@@ -153,6 +153,10 @@ public final class HttpMessageProcessor extends AbstractMessageProcessor<HttpEnd
                 responseError(request.getResponse(), throwable);
                 break;
             }
+            case INTERNAL_EXCEPTION: {
+                LOGGER.error("internal exception", throwable);
+                break;
+            }
         }
     }
 
