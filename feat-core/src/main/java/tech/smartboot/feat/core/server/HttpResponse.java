@@ -177,13 +177,6 @@ public interface HttpResponse {
         write(data.getBytes());
     }
 
-    default void writeJson(Object data) throws IOException {
-        byte[] bytes = JSON.toJSONBytes(data);
-        setContentLength(bytes.length);
-        setContentType("application/json;charset=utf-8");
-        write(bytes);
-    }
-
     /**
      * 写入字节数组的指定部分到响应体。
      * <p>

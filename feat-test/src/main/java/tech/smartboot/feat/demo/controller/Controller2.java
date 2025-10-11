@@ -11,6 +11,7 @@
 package tech.smartboot.feat.demo.controller;
 
 
+import tech.smartboot.feat.cloud.AsyncResponse;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.PathParam;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
@@ -66,5 +67,10 @@ public class Controller2 {
     @RequestMapping("/context")
     public Object[] context(Context content) {
         return null;
+    }
+
+    @RequestMapping("/async")
+    public AsyncResponse async() {
+        return new AsyncResponse();
     }
 }

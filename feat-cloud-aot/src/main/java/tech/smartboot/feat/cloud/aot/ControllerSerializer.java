@@ -236,9 +236,6 @@ final class ControllerSerializer extends AbstractSerializer {
                         printWriter.print("\t\t\t\tbyte[] bytes = bean." + se.getSimpleName() + "(");
                         break;
                     case RETURN_TYPE_OBJECT:
-                        if (async) {
-                            printWriter.print("\t\t");
-                        }
                         printWriter.print("\t\t\t\t" + returnType + " rst = bean." + se.getSimpleName() + "(");
                         break;
                     default:
@@ -269,11 +266,10 @@ final class ControllerSerializer extends AbstractSerializer {
                     case RETURN_TYPE_OBJECT:
                         if (AsyncResponse.class.getName().equals(returnType.toString())) {
                             if (gzip) {
-                                printWriter.println("\t\t\t\t\tgzipResponse(rst, ctx, completableFuture, " + gzipThreshold + ");");
+                                printWriter.println("\t\t\t\tgzipResponse(rst, ctx, completableFuture, " + gzipThreshold + ");");
                             } else {
-                                printWriter.println("\t\t\t\t\tresponse(rst, ctx, completableFuture);");
+                                printWriter.println("\t\t\t\tresponse(rst, ctx, completableFuture);");
                             }
-                            printWriter.println("\t\t\t\t}");
                         } else if (int.class.getName().equals(returnType.toString())) {
                             printWriter.println("\t\t\t\twriteInt(ctx.Response.getOutputStream(), rst);");
                         } else if (boolean.class.getName().equals(returnType.toString())) {
