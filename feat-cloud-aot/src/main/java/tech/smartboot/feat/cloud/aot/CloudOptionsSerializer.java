@@ -351,9 +351,9 @@ final class CloudOptionsSerializer implements Serializer {
     @Override
     public void serializeProperty() {
         printWriter.append("\tpublic static final String license_num = ");
-        printWriter.println(license == null ? "null" : "\"" + license.getNum() + "\";");
+        printWriter.println(license == null ? "null;" : "\"" + license.getNum() + "\";");
         printWriter.append("\tpublic static final String license_name = ");
-        printWriter.println(license == null ? "null" : "\"" + license.getName() + "\";");
+        printWriter.println(license == null ? "null;" : "\"" + license.getName() + "\";");
 
         printWriter.println();
 
