@@ -10,18 +10,22 @@ import { Image } from '@astrojs/starlight/components';
 ## v1.4.0 (孵化中)
 ### 版本特性
 - **Feat Core：**
-  - 新增友好的 SSE 接口
-  - 简化 Http ReadListener 的实现。
-  - Cookie Name 默认采用 rfc2109 规范。
-  - 支持非 UTF8 字符集的请求。
-  - 修复非法 upgrade 引发的请求参数解析阻塞问题。
-  - 改进编解码算法。
-  - HttpClient 支持连接资源自动释放。
+  - [client] 新增友好的 SSE 接口，更好的赋能 AI 开发。
+  - [client] HttpClient 支持连接资源自动释放。
+  - [server] 简化 Http ReadListener 的接口实现。
+  - [server] Cookie Name 默认采用 rfc2109 规范。
+  - [server] 支持非 UTF8 字符集的请求。
+  - [server] 修复非法 upgrade 引发的请求参数解析阻塞问题。
+  - [server] 改进编解码算法。
+  - [server] 废弃 HttpResponse@writeJson 方法。
+  - 升级 smart-socket 至 1.5.74。
 
 - **Feat AI：**
-
+  - 适配全新的 SSE 接口，提升代码可读性和可维护性。
+  - 探索 AI Agent 相关技术。
 - **Feat Cloud**
-  - 异步接收 form 表单数据，提升并发性能。
+  - 异步接收 Form 表单数据，带来并发性能前所未有的提升。
+  - 修复无 license 情况下生成的代码编译报错问题。
 
 
 ### 升级指南
