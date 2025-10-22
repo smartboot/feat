@@ -11,9 +11,10 @@
 package tech.smartboot.feat.core.client;
 
 import org.smartboot.socket.extension.plugins.Plugin;
+import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
+import org.smartboot.socket.transport.MultiplexClient;
 
 import java.nio.channels.AsynchronousChannelGroup;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -22,9 +23,17 @@ import java.util.Map;
  */
 public final class HttpOptions extends Options<HttpResponse> {
 
+    private final MultiplexClient<AbstractResponse>.Options multiplexOptions;
 
-    HttpOptions(String host, int port) {
+    HttpOptions(MultiplexClient<AbstractResponse>.Options multiplexOptions, String host, int port) {
         super(host, port);
+        this.multiplexOptions = multiplexOptions;
+        multiplexOptions.setHost(host);
+        multiplexOptions.setPort(port);
+        //消息处理器
+        HttpMessageProcessor processor = new HttpMessageProcessor();
+        multiplexOptions.setProcessor(processor);
+        multiplexOptions.setProtocol(processor);
     }
 
 
@@ -32,7 +41,7 @@ public final class HttpOptions extends Options<HttpResponse> {
      * 设置建立连接的超时时间
      */
     public HttpOptions connectTimeout(int connectTimeout) {
-        super.connectTimeout(connectTimeout);
+        multiplexOptions.setConnectTimeout(connectTimeout);
         return this;
     }
 
@@ -45,6 +54,8 @@ public final class HttpOptions extends Options<HttpResponse> {
      * @param password 授权密码
      */
     public HttpOptions proxy(String host, int port, String username, String password) {
+        multiplexOptions.setHost(host);
+        multiplexOptions.setPort(port);
         super.proxy(host, port, username, password);
         return this;
     }
@@ -61,7 +72,12 @@ public final class HttpOptions extends Options<HttpResponse> {
 
 
     public HttpOptions readBufferSize(int readBufferSize) {
-        super.readBufferSize(readBufferSize);
+        multiplexOptions.setReadBuffer(readBufferSize);
+        return this;
+    }
+
+    public HttpOptions setWriteBufferSize(int writeBufferSize) {
+        multiplexOptions.setWriteBuffer(writeBufferSize, 2);
         return this;
     }
 
@@ -69,34 +85,31 @@ public final class HttpOptions extends Options<HttpResponse> {
      * 启用 debug 模式后会打印码流
      */
     public HttpOptions debug(boolean debug) {
-        super.debug(debug);
+        if (debug) {
+            addPlugin(new StreamMonitorPlugin<>(StreamMonitorPlugin.BLUE_TEXT_INPUT_STREAM, StreamMonitorPlugin.RED_TEXT_OUTPUT_STREAM));
+        }
         return this;
     }
 
     public HttpOptions addPlugin(Plugin<HttpResponse> plugin) {
-        super.addPlugin(plugin);
+        Plugin p = plugin;
+        multiplexOptions.addPlugin(p);
         return this;
-    }
-
-    public List<Plugin<HttpResponse>> getPlugins() {
-        return super.getPlugins();
     }
 
 
     HttpOptions setHttps(boolean https) {
-        super.setHttps(https);
+        multiplexOptions.setSsl(https);
         return this;
     }
 
-    @Override
     public HttpOptions group(AsynchronousChannelGroup group) {
-        super.group(group);
+        multiplexOptions.group(group);
         return this;
     }
 
-    @Override
     public HttpOptions idleTimeout(int idleTimeout) {
-        super.idleTimeout(idleTimeout);
+        multiplexOptions.idleTimeout(idleTimeout);
         return this;
     }
 

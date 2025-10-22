@@ -10,12 +10,7 @@
 
 package tech.smartboot.feat.core.client;
 
-import org.smartboot.socket.extension.plugins.Plugin;
-
-import java.nio.channels.AsynchronousChannelGroup;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -24,16 +19,6 @@ import java.util.Map;
  */
 class Options<T> {
 
-
-    /**
-     * smart-socket 插件
-     */
-    private final List<Plugin<T>> plugins = new ArrayList<>();
-
-    /**
-     * 连接超时时间
-     */
-    private int connectTimeout;
 
     /**
      * 远程地址
@@ -46,51 +31,17 @@ class Options<T> {
 
     private ProxyOptions proxy;
 
-    /**
-     * read缓冲区大小
-     */
-    private int readBufferSize = 1024;
-
-    /**
-     * read缓冲区大小
-     */
-    private int writeBufferSize = 1024;
-
-
-    private boolean https = false;
-
-    private boolean debug = false;
-
-    /**
-     * 空闲超时时间，单位：毫秒
-     */
-    private int idleTimeout = 60000;
-    /**
-     * 绑定线程池资源组
-     */
-    private AsynchronousChannelGroup group;
 
     /**
      * 自定义请求头
      */
-    private Map<String, String> headers = new HashMap<>();
+    private final Map<String, String> headers = new HashMap<>();
 
     public Options(String host, int port) {
         this.host = host;
         this.port = port;
     }
 
-    public int getConnectTimeout() {
-        return connectTimeout;
-    }
-
-    /**
-     * 设置建立连接的超时时间
-     */
-    protected Options<T> connectTimeout(int connectTimeout) {
-        this.connectTimeout = connectTimeout;
-        return this;
-    }
 
     public String getHost() {
         return host;
@@ -128,72 +79,6 @@ class Options<T> {
         return proxy;
     }
 
-    public int readBufferSize() {
-        return readBufferSize;
-    }
-
-    protected Options<T> readBufferSize(int readBufferSize) {
-        this.readBufferSize = readBufferSize;
-        return this;
-    }
-
-    public int getWriteBufferSize() {
-        return writeBufferSize;
-    }
-
-    public Options<T> setWriteBufferSize(int writeBufferSize) {
-        this.writeBufferSize = writeBufferSize;
-        return this;
-    }
-
-    /**
-     * 启用 debug 模式后会打印码流
-     */
-    protected Options<T> debug(boolean debug) {
-        this.debug = debug;
-        return this;
-    }
-
-    boolean isDebug() {
-        return debug;
-    }
-
-    protected Options<T> addPlugin(Plugin<T> plugin) {
-        plugins.add(plugin);
-        return this;
-    }
-
-    public List<Plugin<T>> getPlugins() {
-        return plugins;
-    }
-
-    final boolean isHttps() {
-        return https;
-    }
-
-    Options<T> setHttps(boolean https) {
-        this.https = https;
-        return this;
-    }
-
-
-    public Options<T> group(AsynchronousChannelGroup group) {
-        this.group = group;
-        return this;
-    }
-
-    public AsynchronousChannelGroup group() {
-        return group;
-    }
-
-    public int idleTimeout() {
-        return idleTimeout;
-    }
-
-    public Options<T> idleTimeout(int idleTimeout) {
-        this.idleTimeout = idleTimeout;
-        return this;
-    }
 
     public final Map<String, String> getHeaders() {
         return headers;

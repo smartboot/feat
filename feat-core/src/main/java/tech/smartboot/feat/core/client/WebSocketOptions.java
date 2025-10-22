@@ -11,7 +11,10 @@
 package tech.smartboot.feat.core.client;
 
 import org.smartboot.socket.extension.plugins.Plugin;
+import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
 
+import java.nio.channels.AsynchronousChannelGroup;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -19,12 +22,31 @@ import java.util.List;
  * @version v1.0.0
  */
 public class WebSocketOptions extends Options<WebSocketResponse> {
-
+    /**
+     * 连接超时时间
+     */
+    private int connectTimeout;
+    /**
+     * smart-socket 插件
+     */
+    private final List<Plugin<WebSocketResponse>> plugins = new ArrayList<>();
 
     private boolean wss = false;
+    /**
+     * read缓冲区大小
+     */
+    private int readBufferSize = 1024;
+    /**
+     * 绑定线程池资源组
+     */
+    private AsynchronousChannelGroup group;
 
     public WebSocketOptions(String host, int port) {
         super(host, port);
+    }
+
+    public int getConnectTimeout() {
+        return connectTimeout;
     }
 
 
@@ -32,7 +54,7 @@ public class WebSocketOptions extends Options<WebSocketResponse> {
      * 设置建立连接的超时时间
      */
     public WebSocketOptions connectTimeout(int connectTimeout) {
-        super.connectTimeout(connectTimeout);
+        this.connectTimeout = connectTimeout;
         return this;
     }
 
@@ -61,25 +83,31 @@ public class WebSocketOptions extends Options<WebSocketResponse> {
 
 
     public WebSocketOptions readBufferSize(int readBufferSize) {
-        super.readBufferSize(readBufferSize);
+        this.readBufferSize = readBufferSize;
         return this;
+    }
+
+    public int readBufferSize() {
+        return readBufferSize;
     }
 
     /**
      * 启用 debug 模式后会打印码流
      */
     public WebSocketOptions debug(boolean debug) {
-        super.debug(debug);
+        if (debug) {
+            this.addPlugin(new StreamMonitorPlugin<>());
+        }
         return this;
     }
 
     public WebSocketOptions addPlugin(Plugin<WebSocketResponse> plugin) {
-        super.addPlugin(plugin);
+        plugins.add(plugin);
         return this;
     }
 
     public List<Plugin<WebSocketResponse>> getPlugins() {
-        return super.getPlugins();
+        return plugins;
     }
 
     public boolean isWss() {
@@ -89,5 +117,14 @@ public class WebSocketOptions extends Options<WebSocketResponse> {
     public WebSocketOptions setWss(boolean wss) {
         this.wss = wss;
         return this;
+    }
+
+    public WebSocketOptions group(AsynchronousChannelGroup group) {
+        this.group = group;
+        return this;
+    }
+
+    public AsynchronousChannelGroup group() {
+        return group;
     }
 }
