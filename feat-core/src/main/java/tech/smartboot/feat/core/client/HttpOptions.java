@@ -32,8 +32,7 @@ public final class HttpOptions extends Options<HttpResponse> {
         multiplexOptions.setPort(port);
         //消息处理器
         HttpMessageProcessor processor = new HttpMessageProcessor();
-        multiplexOptions.setProcessor(processor);
-        multiplexOptions.setProtocol(processor);
+        multiplexOptions.init(processor, processor);
     }
 
 
