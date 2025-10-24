@@ -10,9 +10,9 @@
 
 package tech.smartboot.feat.core.client;
 
+import org.smartboot.socket.extension.multiplex.MultiplexOptions;
 import org.smartboot.socket.extension.plugins.Plugin;
 import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
-import org.smartboot.socket.transport.MultiplexClient;
 
 import java.nio.channels.AsynchronousChannelGroup;
 import java.util.Map;
@@ -23,16 +23,13 @@ import java.util.Map;
  */
 public final class HttpOptions extends Options<HttpResponse> {
 
-    private final MultiplexClient<AbstractResponse>.Options multiplexOptions;
+    private final MultiplexOptions multiplexOptions;
 
-    HttpOptions(MultiplexClient<AbstractResponse>.Options multiplexOptions, String host, int port) {
+    HttpOptions(MultiplexOptions multiplexOptions, String host, int port) {
         super(host, port);
         this.multiplexOptions = multiplexOptions;
         multiplexOptions.setHost(host);
         multiplexOptions.setPort(port);
-        //消息处理器
-        HttpMessageProcessor processor = new HttpMessageProcessor();
-        multiplexOptions.init(processor, processor);
     }
 
 
@@ -40,7 +37,7 @@ public final class HttpOptions extends Options<HttpResponse> {
      * 设置建立连接的超时时间
      */
     public HttpOptions connectTimeout(int connectTimeout) {
-        multiplexOptions.setConnectTimeout(connectTimeout);
+        multiplexOptions.connectTimeout(connectTimeout);
         return this;
     }
 

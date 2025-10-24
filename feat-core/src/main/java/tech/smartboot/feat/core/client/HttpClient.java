@@ -10,9 +10,9 @@
 
 package tech.smartboot.feat.core.client;
 
+import org.smartboot.socket.extension.multiplex.MultiplexClient;
 import org.smartboot.socket.transport.AioQuickClient;
 import org.smartboot.socket.transport.AioSession;
-import org.smartboot.socket.transport.MultiplexClient;
 import tech.smartboot.feat.core.client.impl.HttpRequestImpl;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
@@ -28,10 +28,21 @@ import java.util.function.Consumer;
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
-public final class HttpClient extends MultiplexClient<AbstractResponse> {
+public final class HttpClient {
 
     private final HttpOptions options;
-
+    //消息处理器
+    private final HttpMessageProcessor processor = new HttpMessageProcessor();
+    private final MultiplexClient<AbstractResponse> multiplexClient = new MultiplexClient(processor, processor) {
+        @Override
+        protected void onReuseClient(AioQuickClient client) {
+            AioSession session = client.getSession();
+            DecoderUnit attachment = session.getAttachment();
+            //重置附件，为下一个响应作准备
+            attachment.setState(DecoderUnit.STATE_PROTOCOL_DECODE);
+            attachment.setResponse(null);
+        }
+    };
     /**
      * Header: Host
      */
@@ -69,14 +80,14 @@ public final class HttpClient extends MultiplexClient<AbstractResponse> {
         if (port == -1) {
             throw new IllegalArgumentException("invalid url:" + url);
         }
-        this.options = new HttpOptions(multiplexOptions, host, port);
+        this.options = new HttpOptions(multiplexClient.getMultiplexOptions(), host, port);
         options.setHttps(https);
         hostHeader = options.getHost() + ":" + options.getPort();
         this.uri = uriIndex > 0 ? url.substring(uriIndex) : "/";
     }
 
     public HttpClient(String host, int port) {
-        this.options = new HttpOptions(multiplexOptions, host, port);
+        this.options = new HttpOptions(multiplexClient.getMultiplexOptions(), host, port);
         hostHeader = options.getHost() + ":" + options.getPort();
         this.uri = null;
     }
@@ -114,7 +125,7 @@ public final class HttpClient extends MultiplexClient<AbstractResponse> {
     private HttpRestImpl rest0(String uri) {
         HttpRestImpl httpRestImpl;
         try {
-            AioQuickClient client = acquireClient();
+            AioQuickClient client = multiplexClient.acquireClient();
             httpRestImpl = new HttpRestImpl(client.getSession());
             initRest(httpRestImpl, uri, client);
         } catch (Throwable e) {
@@ -182,13 +193,13 @@ public final class HttpClient extends MultiplexClient<AbstractResponse> {
             }
             //非keep-alive,主动断开连接
             if (close) {
-                releaseClient(client);
+                multiplexClient.releaseClient(client);
             } else {
-                reuseClient(client);
+                multiplexClient.reuseClient(client);
             }
         });
         httpRestImpl.getCompletableFuture().exceptionally(throwable -> {
-            releaseClient(client);
+            multiplexClient.releaseClient(client);
             return null;
         });
     }
@@ -198,12 +209,7 @@ public final class HttpClient extends MultiplexClient<AbstractResponse> {
         return options;
     }
 
-    @Override
-    protected void onReuseClient(AioQuickClient client) {
-        AioSession session = client.getSession();
-        DecoderUnit attachment = session.getAttachment();
-        //重置附件，为下一个响应作准备
-        attachment.setState(DecoderUnit.STATE_PROTOCOL_DECODE);
-        attachment.setResponse(null);
+    public void close() {
+        multiplexClient.close();
     }
 }
