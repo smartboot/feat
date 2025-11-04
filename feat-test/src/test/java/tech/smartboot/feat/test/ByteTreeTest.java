@@ -12,7 +12,7 @@ package tech.smartboot.feat.test;
 
 import org.junit.Assert;
 import org.junit.Test;
-import tech.smartboot.feat.core.common.utils.ByteTree;
+import tech.smartboot.feat.core.common.ByteTree;
 
 import java.nio.ByteBuffer;
 

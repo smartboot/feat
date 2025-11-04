@@ -12,7 +12,7 @@ package tech.smartboot.feat.core.server.impl;
 
 import tech.smartboot.feat.core.common.DecodeState;
 import tech.smartboot.feat.core.common.HeaderName;
-import tech.smartboot.feat.core.common.utils.ByteTree;
+import tech.smartboot.feat.core.common.ByteTree;
 
 /**
  * @author 三刀 zhengjunweimail@163.com

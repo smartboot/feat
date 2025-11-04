@@ -10,7 +10,7 @@
 
 package tech.smartboot.feat.core.client;
 
-import tech.smartboot.feat.core.common.utils.Mimetypes;
+import tech.smartboot.feat.core.common.Mimetypes;
 
 import java.io.File;
 

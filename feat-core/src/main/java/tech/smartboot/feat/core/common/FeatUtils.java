@@ -14,7 +14,6 @@ import org.smartboot.socket.timer.HashedWheelTimer;
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
-import tech.smartboot.feat.core.common.utils.ByteTree;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

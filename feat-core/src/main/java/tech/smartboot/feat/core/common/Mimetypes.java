@@ -8,10 +8,8 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.core.common.utils;
+package tech.smartboot.feat.core.common;
 
-
-import tech.smartboot.feat.core.common.FeatUtils;
 
 import java.io.BufferedReader;
 import java.io.File;

@@ -24,7 +24,7 @@ import tech.smartboot.feat.cloud.aot.controller.JsonSerializer;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.exception.FeatException;
-import tech.smartboot.feat.core.common.utils.ByteTree;
+import tech.smartboot.feat.core.common.ByteTree;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.Session;

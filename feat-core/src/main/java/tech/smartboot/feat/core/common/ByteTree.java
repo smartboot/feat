@@ -8,9 +8,7 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.core.common.utils;
-
-import tech.smartboot.feat.core.common.FeatUtils;
+package tech.smartboot.feat.core.common;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
