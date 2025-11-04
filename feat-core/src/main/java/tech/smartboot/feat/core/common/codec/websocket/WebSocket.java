@@ -10,7 +10,8 @@
 
 package tech.smartboot.feat.core.common.codec.websocket;
 
-import tech.smartboot.feat.core.common.utils.SmartDecoder;
+
+import org.smartboot.socket.extension.decoder.SmartDecoder;
 
 import java.io.IOException;
 import java.io.OutputStream;
