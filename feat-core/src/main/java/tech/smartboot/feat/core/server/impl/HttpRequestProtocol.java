@@ -12,6 +12,7 @@ package tech.smartboot.feat.core.server.impl;
 
 import org.smartboot.socket.Protocol;
 import org.smartboot.socket.transport.AioSession;
+import tech.smartboot.feat.core.common.ByteTree;
 import tech.smartboot.feat.core.common.DecodeState;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
@@ -20,7 +21,6 @@ import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
-import tech.smartboot.feat.core.common.ByteTree;
 import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.ServerOptions;
 import tech.smartboot.feat.core.server.waf.WAF;
@@ -119,7 +119,7 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
                     byte[] bytes = new byte[byteBuffer.limit()];
                     byteBuffer.position(0);
                     byteBuffer.get(bytes);
-                    LOGGER.error("Unsupported HTTP version, remote:{}, method:{}, uri:{} , data:{} ", request.getRemoteAddr(), request.getMethod(), request.getUri(), org.smartboot.socket.util.StringUtils.toHexString(bytes));
+                    LOGGER.error("Unsupported HTTP version, remote:{}, method:{}, uri:{} , data:{} ", request.getRemoteAddr(), request.getMethod(), request.getUri(), new String(bytes));
                     throw new HttpException(HttpStatus.BAD_REQUEST, "Unsupported HTTP version");
                 }
 

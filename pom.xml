@@ -9,7 +9,7 @@
     <packaging>pom</packaging>
 
     <properties>
-        <smartsocket.version>1.7.3-SNAPSHOT</smartsocket.version>
+        <smartsocket.version>1.7.5-SNAPSHOT</smartsocket.version>
     </properties>
 
     <dependencyManagement>

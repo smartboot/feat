@@ -15,7 +15,6 @@ import org.smartboot.socket.extension.plugins.SslPlugin;
 import org.smartboot.socket.extension.ssl.factory.ClientSSLContextFactory;
 import org.smartboot.socket.transport.AioQuickClient;
 import org.smartboot.socket.transport.AioSession;
-import org.smartboot.socket.util.StringUtils;
 import tech.smartboot.feat.core.client.impl.WebSocketRequestImpl;
 import tech.smartboot.feat.core.client.impl.WebSocketResponseImpl;
 import tech.smartboot.feat.core.common.FeatUtils;
@@ -219,7 +218,7 @@ public class WebSocketClient {
 //                                handlePong(request, response);
                             break;
                         case WebSocket.OPCODE_CONTINUE:
-                            LOGGER.warn("unSupport OPCODE_CONTINUE now,ignore payload: {}", StringUtils.toHexString(webSocketResponse.getPayload()));
+                            LOGGER.warn("unSupport OPCODE_CONTINUE now,ignore payload: {}", webSocketResponse.getPayload());
                             break;
                         default:
                             throw new UnsupportedOperationException();

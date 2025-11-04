@@ -12,7 +12,6 @@ package tech.smartboot.feat.core.server.upgrade.websocket;
 
 import org.smartboot.socket.timer.HashedWheelTimer;
 import org.smartboot.socket.timer.TimerTask;
-import org.smartboot.socket.util.StringUtils;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpStatus;
@@ -243,7 +242,7 @@ public class WebSocketUpgrade extends Upgrade {
     }
 
     public void handleContinueMessage(WebSocketRequest request, WebSocketResponse response, byte[] data) {
-        LOGGER.warn("unSupport OPCODE_CONTINUE now,ignore payload: {}", StringUtils.toHexString(request.getPayload()));
+        LOGGER.warn("unSupport OPCODE_CONTINUE now,ignore payload: {}", data);
     }
 
     /**

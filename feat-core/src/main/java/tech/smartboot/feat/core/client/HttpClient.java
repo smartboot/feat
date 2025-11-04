@@ -35,7 +35,7 @@ public final class HttpClient {
     private final HttpMessageProcessor processor = new HttpMessageProcessor();
     private final MultiplexClient<AbstractResponse> multiplexClient = new MultiplexClient(processor, processor) {
         @Override
-        protected void onReuseClient(AioQuickClient client) {
+        protected void onReuse(AioQuickClient client) {
             AioSession session = client.getSession();
             DecoderUnit attachment = session.getAttachment();
             //重置附件，为下一个响应作准备
@@ -125,7 +125,7 @@ public final class HttpClient {
     private HttpRestImpl rest0(String uri) {
         HttpRestImpl httpRestImpl;
         try {
-            AioQuickClient client = multiplexClient.acquireClient();
+            AioQuickClient client = multiplexClient.acquire();
             httpRestImpl = new HttpRestImpl(client.getSession());
             initRest(httpRestImpl, uri, client);
         } catch (Throwable e) {
@@ -193,13 +193,13 @@ public final class HttpClient {
             }
             //非keep-alive,主动断开连接
             if (close) {
-                multiplexClient.releaseClient(client);
+                multiplexClient.release(client);
             } else {
-                multiplexClient.reuseClient(client);
+                multiplexClient.reuse(client);
             }
         });
         httpRestImpl.getCompletableFuture().exceptionally(throwable -> {
-            multiplexClient.releaseClient(client);
+            multiplexClient.release(client);
             return null;
         });
     }
