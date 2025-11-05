@@ -11,6 +11,8 @@
 package tech.smartboot.feat.cloud.aot;
 
 import com.alibaba.fastjson2.JSONPath;
+import org.smartboot.socket.extension.plugins.SslPlugin;
+import org.smartboot.socket.extension.ssl.factory.AutoServerSSLContextFactory;
 import org.yaml.snakeyaml.Yaml;
 import tech.smartboot.feat.cloud.AbstractCloudService;
 import tech.smartboot.feat.cloud.ApplicationContext;
@@ -346,6 +348,10 @@ final class CloudOptionsSerializer implements Serializer {
         for (String service : services) {
             printWriter.println("import " + service + ";");
         }
+        if (isAutoSSL()) {
+            printWriter.println("import " + SslPlugin.class.getName() + ";");
+            printWriter.println("import " + AutoServerSSLContextFactory.class.getName() + ";");
+        }
     }
 
     @Override
@@ -405,6 +411,11 @@ final class CloudOptionsSerializer implements Serializer {
                 printWriter.println("\t\tapplicationContext.getOptions()." + field.getName() + "(" + obj + ");");
             }
         }
+        //特殊的配置
+        if (isAutoSSL()) {
+            printWriter.println("\t\tapplicationContext.getOptions().addPlugin(new SslPlugin<>(new AutoServerSSLContextFactory()));");
+        }
+
         for (String service : services) {
             String simpleClass = service.substring(service.lastIndexOf(".") + 1);
             printWriter.println("\t\tif (acceptService(applicationContext, \"" + service + "\")) {");
@@ -413,6 +424,11 @@ final class CloudOptionsSerializer implements Serializer {
             printWriter.println("\t\t\tservices.add(service);");
             printWriter.println("\t\t}");
         }
+    }
+
+    private boolean isAutoSSL() {
+        Object obj = JSONPath.eval(config, "$.server.autoSSL");
+        return obj == Boolean.TRUE || "true".equals(obj);
     }
 
     @Override

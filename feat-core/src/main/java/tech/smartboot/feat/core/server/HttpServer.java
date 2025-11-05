@@ -11,14 +11,16 @@
 package tech.smartboot.feat.core.server;
 
 import org.smartboot.socket.buffer.BufferPagePool;
+import org.smartboot.socket.extension.plugins.Plugin;
 import org.smartboot.socket.transport.AioQuickServer;
 import tech.smartboot.feat.Feat;
+import tech.smartboot.feat.core.common.ByteTree;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpMethod;
 import tech.smartboot.feat.core.common.HttpProtocol;
-import tech.smartboot.feat.core.common.ByteTree;
+import tech.smartboot.feat.core.server.impl.HttpEndpoint;
 import tech.smartboot.feat.core.server.impl.HttpMessageProcessor;
 import tech.smartboot.feat.core.server.impl.HttpRequestProtocol;
 
@@ -83,6 +85,15 @@ public class HttpServer {
         initByteCache();
 
         options.getPlugins().forEach(processor::addPlugin);
+
+        Plugin<HttpEndpoint> plugin = options.getSslPlugin();
+        if (plugin != null) {
+            processor.addPlugin(plugin);
+        }
+        plugin = options.getDebugPlugin();
+        if (plugin != null) {
+            processor.addPlugin(plugin);
+        }
 
         server = new AioQuickServer(host, port, protocol, processor);
         server.setThreadNum(options.getThreadNum()).setBannerEnabled(false).setReadBufferSize(options.getReadBufferSize()).setBufferPagePool(bufferPagePool, bufferPagePool).setWriteBuffer(options.getWriteBufferSize(), 16);

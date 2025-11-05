@@ -14,8 +14,8 @@ import org.smartboot.socket.extension.plugins.Plugin;
 import org.smartboot.socket.extension.plugins.ProxyProtocolPlugin;
 import org.smartboot.socket.extension.plugins.SslPlugin;
 import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
-import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.ByteTree;
+import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.server.impl.HttpEndpoint;
 import tech.smartboot.feat.core.server.waf.WafOptions;
 
@@ -80,6 +80,10 @@ public class ServerOptions {
      * 用于扩展服务器功能，如 SSL 支持、代理协议支持、流量监控等。
      */
     private final List<Plugin<HttpEndpoint>> plugins = new ArrayList<>();
+
+    private Plugin<HttpEndpoint> sslPlugin;
+
+    private Plugin<HttpEndpoint> debugPlugin;
 
     /**
      * 是否启用控制台 banner
@@ -321,9 +325,10 @@ public class ServerOptions {
      * @return 当前 ServerOptions 实例，支持链式调用
      */
     public ServerOptions debug(boolean debug) {
-        plugins.removeIf(plugin -> plugin instanceof StreamMonitorPlugin);
         if (debug) {
-            addPlugin(new StreamMonitorPlugin<>(StreamMonitorPlugin.BLUE_TEXT_INPUT_STREAM, StreamMonitorPlugin.RED_TEXT_OUTPUT_STREAM));
+            debugPlugin = new StreamMonitorPlugin<>(StreamMonitorPlugin.BLUE_TEXT_INPUT_STREAM, StreamMonitorPlugin.RED_TEXT_OUTPUT_STREAM);
+        } else {
+            debugPlugin = null;
         }
         return this;
     }
@@ -368,9 +373,13 @@ public class ServerOptions {
      * @return 当前 ServerOptions 实例，支持链式调用
      */
     public ServerOptions addPlugin(Plugin<HttpEndpoint> plugin) {
-        plugins.add(plugin);
         if (plugin instanceof SslPlugin) {
+            sslPlugin = plugin;
             secure = true;
+        } else if (plugin instanceof StreamMonitorPlugin) {
+            debugPlugin = plugin;
+        } else {
+            plugins.add(plugin);
         }
         return this;
     }
@@ -410,8 +419,10 @@ public class ServerOptions {
      *
      * @param plugins 要添加的插件列表
      * @return 当前 ServerOptions 实例，支持链式调用
+     * @deprecated
      */
     public ServerOptions addPlugin(List<Plugin<HttpEndpoint>> plugins) {
+        System.err.println("Deprecated: Please use addPlugin(Plugin<HttpEndpoint> plugin) instead.");
         this.plugins.addAll(plugins);
         return this;
     }
@@ -421,8 +432,16 @@ public class ServerOptions {
      *
      * @return 服务器插件列表
      */
-    public List<Plugin<HttpEndpoint>> getPlugins() {
+    List<Plugin<HttpEndpoint>> getPlugins() {
         return plugins;
+    }
+
+    Plugin<HttpEndpoint> getSslPlugin() {
+        return sslPlugin;
+    }
+
+    Plugin<HttpEndpoint> getDebugPlugin() {
+        return debugPlugin;
     }
 
     /**
