@@ -15,6 +15,8 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.smartboot.socket.extension.plugins.SslPlugin;
+import org.smartboot.socket.extension.ssl.factory.AutoServerSSLContextFactory;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.common.HeaderName;
@@ -36,10 +38,10 @@ import java.util.concurrent.Future;
 public class HttpRestTest {
 
     private HttpServer httpServer;
-
+    private HttpServer httpsServer;
 
     @Before
-    public void init() {
+    public void init() throws Exception {
         httpServer = new HttpServer();
         Router routeHandler = new Router();
         routeHandler.route("/post", ctx -> {
@@ -53,6 +55,10 @@ public class HttpRestTest {
             response.write(jsonObject.toString().getBytes());
         });
         httpServer.httpHandler(routeHandler).listen(8080);
+
+        httpsServer = new HttpServer().httpHandler(routeHandler);
+        httpsServer.options().addPlugin(new SslPlugin<>(new AutoServerSSLContextFactory())).debug(true);
+        httpsServer.listen(8081);
     }
 
     @Test
@@ -98,9 +104,37 @@ public class HttpRestTest {
         System.out.println("finish...");
     }
 
+    @Test
+    public void testHttpsKeepalive() throws InterruptedException {
+        HttpClient httpClient = new HttpClient("https://localhost:8081");
+        httpClient.options().debug(false);
+        Map<String, String> form = new HashMap<>();
+        int count = 100;
+        CountDownLatch countDownLatch = new CountDownLatch(count);
+        for (int i = 0; i < count; i++) {
+            form.put("name" + i, "value" + i);
+            final int j = i + 1;
+            httpClient.post("/post").header(h -> h.keepalive(true))
+                    .body().formUrlencoded(form)
+                    .onSuccess(httpResponse -> {
+                        countDownLatch.countDown();
+                        JSONObject jsonObject = JSONObject.parseObject(httpResponse.body());
+                        Assert.assertEquals(jsonObject.size(), j);
+                        System.out.println(httpResponse.body());
+                    })
+                    .onFailure(throwable -> {
+                        countDownLatch.countDown();
+                        throwable.printStackTrace();
+                    }).submit();
+        }
+        countDownLatch.await();
+        System.out.println("finish...");
+    }
+
     @After
     public void destroy() {
         httpServer.shutdown();
+        httpsServer.shutdown();
     }
 
 }

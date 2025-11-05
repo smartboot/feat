@@ -12,6 +12,7 @@ package tech.smartboot.feat.core.common;
 
 import org.smartboot.socket.timer.HashedWheelTimer;
 import tech.smartboot.feat.Feat;
+import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 
@@ -19,7 +20,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -297,8 +297,8 @@ public class FeatUtils {
                     paramMap.put(key, newValue);
                 }
 
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
+            } catch (Throwable e) {
+                throw new FeatException(e);
             }
         }
     }

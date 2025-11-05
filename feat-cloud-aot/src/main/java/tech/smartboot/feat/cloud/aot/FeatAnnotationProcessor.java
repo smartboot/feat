@@ -160,8 +160,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         serviceWrite.close();
 
         if (exception != null) {
-            exception.printStackTrace();
-            throw new FeatException("编译失败！请根据提示修复错误，或者联系开发者：https://gitee.com/smartboot/feat/issues");
+            throw new FeatException("编译失败！请根据提示修复错误，或者联系开发者：https://gitee.com/smartboot/feat/issues", exception);
         }
         // 如果不希望后续的处理器继续处理这些注解，返回 true，否则返回 false
         return false;
