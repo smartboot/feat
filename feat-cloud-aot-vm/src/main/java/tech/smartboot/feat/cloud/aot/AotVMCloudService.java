@@ -14,6 +14,7 @@ import com.alibaba.fastjson2.JSONObject;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
+import org.yaml.snakeyaml.Yaml;
 import tech.smartboot.feat.ai.mcp.server.McpServer;
 import tech.smartboot.feat.cloud.AbstractCloudService;
 import tech.smartboot.feat.cloud.ApplicationContext;
@@ -27,6 +28,7 @@ import tech.smartboot.feat.cloud.annotation.PostConstruct;
 import tech.smartboot.feat.cloud.annotation.PreDestroy;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.cloud.annotation.RequestMethod;
+import tech.smartboot.feat.cloud.annotation.Value;
 import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.exception.FeatException;
@@ -39,6 +41,7 @@ import tech.smartboot.feat.router.RouterHandler;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -53,6 +56,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.stream.Collectors;
 
 /**
  * AOT 虚拟机
@@ -83,9 +87,10 @@ public class AotVMCloudService extends AbstractCloudService {
         annotations.add(Controller.class);
         annotations.add(Mapper.class);
         annotations.add(McpEndpoint.class);
-        List<Class> classes = scanBean(annotations);
+        List<Class> classes = scanBean(annotations).stream().filter(clazz -> acceptService(context, clazz.getName())).collect(Collectors.toList());
 
         for (Class<?> clazz : classes) {
+
             if (clazz.isAnnotationPresent(Bean.class)) {
                 Bean beanAnnotation = clazz.getDeclaredAnnotation(Bean.class);
                 Object bean = clazz.newInstance();
@@ -148,6 +153,9 @@ public class AotVMCloudService extends AbstractCloudService {
 //        for (Object bean : list) {
 //            initMethodBean(context, bean);
 //        }
+        InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream("feat.yml");
+        Yaml yaml = new Yaml();
+        JSONObject jsonObject = JSONObject.from(yaml.load(in));
 
         for (Object bean : list) {
             for (Field field : bean.getClass().getDeclaredFields()) {
@@ -162,6 +170,20 @@ public class AotVMCloudService extends AbstractCloudService {
                     reflectAutowired(bean, field.getName(), loadBean(field.getName(), context));
                 }
 
+            }
+            for (Field field : bean.getClass().getDeclaredFields()) {
+                Value value = field.getAnnotation(Value.class);
+                if (value == null) {
+                    continue;
+                }
+                String name = value.value();
+                if (FeatUtils.isBlank(name)) {
+                    name = field.getName();
+                } else if (name.startsWith("${") && name.endsWith("}")) {
+                    name = name.substring(2, name.length() - 1);
+                }
+                field.setAccessible(true);
+                field.set(bean, jsonObject.getObject(name, field.getType()));
             }
         }
     }
@@ -232,6 +254,7 @@ public class AotVMCloudService extends AbstractCloudService {
             for (Method method : bean.getClass().getDeclaredMethods()) {
                 PreDestroy annotation = method.getAnnotation(PreDestroy.class);
                 if (annotation != null) {
+                    method.setAccessible(true);
                     method.invoke(bean);
                 }
             }
@@ -286,6 +309,9 @@ public class AotVMCloudService extends AbstractCloudService {
 
     private static String getFullUrl(String baseURL, String tailUrl) {
         String url = baseURL.startsWith("/") ? baseURL : "/" + baseURL;
+        if (FeatUtils.isBlank(tailUrl)) {
+            return url;
+        }
         if (!url.endsWith("/")) {
             url = url + "/";
         }
@@ -398,7 +424,7 @@ public class AotVMCloudService extends AbstractCloudService {
                     break;
                 }
             }
-        } catch (ClassNotFoundException | UnsupportedClassVersionError | NoClassDefFoundError e) {
+        } catch (Throwable e) {
             // 忽略无法加载的类
         }
     }
@@ -433,10 +459,7 @@ public class AotVMCloudService extends AbstractCloudService {
         // 首先检查是否需要解析JSON参数
         for (int i = 0; i < parameterTypes.length; i++) {
             Class<?> paramType = parameterTypes[i];
-            if (paramType != tech.smartboot.feat.core.server.HttpRequest.class &&
-                    paramType != tech.smartboot.feat.core.server.HttpResponse.class &&
-                    paramType != tech.smartboot.feat.core.server.Session.class &&
-                    !hasPathParamAnnotation(parameterAnnotations[i])) {
+            if (paramType != tech.smartboot.feat.core.server.HttpRequest.class && paramType != tech.smartboot.feat.core.server.HttpResponse.class && paramType != tech.smartboot.feat.core.server.Session.class && !hasPathParamAnnotation(parameterAnnotations[i])) {
                 needJsonParams = true;
                 break;
             }

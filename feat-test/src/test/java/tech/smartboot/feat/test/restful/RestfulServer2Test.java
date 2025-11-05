@@ -60,7 +60,7 @@ public class RestfulServer2Test extends BastTest {
     @Test
     public void testGet2() throws ExecutionException, InterruptedException {
         HttpClient httpClient = getHttpClient();
-        Assert.assertEquals(httpClient.get("/demo2").submit().get().body(), "hello world");
+        Assert.assertEquals("hello world", httpClient.get("/demo2").submit().get().body());
     }
 
     @Test
