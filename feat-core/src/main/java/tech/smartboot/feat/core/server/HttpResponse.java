@@ -10,7 +10,6 @@
 
 package tech.smartboot.feat.core.server;
 
-import com.alibaba.fastjson2.JSON;
 import tech.smartboot.feat.core.common.Cookie;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HttpStatus;
