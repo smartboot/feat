@@ -189,7 +189,7 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
                         continue;
                     }
                     // header 结束符匹配，最后2字节已经是CR、LF,无需重复验证
-                    if (byteBuffer.get(position - 3) == FeatUtils.CR && byteBuffer.get(position - 2) == FeatUtils.LF) {
+                    if (byteBuffer.getShort(position - 3) == 3338) {
                         byteBuffer.position(position + 1);
                         decodeState.setState(DecodeState.STATE_HEADER_CALLBACK);
                         return true;
