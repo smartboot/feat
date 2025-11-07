@@ -116,16 +116,6 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
                     throw new HttpException(HttpStatus.BAD_REQUEST);
                 }
                 decodeState.setState(DecodeState.STATE_HEADER_END_CHECK);
-                return decode(byteBuffer, request);
-            }
-            case DecodeState.STATE_START_LINE_END: {
-                if (byteBuffer.remaining() == 0) {
-                    break;
-                }
-                if (byteBuffer.get() != FeatUtils.LF) {
-                    throw new HttpException(HttpStatus.BAD_REQUEST);
-                }
-                decodeState.setState(DecodeState.STATE_HEADER_END_CHECK);
             }
             // header结束判断
             case DecodeState.STATE_HEADER_END_CHECK: {
