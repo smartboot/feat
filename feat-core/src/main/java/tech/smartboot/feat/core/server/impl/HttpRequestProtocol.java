@@ -35,9 +35,6 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpRequestProtocol.class);
     private final ServerOptions options;
     private static final ByteTree.EndMatcher URI_END_MATCHER = endByte -> (endByte == ' ' || endByte == '?');
-    private static final byte HTTP_VERSION_0 = '0';
-    private static final byte HTTP_VERSION_1 = '1';
-    private static final byte HTTP_VERSION_2 = '2';
 
     public HttpRequestProtocol(ServerOptions options) {
         this.options = options;
@@ -95,36 +92,31 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
                 decodeState.setState(DecodeState.STATE_PROTOCOL_DECODE);
             }
             case DecodeState.STATE_PROTOCOL_DECODE: {
-                // 跳过空格
-                do {
-                    byteBuffer.mark();
-                } while (byteBuffer.hasRemaining() && byteBuffer.get() == FeatUtils.SP);
-                byteBuffer.reset();
-                if (byteBuffer.remaining() < 9) {
+                if (byteBuffer.remaining() < 10) {
                     break;
                 }
-                byte major = byteBuffer.get(byteBuffer.position() + 5);
-                if (major == HTTP_VERSION_1) {
-                    byte minor = byteBuffer.get(byteBuffer.position() + 7);
-                    if (minor == HTTP_VERSION_1) {
-                        request.setProtocol(HttpProtocol.HTTP_11);
-                    } else if (minor == HTTP_VERSION_0) {
-                        request.setProtocol(HttpProtocol.HTTP_10);
-                    } else {
-                        throw new HttpException(HttpStatus.BAD_REQUEST);
-                    }
-                } else if (major == HTTP_VERSION_2) {
+                long httpVersion = byteBuffer.getLong();
+                if (httpVersion == 5211883372140375601L) {
+                    request.setProtocol(HttpProtocol.HTTP_11);
+                } else if (httpVersion == 5211883372140375600L) {
+                    request.setProtocol(HttpProtocol.HTTP_10);
+                } else if (httpVersion == 5211883372140441136L) {
                     request.setProtocol(HttpProtocol.HTTP_2);
+                } else if (byteBuffer.get(byteBuffer.position() - 8) == FeatUtils.SP) {
+                    byteBuffer.position(byteBuffer.position() - 7);
+                    return decode(byteBuffer, request);
                 } else {
                     byte[] bytes = new byte[byteBuffer.limit()];
                     byteBuffer.position(0);
                     byteBuffer.get(bytes);
-                    LOGGER.error("Unsupported HTTP version, remote:{}, method:{}, uri:{} , data:{} ", request.getRemoteAddr(), request.getMethod(), request.getUri(), new String(bytes));
-                    throw new HttpException(HttpStatus.BAD_REQUEST, "Unsupported HTTP version");
+                    LOGGER.error("Unsupported HTTP version, remote:{}, method:{}, uri:{} , data:\r\n{} ", request.getRemoteAddr(), request.getMethod(), request.getUri(), new String(bytes));
+                    throw new HttpException(HttpStatus.BAD_REQUEST);
                 }
-
-                byteBuffer.position(byteBuffer.position() + 9);
-                decodeState.setState(DecodeState.STATE_START_LINE_END);
+                if (byteBuffer.getShort() != 3338) {
+                    throw new HttpException(HttpStatus.BAD_REQUEST);
+                }
+                decodeState.setState(DecodeState.STATE_HEADER_END_CHECK);
+                return decode(byteBuffer, request);
             }
             case DecodeState.STATE_START_LINE_END: {
                 if (byteBuffer.remaining() == 0) {
