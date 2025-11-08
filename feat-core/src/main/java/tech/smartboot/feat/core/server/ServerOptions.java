@@ -415,19 +415,6 @@ public class ServerOptions {
     }
 
     /**
-     * 批量添加服务器插件
-     *
-     * @param plugins 要添加的插件列表
-     * @return 当前 ServerOptions 实例，支持链式调用
-     * @deprecated
-     */
-    public ServerOptions addPlugin(List<Plugin<HttpEndpoint>> plugins) {
-        System.err.println("Deprecated: Please use addPlugin(Plugin<HttpEndpoint> plugin) instead.");
-        this.plugins.addAll(plugins);
-        return this;
-    }
-
-    /**
      * 获取所有已添加的服务器插件
      *
      * @return 服务器插件列表
