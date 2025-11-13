@@ -10,24 +10,55 @@
 
 package tech.smartboot.feat.ai.chat.prompt;
 
-import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.exception.FeatException;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 /**
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
 public class Prompt {
-    private final String promptFile;
+    public static final String CONTENT_PARAM_NAME = "content";
+    private final List<Function<Map<String, String>, String>> promptBuilder;
 
-    private final List<String> paramNames;
+    public Prompt(String prompt) {
+        this.promptBuilder = parse(prompt);
+    }
 
-    public Prompt(String promptFile, List<String> params) {
-        this.promptFile = promptFile;
-        this.paramNames = params;
+    private boolean noneParam = true;
+
+    private List<Function<Map<String, String>, String>> parse(String prompt) {
+        List<Function<Map<String, String>, String>> promptBuilder = new ArrayList<>();
+        int offset = 0;
+        while (offset != prompt.length()) {
+            int leftIndex = prompt.indexOf("{{", offset);
+            if (leftIndex == -1) {
+                String part = prompt.substring(offset);
+                promptBuilder.add(stringStringMap -> part);
+                break;
+            }
+            int rightIndex = prompt.indexOf("}}", leftIndex);
+            if (rightIndex == -1) {
+                //非法异常
+                throw new FeatException("prompt: " + prompt + " is invalid");
+            }
+            noneParam = false;
+            String param = prompt.substring(leftIndex + 2, rightIndex);
+            promptBuilder.add(stringStringMap -> stringStringMap.getOrDefault(param, ""));
+            offset = rightIndex + 2;
+        }
+        if (noneParam) {
+            promptBuilder.add(stringStringMap -> "\r\nUser:" + stringStringMap.getOrDefault(CONTENT_PARAM_NAME, ""));
+        }
+        return promptBuilder;
+    }
+
+    public boolean isNoneParam() {
+        return noneParam;
     }
 
     /**
@@ -37,18 +68,10 @@ public class Prompt {
      * @return 提示词
      */
     public final String prompt(Map<String, String> params) {
-        String prompt = FeatUtils.getResourceAsString("feat-prompts/" + promptFile);
-        if (prompt == null) {
-            throw new FeatException("prompt: " + promptFile + " not found");
+        StringBuilder prompt = new StringBuilder();
+        for (Function<Map<String, String>, String> function : promptBuilder) {
+            prompt.append(function.apply(params));
         }
-        for (String param : paramNames) {
-            String value = params.get(param);
-            if (value == null) {
-                throw new FeatException("param: " + param + " not found");
-            }
-            prompt = prompt.replace("{{" + param + "}}", params.get(param));
-        }
-        return prompt;
+        return prompt.toString();
     }
-
 }

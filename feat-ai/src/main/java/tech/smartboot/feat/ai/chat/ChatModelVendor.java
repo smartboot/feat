@@ -55,6 +55,7 @@ public class ChatModelVendor extends Vendor {
         public static final ChatModelVendor Qwen3_235B_A22B_Instruct_2507 = new GiteeAI("Qwen3-235B-A22B-Instruct-2507", CAPABILITY_THINK | CAPABILITY_FUNCTION_CALL, qwen_pre_request);
         public static final ChatModelVendor Qwen3_4B = new GiteeAI("Qwen3-4B", CAPABILITY_THINK, qwen_pre_request);
         public static final ChatModelVendor Qwen3_8B = new GiteeAI("Qwen3-8B", CAPABILITY_THINK, qwen_pre_request);
+        public static final ChatModelVendor Qwen3_32B = new GiteeAI("Qwen3-32B", CAPABILITY_THINK, qwen_pre_request);
 
         GiteeAI(String model, int capability, PreRequest request) {
             super("https://ai.gitee.com/v1/", model, capability, request);
