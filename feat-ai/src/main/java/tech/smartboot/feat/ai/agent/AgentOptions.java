@@ -79,7 +79,7 @@ public class AgentOptions {
         return this;
     }
 
-    public AgentOptions vendor(ChatModelVendor vendor) {
+    public AgentOptions model(ChatModelVendor vendor) {
         this.vendor = vendor;
         return this;
     }
@@ -136,15 +136,15 @@ public class AgentOptions {
         return this;
     }
 
-    public String getName() {
+    String getName() {
         return name;
     }
 
-    public String getDescription() {
+    String getDescription() {
         return description;
     }
 
-    public ChatModelVendor getVendor() {
+    ChatModelVendor getVendor() {
         return vendor;
     }
 
@@ -164,12 +164,17 @@ public class AgentOptions {
         return maxMemoryRetrievalCount;
     }
 
-    public Prompt getPrompt() {
+    Prompt getPrompt() {
         return prompt;
     }
 
     public AgentOptions prompt(Prompt prompt) {
         this.prompt = prompt;
+        return this;
+    }
+
+    public AgentOptions prompt(String prompt) {
+        this.prompt = new Prompt(prompt);
         return this;
     }
 

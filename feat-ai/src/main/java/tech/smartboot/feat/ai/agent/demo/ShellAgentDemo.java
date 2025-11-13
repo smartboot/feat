@@ -12,32 +12,23 @@ package tech.smartboot.feat.ai.agent.demo;
 
 import tech.smartboot.feat.ai.agent.FeatAgent;
 import tech.smartboot.feat.ai.agent.tool.ShellInputTool;
+import tech.smartboot.feat.ai.chat.ChatModelVendor;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
-import tech.smartboot.feat.ai.chat.prompt.PromptTemplate;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 /**
  * @author 三刀
  * @version v1.0 9/30/25
  */
 public class ShellAgentDemo {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws ExecutionException, InterruptedException {
         FeatAgent agent = new FeatAgent(options -> {
-            options.prompt(PromptTemplate.GENERAL_AGENT_PROMPT);
+            options.name("")
+                    .model(ChatModelVendor.GiteeAI.Qwen3_32B)
+                    .prompt("你是一个编程高手");
         });
         agent.addTool(new ShellInputTool());
-        System.out.println(agent.getToolsPrompts());
-        Map<String, String> input = new HashMap<>();
-        input.put(PromptTemplate.PARAM_SYSTEM_PROMPT, "");
-        input.put("query", "提供一份旅游攻略");
-        input.put("tools","");
-        agent.execute(input, new StreamResponseCallback() {
-            @Override
-            public void onStreamResponse(String content) {
-                System.out.print(content);
-            }
-        });
+        agent.execute("开发一个五子棋游戏", (StreamResponseCallback) System.out::print);
     }
 }

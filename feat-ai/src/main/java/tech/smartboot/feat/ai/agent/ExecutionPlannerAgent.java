@@ -8,11 +8,8 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.ai.agent.agent;
+package tech.smartboot.feat.ai.agent;
 
-import tech.smartboot.feat.ai.agent.Agent;
-import tech.smartboot.feat.ai.agent.AgentOptions;
-import tech.smartboot.feat.ai.agent.FeatAgent;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
@@ -92,12 +89,12 @@ public class ExecutionPlannerAgent extends FeatAgent {
 
 
     @Override
-    public void execute(Map<String, String> input, StreamResponseCallback callback) {
+    public void execute(Map<String, String> params, StreamResponseCallback callback) {
 
         // 合并输入参数
-        Map<String, String> mergedInput = new HashMap<>(input);
+        Map<String, String> mergedInput = new HashMap<>(params);
         mergedInput.put("agents", getAgentsDescription());
 
-        chatModel.chatStream(options.getPrompt(), data -> data.putAll(mergedInput), callback);
+//        chatModel.chatStream(options.getPrompt(), data -> data.putAll(mergedInput), callback);
     }
 }

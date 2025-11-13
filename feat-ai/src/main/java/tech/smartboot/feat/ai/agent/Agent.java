@@ -44,14 +44,6 @@ public interface Agent {
     String getDescription();
 
     /**
-     * 获取底层ChatModel
-     *
-     * @return ChatModel实例
-     */
-    ChatModel getChatModel();
-
-
-    /**
      * 获取Agent记忆
      *
      * @return AgentMemory实例

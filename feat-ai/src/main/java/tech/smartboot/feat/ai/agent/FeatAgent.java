@@ -17,15 +17,19 @@ import tech.smartboot.feat.ai.agent.tool.ToolExecutionManager;
 import tech.smartboot.feat.ai.agent.tool.ToolExecutor;
 import tech.smartboot.feat.ai.chat.ChatModel;
 import tech.smartboot.feat.ai.chat.entity.Message;
-import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
+import tech.smartboot.feat.ai.chat.prompt.Prompt;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 
 /**
@@ -37,12 +41,6 @@ import java.util.function.Consumer;
 public class FeatAgent implements Agent {
     protected final AgentOptions options;
     private AgentState state = AgentState.IDLE;
-
-    /**
-     * 底层ChatModel
-     */
-    protected final ChatModel chatModel;
-
 
     /**
      * 工具执行器映射
@@ -65,7 +63,6 @@ public class FeatAgent implements Agent {
         this.prompt = prompt;
         this.options = new AgentOptions();
         opt.accept(options);
-        this.chatModel = FeatAI.chatModel(chatOptions -> chatOptions.debug(false).model(options.getVendor()));
     }
 
     public FeatAgent(Consumer<AgentOptions> opt) {
@@ -79,13 +76,9 @@ public class FeatAgent implements Agent {
 
     @Override
     public String getDescription() {
-        return "基于 " + chatModel.getClass().getSimpleName() + " 的AI Agent";
+        return "基于 " + options.getDescription() + " 的AI Agent";
     }
 
-    @Override
-    public ChatModel getChatModel() {
-        return chatModel;
-    }
 
     @Override
     public AgentMemory getMemory() {
@@ -114,15 +107,97 @@ public class FeatAgent implements Agent {
 //    }
 
     @Override
-    public void execute(Map<String, String> input, StreamResponseCallback callback) {
+    public void execute(Map<String, String> params, StreamResponseCallback callback) {
+//        if (options.getPrompt().isNoneParam()) {
+//            throw new IllegalArgumentException("当前接入仅适用于有参数的Prompt");
+//        }
+//        // 带工具调用的流式对话
+//        registerToolsWithChatModel();
+//        List<String> toolNames = new ArrayList<>(toolExecutors.keySet());
+//        logger.info("可用工具: " + toolNames);
+//
+//        chatModel.chatStream(options.getPrompt(), data -> data.putAll(params), callback);
 
-        // 带工具调用的流式对话
-        registerToolsWithChatModel();
-        List<String> toolNames = new ArrayList<>(toolExecutors.keySet());
-        logger.info("可用工具: " + toolNames);
+    }
 
-        chatModel.chatStream(options.getPrompt(), data -> data.putAll(input), callback);
+    public void execute(String input, StreamResponseCallback callback) throws ExecutionException, InterruptedException {
+        if (!options.getPrompt().isNoneParam()) {
+            throw new IllegalArgumentException("当前接入仅适用于无参数的Prompt");
+        }
+        StringBuilder builder = new StringBuilder(options.getPrompt().prompt(Collections.singletonMap(Prompt.CONTENT_PARAM_NAME, input)));
+        builder.append(getThinkMessage(input));
+        builder.append("\r\n");
+        builder.append(currentStepEnvMessage());
+        if (!toolExecutors.isEmpty()) {
+            builder.append("\r\nAvailable Tool List: ");
+            toolExecutors.forEach((name, executor) -> builder.append("\r\n- ").append(name).append(": ").append(executor.getDescription()));
+        }
+        ChatModel model = FeatAI.chatModel(chatOptions -> chatOptions.debug(false).model(options.getVendor()));
+        model.chatStream(builder.toString(), callback);
+    }
 
+    private int currentStepIndex;
+    private String planStatus;
+    private String stepText;
+    private String extraParams;
+    private String executePrams;
+
+    private String currentStepEnvMessage() {
+        return "- Current step environment information";
+    }
+
+    protected String getThinkMessage(String input) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("# 基本信息\n");
+
+        builder.append("系统信息:\r\n");
+        builder.append("操作系统: ").append(System.getProperty("os.name")).append(" ").append(System.getProperty("os.version")).append(" ").append(System.getProperty("os.arch")).append("\r\n");
+
+        builder.append("- 当前日期:\r\n").append(new Date()).append("\r\n");
+
+        //执行计划
+        builder.append("- 用户原始需求 (这是用户的初始输入，可以参考这些信息，但在当前交互轮次中只需要完成当前步骤的需求!) :\n");
+        builder.append(input).append("\n\n");
+        builder.append("- 执行参数: \n");
+        if (FeatUtils.isNotBlank(executePrams)) {
+            builder.append(executePrams).append("\n\n");
+        } else {
+            builder.append("未提供执行参数。\n\n");
+        }
+        builder.append("- 历史已执行步骤记录:\n");
+
+        builder.append("\r\n\r\n");
+
+        builder.append("- 当前步骤需求 (这一步需要由你来完成！这是用户原始请求所要求的，但如果当前步骤没有要求，则无需在此步骤中完成):\r\n");
+        builder.append("步骤 ").append(currentStepIndex).append(": ").append(stepText).append("\r\n");
+        builder.append("\r\n");
+
+        builder.append("- 操作步骤说明:\r\n");
+        if (FeatUtils.isBlank(extraParams)) {
+            builder.append("无");
+        } else {
+            builder.append(extraParams);
+        }
+        builder.append("\r\n\r\n");
+
+        builder.append("- 重要注意事项:\r\n");
+        builder.append("1. 使用工具调用时，必须提供解释说明使用该工具的原因和背后的思考过程").append("\r\n");
+        builder.append("2. 简要描述之前所有步骤完成了什么").append("\r\n");
+        builder.append("3. 只做且 exactly 做当前步骤需求中要求的事情").append("\r\n");
+        builder.append("4. 如果当前步骤需求已完成，请调用终止工具来结束当前步骤。").append("\r\n");
+        builder.append("5. 用户的原始请求是为了全局理解，不要在当前步骤中完成这个用户的原始请求。").append("\r\n");
+
+        builder.append("\r\n");
+        builder.append("# 响应规则:\r\n");
+        builder.append("- 当操作步骤说明为设置时，先响应操作步骤。\r\n");
+        builder.append("- 当需要调用工具时，每次必须只调用一个工具。不允许同时调用多个工具。\r\n");
+//        builder.append("- 在你的响应中，必须调用且仅调用一个工具，这是一个不可缺少的操作步骤。\r\n");
+
+        builder.append("# 任务\n");
+
+        builder.append("基于当前环境信息和提示做出下一步决策");
+        builder.append("\n");
+        return builder.toString();
     }
 
     @Override
@@ -133,23 +208,22 @@ public class FeatAgent implements Agent {
 
     @Override
     public void clearHistory() {
-        int historySize = chatModel.getHistory().size();
-        chatModel.getHistory().clear();
-        logger.info("清空对话历史，之前记录数: " + historySize);
+//        int historySize = chatModel.getHistory().size();
+//        chatModel.getHistory().clear();
+//        logger.info("清空对话历史，之前记录数: " + historySize);
+        throw new UnsupportedOperationException("不支持清空历史记录");
     }
 
     @Override
     public List<Message> getHistory() {
-        return chatModel.getHistory();
+//        return chatModel.getHistory();
+        throw new UnsupportedOperationException("不支持获取历史记录");
     }
 
     /**
      * 将工具执行器注册到ChatModel中
      */
     private void registerToolsWithChatModel() {
-        // 清除旧的工具定义
-        chatModel.getOptions().functions().clear();
-
         // 添加当前所有工具执行器到ChatModel
         toolExecutors.forEach((name, executor) -> {
             // 创建Function对象
@@ -171,7 +245,7 @@ public class FeatAgent implements Agent {
             }
 
             // 将Function添加到ChatModel选项中
-            chatModel.getOptions().addFunction(function);
+//            chatModel.getOptions().addFunction(function);
         });
     }
 
