@@ -10,19 +10,11 @@
 
 package tech.smartboot.feat.ai.agent;
 
-import tech.smartboot.feat.ai.agent.memory.AgentMemory;
-import tech.smartboot.feat.ai.agent.memory.Memory;
 import tech.smartboot.feat.ai.agent.tool.ToolExecutor;
-import tech.smartboot.feat.ai.chat.ChatModel;
-import tech.smartboot.feat.ai.chat.entity.Message;
-import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
-
-import java.util.List;
-import java.util.Map;
 
 /**
  * AI Agent核心接口定义
- * 提供统一的Agent操作接口
+ * 提供统一的Agent操作接口，基于ReAct（Reasoning + Acting）范式
  *
  * @author 三刀 zhengjunweimail@163.com
  * @version v2.0.0
@@ -43,20 +35,6 @@ public interface Agent {
      */
     String getDescription();
 
-    /**
-     * 获取Agent记忆
-     *
-     * @return AgentMemory实例
-     */
-    AgentMemory getMemory();
-
-    /**
-     * 执行流式对话（支持工具调用）
-     *
-     * @param input    用户输入内容
-     * @param callback 流式响应回调
-     */
-    void execute(Map<String, String> input, StreamResponseCallback callback);
 
     /**
      * 添加工具执行器
@@ -65,29 +43,18 @@ public interface Agent {
      */
     void addTool(ToolExecutor executor);
 
-    /**
-     * 移除工具执行器
-     *
-     * @param toolName 工具名称
-     */
-    void removeTool(String toolName);
 
     /**
-     * 添加记忆
+     * 获取Agent状态
      *
-     * @param memory 记忆对象
+     * @return Agent状态
      */
-    void addMemory(Memory memory);
+    AgentState getState();
 
     /**
-     * 清空对话历史
-     */
-    void clearHistory();
-
-    /**
-     * 获取对话历史
+     * 设置最大迭代次数
      *
-     * @return 对话历史列表
+     * @param maxIterations 最大迭代次数
      */
-    List<Message> getHistory();
+    void setMaxIterations(int maxIterations);
 }

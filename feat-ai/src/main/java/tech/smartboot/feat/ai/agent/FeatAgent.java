@@ -11,12 +11,10 @@
 package tech.smartboot.feat.ai.agent;
 
 import tech.smartboot.feat.ai.FeatAI;
-import tech.smartboot.feat.ai.agent.memory.AgentMemory;
 import tech.smartboot.feat.ai.agent.memory.Memory;
 import tech.smartboot.feat.ai.agent.tool.ToolExecutionManager;
 import tech.smartboot.feat.ai.agent.tool.ToolExecutor;
 import tech.smartboot.feat.ai.chat.ChatModel;
-import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
 import tech.smartboot.feat.ai.chat.prompt.Prompt;
 import tech.smartboot.feat.core.common.FeatUtils;
@@ -33,7 +31,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 
 /**
- * AI Agent抽象实现类
+ * AI Agent抽象实现类，基于ReAct（Reasoning + Acting）范式
  *
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.1
@@ -59,6 +57,12 @@ public class FeatAgent implements Agent {
 
     private String prompt;
 
+    // 最大迭代次数，防止无限循环
+    private int maxIterations = 10;
+
+    // 当前迭代次数
+    private int currentIteration = 0;
+
     public FeatAgent(String prompt, Consumer<AgentOptions> opt) {
         this.prompt = prompt;
         this.options = new AgentOptions();
@@ -79,12 +83,6 @@ public class FeatAgent implements Agent {
         return "基于 " + options.getDescription() + " 的AI Agent";
     }
 
-
-    @Override
-    public AgentMemory getMemory() {
-        return options.getMemory();
-    }
-
     @Override
     public void addTool(ToolExecutor executor) {
         toolExecutors.put(executor.getName(), executor);
@@ -92,33 +90,6 @@ public class FeatAgent implements Agent {
         logger.info("添加工具执行器: " + executor.getName());
     }
 
-    @Override
-    public void removeTool(String toolName) {
-        toolExecutors.remove(toolName);
-        toolExecutionManager.removeToolExecutor(toolName);
-        logger.info("移除工具执行器: " + toolName);
-    }
-
-//    @Override
-//    public CompletableFuture<ResponseMessage> chat(String content, ChatOptions options) {
-//        CompletableFuture<ResponseMessage> future = new CompletableFuture<>();
-//        chat(content, options, future::complete);
-//        return future;
-//    }
-
-    @Override
-    public void execute(Map<String, String> params, StreamResponseCallback callback) {
-//        if (options.getPrompt().isNoneParam()) {
-//            throw new IllegalArgumentException("当前接入仅适用于有参数的Prompt");
-//        }
-//        // 带工具调用的流式对话
-//        registerToolsWithChatModel();
-//        List<String> toolNames = new ArrayList<>(toolExecutors.keySet());
-//        logger.info("可用工具: " + toolNames);
-//
-//        chatModel.chatStream(options.getPrompt(), data -> data.putAll(params), callback);
-
-    }
 
     public void execute(String input, StreamResponseCallback callback) throws ExecutionException, InterruptedException {
         if (!options.getPrompt().isNoneParam()) {
@@ -132,9 +103,10 @@ public class FeatAgent implements Agent {
             builder.append("\r\nAvailable Tool List: ");
             toolExecutors.forEach((name, executor) -> builder.append("\r\n- ").append(name).append(": ").append(executor.getDescription()));
         }
-        ChatModel model = FeatAI.chatModel(chatOptions -> chatOptions.debug(false).model(options.getVendor()));
+        ChatModel model = FeatAI.chatModel(chatOptions -> chatOptions.apiKey("UCTLKWMS1KEEQX2FSWP5OVTNWPUU5KJBHUPWGFP3").noThink(true).debug(false).model(options.getVendor()));
         model.chatStream(builder.toString(), callback);
     }
+
 
     private int currentStepIndex;
     private String planStatus;
@@ -148,6 +120,7 @@ public class FeatAgent implements Agent {
 
     protected String getThinkMessage(String input) {
         StringBuilder builder = new StringBuilder();
+        builder.append("你是一个 AI 助手。");
         builder.append("# 基本信息\n");
 
         builder.append("系统信息:\r\n");
@@ -189,7 +162,7 @@ public class FeatAgent implements Agent {
 
         builder.append("\r\n");
         builder.append("# 响应规则:\r\n");
-        builder.append("- 当操作步骤说明为设置时，先响应操作步骤。\r\n");
+        builder.append("- 当**操作步骤说明**没有设置时，先设计出操作计划。\r\n");
         builder.append("- 当需要调用工具时，每次必须只调用一个工具。不允许同时调用多个工具。\r\n");
 //        builder.append("- 在你的响应中，必须调用且仅调用一个工具，这是一个不可缺少的操作步骤。\r\n");
 
@@ -200,53 +173,73 @@ public class FeatAgent implements Agent {
         return builder.toString();
     }
 
-    @Override
-    public void addMemory(Memory memory) {
-        this.options.getMemory().addMemory(memory);
-        logger.info("添加记忆到Agent");
-    }
+    /**
+     * 构建系统提示信息
+     *
+     * @param params 参数
+     * @return 系统提示信息
+     */
+    private String buildSystemPrompt(Map<String, String> params) {
+        StringBuilder promptBuilder = new StringBuilder();
+        promptBuilder.append("你是一个基于ReAct（Reasoning + Acting）范式的AI Agent。\n");
+        promptBuilder.append("你的任务是通过思考和行动来解决问题。请按照以下步骤进行：\n");
+        promptBuilder.append("1. 分析用户的问题\n");
+        promptBuilder.append("2. 决定是否需要使用工具\n");
+        promptBuilder.append("3. 如果需要，选择合适的工具并提供参数\n");
+        promptBuilder.append("4. 等待工具执行结果\n");
+        promptBuilder.append("5. 基于工具执行结果继续思考或给出最终答案\n\n");
 
-    @Override
-    public void clearHistory() {
-//        int historySize = chatModel.getHistory().size();
-//        chatModel.getHistory().clear();
-//        logger.info("清空对话历史，之前记录数: " + historySize);
-        throw new UnsupportedOperationException("不支持清空历史记录");
-    }
+        // 添加可用工具信息到提示词中
+        if (!toolExecutors.isEmpty()) {
+            promptBuilder.append("可用工具列表（请严格按照以下格式调用工具）：\n");
+            for (ToolExecutor executor : toolExecutors.values()) {
+                promptBuilder.append("- 工具名称: ").append(executor.getName()).append("\n");
+                promptBuilder.append("  工具描述: ").append(executor.getDescription()).append("\n");
+                String schema = executor.getParametersSchema();
+                if (schema != null && !schema.isEmpty()) {
+                    promptBuilder.append("  参数格式: ").append(schema).append("\n");
+                }
+                promptBuilder.append("\n");
+            }
+            promptBuilder.append("\n");
 
-    @Override
-    public List<Message> getHistory() {
-//        return chatModel.getHistory();
-        throw new UnsupportedOperationException("不支持获取历史记录");
+            // 添加工具调用格式说明
+            promptBuilder.append("当需要调用工具时，请使用以下精确格式：\n");
+            promptBuilder.append("``tool_call\n");
+            promptBuilder.append("{\n");
+            promptBuilder.append("  \"name\": \"工具名称\",\n");
+            promptBuilder.append("  \"arguments\": {\n");
+            promptBuilder.append("    \"参数名1\": \"参数值1\",\n");
+            promptBuilder.append("    \"参数名2\": \"参数值2\"\n");
+            promptBuilder.append("  }\n");
+            promptBuilder.append("}\n");
+            promptBuilder.append("```\n");
+            promptBuilder.append("重要规则：\n");
+            promptBuilder.append("1. 每次只能调用一个工具\n");
+            promptBuilder.append("2. 调用工具后必须等待结果再继续\n");
+            promptBuilder.append("3. 不要在一次响应中调用多个工具\n");
+            promptBuilder.append("4. 只有在确实需要工具帮助时才调用工具\n");
+            promptBuilder.append("5. 工具调用必须使用上述精确格式\n\n");
+        }
+
+        // 添加观察信息（如果有的话）
+        String observation = params.get("observation");
+        if (observation != null && !observation.isEmpty()) {
+            promptBuilder.append("观察结果：\n").append(observation).append("\n\n");
+        }
+
+        promptBuilder.append("请基于以上信息进行推理和决策。如果需要使用工具，请严格按照工具的参数要求调用。如果问题已解决，请直接给出最终答案。");
+        promptBuilder.append("在给出最终答案前，请确保已经充分分析了所有相关信息。");
+
+        return promptBuilder.toString();
     }
 
     /**
      * 将工具执行器注册到ChatModel中
      */
-    private void registerToolsWithChatModel() {
-        // 添加当前所有工具执行器到ChatModel
-        toolExecutors.forEach((name, executor) -> {
-            // 创建Function对象
-            tech.smartboot.feat.ai.chat.entity.Function function = new tech.smartboot.feat.ai.chat.entity.Function(name).description(executor.getDescription());
-
-            // 解析参数定义并设置到Function中
-            try {
-                String schema = executor.getParametersSchema();
-                if (schema != null && !schema.trim().isEmpty()) {
-                    // 使用JSON库解析参数schema
-                    Object parsedSchema = parseParametersSchema(schema);
-                    if (parsedSchema instanceof java.util.Map) {
-                        applyParametersToFunction(function, (java.util.Map<String, Object>) parsedSchema);
-                    }
-                }
-            } catch (Exception e) {
-                // 如果解析失败，至少添加工具名称和描述
-                function.description(executor.getDescription() + " (参数解析失败: " + e.getMessage() + ")");
-            }
-
-            // 将Function添加到ChatModel选项中
-//            chatModel.getOptions().addFunction(function);
-        });
+    private void registerToolsWithChatModel(ChatOptions chatOptions) {
+        // 不再将工具注册到模型的function call功能中
+        // 工具将通过提示词方式使用
     }
 
     /**
@@ -311,7 +304,7 @@ public class FeatAgent implements Agent {
     /**
      * 检索相关记忆
      */
-    private List<Memory> retrieveRelevantMemories(String content, ChatOptions options) {
+    private List<Memory> retrieveRelevantMemories(String content, tech.smartboot.feat.ai.agent.ChatOptions options) {
         if (options.isEnableMemory()) {
             return this.options.getMemory().getMemoriesByImportance(options.getMemoryRetrievalThreshold());
         }
@@ -372,4 +365,35 @@ public class FeatAgent implements Agent {
         prompts.append("请根据任务需求选择合适的工具。如果任务不需要使用工具，请直接回答问题。");
         return prompts.toString();
     }
+
+    /**
+     * 设置最大迭代次数
+     *
+     * @param maxIterations 最大迭代次数
+     */
+    public void setMaxIterations(int maxIterations) {
+        this.maxIterations = maxIterations;
+    }
+
+    /**
+     * 获取当前迭代次数
+     *
+     * @return 当前迭代次数
+     */
+    public int getCurrentIteration() {
+        return currentIteration;
+    }
+
+    /**
+     * 检查内容是否包含工具调用
+     *
+     * @param content 响应内容
+     * @return 是否包含工具调用
+     */
+    private boolean containsToolCall(String content) {
+        // 检查是否包含工具调用标记
+        return content.contains("```tool_call") && content.contains("```");
+    }
+
+
 }
