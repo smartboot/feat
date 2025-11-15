@@ -70,6 +70,8 @@ public class AgentOptions {
     private int maxMemoryRetrievalCount = 5;
     private Prompt prompt;
 
+    private String systemPrompt;
+
     public static AgentOptions create() {
         return new AgentOptions();
     }
@@ -235,5 +237,13 @@ public class AgentOptions {
                 name, description, roleName, vendor, enableSmartMemory ? "启用" : "禁用",
                 memoryRetrievalThreshold, maxMemoryRetrievalCount
         );
+    }
+
+    public void setSystemPrompt(String systemPrompt) {
+        this.systemPrompt = systemPrompt;
+    }
+
+    public String systemPrompt() {
+        return systemPrompt;
     }
 }

@@ -30,7 +30,8 @@ public class PlanningFeatAgent extends FeatAgent {
         Map<String, String> data = new HashMap<>();
         data.put("date", new Date().toString());
         data.put("history_dialogue", input);
-        call(prompt.prompt(data), new StreamResponseCallback() {
+        options.setSystemPrompt(prompt.prompt(data));
+        call(input, new StreamResponseCallback() {
             @Override
             public void onStreamResponse(String content) {
                 System.out.print(content);

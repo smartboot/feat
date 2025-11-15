@@ -48,6 +48,23 @@ public class ChatModelVendor extends Vendor {
                 LOGGER.warn("noThink is not supported by " + chatModel.getOptions().baseUrl() + " " + modelVendor.model());
             }
         });
+        public static final ChatModelVendor DeepSeek_V32_EXP = new GiteeAI("DeepSeek-V3.2-Exp", CAPABILITY_THINK | CAPABILITY_FUNCTION_CALL, (chatModel, modelVendor, jsonObject) -> {
+            if (FeatUtils.isBlank(chatModel.getOptions().apiKey())) {
+                throw new IllegalArgumentException("apiKey is null, please set it via environment variable " + Options.ENV_API_KEY);
+            }
+            if (chatModel.getOptions().isNoThink() && modelVendor.hasCapability(ChatModelVendor.CAPABILITY_THINK)) {
+                LOGGER.warn("noThink is not supported by " + chatModel.getOptions().baseUrl() + " " + modelVendor.model());
+            }
+        });
+
+        public static final ChatModelVendor DeepSeek_V31 = new GiteeAI("DeepSeek-V3_1", CAPABILITY_THINK | CAPABILITY_FUNCTION_CALL, (chatModel, modelVendor, jsonObject) -> {
+            if (FeatUtils.isBlank(chatModel.getOptions().apiKey())) {
+                throw new IllegalArgumentException("apiKey is null, please set it via environment variable " + Options.ENV_API_KEY);
+            }
+            if (chatModel.getOptions().isNoThink() && modelVendor.hasCapability(ChatModelVendor.CAPABILITY_THINK)) {
+                LOGGER.warn("noThink is not supported by " + chatModel.getOptions().baseUrl() + " " + modelVendor.model());
+            }
+        });
         public static final ChatModelVendor Kimi_K2_Instruct = new GiteeAI("Kimi-K2-Instruct", CAPABILITY_FUNCTION_CALL, null);
         public static final ChatModelVendor DeepSeek_R1_Distill_Qwen_32B = new GiteeAI("DeepSeek-R1-Distill-Qwen-32B", 0, qwen_pre_request);
         public static final ChatModelVendor Qwen2_5_72B_Instruct = new GiteeAI("Qwen2.5-72B-Instruct", CAPABILITY_FUNCTION_CALL, qwen_pre_request);
