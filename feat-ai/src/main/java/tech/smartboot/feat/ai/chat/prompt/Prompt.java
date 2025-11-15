@@ -48,6 +48,8 @@ public class Prompt {
             }
             noneParam = false;
             String param = prompt.substring(leftIndex + 2, rightIndex);
+            String part = prompt.substring(offset, leftIndex);
+            promptBuilder.add(stringStringMap -> part);
             promptBuilder.add(stringStringMap -> stringStringMap.getOrDefault(param, ""));
             offset = rightIndex + 2;
         }

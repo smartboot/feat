@@ -10,6 +10,7 @@
 
 package tech.smartboot.feat.ai.agent;
 
+import tech.smartboot.feat.ai.agent.memory.AgentMemory;
 import tech.smartboot.feat.ai.agent.tool.ToolExecutor;
 
 /**
@@ -21,20 +22,6 @@ import tech.smartboot.feat.ai.agent.tool.ToolExecutor;
  */
 public interface Agent {
 
-    /**
-     * 获取Agent名称
-     *
-     * @return Agent名称
-     */
-    String getName();
-
-    /**
-     * 获取Agent描述
-     *
-     * @return Agent描述
-     */
-    String getDescription();
-
 
     /**
      * 添加工具执行器
@@ -45,16 +32,12 @@ public interface Agent {
 
 
     /**
-     * 获取Agent状态
+     * 获取Agent记忆
      *
-     * @return Agent状态
+     * @return Agent记忆
      */
-    AgentState getState();
+    AgentMemory getMemory();
 
-    /**
-     * 设置最大迭代次数
-     *
-     * @param maxIterations 最大迭代次数
-     */
-    void setMaxIterations(int maxIterations);
+    String execute(String input);
+
 }

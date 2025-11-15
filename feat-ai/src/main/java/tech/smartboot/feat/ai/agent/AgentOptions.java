@@ -39,10 +39,15 @@ public class AgentOptions {
     private String description = "默认Agent";
 
     /**
+     * Agent角色名称（用于在提示中代入角色）
+     */
+    private String roleName = "AI助手";
+
+    /**
      * 模型供应商
      */
-//    private ChatModelVendor vendor = ChatModelVendor.GiteeAI.Qwen3_235B_A22B_Instruct_2507;
-    private ChatModelVendor vendor = ChatModelVendor.Ollama.Deepseek_r1_7B;
+    private ChatModelVendor vendor = ChatModelVendor.GiteeAI.DeepSeek_R1;
+//    private ChatModelVendor vendor = ChatModelVendor.Ollama.Deepseek_r1_7B;
 
     /**
      * Agent记忆
@@ -76,6 +81,11 @@ public class AgentOptions {
 
     public AgentOptions description(String description) {
         this.description = description;
+        return this;
+    }
+
+    public AgentOptions roleName(String roleName) {
+        this.roleName = roleName;
         return this;
     }
 
@@ -142,6 +152,10 @@ public class AgentOptions {
 
     String getDescription() {
         return description;
+    }
+
+    String getRoleName() {
+        return roleName;
     }
 
     ChatModelVendor getVendor() {
@@ -213,11 +227,12 @@ public class AgentOptions {
                 "Agent配置摘要:\n" +
                         "- 名称: %s\n" +
                         "- 描述: %s\n" +
+                        "- 角色名称: %s\n" +
                         "- 模型: %s\n" +
                         "- 智能记忆: %s\n" +
                         "- 记忆阈值: %.2f\n" +
                         "- 最大检索数: %d",
-                name, description, vendor, enableSmartMemory ? "启用" : "禁用",
+                name, description, roleName, vendor, enableSmartMemory ? "启用" : "禁用",
                 memoryRetrievalThreshold, maxMemoryRetrievalCount
         );
     }
