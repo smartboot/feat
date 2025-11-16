@@ -78,7 +78,6 @@ public class WeChatDemo extends BaseChat {
 
                         @Override
                         public void onCompletion(ResponseMessage responseMessage) {
-                            responseMessage.discard();
                             if (!responseMessage.isSuccess()) {
                                 return;
                             }

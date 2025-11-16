@@ -11,16 +11,12 @@
 package tech.smartboot.feat.ai.agent.tool;
 
 import com.alibaba.fastjson2.JSONObject;
-import tech.smartboot.feat.ai.chat.ChatModel;
-import tech.smartboot.feat.ai.chat.entity.Message;
-import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,10 +31,10 @@ public class ToolExecutionManager {
 
     private final Map<String, ToolExecutor> toolExecutors = new HashMap<>();
     private static final Logger logger = LoggerFactory.getLogger(ToolExecutionManager.class.getName());
-    
+
     // 匹配工具调用的正则表达式
     private static final Pattern TOOL_CALL_PATTERN = Pattern.compile("\\{\\{tool:([\\w_]+)(?:\\(([^}]*)\\))?\\}\\}");
-    
+
     // 匹配JSON参数的正则表达式
     private static final Pattern PARAM_PATTERN = Pattern.compile("(\\w+)=\"([^\"]*)\"");
 
@@ -72,7 +68,7 @@ public class ToolExecutionManager {
      */
     public Map<String, String> extractAndExecuteTools(String text) {
         Map<String, String> results = new HashMap<>();
-        
+
         if (text == null || text.isEmpty()) {
             logger.info("没有工具调用需要执行");
             return results;
@@ -80,7 +76,7 @@ public class ToolExecutionManager {
 
         Matcher matcher = TOOL_CALL_PATTERN.matcher(text);
         int toolCount = 0;
-        
+
         while (matcher.find()) {
             toolCount++;
             String toolName = matcher.group(1);
@@ -107,7 +103,7 @@ public class ToolExecutionManager {
                         params.put(paramName, paramValue);
                     }
                 }
-                
+
                 String result = executor.execute(params);
                 logger.info("工具 " + toolName + " 执行成功");
                 results.put(toolName, result);
@@ -117,7 +113,7 @@ public class ToolExecutionManager {
                 results.put(toolName, errorMsg);
             }
         }
-        
+
         logger.info("总共检测到 " + toolCount + " 个工具调用");
 
         return results;
@@ -131,93 +127,5 @@ public class ToolExecutionManager {
      */
     public CompletableFuture<Map<String, String>> executeToolsAsync(String text) {
         return CompletableFuture.supplyAsync(() -> extractAndExecuteTools(text));
-    }
-
-    /**
-     * 处理带有工具调用的响应
-     *
-     * @param chatModel     ChatModel实例
-     * @param response      响应消息
-     * @param finalCallback 最终回调
-     */
-    public void handleToolResponse(ChatModel chatModel, ResponseMessage response, Consumer<ResponseMessage> finalCallback) {
-        String content = response.getContent();
-        Map<String, String> toolResults = extractAndExecuteTools(content);
-        
-        if (!toolResults.isEmpty()) {
-            logger.info("检测到工具调用，开始处理");
-
-            // 构建工具执行结果摘要
-            StringBuilder toolResultsSummary = new StringBuilder();
-            toolResultsSummary.append("工具执行结果:\n");
-
-            for (Map.Entry<String, String> entry : toolResults.entrySet()) {
-                String toolName = entry.getKey();
-                String result = entry.getValue();
-
-                // 添加工具调用结果到历史记录
-                Message toolResultMessage = new Message();
-                toolResultMessage.setRole("tool");
-                toolResultMessage.setContent("工具 " + toolName + " 执行结果: " + result);
-                chatModel.getHistory().add(toolResultMessage);
-
-                // 构建摘要
-                toolResultsSummary.append("- ").append(toolName).append(": ");
-                if (result.length() > 100) {
-                    toolResultsSummary.append(result.substring(0, 100)).append("...");
-                } else {
-                    toolResultsSummary.append(result);
-                }
-                toolResultsSummary.append("\n");
-            }
-
-            logger.info("工具执行完成，继续对话获取最终响应");
-
-            // 继续对话以获取最终响应，提供更明确的指令
-            String followUpPrompt = "请基于以下工具执行结果，生成一个完整、清晰的最终回答。请整合所有工具返回的信息，给出专业的分析和建议：\n\n" +
-                    toolResultsSummary.toString() +
-                    "\n请确保回答内容完整、准确，并直接回答用户最初的问题。";
-
-            chatModel.chat(followUpPrompt, finalResponse -> {
-                // 标记原始响应为丢弃
-                response.discard();
-                logger.info("工具调用处理完成，返回最终响应");
-                finalCallback.accept(finalResponse);
-            });
-        } else {
-            // 没有工具调用，直接返回响应
-            logger.info("没有检测到工具调用，直接返回响应");
-            finalCallback.accept(response);
-        }
-    }
-
-    /**
-     * 处理流式工具调用响应
-     *
-     * @param chatModel    ChatModel实例
-     * @param response     响应消息
-     * @param toolCallback 工具执行回调
-     */
-    public void handleStreamToolResponse(ChatModel chatModel, ResponseMessage response, Consumer<Map<String, String>> toolCallback) {
-        String content = response.getContent();
-        Map<String, String> toolResults = extractAndExecuteTools(content);
-        
-        if (!toolResults.isEmpty()) {
-            logger.info("检测到工具调用，开始处理");
-
-            // 将工具执行结果添加到对话历史中
-            for (Map.Entry<String, String> entry : toolResults.entrySet()) {
-                String toolName = entry.getKey();
-                String result = entry.getValue();
-
-                // 添加工具调用结果到历史记录，格式符合ReAct模式
-                Message toolResultMessage = new Message();
-                toolResultMessage.setRole("user"); // 在ReAct模式中，工具结果通常以user角色传入
-                toolResultMessage.setContent("Observation: 工具 " + toolName + " 执行结果: " + result);
-                chatModel.getHistory().add(toolResultMessage);
-            }
-        }
-        
-        toolCallback.accept(toolResults);
     }
 }

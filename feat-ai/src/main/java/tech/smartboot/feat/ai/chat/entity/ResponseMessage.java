@@ -28,10 +28,6 @@ public class ResponseMessage extends Message {
     private Usage usage;
     @JSONField(deserialize = false, serialize = false)
     private String promptLogprobs;
-    /**
-     * 是否丢弃该消息
-     */
-    private boolean discard = false;
 
     public List<ToolCall> getToolCalls() {
         return toolCalls;
@@ -71,13 +67,5 @@ public class ResponseMessage extends Message {
 
     public void setPromptLogprobs(String promptLogprobs) {
         this.promptLogprobs = promptLogprobs;
-    }
-
-    public boolean isDiscard() {
-        return discard;
-    }
-
-    public void discard() {
-        this.discard = true;
     }
 }

@@ -10,50 +10,32 @@
 
 package tech.smartboot.feat.ai.agent;
 
-import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
 import tech.smartboot.feat.ai.chat.prompt.Prompt;
 import tech.smartboot.feat.ai.chat.prompt.PromptTemplate;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
  * @author 三刀
- * @version v1.0 11/15/25
+ * @version v1.0 11/16/25
  */
-public class PlanningFeatAgent extends FeatAgent {
-
+public class ExecutorFeatAgent extends FeatAgent {
     @Override
     public String execute(String input) {
         Prompt prompt = new Prompt(PromptTemplate.loadPrompt("feat_agent_planner.tpl"));
         Map<String, String> data = new HashMap<>();
         data.put("date", new Date().toString());
         data.put("history_dialogue", input);
-//        data.put("sopPrompt", PromptTemplate.loadPrompt("feat_agent_executor.tpl"));
-//        options.setSystemPrompt(prompt.prompt(data));
-
-        Prompt executorPrompt = new Prompt(PromptTemplate.loadPrompt("feat_agent_executor.tpl"));
-        Map<String, String> executorData = new HashMap<>();
-        executorData.put("input", input);
-
-        List<Message> messages = new ArrayList<>();
-        messages.add(Message.ofSystem(prompt.prompt(data)));
-        messages.add(Message.ofUser(executorPrompt.prompt(executorData)));
-        call(messages, new StreamResponseCallback() {
+        options.setSystemPrompt(prompt.prompt(data));
+        call(null, new StreamResponseCallback() {
             @Override
             public void onStreamResponse(String content) {
                 System.out.print(content);
             }
         });
         return "";
-    }
-
-    public static void main(String[] args) {
-        PlanningFeatAgent agent = new PlanningFeatAgent();
-        agent.execute("明天我要去上海");
     }
 }

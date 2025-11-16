@@ -5,11 +5,13 @@ import tech.smartboot.feat.ai.agent.memory.AgentMemory;
 import tech.smartboot.feat.ai.agent.tool.ToolExecutionManager;
 import tech.smartboot.feat.ai.agent.tool.ToolExecutor;
 import tech.smartboot.feat.ai.chat.ChatModel;
+import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -44,7 +46,7 @@ public abstract class FeatAgent implements Agent {
     }
 
 
-    public void call(String input, StreamResponseCallback callback) {
+    public void call(List<Message> messages, StreamResponseCallback callback) {
         // 创建ChatModel实例
         ChatModel model = FeatAI.chatModel(chatOptions ->
                 chatOptions
@@ -52,7 +54,7 @@ public abstract class FeatAgent implements Agent {
                         .debug(false)
                         .system(options.systemPrompt())
                         .model(options.getVendor()));
-        model.chatStream(input, callback);
+        model.chatStream(messages, callback);
     }
 
     public AgentMemory getMemory() {

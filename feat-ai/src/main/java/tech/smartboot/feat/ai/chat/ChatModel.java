@@ -43,7 +43,6 @@ import java.util.function.Consumer;
 public class ChatModel {
     private static final Logger LOGGER = LoggerFactory.getLogger(ChatModel.class);
     private final ChatOptions options;
-    private final List<Message> history = new ArrayList<>();
 
     public ChatModel(ChatOptions options) {
         if (options.baseUrl().endsWith("/")) {
@@ -54,100 +53,96 @@ public class ChatModel {
             Message message = new Message();
             message.setRole(Message.ROLE_SYSTEM);
             message.setContent(options.getSystem());
-            history.add(message);
         }
     }
 
-    public List<Message> getHistory() {
-        return history;
-    }
-
     public void chatStream(String content, StreamResponseCallback consumer) {
-        chatStream(content, Collections.emptyList(), consumer);
+        chatStream(Collections.singletonList(Message.ofUser(content)), Collections.emptyList(), consumer);
     }
 
-    public void chatStream(String chat, List<String> tools, StreamResponseCallback consumer) {
-        HttpPost post = chat0(chat, tools, true);
+    public void chatStream(List<Message> messages, StreamResponseCallback consumer) {
+        chatStream(messages, Collections.emptyList(), consumer);
+    }
+
+    public void chatStream(List<Message> messages, List<String> tools, StreamResponseCallback consumer) {
+        HttpPost post = chat0(messages, tools, true);
         StringBuilder contentBuilder = new StringBuilder();
         Map<Integer, ToolCall> toolCallMap = new HashMap<>();
 
         post.onSuccess(response -> {
-                    ResponseMessage responseMessage = new ResponseMessage();
-                    responseMessage.setRole(Message.ROLE_ASSISTANT);
-                    responseMessage.setError(response.body());
-                    responseMessage.setSuccess(false);
-                    consumer.onCompletion(responseMessage);
-                })
-                .onSSE(sse -> sse.onData(event -> {
-                    String data = event.getData();
-                    if ("[DONE]".equals(data) || FeatUtils.isBlank(data)) {
-                        ResponseMessage responseMessage = new ResponseMessage();
-                        responseMessage.setRole(Message.ROLE_ASSISTANT);
-                        responseMessage.setContent(contentBuilder.toString());
-                        responseMessage.setToolCalls(new ArrayList<>(toolCallMap.values()));
-                        responseMessage.setSuccess(true);
-                        consumer.onCompletion(responseMessage);
-                        if (!responseMessage.isDiscard()) {
-                            Message message = new Message();
-                            message.setRole(Message.ROLE_ASSISTANT);
-                            message.setContent(contentBuilder.toString());
-                            history.add(message);
-                        }
-                        return;
-                    }
-                    JSONObject object = JSON.parseObject(data);
-                    //最后一个可能为空
-                    JSONArray choices = object.getJSONArray("choices");
-                    if (choices == null || choices.isEmpty()) {
-                        return;
-                    }
-                    JSONObject choice = choices.getJSONObject(0);
-                    JSONObject delta = choice.getJSONObject("delta");
-                    if (delta == null) {
-                        LOGGER.error("delta is null");
-                        return;
-                    }
-                    String content = delta.getString("content");
-                    if (content != null) {
-                        consumer.onStreamResponse(content);
-                        contentBuilder.append(content);
-                    }
-                    String reasoningContent = delta.getString("reasoning_content");
-                    if (reasoningContent != null) {
-                        consumer.onStreamResponse(reasoningContent);
-                        contentBuilder.append(reasoningContent);
-                    }
-                    List<ToolCall> toolCalls = delta.getObject("tool_calls", new TypeReference<List<ToolCall>>() {
+            ResponseMessage responseMessage = new ResponseMessage();
+            responseMessage.setRole(Message.ROLE_ASSISTANT);
+            responseMessage.setError(response.body());
+            responseMessage.setSuccess(false);
+            consumer.onCompletion(responseMessage);
+        }).onSSE(sse -> sse.onData(event -> {
+            String data = event.getData();
+            if ("[DONE]".equals(data) || FeatUtils.isBlank(data)) {
+                ResponseMessage responseMessage = new ResponseMessage();
+                responseMessage.setRole(Message.ROLE_ASSISTANT);
+                responseMessage.setContent(contentBuilder.toString());
+                responseMessage.setToolCalls(new ArrayList<>(toolCallMap.values()));
+                responseMessage.setSuccess(true);
+                consumer.onCompletion(responseMessage);
+                return;
+            }
+            JSONObject object = JSON.parseObject(data);
+            //最后一个可能为空
+            JSONArray choices = object.getJSONArray("choices");
+            if (choices == null || choices.isEmpty()) {
+                return;
+            }
+            JSONObject choice = choices.getJSONObject(0);
+            JSONObject delta = choice.getJSONObject("delta");
+            if (delta == null) {
+                LOGGER.error("delta is null");
+                return;
+            }
+            String content = delta.getString("content");
+            if (content != null) {
+                consumer.onStreamResponse(content);
+                contentBuilder.append(content);
+            }
+            String reasoningContent = delta.getString("reasoning_content");
+            if (reasoningContent != null) {
+                consumer.onStreamResponse(reasoningContent);
+                contentBuilder.append(reasoningContent);
+            }
+            List<ToolCall> toolCalls = delta.getObject("tool_calls", new TypeReference<List<ToolCall>>() {
+            });
+            if (FeatUtils.isNotEmpty(toolCalls)) {
+                for (ToolCall toolCall : toolCalls) {
+                    ToolCall tool = toolCallMap.computeIfAbsent(toolCall.getIndex(), k -> {
+                        ToolCall t = new ToolCall();
+                        t.setFunction(new HashMap<>());
+                        return t;
                     });
-                    if (FeatUtils.isNotEmpty(toolCalls)) {
-                        for (ToolCall toolCall : toolCalls) {
-                            ToolCall tool = toolCallMap.computeIfAbsent(toolCall.getIndex(), k -> {
-                                ToolCall t = new ToolCall();
-                                t.setFunction(new HashMap<>());
-                                return t;
-                            });
-                            if (FeatUtils.isNotBlank(toolCall.getId())) {
-                                tool.setId(toolCall.getId());
-                            }
-                            if (FeatUtils.isNotBlank(toolCall.getType())) {
-                                tool.setType(toolCall.getType());
-                            }
-                            if (toolCall.getFunction() != null) {
-                                toolCall.getFunction().forEach((k, v) -> {
-                                    if (v == null) {
-                                        return;
-                                    }
-                                    String preV = tool.getFunction().get(k);
-                                    if (FeatUtils.isNotBlank(preV)) {
-                                        tool.getFunction().put(k, preV + v);
-                                    } else {
-                                        tool.getFunction().put(k, v);
-                                    }
-                                });
-                            }
-                        }
+                    if (FeatUtils.isNotBlank(toolCall.getId())) {
+                        tool.setId(toolCall.getId());
                     }
-                })).submit();
+                    if (FeatUtils.isNotBlank(toolCall.getType())) {
+                        tool.setType(toolCall.getType());
+                    }
+                    if (toolCall.getFunction() != null) {
+                        toolCall.getFunction().forEach((k, v) -> {
+                            if (v == null) {
+                                return;
+                            }
+                            String preV = tool.getFunction().get(k);
+                            if (FeatUtils.isNotBlank(preV)) {
+                                tool.getFunction().put(k, preV + v);
+                            } else {
+                                tool.getFunction().put(k, v);
+                            }
+                        });
+                    }
+                }
+            }
+        })).submit();
+    }
+
+    public void chatStream(String chat, List<String> tools, StreamResponseCallback consumer) {
+        chatStream(Collections.singletonList(Message.ofUser(chat)), tools, consumer);
     }
 
     public CompletableFuture<ResponseMessage> chat(String content) {
@@ -161,7 +156,7 @@ public class ChatModel {
     }
 
     public void chat(String content, List<String> tools, Consumer<ResponseMessage> callback) {
-        HttpPost post = chat0(content, tools, false);
+        HttpPost post = chat0(Message.ofUser(content), tools, false);
 
         post.onSuccess(response -> {
             if (response.statusCode() != 200) {
@@ -173,7 +168,6 @@ public class ChatModel {
                 return;
             }
             ChatWholeResponse chatResponse = JSON.parseObject(response.body(), ChatWholeResponse.class);
-            chatResponse.getChoices().forEach(choice -> history.add(choice.getMessage()));
             ResponseMessage responseMessage = chatResponse.getChoice().getMessage();
             responseMessage.setUsage(chatResponse.getUsage());
             responseMessage.setPromptLogprobs(chatResponse.getPromptLogprobs());
@@ -182,19 +176,17 @@ public class ChatModel {
         }).onFailure(Throwable::printStackTrace).submit();
     }
 
+    private HttpPost chat0(Message message, List<String> tools, boolean stream) {
+        return chat0(Collections.singletonList(message), tools, stream);
+    }
 
-    private HttpPost chat0(String content, List<String> tools, boolean stream) {
+    private HttpPost chat0(List<Message> messages, List<String> tools, boolean stream) {
         LOGGER.warn("content:");
-        LOGGER.warn(content);
 //        System.out.println("我：" + content);
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("model", options.getModel().model());
         jsonObject.put("stream", stream);
-        Message message = new Message();
-        message.setContent(content);
-        message.setRole("user");
-        history.add(message);
-        jsonObject.put("messages", history);
+        jsonObject.put("messages", messages);
         if (options.responseFormat() != null) {
             jsonObject.put("response_format", JSONObject.of("type", options.responseFormat().getType()));
         }
@@ -250,14 +242,12 @@ public class ChatModel {
     public void chat(Prompt prompt, Consumer<Map<String, String>> data, Consumer<ResponseMessage> callback) {
         Map<String, String> params = new HashMap<>();
         data.accept(params);
-        history.clear();
         chat(prompt.prompt(params), callback);
     }
 
     public void chatStream(Prompt prompt, Consumer<Map<String, String>> data, StreamResponseCallback callback) {
         Map<String, String> params = new HashMap<>();
         data.accept(params);
-        history.clear();
         chatStream(prompt.prompt(params), callback);
     }
 

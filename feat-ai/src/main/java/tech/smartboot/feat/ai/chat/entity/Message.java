@@ -35,6 +35,27 @@ public class Message {
     @JSONField(name = "reasoning_content")
     private String reasoningContent;
 
+    public static Message ofUser(String content) {
+        Message message = new Message();
+        message.setRole(ROLE_USER);
+        message.setContent(content);
+        return message;
+    }
+
+    public static Message ofSystem(String content) {
+        Message message = new Message();
+        message.setRole(ROLE_SYSTEM);
+        message.setContent(content);
+        return message;
+    }
+
+    public static Message ofAssistant(String content) {
+        Message message = new Message();
+        message.setRole(ROLE_ASSISTANT);
+        message.setContent(content);
+        return message;
+    }
+
     public String getRole() {
         return role;
     }
