@@ -156,7 +156,7 @@ public class ChatModel {
     }
 
     public void chat(String content, List<String> tools, Consumer<ResponseMessage> callback) {
-        HttpPost post = chat0(Message.ofUser(content), tools, false);
+        HttpPost post = chat0(Collections.singletonList(Message.ofUser(content)), tools, false);
 
         post.onSuccess(response -> {
             if (response.statusCode() != 200) {
@@ -174,10 +174,6 @@ public class ChatModel {
             responseMessage.setSuccess(true);
             callback.accept(responseMessage);
         }).onFailure(Throwable::printStackTrace).submit();
-    }
-
-    private HttpPost chat0(Message message, List<String> tools, boolean stream) {
-        return chat0(Collections.singletonList(message), tools, stream);
     }
 
     private HttpPost chat0(List<Message> messages, List<String> tools, boolean stream) {
