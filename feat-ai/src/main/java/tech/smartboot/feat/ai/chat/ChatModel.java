@@ -49,11 +49,6 @@ public class ChatModel {
             options.baseUrl(options.baseUrl().substring(0, options.baseUrl().length() - 1));
         }
         this.options = options;
-        if (FeatUtils.isNotBlank(options.getSystem())) {
-            Message message = new Message();
-            message.setRole(Message.ROLE_SYSTEM);
-            message.setContent(options.getSystem());
-        }
     }
 
     public void chatStream(String content, StreamResponseCallback consumer) {
