@@ -71,6 +71,7 @@ public class DefaultMcpServerSerializer implements Serializer {
         printWriter.println("\t\tapplicationContext.getRouter().route(bean.getOptions().getSseEndpoint(), bean.sseHandler());");
         printWriter.println("\t\tapplicationContext.getRouter().route(bean.getOptions().getSseMessageEndpoint(), bean.sseMessageHandler());");
         printWriter.println("\t\tapplicationContext.getRouter().route(bean.getOptions().getMcpEndpoint(), bean.mcpHandler());");
+        printWriter.println("\t\tprintlnMcp(bean);");
     }
 
     @Override
