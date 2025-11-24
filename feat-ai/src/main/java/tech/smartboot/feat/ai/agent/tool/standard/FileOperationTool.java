@@ -13,7 +13,6 @@ package tech.smartboot.feat.ai.agent.tool.standard;
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.ai.agent.tool.ToolExecutor;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -172,7 +171,7 @@ public class FileOperationTool implements ToolExecutor {
         }
 
         Path path = resolvePath(pathStr);
-        
+
         // 创建父目录（如果不存在）
         Path parent = path.getParent();
         if (parent != null && !Files.exists(parent)) {
@@ -182,6 +181,7 @@ public class FileOperationTool implements ToolExecutor {
         // Write string content to file using BufferedWriter
         try (java.io.BufferedWriter writer = Files.newBufferedWriter(path)) {
             writer.write(content);
+            writer.flush();
         }
         return "已成功写入文件: " + pathStr;
     }
@@ -232,7 +232,7 @@ public class FileOperationTool implements ToolExecutor {
     private Path resolvePath(String pathStr) {
         Path path = Paths.get(pathStr).normalize();
         Path resolvedPath;
-        
+
         if (path.isAbsolute()) {
             // 如果是绝对路径，确保它在工作目录内
             resolvedPath = path;
@@ -244,7 +244,7 @@ public class FileOperationTool implements ToolExecutor {
         // 确保路径在工作目录内（防止路径遍历攻击）
         Path workingDirPath = Paths.get(workingDirectory).normalize().toAbsolutePath();
         Path absolutePath = resolvedPath.toAbsolutePath();
-        
+
         if (!absolutePath.startsWith(workingDirPath)) {
             throw new SecurityException("访问被拒绝：路径必须在工作目录内: " + pathStr);
         }

@@ -22,7 +22,7 @@ import tech.smartboot.feat.ai.chat.prompt.PromptTemplate;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -81,7 +81,7 @@ public class ReActAgent extends FeatAgent {
         try {
             // 初始化Agent状态
             StringBuilder fullResponse = new StringBuilder();
-            List<Message> conversationHistory = new ArrayList<>();
+//            List<Message> conversationHistory = new ArrayList<>();
 
             // 加载规划者模板
             Prompt plannerPrompt = new Prompt(PromptTemplate.loadPrompt("feat_agent_planner.tpl"));
@@ -92,15 +92,15 @@ public class ReActAgent extends FeatAgent {
             templateData.put("input", input);
             templateData.put("tool_descriptions", getToolDescriptions());
             templateData.put("tool_names", getToolNames());
-            templateData.put("history", formatConversationHistory(conversationHistory));
+//            templateData.put("history", formatConversationHistory(conversationHistory));
             templateData.put("agent_scratchpad", "");
 
             // 设置系统提示
             options.setSystemPrompt(plannerPrompt.prompt(templateData));
-            conversationHistory.add(Message.ofSystem(options.systemPrompt()));
+//            conversationHistory.add(Message.ofSystem(options.systemPrompt()));
             // 构造初始消息
-            Message userMessage = Message.ofUser(input);
-            conversationHistory.add(userMessage);
+//            Message userMessage = Message.ofUser(input);
+//            conversationHistory.add(userMessage);
 
             // 执行推理循环
             int maxIterations = options.getMaxIterations(); // 使用配置的最大迭代次数
@@ -108,7 +108,7 @@ public class ReActAgent extends FeatAgent {
                 fullResponse.setLength(0);
                 CompletableFuture<Boolean> isDone = new CompletableFuture<>();
                 // 调用模型
-                callStream(conversationHistory, new StreamResponseCallback() {
+                callStream(Collections.singletonList(Message.ofUser(options.systemPrompt())), new StreamResponseCallback() {
 
                     @Override
                     public void onCompletion(ResponseMessage responseMessage) {
