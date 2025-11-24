@@ -46,7 +46,7 @@ public class AgentOptions {
     /**
      * 模型供应商
      */
-    private ChatModelVendor vendor = ChatModelVendor.GiteeAI.Qwen3_32B;
+    private ChatModelVendor vendor = ChatModelVendor.GiteeAI.DeepSeek_V32_EXP;
 //    private ChatModelVendor vendor = ChatModelVendor.Ollama.Deepseek_r1_7B;
 
     /**
@@ -75,7 +75,7 @@ public class AgentOptions {
     /**
      * 最大推理迭代次数
      */
-    private int maxIterations = 5;
+    private int maxIterations = 20;
 
     public static AgentOptions create() {
         return new AgentOptions();

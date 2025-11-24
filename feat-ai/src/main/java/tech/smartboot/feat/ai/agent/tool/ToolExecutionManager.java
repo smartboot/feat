@@ -61,6 +61,15 @@ public class ToolExecutionManager {
     }
 
     /**
+     * 获取所有已注册的工具执行器
+     *
+     * @return 工具执行器映射
+     */
+    public Map<String, ToolExecutor> getToolExecutors() {
+        return new HashMap<>(toolExecutors);
+    }
+
+    /**
      * 从文本中提取并执行工具调用
      *
      * @param text 包含工具调用的文本

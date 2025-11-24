@@ -10,8 +10,10 @@
 
 package tech.smartboot.feat.ai.agent;
 
+import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.ai.agent.memory.Memory;
 import tech.smartboot.feat.ai.agent.tool.ToolExecutor;
+import tech.smartboot.feat.ai.agent.tool.standard.StandardToolsRegistry;
 import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
@@ -43,6 +45,15 @@ public class ReActAgent extends FeatAgent {
 
     // Agent当前状态
     private AgentState state = AgentState.IDLE;
+
+    /**
+     * 构造函数，初始化时注册标准工具集
+     */
+    public ReActAgent() {
+        // 注册标准工具集
+        StandardToolsRegistry.registerStandardTools(toolExecutionManager);
+        toolExecutors.putAll(toolExecutionManager.getToolExecutors());
+    }
 
     // 匹配思考步骤的正则表达式
     private static final Pattern THOUGHT_PATTERN = Pattern.compile("Thought:\\s*(.+)");
@@ -94,6 +105,7 @@ public class ReActAgent extends FeatAgent {
             // 执行推理循环
             int maxIterations = options.getMaxIterations(); // 使用配置的最大迭代次数
             for (int i = 0; i < maxIterations; i++) {
+                fullResponse.setLength(0);
                 CompletableFuture<Boolean> isDone = new CompletableFuture<>();
                 // 调用模型
                 callStream(conversationHistory, new StreamResponseCallback() {
@@ -254,7 +266,7 @@ public class ReActAgent extends FeatAgent {
 
         try {
             // 使用工具执行管理器来执行工具
-            return toolExecutionManager.executeTool(toolName, null);
+            return toolExecutionManager.executeTool(toolName, JSONObject.parse(input));
         } catch (Exception e) {
             return "Error executing tool '" + toolName + "': " + e.getMessage();
         }
@@ -269,6 +281,11 @@ public class ReActAgent extends FeatAgent {
         StringBuilder sb = new StringBuilder();
         for (ToolExecutor executor : toolExecutors.values()) {
             sb.append(String.format("- %s: %s\n", executor.getName(), executor.getDescription()));
+            // 添加参数信息
+            String parametersSchema = executor.getParametersSchema();
+            if (parametersSchema != null && !parametersSchema.isEmpty()) {
+                sb.append(String.format("  参数: %s\n", parametersSchema));
+            }
         }
         return sb.toString();
     }

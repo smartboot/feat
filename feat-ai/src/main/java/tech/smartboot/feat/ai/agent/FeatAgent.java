@@ -36,6 +36,13 @@ public abstract class FeatAgent implements Agent {
     protected final ToolExecutionManager toolExecutionManager = new ToolExecutionManager();
 
     /**
+     * 构造函数，初始化时注册标准工具集
+     */
+    public FeatAgent() {
+        // 子类可以覆盖此方法以添加自定义初始化逻辑
+    }
+
+    /**
      * 日志记录器
      */
     protected static final Logger logger = LoggerFactory.getLogger(FeatAgent.class.getName());
