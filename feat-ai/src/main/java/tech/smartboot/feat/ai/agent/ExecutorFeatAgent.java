@@ -30,7 +30,7 @@ public class ExecutorFeatAgent extends FeatAgent {
         data.put("date", new Date().toString());
         data.put("history_dialogue", input);
         options.setSystemPrompt(prompt.prompt(data));
-        call(null, new StreamResponseCallback() {
+        callStream(null, new StreamResponseCallback() {
             @Override
             public void onStreamResponse(String content) {
                 System.out.print(content);

@@ -118,6 +118,26 @@ public class ToolExecutionManager {
 
         return results;
     }
+    
+    /**
+     * 执行指定工具
+     *
+     * @param toolName 工具名称
+     * @param parameters 工具参数
+     * @return 工具执行结果
+     */
+    public String executeTool(String toolName, JSONObject parameters) {
+        ToolExecutor executor = toolExecutors.get(toolName);
+        if (executor == null) {
+            return "错误：未找到名为 '" + toolName + "' 的工具";
+        }
+        
+        try {
+            return executor.execute(parameters);
+        } catch (Exception e) {
+            return "执行工具 '" + toolName + "' 时出错: " + e.getMessage();
+        }
+    }
 
     /**
      * 异步执行工具调用

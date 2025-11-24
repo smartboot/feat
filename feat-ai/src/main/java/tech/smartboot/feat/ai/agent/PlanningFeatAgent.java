@@ -32,18 +32,18 @@ public class PlanningFeatAgent extends FeatAgent {
         Prompt prompt = new Prompt(PromptTemplate.loadPrompt("feat_agent_planner.tpl"));
         Map<String, String> data = new HashMap<>();
         data.put("date", new Date().toString());
-        data.put("history_dialogue", input);
+        data.put("input", input);
 //        data.put("sopPrompt", PromptTemplate.loadPrompt("feat_agent_executor.tpl"));
 //        options.setSystemPrompt(prompt.prompt(data));
 
-        Prompt executorPrompt = new Prompt(PromptTemplate.loadPrompt("feat_agent_executor.tpl"));
-        Map<String, String> executorData = new HashMap<>();
-        executorData.put("input", input);
+//        Prompt executorPrompt = new Prompt(PromptTemplate.loadPrompt("feat_agent_executor.tpl"));
+//        Map<String, String> executorData = new HashMap<>();
+//        executorData.put("input", input);
 
         List<Message> messages = new ArrayList<>();
-        messages.add(Message.ofSystem(prompt.prompt(data)));
-        messages.add(Message.ofUser(executorPrompt.prompt(executorData)));
-        call(messages, new StreamResponseCallback() {
+        messages.add(Message.ofUser(prompt.prompt(data)));
+//        messages.add(Message.ofUser(executorPrompt.prompt(executorData)));
+        callStream(messages, new StreamResponseCallback() {
             @Override
             public void onStreamResponse(String content) {
                 System.out.print(content);
@@ -54,6 +54,6 @@ public class PlanningFeatAgent extends FeatAgent {
 
     public static void main(String[] args) {
         PlanningFeatAgent agent = new PlanningFeatAgent();
-        agent.execute("明天我要去上海");
+        agent.execute("开发一个五子棋的游戏");
     }
 }

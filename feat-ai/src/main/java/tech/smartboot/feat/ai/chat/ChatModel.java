@@ -144,14 +144,20 @@ public class ChatModel {
         return chat(content, Collections.emptyList());
     }
 
+    public CompletableFuture<ResponseMessage> chat(List<Message> messages) {
+        CompletableFuture<ResponseMessage> future = new CompletableFuture<>();
+        chat(messages, Collections.emptyList(), future::complete);
+        return future;
+    }
+
     public CompletableFuture<ResponseMessage> chat(String content, List<String> tools) {
         CompletableFuture<ResponseMessage> future = new CompletableFuture<>();
         chat(content, tools, future::complete);
         return future;
     }
 
-    public void chat(String content, List<String> tools, Consumer<ResponseMessage> callback) {
-        HttpPost post = chat0(Collections.singletonList(Message.ofUser(content)), tools, false);
+    public void chat(List<Message> messages, List<String> tools, Consumer<ResponseMessage> callback) {
+        HttpPost post = chat0(messages, tools, false);
 
         post.onSuccess(response -> {
             if (response.statusCode() != 200) {
@@ -169,6 +175,10 @@ public class ChatModel {
             responseMessage.setSuccess(true);
             callback.accept(responseMessage);
         }).onFailure(Throwable::printStackTrace).submit();
+    }
+
+    public void chat(String content, List<String> tools, Consumer<ResponseMessage> callback) {
+        chat(Collections.singletonList(Message.ofUser(content)), tools, callback);
     }
 
     private HttpPost chat0(List<Message> messages, List<String> tools, boolean stream) {

@@ -46,7 +46,7 @@ public class AgentOptions {
     /**
      * 模型供应商
      */
-    private ChatModelVendor vendor = ChatModelVendor.GiteeAI.DeepSeek_R1;
+    private ChatModelVendor vendor = ChatModelVendor.GiteeAI.Qwen3_32B;
 //    private ChatModelVendor vendor = ChatModelVendor.Ollama.Deepseek_r1_7B;
 
     /**
@@ -71,6 +71,11 @@ public class AgentOptions {
     private Prompt prompt;
 
     private String systemPrompt;
+    
+    /**
+     * 最大推理迭代次数
+     */
+    private int maxIterations = 5;
 
     public static AgentOptions create() {
         return new AgentOptions();
@@ -147,6 +152,18 @@ public class AgentOptions {
         logger.info("设置最大记忆检索数量: " + count);
         return this;
     }
+    
+    /**
+     * 设置最大推理迭代次数
+     *
+     * @param maxIterations 最大迭代次数
+     * @return 当前实例
+     */
+    public AgentOptions maxIterations(int maxIterations) {
+        this.maxIterations = Math.max(1, maxIterations);
+        logger.info("设置最大推理迭代次数: " + maxIterations);
+        return this;
+    }
 
     String getName() {
         return name;
@@ -178,6 +195,10 @@ public class AgentOptions {
 
     public int getMaxMemoryRetrievalCount() {
         return maxMemoryRetrievalCount;
+    }
+    
+    public int getMaxIterations() {
+        return maxIterations;
     }
 
     Prompt getPrompt() {
