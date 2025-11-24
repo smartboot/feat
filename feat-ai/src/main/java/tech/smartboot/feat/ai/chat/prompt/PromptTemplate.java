@@ -18,10 +18,6 @@ import tech.smartboot.feat.core.common.FeatUtils;
  */
 public class PromptTemplate {
 
-    /**
-     * 执行计划规划师提示词模板
-     */
-    public static final Prompt EXECUTION_PLANNER = new Prompt(loadPrompt("execution_planner.tpl"));
 
     public static Prompt MAVEN_PROJECT_MERMAID = new Prompt(loadPrompt("maven_project_mermaid.tpl"));
 
