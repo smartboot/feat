@@ -27,23 +27,15 @@ public abstract class FeatAgent implements Agent {
      */
     protected final Map<String, ToolExecutor> toolExecutors = new HashMap<>();
 
-
-    /**
-     * 构造函数，初始化时注册标准工具集
-     */
-    public FeatAgent() {
-        // 子类可以覆盖此方法以添加自定义初始化逻辑
-    }
-
     /**
      * 日志记录器
      */
-    protected static final Logger logger = LoggerFactory.getLogger(FeatAgent.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(FeatAgent.class.getName());
 
     /**
      * Agent状态
      */
-    protected AgentState state = AgentState.IDLE;
+    private AgentState state = AgentState.IDLE;
 
     @Override
     public void addTool(ToolExecutor executor) {
