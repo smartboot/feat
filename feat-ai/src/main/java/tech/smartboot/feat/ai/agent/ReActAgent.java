@@ -13,7 +13,10 @@ package tech.smartboot.feat.ai.agent;
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.ai.agent.memory.Memory;
 import tech.smartboot.feat.ai.agent.tool.ToolExecutor;
-import tech.smartboot.feat.ai.agent.tool.standard.StandardToolsRegistry;
+import tech.smartboot.feat.ai.agent.tool.standard.FileOperationTool;
+import tech.smartboot.feat.ai.agent.tool.standard.SearchTool;
+import tech.smartboot.feat.ai.agent.tool.standard.SubAgentTool;
+import tech.smartboot.feat.ai.agent.tool.standard.TodoListTool;
 import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
@@ -22,6 +25,7 @@ import tech.smartboot.feat.ai.chat.prompt.PromptTemplate;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -50,9 +54,10 @@ public class ReActAgent extends FeatAgent {
      * 构造函数，初始化时注册标准工具集
      */
     public ReActAgent() {
-        // 注册标准工具集
-        StandardToolsRegistry.registerStandardTools(toolExecutionManager);
-        toolExecutors.putAll(toolExecutionManager.getToolExecutors());
+        List<ToolExecutor> tools = Arrays.asList(new TodoListTool(), new FileOperationTool(), new SubAgentTool(), new SearchTool());
+        for (ToolExecutor tool : tools) {
+            toolExecutors.put(tool.getName(), tool);
+        }
     }
 
     // 匹配思考步骤的正则表达式
@@ -267,9 +272,22 @@ public class ReActAgent extends FeatAgent {
 
         try {
             // 使用工具执行管理器来执行工具
-            return toolExecutionManager.executeTool(toolName, JSONObject.parse(input));
+            return executeTool(toolName, JSONObject.parse(input));
         } catch (Exception e) {
             return "Error executing tool '" + toolName + "': " + e.getMessage();
+        }
+    }
+
+    private String executeTool(String toolName, JSONObject parameters) {
+        ToolExecutor executor = toolExecutors.get(toolName);
+        if (executor == null) {
+            return "错误：未找到名为 '" + toolName + "' 的工具";
+        }
+
+        try {
+            return executor.execute(parameters);
+        } catch (Exception e) {
+            return "执行工具 '" + toolName + "' 时出错: " + e.getMessage();
         }
     }
 

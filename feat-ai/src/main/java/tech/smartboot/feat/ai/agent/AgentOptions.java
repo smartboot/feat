@@ -47,7 +47,6 @@ public class AgentOptions {
      * 模型供应商
      */
     private ChatModelVendor vendor = ChatModelVendor.GiteeAI.DeepSeek_V32_EXP;
-//    private ChatModelVendor vendor = ChatModelVendor.Ollama.Deepseek_r1_7B;
 
     /**
      * Agent记忆
