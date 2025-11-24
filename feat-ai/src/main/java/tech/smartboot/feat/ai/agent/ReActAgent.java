@@ -89,7 +89,7 @@ public class ReActAgent extends FeatAgent {
 //            List<Message> conversationHistory = new ArrayList<>();
 
             // 加载规划者模板
-            Prompt plannerPrompt = new Prompt(PromptTemplate.loadPrompt("feat_agent_planner.tpl"));
+            Prompt plannerPrompt = new Prompt(PromptTemplate.loadPrompt("feat_react_agent.tpl"));
 
             // 准备模板数据
             Map<String, String> templateData = new HashMap<>();
