@@ -142,6 +142,7 @@ public class ReActAgent extends FeatAgent {
 
                 // 执行工具
                 String observation = executeTool(action.getAction(), action.getActionInput());
+                logger.info("执行工具: {}, 输入: {}, 观察结果: {}", action.getAction(), action.getActionInput(), observation);
 
                 // 将动作和观察结果添加到历史记录中
                 String scratchpadEntry = String.format("Thought: %s\nAction: %s\nAction Input: %s\nObservation: %s\n", action.getThought(), action.getAction(), action.getActionInput(), observation);

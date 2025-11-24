@@ -17,6 +17,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -34,12 +36,33 @@ public class FileOperationTool implements ToolExecutor {
     // 工作目录，限制文件操作在此目录内进行
     private final String workingDirectory;
 
+    // 全局排除模式列表
+    private volatile java.util.List<String> globalExcludePatterns = new ArrayList<>(Arrays.asList("/node_modules/", "*/target/*","/.git/","/.idea/"));
+
     public FileOperationTool() {
         this.workingDirectory = System.getProperty("user.dir");
     }
 
     public FileOperationTool(String workingDirectory) {
         this.workingDirectory = workingDirectory;
+    }
+
+    /**
+     * 设置全局排除模式
+     *
+     * @param patterns 要排除的文件或目录模式列表
+     */
+    public void setGlobalExcludePatterns(java.util.List<String> patterns) {
+        this.globalExcludePatterns = new java.util.ArrayList<>(patterns != null ? patterns : java.util.Collections.emptyList());
+    }
+
+    /**
+     * 获取当前全局排除模式
+     *
+     * @return 当前排除模式列表
+     */
+    public java.util.List<String> getGlobalExcludePatterns() {
+        return new java.util.ArrayList<>(this.globalExcludePatterns);
     }
 
     @Override
@@ -116,6 +139,9 @@ public class FileOperationTool implements ToolExecutor {
         String pathStr = parameters.getString("path");
         boolean recursive = parameters.getBooleanValue("recursive", false);
 
+        // 使用全局排除模式
+        java.util.List<String> excludePatterns = this.globalExcludePatterns;
+
         Path path = resolvePath(pathStr);
         if (!Files.exists(path)) {
             return "错误：路径不存在: " + pathStr;
@@ -127,12 +153,16 @@ public class FileOperationTool implements ToolExecutor {
 
         if (recursive) {
             try (Stream<Path> paths = Files.walk(path)) {
-                return paths.map(p -> p.toString().substring(workingDirectory.length()))
+                return paths
+                        .filter(p -> !shouldExclude(p, path, excludePatterns))
+                        .map(p -> p.toString().substring(workingDirectory.length()))
                         .collect(Collectors.joining("\n"));
             }
         } else {
             try (Stream<Path> paths = Files.list(path)) {
-                return paths.map(p -> p.toString().substring(workingDirectory.length()))
+                return paths
+                        .filter(p -> !shouldExclude(p, path, excludePatterns))
+                        .map(p -> p.toString().substring(workingDirectory.length()))
                         .collect(Collectors.joining("\n"));
             }
         }
@@ -250,5 +280,80 @@ public class FileOperationTool implements ToolExecutor {
         }
 
         return resolvedPath;
+    }
+
+    /**
+     * 检查路径是否应该被排除
+     *
+     * @param path            要检查的路径
+     * @param basePath        基础路径
+     * @param excludePatterns 排除模式列表
+     * @return 如果应该排除返回true，否则返回false
+     */
+    private boolean shouldExclude(Path path, Path basePath, java.util.List<String> excludePatterns) {
+        // 如果没有排除模式，则不排除任何内容
+        if (excludePatterns == null || excludePatterns.isEmpty()) {
+            return false;
+        }
+
+        // 获取相对路径
+        Path relativePath = basePath.relativize(path);
+        String relativePathStr = relativePath.toString();
+
+        // 检查每个排除模式
+        for (String pattern : excludePatterns) {
+            // 处理简单的通配符模式
+            if (matchesPattern(relativePathStr, pattern)) {
+                return true;
+            }
+
+            // 检查文件名是否匹配模式
+            String fileName = path.getFileName().toString();
+            if (matchesPattern(fileName, pattern)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * 简单的通配符模式匹配
+     *
+     * @param text    要检查的文本
+     * @param pattern 模式（支持*和?通配符）
+     * @return 如果匹配返回true，否则返回false
+     */
+    private boolean matchesPattern(String text, String pattern) {
+        // 将通配符模式转换为正则表达式
+        StringBuilder regex = new StringBuilder();
+        for (char c : pattern.toCharArray()) {
+            switch (c) {
+                case '*':
+                    regex.append(".*");
+                    break;
+                case '?':
+                    regex.append(".");
+                    break;
+                case '.':
+                case '$':
+                case '^':
+                case '[':
+                case ']':
+                case '(':
+                case ')':
+                case '{':
+                case '}':
+                case '|':
+                case '\\':
+                    regex.append('\\').append(c);
+                    break;
+                default:
+                    regex.append(c);
+                    break;
+            }
+        }
+
+        return java.util.regex.Pattern.matches(regex.toString(), text);
     }
 }
