@@ -182,8 +182,6 @@ public class ChatModel {
     }
 
     private HttpPost chat0(List<Message> messages, List<String> tools, boolean stream) {
-        LOGGER.warn("content:");
-//        System.out.println("我：" + content);
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("model", options.getModel().model());
         jsonObject.put("stream", stream);
