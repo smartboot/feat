@@ -30,6 +30,7 @@ public class HeaderValue {
 
     public interface ContentEncoding {
         String GZIP = "gzip";
+        String Deflate = "dcz";
     }
 
     public interface Connection {

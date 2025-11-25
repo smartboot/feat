@@ -13,7 +13,8 @@ package tech.smartboot.feat.core.client.impl;
 import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.client.AbstractResponse;
 import tech.smartboot.feat.core.client.HttpResponse;
-import tech.smartboot.feat.core.client.stream.GzipStream;
+import tech.smartboot.feat.core.client.stream.DeflaterInputStream;
+import tech.smartboot.feat.core.client.stream.InflaterStream;
 import tech.smartboot.feat.core.client.stream.Stream;
 import tech.smartboot.feat.core.client.stream.StringStream;
 import tech.smartboot.feat.core.common.FeatUtils;
@@ -22,9 +23,11 @@ import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.exception.FeatException;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
+import java.util.zip.GZIPInputStream;
 
 /**
  * @author 三刀 zhengjunweimail@163.com
@@ -38,7 +41,7 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
     private static final int STATE_CONNECTION_CLOSE = 1 << 4;
     private static final int STATE_FINISH = 1 << 5;
     private static final int STATE_STREAM = 1 << 6;
-    private static final int STATE_GZIP = 0x80;
+    private static final int STATE_INFLATER = 0x80;
     private Stream streaming = new StringStream();
     private int state;
 
@@ -87,9 +90,25 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
         } else {
             state = STATE_FINISH;
         }
-        if (FeatUtils.equals(HeaderValue.ContentEncoding.GZIP, getHeader(HeaderName.CONTENT_ENCODING))) {
-            state = STATE_GZIP | state;
-            streaming = new GzipStream(streaming);
+        String contentEncoding = getHeader(HeaderName.CONTENT_ENCODING);
+        if (FeatUtils.equals(HeaderValue.ContentEncoding.GZIP, contentEncoding)) {
+            state = STATE_INFLATER | state;
+            streaming = new InflaterStream(streaming) {
+                @Override
+                protected InputStream inflaterInputStream(InputStream inputStream) throws IOException {
+                    return new GZIPInputStream(inputStream);
+                }
+            };
+        }
+        if (FeatUtils.equals(HeaderValue.ContentEncoding.Deflate, contentEncoding)) {
+            state = STATE_INFLATER | state;
+            streaming = new InflaterStream(streaming) {
+                @Override
+                protected InputStream inflaterInputStream(InputStream inputStream) {
+                    //JDK提供的DeflaterInputStream不支持半包
+                    return new DeflaterInputStream(inputStream);
+                }
+            };
         }
         if (headerConsumer != null) {
             headerConsumer.accept(this);
@@ -99,7 +118,7 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
     @Override
     public void onBodyStream(ByteBuffer buffer) {
         try {
-            switch (state & ~STATE_GZIP) {
+            switch (state & ~STATE_INFLATER) {
                 case STATE_CHUNK_LENGTH: {
                     int length = FeatUtils.scanUntilAndTrim(buffer, FeatUtils.LF);
                     if (length < 0) {

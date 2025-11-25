@@ -16,18 +16,17 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
-import java.util.zip.GZIPInputStream;
 
 /**
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
-public class GzipStream implements Stream {
+public abstract class InflaterStream implements Stream {
     private ByteBuffer buffer;
-    private GZIPInputStream gzipInputStream;
+    private InputStream inflaterInputStream;
     private final Stream stream;
 
-    public GzipStream(Stream stream) {
+    public InflaterStream(Stream stream) {
         this.stream = stream;
     }
 
@@ -42,8 +41,8 @@ public class GzipStream implements Stream {
         } else {
             buffer = ByteBuffer.wrap(data);
         }
-        if (gzipInputStream == null) {
-            gzipInputStream = new GZIPInputStream(new InputStream() {
+        if (inflaterInputStream == null) {
+            inflaterInputStream = inflaterInputStream(new InputStream() {
                 @Override
                 public int read() {
                     return (buffer == null ? -1 : buffer.get()) & 0xFF;
@@ -61,21 +60,18 @@ public class GzipStream implements Stream {
 
                 @Override
                 public int available() {
-                    return buffer == null ? 0 : buffer.remaining();
+                   throw new UnsupportedOperationException();
                 }
-            }) {
-                @Override
-                public int available() {
-                    return buffer == null ? 0 : buffer.remaining();
-                }
-            };
+            });
         }
         byte[] b = new byte[4096];
         int n;
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        while ((end || buffer.remaining() > 100) && buffer.hasRemaining() && (n = gzipInputStream.read(b)) > 0) {
+        while (buffer.hasRemaining() && (n = inflaterInputStream.read(b)) > 0) {
             bos.write(b, 0, n);
         }
         stream.stream(response, bos.toByteArray(), end);
     }
+
+    protected abstract InputStream inflaterInputStream(InputStream inputStream) throws IOException;
 }
