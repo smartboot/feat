@@ -5,6 +5,7 @@ import tech.smartboot.feat.ai.agent.tool.ToolExecutor;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.common.HeaderName;
+import tech.smartboot.feat.core.common.HttpStatus;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -113,7 +114,7 @@ public class SearchTool implements ToolExecutor {
 
     public static void main(String[] args) throws Throwable {
         BingSearch bingSearch = new BingSearch();
-        System.out.println(bingSearch.search("java"));
+        System.out.println(bingSearch.search("番茄炒蛋"));
     }
 
     public static class BingSearch {
@@ -123,7 +124,8 @@ public class SearchTool implements ToolExecutor {
             client.options().debug(true);
             Map<String, String> headers = new HashMap<>();
             headers.put("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7");
-            headers.put("Accept-Encoding", "gzip, deflate, br, zstd, dcb, dcz");
+//            headers.put("Accept-Encoding", "gzip, deflate, br, zstd, dcb, dcz");
+            headers.put("Accept-Encoding", "gzip");
             headers.put("Accept-Language", "zh-CN,zh;q=0.9");
             headers.put(HeaderName.USER_AGENT.getName(), "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Mobile Safari/537.36");
             headers.put(HeaderName.CACHE_CONTROL.getName(), "max-age=0");
@@ -145,7 +147,7 @@ public class SearchTool implements ToolExecutor {
             headers.put("Upgrade-Insecure-Requests", "0");
             headers.put("Referer", "https://cn.bing.com/");
 
-            return client.get("/search?q=" + URLEncoder.encode(query, "utf-8"))
+            HttpResponse r = client.get("/search?q=" + URLEncoder.encode(query, "utf-8"))
                     .header(header -> {
                         headers.forEach(header::set);
                     })
@@ -156,7 +158,11 @@ public class SearchTool implements ToolExecutor {
                     .onFailure(throwable -> {
                         throwable.printStackTrace();
                     })
-                    .submit().get().body();
+                    .submit().get();
+            if (r.statusCode() != HttpStatus.OK.value()) {
+                return "搜索失败，HTTP状态码: " + r.statusCode();
+            }
+            return itemToMarkdown(r.body());
         }
 
         private String toMarkdown(String html) {
@@ -211,6 +217,113 @@ public class SearchTool implements ToolExecutor {
             item = item.substring(i + 1);
             i = item.indexOf("</p>");
             String description = item.substring(0, i);
+            sb.append("- [").append(title.replaceAll("<strong>", "**").replaceAll("</strong>", "**")).append("](").append(href).append(") ").append("\r\n  ").append(description).append("\r\n");
+//        sb.append("- [").append(href).append("](").append(href).append(") ");
+
+            return sb.toString();
+        }
+    }
+
+
+    public static class BaiduSearch {
+
+        public String search(String query) throws Throwable {
+            HttpClient client = new HttpClient("https://www.baidu.com");
+            client.options().debug(true);
+            Map<String, String> headers = new HashMap<>();
+            headers.put("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7");
+            headers.put("Accept-Encoding", "gzip, deflate, zstd, dcb, dcz");
+            headers.put("Accept-Language", "zh-CN,zh;q=0.9");
+            headers.put(HeaderName.USER_AGENT.getName(), "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36");
+            headers.put(HeaderName.CACHE_CONTROL.getName(), "max-age=0");
+            headers.put("Sec-Ch-Ua", "\"Chromium\";v=\"142\", \"Google Chrome\";v=\"142\", \"Not_A Brand\";v=\"99\"");
+            headers.put("Sec-Ch-Ua-Arch", "");
+            headers.put("Sec-Ch-Ua-Bitness", "\"64\"");
+            headers.put("Sec-Ch-Ua-Full-Version", "\"142.0.7444.163\"");
+            headers.put("Sec-Ch-Ua-Full-Version-List", "\"Chromium\";v=\"142.0.7444.163\", \"Google Chrome\";v=\"142.0.7444.163\", \"Not_A Brand\";v=\"99.0.0.0\"");
+            headers.put("Sec-Ch-Ua-Mobile", "?0");
+            headers.put("Sec-Ch-Ua-Platform", "\"macOS\"");
+            headers.put("Sec-Fetch-Dest", "document");
+            headers.put("Sec-Fetch-Mode", "navigate");
+            headers.put("Sec-Fetch-Site", "same-origin");
+            headers.put("Sec-Fetch-User", "?1");
+            headers.put("Prority", "u=0, i");
+            headers.put("Upgrade-Insecure-Requests", "0");
+            headers.put("Referer", "https://www.baidu.com");
+            HttpResponse response =
+                    client.get("/s")
+                            .addQueryParam("wd", query)
+                            .addQueryParam("ie", "utf-8")
+                            .addQueryParam("rsv_spt", "1")
+                            .header(header -> {
+                                headers.forEach(header::set);
+                            })
+                            .onSuccess(rsp -> {
+//                                String html = toMarkdown(rsp.body());
+//                                System.out.println(html);
+                            })
+                            .onFailure(throwable -> {
+                                throwable.printStackTrace();
+                            })
+                            .submit().get();
+            if (response.statusCode() != HttpStatus.OK.value()) {
+                return "请求失败.";
+            } else {
+                return toMarkdown(response.body());
+            }
+        }
+
+        private String toMarkdown(String html) {
+            // 移除HTML中的script标签及其内容
+            int startIndex = html.indexOf("id=\"content_left\"");
+            html = html.substring(startIndex);
+            html = html.substring(0, html.indexOf("<div style=\"clear:both;height:0;\"></div>"));
+//            html = Pattern.compile("<style[^>]*>[\\s\\S]*?</style>", Pattern.CASE_INSENSITIVE).matcher(html).replaceAll("");
+//            html = Pattern.compile("<!--[\\s\\S]*?-->", Pattern.CASE_INSENSITIVE).matcher(html).replaceAll("");
+//            html = Pattern.compile("data-feedback=\"[\\s\\S]*?\"", Pattern.CASE_INSENSITIVE).matcher(html).replaceAll("");
+            System.out.println(html);
+            System.out.println();
+            System.out.println();
+            System.out.println();
+            StringBuilder sb = new StringBuilder();
+            int i = html.indexOf("class=\"result c-container");
+            int j;
+            while (i >= 0) {
+                j = html.indexOf("class=\"result c-container", i + 1);
+                if (j < 0) {
+                    sb.append(itemToMarkdown(html.substring(i)));
+                    break;
+                } else {
+                    sb.append(itemToMarkdown(html.substring(i, j)));
+                    i = j;
+                }
+            }
+
+//        html = Pattern.compile("<path [\\s\\S]*?/>", Pattern.CASE_INSENSITIVE).matcher(html).replaceAll("");
+//        html = Pattern.compile("<meta [\\s\\S]*?/>", Pattern.CASE_INSENSITIVE).matcher(html).replaceAll("");
+//        html = Pattern.comile("<div style=\"display:none\"[^>]*>[\\s\\S]*?</div>", Pattern.CASE_INSENSITIVE).matcher(html).replaceAll("");
+            return sb.toString();
+        }
+
+        private String itemToMarkdown(String item) {
+            int i = item.indexOf("mu=\"");
+            int j = item.indexOf("\"", i + 4);
+            StringBuilder sb = new StringBuilder();
+            String href = item.substring(i + 4, j);
+            i = j;
+
+            i = item.indexOf("<!--s-text-->", i);
+            j = item.indexOf("<!--/s-text-->", i);
+            String title = item.substring(i + 13, j);
+            i = j;
+            i = item.indexOf("<!--s-data:", i);
+            i = item.indexOf("\"text\":\"", i);
+            j = item.indexOf("\"}],", i);
+            String description = item.substring(i + 8, j);
+
+//            i = item.indexOf(">");
+//            item = item.substring(i + 1);
+//            i = item.indexOf("</p>");
             sb.append("- [").append(title.replaceAll("<strong>", "**").replaceAll("</strong>", "**")).append("](").append(href).append(") ").append("\r\n  ").append(description).append("\r\n");
 //        sb.append("- [").append(href).append("](").append(href).append(") ");
 
