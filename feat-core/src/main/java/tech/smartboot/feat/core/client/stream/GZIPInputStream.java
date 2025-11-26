@@ -58,6 +58,10 @@ public class GZIPInputStream extends InflaterInputStream {
 
     private boolean closed = false;
 
+    private static final int STATE_INFLATE = 0;
+    private static final int STATE_CRC_CHECK = 1;
+    private int state = STATE_INFLATE;
+
     /**
      * Check to make sure that this stream has not been closed
      */
@@ -118,16 +122,27 @@ public class GZIPInputStream extends InflaterInputStream {
         if (eos) {
             return -1;
         }
-        int n = super.read(buf, off, len);
-        if (n == -1) {
-            if (readTrailer())
-                eos = true;
-            else
-                return this.read(buf, off, len);
-        } else {
-            crc.update(buf, off, n);
+        if (state == STATE_INFLATE) {
+            int n = super.read(buf, off, len);
+            if (n == -1) {
+                state = STATE_CRC_CHECK;
+            } else {
+                crc.update(buf, off, n);
+                return n;
+            }
         }
-        return n;
+        if (state == STATE_CRC_CHECK) {
+            if ((inf.getRemaining() + in.available()) < 8) {
+                return 0;
+            } else if (readTrailer()) {
+                eos = true;
+                return -1;
+            } else {
+                //同JDK源码不一致，此处中断阻塞
+                return this.read(buf, off, len);
+            }
+        }
+        throw new IllegalStateException();
     }
 
     /**
@@ -164,6 +179,7 @@ public class GZIPInputStream extends InflaterInputStream {
      */
     private int readHeader(InputStream this_in) throws IOException {
         CheckedInputStream in = new CheckedInputStream(this_in, crc);
+        state = STATE_INFLATE;
         crc.reset();
         // Check header magic
         if (readUShort(in) != GZIP_MAGIC) {
@@ -217,18 +233,15 @@ public class GZIPInputStream extends InflaterInputStream {
         InputStream in = this.in;
         int n = inf.getRemaining();
         if (n > 0) {
-            in = new SequenceInputStream(
-                    new ByteArrayInputStream(buf, len - n, n),
-                    new FilterInputStream(in) {
-                        public void close() throws IOException {
-                        }
-                    });
+            in = new SequenceInputStream(new ByteArrayInputStream(buf, len - n, n), new FilterInputStream(in) {
+                public void close() throws IOException {
+                }
+            });
         }
         // Uses left-to-right evaluation order
         if ((readUInt(in) != crc.getValue()) ||
                 // rfc1952; ISIZE is the input size modulo 2^32
-                (readUInt(in) != (inf.getBytesWritten() & 0xffffffffL)))
-            throw new ZipException("Corrupt GZIP trailer");
+                (readUInt(in) != (inf.getBytesWritten() & 0xffffffffL))) throw new ZipException("Corrupt GZIP trailer");
 
         // If there are more bytes available in "in" or
         // the leftover in the "inf" is > 26 bytes:
@@ -242,8 +255,7 @@ public class GZIPInputStream extends InflaterInputStream {
                 return true;  // ignore any malformed, do nothing
             }
             inf.reset();
-            if (n > m)
-                inf.setInput(buf, len - n + m, n - m);
+            if (n > m) inf.setInput(buf, len - n + m, n - m);
             return false;
         }
         return true;
@@ -275,8 +287,7 @@ public class GZIPInputStream extends InflaterInputStream {
         }
         if (b < -1 || b > 255) {
             // Report on this.in, not argument in; see read{Header, Trailer}.
-            throw new IOException(this.in.getClass().getName()
-                    + ".read() returned value out of range -1..255: " + b);
+            throw new IOException(this.in.getClass().getName() + ".read() returned value out of range -1..255: " + b);
         }
         return b;
     }
