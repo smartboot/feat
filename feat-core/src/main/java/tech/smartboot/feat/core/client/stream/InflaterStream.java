@@ -60,7 +60,7 @@ public abstract class InflaterStream implements Stream {
 
                 @Override
                 public int available() {
-                   throw new UnsupportedOperationException();
+                    return buffer == null ? 0 : buffer.remaining();
                 }
             });
         }
