@@ -14,6 +14,7 @@ import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.client.AbstractResponse;
 import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.client.stream.DeflaterInputStream;
+import tech.smartboot.feat.core.client.stream.GZIPInputStream;
 import tech.smartboot.feat.core.client.stream.InflaterStream;
 import tech.smartboot.feat.core.client.stream.Stream;
 import tech.smartboot.feat.core.client.stream.StringStream;
@@ -27,7 +28,6 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
-import java.util.zip.GZIPInputStream;
 
 /**
  * @author 三刀 zhengjunweimail@163.com
@@ -91,25 +91,22 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
             state = STATE_FINISH;
         }
         String contentEncoding = getHeader(HeaderName.CONTENT_ENCODING);
-        if (FeatUtils.equals(HeaderValue.ContentEncoding.GZIP, contentEncoding)) {
+        if (FeatUtils.isNotBlank(contentEncoding)) {
             state = STATE_INFLATER | state;
             streaming = new InflaterStream(streaming) {
                 @Override
                 protected InputStream inflaterInputStream(InputStream inputStream) throws IOException {
-                    return new GZIPInputStream(inputStream);
+                    if (FeatUtils.equals(HeaderValue.ContentEncoding.GZIP, contentEncoding)) {
+                        return new GZIPInputStream(inputStream);
+                    }
+                    if (FeatUtils.equals(HeaderValue.ContentEncoding.Deflate, contentEncoding)) {
+                        return new DeflaterInputStream(inputStream);
+                    }
+                    throw new FeatException("unsupported content encoding:" + contentEncoding);
                 }
             };
         }
-        if (FeatUtils.equals(HeaderValue.ContentEncoding.Deflate, contentEncoding)) {
-            state = STATE_INFLATER | state;
-            streaming = new InflaterStream(streaming) {
-                @Override
-                protected InputStream inflaterInputStream(InputStream inputStream) {
-                    //JDK提供的DeflaterInputStream不支持半包
-                    return new DeflaterInputStream(inputStream);
-                }
-            };
-        }
+
         if (headerConsumer != null) {
             headerConsumer.accept(this);
         }
