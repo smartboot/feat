@@ -18,6 +18,7 @@ import tech.smartboot.feat.core.common.HttpStatus;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 /**
@@ -35,7 +36,7 @@ public abstract class Searcher {
             searcher = new DefaultSearcher();
         }
         HttpClient httpClient = new HttpClient(url);
-        httpClient.options().debug(true);
+        httpClient.options().debug(false);
         try {
             HttpGet httpGet = httpClient.get();
             if (consumer != null) {
@@ -45,7 +46,7 @@ public abstract class Searcher {
                 baseHeader().forEach(header::set);
             });
             searcher.initRequest(httpGet);
-            HttpResponse response = httpGet.submit().get();
+            HttpResponse response = httpGet.submit().get(5, TimeUnit.SECONDS);
             if (response.statusCode() != HttpStatus.OK.value()) {
                 return "请求失败.";
             } else {
