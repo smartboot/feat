@@ -1,81 +1,112 @@
 ---
 title: Router 路由组件
-description: Feat Router是一个功能强大的HTTP请求分发器，支持多种路由匹配方式和高级功能
+description: Feat Router 是一个功能强大的 HTTP 请求分发器，支持多种路由匹配方式和高级功能
 sidebar:
-    order: 3
+  order: 3
 ---
 
-Feat中的`Router`组件是一个功能强大的HTTP请求分发器，用于将HTTP请求分发到对应的处理程序（Handler）。它是基于`NodePath`树状结构实现的，支持多种路由匹配方式，包括精确匹配、通配符匹配、路径参数匹配等。同时提供了Session管理和请求拦截等高级功能。
+import Mermaid from '../../../components/Mermaid.astro'
+
+`Router` 是 Feat 框架中的核心组件之一，它作为一个功能强大的 HTTP 请求分发器，负责将传入的 HTTP 请求路由到对应的处理程序（Handler）。Router 基于 `NodePath` 树状结构实现，支持多种路由匹配方式，包括精确匹配、通配符匹配和路径参数匹配等。此外，它还提供了 Session 管理和请求拦截等高级功能，帮助开发者构建功能丰富的 Web 应用。
 
 ## 主要功能
 
-### 1. 基础功能
+### 基础功能
 
-- **路由匹配**：根据请求的URI将请求分发到对应的处理程序
+- **路由匹配**：根据请求的 URI 将请求分发到对应的处理程序
 - **路径参数提取**：支持从路径中提取参数
 - **多种匹配方式**：支持精确匹配、通配符匹配（`*`）、路径参数匹配（`:param`）等
 - **默认路由**：未匹配到任何路由时，使用默认处理程序
 
-### 2. 高级功能
+### 高级功能
 
-- **Session管理**：提供完整的Session生命周期管理，支持创建、获取、更新和销毁Session
+- **Session 管理**：提供完整的 Session 生命周期管理，支持创建、获取、更新和销毁 Session
 - **请求拦截**：支持配置拦截器，实现请求的前置和后置处理
 - **灵活配置**：支持链式调用，简化路由配置
 
 ## 路由匹配原理
 
-![Router原理图](./img/router.svg)
+<Mermaid code={`
+graph TD
+    A[HTTP请求] --> B[Router解析URI]
+    B --> C[NodePath树状匹配]
+    C --> D{精确匹配?}
+    D -->|是| E[调用处理程序]
+    D -->|否| F{路径参数匹配?}
+    F -->|是| G[提取路径参数]
+    G --> E
+    F -->|否| H{通配符匹配?}
+    H -->|是| I[匹配通配符路径]
+    I --> E
+    H -->|否| J[使用默认处理程序]
+    E --> K[返回响应]
+`}/>
 
-### 1. 核心数据结构
+### 核心数据结构
 
-`Router`内部通过`NodePath`树状结构存储路由规则：
+`Router` 内部通过 `NodePath` 树状结构存储路由规则：
 
-- **根节点**：表示根路径`/`
-- **路径节点**：每个`NodePath`节点代表一个路径部分（如`/user`或`:id`）
+- **根节点**：表示根路径 `/`
+- **路径节点**：每个 `NodePath` 节点代表一个路径部分（如 `/user` 或 `:id`）
 - **叶子节点**：存储具体的处理程序（RouterHandler）
 
-### 2. 匹配流程
+### 匹配流程
 
-1. **解析请求URI**：将请求URI拆分为路径部分
+1. **解析请求 URI**：将请求 URI 拆分为路径部分
 2. **树状匹配**：
    - 从根节点开始，逐层匹配路径部分
    - 优先进行精确匹配，其次是路径参数匹配，最后是通配符匹配
-3. **参数提取**：如果匹配到路径参数（如`:id`），将其提取到`Context`中
+3. **参数提取**：如果匹配到路径参数（如 `:id`），将其提取到 `Context` 中
 4. **处理程序调用**：调用匹配到的处理程序，如未匹配则使用默认处理程序
 
-## Session管理
+## Session 管理
 
-### 1. Session配置
-![Session管理机制](./img/session.svg)
+### Session 配置
+
+通过 [SessionOptions](/server/config) 可以配置 Session 的各种参数：
+
 ```java
 Router router = new Router();
 router.getSessionOptions()
-      .setMaxAge(1800); // 设置Session过期时间为30分钟
+      .setMaxAge(1800); // 设置 Session 过期时间为 30 分钟
 ```
 
-### 2. Session操作
+### Session 操作
 
 ```java
 router.route("/session/demo", ctx -> {
-    // 获取或创建Session
+    // 获取或创建 Session
     Session session = ctx.getSession();
     
-    // 设置Session属性
+    // 设置 Session 属性
     session.setAttribute("userId", "12345");
     
-    // 获取Session属性
+    // 获取 Session 属性
     String userId = session.getAttribute("userId");
     
-    // 手动使Session失效
+    // 手动使 Session 失效
     session.invalidate();
 });
 ```
 
 ## 拦截器使用
 
-![拦截器执行流程](./img/interceptor.svg)
+<Mermaid code={`
+graph LR
+    A[HTTP请求] --> B[拦截器链]
+    B --> C{拦截器1}
+    C -->|继续| D{拦截器2}
+    D -->|继续| E{拦截器N}
+    E -->|继续| F[路由处理程序]
+    F --> G[响应返回]
+    G --> E
+    E -->|返回| D
+    D -->|返回| C
+    C -->|返回| B
+    B --> H[客户端]
+`}/>
 
-### 1. 创建拦截器
+### 创建拦截器
 
 ```java
 public class LogInterceptor implements Interceptor {
@@ -91,11 +122,11 @@ public class LogInterceptor implements Interceptor {
 }
 ```
 
-### 2. 配置拦截器
+### 配置拦截器
 
 ```java
 Router router = new Router();
-// 为所有/api路径下的请求添加拦截器
+// 为所有 /api 路径下的请求添加拦截器
 router.addInterceptor("/api/*", new LogInterceptor());
 
 // 为多个路径添加拦截器
@@ -105,7 +136,7 @@ router.addInterceptors(patterns, new LogInterceptor());
 
 ## 路由配置示例
 
-### 1. 基础路由
+### 基础路由
 
 ```java
 Router router = new Router();
@@ -127,7 +158,7 @@ router.route("/api/*", ctx -> {
 });
 ```
 
-### 2. 默认路由
+### 默认路由
 
 ```java
 Router router = new Router(request -> {
@@ -137,7 +168,7 @@ Router router = new Router(request -> {
 });
 ```
 
-### 3. 深层路由示例
+### 深层路由示例
 
 ```java
 public class DeepRouterDemo {
@@ -164,30 +195,31 @@ public class DeepRouterDemo {
 
         // 4. 通配符匹配（最低优先级）
         router.route("/api/v1/user/*", ctx -> {
-            ctx.Response.write("用户相关API");
+            ctx.Response.write("用户相关 API");
         });
 
         // 5. 多层通配符匹配
         router.route("/api/*/user/*/*", ctx -> {
-            ctx.Response.write("通用用户API处理");
+            ctx.Response.write("通用用户 API 处理");
         });
     }
 }
 ```
 
 上述示例展示了深层路由的匹配优先级规则：
-1. 精确路径匹配：完全匹配URL路径，如`/api/v1/user/profile`
-2. 路径参数匹配：包含`:param`形式的参数，如`/api/v1/user/:id/orders`
-3. 通配符匹配：包含`*`的路径，如`/api/v1/user/*`或`/api/*/user/*/*`
 
-### 4. 完整示例
+1. 精确路径匹配：完全匹配 URL 路径，如 `/api/v1/user/profile`
+2. 路径参数匹配：包含 `:param` 形式的参数，如 `/api/v1/user/:id/orders`
+3. 通配符匹配：包含 `*` 的路径，如 `/api/v1/user/*` 或 `/api/*/user/*/*`
+
+### 完整示例
 
 ```java
 public class RouterDemo {
     public static void main(String[] args) {
         Router router = new Router();
         
-        // 配置Session
+        // 配置 Session
         router.getSessionOptions().setMaxAge(1800);
         
         // 添加拦截器
@@ -202,7 +234,7 @@ public class RouterDemo {
         
         router.route("/user/:id", ctx -> {
             String id = ctx.pathParam("id");
-            Session session = ctx.getSession(false); // 获取Session但不创建
+            Session session = ctx.getSession(false); // 获取 Session 但不创建
             if (session != null) {
                 Long visitTime = session.getAttribute("visitTime");
                 ctx.Response.write("User " + id + ", last visit: " + visitTime);
@@ -221,4 +253,4 @@ public class RouterDemo {
 
 ## 总结
 
-Feat中的`Router`组件不仅提供了强大的路由匹配功能，还集成了Session管理和请求拦截等高级特性。通过树状的路由匹配结构，实现了高效的请求分发。同时，其链式调用的API设计，使得路由配置更加简洁直观。开发者可以根据实际需求，灵活运用这些功能，构建功能丰富的Web应用。
+Feat 中的 `Router` 组件不仅提供了强大的路由匹配功能，还集成了 Session 管理和请求拦截等高级特性。通过树状的路由匹配结构，实现了高效的请求分发。同时，其链式调用的 API 设计，使得路由配置更加简洁直观。开发者可以根据实际需求，灵活运用这些功能，构建功能丰富的 Web 应用。
