@@ -68,7 +68,7 @@ public class ReActAgent extends FeatAgent {
     private static final Pattern ACTION_PATTERN = Pattern.compile("Action:\\s*([\\w_]+)");
 
     // 匹配动作输入的正则表达式
-    private static final Pattern ACTION_INPUT_PATTERN = Pattern.compile("Action Input:\\s*(.+)");
+    private static final Pattern ACTION_INPUT_PATTERN = Pattern.compile("Action Input:\\s*(.+)", Pattern.DOTALL);
 
     // 匹配最终答案的正则表达式
     private static final Pattern FINAL_ANSWER_PATTERN = Pattern.compile("AI:\\s*(.+)");
@@ -247,7 +247,10 @@ public class ReActAgent extends FeatAgent {
         // 查找动作输入
         Matcher actionInputMatcher = ACTION_INPUT_PATTERN.matcher(response);
         if (actionInputMatcher.find()) {
-            action.setActionInput(actionInputMatcher.group(1).trim());
+            String actionInput = actionInputMatcher.group(1).trim();
+            // 将换行符标准化为 \n
+            actionInput = actionInput.replaceAll("\\R", "\n");
+            action.setActionInput(actionInput);
         }
 
         // 如果有动作但没有输入，则返回null
