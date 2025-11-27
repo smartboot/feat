@@ -17,6 +17,7 @@ import tech.smartboot.feat.ai.agent.tool.standard.FileOperationTool;
 import tech.smartboot.feat.ai.agent.tool.standard.SearchTool;
 import tech.smartboot.feat.ai.agent.tool.standard.SubAgentTool;
 import tech.smartboot.feat.ai.agent.tool.standard.TodoListTool;
+import tech.smartboot.feat.ai.agent.tool.standard.WebPageReaderTool;
 import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
@@ -54,7 +55,7 @@ public class ReActAgent extends FeatAgent {
      * 构造函数，初始化时注册标准工具集
      */
     public ReActAgent() {
-        List<ToolExecutor> tools = Arrays.asList(new TodoListTool(), new FileOperationTool(), new SubAgentTool(), new SearchTool());
+        List<ToolExecutor> tools = Arrays.asList(new TodoListTool(), new FileOperationTool(), new SubAgentTool(), new SearchTool(), new WebPageReaderTool());
         for (ToolExecutor tool : tools) {
             toolExecutors.put(tool.getName(), tool);
         }

@@ -42,9 +42,6 @@ public class SearchTool implements ToolExecutor {
         }
     }
 
-//    private final BaiduSearch baiduSearch = new BaiduSearch();
-//    private final BingSearch bingSearch = new BingSearch();
-
     @Override
     public String execute(JSONObject parameters) {
         String query = parameters.getString("query");
