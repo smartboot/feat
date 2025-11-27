@@ -31,15 +31,11 @@ class BingSearcher extends Searcher {
 //                    html = html.substring(html.indexOf("<li"));
 //                    html = html.substring(0, html.lastIndexOf("</li>"));
         html = Pattern.compile("<style[^>]*>[\\s\\S]*?</style>", Pattern.CASE_INSENSITIVE).matcher(html).replaceAll("");
-        System.out.println(html);
-        System.out.println();
-        System.out.println();
-        System.out.println();
         StringBuilder sb = new StringBuilder();
-        int i = html.indexOf("class=\"b_algoheader\"");
+        int i = html.indexOf("class=\"b_algo\"");
         int j;
         while (i >= 0) {
-            j = html.indexOf("class=\"b_algoheader\"", i + 1);
+            j = html.indexOf("class=\"b_algo\"", i + 1);
             if (j < 0) {
                 sb.append(itemToMarkdown(html.substring(i)));
                 break;
@@ -56,23 +52,27 @@ class BingSearcher extends Searcher {
     }
 
     private String itemToMarkdown(String item) {
-        int i = item.indexOf("b_algoheader");
+        int i = item.indexOf("<h2");
         if (i == -1) {
             return "";
         }
-        item = item.substring(item.indexOf("href") + 6);
+        i = item.indexOf("href=\"", i);
+        if (i == -1) {
+            return "";
+        }
+        i += 6;
+        int j = item.indexOf("\"", i);
+        String href = item.substring(i, j);
+
+        i = item.indexOf(">", j);
+        j = item.indexOf("</a>", i);
+        String title = item.substring(i + 1, j);
+
+        i = item.indexOf("<p", j);
+        i = item.indexOf(">", i);
+        j = item.indexOf("</p>", i);
+        String description = item.substring(i + 1, j);
         StringBuilder sb = new StringBuilder();
-        String href = item.substring(0, item.indexOf("\""));
-        item = item.substring(item.indexOf("<h2") + 1);
-        item = item.substring(item.indexOf(">") + 1);
-        i = item.indexOf("</h2>");
-        String title = item.substring(0, i);
-        i = item.indexOf("<p");
-        item = item.substring(i + 2);
-        i = item.indexOf(">");
-        item = item.substring(i + 1);
-        i = item.indexOf("</p>");
-        String description = item.substring(0, i);
         sb.append("- [").append(title.replaceAll("<strong>", "**").replaceAll("</strong>", "**")).append("](").append(href).append(") ").append("\r\n  ").append(description).append("\r\n");
 //        sb.append("- [").append(href).append("](").append(href).append(") ");
 

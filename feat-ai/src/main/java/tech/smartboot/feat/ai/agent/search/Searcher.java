@@ -35,6 +35,7 @@ public abstract class Searcher {
             searcher = new DefaultSearcher();
         }
         HttpClient httpClient = new HttpClient(url);
+        httpClient.options().debug(true);
         try {
             HttpGet httpGet = httpClient.get();
             if (consumer != null) {
@@ -51,6 +52,7 @@ public abstract class Searcher {
                 return searcher.toMarkdown(response.body());
             }
         } catch (Throwable e) {
+            e.printStackTrace();
             return "请求失败.";
         }
     }

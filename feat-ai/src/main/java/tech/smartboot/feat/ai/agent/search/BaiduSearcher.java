@@ -27,10 +27,6 @@ class BaiduSearcher extends Searcher {
 //            html = Pattern.compile("<style[^>]*>[\\s\\S]*?</style>", Pattern.CASE_INSENSITIVE).matcher(html).replaceAll("");
 //            html = Pattern.compile("<!--[\\s\\S]*?-->", Pattern.CASE_INSENSITIVE).matcher(html).replaceAll("");
 //            html = Pattern.compile("data-feedback=\"[\\s\\S]*?\"", Pattern.CASE_INSENSITIVE).matcher(html).replaceAll("");
-        System.out.println(html);
-        System.out.println();
-        System.out.println();
-        System.out.println();
         StringBuilder sb = new StringBuilder();
         int i = html.indexOf("class=\"result c-container");
         int j;
