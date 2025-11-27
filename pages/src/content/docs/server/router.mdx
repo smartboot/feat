@@ -5,252 +5,203 @@ sidebar:
   order: 3
 ---
 
-import Mermaid from '../../../components/Mermaid.astro'
+import Mermaid from '../../../components/Mermaid.astro';
 
-`Router` 是 Feat 框架中的核心组件之一，它作为一个功能强大的 HTTP 请求分发器，负责将传入的 HTTP 请求路由到对应的处理程序（Handler）。Router 基于 `NodePath` 树状结构实现，支持多种路由匹配方式，包括精确匹配、通配符匹配和路径参数匹配等。此外，它还提供了 Session 管理和请求拦截等高级功能，帮助开发者构建功能丰富的 Web 应用。
+# Router 路由组件
 
-## 主要功能
+Feat中的`Router`组件是一个功能强大的HTTP请求分发器，用于将HTTP请求分发到对应的处理程序（Handler）。它是基于`NodePath`树状结构实现的，支持多种路由匹配方式，包括精确匹配、通配符匹配、路径参数匹配等。同时提供了Session管理和请求拦截等高级功能。
 
-### 基础功能
+## Router 基础使用
 
-- **路由匹配**：根据请求的 URI 将请求分发到对应的处理程序
-- **路径参数提取**：支持从路径中提取参数
-- **多种匹配方式**：支持精确匹配、通配符匹配（`*`）、路径参数匹配（`:param`）等
-- **默认路由**：未匹配到任何路由时，使用默认处理程序
+Router组件提供了基本的路由匹配功能，支持以下几种匹配模式：
 
-### 高级功能
+### 精确匹配
 
-- **Session 管理**：提供完整的 Session 生命周期管理，支持创建、获取、更新和销毁 Session
-- **请求拦截**：支持配置拦截器，实现请求的前置和后置处理
-- **灵活配置**：支持链式调用，简化路由配置
+精确匹配是最简单的匹配方式，只有当请求路径与路由定义完全一致时才会触发处理程序。
+
+```java
+Router router = new Router();
+// 精确匹配
+router.route("/users", ctx -> {
+    // 处理 /users 请求
+    ctx.Response.write("处理用户列表".getBytes());
+});
+```
+
+### 通配符匹配
+
+使用`*`作为通配符可以匹配任意路径，适用于处理静态资源或需要匹配大量相似路径的场景。
+
+```java
+// 通配符匹配
+router.route("/static/*", ctx -> {
+    // 处理 /static/ 开头的所有请求
+    String path = ctx.pathParam("*");
+    ctx.Response.write(("访问静态资源: " + path).getBytes());
+});
+```
+
+### 路径参数匹配
+
+使用`:paramName`的形式可以捕获路径中的动态部分，并在处理程序中通过[ctx.pathParam()](file:///Users/zhengjw22mac123/IdeaProjects/feat/feat-core/src/main/java/tech/smartboot/feat/router/Context.java#L36-L38)方法获取。
+
+```java
+// 路径参数匹配
+router.route("/users/:id", ctx -> {
+    String userId = ctx.pathParam("id");
+    // 根据用户ID处理请求
+    ctx.Response.write(("用户ID: " + userId).getBytes());
+});
+```
+
+## 高级功能
+
+Router组件除了基本的路由匹配外，还提供了一些高级功能：
+
+### Session管理
+
+Router内置了基于Cookie的会话管理功能，可以方便地存储和获取用户状态信息。
+
+```java
+// Session使用示例
+router.route("/profile", ctx -> {
+    Session session = ctx.session();
+    String username = session.getAttribute("username");
+    // 处理用户信息
+});
+```
+
+可以通过[SessionOptions](file:///Users/zhengjw22mac123/IdeaProjects/feat/feat-core/src/main/java/tech/smartboot/feat/router/SessionOptions.java#L16-L30)配置Session的行为：
+
+```java
+Router router = new Router();
+// 配置Session超时时间
+router.getSessionOptions().setMaxAge(30 * 60); // 30分钟
+```
+
+### HTTP方法限定
+
+可以针对特定的HTTP方法注册路由，这样只有对应方法的请求才会被处理。
+
+```java
+// HTTP方法限定
+router.route("/api/users", "POST", ctx -> {
+    // 仅处理POST请求
+    ctx.Response.write("创建新用户".getBytes());
+});
+
+// 也可以同时指定多个HTTP方法
+router.route("/api/users", new String[]{"PUT", "PATCH"}, ctx -> {
+    // 处理PUT和PATCH请求
+    ctx.Response.write("更新用户信息".getBytes());
+});
+```
+
+### 拦截器
+
+拦截器允许你在请求处理前后执行一些通用逻辑，比如身份验证、日志记录等。
+
+首先创建一个实现[Interceptor](file:///Users/zhengjw22mac123/IdeaProjects/feat/feat-core/src/main/java/tech/smartboot/feat/router/Interceptor.java#L25-L42)接口的类：
+
+```java
+public class AuthInterceptor implements Interceptor {
+    @Override
+    public void intercept(Context context, CompletableFuture<Void> completableFuture, Chain chain) throws Throwable {
+        Session session = context.session();
+        if (session.getAttribute("user") == null) {
+            // 未登录，重定向到登录页
+            context.Response.sendRedirect("/login");
+            completableFuture.complete(null);
+            return;
+        }
+        // 继续执行下一个拦截器或处理程序
+        chain.proceed(context, completableFuture);
+    }
+}
+```
+
+然后将拦截器注册到Router中：
+
+```java
+Router router = new Router();
+AuthInterceptor authInterceptor = new AuthInterceptor();
+
+// 对所有路径应用拦截器
+router.addInterceptor("/*", authInterceptor);
+
+// 或者只对特定路径应用
+router.addInterceptor("/admin/*", authInterceptor);
+```
 
 ## 路由匹配原理
 
-<Mermaid code={`
-graph TD
-    A[HTTP请求] --> B[Router解析URI]
-    B --> C[NodePath树状匹配]
-    C --> D{精确匹配?}
-    D -->|是| E[调用处理程序]
-    D -->|否| F{路径参数匹配?}
-    F -->|是| G[提取路径参数]
-    G --> E
-    F -->|否| H{通配符匹配?}
-    H -->|是| I[匹配通配符路径]
-    I --> E
-    H -->|否| J[使用默认处理程序]
-    E --> K[返回响应]
-`}/>
-
 ### 核心数据结构
 
-`Router` 内部通过 `NodePath` 树状结构存储路由规则：
+Router使用前缀树（Trie）结构来存储路由规则，这种结构可以高效地进行路径匹配。
 
-- **根节点**：表示根路径 `/`
-- **路径节点**：每个 `NodePath` 节点代表一个路径部分（如 `/user` 或 `:id`）
-- **叶子节点**：存储具体的处理程序（RouterHandler）
+<Mermaid code={`
+graph TD
+    A[根节点 /] --> B[users]
+    A --> C[static]
+    B --> D[:id]
+    C --> E[*]
+    
+    style A fill:#FFE4B5,stroke:#333
+    style B fill:#E6E6FA,stroke:#333
+    style C fill:#E6E6FA,stroke:#333
+    style D fill:#DDA0DD,stroke:#333
+    style E fill:#DDA0DD,stroke:#333
+    
+    classDef normal fill:#E6E6FA,stroke:#333;
+    classDef param fill:#DDA0DD,stroke:#333;
+    classDef root fill:#FFE4B5,stroke:#333;
+`}/>
 
 ### 匹配流程
 
-1. **解析请求 URI**：将请求 URI 拆分为路径部分
-2. **树状匹配**：
-   - 从根节点开始，逐层匹配路径部分
-   - 优先进行精确匹配，其次是路径参数匹配，最后是通配符匹配
-3. **参数提取**：如果匹配到路径参数（如 `:id`），将其提取到 `Context` 中
-4. **处理程序调用**：调用匹配到的处理程序，如未匹配则使用默认处理程序
+当HTTP请求到达时，Router会按照以下流程进行匹配：
 
-## Session 管理
+1. 解析请求URL路径
+2. 在前缀树中查找匹配的节点
+3. 提取路径参数（如果有的话）
+4. 执行匹配到的处理器
 
-### Session 配置
+## 完整示例
 
-通过 [SessionOptions](/server/config) 可以配置 Session 的各种参数：
-
-```java
-Router router = new Router();
-router.getSessionOptions()
-      .setMaxAge(1800); // 设置 Session 过期时间为 30 分钟
-```
-
-### Session 操作
-
-```java
-router.route("/session/demo", ctx -> {
-    // 获取或创建 Session
-    Session session = ctx.getSession();
-    
-    // 设置 Session 属性
-    session.setAttribute("userId", "12345");
-    
-    // 获取 Session 属性
-    String userId = session.getAttribute("userId");
-    
-    // 手动使 Session 失效
-    session.invalidate();
-});
-```
-
-## 拦截器使用
-
-<Mermaid code={`
-graph LR
-    A[HTTP请求] --> B[拦截器链]
-    B --> C{拦截器1}
-    C -->|继续| D{拦截器2}
-    D -->|继续| E{拦截器N}
-    E -->|继续| F[路由处理程序]
-    F --> G[响应返回]
-    G --> E
-    E -->|返回| D
-    D -->|返回| C
-    C -->|返回| B
-    B --> H[客户端]
-`}/>
-
-### 创建拦截器
-
-```java
-public class LogInterceptor implements Interceptor {
-    @Override
-    public void intercept(Context ctx, Chain chain) throws Throwable {
-        System.out.println("请求开始: " + ctx.Request.getRequestURI());
-        try {
-            chain.proceed(ctx);
-        } finally {
-            System.out.println("请求结束: " + ctx.Request.getRequestURI());
-        }
-    }
-}
-```
-
-### 配置拦截器
-
-```java
-Router router = new Router();
-// 为所有 /api 路径下的请求添加拦截器
-router.addInterceptor("/api/*", new LogInterceptor());
-
-// 为多个路径添加拦截器
-List<String> patterns = Arrays.asList("/user/*", "/order/*");
-router.addInterceptors(patterns, new LogInterceptor());
-```
-
-## 路由配置示例
-
-### 基础路由
-
-```java
-Router router = new Router();
-
-// 精确匹配
-router.route("/user/info", ctx -> {
-    ctx.Response.write("User info");
-});
-
-// 路径参数匹配
-router.route("/user/:id", ctx -> {
-    String id = ctx.pathParam("id");
-    ctx.Response.write("User ID: " + id);
-});
-
-// 通配符匹配
-router.route("/api/*", ctx -> {
-    ctx.Response.write("API endpoint");
-});
-```
-
-### 默认路由
-
-```java
-Router router = new Router(request -> {
-    request.getResponse()
-           .setHttpStatus(HttpStatus.NOT_FOUND)
-           .write("404 Not Found");
-});
-```
-
-### 深层路由示例
-
-```java
-public class DeepRouterDemo {
-    public static void main(String[] args) {
-        Router router = new Router();
-
-        // 1. 精确匹配（最高优先级）
-        router.route("/api/v1/user/profile", ctx -> {
-            ctx.Response.write("用户档案");
-        });
-
-        // 2. 路径参数匹配（次高优先级）
-        router.route("/api/v1/user/:id/orders", ctx -> {
-            String userId = ctx.pathParam("id");
-            ctx.Response.write("用户" + userId + "的订单列表");
-        });
-
-        // 3. 多路径参数匹配
-        router.route("/api/v1/user/:userId/orders/:orderId", ctx -> {
-            String userId = ctx.pathParam("userId");
-            String orderId = ctx.pathParam("orderId");
-            ctx.Response.write("用户" + userId + "的订单" + orderId + "详情");
-        });
-
-        // 4. 通配符匹配（最低优先级）
-        router.route("/api/v1/user/*", ctx -> {
-            ctx.Response.write("用户相关 API");
-        });
-
-        // 5. 多层通配符匹配
-        router.route("/api/*/user/*/*", ctx -> {
-            ctx.Response.write("通用用户 API 处理");
-        });
-    }
-}
-```
-
-上述示例展示了深层路由的匹配优先级规则：
-
-1. 精确路径匹配：完全匹配 URL 路径，如 `/api/v1/user/profile`
-2. 路径参数匹配：包含 `:param` 形式的参数，如 `/api/v1/user/:id/orders`
-3. 通配符匹配：包含 `*` 的路径，如 `/api/v1/user/*` 或 `/api/*/user/*/*`
-
-### 完整示例
+以下是一个完整的使用示例：
 
 ```java
 public class RouterDemo {
     public static void main(String[] args) {
         Router router = new Router();
         
-        // 配置 Session
-        router.getSessionOptions().setMaxAge(1800);
-        
-        // 添加拦截器
-        router.addInterceptor("/*", new LogInterceptor());
-        
-        // 配置路由
+        // 首页路由
         router.route("/", ctx -> {
-            Session session = ctx.getSession();
-            session.setAttribute("visitTime", System.currentTimeMillis());
-            ctx.Response.write("Welcome!");
+            ctx.Response.write("欢迎来到Feat框架".getBytes());
         });
         
-        router.route("/user/:id", ctx -> {
-            String id = ctx.pathParam("id");
-            Session session = ctx.getSession(false); // 获取 Session 但不创建
-            if (session != null) {
-                Long visitTime = session.getAttribute("visitTime");
-                ctx.Response.write("User " + id + ", last visit: " + visitTime);
-            } else {
-                ctx.Response.write("User " + id);
-            }
+        // 用户相关路由
+        router.route("/users/:id", ctx -> {
+            String userId = ctx.pathParam("id");
+            String response = "用户ID: " + userId;
+            ctx.Response.write(response.getBytes());
+        });
+        
+        // 静态资源路由
+        router.route("/static/*", ctx -> {
+            String path = ctx.pathParam("*");
+            String response = "访问静态资源: " + path;
+            ctx.Response.write(response.getBytes());
         });
         
         // 启动服务器
-        Feat.httpServer()
-            .httpHandler(router)
-            .listen();
+        Feat.httpServer().httpHandler(router).listen(8080);
     }
 }
 ```
 
+有关完整示例，请参见 [RouterDemo1.java](https://gitee.com/smartboot/feat/blob/master/feat-test/src/main/java/tech/smartboot/feat/demo/router/RouterDemo1.java)
+
 ## 总结
 
-Feat 中的 `Router` 组件不仅提供了强大的路由匹配功能，还集成了 Session 管理和请求拦截等高级特性。通过树状的路由匹配结构，实现了高效的请求分发。同时，其链式调用的 API 设计，使得路由配置更加简洁直观。开发者可以根据实际需求，灵活运用这些功能，构建功能丰富的 Web 应用。
+Feat中的`Router`组件不仅提供了强大的路由匹配功能，还集成了Session管理和请求拦截等高级特性。通过树状的路由匹配结构，实现了高效的请求分发。同时，其链式调用的API设计，使得路由配置更加简洁直观。开发者可以根据实际需求，灵活运用这些功能，构建功能丰富的Web应用。
