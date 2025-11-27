@@ -29,5 +29,6 @@ export default new Map([
 ["src/content/docs/server/serveroptions.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fserver%2Fserveroptions.mdx&astroContentModuleFlag=true")],
 ["src/content/docs/server/upgrade.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fserver%2Fupgrade.mdx&astroContentModuleFlag=true")],
 ["src/content/docs/appendix/prompt.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fappendix%2Fprompt.mdx&astroContentModuleFlag=true")],
-["src/content/docs/ai/agent.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fai%2Fagent.mdx&astroContentModuleFlag=true")]]);
+["src/content/docs/ai/agent.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fai%2Fagent.mdx&astroContentModuleFlag=true")],
+["src/content/docs/ai/agent-complete.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fai%2Fagent-complete.mdx&astroContentModuleFlag=true")]]);
 		
