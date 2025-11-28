@@ -23,9 +23,10 @@ Agent 是 Feat AI 框架中的一个重要组件，它基于 ReAct（Reasoning +
 
 ```java
 import tech.smartboot.feat.ai.agent.ReActAgent;
+import tech.smartboot.feat.ai.agent.FeatAgent;
 
 // 创建一个 ReActAgent 实例
-ReActAgent agent = new ReActAgent();
+FeatAgent agent = new ReActAgent();
 
 // 执行任务
 String result = agent.execute("帮我搜索一下最新的 AI 技术发展趋势");
@@ -45,14 +46,15 @@ import tech.smartboot.feat.ai.chat.ChatModelVendor;
 
 // 创建 Agent 配置
 AgentOptions options = AgentOptions.create()
-    .name("ResearchAssistant")                  // 设置 Agent 名称
-    .description("研究助理，可以帮助搜索和整理信息")   // 设置描述
-    .roleName("AI研究员")                       // 设置角色名称
-    .model(ChatModelVendor.GiteeAI.DeepSeek_R1) // 设置使用的模型
-    .maxIterations(15);                         // 设置最大推理迭代次数
+    .maxIterations(15)                         // 设置最大推理迭代次数
+    .chatOptions()
+    .model(ChatModelVendor.GiteeAI.DeepSeek_V32_EXP); // 设置使用的模型
 
 // 创建 Agent 实例
 ReActAgent agent = new ReActAgent();
+agent.options.maxIterations(15)
+    .chatOptions()
+    .model(ChatModelVendor.GiteeAI.DeepSeek_V32_EXP);
 ```
 
 ## 2. 核心概念
@@ -94,51 +96,26 @@ AgentState state = agent.getState();
 System.out.println("当前状态: " + state);
 ```
 
-## 3. 执行流程
+## 3. 内置工具
 
-下面的泳道图展示了 ReActAgent 的完整执行流程，包括各个组件之间的交互：
+Feat AI Agent 内置了多种常用工具，在 ReActAgent 构造函数中默认注册：
 
-<Mermaid code={`
-sequenceDiagram
-    participant U as 用户
-    participant RA as ReActAgent
-    participant AO as AgentOptions
-    participant AM as AgentMemory
-    participant AI as AI模型
-    participant TE as ToolExecutor
-
-    U->>RA: execute(input)
-    RA->>AO: 获取系统提示配置
-    AO-->>RA: 返回提示模板数据
-    RA->>RA: 构造系统提示
-    loop 推理迭代
-        RA->>AI: 调用模型生成响应
-        AI-->>RA: 返回模型输出
-        RA->>RA: 解析Thought/Action
-        alt 如果是最终答案
-            RA->>AM: 保存交互历史
-            RA-->>U: 返回最终结果
-        else 如果需要执行工具
-            RA->>TE: executeTool()
-            TE-->>RA: 返回执行结果
-            RA->>RA: 更新上下文信息
-        end
-    end
-`}/>
-
-## 4. 内置工具
-
-Feat AI Agent 内置了多种常用工具：
-
-### 4.1 待办事项工具 (TodoListTool)
+### 3.1 待办事项工具 (TodoListTool)
 
 管理待办事项列表：
 
-```java
+```json
+// 创建待办事项列表
+Action: todo_list
+Action Input: {
+  "action": "create"
+}
+
 // 添加待办事项
 Action: todo_list
 Action Input: {
-  "operation": "add",
+  "action": "add",
+  "list_id": "todo_list_1234567890",
   "title": "完成项目文档",
   "description": "编写 Feat AI 的使用文档"
 }
@@ -146,48 +123,104 @@ Action Input: {
 // 列出所有待办事项
 Action: todo_list
 Action Input: {
-  "operation": "list"
+  "action": "list",
+  "list_id": "todo_list_1234567890"
+}
+
+// 完成待办事项
+Action: todo_list
+Action Input: {
+  "action": "complete",
+  "list_id": "todo_list_1234567890",
+  "item_id": 1
+}
+
+// 移除待办事项
+Action: todo_list
+Action Input: {
+  "action": "remove",
+  "list_id": "todo_list_1234567890",
+  "item_id": 1
 }
 ```
 
-### 4.2 文件操作工具 (FileOperationTool)
+### 3.2 文件操作工具 (FileOperationTool)
 
 执行文件系统操作：
 
-```java
+```json
+// 列出目录内容
+Action: file_operation
+Action Input: {
+  "action": "list_directory",
+  "path": "./",
+  "recursive": false
+}
+
 // 读取文件
 Action: file_operation
 Action Input: {
-  "operation": "read",
+  "action": "read_file",
   "path": "./README.md"
 }
 
 // 写入文件
 Action: file_operation
 Action Input: {
-  "operation": "write",
+  "action": "write_file",
   "path": "./output.txt",
   "content": "这是写入的内容"
 }
-```
 
-### 4.3 搜索工具 (SearchTool)
-
-执行网络搜索：
-
-```java
-// 搜索信息
-Action: search
+// 创建目录
+Action: file_operation
 Action Input: {
-  "query": "最新的 AI 技术发展趋势"
+  "action": "create_directory",
+  "path": "./new_directory"
+}
+
+// 删除文件
+Action: file_operation
+Action Input: {
+  "action": "delete_file",
+  "path": "./unwanted.txt"
+}
+
+// 检查文件是否存在
+Action: file_operation
+Action Input: {
+  "action": "file_exists",
+  "path": "./important.txt"
 }
 ```
 
-### 4.4 网页阅读工具 (WebPageReaderTool)
+### 3.3 搜索工具 (SearchTool)
+
+执行网络搜索：
+
+```json
+// 使用百度搜索
+Action: search
+Action Input: {
+  "query": "最新的 AI 技术发展趋势",
+  "engine": "baidu",
+  "max_results": 5
+}
+
+// 使用必应搜索
+Action: search
+Action Input: {
+  "query": "最新的 AI 技术发展趋势",
+  "engine": "bing",
+  "max_results": 5
+}
+```
+
+### 3.4 网页阅读工具 (WebPageReaderTool)
 
 读取网页内容：
 
-```java
+```json
 // 读取网页
 Action: web_page_reader
 Action Input: {
@@ -195,27 +228,28 @@ Action Input: {
 }
 ```
 
-### 4.5 子 Agent 工具 (SubAgentTool)
+### 3.5 子 Agent 工具 (SubAgentTool)
 
 创建子 Agent 来处理特定任务：
 
-```java
+```json
 // 创建子 Agent
 Action: sub_agent
 Action Input: {
+  "agent_name": "analysis_agent",
   "task": "分析这份报告的主要观点"
 }
 ```
 
-## 5. 自定义工具
+## 4. 自定义工具
 
 除了内置工具外，您还可以创建自定义工具来扩展 Agent 的功能：
 
 ```java
-import tech.smartboot.feat.ai.agent.tool.ToolExecutor;
+import tech.smartboot.feat.ai.agent.AgentTool;
 import com.alibaba.fastjson2.JSONObject;
 
-public class CustomTool implements ToolExecutor {
+public class CustomTool implements AgentTool {
     
     @Override
     public String execute(JSONObject parameters) {
@@ -246,10 +280,13 @@ public class CustomTool implements ToolExecutor {
 }
 
 // 注册自定义工具
-agent.addTool(new CustomTool());
+AgentOptions options = AgentOptions.create();
+options.addTool(new CustomTool());
 ```
 
-## 6. 内存管理
+## 5. 内存管理和提示模板
+
+### 5.1 内存管理
 
 Agent 具有内存管理功能，可以存储和检索相关信息：
 
@@ -259,15 +296,11 @@ import tech.smartboot.feat.ai.agent.memory.DefaultAgentMemory;
 
 // 创建自定义内存管理器
 AgentMemory memory = new DefaultAgentMemory();
-agent.getOptions().memory(memory);
+AgentOptions options = AgentOptions.create()
+    .memory(memory);
 
 // 或者在创建 Agent 时配置
 ReActAgent agent = new ReActAgent();
-agent.getOptions()
-    .memory(new DefaultAgentMemory())
-    .enableSmartMemory()
-    .memoryRetrievalThreshold(0.7)
-    .maxMemoryRetrievalCount(10);
 ```
 
 内存管理配置选项：
@@ -278,28 +311,31 @@ agent.getOptions()
 | enableSmartMemory | 是否启用智能记忆检索 | true |
 | memoryRetrievalThreshold | 记忆检索阈值 | 0.5 |
 | maxMemoryRetrievalCount | 最大记忆检索数量 | 5 |
+| maxIterations | 最大推理迭代次数 | 20 |
 
-## 7. 完整示例
+### 5.2 提示模板
+
+Agent 使用提示模板来引导 AI 模型的行为。默认使用 `feat_react_agent.tpl` 模板，其中包含了以下变量：
+
+- `{{tool_descriptions}}` - 所有工具的描述信息
+- `{{tool_names}}` - 所有工具名称列表
+- `{{date}}` - 当前日期时间
+- `{{history}}` - 历史对话记录
+- `{{input}}` - 用户输入的任务
+- `{{agent_scratchpad}}` - Agent 的推理过程记录
+
+## 6. 完整示例和最佳实践
 
 以下是一个完整的使用示例：
 
 ```java
 import tech.smartboot.feat.ai.agent.ReActAgent;
-import tech.smartboot.feat.ai.agent.AgentOptions;
-import tech.smartboot.feat.ai.chat.ChatModelVendor;
+import tech.smartboot.feat.ai.agent.FeatAgent;
 
 public class AgentDemo {
     public static void main(String[] args) {
-        // 创建 Agent 配置
-        AgentOptions options = AgentOptions.create()
-            .name("ResearchAssistant")
-            .description("研究助理，可以帮助搜索和整理信息")
-            .roleName("AI研究员")
-            .model(ChatModelVendor.GiteeAI.DeepSeek_R1)
-            .maxIterations(15);
-            
         // 创建 Agent 实例
-        ReActAgent agent = new ReActAgent();
+        FeatAgent agent = new ReActAgent();
         
         // 执行任务
         String result = agent.execute("请帮我调研一下 AI 领域的最新进展，并整理成一份简要报告");
@@ -311,26 +347,10 @@ public class AgentDemo {
 
 有关完整示例，请参见 [ReActAgentTest.java](https://gitee.com/smartboot/feat/blob/master/feat-ai/src/test/java/tech/smartboot/feat/ai/agent/ReActAgentTest.java)
 
-## 8. 最佳实践
+### 最佳实践
 
 1. **合理设置迭代次数** - 根据任务复杂度设置合适的最大迭代次数，避免无限循环
 2. **选择合适模型** - 根据任务需求选择具有相应能力的模型
 3. **工具组合使用** - 合理组合不同工具以完成复杂任务
 4. **监控 Agent 状态** - 通过状态监控了解 Agent 的执行过程
 5. **错误处理** - 妥善处理执行过程中可能出现的异常情况
-
-## 9. 工作原理
-
-ReActAgent 的工作原理如下：
-
-1. 接收用户输入的任务
-2. 使用预定义的提示模板构造系统提示
-3. 调用配置的 AI 模型生成响应
-4. 解析响应中的 Thought、Action 和 Action Input
-5. 执行对应的工具操作
-6. 将工具执行结果作为 Observation 添加到上下文中
-7. 重复步骤 3-6 直到获得最终答案或达到最大迭代次数
-
-## 10. 总结
-
-Feat AI Agent 为开发者提供了一个强大而灵活的框架，用于构建能够自主推理和执行任务的 AI 应用程序。通过内置工具和自定义扩展机制，可以满足各种复杂场景的需求。

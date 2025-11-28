@@ -12,10 +12,13 @@ package tech.smartboot.feat.ai.agent;
 
 import tech.smartboot.feat.ai.agent.memory.AgentMemory;
 import tech.smartboot.feat.ai.agent.memory.DefaultAgentMemory;
-import tech.smartboot.feat.ai.chat.ChatModelVendor;
+import tech.smartboot.feat.ai.chat.ChatOptions;
 import tech.smartboot.feat.ai.chat.prompt.Prompt;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
+
+import java.util.HashMap;
+import java.util.Map;
 
 
 /**
@@ -28,25 +31,6 @@ public class AgentOptions {
 
     private static final Logger logger = LoggerFactory.getLogger(AgentOptions.class.getName());
 
-    /**
-     * Agent名称
-     */
-    private String name = "DefaultAgent";
-
-    /**
-     * Agent描述
-     */
-    private String description = "默认Agent";
-
-    /**
-     * Agent角色名称（用于在提示中代入角色）
-     */
-    private String roleName = "AI助手";
-
-    /**
-     * 模型供应商
-     */
-    private ChatModelVendor vendor = ChatModelVendor.GiteeAI.DeepSeek_V32_EXP;
 
     /**
      * Agent记忆
@@ -69,36 +53,22 @@ public class AgentOptions {
     private int maxMemoryRetrievalCount = 5;
     private Prompt prompt;
 
-    private String systemPrompt;
-    
     /**
      * 最大推理迭代次数
      */
     private int maxIterations = 20;
 
+    /**
+     * 工具执行器映射
+     */
+    private final Map<String, AgentTool> toolExecutors = new HashMap<>();
+
+    private final ChatOptions chatOptions = new ChatOptions();
+
     public static AgentOptions create() {
         return new AgentOptions();
     }
 
-    public AgentOptions name(String name) {
-        this.name = name;
-        return this;
-    }
-
-    public AgentOptions description(String description) {
-        this.description = description;
-        return this;
-    }
-
-    public AgentOptions roleName(String roleName) {
-        this.roleName = roleName;
-        return this;
-    }
-
-    public AgentOptions model(ChatModelVendor vendor) {
-        this.vendor = vendor;
-        return this;
-    }
 
     public AgentOptions memory(AgentMemory memory) {
         this.memory = memory;
@@ -151,7 +121,7 @@ public class AgentOptions {
         logger.info("设置最大记忆检索数量: " + count);
         return this;
     }
-    
+
     /**
      * 设置最大推理迭代次数
      *
@@ -162,22 +132,6 @@ public class AgentOptions {
         this.maxIterations = Math.max(1, maxIterations);
         logger.info("设置最大推理迭代次数: " + maxIterations);
         return this;
-    }
-
-    String getName() {
-        return name;
-    }
-
-    String getDescription() {
-        return description;
-    }
-
-    String getRoleName() {
-        return roleName;
-    }
-
-    ChatModelVendor getVendor() {
-        return vendor;
     }
 
     public AgentMemory getMemory() {
@@ -195,7 +149,7 @@ public class AgentOptions {
     public int getMaxMemoryRetrievalCount() {
         return maxMemoryRetrievalCount;
     }
-    
+
     public int getMaxIterations() {
         return maxIterations;
     }
@@ -210,60 +164,30 @@ public class AgentOptions {
     }
 
     public AgentOptions prompt(String prompt) {
-        this.prompt = new Prompt(prompt);
+        return prompt(new Prompt(prompt));
+    }
+
+    /**
+     * 添加工具执行器
+     *
+     * @param executor 工具执行器
+     */
+    public AgentOptions addTool(AgentTool executor) {
+        toolExecutors.put(executor.getName(), executor);
+        logger.info("添加工具执行器: " + executor.getName());
         return this;
     }
 
-    /**
-     * 验证配置选项
-     *
-     * @return 验证结果
-     */
-    public boolean validate() {
-        if (name == null || name.trim().isEmpty()) {
-            logger.warn("Agent名称不能为空");
-            return false;
-        }
-
-        if (vendor == null) {
-            logger.warn("模型供应商不能为空");
-            return false;
-        }
-
-        if (memory == null) {
-            logger.warn("Agent记忆不能为空");
-            return false;
-        }
-
-        logger.info("Agent配置验证通过: " + name);
-        return true;
+    AgentTool getToolExecutor(String name) {
+        return toolExecutors.get(name);
     }
 
-    /**
-     * 获取配置摘要
-     *
-     * @return 配置摘要
-     */
-    public String getSummary() {
-        return String.format(
-                "Agent配置摘要:\n" +
-                        "- 名称: %s\n" +
-                        "- 描述: %s\n" +
-                        "- 角色名称: %s\n" +
-                        "- 模型: %s\n" +
-                        "- 智能记忆: %s\n" +
-                        "- 记忆阈值: %.2f\n" +
-                        "- 最大检索数: %d",
-                name, description, roleName, vendor, enableSmartMemory ? "启用" : "禁用",
-                memoryRetrievalThreshold, maxMemoryRetrievalCount
-        );
+    Map<String, AgentTool> getToolExecutors() {
+        return toolExecutors;
     }
 
-    public void setSystemPrompt(String systemPrompt) {
-        this.systemPrompt = systemPrompt;
-    }
 
-    public String systemPrompt() {
-        return systemPrompt;
+    public ChatOptions chatOptions() {
+        return chatOptions;
     }
 }

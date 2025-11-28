@@ -12,22 +12,23 @@ package tech.smartboot.feat.ai.agent;
 
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.ai.agent.memory.Memory;
-import tech.smartboot.feat.ai.agent.tool.ToolExecutor;
-import tech.smartboot.feat.ai.agent.tool.standard.FileOperationTool;
-import tech.smartboot.feat.ai.agent.tool.standard.SearchTool;
-import tech.smartboot.feat.ai.agent.tool.standard.SubAgentTool;
-import tech.smartboot.feat.ai.agent.tool.standard.TodoListTool;
-import tech.smartboot.feat.ai.agent.tool.standard.WebPageReaderTool;
+import tech.smartboot.feat.ai.agent.tools.FileOperationTool;
+import tech.smartboot.feat.ai.agent.tools.SearchTool;
+import tech.smartboot.feat.ai.agent.tools.SubAgentTool;
+import tech.smartboot.feat.ai.agent.tools.TodoListTool;
+import tech.smartboot.feat.ai.agent.tools.WebPageReaderTool;
+import tech.smartboot.feat.ai.chat.ChatModel;
+import tech.smartboot.feat.ai.chat.ChatModelVendor;
 import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
-import tech.smartboot.feat.ai.chat.prompt.Prompt;
 import tech.smartboot.feat.ai.chat.prompt.PromptTemplate;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -48,17 +49,18 @@ public class ReActAgent extends FeatAgent {
     // 日志记录器
     private static final Logger logger = LoggerFactory.getLogger(ReActAgent.class.getName());
 
-    // Agent当前状态
-    private AgentState state = AgentState.IDLE;
-
     /**
      * 构造函数，初始化时注册标准工具集
      */
     public ReActAgent() {
-        List<ToolExecutor> tools = Arrays.asList(new TodoListTool(), new FileOperationTool(), new SubAgentTool(), new SearchTool(), new WebPageReaderTool());
-        for (ToolExecutor tool : tools) {
-            toolExecutors.put(tool.getName(), tool);
-        }
+        options.addTool(new TodoListTool())
+                .addTool(new FileOperationTool())
+                .addTool(new SearchTool())
+                .addTool(new WebPageReaderTool())
+                .addTool(new SubAgentTool())
+                .prompt(PromptTemplate.loadPrompt("feat_react_agent.tpl"))
+                .chatOptions()
+                .model(ChatModelVendor.GiteeAI.DeepSeek_V32_EXP);
     }
 
     // 匹配思考步骤的正则表达式
@@ -87,10 +89,6 @@ public class ReActAgent extends FeatAgent {
         try {
             // 初始化Agent状态
             StringBuilder fullResponse = new StringBuilder();
-//            List<Message> conversationHistory = new ArrayList<>();
-
-            // 加载规划者模板
-            Prompt plannerPrompt = new Prompt(PromptTemplate.loadPrompt("feat_react_agent.tpl"));
 
             // 准备模板数据
             Map<String, String> templateData = new HashMap<>();
@@ -98,23 +96,30 @@ public class ReActAgent extends FeatAgent {
             templateData.put("input", input);
             templateData.put("tool_descriptions", getToolDescriptions());
             templateData.put("tool_names", getToolNames());
-//            templateData.put("history", formatConversationHistory(conversationHistory));
+            
+            // 添加相关的记忆到模板数据中
+            StringBuilder memoryContext = new StringBuilder();
+            List<Memory> relevantMemories = getMemory().getMemoriesByKeywords(
+                Arrays.asList(input.split("\\s+"))
+            );
+            
+            // 限制记忆数量，只取最近的几条
+            relevantMemories.stream()
+                .sorted(Comparator.comparingLong(Memory::getTimestamp).reversed())
+                .limit(5)
+                .forEach(memory -> memoryContext.append(memory.getContent()).append("\n"));
+                
+            templateData.put("relevant_memories", memoryContext.toString());
             templateData.put("agent_scratchpad", "");
-
-            // 设置系统提示
-            options.setSystemPrompt(plannerPrompt.prompt(templateData));
-//            conversationHistory.add(Message.ofSystem(options.systemPrompt()));
-            // 构造初始消息
-//            Message userMessage = Message.ofUser(input);
-//            conversationHistory.add(userMessage);
 
             // 执行推理循环
             int maxIterations = options.getMaxIterations(); // 使用配置的最大迭代次数
             for (int i = 0; i < maxIterations; i++) {
                 fullResponse.setLength(0);
                 CompletableFuture<Boolean> isDone = new CompletableFuture<>();
-                // 调用模型
-                callStream(Collections.singletonList(Message.ofUser(options.systemPrompt())), new StreamResponseCallback() {
+                // 创建ChatModel实例
+                ChatModel model = new ChatModel(options.chatOptions());
+                model.chatStream(Collections.singletonList(Message.ofUser(options.getPrompt().prompt(templateData))), new StreamResponseCallback() {
 
                     @Override
                     public void onCompletion(ResponseMessage responseMessage) {
@@ -157,9 +162,6 @@ public class ReActAgent extends FeatAgent {
                 String currentScratchpad = templateData.getOrDefault("agent_scratchpad", "");
                 templateData.put("agent_scratchpad", currentScratchpad + scratchpadEntry);
 
-                // 更新系统提示
-                options.setSystemPrompt(plannerPrompt.prompt(templateData));
-
                 // 恢复运行状态
                 setState(AgentState.RUNNING);
             }
@@ -194,25 +196,6 @@ public class ReActAgent extends FeatAgent {
             logger.error("Agent执行出错: " + e.getMessage(), e);
             return "Error: " + e.getMessage();
         }
-    }
-
-    /**
-     * 获取Agent当前状态
-     *
-     * @return Agent状态
-     */
-    public AgentState getState() {
-        return state;
-    }
-
-    /**
-     * 设置Agent状态
-     *
-     * @param state 新状态
-     */
-    protected void setState(AgentState state) {
-        this.state = state;
-        logger.info("Agent状态变更: " + state);
     }
 
     /**
@@ -269,7 +252,7 @@ public class ReActAgent extends FeatAgent {
      * @return 工具执行结果
      */
     private String executeTool(String toolName, String input) {
-        ToolExecutor executor = toolExecutors.get(toolName);
+        AgentTool executor = options.getToolExecutor(toolName);
         if (executor == null) {
             return "Error: Tool '" + toolName + "' not found.";
         }
@@ -283,7 +266,7 @@ public class ReActAgent extends FeatAgent {
     }
 
     private String executeTool(String toolName, JSONObject parameters) {
-        ToolExecutor executor = toolExecutors.get(toolName);
+        AgentTool executor = options.getToolExecutor(toolName);
         if (executor == null) {
             return "错误：未找到名为 '" + toolName + "' 的工具";
         }
@@ -302,7 +285,7 @@ public class ReActAgent extends FeatAgent {
      */
     private String getToolDescriptions() {
         StringBuilder sb = new StringBuilder();
-        for (ToolExecutor executor : toolExecutors.values()) {
+        for (AgentTool executor : options.getToolExecutors().values()) {
             sb.append(String.format("- %s: %s\n", executor.getName(), executor.getDescription()));
             // 添加参数信息
             String parametersSchema = executor.getParametersSchema();
@@ -319,21 +302,7 @@ public class ReActAgent extends FeatAgent {
      * @return 工具名称列表
      */
     private String getToolNames() {
-        return String.join(", ", toolExecutors.keySet());
-    }
-
-    /**
-     * 格式化对话历史
-     *
-     * @param history 对话历史
-     * @return 格式化后的字符串
-     */
-    private String formatConversationHistory(List<Message> history) {
-        StringBuilder sb = new StringBuilder();
-        for (Message message : history) {
-            sb.append(message.getRole()).append(": ").append(message.getContent()).append("\n");
-        }
-        return sb.toString();
+        return String.join(", ", options.getToolExecutors().keySet());
     }
 
     /**

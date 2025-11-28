@@ -17,21 +17,21 @@ package tech.smartboot.feat.ai.agent.memory;
  * @version v1.0.0
  */
 public interface Memory {
-    
+
     /**
      * 获取记忆内容
      *
      * @return 记忆内容
      */
     String getContent();
-    
+
     /**
      * 获取记忆创建时间戳
      *
      * @return 创建时间戳
      */
     long getTimestamp();
-    
+
     /**
      * 获取记忆重要性评分
      *

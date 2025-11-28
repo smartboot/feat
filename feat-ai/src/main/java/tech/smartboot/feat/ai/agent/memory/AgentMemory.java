@@ -19,21 +19,21 @@ import java.util.List;
  * @version v1.0.0
  */
 public interface AgentMemory {
-    
+
     /**
      * 添加记忆
      *
      * @param memory 记忆对象
      */
     void addMemory(Memory memory);
-    
+
     /**
      * 获取所有记忆
      *
      * @return 记忆列表
      */
     List<Memory> getMemories();
-    
+
     /**
      * 根据重要性获取记忆
      *
@@ -41,7 +41,7 @@ public interface AgentMemory {
      * @return 符合条件的记忆列表
      */
     List<Memory> getMemoriesByImportance(double minImportance);
-    
+
     /**
      * 根据时间范围获取记忆
      *
@@ -50,16 +50,41 @@ public interface AgentMemory {
      * @return 时间范围内的记忆列表
      */
     List<Memory> getMemoriesByTimeRange(long startTime, long endTime);
-    
+
     /**
      * 清空记忆
      */
     void clear();
-    
+
     /**
      * 获取记忆总数
      *
      * @return 记忆总数
      */
     int size();
+    
+    /**
+     * 根据关键词检索相关记忆
+     *
+     * @param keywords 关键词列表
+     * @return 相关记忆列表
+     */
+    List<Memory> getMemoriesByKeywords(List<String> keywords);
+    
+    /**
+     * 获取最近添加的记忆
+     *
+     * @param count 数量
+     * @return 最近记忆列表
+     */
+    List<Memory> getRecentMemories(int count);
+    
+    /**
+     * 根据内容相似度检索记忆
+     *
+     * @param query 查询内容
+     * @param threshold 相似度阈值 (0-1)
+     * @return 相似记忆列表
+     */
+    List<Memory> getMemoriesBySimilarity(String query, double threshold);
 }
