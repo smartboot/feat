@@ -7,7 +7,7 @@ description: 为确保 Feat 文档的一致性、专业性和易读性而制定�
 
 本文档为 Feat 框架的文档写作标准指南。它提供了文档结构、写作风格和技术内容呈现等方面的指导原则。
 
-所有 Feat 文均为开源内容。如果您发现文档存在问题或希望改进文档，请积极参与贡献。
+所有 Feat 文档均为开源内容。如果您发现文档存在问题或希望改进文档，请积极参与贡献。
 
 ### 获取帮助
 
@@ -113,8 +113,102 @@ public class HelloWorld {
 - 使用相对路径引用图片
 - 使用 Mermaid 时，必须在文档顶部导入自定义组件：`import Mermaid from '../../../components/Mermaid.astro';`
 
-#### Mermaid 图表示例：
-使用 Mermaid 组件展示图表：
+#### Mermaid 图表规范
+
+为了生成高质量的 Mermaid 图表，请遵循以下规范：
+
+1. **图表结构要求**：
+   - 使用清晰的节点命名，避免使用无意义的字母
+   - 节点文本应简洁明了，不超过一行
+   - 连接线应有明确含义，必要时添加标签
+   - 保持图表布局整洁，避免线条交叉
+
+2. **图表类型选择**：
+   - 流程图：`graph TD` 或 `graph LR` 用于表示执行流程
+   - 序列图：`sequenceDiagram` 用于表示对象间交互
+   - 类图：`classDiagram` 用于表示类关系
+   - 状态图：`stateDiagram` 用于表示状态变化
+   - 组件图：`graph TD` 用于表示系统组件关系
+
+3. **节点样式规范**：
+   - 方形节点：`A[节点文本]`
+   - 圆形节点：`A((节点文本))`
+   - 菱形节点：`A{条件判断}`
+   - 圆角矩形：`A(节点文本)`
+
+4. **图表设计原则**：
+   - **一致性**：同一文档中相同类型的元素应使用相同的样式
+   - **可读性**：确保节点文本清晰可见，避免过长文本
+   - **逻辑性**：图表流向应符合常规阅读习惯（从上到下或从左到右）
+   - **简洁性**：只包含必要的信息，避免图表过于复杂
+
+5. **高质量示例**：
+
+流程图示例：
+```jsx
+<Mermaid code={`
+graph TD
+    A[用户请求] --> B{身份验证}
+    B -->|验证成功| C[处理请求]
+    B -->|验证失败| D[返回错误]
+    C --> E[返回结果]
+    D --> E
+`} />
+```
+
+序列图示例：
+```jsx
+<Mermaid code={`
+sequenceDiagram
+    participant U as 用户
+    participant S as 服务器
+    participant D as 数据库
+    
+    U->>S: 登录请求
+    S->>D: 验证凭据
+    D-->>S: 验证结果
+    S-->>U: 登录响应
+`} />
+```
+
+类图示例：
+```jsx
+<Mermaid code={`
+classDiagram
+    class Animal {
+        +String name
+        +int age
+        +makeSound()
+    }
+    
+    class Dog {
+        +String breed
+        +bark()
+    }
+    
+    class Cat {
+        +String color
+        +meow()
+    }
+    
+    Animal <|-- Dog
+    Animal <|-- Cat
+`} />
+```
+
+组件图示例：
+```jsx
+<Mermaid code={`
+graph TD
+    A[客户端] --> B(负载均衡器)
+    B --> C[Web服务器1]
+    B --> D[Web服务器2]
+    B --> E[Web服务器3]
+    C --> F[(数据库)]
+    D --> F
+    E --> F
+`} />
+```
 
 在使用 Mermaid 图表之前，需要在文档顶部导入自定义的 Mermaid 组件：
 
