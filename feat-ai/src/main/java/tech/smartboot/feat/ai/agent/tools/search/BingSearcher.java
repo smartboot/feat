@@ -8,7 +8,7 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.ai.agent.search;
+package tech.smartboot.feat.ai.agent.tools.search;
 
 import java.util.regex.Pattern;
 

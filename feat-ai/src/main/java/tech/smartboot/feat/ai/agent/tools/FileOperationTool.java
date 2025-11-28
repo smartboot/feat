@@ -8,10 +8,10 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.ai.agent.tool.standard;
+package tech.smartboot.feat.ai.agent.tools;
 
 import com.alibaba.fastjson2.JSONObject;
-import tech.smartboot.feat.ai.agent.tool.ToolExecutor;
+import tech.smartboot.feat.ai.agent.AgentTool;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -19,6 +19,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -28,7 +29,7 @@ import java.util.stream.Stream;
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
-public class FileOperationTool implements ToolExecutor {
+public class FileOperationTool implements AgentTool {
 
     private static final String NAME = "file_operation";
     private static final String DESCRIPTION = "提供文件系统操作功能，包括列出目录、读取文件、写入文件等";
@@ -37,7 +38,7 @@ public class FileOperationTool implements ToolExecutor {
     private final String workingDirectory;
 
     // 全局排除模式列表
-    private volatile java.util.List<String> globalExcludePatterns = new ArrayList<>(Arrays.asList("/node_modules/", "*/target/*","/.git/","/.idea/"));
+    private volatile List<String> globalExcludePatterns = new ArrayList<>(Arrays.asList("/node_modules/", "*/target/*", "/.git/", "/.idea/"));
 
     public FileOperationTool() {
         this.workingDirectory = System.getProperty("user.dir");

@@ -8,7 +8,7 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.ai.agent.search;
+package tech.smartboot.feat.ai.agent.tools.search;
 
 import tech.smartboot.feat.core.client.HttpGet;
 import tech.smartboot.feat.core.common.HeaderName;

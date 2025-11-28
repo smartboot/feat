@@ -19,21 +19,21 @@ import java.util.List;
  * @version v1.0.0
  */
 public interface AgentMemory {
-    
+
     /**
      * 添加记忆
      *
      * @param memory 记忆对象
      */
     void addMemory(Memory memory);
-    
+
     /**
      * 获取所有记忆
      *
      * @return 记忆列表
      */
     List<Memory> getMemories();
-    
+
     /**
      * 根据重要性获取记忆
      *
@@ -41,7 +41,7 @@ public interface AgentMemory {
      * @return 符合条件的记忆列表
      */
     List<Memory> getMemoriesByImportance(double minImportance);
-    
+
     /**
      * 根据时间范围获取记忆
      *
@@ -50,12 +50,12 @@ public interface AgentMemory {
      * @return 时间范围内的记忆列表
      */
     List<Memory> getMemoriesByTimeRange(long startTime, long endTime);
-    
+
     /**
      * 清空记忆
      */
     void clear();
-    
+
     /**
      * 获取记忆总数
      *
