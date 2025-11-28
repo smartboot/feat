@@ -24,7 +24,7 @@ public class FeatException extends RuntimeException {
     }
 
     public FeatException(String message, Throwable cause) {
-        super(message, cause);
+        super(message, getRootCause(cause));
     }
 
     private static Throwable getRootCause(Throwable cause) {

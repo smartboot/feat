@@ -221,27 +221,20 @@ final class CloudOptionsSerializer implements Serializer {
             ecdsaVerify.initVerify(publicKey);
             ecdsaVerify.update(license.getName().getBytes(StandardCharsets.UTF_8));
             if (!ecdsaVerify.verify(Base64.getDecoder().decode(license.getLicense()))) {
-                throw new FeatException("") {
-                    @Override
-                    public void printStackTrace() {
-                        System.err.println("################# ERROR ##############");
-                        System.err.println("invalid Feat License: " + localLicense);
-                        System.err.println("######################################");
-                    }
-                };
+                System.err.println("################# ERROR ##############");
+                System.err.println("invalid Feat License: " + localLicense);
+                System.err.println("######################################");
+                throw new FeatException("Invalid Feat License");
             }
             supplyChainSecurity(featUsers);
         } catch (FeatException e) {
             throw e;
         } catch (Throwable e) {
-            throw new FeatException("") {
-                @Override
-                public void printStackTrace() {
-                    System.err.println("################# ERROR ##############");
-                    System.err.println("Feat License Check ERROR: " + e.getMessage());
-                    System.err.println("######################################");
-                }
-            };
+            e.printStackTrace();
+            System.err.println("################# ERROR ##############");
+            System.err.println("Feat License Check ERROR: " + e.getMessage());
+            System.err.println("######################################");
+            throw new FeatException("Feat License Check ERROR", e);
         }
     }
 
