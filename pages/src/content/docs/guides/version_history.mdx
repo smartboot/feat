@@ -11,7 +11,8 @@ import { Image } from '@astrojs/starlight/components';
 ### 版本特性
 - **Feat Core：**
   - [client] 新增友好的 SSE 接口，更好的赋能 AI 开发。
-  - [client] HttpClient 支持连接资源自动释放。
+  - [client] 修复特定情况下 SSE 解码异常问题。
+  - [client] HttpClient 支持链路复用，以及连接资源自动释放。
   - [client] 支持解析 `Content-Encoding:dcz` 响应结果。
   - [client] 采用自定义 gzip 解析，支持异步解码。
   - [server] 简化 Http ReadListener 的接口实现。
@@ -20,13 +21,19 @@ import { Image } from '@astrojs/starlight/components';
   - [server] 修复非法 upgrade 引发的请求参数解析阻塞问题。
   - [server] 改进编解码算法。
   - [server] 废弃 HttpResponse@writeJson 方法。
+  - [server] 优化 smart-socket 插件注册顺序。
   - 升级 smart-socket 至 1.7.5。
 
 - **Feat AI：**
   - 适配全新的 SSE 接口，提升代码可读性和可维护性。
-  - 探索 AI Agent 相关技术，并初步实现通用 Agent 能力。
+  - 探索 AI Agent 相关技术：并初步实现通用 Agent 能力，并内置了多款工具。
+  - 重构提示词模版接口设计，提升使用体验及解析性能。
+  - 新增多款 Gitee AI 模型：DeepSeek-V3.2-Exp、DeepSeek-V3_1、Qwen3-8B、Qwen3-32B
 - **Feat Cloud**
   - 异步接收 Form 表单数据，带来并发性能前所未有的提升。
+  - 新增 feat.yaml 配置项：`$.server.autoSSL` 自动启用 HTTPS。
+  - 优化 MCP 注册路由的控制台输出。
+  - 优化 AOT VM 模块，尽量对齐 AOT 运行表现。
 
 
 ### 升级指南
