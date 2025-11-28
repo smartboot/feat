@@ -7,11 +7,32 @@ sidebar:
 
 import Mermaid from '../../../components/Mermaid.astro';
 
+## 关于 Agent
+
 Agent 是 Feat AI 框架中的一个重要组件，它基于 ReAct（Reasoning + Acting）范式，能够进行推理并执行动作。Agent 可以使用各种工具来完成复杂的任务，如文件操作、网络搜索、待办事项管理等。
 
-## 核心概念
+所有 Feat AI 文档均为开源内容。如果您发现文档存在问题或希望改进文档，请积极参与贡献。
 
-### ReAct 范式
+### 获取帮助
+
+如果在使用 Feat AI Agent 时遇到问题，可通过以下方式获取帮助：
+
+- 参考本文档获取使用指导
+- 查阅 Feat AI 官方示例文档
+- 在项目讨论区提问
+
+## 1. 入门指南
+
+如果您刚开始接触 Feat AI Agent，请从以下几个方面入手：
+
+- 了解 Agent 的核心概念和工作原理
+- 学习如何创建和配置 Agent 实例
+- 掌握内置工具的使用方法
+- 了解如何创建自定义工具
+
+### 1.1 核心概念
+
+#### ReAct 范式
 
 ReAct 是一种结合推理（Reasoning）和行动（Acting）的范式，使 Agent 能够：
 
@@ -31,7 +52,7 @@ graph TD
     E -->|是| F[返回最终答案]
 `}/>
 
-### Agent 状态
+#### Agent 状态
 
 Agent 在执行过程中会经历以下状态：
 
@@ -41,9 +62,9 @@ Agent 在执行过程中会经历以下状态：
 - **FINISHED** - 执行完成
 - **ERROR** - 执行出错
 
-## 快速开始
+## 2. 快速开始
 
-### 创建 Agent 实例
+### 2.1 创建 Agent 实例
 
 ```java
 import tech.smartboot.feat.ai.agent.ReActAgent;
@@ -52,7 +73,7 @@ import tech.smartboot.feat.ai.agent.ReActAgent;
 ReActAgent agent = new ReActAgent();
 ```
 
-### 执行任务
+### 2.2 执行任务
 
 ```java
 // 让 Agent 执行一个任务
@@ -60,7 +81,7 @@ String result = agent.execute("帮我搜索一下最新的 AI 技术发展趋势
 System.out.println(result);
 ```
 
-## 配置选项
+## 3. 配置选项
 
 Agent 提供了丰富的配置选项，可通过 [AgentOptions](file:///Users/zhengjw22mac123/IdeaProjects/feat/feat-ai/src/main/java/tech/smartboot/feat/ai/agent/AgentOptions.java#L37-L268) 进行配置：
 
@@ -71,6 +92,7 @@ import tech.smartboot.feat.ai.chat.ChatModelVendor;
 AgentOptions options = AgentOptions.create()
     .name("MyAgent")                           // 设置 Agent 名称
     .description("一个通用的 AI Agent")          // 设置描述
+    .roleName("AI研究员")                        // 设置角色名称
     .model(ChatModelVendor.GiteeAI.DeepSeek_R1) // 设置使用的模型
     .maxIterations(10)                         // 设置最大推理迭代次数
     .enableSmartMemory();                      // 启用智能记忆检索
@@ -82,15 +104,16 @@ AgentOptions options = AgentOptions.create()
 |------|------|--------|
 | name | Agent 名称 | "DefaultAgent" |
 | description | Agent 描述 | "默认Agent" |
+| roleName | Agent 角色名称 | "AI助手" |
 | model | 使用的模型 | ChatModelVendor.GiteeAI.DeepSeek_V32_EXP |
 | maxIterations | 最大推理迭代次数 | 20 |
 | enableSmartMemory | 是否启用智能记忆检索 | true |
 
-## 内置工具
+## 4. 内置工具
 
 Feat AI Agent 内置了多种常用工具：
 
-### 待办事项工具 (TodoListTool)
+### 4.1 待办事项工具 (TodoListTool)
 
 管理待办事项列表：
 
@@ -110,7 +133,7 @@ Action Input: {
 }
 ```
 
-### 文件操作工具 (FileOperationTool)
+### 4.2 文件操作工具 (FileOperationTool)
 
 执行文件系统操作：
 
@@ -131,7 +154,7 @@ Action Input: {
 }
 ```
 
-### 搜索工具 (SearchTool)
+### 4.3 搜索工具 (SearchTool)
 
 执行网络搜索：
 
@@ -143,7 +166,7 @@ Action Input: {
 }
 ```
 
-### 网页阅读工具 (WebPageReaderTool)
+### 4.4 网页阅读工具 (WebPageReaderTool)
 
 读取网页内容：
 
@@ -155,7 +178,7 @@ Action Input: {
 }
 ```
 
-### 子 Agent 工具 (SubAgentTool)
+### 4.5 子 Agent 工具 (SubAgentTool)
 
 创建子 Agent 来处理特定任务：
 
@@ -167,7 +190,7 @@ Action Input: {
 }
 ```
 
-## 自定义工具
+## 5. 自定义工具
 
 除了内置工具外，您还可以创建自定义工具：
 
@@ -209,9 +232,9 @@ public class CustomTool implements ToolExecutor {
 agent.addTool(new CustomTool());
 ```
 
-## 使用示例
+## 6. 使用示例
 
-### 完整示例
+### 6.1 完整示例
 
 ```java
 import tech.smartboot.feat.ai.agent.ReActAgent;
@@ -224,6 +247,7 @@ public class AgentDemo {
         AgentOptions options = AgentOptions.create()
             .name("ResearchAssistant")
             .description("研究助理，可以帮助搜索和整理信息")
+            .roleName("AI研究员")
             .model(ChatModelVendor.GiteeAI.DeepSeek_R1)
             .maxIterations(15);
             
@@ -240,7 +264,7 @@ public class AgentDemo {
 
 有关完整示例，请参见 [ReActAgentTest.java](https://gitee.com/smartboot/feat/blob/master/feat-ai/src/test/java/tech/smartboot/feat/ai/agent/ReActAgentTest.java)
 
-## 内存管理
+## 7. 内存管理
 
 Agent 具有内存管理功能，可以存储和检索相关信息：
 
@@ -261,7 +285,16 @@ agent.getOptions()
     .maxMemoryRetrievalCount(10);
 ```
 
-## 最佳实践
+内存管理配置选项：
+
+| 选项 | 描述 | 默认值 |
+|------|------|--------|
+| memory | Agent 记忆实例 | DefaultAgentMemory |
+| enableSmartMemory | 是否启用智能记忆检索 | true |
+| memoryRetrievalThreshold | 记忆检索阈值 | 0.5 |
+| maxMemoryRetrievalCount | 最大记忆检索数量 | 5 |
+
+## 8. 最佳实践
 
 1. **合理设置迭代次数** - 根据任务复杂度设置合适的最大迭代次数，避免无限循环
 2. **选择合适模型** - 根据任务需求选择具有相应能力的模型
@@ -269,7 +302,7 @@ agent.getOptions()
 4. **监控 Agent 状态** - 通过状态监控了解 Agent 的执行过程
 5. **错误处理** - 妥善处理执行过程中可能出现的异常情况
 
-## 架构说明
+## 9. 架构说明
 
 ReActAgent 的工作原理如下：
 
@@ -281,6 +314,6 @@ ReActAgent 的工作原理如下：
 6. 将工具执行结果作为 Observation 添加到上下文中
 7. 重复步骤 3-6 直到获得最终答案或达到最大迭代次数
 
-## 总结
+## 10. 总结
 
 Feat AI Agent 为开发者提供了一个强大而灵活的框架，用于构建能够自主推理和执行任务的 AI 应用程序。通过内置工具和自定义扩展机制，可以满足各种复杂场景的需求。
