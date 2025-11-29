@@ -11,20 +11,32 @@
 package tech.smartboot.feat.ai.chat.entity;
 
 /**
+ * 完整选择项类，继承自Choice，包含完整的消息内容
+ *
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
 public class WholeChoice extends Choice {
 
     /**
-     * 非 stream 全量返回
+     * 非 stream 全量返回的消息内容
      */
     private ResponseMessage message;
 
+    /**
+     * 获取响应消息
+     *
+     * @return 响应消息
+     */
     public ResponseMessage getMessage() {
         return message;
     }
 
+    /**
+     * 设置响应消息
+     *
+     * @param message 响应消息
+     */
     public void setMessage(ResponseMessage message) {
         this.message = message;
     }

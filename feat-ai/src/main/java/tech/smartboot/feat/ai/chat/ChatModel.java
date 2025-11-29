@@ -37,6 +37,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 /**
+ * 聊天模型类，用于与AI模型进行交互，支持流式和非流式响应
+ *
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
@@ -44,6 +46,11 @@ public class ChatModel {
     private static final Logger LOGGER = LoggerFactory.getLogger(ChatModel.class);
     private final ChatOptions options;
 
+    /**
+     * 构造函数
+     *
+     * @param options 聊天选项配置
+     */
     public ChatModel(ChatOptions options) {
         if (options.baseUrl().endsWith("/")) {
             options.baseUrl(options.baseUrl().substring(0, options.baseUrl().length() - 1));
@@ -51,14 +58,33 @@ public class ChatModel {
         this.options = options;
     }
 
+    /**
+     * 发送流式聊天请求（简单版本）
+     *
+     * @param content  用户输入内容
+     * @param consumer 流式响应回调
+     */
     public void chatStream(String content, StreamResponseCallback consumer) {
         chatStream(Collections.singletonList(Message.ofUser(content)), Collections.emptyList(), consumer);
     }
 
+    /**
+     * 发送流式聊天请求（消息列表版本）
+     *
+     * @param messages 消息列表
+     * @param consumer 流式响应回调
+     */
     public void chatStream(List<Message> messages, StreamResponseCallback consumer) {
         chatStream(messages, Collections.emptyList(), consumer);
     }
 
+    /**
+     * 发送流式聊天请求（完整版本）
+     *
+     * @param messages 消息列表
+     * @param tools    工具列表
+     * @param consumer 流式响应回调
+     */
     public void chatStream(List<Message> messages, List<String> tools, StreamResponseCallback consumer) {
         HttpPost post = chat0(messages, tools, true);
         StringBuilder contentBuilder = new StringBuilder();
@@ -136,26 +162,59 @@ public class ChatModel {
         })).submit();
     }
 
+    /**
+     * 发送流式聊天请求（工具版本）
+     *
+     * @param chat     用户输入内容
+     * @param tools    工具列表
+     * @param consumer 流式响应回调
+     */
     public void chatStream(String chat, List<String> tools, StreamResponseCallback consumer) {
         chatStream(Collections.singletonList(Message.ofUser(chat)), tools, consumer);
     }
 
+    /**
+     * 发送非流式聊天请求（简单版本）
+     *
+     * @param content 用户输入内容
+     * @return 包含响应消息的CompletableFuture
+     */
     public CompletableFuture<ResponseMessage> chat(String content) {
         return chat(content, Collections.emptyList());
     }
 
+    /**
+     * 发送非流式聊天请求（消息列表版本）
+     *
+     * @param messages 消息列表
+     * @return 包含响应消息的CompletableFuture
+     */
     public CompletableFuture<ResponseMessage> chat(List<Message> messages) {
         CompletableFuture<ResponseMessage> future = new CompletableFuture<>();
         chat(messages, Collections.emptyList(), future::complete);
         return future;
     }
 
+    /**
+     * 发送非流式聊天请求（工具版本）
+     *
+     * @param content 用户输入内容
+     * @param tools   工具列表
+     * @return 包含响应消息的CompletableFuture
+     */
     public CompletableFuture<ResponseMessage> chat(String content, List<String> tools) {
         CompletableFuture<ResponseMessage> future = new CompletableFuture<>();
         chat(content, tools, future::complete);
         return future;
     }
 
+    /**
+     * 发送非流式聊天请求（回调版本）
+     *
+     * @param messages 消息列表
+     * @param tools    工具列表
+     * @param callback 响应回调
+     */
     public void chat(List<Message> messages, List<String> tools, Consumer<ResponseMessage> callback) {
         HttpPost post = chat0(messages, tools, false);
 
@@ -177,10 +236,25 @@ public class ChatModel {
         }).onFailure(Throwable::printStackTrace).submit();
     }
 
+    /**
+     * 发送非流式聊天请求（工具+回调版本）
+     *
+     * @param content  用户输入内容
+     * @param tools    工具列表
+     * @param callback 响应回调
+     */
     public void chat(String content, List<String> tools, Consumer<ResponseMessage> callback) {
         chat(Collections.singletonList(Message.ofUser(content)), tools, callback);
     }
 
+    /**
+     * 构建并发送聊天请求的核心方法
+     *
+     * @param messages 消息列表
+     * @param tools    工具列表
+     * @param stream   是否使用流式响应
+     * @return HttpPost请求对象
+     */
     private HttpPost chat0(List<Message> messages, List<String> tools, boolean stream) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("model", options.getModel().model());
@@ -224,32 +298,71 @@ public class ChatModel {
         return post;
     }
 
+    /**
+     * 发送非流式聊天请求（单工具版本）
+     *
+     * @param content  用户输入内容
+     * @param tool     工具名称
+     * @param callback 响应回调
+     */
     public void chat(String content, String tool, Consumer<ResponseMessage> callback) {
         chat(content, Collections.singletonList(tool), callback);
     }
 
+    /**
+     * 发送非流式聊天请求（无工具版本）
+     *
+     * @param content  用户输入内容
+     * @param callback 响应回调
+     */
     public void chat(String content, Consumer<ResponseMessage> callback) {
         chat(content, Collections.emptyList(), callback);
     }
 
+    /**
+     * 发送非流式聊天请求（提示词模板版本）
+     *
+     * @param prompt 提示词模板
+     * @param data   模板数据
+     * @return 包含响应消息的CompletableFuture
+     */
     public CompletableFuture<ResponseMessage> chat(Prompt prompt, Consumer<Map<String, String>> data) {
         CompletableFuture<ResponseMessage> future = new CompletableFuture<>();
         chat(prompt, data, future::complete);
         return future;
     }
 
+    /**
+     * 发送非流式聊天请求（提示词模板+回调版本）
+     *
+     * @param prompt   提示词模板
+     * @param data     模板数据
+     * @param callback 响应回调
+     */
     public void chat(Prompt prompt, Consumer<Map<String, String>> data, Consumer<ResponseMessage> callback) {
         Map<String, String> params = new HashMap<>();
         data.accept(params);
         chat(prompt.prompt(params), callback);
     }
 
+    /**
+     * 发送流式聊天请求（提示词模板版本）
+     *
+     * @param prompt   提示词模板
+     * @param data     模板数据
+     * @param callback 流式响应回调
+     */
     public void chatStream(Prompt prompt, Consumer<Map<String, String>> data, StreamResponseCallback callback) {
         Map<String, String> params = new HashMap<>();
         data.accept(params);
         chatStream(prompt.prompt(params), callback);
     }
 
+    /**
+     * 获取聊天选项配置
+     *
+     * @return 聊天选项配置
+     */
     public ChatOptions getOptions() {
         return options;
     }
