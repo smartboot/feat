@@ -96,11 +96,67 @@ AgentState state = agent.getState();
 System.out.println("当前状态: " + state);
 ```
 
-## 3. 内置工具
+## 3. Agent 架构设计
+
+Feat AI Agent 采用了模块化设计，主要包括以下几个核心组件：
+
+<Mermaid code={`
+graph TB
+    A[Agent接口] --> B[FeatAgent抽象类]
+    B --> C[ReActAgent实现类]
+    C --> D[AgentOptions配置]
+    C --> E[AgentState状态管理]
+    C --> F[AgentTool工具接口]
+    F --> G[TodoListTool]
+    F --> H[FileOperationTool]
+    F --> I[SearchTool]
+    F --> J[WebPageReaderTool]
+    F --> K[SubAgentTool]
+    D --> L[PromptTemplate提示模板]
+    D --> M[ChatOptions聊天选项]
+    C --> N[Memory记忆管理]
+    
+    style C fill:#FFE4B5,stroke:#333
+    style D fill:#E6E6FA,stroke:#333
+    style F fill:#E6E6FA,stroke:#333
+`} />
+
+### 3.1 核心组件说明
+
+1. **Agent接口** - 定义了Agent的基本行为，主要是execute方法
+2. **FeatAgent抽象类** - 提供了Agent的基础实现，包括状态管理和配置选项
+3. **ReActAgent实现类** - 基于ReAct范式的具体实现，是用户直接使用的类
+4. **AgentOptions配置** - 管理Agent的各种配置选项，包括工具、提示模板、聊天选项等
+5. **AgentState状态管理** - 管理Agent的运行状态
+6. **AgentTool工具接口** - 定义了工具的基本规范，所有工具都需要实现此接口
+7. **内置工具实现** - 提供了常用的工具实现，如文件操作、搜索等
+8. **PromptTemplate提示模板** - 管理Agent的行为提示模板
+9. **Memory记忆管理** - 管理Agent的记忆信息
+
+### 3.2 工作流程
+
+<Mermaid code={`
+sequenceDiagram
+    participant U as 用户
+    participant R as ReActAgent
+    participant T as 工具
+    participant M as 模型
+    
+    U->>R: execute(任务)
+    loop ReAct循环
+        R->>M: 发送提示和任务
+        M->>R: 返回思考和行动
+        R->>T: 执行工具
+        T->>R: 返回结果
+    end
+    R->>U: 返回最终结果
+`} />
+
+## 4. 内置工具
 
 Feat AI Agent 内置了多种常用工具，在 ReActAgent 构造函数中默认注册。这些工具可以让 Agent 执行各种实际操作来完成复杂任务。
 
-### 3.1 待办事项工具 (TodoListTool)
+### 4.1 待办事项工具 (TodoListTool)
 
 管理待办事项列表，可用于任务分解和进度跟踪：
 
@@ -144,7 +200,7 @@ Action Input: {
 }
 ```
 
-### 3.2 文件操作工具 (FileOperationTool)
+### 4.2 文件操作工具 (FileOperationTool)
 
 执行文件系统操作，包括读写文件、创建目录等：
 
@@ -194,7 +250,7 @@ Action Input: {
 }
 ```
 
-### 3.3 搜索工具 (SearchTool)
+### 4.3 搜索工具 (SearchTool)
 
 执行网络搜索，获取实时信息：
 
@@ -216,7 +272,7 @@ Action Input: {
 }
 ```
 
-### 3.4 网页阅读工具 (WebPageReaderTool)
+### 4.4 网页阅读工具 (WebPageReaderTool)
 
 读取网页内容，提取文本信息：
 
@@ -228,7 +284,7 @@ Action Input: {
 }
 ```
 
-### 3.5 子 Agent 工具 (SubAgentTool)
+### 4.5 子 Agent 工具 (SubAgentTool)
 
 创建子 Agent 来处理特定任务，实现任务委派：
 
@@ -241,7 +297,7 @@ Action Input: {
 }
 ```
 
-## 4. 自定义工具
+## 5. 自定义工具
 
 除了内置工具外，您还可以创建自定义工具来扩展 Agent 的功能。自定义工具需要实现 [AgentTool](file:///Users/zhengjw22mac123/IdeaProjects/feat/feat-ai/src/main/java/tech/smartboot/feat/ai/agent/AgentTool.java#L30-L103) 接口：
 
@@ -284,9 +340,9 @@ AgentOptions options = AgentOptions.create();
 options.addTool(new CustomTool());
 ```
 
-## 5. 内存管理和提示模板
+## 6. 内存管理和提示模板
 
-### 5.1 内存管理
+### 6.1 内存管理
 
 Agent 具有内存管理功能，可以存储和检索相关信息：
 
@@ -313,7 +369,7 @@ ReActAgent agent = new ReActAgent();
 | maxMemoryRetrievalCount | 最大记忆检索数量 | 5 |
 | maxIterations | 最大推理迭代次数 | 20 |
 
-### 5.2 提示模板
+### 6.2 提示模板
 
 Agent 使用提示模板来引导 AI 模型的行为。默认使用 `feat_react_agent.tpl` 模板，其中包含了以下变量：
 
@@ -377,7 +433,7 @@ AI: 最终答案
 请严格按照上述格式进行思考和输出，每一步只能输出一个Thought和一个Action或AI回答。
 ```
 
-## 6. 完整示例和最佳实践
+## 7. 完整示例和最佳实践
 
 以下是一个完整的使用示例：
 
