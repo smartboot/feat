@@ -57,34 +57,71 @@ import java.util.stream.Collectors;
  */
 public final class Router implements HttpHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(Router.class);
+    
     /**
-     * 默认404
+     * 默认404处理器
+     * <p>
+     * 当没有找到匹配的路由时，使用此处理器返回404状态码
+     * </p>
      */
     private final RouterHandlerImpl defaultHandler;
+    
+    /**
+     * 根路径节点
+     * <p>
+     * 所有路由规则的根节点，用于构建路由匹配的前缀树结构
+     * </p>
+     */
     private final NodePath rootPath = new NodePath("/");
+    
+    /**
+     * 拦截器单元列表
+     * <p>
+     * 存储所有注册的拦截器及其匹配路径规则
+     * </p>
+     */
     private final List<InterceptorUnit> interceptors = new ArrayList<>();
 
     /**
-     * 所有的session
+     * 所有的会话映射表
+     * <p>
+     * 通过会话ID映射到会话单元，用于管理和查找会话信息
+     * </p>
      */
     private final Map<String, SessionUnit> sessions = new ConcurrentHashMap<>();
+    
     /**
-     * session监听器,用于清理过期的session
+     * 会话监听器,用于清理过期的会话
+     * <p>
+     * 使用时间轮算法定期检查和清理过期的会话，避免内存泄漏
+     * </p>
      */
     private static final HashedWheelTimer timer = new HashedWheelTimer(r -> {
         Thread thread = new Thread(r, "feat-session-timer");
         thread.setDaemon(true);
         return thread;
     }, 1000, 64);
+    
     /**
-     * session的配置
+     * 会话的配置选项
+     * <p>
+     * 包含会话相关的配置参数，如最大存活时间等
+     * </p>
      */
     private final SessionOptions sessionOptions = new SessionOptions();
 
+    /**
+     * 构造一个路由管理器实例，使用默认的404处理器
+     */
     public Router() {
         this(request -> request.getResponse().setHttpStatus(HttpStatus.NOT_FOUND));
     }
 
+    /**
+     * 构造一个路由管理器实例，使用指定的HTTP处理器
+     *
+     * @param httpHandler 默认的HTTP处理器
+     */
     public Router(HttpHandler httpHandler) {
         this.defaultHandler = new RouterHandlerImpl(this, "", new RouterHandler() {
             @Override
@@ -144,9 +181,9 @@ public final class Router implements HttpHandler {
     /**
      * 配置URL路由
      *
-     * @param urlPattern url匹配
-     * @param handler    处理handler
-     * @return
+     * @param urlPattern url匹配模式
+     * @param handler    处理器
+     * @return 路由管理器实例，支持链式调用
      */
     public Router route(String urlPattern, RouterHandler handler) {
         return route(urlPattern, "", handler);
@@ -155,22 +192,37 @@ public final class Router implements HttpHandler {
     /**
      * 配置URL路由
      *
-     * @param urlPattern url匹配
-     * @param handler    处理handler
-     * @return
+     * @param urlPattern url匹配模式
+     * @param method     HTTP方法
+     * @param handler    处理器
+     * @return 路由管理器实例，支持链式调用
      */
     public Router route(String urlPattern, String method, RouterHandler handler) {
         rootPath.add(urlPattern, new RouterHandlerImpl(this, urlPattern, method, handler, defaultHandler));
         return this;
     }
 
-    public Router route(String urlPattern, String[] method, RouterHandler handler) {
-        for (String s : method) {
-            route(urlPattern, s, handler);
+    /**
+     * 配置URL路由，支持多个HTTP方法
+     *
+     * @param urlPattern url匹配模式
+     * @param methods    HTTP方法数组
+     * @param handler    处理器
+     * @return 路由管理器实例，支持链式调用
+     */
+    public Router route(String urlPattern, String[] methods, RouterHandler handler) {
+        for (String method : methods) {
+            route(urlPattern, method, handler);
         }
         return this;
     }
 
+    /**
+     * 匹配URI并返回对应的HTTP处理器
+     *
+     * @param uri 待匹配的URI
+     * @return 匹配到的HTTP处理器
+     */
     private HttpHandler matchHandler(String uri) {
         HttpHandler httpHandler = rootPath.match(uri);
         if (httpHandler == null) {
@@ -214,20 +266,55 @@ public final class Router implements HttpHandler {
         };
     }
 
+    /**
+     * 添加单个路径模式的拦截器
+     *
+     * @param urlPattern  URL路径模式
+     * @param interceptor 拦截器实例
+     * @return 路由管理器实例，支持链式调用
+     */
     public Router addInterceptor(String urlPattern, Interceptor interceptor) {
         return addInterceptors(Collections.singletonList(urlPattern), interceptor);
     }
 
+    /**
+     * 添加多个路径模式的拦截器
+     *
+     * @param urlPatterns URL路径模式列表
+     * @param interceptor 拦截器实例
+     * @return 路由管理器实例，支持链式调用
+     */
     public Router addInterceptors(List<String> urlPatterns, Interceptor interceptor) {
         interceptors.add(new InterceptorUnit(urlPatterns, interceptor));
         return this;
     }
 
-
+    /**
+     * 拦截器单元内部类
+     * <p>
+     * 封装拦截器及其匹配路径规则的内部类
+     * </p>
+     */
     private class InterceptorUnit {
+        /**
+         * 路径节点列表
+         * <p>
+         * 存储所有匹配路径对应的节点对象，用于快速匹配拦截器适用范围
+         * </p>
+         */
         private final List<NodePath> path;
+        
+        /**
+         * 拦截器实例
+         */
         private final Interceptor interceptor;
 
+        /**
+         * 构造拦截器单元
+         *
+         * @param patterns    路径模式列表
+         * @param interceptor 拦截器实例
+         */
         public InterceptorUnit(List<String> patterns, Interceptor interceptor) {
             this.interceptor = interceptor;
             this.path = new ArrayList<>();
@@ -238,11 +325,23 @@ public final class Router implements HttpHandler {
             }
         }
 
+        /**
+         * 获取拦截器实例
+         *
+         * @return 拦截器实例
+         */
         public Interceptor getInterceptor() {
             return interceptor;
         }
     }
 
+    /**
+     * 获取或创建会话单元
+     *
+     * @param request HTTP请求对象
+     * @param create  是否创建新会话的标志
+     * @return 会话单元，如果不存在且不创建则返回null
+     */
     SessionUnit getSession(HttpRequest request, boolean create) {
         SessionUnit sessionUnit = null;
         Cookie[] cookies = request.getCookies();
@@ -280,11 +379,32 @@ public final class Router implements HttpHandler {
         return unit;
     }
 
+    /**
+     * 会话单元内部类
+     * <p>
+     * 封装会话实例和相关定时任务的内部类
+     * </p>
+     */
     class SessionUnit {
+        /**
+         * 会话实例
+         */
         private Session session;
+        
+        /**
+         * 定时任务实例
+         * <p>
+         * 用于管理会话超时的定时任务
+         * </p>
+         */
         private TimerTask timerTask;
 
-
+        /**
+         * 暂停超时任务
+         * <p>
+         * 取消当前的超时定时任务
+         * </p>
+         */
         void pauseTimeoutTask() {
             if (timerTask != null) {
                 timerTask.cancel();
@@ -292,6 +412,12 @@ public final class Router implements HttpHandler {
             }
         }
 
+        /**
+         * 更新超时任务
+         * <p>
+         * 取消当前超时任务并根据会话最大存活时间重新设置新的超时任务
+         * </p>
+         */
         synchronized void updateTimeoutTask() {
             pauseTimeoutTask();
             if (session.getMaxAge() <= 0) {
@@ -303,6 +429,11 @@ public final class Router implements HttpHandler {
             }, session.getMaxAge(), TimeUnit.SECONDS);
         }
 
+        /**
+         * 获取会话实例
+         *
+         * @return 会话实例
+         */
         public Session getSession() {
             return session;
         }

@@ -62,11 +62,18 @@ public class HttpRouteDemo {
 //                    }
 //                })
                 .route("/b/c/test1", ctx -> ctx.Response.write(("/b/c/test1").getBytes()))
-                .route("/b/c/test2", ctx -> ctx.Response.write(("/b/c/test2").getBytes()));
+                .route("/b/c/test2", ctx -> ctx.Response.write(("/b/c/test2").getBytes()))
+                .route("/static/:id", ctx -> {
+                    // 处理 /static/ 开头的所有请求
+                    String path = ctx.pathParam("id");
+                    ctx.Response.write(("访问静态资源: " + path).getBytes());
+                });
+        ;
         routeHandle.addInterceptor("/b/*", (context, completableFuture, chain) -> {
             System.out.println("intercept:" + context.Request.getRequestURI());
             chain.proceed(context, completableFuture);
         });
+
 
         // 3. 启动服务
         HttpServer bootstrap = new HttpServer();

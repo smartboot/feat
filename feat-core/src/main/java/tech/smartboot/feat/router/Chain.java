@@ -27,21 +27,33 @@ import java.util.concurrent.CompletableFuture;
 public class Chain {
     /**
      * 当前拦截器在链中的索引位置
+     * <p>
+     * 用于跟踪当前执行到哪一个拦截器，初始值为0，每执行一个拦截器递增1
+     * </p>
      */
     private int index;
     
     /**
      * 拦截器列表，按顺序存储所有注册的拦截器
+     * <p>
+     * 存储所有需要按顺序执行的拦截器实例，保证请求处理过程中的横切关注点处理
+     * </p>
      */
     private final List<Interceptor> interceptors;
     
     /**
      * 最终的目标处理器，当所有拦截器执行完毕后调用
+     * <p>
+     * 在所有拦截器处理完成后，负责实际的业务逻辑处理
+     * </p>
      */
     private final RouterHandler handler;
     
     /**
      * 中断标志，表示处理流程是否被中断
+     * <p>
+     * 当拦截器链中的某个拦截器决定不继续执行后续处理时，会设置此标志为true
+     * </p>
      */
     private boolean isInterrupted = true;
 

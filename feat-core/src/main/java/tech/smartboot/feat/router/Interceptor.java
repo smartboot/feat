@@ -19,6 +19,10 @@ import java.util.concurrent.CompletableFuture;
  * 如权限验证、日志记录、性能监控等。通过实现该接口，开发者可以
  * 自定义拦截逻辑，并将其集成到请求处理链中。
  * </p>
+ * <p>
+ * 拦截器的执行遵循责任链模式，每个拦截器都可以决定是否继续执行
+ * 下一个拦截器或者直接终止请求处理流程。
+ * </p>
  *
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
@@ -31,6 +35,15 @@ public interface Interceptor {
      * 在请求处理链中执行拦截逻辑。实现类可以通过 [chain.proceed()](file:///Users/zhengjw22mac123/IdeaProjects/feat/feat-core/src/main/java/tech/smartboot/feat/router/Interceptor.java#L25-L25)
      * 方法将请求传递给下一个拦截器或最终的目标处理器。
      * </p>
+     * <p>
+     * 实现注意事项：
+     * <ul>
+     *   <li>如果希望继续执行后续处理，必须调用 chain.proceed()</li>
+     *   <li>如果不调用 chain.proceed()，则请求处理流程会被中断</li>
+     *   <li>可以在调用 chain.proceed() 前后执行自定义逻辑</li>
+     *   <li>注意异常处理，避免影响整个请求处理流程</li>
+     * </ul>
+     * </p>
      *
      * @param context             请求上下文，包含请求和响应的相关信息
      * @param completableFuture   异步完成回调，用于标记当前拦截器处理完成
@@ -38,6 +51,4 @@ public interface Interceptor {
      * @throws Throwable          处理过程中可能抛出的异常
      */
     void intercept(Context context, CompletableFuture<Void> completableFuture, Chain chain) throws Throwable;
-
-
 }
