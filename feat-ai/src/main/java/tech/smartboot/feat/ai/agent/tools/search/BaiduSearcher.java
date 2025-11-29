@@ -11,13 +11,31 @@
 package tech.smartboot.feat.ai.agent.tools.search;
 
 /**
+ * 百度搜索引擎实现
+ * <p>
+ * 专门用于处理百度搜索结果的解析和格式化，将百度特有的HTML结构
+ * 转换为标准的Markdown格式，便于AI处理和理解。
+ * </p>
+ *
  * @author 三刀
  * @version v1.0 11/26/25
  */
 class BaiduSearcher extends Searcher {
+    /**
+     * 百度搜索的基础URL
+     */
     public static final String BASE_URL = "https://www.baidu.com/s";
 
-
+    /**
+     * 将百度搜索返回的HTML内容转换为Markdown格式
+     * <p>
+     * 解析百度搜索结果页面，提取搜索结果条目，并将其转换为
+     * Markdown格式的链接列表，便于AI阅读和处理。
+     * </p>
+     *
+     * @param html 百度搜索结果的HTML内容
+     * @return Markdown格式的搜索结果
+     */
     @Override
     protected String toMarkdown(String html) {
         // 移除HTML中的script标签及其内容
@@ -47,6 +65,16 @@ class BaiduSearcher extends Searcher {
         return sb.toString();
     }
 
+    /**
+     * 将单个百度搜索结果条目转换为Markdown格式
+     * <p>
+     * 解析单个搜索结果条目，提取标题、链接和描述信息，
+     * 并格式化为Markdown链接格式。
+     * </p>
+     *
+     * @param item 单个搜索结果条目的HTML内容
+     * @return Markdown格式的搜索结果条目
+     */
     private String itemToMarkdown(String item) {
         int i = item.indexOf("mu=\"");
         int j = item.indexOf("\"", i + 4);

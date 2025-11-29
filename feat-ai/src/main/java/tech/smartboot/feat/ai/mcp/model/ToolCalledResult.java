@@ -10,8 +10,6 @@
 
 package tech.smartboot.feat.ai.mcp.model;
 
-import com.alibaba.fastjson2.JSONObject;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,7 +36,6 @@ public class ToolCalledResult {
     public void setError(boolean error) {
         isError = error;
     }
-
 
 
 }

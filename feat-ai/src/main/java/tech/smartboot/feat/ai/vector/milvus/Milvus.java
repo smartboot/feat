@@ -61,6 +61,7 @@ public class Milvus {
 
     /**
      * This operation drops the specified database.
+     *
      * @param database
      */
     public void deleteDatabase(String database) {

@@ -19,6 +19,10 @@ import java.util.function.Consumer;
 
 /**
  * 搜索工具，用于在互联网或特定数据源中搜索信息
+ * <p>
+ * 该工具允许AI Agent执行网络搜索操作，支持多种搜索引擎，
+ * 包括百度和必应。搜索结果以适合AI处理的格式返回。
+ * </p>
  *
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
@@ -28,8 +32,21 @@ public class SearchTool implements AgentTool {
     private static final String NAME = "search";
     private static final String DESCRIPTION = "在互联网或特定数据源中搜索信息";
 
+    /**
+     * 搜索引擎枚举
+     * <p>
+     * 定义支持的搜索引擎类型，目前支持百度和必应。
+     * </p>
+     */
     public enum SearchEngine {
+        /**
+         * 百度搜索引擎
+         */
         BAIDU("baidu"),
+
+        /**
+         * 必应搜索引擎
+         */
         BING("bing");
 
         private final String value;
@@ -42,6 +59,12 @@ public class SearchTool implements AgentTool {
             return value;
         }
 
+        /**
+         * 根据字符串值获取对应的搜索引擎枚举
+         *
+         * @param value 搜索引擎字符串值
+         * @return 对应的搜索引擎枚举，如果找不到则返回百度
+         */
         public static SearchEngine fromString(String value) {
             for (SearchEngine engine : SearchEngine.values()) {
                 if (engine.value.equalsIgnoreCase(value)) {
@@ -52,6 +75,15 @@ public class SearchTool implements AgentTool {
         }
     }
 
+    /**
+     * 执行搜索操作
+     * <p>
+     * 根据提供的参数执行网络搜索，并返回格式化的搜索结果。
+     * </p>
+     *
+     * @param parameters 包含搜索查询词、最大结果数和搜索引擎的参数
+     * @return 搜索结果字符串
+     */
     @Override
     public String execute(JSONObject parameters) {
         String query = parameters.getString("query");
@@ -88,16 +120,34 @@ public class SearchTool implements AgentTool {
         }
     }
 
+    /**
+     * 获取工具名称
+     *
+     * @return 工具名称 "search"
+     */
     @Override
     public String getName() {
         return NAME;
     }
 
+    /**
+     * 获取工具描述
+     *
+     * @return 工具功能描述
+     */
     @Override
     public String getDescription() {
         return DESCRIPTION;
     }
 
+    /**
+     * 获取工具参数的JSON Schema定义
+     * <p>
+     * 定义了搜索工具的参数格式，包括查询词、最大结果数和搜索引擎选择。
+     * </p>
+     *
+     * @return 参数定义的JSON Schema字符串
+     */
     @Override
     public String getParametersSchema() {
         return "{\n" +
@@ -121,6 +171,12 @@ public class SearchTool implements AgentTool {
                 "}";
     }
 
+    /**
+     * 测试方法
+     *
+     * @param args 命令行参数
+     * @throws Throwable 异常
+     */
     public static void main(String[] args) throws Throwable {
         SearchTool tool = new SearchTool();
 

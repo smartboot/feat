@@ -20,7 +20,6 @@ import tech.smartboot.feat.ai.vector.expression.Expression;
 import tech.smartboot.feat.ai.vector.expression.SimpleExpression;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.exception.FeatException;
-import tech.smartboot.feat.core.common.FeatUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;

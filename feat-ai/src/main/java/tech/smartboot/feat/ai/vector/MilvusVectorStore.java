@@ -17,7 +17,6 @@ import tech.smartboot.feat.ai.vector.milvus.Collection;
 import tech.smartboot.feat.ai.vector.milvus.Milvus;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.exception.FeatException;
-import tech.smartboot.feat.core.common.FeatUtils;
 
 import java.util.Collections;
 import java.util.List;

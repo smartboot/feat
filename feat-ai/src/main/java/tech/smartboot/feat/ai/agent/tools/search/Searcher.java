@@ -22,10 +22,29 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 /**
+ * 搜索器抽象基类
+ * <p>
+ * 该类定义了网络搜索功能的基础框架，支持不同搜索引擎的实现。
+ * 通过模板方法模式，具体的搜索引擎实现只需要关注请求的URL和结果解析逻辑，
+ * 而通用的HTTP请求处理、错误处理等由基类统一处理。
+ * </p>
+ *
  * @author 三刀
  * @version v1.0 11/26/25
  */
 public abstract class Searcher {
+
+    /**
+     * 执行搜索操作的通用方法
+     * <p>
+     * 根据URL自动选择合适的搜索引擎实现，并执行搜索请求。
+     * 支持自定义HTTP GET请求参数。
+     * </p>
+     *
+     * @param url      搜索URL
+     * @param consumer 自定义HTTP GET请求的回调函数
+     * @return 搜索结果的Markdown格式字符串
+     */
     public static String search(String url, Consumer<HttpGet> consumer) {
         Searcher searcher;
         if (url.startsWith(BaiduSearcher.BASE_URL)) {
@@ -58,15 +77,51 @@ public abstract class Searcher {
         }
     }
 
+    /**
+     * 执行搜索操作的简化方法
+     * <p>
+     * 执行指定URL的搜索请求，不包含自定义参数。
+     * </p>
+     *
+     * @param url 搜索URL
+     * @return 搜索结果的Markdown格式字符串
+     */
     public static String search(String url) {
         return search(url, null);
     }
 
+    /**
+     * 初始化HTTP请求
+     * <p>
+     * 子类可以重写此方法以添加特定搜索引擎所需的请求头或其他配置。
+     * </p>
+     *
+     * @param httpGet HTTP GET请求对象
+     */
     protected void initRequest(HttpGet httpGet) {
     }
 
+    /**
+     * 将HTML内容转换为Markdown格式
+     * <p>
+     * 抽象方法，由具体搜索引擎实现，负责将搜索引擎返回的HTML内容
+     * 解析并转换为适合AI处理的Markdown格式文本。
+     * </p>
+     *
+     * @param html HTML格式的搜索结果
+     * @return Markdown格式的搜索结果
+     */
     protected abstract String toMarkdown(String html);
 
+    /**
+     * 获取基础HTTP请求头
+     * <p>
+     * 定义通用的浏览器请求头，使搜索请求看起来像是来自真实用户的浏览器，
+     * 避免被搜索引擎识别为机器人请求。
+     * </p>
+     *
+     * @return 包含基础请求头的Map
+     */
     private static Map<String, String> baseHeader() {
         Map<String, String> headers = new HashMap<>();
         headers.put(HeaderName.ACCEPT.getName(), "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7");

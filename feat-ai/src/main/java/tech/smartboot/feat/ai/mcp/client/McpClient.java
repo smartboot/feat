@@ -12,11 +12,6 @@ package tech.smartboot.feat.ai.mcp.client;
 
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
-import tech.smartboot.feat.ai.mcp.model.ToolResult;
-import tech.smartboot.feat.core.client.HttpResponse;
-import tech.smartboot.feat.core.common.FeatUtils;
-import tech.smartboot.feat.core.common.HttpStatus;
-import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.ai.mcp.enums.LoggerLevel;
 import tech.smartboot.feat.ai.mcp.enums.RoleEnum;
 import tech.smartboot.feat.ai.mcp.model.McpInitializeRequest;
@@ -30,6 +25,11 @@ import tech.smartboot.feat.ai.mcp.model.Response;
 import tech.smartboot.feat.ai.mcp.model.Roots;
 import tech.smartboot.feat.ai.mcp.model.ToolCalledResult;
 import tech.smartboot.feat.ai.mcp.model.ToolListResponse;
+import tech.smartboot.feat.ai.mcp.model.ToolResult;
+import tech.smartboot.feat.core.client.HttpResponse;
+import tech.smartboot.feat.core.common.FeatUtils;
+import tech.smartboot.feat.core.common.HttpStatus;
+import tech.smartboot.feat.core.common.exception.FeatException;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;

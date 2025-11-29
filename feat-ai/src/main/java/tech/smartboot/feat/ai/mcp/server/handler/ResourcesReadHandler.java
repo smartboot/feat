@@ -12,9 +12,9 @@ package tech.smartboot.feat.ai.mcp.server.handler;
 
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
+import tech.smartboot.feat.ai.mcp.McpException;
 import tech.smartboot.feat.ai.mcp.model.Resource;
 import tech.smartboot.feat.ai.mcp.server.McpServer;
-import tech.smartboot.feat.ai.mcp.McpException;
 import tech.smartboot.feat.ai.mcp.server.model.ResourceContext;
 import tech.smartboot.feat.ai.mcp.server.model.ServerResource;
 import tech.smartboot.feat.core.server.HttpRequest;

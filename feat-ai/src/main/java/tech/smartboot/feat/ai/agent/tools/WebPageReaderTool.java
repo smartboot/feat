@@ -16,6 +16,10 @@ import tech.smartboot.feat.ai.agent.tools.search.Searcher;
 
 /**
  * 网页内容读取工具，用于直接读取指定URL的网页内容并返回其文本内容
+ * <p>
+ * 该工具允许AI Agent读取指定网页的完整内容，并将其转换为纯文本格式返回，
+ * 便于后续处理和分析。工具会自动处理HTML标签，提取纯文本内容。
+ * </p>
  *
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
@@ -25,6 +29,15 @@ public class WebPageReaderTool implements AgentTool {
     private static final String NAME = "web_page_reader";
     private static final String DESCRIPTION = "读取指定URL的网页内容并返回其文本内容";
 
+    /**
+     * 执行网页内容读取操作
+     * <p>
+     * 读取指定URL的网页内容，自动处理HTML并提取纯文本内容。
+     * </p>
+     *
+     * @param parameters 包含目标URL的参数
+     * @return 网页的纯文本内容
+     */
     @Override
     public String execute(JSONObject parameters) {
         String url = parameters.getString("url");
@@ -41,16 +54,34 @@ public class WebPageReaderTool implements AgentTool {
         }
     }
 
+    /**
+     * 获取工具名称
+     *
+     * @return 工具名称 "web_page_reader"
+     */
     @Override
     public String getName() {
         return NAME;
     }
 
+    /**
+     * 获取工具描述
+     *
+     * @return 工具功能描述
+     */
     @Override
     public String getDescription() {
         return DESCRIPTION;
     }
 
+    /**
+     * 获取工具参数的JSON Schema定义
+     * <p>
+     * 定义了网页读取工具的参数格式，只需要目标URL。
+     * </p>
+     *
+     * @return 参数定义的JSON Schema字符串
+     */
     @Override
     public String getParametersSchema() {
         return "{\n" +
@@ -65,6 +96,11 @@ public class WebPageReaderTool implements AgentTool {
                 "}";
     }
 
+    /**
+     * 测试方法
+     *
+     * @param args 命令行参数
+     */
     public static void main(String[] args) {
         WebPageReaderTool tool = new WebPageReaderTool();
         JSONObject params = new JSONObject();

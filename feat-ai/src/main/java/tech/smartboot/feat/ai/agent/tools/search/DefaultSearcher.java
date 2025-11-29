@@ -15,15 +15,45 @@ import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
 
 /**
+ * 默认搜索引擎实现
+ * <p>
+ * 用于处理通用网页内容的解析和格式化，将HTML内容转换为Markdown格式，
+ * 适用于无法识别的搜索引擎或普通网页内容的处理。
+ * </p>
+ *
  * @author 三刀
  * @version v1.0 11/26/25
  */
 public class DefaultSearcher extends Searcher {
+
+    /**
+     * 初始化HTTP请求
+     * <p>
+     * 设置HTTP连接为keep-alive，提高请求效率。
+     * </p>
+     *
+     * @param httpGet HTTP GET请求对象
+     */
     @Override
     protected void initRequest(HttpGet httpGet) {
         httpGet.header().set(HeaderName.CONNECTION, HeaderValue.Connection.keepalive);
     }
 
+    /**
+     * 将HTML内容转换为Markdown格式
+     * <p>
+     * 通用的HTML到Markdown转换器，处理各种HTML标签并转换为对应的Markdown格式：
+     * - 标题标签(h1-h6)转换为Markdown标题
+     * - 段落标签(p)转换为文本段落
+     * - 链接标签(a)转换为Markdown链接
+     * - 列表标签(ul, ol, li)转换为Markdown列表
+     * - 代码标签(code, pre)转换为Markdown代码块
+     * - 等等
+     * </p>
+     *
+     * @param html HTML格式的内容
+     * @return Markdown格式的内容
+     */
     @Override
     protected String toMarkdown(String html) {
         if (html == null || html.isEmpty()) {

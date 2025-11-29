@@ -25,6 +25,19 @@ import java.util.stream.Stream;
 
 /**
  * 文件操作工具，提供文件系统操作功能
+ * <p>
+ * 该工具允许AI Agent执行常见的文件系统操作，包括：
+ * 1. 列出目录内容
+ * 2. 读取文件内容
+ * 3. 写入文件内容
+ * 4. 创建目录
+ * 5. 删除文件
+ * 6. 检查文件是否存在
+ * </p>
+ * <p>
+ * 为了安全考虑，所有文件操作都被限制在指定的工作目录内，
+ * 防止AI Agent访问系统敏感文件或目录。
+ * </p>
  *
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
@@ -34,22 +47,48 @@ public class FileOperationTool implements AgentTool {
     private static final String NAME = "file_operation";
     private static final String DESCRIPTION = "提供文件系统操作功能，包括列出目录、读取文件、写入文件等";
 
-    // 工作目录，限制文件操作在此目录内进行
+    /**
+     * 工作目录，限制文件操作在此目录内进行
+     * <p>
+     * 为了安全考虑，所有文件操作都被限制在该目录内，
+     * 防止AI Agent访问系统敏感文件或目录。
+     * </p>
+     */
     private final String workingDirectory;
 
-    // 全局排除模式列表
+    /**
+     * 全局排除模式列表
+     * <p>
+     * 定义一组文件或目录模式，这些模式匹配的路径在列出目录内容时会被忽略。
+     * 默认排除node_modules、target、.git、.idea等开发相关目录。
+     * </p>
+     */
     private volatile List<String> globalExcludePatterns = new ArrayList<>(Arrays.asList("/node_modules/", "*/target/*", "/.git/", "/.idea/"));
 
+    /**
+     * 默认构造函数
+     * <p>
+     * 使用系统当前目录作为工作目录初始化工具。
+     * </p>
+     */
     public FileOperationTool() {
         this.workingDirectory = System.getProperty("user.dir");
     }
 
+    /**
+     * 带工作目录参数的构造函数
+     *
+     * @param workingDirectory 指定的工作目录路径
+     */
     public FileOperationTool(String workingDirectory) {
         this.workingDirectory = workingDirectory;
     }
 
     /**
      * 设置全局排除模式
+     * <p>
+     * 允许自定义需要排除的文件或目录模式列表，替代默认的排除模式。
+     * </p>
      *
      * @param patterns 要排除的文件或目录模式列表
      */
@@ -60,12 +99,27 @@ public class FileOperationTool implements AgentTool {
     /**
      * 获取当前全局排除模式
      *
-     * @return 当前排除模式列表
+     * @return 当前排除模式列表的副本
      */
     public java.util.List<String> getGlobalExcludePatterns() {
         return new java.util.ArrayList<>(this.globalExcludePatterns);
     }
 
+    /**
+     * 执行文件操作工具
+     * <p>
+     * 根据传入的参数执行相应的文件操作，支持多种操作类型：
+     * 1. list_directory: 列出目录内容
+     * 2. read_file: 读取文件内容
+     * 3. write_file: 写入文件内容
+     * 4. create_directory: 创建目录
+     * 5. delete_file: 删除文件
+     * 6. file_exists: 检查文件是否存在
+     * </p>
+     *
+     * @param parameters 包含操作类型和相关参数的JSON对象
+     * @return 操作结果字符串
+     */
     @Override
     public String execute(JSONObject parameters) {
         String action = parameters.getString("action");
@@ -96,16 +150,34 @@ public class FileOperationTool implements AgentTool {
         }
     }
 
+    /**
+     * 获取工具名称
+     *
+     * @return 工具名称 "file_operation"
+     */
     @Override
     public String getName() {
         return NAME;
     }
 
+    /**
+     * 获取工具描述
+     *
+     * @return 工具功能描述
+     */
     @Override
     public String getDescription() {
         return DESCRIPTION;
     }
 
+    /**
+     * 获取工具参数的JSON Schema定义
+     * <p>
+     * 定义了该工具支持的所有操作及其参数格式，供AI Agent正确调用工具。
+     * </p>
+     *
+     * @return 参数定义的JSON Schema字符串
+     */
     @Override
     public String getParametersSchema() {
         return "{\n" +
@@ -135,6 +207,14 @@ public class FileOperationTool implements AgentTool {
 
     /**
      * 列出目录内容
+     * <p>
+     * 根据参数列出指定目录的内容，支持递归和非递归两种模式。
+     * 会过滤掉符合排除模式的文件或目录。
+     * </p>
+     *
+     * @param parameters 包含路径和递归标志的参数
+     * @return 目录内容列表字符串
+     * @throws IOException IO操作异常
      */
     private String listDirectory(JSONObject parameters) throws IOException {
         String pathStr = parameters.getString("path");
@@ -171,6 +251,13 @@ public class FileOperationTool implements AgentTool {
 
     /**
      * 读取文件内容
+     * <p>
+     * 读取指定文件的全部内容并返回。
+     * </p>
+     *
+     * @param parameters 包含文件路径的参数
+     * @return 文件内容字符串
+     * @throws IOException IO操作异常
      */
     private String readFile(JSONObject parameters) throws IOException {
         String pathStr = parameters.getString("path");
@@ -192,6 +279,14 @@ public class FileOperationTool implements AgentTool {
 
     /**
      * 写入文件内容
+     * <p>
+     * 将指定内容写入文件，如果文件不存在会自动创建，
+     * 如果目录不存在也会自动创建目录。
+     * </p>
+     *
+     * @param parameters 包含文件路径和内容的参数
+     * @return 操作结果字符串
+     * @throws IOException IO操作异常
      */
     private String writeFile(JSONObject parameters) throws IOException {
         String pathStr = parameters.getString("path");
@@ -219,6 +314,13 @@ public class FileOperationTool implements AgentTool {
 
     /**
      * 创建目录
+     * <p>
+     * 创建指定路径的目录，如果目录已存在则返回错误。
+     * </p>
+     *
+     * @param parameters 包含目录路径的参数
+     * @return 操作结果字符串
+     * @throws IOException IO操作异常
      */
     private String createDirectory(JSONObject parameters) throws IOException {
         String pathStr = parameters.getString("path");
@@ -234,6 +336,13 @@ public class FileOperationTool implements AgentTool {
 
     /**
      * 删除文件
+     * <p>
+     * 删除指定路径的文件或空目录。
+     * </p>
+     *
+     * @param parameters 包含文件路径的参数
+     * @return 操作结果字符串
+     * @throws IOException IO操作异常
      */
     private String deleteFile(JSONObject parameters) throws IOException {
         String pathStr = parameters.getString("path");
@@ -249,6 +358,12 @@ public class FileOperationTool implements AgentTool {
 
     /**
      * 检查文件是否存在
+     * <p>
+     * 检查指定路径的文件或目录是否存在。
+     * </p>
+     *
+     * @param parameters 包含文件路径的参数
+     * @return "true"表示存在，"false"表示不存在
      */
     private String fileExists(JSONObject parameters) {
         String pathStr = parameters.getString("path");
@@ -259,6 +374,14 @@ public class FileOperationTool implements AgentTool {
 
     /**
      * 解析并验证路径，确保在工作目录范围内
+     * <p>
+     * 将相对或绝对路径解析为工作目录内的有效路径，
+     * 并验证路径安全性，防止路径遍历攻击。
+     * </p>
+     *
+     * @param pathStr 原始路径字符串
+     * @return 解析后的安全路径
+     * @throws SecurityException 当路径超出工作目录范围时抛出
      */
     private Path resolvePath(String pathStr) {
         Path path = Paths.get(pathStr).normalize();
@@ -285,6 +408,9 @@ public class FileOperationTool implements AgentTool {
 
     /**
      * 检查路径是否应该被排除
+     * <p>
+     * 根据排除模式列表判断指定路径是否应该被排除在操作结果之外。
+     * </p>
      *
      * @param path            要检查的路径
      * @param basePath        基础路径
@@ -320,6 +446,9 @@ public class FileOperationTool implements AgentTool {
 
     /**
      * 简单的通配符模式匹配
+     * <p>
+     * 支持基本的通配符匹配，其中'*'匹配任意字符序列，'?'匹配单个字符。
+     * </p>
      *
      * @param text    要检查的文本
      * @param pattern 模式（支持*和?通配符）

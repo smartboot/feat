@@ -1,6 +1,5 @@
 package tech.smartboot.feat.ai.agent;
 
-import tech.smartboot.feat.ai.agent.memory.AgentMemory;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 
@@ -12,6 +11,11 @@ import tech.smartboot.feat.core.common.logging.LoggerFactory;
  * Agent会先进行推理分析任务需求，然后采取行动执行具体操作，
  * 根据执行结果再进行推理，如此循环直到任务完成。
  * 这种模式特别适用于需要多步骤操作、工具调用和动态决策的复杂场景。
+ * </p>
+ * <p>
+ * 该抽象类定义了Agent的基本结构和核心机制，具体实现需要继承此类并实现
+ * {@link #execute(String)}方法。
+ * </p>
  *
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.1
@@ -27,6 +31,7 @@ public abstract class FeatAgent {
      * 使用LoggerFactory获取当前类的Logger实例，确保日志信息能够被正确分类和管理。
      * 日志记录对于调试、监控和问题排查非常重要，特别是在复杂的AI代理执行流程中。
      * 通过日志可以追踪Agent的状态变化、任务执行过程和潜在问题。
+     * </p>
      */
     private static final Logger logger = LoggerFactory.getLogger(FeatAgent.class.getName());
 
@@ -40,9 +45,11 @@ public abstract class FeatAgent {
      * - 记忆系统配置（记忆管理器、智能检索开关、检索阈值等）
      * - 工具执行器映射（可用工具列表）
      * - 执行控制参数（最大迭代次数等）
+     * </p>
      * <p>
      * 通过options字段，Agent可以访问所有必要的配置和组件，
      * 实现灵活的运行时行为调整。
+     * </p>
      *
      * @see AgentOptions 代理配置选项详情
      */
@@ -53,6 +60,7 @@ public abstract class FeatAgent {
      * <p>
      * 状态流转通常遵循以下模式：
      * IDLE → RUNNING → (TOOL_EXECUTION → RUNNING)* → FINISHED|ERROR
+     * </p>
      * <p>
      * 各状态详细说明：
      * - {@link AgentState#IDLE IDLE}: 初始状态或任务完成/出错后的空闲状态，
@@ -65,6 +73,7 @@ public abstract class FeatAgent {
      * 表示Agent已成功解决用户提出的问题
      * - {@link AgentState#ERROR ERROR}: 错误状态，
      * 表示在执行过程中遇到无法恢复的异常
+     * </p>
      *
      * @see AgentState 状态枚举定义
      */
@@ -78,41 +87,20 @@ public abstract class FeatAgent {
      * 2. 进入推理循环，交替进行思考和行动
      * 3. 根据需要调用工具执行具体操作
      * 4. 整合所有信息生成最终响应
+     * </p>
      * <p>
      * 实现时应考虑：
      * - 合理使用记忆系统存储和检索历史信息
      * - 控制迭代次数避免无限循环
      * - 正确处理工具调用和异常情况
      * - 及时更新Agent状态
+     * </p>
      *
      * @param input 用户输入的任务描述或问题，通常为自然语言文本
      * @return 经过处理后的结果字符串，应能准确回答用户问题或完成指定任务
      * @see #setState(AgentState) 状态更新方法
-     * @see #getMemory() 记忆系统访问方法
      */
     public abstract String execute(String input);
-
-    /**
-     * 获取Agent的记忆管理器实例，用于存储和检索历史交互信息
-     * <p>
-     * 记忆系统是实现智能Agent的关键组件，它允许Agent：
-     * - 存储重要的历史交互信息
-     * - 根据当前任务检索相关历史经验
-     * - 避免重复询问已知信息
-     * - 基于上下文提供更准确的回答
-     * <p>
-     * 记忆管理器支持多种检索方式：
-     * - {@link AgentMemory#getMemories() 获取所有记忆}
-     * - {@link AgentMemory#getMemoriesByImportance(double) 按重要性检索}
-     * - {@link AgentMemory#getMemoriesByTimeRange(long, long) 按时间范围检索}
-     *
-     * @return AgentMemory 记忆管理器实例，可用于添加和检索记忆信息
-     * @see AgentMemory 记忆接口定义
-     * @see tech.smartboot.feat.ai.agent.memory.DefaultAgentMemory 默认记忆实现
-     */
-    public AgentMemory getMemory() {
-        return options.getMemory();
-    }
 
     /**
      * 获取Agent当前运行状态，用于外部监控和流程控制
@@ -122,8 +110,10 @@ public abstract class FeatAgent {
      * - 监控任务执行进度
      * - 在适当的时候获取最终结果
      * - 处理异常情况
+     * </p>
      * <p>
      * 注意：状态查询本身不会改变Agent的运行状态。
+     * </p>
      *
      * @return AgentState Agent当前的状态枚举值
      * @see AgentState 状态枚举定义
@@ -141,6 +131,7 @@ public abstract class FeatAgent {
      * - 使用protected访问级别，仅允许同包或子类调用
      * - 自动记录状态变更日志，便于调试和监控
      * - 是ReAct执行流程中的关键环节
+     * </p>
      * <p>
      * 状态变更时机示例：
      * - 开始处理任务时：IDLE → RUNNING
@@ -148,6 +139,7 @@ public abstract class FeatAgent {
      * - 工具执行完成后：TOOL_EXECUTION → RUNNING
      * - 任务完成时：RUNNING → FINISHED
      * - 发生错误时：任意状态 → ERROR
+     * </p>
      *
      * @param state 新的状态值，不能为空
      * @throws IllegalArgumentException 当state参数为null时抛出

@@ -13,13 +13,31 @@ package tech.smartboot.feat.ai.agent.tools.search;
 import java.util.regex.Pattern;
 
 /**
+ * 必应搜索引擎实现
+ * <p>
+ * 专门用于处理必应搜索结果的解析和格式化，将必应特有的HTML结构
+ * 转换为标准的Markdown格式，便于AI处理和理解。
+ * </p>
+ *
  * @author 三刀
  * @version v1.0 11/26/25
  */
 class BingSearcher extends Searcher {
+    /**
+     * 必应搜索的基础URL
+     */
     public static final String BASE_URL = "https://cn.bing.com/search";
 
-
+    /**
+     * 将必应搜索返回的HTML内容转换为Markdown格式
+     * <p>
+     * 解析必应搜索结果页面，提取搜索结果条目，并将其转换为
+     * Markdown格式的链接列表，便于AI阅读和处理。
+     * </p>
+     *
+     * @param html 必应搜索结果的HTML内容
+     * @return Markdown格式的搜索结果
+     */
     @Override
     protected String toMarkdown(String html) {
         // 移除HTML中的script标签及其内容
@@ -51,6 +69,16 @@ class BingSearcher extends Searcher {
         return sb.toString();
     }
 
+    /**
+     * 将单个必应搜索结果条目转换为Markdown格式
+     * <p>
+     * 解析单个搜索结果条目，提取标题、链接和描述信息，
+     * 并格式化为Markdown链接格式。
+     * </p>
+     *
+     * @param item 单个搜索结果条目的HTML内容
+     * @return Markdown格式的搜索结果条目
+     */
     private String itemToMarkdown(String item) {
         int i = item.indexOf("<h2");
         if (i == -1) {
