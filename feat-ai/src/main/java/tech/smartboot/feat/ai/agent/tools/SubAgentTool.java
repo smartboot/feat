@@ -12,6 +12,7 @@ package tech.smartboot.feat.ai.agent.tools;
 
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.ai.agent.AgentTool;
+import tech.smartboot.feat.ai.agent.ReActAgent;
 
 /**
  * 子代理工具，用于委托任务给专门的子代理
@@ -52,9 +53,16 @@ public class SubAgentTool implements AgentTool {
             return "错误：必须提供'task'参数";
         }
 
-        // 这里应该实际调用子代理来执行任务
-        // 目前我们只是模拟这个过程
-        return String.format("已将任务委托给子代理 '%s': %s\n结果: [子代理执行结果]", agentName, task);
+        // 创建一个新的子代理实例来处理任务
+        ReActAgent subAgent = new ReActAgent();
+        
+        // 可以根据agent_name设置不同的配置，这里简化处理
+        try {
+            String result = subAgent.execute(task);
+            return String.format("子代理 '%s' 执行结果:\n%s", agentName, result);
+        } catch (Exception e) {
+            return String.format("子代理 '%s' 执行任务时发生错误: %s", agentName, e.getMessage());
+        }
     }
 
     /**
