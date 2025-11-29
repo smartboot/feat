@@ -83,11 +83,11 @@ graph TD
 
 Agent 在执行过程中会经历以下状态：
 
-- **IDLE** - 空闲状态
-- **RUNNING** - 正在运行
-- **TOOL_EXECUTION** - 正在执行工具
-- **FINISHED** - 执行完成
-- **ERROR** - 执行出错
+- **IDLE** - 空闲状态，表示 Agent 当前没有任务正在执行，可以接受新的任务
+- **RUNNING** - 运行状态，表示 Agent 正在处理任务的主逻辑阶段
+- **TOOL_EXECUTION** - 工具执行状态，表示 Agent 正在调用外部工具或执行特定的功能模块
+- **FINISHED** - 完成状态，表示 Agent 已经成功完成了当前的任务
+- **ERROR** - 错误状态，表示 Agent 在执行过程中遇到了异常或错误
 
 可以通过 [getState()](file:///Users/zhengjw22mac123/IdeaProjects/feat/feat-ai/src/main/java/tech/smartboot/feat/ai/agent/ReActAgent.java#L301-L303) 方法获取 Agent 的当前状态：
 
@@ -98,11 +98,11 @@ System.out.println("当前状态: " + state);
 
 ## 3. 内置工具
 
-Feat AI Agent 内置了多种常用工具，在 ReActAgent 构造函数中默认注册：
+Feat AI Agent 内置了多种常用工具，在 ReActAgent 构造函数中默认注册。这些工具可以让 Agent 执行各种实际操作来完成复杂任务。
 
 ### 3.1 待办事项工具 (TodoListTool)
 
-管理待办事项列表：
+管理待办事项列表，可用于任务分解和进度跟踪：
 
 ```json
 // 创建待办事项列表
@@ -146,7 +146,7 @@ Action Input: {
 
 ### 3.2 文件操作工具 (FileOperationTool)
 
-执行文件系统操作：
+执行文件系统操作，包括读写文件、创建目录等：
 
 ```json
 // 列出目录内容
@@ -196,7 +196,7 @@ Action Input: {
 
 ### 3.3 搜索工具 (SearchTool)
 
-执行网络搜索：
+执行网络搜索，获取实时信息：
 
 ```json
 // 使用百度搜索
@@ -218,7 +218,7 @@ Action Input: {
 
 ### 3.4 网页阅读工具 (WebPageReaderTool)
 
-读取网页内容：
+读取网页内容，提取文本信息：
 
 ```json
 // 读取网页
@@ -230,7 +230,7 @@ Action Input: {
 
 ### 3.5 子 Agent 工具 (SubAgentTool)
 
-创建子 Agent 来处理特定任务：
+创建子 Agent 来处理特定任务，实现任务委派：
 
 ```json
 // 创建子 Agent
@@ -243,7 +243,7 @@ Action Input: {
 
 ## 4. 自定义工具
 
-除了内置工具外，您还可以创建自定义工具来扩展 Agent 的功能：
+除了内置工具外，您还可以创建自定义工具来扩展 Agent 的功能。自定义工具需要实现 [AgentTool](file:///Users/zhengjw22mac123/IdeaProjects/feat/feat-ai/src/main/java/tech/smartboot/feat/ai/agent/AgentTool.java#L30-L103) 接口：
 
 ```java
 import tech.smartboot.feat.ai.agent.AgentTool;
@@ -323,6 +323,59 @@ Agent 使用提示模板来引导 AI 模型的行为。默认使用 `feat_react_
 - `{{history}}` - 历史对话记录
 - `{{input}}` - 用户输入的任务
 - `{{agent_scratchpad}}` - Agent 的推理过程记录
+
+提示模板内容如下：
+
+```text
+你是基于ReAct范式的AI智能体，能够通过推理(Thought)和行动(Action)来解决问题。
+
+## 角色与目标
+作为AI智能体，你的目标是准确理解用户的需求，并通过合理的推理和必要的工具调用来提供最佳解决方案。
+
+## 可用工具
+你可以使用的工具如下：
+
+{{tool_descriptions}}
+
+## 行动准则
+1. 分析用户请求，判断是否需要使用工具
+2. 如需使用工具，必须严格按照以下格式输出：
+   Thought: 分析为什么需要这个工具
+   Action: 从[{{tool_names}}]中选择合适的工具
+   Action Input: 工具参数
+3. 等待观察工具执行结果(Observation)
+4. 根据观察结果继续推理或给出最终答案
+
+## 输出格式
+当你需要使用工具时，请严格按以下格式输出：
+```
+Thought: 详细说明为什么要使用该工具
+Action: 工具名称
+Action Input: 工具参数
+Observation: 工具执行结果
+```
+
+当你已经获得足够信息可以回答用户时，请按以下格式输出：
+```
+Thought: 总结推理过程并解释答案
+AI: 最终答案
+```
+
+## 上下文信息
+当前日期时间: {{date}}
+
+## 相关历史记忆
+以下是与当前任务相关的记忆信息：
+{{relevant_memories}}
+
+## 当前任务
+{{input}}
+
+## 推理过程
+{{agent_scratchpad}}
+
+请严格按照上述格式进行思考和输出，每一步只能输出一个Thought和一个Action或AI回答。
+```
 
 ## 6. 完整示例和最佳实践
 
