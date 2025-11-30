@@ -22,7 +22,7 @@ Agent 是 Feat AI 框架中的一个重要组件，它基于 ReAct（Reasoning +
 
 ### 1.1 创建并运行 Agent
 
-创建一个基本的 ReActAgent 实例并执行任务非常简单：
+让我们一起来创建一个基本的 ReActAgent 实例并执行任务，这非常简单：
 
 ```java
 import tech.smartboot.feat.ai.agent.ReActAgent;
@@ -450,7 +450,7 @@ public class AgentDemo {
         FeatAgent agent = new ReActAgent();
         
         // 执行任务
-        String result = agent.execute("请帮我调研一下 AI 领域的最新进展，并整理成一份简要报告");
+        String result = agent.execute("阅读spring官方文档，对比下spring4和3的差别，生成一份详细的分析报告");
         System.out.println("任务结果:");
         System.out.println(result);
     }
