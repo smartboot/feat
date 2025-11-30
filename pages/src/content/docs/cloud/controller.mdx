@@ -10,11 +10,13 @@ import Mermaid from '../../../components/Mermaid.astro';
 
 <CheckAuthorize/>
 
-Feat Cloud 在设计 Controller 注解时，借鉴了 Spring 的设计理念，降低学习成本的同时进行了极致简化，专注于高性能和易用性。
+让我们一起来探索 Feat Cloud 中强大的 Controller 功能！Controller 是处理 HTTP 请求的核心组件，通过一系列简洁的注解，你可以轻松构建功能丰富的 Web 应用程序。这个教程将带你从基础到进阶，全面掌握 Controller 的使用方法。
 
 ## 概述
 
 Controller 是 Feat Cloud 中处理 HTTP 请求的核心组件。通过一系列注解，开发者可以轻松地将类标记为控制器，并将方法映射到特定的 HTTP 请求路径和方法。
+
+Feat Cloud 在设计 Controller 注解时，借鉴了 Spring 的设计理念，降低学习成本的同时进行了极致简化，专注于高性能和易用性。
 
 ## 核心注解
 
@@ -29,6 +31,8 @@ Feat Cloud 提供以下核心注解：
 
 ## Controller 工作流程
 
+当我们发起一个 HTTP 请求时，Controller 是如何处理它的呢？让我们通过下面的流程图来了解一下：
+
 <Mermaid code={`graph TD
     A[HTTP请求到达] --> B{路径匹配}
     B -->|匹配成功| C[找到对应Controller]
@@ -42,6 +46,8 @@ Feat Cloud 提供以下核心注解：
     B -->|匹配失败| J[404错误]
     D -->|匹配失败| K[405错误]
 `}/>
+
+是不是很清晰？接下来我们就来详细了解每个注解的使用方法。
 
 ## 注解详解
 
@@ -269,6 +275,8 @@ public class ApiController {
 
 ## 实践示例
 
+掌握了基本概念后，让我们通过一些实际的例子来看看如何使用这些注解。
+
 ### 基础 Controller 示例
 
 ```java
@@ -442,6 +450,8 @@ public class ApiController {
 
 ## 最佳实践
 
+掌握了基础知识后，让我们来看看一些最佳实践，帮助你写出更好的代码。
+
 ### 1. 合理组织 Controller 结构
 
 ```java
@@ -522,3 +532,16 @@ public class ApiController {
     }
 }
 ```
+
+## 总结
+
+通过这篇教程，我们学习了 Feat Cloud 中 Controller 的各种用法，包括：
+
+1. 如何使用核心注解 (`@Controller`, `@RequestMapping`, `@Param`, `@PathParam`)
+2. 如何实现拦截器功能
+3. 如何管理 Controller 的生命周期
+4. 一些实用的最佳实践
+
+掌握了这些知识，你就可以轻松地构建功能丰富的 Web 应用程序了。记住，实践是最好的老师，不妨动手试试这些功能吧！
+
+有关完整示例，请参见 [Controller 相关测试代码](https://gitee.com/smartboot/feat/blob/master/feat-cloud-aot-vm/src/test/java/tech/smartboot/feat/cloud/test)
