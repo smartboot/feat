@@ -9,9 +9,9 @@ import CheckAuthorize from '../../../components/CheckAuthorize.astro'
 <CheckAuthorize/>
 随着 Web 技术的快速发展，WebSocket 已经成为实时通信应用的首选技术。它能够实现浏览器与服务器之间的全双工通信，适用于实时聊天、在线游戏、股票交易、物联设备控制等场景。
 
-WebSocketClient 是 Feat 框架中的一款高性能 WebSocket 客户端实现，旨在为开发者提供灵活、高效、易用的 WebSocket 开发体验。
+WebSocketClient 是 Feat 框架中的一款高性能 WebSocket 客户端实现，旨在为开发者提供灵活、高效、易用的 WebSocket 开发体验。无论你是要构建实时聊天应用，还是要开发物联网设备控制系统，WebSocketClient 都能满足你的需求。
 
-本文将详细介绍 Feat WebSocketClient 的功能、核心接口以及使用方法。
+让我们一起来探索这个强大的工具吧！
 
 ---
 
@@ -39,7 +39,7 @@ Feat WebSocketClient 提供了以下核心功能：
 
 ## 核心接口
 
-Feat WebSocketClient 的核心接口包括以下几个部分：
+在深入了解具体用法之前，让我们先了解一下 WebSocketClient 的核心接口。
 
 ### WebSocketClient 类
 
@@ -134,6 +134,8 @@ public WebSocketOptions debug(boolean debug)
 
 ## 使用示例
 
+掌握了基本概念后，让我们通过一些实际的例子来看看如何使用这些功能。
+
 ### 基本用法
 
 以下是一个简单的示例，展示了如何使用 Feat WebSocketClient 连接 WebSocket 服务器并处理消息：
@@ -195,6 +197,121 @@ client.connect(listener);
 
 ---
 
+## 最佳实践
+
+在实际项目中使用 WebSocketClient 时，有一些最佳实践可以帮助你写出更好的代码。
+
+### 1. 错误处理和重连机制
+
+在生产环境中，网络问题可能导致连接断开，建议实现重连机制：
+
+```java
+import tech.smartboot.feat.core.client.WebSocketClient;
+import tech.smartboot.feat.core.client.WebSocketListener;
+import tech.smartboot.feat.core.client.WebSocketResponse;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+public class WebSocketReconnectDemo {
+    private static ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+    private static WebSocketClient client;
+    
+    public static void main(String[] args) {
+        connectWebSocket();
+    }
+    
+    private static void connectWebSocket() {
+        client = new WebSocketClient("ws://localhost:8080/ws");
+        client.options().debug(true);
+        
+        client.connect(new WebSocketListener() {
+            @Override
+            public void onOpen(WebSocketClient client, WebSocketResponse response) {
+                System.out.println("WebSocket 连接成功");
+            }
+
+            @Override
+            public void onMessage(WebSocketClient client, String message) {
+                System.out.println("接收到消息：" + message);
+            }
+
+            @Override
+            public void onClose(WebSocketClient client, WebSocketResponse response, CloseReason reason) {
+                System.out.println("WebSocket 连接关闭，关闭原因：" + reason);
+                scheduleReconnect();
+            }
+
+            @Override
+            public void onError(WebSocketClient client, WebSocketResponse response, Throwable throwable) {
+                System.out.println("发生错误：" + throwable.getMessage());
+                scheduleReconnect();
+            }
+        });
+    }
+    
+    private static void scheduleReconnect() {
+        System.out.println("将在 5 秒后尝试重连...");
+        scheduler.schedule(WebSocketReconnectDemo::connectWebSocket, 5, TimeUnit.SECONDS);
+    }
+}
+```
+
+### 2. 资源管理
+
+确保在应用程序关闭时正确释放资源：
+
+```java
+import tech.smartboot.feat.core.client.WebSocketClient;
+import tech.smartboot.feat.core.client.WebSocketListener;
+import tech.smartboot.feat.core.client.WebSocketResponse;
+
+public class WebSocketResourceManagementDemo {
+    private static WebSocketClient client;
+    
+    public static void main(String[] args) {
+        connectWebSocket();
+        
+        // 添加关闭钩子以确保资源被释放
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            if (client != null) {
+                client.close();
+                System.out.println("WebSocket 连接已关闭");
+            }
+        }));
+    }
+    
+    private static void connectWebSocket() {
+        client = new WebSocketClient("ws://localhost:8080/ws");
+        client.options().debug(true);
+        
+        client.connect(new WebSocketListener() {
+            @Override
+            public void onOpen(WebSocketClient client, WebSocketResponse response) {
+                System.out.println("WebSocket 连接成功");
+            }
+
+            @Override
+            public void onMessage(WebSocketClient client, String message) {
+                System.out.println("接收到消息：" + message);
+            }
+
+            @Override
+            public void onClose(WebSocketClient client, WebSocketResponse response, CloseReason reason) {
+                System.out.println("WebSocket 连接关闭，关闭原因：" + reason);
+            }
+
+            @Override
+            public void onError(WebSocketClient client, WebSocketResponse response, Throwable throwable) {
+                System.out.println("发生错误：" + throwable.getMessage());
+            }
+        });
+    }
+}
+```
+
+---
+
 ## 性能与扩展性
 
 ### 高性能
@@ -213,6 +330,15 @@ Feat WebSocketClient 的设计充分考虑了线程安全问题，保证在高�
 
 ## 总结
 
+通过这篇文章，我们学习了 Feat WebSocketClient 的核心功能：
+
+1. 如何建立 WebSocket 连接
+2. 如何发送和接收消息
+3. 如何配置客户端选项
+4. 如何实现错误处理和重连机制
+
 Feat WebSocketClient 是一款功能丰富、性能优越的 WebSocket 客户端实现，能够满足大多数实时通信场景的需求。通过简单的 API 和灵活的配置选项，开发者可以快速构建高效的 WebSocket 应用。
 
 如果你正在寻找一款高性能、易用的 WebSocket 客户端，Feat WebSocketClient 是一个值得考虑的选择。
+
+有关完整示例，请参见 [WebSocketClient 测试代码](https://gitee.com/smartboot/feat/blob/master/feat-core/src/main/java/tech/smartboot/feat/core/client/WebSocketClient.java)
