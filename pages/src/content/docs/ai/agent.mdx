@@ -1,6 +1,6 @@
 ---
 title: Agent
-description: Feat AI Agent 使用教程与最佳实践
+description: Feat AI Agent 功能介绍与使用指南
 sidebar:
     order: 6
 ---
@@ -10,43 +10,21 @@ import CheckAuthorize from '../../../components/CheckAuthorize.astro'
 
 <CheckAuthorize/>
 
-:::tip
-本文档所有代码示例均基于 Feat 项目真实源码，并已验证可用；示例均提供到 Gitee 仓库的链接，便于查看完整上下文与运行。
-:::
-
 ## 关于 Agent
 
-让我们一起来探索 Feat AI Agent！这是一个基于 ReAct（Reasoning + Acting）范式的强大组件，能够像人类一样思考和行动。Agent 可以使用各种工具来完成复杂的任务，比如文件操作、网络搜索、待办事项管理等等。
+让我们一起来探索 Feat AI 框架中强大的 Agent 组件！Agent 是 Feat AI 的核心功能之一，它基于 ReAct（Reasoning + Acting）范式，能够像人一样思考和行动，通过推理和执行操作来解决复杂任务。
+
+想象一下，如果你有一个智能助手，不仅能理解你的需求，还能主动采取行动去完成任务，比如搜索信息、操作文件、管理待办事项等等，这就是 Agent 的魅力所在！
 
 :::note
-在使用 Agent 之前，请确保已正确配置 Feat AI 模块并添加了相应的依赖。
+在开始使用 Agent 之前，请确保已正确配置 Feat AI 模块并添加了相应的依赖。
 :::
 
-### 文档目标
+## 1. 快速上手
 
-- 了解 Feat AI Agent 的核心概念与架构
-- 快速创建并运行一个可用的 Agent
-- 掌握常用工具的实践用法与组合策略
-- 学会配置选项、提示模板与内存管理的实战技巧
+### 1.1 创建你的第一个 Agent
 
-### 适用人群与前置条件
-
-- 适用于需要通过 AI 自动化完成多步骤任务的开发者
-- 需要具备 Java 基础与 Feat AI 模块的基本配置能力
-
-:::caution
-合理设置迭代次数与工具调用，过高的迭代可能导致长时间运行或资源占用。
-:::
-
-## 1. 快速开始
-
-### 1.1 创建并运行 Agent
-
-让我们一起来创建一个基本的 ReActAgent 实例并执行任务，这非常简单：
-
-- 创建 `ReActAgent` 实例
-- 调用 `execute` 执行任务
-- 输出结果以便快速验证
+我们从一个简单的例子开始，创建一个基本的 ReActAgent 实例并执行任务：
 
 ```java
 import tech.smartboot.feat.ai.agent.ReActAgent;
@@ -60,40 +38,46 @@ String result = agent.execute("帮我搜索一下最新的 AI 技术发展趋势
 System.out.println(result);
 ```
 
+这个简单的例子展示了 Agent 的强大能力。只需几行代码，你就拥有了一个可以理解自然语言并执行复杂任务的智能助手！
+
 有关完整示例，请参见 [ReActAgentTest.java](https://gitee.com/smartboot/feat/blob/master/feat-ai/src/test/java/tech/smartboot/feat/ai/agent/ReActAgentTest.java)
 
 ### 1.2 配置 Agent 选项
 
-在创建 Agent 时，您可以配置各种选项以满足特定需求：
+在实际应用中，你可能需要根据具体需求对 Agent 进行配置。下面是如何自定义 Agent 选项：
 
 ```java
 import tech.smartboot.feat.ai.agent.ReActAgent;
 import tech.smartboot.feat.ai.agent.AgentOptions;
 import tech.smartboot.feat.ai.chat.ChatModelVendor;
 
-// 创建 Agent 实例并配置选项
+// 创建 Agent 配置
+AgentOptions options = AgentOptions.create()
+    .maxIterations(15)                         // 设置最大推理迭代次数
+    .chatOptions()
+    .model(ChatModelVendor.GiteeAI.DeepSeek_V32_EXP); // 设置使用的模型
+
+// 创建 Agent 实例
 ReActAgent agent = new ReActAgent();
 agent.options.maxIterations(15)
     .chatOptions()
     .model(ChatModelVendor.GiteeAI.DeepSeek_V32_EXP);
 ```
 
-- `maxIterations` 控制推理循环的最大次数，建议根据任务复杂度进行调整
-- `chatOptions.model` 选择合适的对话模型，以获得更佳的工具推理与执行效果
+通过这些配置，你可以控制 Agent 的行为，比如设置最大迭代次数防止无限循环，或者选择更适合任务的 AI 模型。
 
-## 2. 核心概念
+## 2. 核心概念解析
 
-### 2.1 ReAct 范式
+### 2.1 ReAct 范式详解
 
-ReAct 是一种结合推理（Reasoning）和行动（Acting）的范式，使 Agent 能够：
+ReAct（Reasoning + Acting）是 Agent 的核心工作原理。这个范式让 Agent 能够像人一样通过思考和行动来解决问题：
 
 1. **思考（Thought）** - 分析当前情况和目标
 2. **行动（Action）** - 执行具体的操作
 3. **观察（Observation）** - 获取行动结果并据此继续推理
 
-这种循环往复的过程让 Agent 能够解决复杂的多步骤任务。
+这个循环过程让 Agent 能够解决复杂的多步骤任务。
 
-ReAct 循环流程图：
 <Mermaid code={`
 graph TD
     A[开始] --> B[思考]
@@ -104,9 +88,9 @@ graph TD
     E -->|是| F[返回最终答案]
 `}/>
 
-### 2.2 Agent 状态
+### 2.2 Agent 状态管理
 
-Agent 在执行过程中会经历以下状态：
+Agent 在执行过程中会经历不同的状态，了解这些状态有助于你更好地监控和调试：
 
 - **IDLE** - 空闲状态，表示 Agent 当前没有任务正在执行，可以接受新的任务
 - **RUNNING** - 运行状态，表示 Agent 正在处理任务的主逻辑阶段
@@ -114,22 +98,17 @@ Agent 在执行过程中会经历以下状态：
 - **FINISHED** - 完成状态，表示 Agent 已经成功完成了当前的任务
 - **ERROR** - 错误状态，表示 Agent 在执行过程中遇到了异常或错误
 
-可以通过 [getState()](https://gitee.com/smartboot/feat/blob/master/feat-ai/src/main/java/tech/smartboot/feat/ai/agent/ReActAgent.java#L301-L303) 方法获取 Agent 的当前状态：
+你可以通过以下方式获取 Agent 的当前状态：
 
 ```java
 AgentState state = agent.getState();
 System.out.println("当前状态: " + state);
 ```
 
-:::tip
-调试时想知道 Agent 正在做什么？调用 getState() 能快速定位当前阶段。
-:::
-
 ## 3. Agent 架构设计
 
 Feat AI Agent 采用了模块化设计，主要包括以下几个核心组件：
 
-架构组件关系图：
 <Mermaid code={`
 graph TB
     A[Agent接口] --> B[FeatAgent抽象类]
@@ -165,6 +144,8 @@ graph TB
 
 ### 3.2 工作流程
 
+Agent 的工作流程如下图所示：
+
 <Mermaid code={`
 sequenceDiagram
     participant U as 用户
@@ -182,7 +163,7 @@ sequenceDiagram
     R->>U: 返回最终结果
 `} />
 
-## 4. 内置工具
+## 4. 内置工具详解
 
 Feat AI Agent 内置了多种常用工具，在 ReActAgent 构造函数中默认注册。这些工具可以让 Agent 执行各种实际操作来完成复杂任务。
 
@@ -327,9 +308,9 @@ Action Input: {
 }
 ```
 
-## 5. 自定义工具
+## 5. 扩展功能：自定义工具
 
-除了内置工具外，您还可以创建自定义工具来扩展 Agent 的功能。自定义工具需要实现 [AgentTool](https://gitee.com/smartboot/feat/blob/master/feat-ai/src/main/java/tech/smartboot/feat/ai/agent/AgentTool.java#L30-L103) 接口：
+除了内置工具外，你还可以创建自定义工具来扩展 Agent 的功能。自定义工具需要实现 [AgentTool](file:///Users/zhengjw22mac123/IdeaProjects/feat/feat-ai/src/main/java/tech/smartboot/feat/ai/agent/AgentTool.java#L30-L103) 接口：
 
 ```java
 import tech.smartboot.feat.ai.agent.AgentTool;
@@ -366,11 +347,13 @@ public class CustomTool implements AgentTool {
 }
 
 // 注册自定义工具
-ReActAgent agent = new ReActAgent();
-agent.options.addTool(new CustomTool());
+AgentOptions options = AgentOptions.create();
+options.addTool(new CustomTool());
 ```
 
-## 6. 内存管理和提示模板
+通过自定义工具，你可以让 Agent 具备特定领域的专业能力，比如数据库操作、API 调用等。
+
+## 6. 高级功能
 
 ### 6.1 内存管理
 
@@ -382,8 +365,11 @@ import tech.smartboot.feat.ai.agent.memory.DefaultAgentMemory;
 
 // 创建自定义内存管理器
 AgentMemory memory = new DefaultAgentMemory();
+AgentOptions options = AgentOptions.create()
+    .memory(memory);
+
+// 或者在创建 Agent 时配置
 ReActAgent agent = new ReActAgent();
-agent.options.memory(memory);
 ```
 
 内存管理配置选项：
@@ -460,9 +446,11 @@ AI: 最终答案
 请严格按照上述格式进行思考和输出，每一步只能输出一个Thought和一个Action或AI回答。
 ```
 
-## 7. 完整示例和最佳实践
+## 7. 实战案例与最佳实践
 
-以下是一个完整的使用示例：
+### 7.1 完整使用示例
+
+让我们通过一个完整的示例来展示 Agent 的强大功能：
 
 ```java
 import tech.smartboot.feat.ai.agent.ReActAgent;
@@ -483,7 +471,9 @@ public class AgentDemo {
 
 有关完整示例，请参见 [ReActAgentTest.java](https://gitee.com/smartboot/feat/blob/master/feat-ai/src/test/java/tech/smartboot/feat/ai/agent/ReActAgentTest.java)
 
-### 最佳实践
+### 7.2 最佳实践建议
+
+在使用 Agent 时，遵循以下最佳实践可以让你获得更好的效果：
 
 1. **合理设置迭代次数** - 根据任务复杂度设置合适的最大迭代次数，避免无限循环
 2. **选择合适模型** - 根据任务需求选择具有相应能力的模型
@@ -491,14 +481,8 @@ public class AgentDemo {
 4. **监控 Agent 状态** - 通过状态监控了解 Agent 的执行过程
 5. **错误处理** - 妥善处理执行过程中可能出现的异常情况
 
-## 8. 总结与参考资料
-
-- 本文以实践为主、原理为辅，覆盖了 Agent 快速上手、配置、架构与工具使用
-- 若需查看完整上下文与运行示例，请参考：
-  - `ReActAgentTest.java` 用法示例
-  - `ReActAgent.java` 状态管理与执行流程（例如 `getState()`）
-  - `AgentTool.java` 工具接口定义
-
-:::note
-本文基于 Feat AI 模块主分支的实现进行说明，版本差异可能导致行为细节不同，请以仓库最新代码为准。
+:::tip
+小贴士：在实际应用中，建议为复杂的任务提供更详细的指导，帮助 Agent 更好地理解你的需求。
 :::
+
+通过本教程，你已经掌握了 Feat AI Agent 的核心功能和使用方法。现在你可以开始构建自己的智能应用了！
