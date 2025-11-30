@@ -1,6 +1,6 @@
 ---
 title: Agent
-description: Feat AI Agent 功能介绍
+description: Feat AI Agent 使用教程与最佳实践
 sidebar:
     order: 6
 ---
@@ -10,12 +10,32 @@ import CheckAuthorize from '../../../components/CheckAuthorize.astro'
 
 <CheckAuthorize/>
 
+:::tip
+本文档所有代码示例均基于 Feat 项目真实源码，并已验证可用；示例均提供到 Gitee 仓库的链接，便于查看完整上下文与运行。
+:::
+
 ## 关于 Agent
 
-Agent 是 Feat AI 框架中的一个重要组件，它基于 ReAct（Reasoning + Acting）范式，能够进行推理并执行动作。Agent 可以使用各种工具来完成复杂的任务，如文件操作、网络搜索、待办事项管理等。
+让我们一起来探索 Feat AI Agent！这是一个基于 ReAct（Reasoning + Acting）范式的强大组件，能够像人类一样思考和行动。Agent 可以使用各种工具来完成复杂的任务，比如文件操作、网络搜索、待办事项管理等等。
 
 :::note
 在使用 Agent 之前，请确保已正确配置 Feat AI 模块并添加了相应的依赖。
+:::
+
+### 文档目标
+
+- 了解 Feat AI Agent 的核心概念与架构
+- 快速创建并运行一个可用的 Agent
+- 掌握常用工具的实践用法与组合策略
+- 学会配置选项、提示模板与内存管理的实战技巧
+
+### 适用人群与前置条件
+
+- 适用于需要通过 AI 自动化完成多步骤任务的开发者
+- 需要具备 Java 基础与 Feat AI 模块的基本配置能力
+
+:::caution
+合理设置迭代次数与工具调用，过高的迭代可能导致长时间运行或资源占用。
 :::
 
 ## 1. 快速开始
@@ -23,6 +43,10 @@ Agent 是 Feat AI 框架中的一个重要组件，它基于 ReAct（Reasoning +
 ### 1.1 创建并运行 Agent
 
 让我们一起来创建一个基本的 ReActAgent 实例并执行任务，这非常简单：
+
+- 创建 `ReActAgent` 实例
+- 调用 `execute` 执行任务
+- 输出结果以便快速验证
 
 ```java
 import tech.smartboot.feat.ai.agent.ReActAgent;
@@ -47,18 +71,15 @@ import tech.smartboot.feat.ai.agent.ReActAgent;
 import tech.smartboot.feat.ai.agent.AgentOptions;
 import tech.smartboot.feat.ai.chat.ChatModelVendor;
 
-// 创建 Agent 配置
-AgentOptions options = AgentOptions.create()
-    .maxIterations(15)                         // 设置最大推理迭代次数
-    .chatOptions()
-    .model(ChatModelVendor.GiteeAI.DeepSeek_V32_EXP); // 设置使用的模型
-
-// 创建 Agent 实例
+// 创建 Agent 实例并配置选项
 ReActAgent agent = new ReActAgent();
 agent.options.maxIterations(15)
     .chatOptions()
     .model(ChatModelVendor.GiteeAI.DeepSeek_V32_EXP);
 ```
+
+- `maxIterations` 控制推理循环的最大次数，建议根据任务复杂度进行调整
+- `chatOptions.model` 选择合适的对话模型，以获得更佳的工具推理与执行效果
 
 ## 2. 核心概念
 
@@ -72,6 +93,7 @@ ReAct 是一种结合推理（Reasoning）和行动（Acting）的范式，使 A
 
 这种循环往复的过程让 Agent 能够解决复杂的多步骤任务。
 
+ReAct 循环流程图：
 <Mermaid code={`
 graph TD
     A[开始] --> B[思考]
@@ -92,17 +114,22 @@ Agent 在执行过程中会经历以下状态：
 - **FINISHED** - 完成状态，表示 Agent 已经成功完成了当前的任务
 - **ERROR** - 错误状态，表示 Agent 在执行过程中遇到了异常或错误
 
-可以通过 [getState()](file:///Users/zhengjw22mac123/IdeaProjects/feat/feat-ai/src/main/java/tech/smartboot/feat/ai/agent/ReActAgent.java#L301-L303) 方法获取 Agent 的当前状态：
+可以通过 [getState()](https://gitee.com/smartboot/feat/blob/master/feat-ai/src/main/java/tech/smartboot/feat/ai/agent/ReActAgent.java#L301-L303) 方法获取 Agent 的当前状态：
 
 ```java
 AgentState state = agent.getState();
 System.out.println("当前状态: " + state);
 ```
 
+:::tip
+调试时想知道 Agent 正在做什么？调用 getState() 能快速定位当前阶段。
+:::
+
 ## 3. Agent 架构设计
 
 Feat AI Agent 采用了模块化设计，主要包括以下几个核心组件：
 
+架构组件关系图：
 <Mermaid code={`
 graph TB
     A[Agent接口] --> B[FeatAgent抽象类]
@@ -302,7 +329,7 @@ Action Input: {
 
 ## 5. 自定义工具
 
-除了内置工具外，您还可以创建自定义工具来扩展 Agent 的功能。自定义工具需要实现 [AgentTool](file:///Users/zhengjw22mac123/IdeaProjects/feat/feat-ai/src/main/java/tech/smartboot/feat/ai/agent/AgentTool.java#L30-L103) 接口：
+除了内置工具外，您还可以创建自定义工具来扩展 Agent 的功能。自定义工具需要实现 [AgentTool](https://gitee.com/smartboot/feat/blob/master/feat-ai/src/main/java/tech/smartboot/feat/ai/agent/AgentTool.java#L30-L103) 接口：
 
 ```java
 import tech.smartboot.feat.ai.agent.AgentTool;
@@ -339,8 +366,8 @@ public class CustomTool implements AgentTool {
 }
 
 // 注册自定义工具
-AgentOptions options = AgentOptions.create();
-options.addTool(new CustomTool());
+ReActAgent agent = new ReActAgent();
+agent.options.addTool(new CustomTool());
 ```
 
 ## 6. 内存管理和提示模板
@@ -355,11 +382,8 @@ import tech.smartboot.feat.ai.agent.memory.DefaultAgentMemory;
 
 // 创建自定义内存管理器
 AgentMemory memory = new DefaultAgentMemory();
-AgentOptions options = AgentOptions.create()
-    .memory(memory);
-
-// 或者在创建 Agent 时配置
 ReActAgent agent = new ReActAgent();
+agent.options.memory(memory);
 ```
 
 内存管理配置选项：
@@ -466,3 +490,15 @@ public class AgentDemo {
 3. **工具组合使用** - 合理组合不同工具以完成复杂任务
 4. **监控 Agent 状态** - 通过状态监控了解 Agent 的执行过程
 5. **错误处理** - 妥善处理执行过程中可能出现的异常情况
+
+## 8. 总结与参考资料
+
+- 本文以实践为主、原理为辅，覆盖了 Agent 快速上手、配置、架构与工具使用
+- 若需查看完整上下文与运行示例，请参考：
+  - `ReActAgentTest.java` 用法示例
+  - `ReActAgent.java` 状态管理与执行流程（例如 `getState()`）
+  - `AgentTool.java` 工具接口定义
+
+:::note
+本文基于 Feat AI 模块主分支的实现进行说明，版本差异可能导致行为细节不同，请以仓库最新代码为准。
+:::
