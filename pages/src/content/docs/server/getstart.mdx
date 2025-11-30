@@ -4,25 +4,26 @@ description: 一款企业级 Web 服务开发框架
 sidebar:
     order: 1
 ---
-
-
 import {Aside, TabItem, Tabs} from '@astrojs/starlight/components';
 import helloFeat from './img/1_2_hello_feat.png';
 import helloWorld from './img/1_2_hello_world.png';
 
-在本章节中，您将学习如何开始使用 Feat 快速开发一个 Web 项目。
+让我们一起踏上 Feat 框架的学习之旅吧！在这篇文档中，我们将从零开始，带你快速搭建第一个 Web 服务。不用担心，即使你是初学者也能轻松跟上。
 
 开始之前，请确保已完成以下几项前置准备工作：
 
 - JDK 1.8 或更高版本
 - Maven 3.0 或更高版本
 - IDE（本教程示例基于 IntelliJ IDEA）
-- [curl](https://curl.se/) 或者 **浏览器** 用于 HTTP 请求测试。
+- [curl](https://curl.se/) 或者 **浏览器** 用于 HTTP 请求测试
 
-> **Feat Server 是一种原生编程模式，通常我们建议采用 [Feat Cloud](/feat/cloud/getstart/) 开展应用开发，以获得近似于 Springboot 的编程体验。**
+:::note
+Feat Server 是一种原生编程模式，通常我们建议采用 [Feat Cloud](/feat/cloud/getstart/) 开展应用开发，以获得近似于 Spring Boot 的编程体验。
+:::
 
 ## 引入 Feat
-在您的 Maven 工程 pom.xml 文件中添加以下配置，即可完成 Feat 的引入：
+
+万事开头难，但引入 Feat 却非常简单！只需在你的 Maven 工程 pom.xml 文件中添加以下配置，就可以开始使用 Feat 了：
 
 ```xml title="pom.xml"
 <dependency>
@@ -31,12 +32,15 @@ import helloWorld from './img/1_2_hello_world.png';
     <version>${feat.version}</version>
 </dependency>
 ```
+
 <Aside>
     `${feat.version}` 需根据实际情况设置，建议使用[最新版本](https://central.sonatype.com/artifact/tech.smartboot.feat/feat-core)。
 </Aside>
 
 ## 快速启动
-下面通过一个简单的示例，以检验 Feat 是否成功引入，并演示如何快速启动一个 Web 服务。
+
+现在让我们动手实践，创建第一个简单的 Web 服务来验证 Feat 是否成功引入。
+
 ```java title="HelloFeat.java" {3}
 public class HelloFeat {
     public static void main(String[] args) {
@@ -45,7 +49,9 @@ public class HelloFeat {
 }
 ```
 
-启动上面的程序后，运行效果：
+这个例子虽然只有短短一行核心代码，但它已经创建了一个完整的 HTTP 服务器！默认情况下，服务器会监听 8080 端口。
+
+启动上面的程序后，让我们看看运行效果：
 <Tabs>
     <TabItem value="浏览器" label="浏览器">
         <img src={helloFeat.src} alt="hello world" width="60%" className="shadow"/>
@@ -74,12 +80,12 @@ public class HelloFeat {
     </TabItem>
 </Tabs>
 
-🎉 **好了，我们的第一个 Web 服务就完成了。**
-
-
+🎉 **恭喜！我们的第一个 Web 服务就成功运行了。**
 
 ## 编写自定义响应
-现在我们再来写一个自定义的响应的服务，并指定服务端端口为 8081。
+
+刚才的例子使用了默认的响应，现在我们来试试自定义响应。这次我们显式指定一个处理函数，并让服务器监听 8081 端口：
+
 ```java title="HelloWorld.java" {3,4,5}
 public class HelloWorld {
     public static void main(String[] args) {
@@ -89,6 +95,9 @@ public class HelloWorld {
     }
 }
 ```
+
+这个例子中，我们通过 [httpHandler](https://gitee.com/smartboot/feat/blob/master/feat-core/src/main/java/tech/smartboot/feat/core/server/HttpServer.java#L91) 方法设置了自定义的请求处理逻辑，将响应内容设置为 "Hello World"。
+
 运行效果：
 <Tabs>
     <TabItem value="浏览器" label="浏览器">
@@ -117,6 +126,20 @@ public class HelloWorld {
     </TabItem>
 </Tabs>
 
+是不是很简单？短短几行代码就实现了一个功能完整的 Web 服务！
+
+## 下一步
+
+这只是 Feat 框架强大功能的冰山一角。接下来你可以：
+
+1. 学习 [ServerOptions 配置](/feat/server/serveroptions/) 来定制服务器行为
+2. 掌握 [Router 路由组件](/feat/server/router/) 来处理不同的请求路径
+3. 了解 [异步处理](/feat/server/async/) 来提升服务器性能
+
+:::tip
+如果你想要更接近 Spring Boot 的开发体验，不妨试试 [Feat Cloud](/feat/cloud/getstart/)，它提供了更高级的编程模型和更多的开箱即用功能。
+:::
+
 ## 建议&反馈
-希望这篇教程能够帮助您对 Feat 有一个初步的了解。
-如果您在使用过程中遇到任何问题，欢迎随时向我们提交 [Issue](https://gitee.com/smartboot/feat/issues/new/)。
+
+希望这篇教程能够帮助你对 Feat 有一个初步的了解。在学习过程中遇到任何问题，都欢迎随时向我们提交 [Issue](https://gitee.com/smartboot/feat/issues/new/)，我们很乐意为你提供帮助。

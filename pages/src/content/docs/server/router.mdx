@@ -7,6 +7,10 @@ sidebar:
 
 import Mermaid from '../../../components/Mermaid.astro';
 
+Router 组件是 Feat 框架中负责 HTTP 请求路由分发的核心组件。它不仅能根据请求路径将请求分发到对应的处理器，还提供了 Session 管理、请求拦截等强大功能。
+
+想象一下，当你的应用程序有成百上千个不同的 API 接口时，如果没有一个好的路由机制，代码将会变得多么混乱！而 Router 正是解决这个问题的利器。
+
 ## 主要功能
 
 Feat中的`Router`组件是一个功能强大的HTTP请求分发器，用于将HTTP请求分发到对应的处理程序（Handler）。它是基于`NodePath`树状结构实现的，支持多种路由匹配方式，包括精确匹配、通配符匹配、路径参数匹配等。同时提供了Session管理和请求拦截等高级功能。
@@ -45,6 +49,30 @@ Router组件的核心是`NodePath`类，它实现了基于前缀树的路由匹�
 2. 路径参数匹配
 3. 通配符匹配（最低优先级）
 
+来看一个形象的路由匹配示意图：
+
+<Mermaid code={`
+graph TD
+    A[根路径 /] --> B[api]
+    A --> C[user]
+    A --> D[*]
+    B --> E[v1]
+    C --> F[:id]
+    E --> G[用户API处理器]
+    F --> H[用户详情处理器]
+    D --> I[默认处理器]
+    
+    style A fill:#4CAF50
+    style B fill:#2196F3
+    style C fill:#2196F3
+    style D fill:#2196F3
+    style E fill:#FF9800
+    style F fill:#FF9800
+    style G fill:#E91E63
+    style H fill:#E91E63
+    style I fill:#E91E63
+`} />
+
 ## Session管理
 
 Router组件内置了Session管理功能，基于Cookie实现，支持自动创建、维护和清理Session。
@@ -79,9 +107,27 @@ router.route("/session/demo", ctx -> {
 });
 ```
 
+Session 的生命周期管理示意图：
+
+<Mermaid code={`
+graph LR
+    A[创建Session] --> B[访问/更新]
+    B --> C[重置超时]
+    C --> B
+    B --> D[超时]
+    D --> E[销毁]
+    C --> D
+    
+    style A fill:#4CAF50
+    style B fill:#FFC107
+    style C fill:#FFC107
+    style D fill:#FF5722
+    style E fill:#F44336
+`} />
+
 ## 拦截器使用
 
-拦截器允许在请求处理前后执行自定义逻辑，比如权限验证、日志记录等。
+拦截器允许在请求处理前后执行自定义逻辑，比如权限验证、日志记录等。这就像在请求处理流水线上设置检查点一样。
 
 ### 1. 创建拦截器
 
@@ -114,13 +160,21 @@ router.addInterceptor("/api/*", new LogInterceptor());
 拦截器执行流程如下：
 
 <Mermaid code={`
-stateDiagram-v2
-    [*] --> 拦截器1前置处理: 客户端请求
-    拦截器1前置处理 --> 拦截器2前置处理
-    拦截器2前置处理 --> 目标路由处理
-    目标路由处理 --> 拦截器2后置处理
-    拦截器2后置处理 --> 拦截器1后置处理
-    拦截器1后置处理 --> [*]: 响应客户端
+graph LR
+    A[客户端请求] --> B[拦截器1前置处理]
+    B --> C[拦截器2前置处理]
+    C --> D[目标路由处理]
+    D --> E[拦截器2后置处理]
+    E --> F[拦截器1后置处理]
+    F --> G[响应客户端]
+    
+    style A fill:#4CAF50
+    style B fill:#2196F3
+    style C fill:#2196F3
+    style D fill:#FF9800
+    style E fill:#2196F3
+    style F fill:#2196F3
+    style G fill:#4CAF50
 `} />
 
 ## 路由配置示例
@@ -242,6 +296,8 @@ public class RouterDemo {
 }
 ```
 
+有关完整示例，请参见 [RouterDemo.java](https://gitee.com/smartboot/feat/blob/master/feat-test/src/main/java/tech/smartboot/feat/demo/SmartHttpDemo.java)
+
 ## 总结
 
 Feat Router组件提供了一套完整的HTTP路由解决方案，具有以下优势：
@@ -252,4 +308,4 @@ Feat Router组件提供了一套完整的HTTP路由解决方案，具有以下�
 4. **扩展性**：支持拦截器机制，方便添加自定义处理逻辑
 5. **内置功能**：集成Session管理，无需额外配置
 
-通过合理使用Router组件，可以快速构建功能丰富、性能优良的Web应用。
+通过合理使用Router组件，可以快速构建功能丰富、性能优良的Web应用。在实际开发中，建议结合具体业务场景，合理规划路由结构，充分发挥Router的强大功能。

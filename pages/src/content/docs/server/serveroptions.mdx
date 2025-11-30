@@ -7,9 +7,22 @@ sidebar:
 
 # ServerOptions 配置详解
 
-Feat HTTP 服务器配置类，用于配置服务器的各项参数，包括基础配置、性能调优、安全设置和调试功能等。
+在 Feat 框架中，[ServerOptions](https://gitee.com/smartboot/feat/blob/master/feat-core/src/main/java/tech/smartboot/feat/core/server/ServerOptions.java) 是 HTTP 服务器的核心配置类，它让你可以精细地调整服务器的各种参数。无论你是想优化性能、加强安全还是调试问题，都可以在这里找到相应的配置项。
+
+让我们一起来看看 ServerOptions 提供了哪些强大的配置选项吧！
 
 ## 基础配置
+
+### serverName
+**类型:** `String` **默认值:** `"feat/" + Feat.VERSION`
+
+设置服务器名称，该名称会出现在 HTTP 响应头的 Server 字段中。
+
+```java
+options.serverName("my-awesome-app/v1.0");
+```
+
+**使用场景：** 标识应用名称和版本、满足合规要求
 
 ### bannerEnabled
 **类型:** `boolean` **默认值:** `true`
