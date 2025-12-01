@@ -103,10 +103,10 @@ public class SearchTool implements AgentTool {
         try {
             switch (searchEngine) {
                 case BING:
-                    return WebReader.search("https://cn.bing.com/search", httpGet -> httpGet.addQueryParam("q", query));
+                    return WebReader.read("https://cn.bing.com/search", httpGet -> httpGet.addQueryParam("q", query));
                 case BAIDU:
                 default:
-                    return WebReader.search("https://www.baidu.com/s", new Consumer<HttpGet>() {
+                    return WebReader.read("https://www.baidu.com/s", new Consumer<HttpGet>() {
                         @Override
                         public void accept(HttpGet httpGet) {
                             httpGet.addQueryParam("wd", query)

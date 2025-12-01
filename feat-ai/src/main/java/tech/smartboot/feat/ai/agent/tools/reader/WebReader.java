@@ -45,7 +45,7 @@ public class WebReader {
      * @param consumer 自定义HTTP GET请求的回调函数
      * @return 搜索结果的Markdown格式字符串
      */
-    public static String search(String url, Consumer<HttpGet> consumer) {
+    public static String read(String url, Consumer<HttpGet> consumer) {
         WebReader searcher;
         if (url.startsWith(BaiduReader.BASE_URL)) {
             searcher = new BaiduReader();
@@ -88,8 +88,8 @@ public class WebReader {
      * @param url 搜索URL
      * @return 搜索结果的Markdown格式字符串
      */
-    public static String search(String url) {
-        return search(url, null);
+    public static String read(String url) {
+        return read(url, null);
     }
 
     /**

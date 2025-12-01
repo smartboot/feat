@@ -48,7 +48,7 @@ public class WebPageReaderTool implements AgentTool {
 
         try {
             // 使用现有的Searcher类来获取网页内容
-            return WebReader.search(url);
+            return WebReader.read(url);
         } catch (Throwable e) {
             return "读取网页内容时发生错误: " + e.getMessage();
         }
