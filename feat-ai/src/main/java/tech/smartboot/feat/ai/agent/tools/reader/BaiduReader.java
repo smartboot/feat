@@ -8,7 +8,7 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.ai.agent.tools.search;
+package tech.smartboot.feat.ai.agent.tools.reader;
 
 /**
  * 百度搜索引擎实现
@@ -20,7 +20,7 @@ package tech.smartboot.feat.ai.agent.tools.search;
  * @author 三刀
  * @version v1.0 11/26/25
  */
-class BaiduSearcher extends Searcher {
+class BaiduReader extends WebReader {
     /**
      * 百度搜索的基础URL
      */

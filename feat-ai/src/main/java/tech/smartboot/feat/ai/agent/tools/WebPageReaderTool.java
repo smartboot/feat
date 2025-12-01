@@ -12,7 +12,7 @@ package tech.smartboot.feat.ai.agent.tools;
 
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.ai.agent.AgentTool;
-import tech.smartboot.feat.ai.agent.tools.search.Searcher;
+import tech.smartboot.feat.ai.agent.tools.reader.WebReader;
 
 /**
  * 网页内容读取工具，用于直接读取指定URL的网页内容并返回其文本内容
@@ -48,7 +48,7 @@ public class WebPageReaderTool implements AgentTool {
 
         try {
             // 使用现有的Searcher类来获取网页内容
-            return Searcher.search(url);
+            return WebReader.search(url);
         } catch (Throwable e) {
             return "读取网页内容时发生错误: " + e.getMessage();
         }

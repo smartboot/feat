@@ -12,7 +12,7 @@ package tech.smartboot.feat.ai.agent.tools;
 
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.ai.agent.AgentTool;
-import tech.smartboot.feat.ai.agent.tools.search.Searcher;
+import tech.smartboot.feat.ai.agent.tools.reader.WebReader;
 import tech.smartboot.feat.core.client.HttpGet;
 
 import java.util.function.Consumer;
@@ -103,10 +103,10 @@ public class SearchTool implements AgentTool {
         try {
             switch (searchEngine) {
                 case BING:
-                    return Searcher.search("https://cn.bing.com/search", httpGet -> httpGet.addQueryParam("q", query));
+                    return WebReader.search("https://cn.bing.com/search", httpGet -> httpGet.addQueryParam("q", query));
                 case BAIDU:
                 default:
-                    return Searcher.search("https://www.baidu.com/s", new Consumer<HttpGet>() {
+                    return WebReader.search("https://www.baidu.com/s", new Consumer<HttpGet>() {
                         @Override
                         public void accept(HttpGet httpGet) {
                             httpGet.addQueryParam("wd", query)
@@ -182,7 +182,7 @@ public class SearchTool implements AgentTool {
 
         // 测试百度搜索
         JSONObject params = new JSONObject();
-        params.put("query", "番茄炒蛋");
+        params.put("query", "smart-socket");
         params.put("engine", "baidu");
         System.out.println("=== 百度搜索结果 ===");
         System.out.println(tool.execute(params));
@@ -190,7 +190,7 @@ public class SearchTool implements AgentTool {
         // 测试必应搜索
         params.put("engine", "bing");
         System.out.println("\n=== 必应搜索结果 ===");
-//        System.out.println(tool.execute(params));
+        System.out.println(tool.execute(params));
     }
 
 }

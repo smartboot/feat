@@ -8,7 +8,7 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.ai.agent.tools.search;
+package tech.smartboot.feat.ai.agent.tools.reader;
 
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpGet;
@@ -32,7 +32,7 @@ import java.util.function.Consumer;
  * @author 三刀
  * @version v1.0 11/26/25
  */
-public abstract class Searcher {
+public class WebReader {
 
     /**
      * 执行搜索操作的通用方法
@@ -46,13 +46,15 @@ public abstract class Searcher {
      * @return 搜索结果的Markdown格式字符串
      */
     public static String search(String url, Consumer<HttpGet> consumer) {
-        Searcher searcher;
-        if (url.startsWith(BaiduSearcher.BASE_URL)) {
-            searcher = new BaiduSearcher();
-        } else if (url.startsWith(BingSearcher.BASE_URL)) {
-            searcher = new BingSearcher();
+        WebReader searcher;
+        if (url.startsWith(BaiduReader.BASE_URL)) {
+            searcher = new BaiduReader();
+        } else if (url.startsWith(BingReader.BASE_URL)) {
+            searcher = new BingReader();
+        } else if (url.startsWith(OsChinaNewsReader.BASE_URL)) {
+            searcher = new OsChinaNewsReader();
         } else {
-            searcher = new DefaultSearcher();
+            searcher = new WebReader();
         }
         HttpClient httpClient = new HttpClient(url);
         httpClient.options().debug(false);
@@ -62,7 +64,7 @@ public abstract class Searcher {
                 consumer.accept(httpGet);
             }
             httpGet.header(header -> {
-                baseHeader().forEach(header::set);
+                searcher.baseHeader().forEach(header::set);
             });
             searcher.initRequest(httpGet);
             HttpResponse response = httpGet.submit().get(5, TimeUnit.SECONDS);
@@ -111,7 +113,87 @@ public abstract class Searcher {
      * @param html HTML格式的搜索结果
      * @return Markdown格式的搜索结果
      */
-    protected abstract String toMarkdown(String html);
+    protected String toMarkdown(String html) {
+        if (html == null || html.isEmpty()) {
+            return "";
+        }
+
+        // Remove script and style tags
+        html = html.replaceAll("(?is)<head[^>]*>.*?</head>", "");
+        html = html.replaceAll("(?is)<script[^>]*>.*?</script>", "");
+        html = html.replaceAll("(?is)<style[^>]*>.*?</style>", "");
+        html = html.replaceAll("(?is)<footer[^>]*>.*?</footer>", "");
+
+        // Remove HTML comments
+        html = html.replaceAll("(?is)<!--.*?-->", "");
+
+        // Handle headings
+        html = html.replaceAll("(?i)</?h1>", "\n# ");
+        html = html.replaceAll("(?i)</?h2>", "\n## ");
+        html = html.replaceAll("(?i)</?h3>", "\n### ");
+        html = html.replaceAll("(?i)</?h4>", "\n#### ");
+        html = html.replaceAll("(?i)</?h5>", "\n##### ");
+        html = html.replaceAll("(?i)</?h6>", "\n###### ");
+        //合并空白字符
+        html = html.replaceAll("\\s+", " ");
+
+        // Handle paragraphs
+        html = html.replaceAll("(?i)<p[^>]*>", "\n\n");
+        html = html.replaceAll("(?i)</p>", "\n");
+
+        html = html.replaceAll("(?i)<div[^>]*>", "\n\n");
+        html = html.replaceAll("(?i)</div>", "\n");
+
+
+        // Handle line breaks
+        html = html.replaceAll("(?i)<br[^>]*/?>", "\n");
+
+        // Handle bold/strong
+        html = html.replaceAll("(?i)<strong[^>]*>(.*?)</strong>", "**$1**");
+        html = html.replaceAll("(?i)<b[^>]*>(.*?)</b>", "**$1**");
+
+        // Handle italic/em
+        html = html.replaceAll("(?i)<em[^>]*>(.*?)</em>", "*$1*");
+        html = html.replaceAll("(?i)<i[^>]*>(.*?)</i>", "*$1*");
+
+        // Handle links
+        html = html.replaceAll("(?i)<a[^>]*href=[\"']([^\"']*)[\"'][^>]*>(.*?)</a>", "[$2]($1)");
+
+        // Handle images
+        html = html.replaceAll("(?i)<img[^>]*src=[\"']([^\"']*)[\"'][^>]*alt=[\"']([^\"']*)[\"'][^>]*/?>", "![$2]($1)");
+        html = html.replaceAll("(?i)<img[^>]*alt=[\"']([^\"']*)[\"'][^>]*src=[\"']([^\"']*)[\"'][^>]*/?>", "![$1]($2)");
+
+        // Handle lists
+        html = html.replaceAll("(?i)<ul[^>]*>", "\n");
+        html = html.replaceAll("(?i)</ul>", "\n");
+        html = html.replaceAll("(?i)<ol[^>]*>", "\n");
+        html = html.replaceAll("(?i)</ol>", "\n");
+        html = html.replaceAll("(?i)<li[^>]*>", "\n- ");
+        html = html.replaceAll("(?i)</li>", "\n");
+
+        // Handle code blocks
+        html = html.replaceAll("(?i)<pre[^>]*>", "\n```\n");
+        html = html.replaceAll("(?i)</pre>", "\n```\n");
+        html = html.replaceAll("(?i)<code[^>]*>", "`");
+        html = html.replaceAll("(?i)</code>", "`");
+
+        // Handle blockquotes
+        html = html.replaceAll("(?i)<blockquote[^>]*>", "\n> ");
+        html = html.replaceAll("(?i)</blockquote>", "\n");
+
+        // Handle horizontal rules
+        html = html.replaceAll("(?i)<hr[^>]*/?>", "\n---\n");
+
+        // Remove remaining HTML tags
+        html = html.replaceAll("(?i)<[^>]*>", "");
+
+        // Clean up extra whitespace
+        html = html.replaceAll("\n\\s+\n", "\n\n");
+        html = html.replaceAll("\n{3,}", "\n\n");
+        html = html.trim();
+
+        return html;
+    }
 
     /**
      * 获取基础HTTP请求头
@@ -122,7 +204,7 @@ public abstract class Searcher {
      *
      * @return 包含基础请求头的Map
      */
-    private static Map<String, String> baseHeader() {
+    private Map<String, String> baseHeader() {
         Map<String, String> headers = new HashMap<>();
         headers.put(HeaderName.ACCEPT.getName(), "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7");
         headers.put(HeaderName.ACCEPT_ENCODING.getName(), "gzip, deflate, zstd, dcb, dcz");

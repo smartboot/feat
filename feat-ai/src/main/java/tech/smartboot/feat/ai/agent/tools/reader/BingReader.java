@@ -8,7 +8,7 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.ai.agent.tools.search;
+package tech.smartboot.feat.ai.agent.tools.reader;
 
 import java.util.regex.Pattern;
 
@@ -22,7 +22,7 @@ import java.util.regex.Pattern;
  * @author 三刀
  * @version v1.0 11/26/25
  */
-class BingSearcher extends Searcher {
+class BingReader extends WebReader {
     /**
      * 必应搜索的基础URL
      */
