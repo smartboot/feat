@@ -133,6 +133,9 @@ public class WebReader {
         // Remove script and style tags
         body = body.replaceAll("(?is)<script[^>]*>.*?</script>", "");
         body = body.replaceAll("(?is)<style[^>]*>.*?</style>", "");
+        //移除display:none
+        // 优化正则表达式以更准确地匹配具有display:none样式的元素
+        body = body.replaceAll("(?is)<[^>]*style\\s*=\\s*[\"'][^\"']*display\\s*:\\s*none[^\"']*[\"'][^>]*>.*?</[^>]*>", "");
 //        body = body.replaceAll("(?is)<footer[^>]*>.*?</footer>", "");
 
         // Remove HTML comments
