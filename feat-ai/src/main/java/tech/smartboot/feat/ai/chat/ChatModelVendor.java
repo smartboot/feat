@@ -75,9 +75,9 @@ public class ChatModelVendor extends Vendor {
         });
 
         /**
-         * DeepSeek-V3.2-Exp模型
+         * DeepSeek-V3.2模型
          */
-        public static final ChatModelVendor DeepSeek_V32_EXP = new GiteeAI("DeepSeek-V3.2-Exp", CAPABILITY_THINK | CAPABILITY_FUNCTION_CALL, (chatModel, modelVendor, jsonObject) -> {
+        public static final ChatModelVendor DeepSeek_V32 = new GiteeAI("DeepSeek-V3.2", CAPABILITY_THINK | CAPABILITY_FUNCTION_CALL, (chatModel, modelVendor, jsonObject) -> {
             if (FeatUtils.isBlank(chatModel.getOptions().apiKey())) {
                 throw new IllegalArgumentException("apiKey is null, please set it via environment variable " + Options.ENV_API_KEY);
             }

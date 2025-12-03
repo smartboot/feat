@@ -110,7 +110,7 @@ public class ReActAgent extends FeatAgent {
                 .addTool(new SubAgentTool())
                 .prompt(PromptTemplate.loadPrompt("feat_react_agent.tpl"))
                 .chatOptions()
-                .model(ChatModelVendor.GiteeAI.DeepSeek_V32_EXP);
+                .model(ChatModelVendor.GiteeAI.DeepSeek_V32);
     }
 
     /**
