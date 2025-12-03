@@ -31,6 +31,7 @@ import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.zip.CRC32;
 import java.util.zip.CheckedInputStream;
 import java.util.zip.Inflater;
@@ -50,17 +51,27 @@ public class GZIPInputStream extends InflaterInputStream {
      * CRC-32 for uncompressed data.
      */
     protected CRC32 crc = new CRC32();
-
+    private final CheckedInputStream headInput;
     /**
      * Indicates end of input stream.
      */
     protected boolean eos;
 
     private boolean closed = false;
+    private static final int STATE_MAGIC = 0;
+    private static final int STATE_COMPRESSION_METHOD = 1;
+    private static final int STATE_FLAGS = 2;
+    private static final int STATE_FEXTRA_LEN = 3;
+    private static final int STATE_FEXTRA_DATA = 4;
+    private static final int STATE_FNAME = 5;
+    private static final int STATE_FCOMMENT = 6;
+    private static final int STATE_HCRC = 7;
+    private static final int STATE_INFLATE = 10;
+    private static final int STATE_CRC_CHECK = 20;
 
-    private static final int STATE_INFLATE = 0;
-    private static final int STATE_CRC_CHECK = 1;
-    private int state = STATE_INFLATE;
+    private int state = STATE_MAGIC;
+    private int flags;
+    private int extraReaming;
 
     /**
      * Check to make sure that this stream has not been closed
@@ -84,7 +95,7 @@ public class GZIPInputStream extends InflaterInputStream {
     public GZIPInputStream(InputStream in, int size) throws IOException {
         super(in, new Inflater(true), size);
         usesDefaultInflater = true;
-        readHeader(in);
+        headInput = new CheckedInputStream(in, crc);
     }
 
     /**
@@ -122,24 +133,126 @@ public class GZIPInputStream extends InflaterInputStream {
         if (eos) {
             return -1;
         }
-        if (state == STATE_INFLATE) {
-            int n = super.read(buf, off, len);
-            if (n == -1) {
-                state = STATE_CRC_CHECK;
-            } else {
-                crc.update(buf, off, n);
-                return n;
+        switch (state) {
+            case STATE_MAGIC: {
+                if (headInput.available() < 2) {
+                    return 0;
+                }
+                // Check header magic
+                if (readUShort(headInput) != GZIP_MAGIC) {
+                    throw new ZipException("Not in GZIP format");
+                }
+                state = STATE_COMPRESSION_METHOD;
             }
-        }
-        if (state == STATE_CRC_CHECK) {
-            if ((inf.getRemaining() + in.available()) < 8) {
-                return 0;
-            } else if (readTrailer()) {
-                eos = true;
-                return -1;
-            } else {
-                //同JDK源码不一致，此处中断阻塞
-                return this.read(buf, off, len);
+            case STATE_COMPRESSION_METHOD: {
+                if (headInput.available() < 1) {
+                    return 0;
+                }
+                // Check compression method
+                if (readUByte(headInput) != 8) {
+                    throw new ZipException("Unsupported compression method");
+                }
+            }
+            case STATE_FLAGS: {
+                if (headInput.available() < 7) {
+                    return 0;
+                }
+                flags = readUByte(headInput);
+                // Skip extra flags and modification time
+                skipBytes(headInput, 6);
+                if ((flags & FEXTRA) == FEXTRA) {
+                    state = STATE_FEXTRA_LEN;
+                } else {
+                    state = STATE_FNAME;
+                    return this.read(buf, off, len);
+                }
+            }
+            case STATE_FEXTRA_LEN: {
+                if (headInput.available() < 2) {
+                    return 0;
+                }
+                extraReaming = readUShort(headInput);
+                state = STATE_FEXTRA_DATA;
+            }
+            case STATE_FEXTRA_DATA: {
+                if (extraReaming > 0) {
+                    if (headInput.available() == 0) {
+                        return 0;
+                    }
+                    int n = Math.min(extraReaming, headInput.available());
+                    skipBytes(headInput, n);
+                    extraReaming -= n;
+                    return this.read(buf, off, len);
+                } else if (extraReaming == 0) {
+                    state = STATE_FNAME;
+                } else {
+                    throw new ZipException("Invalid extra data size");
+                }
+            }
+            case STATE_FNAME: {
+                if ((flags & FNAME) == FNAME) {
+                    while (headInput.available() > 0) {
+                        int c = headInput.read();
+                        if (c == -1) {
+                            throw new ZipException("Unexpected end of stream");
+                        } else if (c == 0) {
+                            state = STATE_FCOMMENT;
+                            return this.read(buf, off, len);
+                        }
+                    }
+                    return 0;
+                } else {
+                    state = STATE_FCOMMENT;
+                }
+            }
+            case STATE_FCOMMENT: {
+                if ((flags & FCOMMENT) == FCOMMENT) {
+                    while (headInput.available() > 0) {
+                        int c = headInput.read();
+                        if (c == -1) {
+                            throw new ZipException("Unexpected end of stream");
+                        } else if (c == 0) {
+                            state = STATE_HCRC;
+                            return this.read(buf, off, len);
+                        }
+                    }
+                    return 0;
+                } else {
+                    state = STATE_HCRC;
+                }
+            }
+            case STATE_HCRC: {
+                if ((flags & FHCRC) == FHCRC) {
+                    if (headInput.available() < 2) {
+                        return 0;
+                    }
+                    int v = (int) crc.getValue() & 0xffff;
+                    if (readUShort(headInput) != v) {
+                        throw new ZipException("Corrupt GZIP header");
+                    }
+                }
+                state = STATE_INFLATE;
+                crc.reset();
+            }
+            case STATE_INFLATE: {
+                int n = super.read(buf, off, len);
+                if (n == -1) {
+                    state = STATE_CRC_CHECK;
+                } else {
+                    crc.update(buf, off, n);
+                    return n;
+                }
+            }
+            case STATE_CRC_CHECK: {
+                if ((inf.getRemaining() + in.available()) < 8) {
+                    return 0;
+                } else if (readTrailer()) {
+                    eos = true;
+                    return -1;
+                } else {
+                    //同JDK源码不一致，此处中断阻塞
+                    return this.read(buf, off, len);
+                }
             }
         }
         throw new IllegalStateException();
@@ -174,57 +287,6 @@ public class GZIPInputStream extends InflaterInputStream {
     private final static int FCOMMENT = 16;   // File comment
 
     /*
-     * Reads GZIP member header and returns the total byte number
-     * of this member header.
-     */
-    private int readHeader(InputStream this_in) throws IOException {
-        CheckedInputStream in = new CheckedInputStream(this_in, crc);
-        state = STATE_INFLATE;
-        crc.reset();
-        // Check header magic
-        if (readUShort(in) != GZIP_MAGIC) {
-            throw new ZipException("Not in GZIP format");
-        }
-        // Check compression method
-        if (readUByte(in) != 8) {
-            throw new ZipException("Unsupported compression method");
-        }
-        // Read flags
-        int flg = readUByte(in);
-        // Skip MTIME, XFL, and OS fields
-        skipBytes(in, 6);
-        int n = 2 + 2 + 6;
-        // Skip optional extra field
-        if ((flg & FEXTRA) == FEXTRA) {
-            int m = readUShort(in);
-            skipBytes(in, m);
-            n += m + 2;
-        }
-        // Skip optional file name
-        if ((flg & FNAME) == FNAME) {
-            do {
-                n++;
-            } while (readUByte(in) != 0);
-        }
-        // Skip optional file comment
-        if ((flg & FCOMMENT) == FCOMMENT) {
-            do {
-                n++;
-            } while (readUByte(in) != 0);
-        }
-        // Check optional header CRC
-        if ((flg & FHCRC) == FHCRC) {
-            int v = (int) crc.getValue() & 0xffff;
-            if (readUShort(in) != v) {
-                throw new ZipException("Corrupt GZIP header");
-            }
-            n += 2;
-        }
-        crc.reset();
-        return n;
-    }
-
-    /*
      * Reads GZIP member trailer and returns true if the eos
      * reached, false if there are more (concatenated gzip
      * data set)
@@ -248,15 +310,16 @@ public class GZIPInputStream extends InflaterInputStream {
         // this.trailer(8) + next.header.min(10) + next.trailer(8)
         // try concatenated case
         if (this.in.available() > 0 || n > 26) {
-            int m = 8;                  // this.trailer
-            try {
-                m += readHeader(in);    // next.header
-            } catch (IOException ze) {
-                return true;  // ignore any malformed, do nothing
-            }
-            inf.reset();
-            if (n > m) inf.setInput(buf, len - n + m, n - m);
-            return false;
+            throw new UnsupportedEncodingException("Concatenated gzip streams not supported");
+//            int m = 8;                  // this.trailer
+//            try {
+//                m += readHeader(in);    // next.header
+//            } catch (IOException ze) {
+//                return true;  // ignore any malformed, do nothing
+//            }
+//            inf.reset();
+//            if (n > m) inf.setInput(buf, len - n + m, n - m);
+//            return false;
         }
         return true;
     }
@@ -285,14 +348,10 @@ public class GZIPInputStream extends InflaterInputStream {
         if (b == -1) {
             throw new EOFException();
         }
-        if (b < -1 || b > 255) {
-            // Report on this.in, not argument in; see read{Header, Trailer}.
-            throw new IOException(this.in.getClass().getName() + ".read() returned value out of range -1..255: " + b);
-        }
         return b;
     }
 
-    private byte[] tmpbuf = new byte[128];
+    private final static byte[] tmpbuf = new byte[128];
 
     /*
      * Skips bytes of input data blocking until all bytes are skipped.
@@ -300,7 +359,7 @@ public class GZIPInputStream extends InflaterInputStream {
      */
     private void skipBytes(InputStream in, int n) throws IOException {
         while (n > 0) {
-            int len = in.read(tmpbuf, 0, n < tmpbuf.length ? n : tmpbuf.length);
+            int len = in.read(tmpbuf, 0, Math.min(n, tmpbuf.length));
             if (len == -1) {
                 throw new EOFException();
             }
