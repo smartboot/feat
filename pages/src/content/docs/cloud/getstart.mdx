@@ -73,11 +73,28 @@ Feat Cloud 提供了一种面向企业级应用开发的解决方案，类似于
 
 
 ## 快速启动
-在 Maven 工程中创建一个 `FeatCloudDemo.java` 文件，添加以下代码：
-``` java title=FeatCloudDemo.java
+
+### 创建 Maven 项目
+创建一个 Maven 项目，在 `pom.xml` 文件中添加以下依赖：
+
+```xml title=pom.xml
+<dependency>
+    <groupId>tech.smartboot.feat</groupId>
+    <artifactId>feat-cloud-starter</artifactId>
+    <version>${feat.version}</version>
+</dependency>
+```
+
+你可以在 [Gitee 仓库](https://gitee.com/smartboot/feat/tree/master/demo/helloworld) 中找到完整的 helloworld 示例项目。
+
+### 创建启动类
+在 Maven 工程中创建一个 `Bootstrap.java` 文件，添加以下代码：
+
+``` java title=Bootstrap.java
 @Controller
-public class FeatCloudDemo {
-    @RequestMapping("/cloud")
+public class Bootstrap {
+
+    @RequestMapping("/hello")
     public String helloWorld() {
         return "hello Feat Cloud";
     }
@@ -87,7 +104,7 @@ public class FeatCloudDemo {
     }
 }
 ```
-启动程序，打开浏览器访问 `http://localhost:8080/cloud`。
+启动程序，打开浏览器访问 `http://localhost:8080/hello`。
 <img src={demo.src} alt="hello world" width="60%" className="shadow"/>
 
 ---
