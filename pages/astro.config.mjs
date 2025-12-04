@@ -99,12 +99,12 @@ export default defineConfig({
                     autogenerate: {directory: 'guides'},
                 },
                 {
-                    label: 'Feat Server开发',
-                    autogenerate: {directory: 'server'},
-                },
-                {
                     label: 'Feat Cloud开发',
                     autogenerate: {directory: 'cloud'},
+                },
+                {
+                    label: 'Feat Server开发',
+                    autogenerate: {directory: 'server'},
                 },
                 {
                     label: 'Feat Client开发',
