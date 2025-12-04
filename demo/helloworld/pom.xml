@@ -8,7 +8,6 @@
 
     <artifactId>helloworld</artifactId>
     <properties>
-        <maven.compiler.debug>false</maven.compiler.debug>
     </properties>
 
     <dependencies>
