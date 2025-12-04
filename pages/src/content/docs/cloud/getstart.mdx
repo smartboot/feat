@@ -1,83 +1,34 @@
 ---
-title: 开始使用
-description: Feat Cloud 快速入门教程与环境配置
+title: 快速入门
+description: 用 Feat Cloud 构建你的第一个 Web 应用
 sidebar:
-    order: 1
+  order: 1
 ---
 
 import LicenseGenerator from '../../../components/LicenseGenerator.astro';
 import idea_setting from './img/idea_setting.png';
 import demo from './img/demo.png';
-import lifecycle from './img/lifecycle.svg';
-import {Aside, TabItem, Tabs} from "@astrojs/starlight/components";
+import {Aside} from "@astrojs/starlight/components";
 
-Feat Cloud 提供了一种面向企业级应用开发的解决方案，类似于 SpringBoot 但更加优化。
+你是否想要快速构建一个高性能的 Web 应用？让我们一起用 Feat Cloud 来创建你的第一个 Web 服务吧！
 
-**设计方面**：Feat Cloud 尽最大可能保留了 SpringBoot 的使用习惯，以此降低开发者的学习成本。
+## 什么是 Feat Cloud？
 
-**技术方面**：Feat Cloud 在编译期对代码进行静态分析，最大化提升服务运行性能，降低资源消耗。
+Feat Cloud 是一款专为企业级应用开发打造的现代化框架，它借鉴了 Spring Boot 的设计理念，但在性能和资源利用方面进行了深度优化。相比传统框架，它最大的亮点是在编译期就完成了大量的静态分析和优化工作，让你的应用在运行时拥有更高的性能和更低的资源消耗。
 
----
+简单来说，如果你喜欢 Spring Boot 的开发体验，却又对性能有着更高要求，那么 Feat Cloud 就是为你准备的！
 
-**Feat 核心优势**：
+## 准备工作：搭建开发环境
 
-**🚀 AOT 编译优化**
-- 运用 APT（Annotation Processing Tool）技术
-- 编译期生成优化代码，消除运行时反射开销
-- 结合 ServiceLoader 实现零配置服务加载
+在开始编码之前，我们需要做一些准备工作。别担心，这些步骤都很简单！
 
-**⚡ 高性能特性**
-- 快速启动：无需类扫描和注解解析
-- 低内存占用：减少运行时元数据缓存
-- 高并发处理能力：基于 smart-socket 的异步非阻塞网络通信
+### 第一步：创建 Maven 项目
 
-**🔧 开发友好**
-- 保持 SpringBoot 使用习惯
-- 支持 **AOT** 和 **AOT虚拟机** 双模式
-- 完善的依赖注入和生命周期管理
+首先，让我们创建一个新的 Maven 项目。你可以使用你喜欢的 IDE（比如 IntelliJ IDEA）来创建，也可以手动创建目录结构。
 
-<Aside type="tip">
-    **深入了解技术原理**：想要了解 Feat Cloud 的 AOT 编译机制、代码生成过程等技术细节，请参考 [AOT 编译和 AOT 虚拟机](/feat/cloud/aot/) 章节。
-</Aside>
+创建好项目之后，我们需要在 `pom.xml` 文件中添加 Feat Cloud 的依赖：
 
-
-
-## 准备工作
-
-### 引入 Maven 依赖
-创建一个 Maven 项目，在 `pom.xml` 文件中添加以下依赖：
-```xml title=pom.xml
-<dependency>
-    <groupId>tech.smartboot.feat</groupId>
-    <artifactId>feat-cloud-starter</artifactId>
-    <version>${feat.version}</version>
-</dependency>
-```
-<Aside>
-    **$\{feat.version}**
-    需根据实际情况设置，建议使用[最新版本](https://central.sonatype.com/artifact/tech.smartboot.feat/feat-cloud-starter)。
-</Aside>
-
-### 配置 IDEA
-调整 IDEA 编译配置，以启用 Feat Cloud 的静态优化功能，**否则请求将无法正常路由**。
-
-设置路径为：`Preferences -> Build, Execution, Deployment -> Build Tools -> Maven -> Runner`，
-勾选`Delegate IDE build/run actions to Maven` 并点击 `OK` 保存配置。
-
-<img src={idea_setting.src} alt="hello world" width="60%" className="shadow"/>
-<Aside type="tip">
-    这是一种比较常规的配置方式，确保了本地开发环境与正式生产环境的代码一致性。
-    虽然程序拥有极高的运行效率，但每次运行都需要进行全量 AOT 编译，无法享受 IDEA 自动增量编译带来的便利性，一定程度上损失了开发体验。
-    此时可考虑启用 [AOT 虚拟机](/feat/cloud/aot/#aot虚拟机) 改善本地开发体验。
-</Aside>
-
-
-## 快速启动
-
-### 创建 Maven 项目
-创建一个 Maven 项目，在 `pom.xml` 文件中添加以下依赖：
-
-```xml title=pom.xml
+```xml title="pom.xml"
 <dependency>
     <groupId>tech.smartboot.feat</groupId>
     <artifactId>feat-cloud-starter</artifactId>
@@ -85,18 +36,42 @@ Feat Cloud 提供了一种面向企业级应用开发的解决方案，类似于
 </dependency>
 ```
 
-你可以在 [Gitee 仓库](https://gitee.com/smartboot/feat/tree/master/demo/helloworld) 中找到完整的 helloworld 示例项目。
+<Aside title="关于版本号">
+  `${feat.version}` 需要替换为实际的版本号，建议使用[最新版本](https://central.sonatype.com/artifact/tech.smartboot.feat/feat-cloud-starter)。
+</Aside>
+
+### 第二步：配置 IntelliJ IDEA
+
+为了让 Feat Cloud 的静态优化功能生效，我们需要稍微调整一下 IDEA 的配置。
+
+请按以下步骤操作：
+
+1. 打开 IDEA，进入 `Preferences`
+2. 导航到 `Build, Execution, Deployment -> Build Tools -> Maven -> Runner`
+3. 勾选 `Delegate IDE build/run actions to Maven`
+4. 点击 `OK` 保存配置
+
+<img src={idea_setting.src} alt="IDEA 配置截图" width="60%" className="shadow"/>
+
+<Aside type="tip">
+  这样配置是为了确保本地开发环境和生产环境的一致性。虽然每次运行都需要进行 AOT 编译，不能享受 IDEA 的增量编译，但换来的是极致的运行性能。如果你觉得开发体验受影响，可以了解一下 [AOT 虚拟机](/feat/cloud/aot/#aot虚拟机) 来改善这个问题。
+</Aside>
+
+## 编写你的第一个应用
+
+万事俱备，让我们动手创建一个简单的 Web 应用吧！
 
 ### 创建启动类
-在 Maven 工程中创建一个 `Bootstrap.java` 文件，添加以下代码：
 
-``` java title=Bootstrap.java
+在 `src/main/java` 目录下创建一个名为 [`Bootstrap.java`](https://gitee.com/smartboot/feat/blob/master/demo/helloworld/src/main/java/tech/smartboot/feat/Bootstrap.java) 的文件，添加如下代码：
+
+```java title="Bootstrap.java"
 @Controller
 public class Bootstrap {
 
     @RequestMapping("/hello")
     public String helloWorld() {
-        return "hello Feat Cloud";
+        return "Hello, Feat Cloud!";
     }
 
     public static void main(String[] args) {
@@ -104,10 +79,67 @@ public class Bootstrap {
     }
 }
 ```
-启动程序，打开浏览器访问 `http://localhost:8080/hello`。
-<img src={demo.src} alt="hello world" width="60%" className="shadow"/>
 
----
+这段代码做了几件重要的事情：
+
+1. `@Controller` 注解标记了这是一个控制器类
+2. `@RequestMapping("/hello")` 注解将 `/hello` 路径的请求映射到 helloWorld() 方法
+3. main() 方法中通过 `FeatCloud.cloudServer().listen()` 启动了 Web 服务
+
+是不是很简单？Spring Boot 用户应该会觉得非常熟悉吧！
+
+### 运行应用
+
+现在，点击 IDEA 中的运行按钮，或者使用快捷键运行 Bootstrap 类。
+
+当看到控制台输出类似下面的信息时，说明你的应用已经成功启动了：
+
+```
+Feat Router:
+ |-> /hello ==> Bootstrap@helloWorld
+ ________   ________        _        _________
+|_   __  | |_   __  |      / \      |  _   _  |
+  | |_ \_|   | |_ \_|     / _ \     |_/ | | \_|
+  |  _|      |  _| _     / ___ \        | |
+ _| |_      _| |__/ |  _/ /   \ \_     _| |_
+|_____|    |________| |____| |____|   |_____|
+ :: Feat :: (v1.4.0)
+Technical Support:
+ - Document: https://smartboot.tech]
+ - Github: https://github.com/smartboot/feat
+🎉Congratulations, the feat startup is successful. cost: 71ms
+http://0.0.0.0:8080/
+```
+
+这表示我们的服务已经在 8080 端口上运行了，其中 `/hello` 路径已经映射到了对应的处理方法。
+
+### 测试接口
+
+打开你的浏览器，访问 `http://localhost:8080/hello`，你会看到页面上显示着：
+
+```
+Hello, Feat Cloud!
+```
+
+<img src={demo.src} alt="浏览器访问效果图" width="60%" className="shadow"/>
+
+恭喜你！你已经成功创建并运行了第一个 Feat Cloud 应用！
+
+## 更进一步
+
+这个简单的例子只是 Feat Cloud 能力的冰山一角。在后续的文档中，我们会介绍更多强大的功能：
+
+- 复杂路由配置
+- 请求参数处理
+- 数据校验
+- 数据库集成
+- 安全认证
+- 微服务架构
 
 ## 授权申请
+
+Feat Cloud 是一个商业友好的开源项目，但企业用户需要获得授权才能在生产环境中使用。
+
 <LicenseGenerator />
+
+不用担心，个人学习和测试使用是完全免费的！
