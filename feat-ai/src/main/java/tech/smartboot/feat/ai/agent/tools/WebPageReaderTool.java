@@ -104,7 +104,7 @@ public class WebPageReaderTool implements AgentTool {
     public static void main(String[] args) {
         WebPageReaderTool tool = new WebPageReaderTool();
         JSONObject params = new JSONObject();
-        params.put("url", "https://www.oschina.net/news/385596/smart-mqtt-1-5-0-released");
+        params.put("url", "https://www.oschina.net/");
         System.out.println(tool.execute(params));
     }
 }

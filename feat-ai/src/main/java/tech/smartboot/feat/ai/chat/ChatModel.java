@@ -34,6 +34,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 /**
@@ -45,6 +46,9 @@ import java.util.function.Consumer;
 public class ChatModel {
     private static final Logger LOGGER = LoggerFactory.getLogger(ChatModel.class);
     private final ChatOptions options;
+    private static final int STREAM_STATUS_INIT = 0;
+    private static final int STREAM_STATUS_UPGRADE = 1;
+    private static final int STREAM_STATUS_COMPLETE = 2;
 
     /**
      * 构造函数
@@ -89,25 +93,45 @@ public class ChatModel {
         HttpPost post = chat0(messages, tools, true);
         StringBuilder contentBuilder = new StringBuilder();
         Map<Integer, ToolCall> toolCallMap = new HashMap<>();
-
+        AtomicInteger status = new AtomicInteger(STREAM_STATUS_INIT);
         post.onSuccess(response -> {
-            ResponseMessage responseMessage = new ResponseMessage();
-            responseMessage.setRole(Message.ROLE_ASSISTANT);
-            responseMessage.setError(response.body());
-            responseMessage.setSuccess(false);
-            consumer.onCompletion(responseMessage);
+            //若sse升级成功，则忽略onSuccess逻辑
+            if (status.get() == STREAM_STATUS_INIT) {
+                ResponseMessage responseMessage = new ResponseMessage();
+                responseMessage.setRole(Message.ROLE_ASSISTANT);
+                responseMessage.setError(response.body());
+                responseMessage.setSuccess(false);
+                consumer.onCompletion(responseMessage);
+            }
         }).onSSE(sse -> sse.onData(event -> {
+            if (status.get() == STREAM_STATUS_INIT) {
+                status.set(STREAM_STATUS_UPGRADE);
+            }
             String data = event.getData();
             if ("[DONE]".equals(data) || FeatUtils.isBlank(data)) {
+                if (status.get() == STREAM_STATUS_COMPLETE && contentBuilder.length() == 0) {
+                    return;
+                }
                 ResponseMessage responseMessage = new ResponseMessage();
                 responseMessage.setRole(Message.ROLE_ASSISTANT);
                 responseMessage.setContent(contentBuilder.toString());
                 responseMessage.setToolCalls(new ArrayList<>(toolCallMap.values()));
                 responseMessage.setSuccess(true);
+                status.set(STREAM_STATUS_COMPLETE);
                 consumer.onCompletion(responseMessage);
                 return;
             }
             JSONObject object = JSON.parseObject(data);
+            JSONObject error = object.getJSONObject("error");
+            if (error != null) {
+                ResponseMessage responseMessage = new ResponseMessage();
+                responseMessage.setRole(Message.ROLE_ASSISTANT);
+                responseMessage.setError(error.getString("message"));
+                responseMessage.setSuccess(false);
+                status.set(STREAM_STATUS_COMPLETE);
+                consumer.onCompletion(responseMessage);
+                return;
+            }
             //最后一个可能为空
             JSONArray choices = object.getJSONArray("choices");
             if (choices == null || choices.isEmpty()) {

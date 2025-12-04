@@ -22,6 +22,7 @@ import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
 import tech.smartboot.feat.ai.chat.prompt.PromptTemplate;
+import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 
@@ -30,6 +31,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -103,14 +105,13 @@ public class ReActAgent extends FeatAgent {
      * </p>
      */
     public ReActAgent() {
-        options.addTool(new TodoListTool())
-                .addTool(new FileOperationTool())
-                .addTool(new SearchTool())
-                .addTool(new WebPageReaderTool())
-                .addTool(new SubAgentTool())
-                .prompt(PromptTemplate.loadPrompt("feat_react_agent.tpl"))
-                .chatOptions()
-                .model(ChatModelVendor.GiteeAI.DeepSeek_V32);
+        this(opts -> opts.addTool(new TodoListTool()).addTool(new FileOperationTool()).addTool(new SearchTool()).addTool(new WebPageReaderTool()).addTool(new SubAgentTool()).chatOptions().model(ChatModelVendor.GiteeAI.DeepSeek_V32));
+
+    }
+
+    public ReActAgent(Consumer<AgentOptions> opts) {
+        opts.accept(options);
+        options.prompt(PromptTemplate.loadPrompt("feat_react_agent.tpl"));
     }
 
     /**
@@ -159,7 +160,11 @@ public class ReActAgent extends FeatAgent {
 
                     @Override
                     public void onCompletion(ResponseMessage responseMessage) {
-                        isDone.complete(true);
+                        if (responseMessage.isSuccess()) {
+                            isDone.complete(true);
+                        } else {
+                            isDone.completeExceptionally(new FeatException(responseMessage.getError()));
+                        }
                     }
 
                     @Override
@@ -232,19 +237,29 @@ public class ReActAgent extends FeatAgent {
     private AgentAction parseAgentResponse(String response) {
         AgentAction action = new AgentAction();
 
+        int lastAI = response.lastIndexOf("AI:");
+        int lastAction = response.lastIndexOf("Action:");
+
         // 查找最终答案
-        Matcher finalAnswerMatcher = FINAL_ANSWER_PATTERN.matcher(response);
-        if (finalAnswerMatcher.find()) {
-            action.setAction("Final Answer");
-            action.setActionInput(finalAnswerMatcher.group(1));
-            return action;
+        if (lastAI > lastAction) {
+            Matcher finalAnswerMatcher = FINAL_ANSWER_PATTERN.matcher(response);
+            if (finalAnswerMatcher.find()) {
+                action.setAction("Final Answer");
+                action.setActionInput(finalAnswerMatcher.group(1));
+                return action;
+            }
         }
 
         // 查找思考步骤
-        Matcher thoughtMatcher = THOUGHT_PATTERN.matcher(response);
-        if (thoughtMatcher.find()) {
-            action.setThought(thoughtMatcher.group(1));
+        int lastThought = response.lastIndexOf("Thought:");
+        if (lastThought > 0) {
+            Matcher thoughtMatcher = THOUGHT_PATTERN.matcher(response.substring(lastThought));
+            if (thoughtMatcher.find()) {
+                action.setThought(thoughtMatcher.group(1));
+            }
         }
+
+        response = response.substring(lastAction);
 
         // 查找动作
         Matcher actionMatcher = ACTION_PATTERN.matcher(response);
@@ -287,6 +302,19 @@ public class ReActAgent extends FeatAgent {
         if (executor == null) {
             return "Error: Tool '" + toolName + "' not found.";
         }
+        int start = 0;
+        for (; start < input.length(); start++) {
+            if (input.charAt(start) != '`' && input.charAt(start) != ' ' && input.charAt(start) != '\n') {
+                break;
+            }
+        }
+        int end = input.length() - 1;
+        for (; end > 0; end--) {
+            if (input.charAt(end) != '`' && input.charAt(end) != ' ' && input.charAt(end) != '\n') {
+                break;
+            }
+        }
+        input = input.substring(start, end + 1);
 
         try {
             // 使用工具执行管理器来执行工具

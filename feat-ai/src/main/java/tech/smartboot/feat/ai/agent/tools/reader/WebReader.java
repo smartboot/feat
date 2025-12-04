@@ -67,7 +67,7 @@ public class WebReader {
                 consumer.accept(httpGet);
             }
             httpGet.header(header -> {
-                searcher.baseHeader().forEach(header::set);
+                searcher.simulatorDeviceHeader().forEach(header::set);
             });
             searcher.initRequest(httpGet);
             HttpResponse response = httpGet.submit().get(5, TimeUnit.SECONDS);
@@ -353,7 +353,7 @@ public class WebReader {
      *
      * @return 包含基础请求头的Map
      */
-    private Map<String, String> baseHeader() {
+    public static Map<String, String> simulatorDeviceHeader() {
         Map<String, String> headers = new HashMap<>();
         headers.put(HeaderName.ACCEPT.getName(), "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7");
         headers.put(HeaderName.ACCEPT_ENCODING.getName(), "gzip, deflate, zstd, dcb, dcz");
