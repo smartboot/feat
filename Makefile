@@ -5,4 +5,5 @@ update_version:
 	mvn versions:set -DnewVersion=${version} versions:commit clean install -DskipTests
 	mvn -f demo/feat_static/pom.xml versions:set -DnewVersion=${version} versions:commit
 	mvn -f demo/feat-cloud-helloworld/pom.xml versions:set -DnewVersion=${version} versions:commit
+	mvn -f demo/helloworld/pom.xml versions:set -DnewVersion=${version} versions:commit
 
