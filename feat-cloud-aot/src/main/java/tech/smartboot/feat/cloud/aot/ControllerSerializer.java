@@ -21,10 +21,10 @@ import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.cloud.annotation.RequestMethod;
 import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
 import tech.smartboot.feat.cloud.aot.controller.JsonSerializer;
+import tech.smartboot.feat.core.common.ByteTree;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.exception.FeatException;
-import tech.smartboot.feat.core.common.ByteTree;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.Session;
@@ -122,6 +122,13 @@ final class ControllerSerializer extends AbstractSerializer {
                     requestURL = basePath + requestURL;
                 } else {
                     requestURL = basePath + "/" + requestURL;
+                }
+                // 将路径参数格式从 "{param}" 转换为 ":param" 格式
+                // 例如: 将 /user/{id}/ 转换为 /user/:id/
+                requestURL = requestURL.replace("/{", "/:").replace("}/", "/");
+                // 处理路径末尾的参数情况，如 /user/{id} 转换为 /user/:id
+                if (requestURL.endsWith("}")) {
+                    requestURL = requestURL.substring(0, requestURL.length() - 1);
                 }
 
                 if (FeatUtils.isBlank(requestURL)) {
