@@ -1,0 +1,33 @@
+### 获取所有用户
+GET http://localhost:8080/users
+
+### 根据用户名获取特定用户
+GET http://localhost:8080/users/feat
+
+### 根据角色获取用户列表
+GET http://localhost:8080/users/role/admin
+
+### 创建新用户
+POST http://localhost:8080/users
+Content-Type: application/json
+
+{
+  "username": "newuser",
+  "password": "password123",
+  "desc": "New test user",
+  "role": "user"
+}
+
+### 更新用户信息
+PUT http://localhost:8080/users
+Content-Type: application/json
+
+{
+  "username": "newuser",
+  "password": "newpassword123",
+  "desc": "Updated test user",
+  "role": "user"
+}
+
+### 删除特定用户
+DELETE http://localhost:8080/users/newuser
