@@ -78,6 +78,12 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         super.init(processingEnv);
         try {
             this.config = loadFeatYaml(processingEnv);
+            //清理原service文件。
+            serviceFile = processingEnv.getFiler().getResource(StandardLocation.CLASS_OUTPUT, "", "META-INF/services/" + CloudService.class.getName());
+            File file = new File(serviceFile.toUri());
+            if (file.isFile()) {
+                System.out.println("delete service file: " + serviceFile.toUri() + " " + (file.delete() ? "success" : "fail"));
+            }
             serviceFile = processingEnv.getFiler().createResource(StandardLocation.CLASS_OUTPUT, "", "META-INF/services/" + CloudService.class.getName());
             serviceWrite = new PrintWriter(serviceFile.openWriter());
             System.out.println("processor init: " + this);
