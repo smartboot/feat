@@ -11,11 +11,19 @@ import {Aside, TabItem, Tabs} from "@astrojs/starlight/components";
 
 <CheckAuthorize/>
 
-GraalVM Native Image 为部署和运行 Java 应用程序提供了一种新方式。
+## 什么是 GraalVM Native Image
 
-与传统的 Java 虚拟机相比，原生镜像可以更小的内存占用运行，并具有更快的启动速度。它们非常适合使用容器镜像部署的应用程序，特别是与"函数即服务"(FaaS)平台结合使用时。
+让我们一起探索 GraalVM Native Image 技术！这是一种革命性的技术，它为部署和运行 Java 应用程序提供了全新的方式。
 
-## 原生镜像的优势
+与传统的 Java 虚拟机相比，原生镜像具有显著的优势：
+- **极速启动**：启动时间从几秒甚至几十秒缩短到几十毫秒级别
+- **低内存占用**：相比 JVM 运行时，内存使用量可减少高达 5-10 倍
+- **独立部署**：生成的可执行文件不依赖 JVM，可独立运行
+- **容器优化**：更适合容器化部署和云原生环境
+
+这些优势使得原生镜像特别适用于使用容器镜像部署的应用程序，特别是与"函数即服务"(FaaS)平台结合使用时。
+
+## 为什么选择 Feat 框架
 
 Feat 框架原生支持 GraalVM Native Image，能够充分利用其优势：
 
@@ -24,7 +32,9 @@ Feat 框架原生支持 GraalVM Native Image，能够充分利用其优势：
 - **独立部署**：生成的可执行文件不依赖 JVM，可独立运行
 - **容器优化**：更适合容器化部署和云原生环境
 
-## 构建原生镜像
+Feat 框架通过其独特的 [AOT 编译机制](/feat/cloud/aot/)，天然适合 GraalVM Native Image 构建。相比其他框架需要大量配置和调整才能构建原生镜像，Feat 几乎无需额外工作即可构建出高性能的原生镜像应用。
+
+## 快速入门：构建你的第一个原生镜像
 
 ### 实际示例
 
@@ -75,7 +85,6 @@ mvn clean native:compile -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
     - 当前 fastjson2 还不兼容 GraalVM 25，因此请使用 GraalVM 21 版本来构建原生镜像。
 </Aside>
 
-
 ### 方法二：使用 native-image 命令构建
 
 使用 native-image 命令适用于 **JDK8** 的项目工程。这种方法需要先将[应用打包成 Fat-JAR](/feat/cloud/deployment/)：
@@ -94,7 +103,7 @@ native-image \
   -jar target/helloworld_native.jar
 ```
 
-## 构建流程图
+## 构建流程详解
 
 <Mermaid code={`
 graph TD
@@ -156,13 +165,11 @@ native-image \
   -jar target/helloworld_native.jar
 ```
 
-## 总结
-
-Feat 框架通过其独特的 AOT 编译机制，天然适合 GraalVM Native Image 构建。相比其他框架需要大量配置和调整才能构建原生镜像，Feat 几乎无需额外工作即可构建出高性能的原生镜像应用。
+## 性能对比
 
 通过使用 Feat 和 GraalVM Native Image，您可以获得：
-- 极速启动的应用程序
-- 更低的资源消耗
+- 极速启动的应用程序（从秒级降到毫秒级）
+- 更低的资源消耗（内存使用量减少5-10倍）
 - 更好的容器化部署体验
 - 更高的运行时性能
 
