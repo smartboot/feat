@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+<!--    <settings>-->
+<!--        <setting name="logImpl" value="STDOUT_LOGGING"/>-->
+<!--    </settings>-->
+    <environments default="h2_mem">
+        <environment id="h2_mem">
+            <transactionManager type="JDBC"/>
+            <dataSource type="POOLED">
+                <property name="driver" value="org.h2.Driver"/>
+                <property name="url" value="jdbc:h2:mem:smart-mqtt;NON_KEYWORDS=value;mode=mysql;"/>
+            </dataSource>
+        </environment>
+    </environments>
+    <mappers>
+        <package name="tech.smartboot.feat.demo.mybatis.mapper"/>
+    </mappers>
+</configuration>
