@@ -44,7 +44,7 @@ final class RouterHandlerImpl implements HttpHandler {
      * 关联的路由器实例
      */
     private final Router router;
-    
+
     /**
      * URL模式字符串
      * <p>
@@ -52,7 +52,7 @@ final class RouterHandlerImpl implements HttpHandler {
      * </p>
      */
     private final String urlPattern;
-    
+
     /**
      * HTTP方法处理器映射表
      * <p>
@@ -60,7 +60,7 @@ final class RouterHandlerImpl implements HttpHandler {
      * </p>
      */
     private Map<String, RouterUnit> methodHandlers;
-    
+
     /**
      * 默认路由单元
      * <p>
@@ -68,7 +68,7 @@ final class RouterHandlerImpl implements HttpHandler {
      * </p>
      */
     private RouterUnit routerUnit;
-    
+
     /**
      * 默认的路由处理器实现
      * <p>
@@ -80,8 +80,8 @@ final class RouterHandlerImpl implements HttpHandler {
     /**
      * 构造一个路由处理器实现
      *
-     * @param router       关联的路由器实例
-     * @param urlPattern   URL模式
+     * @param router        关联的路由器实例
+     * @param urlPattern    URL模式
      * @param routerHandler 路由处理器
      */
     public RouterHandlerImpl(Router router, String urlPattern, RouterHandler routerHandler) {
@@ -91,10 +91,10 @@ final class RouterHandlerImpl implements HttpHandler {
     /**
      * 构造一个路由处理器实现
      *
-     * @param router              关联的路由器实例
-     * @param urlPattern          URL模式
-     * @param method              HTTP方法
-     * @param routerHandler       路由处理器
+     * @param router               关联的路由器实例
+     * @param urlPattern           URL模式
+     * @param method               HTTP方法
+     * @param routerHandler        路由处理器
      * @param routerDefaultHandler 默认路由处理器实现
      */
     public RouterHandlerImpl(Router router, String urlPattern, String method, RouterHandler routerHandler, RouterHandlerImpl routerDefaultHandler) {
@@ -106,8 +106,6 @@ final class RouterHandlerImpl implements HttpHandler {
         for (int i = 0; i < path.length; i++) {
             if (path[i].startsWith(":")) {
                 pathIndexes.add(new PathIndex(path[i].substring(1), i));
-            } else if (path[i].startsWith("{") && path[i].endsWith("}")) {
-                pathIndexes.add(new PathIndex(path[i].substring(1, path[i].length() - 1), i));
             }
         }
         if (pathIndexes.isEmpty()) {
@@ -219,7 +217,7 @@ final class RouterHandlerImpl implements HttpHandler {
          * 路径参数名称
          */
         private final String path;
-        
+
         /**
          * 路径参数在URL路径中的索引位置
          */
@@ -281,7 +279,7 @@ final class RouterHandlerImpl implements HttpHandler {
          * </p>
          */
         private final String method;
-        
+
         /**
          * 路径索引列表
          * <p>
@@ -289,7 +287,7 @@ final class RouterHandlerImpl implements HttpHandler {
          * </p>
          */
         private final List<PathIndex> pathIndexes;
-        
+
         /**
          * 路由处理器实例
          */

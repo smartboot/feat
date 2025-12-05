@@ -40,37 +40,37 @@ final class NodePath {
      * 通配符键名，用于标识通配符节点
      */
     private final static String PATTERN_KEY = "$E";
-    
+
     /**
      * 精确路径节点类型
      */
     private final static int TYPE_EXACT_PATH_NODE = 1;
-    
+
     /**
      * 路径参数节点类型
      */
     private final static int TYPE_PATH_PARAM_NODE = 2;
-    
+
     /**
      * 精确叶子节点类型
      */
     private final static int TYPE_EXACT_LEAF = 2;
-    
+
     /**
      * 通配符叶子节点类型
      */
     private final static int TYPE_PATTERN_LEAF = 3;
-    
+
     /**
      * 后缀匹配叶子节点类型
      */
     private final static int TYPE_ENDING_PATTERN_LEAF = 5;
-    
+
     /**
      * 路径参数叶子节点类型
      */
     private final static int TYPE_PATH_PARAM_LEAF = 6;
-    
+
     /**
      * 节点路径字符串
      * <p>
@@ -78,7 +78,7 @@ final class NodePath {
      * </p>
      */
     private final String path;
-    
+
     /**
      * 节点类型
      * <p>
@@ -86,7 +86,7 @@ final class NodePath {
      * </p>
      */
     private final int type;
-    
+
     /**
      * 节点深度
      * <p>
@@ -94,7 +94,7 @@ final class NodePath {
      * </p>
      */
     private final int depth;
-    
+
     /**
      * 精确匹配子路径映射表
      * <p>
@@ -110,7 +110,7 @@ final class NodePath {
      * </p>
      */
     private final Map<String, NodePath> patternPaths;
-    
+
     /**
      * 路由处理器
      * <p>
@@ -259,9 +259,9 @@ final class NodePath {
     /**
      * 递归添加子路径和对应的处理器
      *
-     * @param subPath  子路径
-     * @param offset   当前处理的偏移量
-     * @param handler  路由处理器
+     * @param subPath 子路径
+     * @param offset  当前处理的偏移量
+     * @param handler 路由处理器
      */
     private void add(final String subPath, int offset, RouterHandlerImpl handler) {
         int nextIndex;
@@ -277,8 +277,6 @@ final class NodePath {
             NodePath curNode = null;
             if (subPath.charAt(offset + 1) == ':') {
                 curNode = patternPaths.computeIfAbsent(nodePath, ptah -> new NodePath(ptah, TYPE_PATH_PARAM_NODE, depth + 1));
-            } else if (subPath.charAt(offset + 1) == '{' && nodePath.endsWith("}")) {
-                curNode = patternPaths.computeIfAbsent(nodePath, path -> new NodePath(path, TYPE_PATH_PARAM_NODE, depth + 1));
             } else {
                 curNode = exactPaths.computeIfAbsent(nodePath, ptah -> new NodePath(ptah, TYPE_EXACT_PATH_NODE, depth + 1));
             }
@@ -291,10 +289,6 @@ final class NodePath {
         int type = 0;
         NodePath curNode;
         if (!nodePath.isEmpty() && nodePath.charAt(0) == ':') {
-            type = TYPE_PATH_PARAM_LEAF;
-            curNode = patternPaths.get(PATTERN_KEY);
-            nodePath = PATTERN_KEY;
-        } else if (!nodePath.isEmpty() && nodePath.charAt(0) == '{' && nodePath.endsWith("}")) {
             type = TYPE_PATH_PARAM_LEAF;
             curNode = patternPaths.get(PATTERN_KEY);
             nodePath = PATTERN_KEY;
