@@ -123,7 +123,7 @@ final class ControllerSerializer extends AbstractSerializer {
                 } else {
                     requestURL = basePath + "/" + requestURL;
                 }
-                // 将路径参数格式从 "{param}" 转换为 ":param" 格式
+                // 将路径参数格式从 "{param}" 转换为 ":param" 格式,该特性不在feat core中实现，保持底层的简洁、高效
                 // 例如: 将 /user/{id}/ 转换为 /user/:id/
                 requestURL = requestURL.replace("/{", "/:").replace("}/", "/");
                 // 处理路径末尾的参数情况，如 /user/{id} 转换为 /user/:id
