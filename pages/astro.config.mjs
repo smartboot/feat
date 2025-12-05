@@ -35,11 +35,11 @@ export default defineConfig({
                     }
                 },
                 {
-                    tag: 'script',
-                    attrs: {
-                        src: 'https://smartboot.tech/js/gitee.js'
-                    }
-                },{
+                //     tag: 'script',
+                //     attrs: {
+                //         src: 'https://smartboot.tech/js/gitee.js'
+                //     }
+                // },{
                     tag:'script',
                     content: `if(!location.pathname.endsWith("feat/")&&!location.pathname.endsWith("/unstar/")&&!location.pathname.endsWith("/auth/")){
                                 checkStar("smartboot","feat",function(){
@@ -103,16 +103,21 @@ export default defineConfig({
                     autogenerate: {directory: 'cloud'},
                 },
                 {
-                    label: 'Feat Server开发',
-                    autogenerate: {directory: 'server'},
-                },
-                {
-                    label: 'Feat Client开发',
-                    autogenerate: {directory: 'client'},
-                },
-                {
-                    label: 'Feat AI开发',
+                    label: 'Feat AI教程',
                     autogenerate: {directory: 'ai'},
+                },
+                {
+                    label: 'Feat Core教程',
+                    items:[
+                        {
+                            label: 'Http Server',
+                            autogenerate: {directory: 'server'},
+                        },
+                        {
+                            label: 'Http Client',
+                            autogenerate: {directory: 'client'},
+                        }
+                    ]
                 },
                 {
                     label: '附录',
