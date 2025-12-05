@@ -106,6 +106,8 @@ final class RouterHandlerImpl implements HttpHandler {
         for (int i = 0; i < path.length; i++) {
             if (path[i].startsWith(":")) {
                 pathIndexes.add(new PathIndex(path[i].substring(1), i));
+            } else if (path[i].startsWith("{") && path[i].endsWith("}")) {
+                pathIndexes.add(new PathIndex(path[i].substring(1, path[i].length() - 1), i));
             }
         }
         if (pathIndexes.isEmpty()) {

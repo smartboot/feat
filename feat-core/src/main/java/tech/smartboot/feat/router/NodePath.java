@@ -277,6 +277,8 @@ final class NodePath {
             NodePath curNode = null;
             if (subPath.charAt(offset + 1) == ':') {
                 curNode = patternPaths.computeIfAbsent(nodePath, ptah -> new NodePath(ptah, TYPE_PATH_PARAM_NODE, depth + 1));
+            } else if (subPath.charAt(offset + 1) == '{' && nodePath.endsWith("}")) {
+                curNode = patternPaths.computeIfAbsent(nodePath, path -> new NodePath(path, TYPE_PATH_PARAM_NODE, depth + 1));
             } else {
                 curNode = exactPaths.computeIfAbsent(nodePath, ptah -> new NodePath(ptah, TYPE_EXACT_PATH_NODE, depth + 1));
             }
@@ -289,6 +291,10 @@ final class NodePath {
         int type = 0;
         NodePath curNode;
         if (!nodePath.isEmpty() && nodePath.charAt(0) == ':') {
+            type = TYPE_PATH_PARAM_LEAF;
+            curNode = patternPaths.get(PATTERN_KEY);
+            nodePath = PATTERN_KEY;
+        } else if (!nodePath.isEmpty() && nodePath.charAt(0) == '{' && nodePath.endsWith("}")) {
             type = TYPE_PATH_PARAM_LEAF;
             curNode = patternPaths.get(PATTERN_KEY);
             nodePath = PATTERN_KEY;
