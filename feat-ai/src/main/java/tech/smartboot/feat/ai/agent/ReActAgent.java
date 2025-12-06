@@ -110,8 +110,8 @@ public class ReActAgent extends FeatAgent {
     }
 
     public ReActAgent(Consumer<AgentOptions> opts) {
+        options.prompt(PromptTemplate.loadPrompt("feat_react_agent.tpl")).chatOptions().model(ChatModelVendor.GiteeAI.DeepSeek_V32);
         opts.accept(options);
-        options.prompt(PromptTemplate.loadPrompt("feat_react_agent.tpl"));
     }
 
     /**
