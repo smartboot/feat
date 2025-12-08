@@ -1,0 +1,7 @@
+FROM eclipse-temurin:21.0.7_6-jre-alpine
+WORKDIR /feat
+COPY target/helloworld_docker*.jar helloworld.jar
+
+EXPOSE 8080
+
+CMD ["java", "-jar", "helloworld.jar"]
