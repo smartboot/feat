@@ -34,7 +34,7 @@ import java.util.ServiceLoader;
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
-public class ApplicationContext {
+public final class ApplicationContext {
     /**
      * 日志记录器
      */
@@ -65,7 +65,7 @@ public class ApplicationContext {
      *
      * @param options 云应用配置选项
      */
-    public ApplicationContext(CloudOptions options) {
+    ApplicationContext(CloudOptions options) {
         this.options = options;
     }
 
