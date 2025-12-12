@@ -166,11 +166,8 @@ public class ByteTree<T> {
             }
 
             // 获取子节点
-            ByteTree<T> b = byteTree.nodes[i];
-            if (b != null) {
-                // 继续在子节点中搜索
-                byteTree = b;
-            } else {
+            byteTree = byteTree.nodes[i];
+            if (byteTree == null) {
                 // 未找到匹配的子节点，结束搜索
                 break;
             }
