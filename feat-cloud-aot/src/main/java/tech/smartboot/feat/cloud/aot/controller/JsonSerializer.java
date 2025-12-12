@@ -150,7 +150,7 @@ public final class JsonSerializer {
             throw new FeatException("");
         }
 
-        printWriter.println(headBlank(i) + "os.write('{');");
+        printWriter.println(headBlank(i + 1) + "os.write('{');");
         boolean withComma = false;
         for (Element se : elements) {
             TypeMirror type = se.asType();
@@ -164,21 +164,21 @@ public final class JsonSerializer {
             }
             AbstractSerializer serializer = jsonFieldSerializerMap.get(type.toString());
             if (serializer != null) {
-                serializer.serialize(se, obj, i, withComma);
+                serializer.serialize(se, obj, i + 1, withComma);
             } else {
-                printWriter.append(headBlank(i));
+                printWriter.append(headBlank(i + 1));
                 toBytesPool("\"" + fieldName + "\":", withComma);
                 String filedName = obj + ".get" + se.getSimpleName().toString().substring(0, 1).toUpperCase() + se.getSimpleName().toString().substring(1) + "()";
-                printWriter.append(headBlank(i)).println("if (" + filedName + " == null) {");
-                printWriter.append(headBlank(i + 1));
+                printWriter.append(headBlank(i + 1)).println("if (" + filedName + " == null) {");
+                printWriter.append(headBlank(i + 2));
                 toBytesPool("null");
-                printWriter.append(headBlank(i)).println("} else {");
+                printWriter.append(headBlank(i + 1)).println("} else {");
                 serialize(type, filedName, i + 1, (DeclaredType) typeMirror);
-                printWriter.append(headBlank(i)).println("}");
+                printWriter.append(headBlank(i + 1)).println("}");
             }
             withComma = true;
         }
-        printWriter.append(headBlank(i)).println("os.write('}');");
+        printWriter.append(headBlank(i + 1)).println("os.write('}');");
     }
 
     public static String headBlank(int i) {
