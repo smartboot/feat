@@ -51,10 +51,7 @@ public final class HttpEndpoint extends Endpoint implements HttpRequest, Reset {
 
     private final DecoderUnit decodeState = new DecoderUnit();
     private HttpHandler serverHandler;
-    /**
-     * 释放维持长连接
-     */
-    private boolean keepAlive;
+
     private List<Part> parts;
     private boolean multipartParsed;
 
@@ -227,14 +224,6 @@ public final class HttpEndpoint extends Endpoint implements HttpRequest, Reset {
             LOGGER.error("getRemoteHost error", e);
         }
         return remoteHost;
-    }
-
-    public boolean isKeepAlive() {
-        return keepAlive;
-    }
-
-    public void setKeepAlive(boolean keepAlive) {
-        this.keepAlive = keepAlive;
     }
 
     @Override

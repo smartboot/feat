@@ -16,9 +16,7 @@ import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.core.common.DecodeState;
 import tech.smartboot.feat.core.common.FeatUtils;
-import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
-import tech.smartboot.feat.core.common.HttpProtocol;
 import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.common.io.FeatOutputStream;
@@ -234,8 +232,6 @@ public final class HttpMessageProcessor extends AbstractMessageProcessor<HttpEnd
         AbstractResponse response = request.getResponse();
         try {
             CompletableFuture<Void> future = new CompletableFuture<>();
-            boolean keepAlive = isKeepAlive(request, response);
-            request.setKeepAlive(keepAlive);
             request.getServerHandler().handle(request, future);
             if (request.getUpgrade() == null || request.getInputStream().getReadListener() != null) {
                 finishHttpHandle(request, future);
@@ -310,23 +306,10 @@ public final class HttpMessageProcessor extends AbstractMessageProcessor<HttpEnd
             return false;
         }
         //非keepAlive或者 body部分未读取完毕,释放连接资源
-        if (!request.isKeepAlive() || !request.getInputStream().isFinished()) {
+        if (HeaderValue.Connection.CLOSE.equals(request.getConnection()) || !request.getInputStream().isFinished()) {
             request.getResponse().close();
             return false;
         }
         return true;
-    }
-
-    private boolean isKeepAlive(HttpEndpoint abstractRequest, AbstractResponse response) {
-        String connection = abstractRequest.getConnection();
-        boolean keepAlive = !HeaderValue.Connection.CLOSE.equals(connection);
-        // http/1.0默认短连接，http/1.1默认长连接。此处用 == 性能更高
-        if (keepAlive && HttpProtocol.HTTP_10 == abstractRequest.getProtocol()) {
-            keepAlive = HeaderValue.Connection.KEEPALIVE.equalsIgnoreCase(connection);
-            if (keepAlive) {
-                response.setHeader(HeaderName.CONNECTION, HeaderValue.Connection.KEEPALIVE);
-            }
-        }
-        return keepAlive;
     }
 }
