@@ -79,7 +79,6 @@ public abstract class Endpoint implements Reset {
     protected String requestUri;
     protected String requestUrl;
     protected String contentType;
-    protected String connection;
     /**
      * 跟在URL后面的请求信息
      */
@@ -305,15 +304,6 @@ public abstract class Endpoint implements Reset {
         }
         return contentType;
     }
-
-    public final String getConnection() {
-        if (connection != null) {
-            return connection;
-        }
-        connection = getHeader(HeaderName.CONNECTION);
-        return connection;
-    }
-
 
     public long getContentLength() {
         if (contentLength > INIT_CONTENT_LENGTH) {

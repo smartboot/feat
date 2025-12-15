@@ -16,6 +16,7 @@ import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.core.common.DecodeState;
 import tech.smartboot.feat.core.common.FeatUtils;
+import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.exception.HttpException;
@@ -301,12 +302,12 @@ public final class HttpMessageProcessor extends AbstractMessageProcessor<HttpEnd
         abstractRequest.reset();
     }
 
-    private boolean keepConnection(HttpEndpoint request) throws IOException {
+    private boolean keepConnection(HttpEndpoint request) {
         if (request.getResponse().isClosed()) {
             return false;
         }
         //非keepAlive或者 body部分未读取完毕,释放连接资源
-        if (HeaderValue.Connection.CLOSE.equals(request.getConnection()) || !request.getInputStream().isFinished()) {
+        if (HeaderValue.Connection.CLOSE.equals(request.getHeader(HeaderName.CONNECTION)) || !request.getInputStream().isFinished()) {
             request.getResponse().close();
             return false;
         }
