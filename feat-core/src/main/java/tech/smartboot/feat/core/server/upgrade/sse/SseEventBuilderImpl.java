@@ -32,7 +32,7 @@ class SseEventBuilderImpl implements SseEventBuilder {
 
     @Override
     public SseEventBuilder reconnectTime(long reconnectTimeMillis) {
-        sb.append("retry:").append(String.valueOf(reconnectTimeMillis)).append('\n');
+        sb.append("retry:").append(reconnectTimeMillis).append('\n');
         return this;
     }
 
