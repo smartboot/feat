@@ -10,7 +10,9 @@
 
 package tech.smartboot.feat.cloud.session;
 
+import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.Session;
+import tech.smartboot.feat.router.session.SessionManager;
 import tech.smartboot.redisun.Redisun;
 
 /**
@@ -21,13 +23,14 @@ public class RedisSession implements Session {
     private final String sessionId;
     private final Redisun redisun;
     private final String sessionKey;
-    private static final String SESSION_KEY_PREFIX = "feat_session:";
     private int maxAge = 30 * 60; // 默认30分钟
+    private final HttpRequest request;
 
-    public RedisSession(String sessionId, String sessionKey, Redisun redisun) {
+    public RedisSession(String sessionId, String sessionKey, HttpRequest request, Redisun redisun) {
         this.sessionId = sessionId;
         this.redisun = redisun;
         this.sessionKey = sessionKey;
+        this.request = request;
     }
 
     @Override
@@ -63,5 +66,6 @@ public class RedisSession implements Session {
     @Override
     public void invalidate() {
         redisun.del(sessionKey);
+        SessionManager.removeSessionCookie(request);
     }
 }

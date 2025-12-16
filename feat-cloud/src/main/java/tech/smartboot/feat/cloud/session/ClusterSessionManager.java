@@ -39,7 +39,7 @@ public class ClusterSessionManager extends SessionManager {
             int count = redisun.expire(sessionKey, sessionOptions.getMaxAge());
             // 更新成功，说明存在该会话，返回RedisSession
             if (count == 1) {
-                return new RedisSession(sessionId, sessionKey, redisun);
+                return new RedisSession(sessionId, sessionKey, request, redisun);
             }
         }
 
@@ -52,9 +52,9 @@ public class ClusterSessionManager extends SessionManager {
         String newSessionId = FeatUtils.createSessionId();
         String sessionKey = SESSION_KEY_PREFIX + newSessionId;
 
-        RedisSession redisSession = new RedisSession(newSessionId, sessionKey, redisun);
+        RedisSession redisSession = new RedisSession(newSessionId, sessionKey, request, redisun);
         removeSessionCookie(request);
-        responseSessionId(request, newSessionId);
+        responseSessionCookie(request, newSessionId);
         return redisSession;
     }
 

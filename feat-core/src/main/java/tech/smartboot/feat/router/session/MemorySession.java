@@ -86,6 +86,7 @@ class MemorySession implements Session {
     MemorySession(HttpRequest request) {
         this.sessionId = FeatUtils.createSessionId();
         this.request = request;
+        SessionManager.removeSessionCookie(request);
     }
 
     /**
@@ -171,6 +172,7 @@ class MemorySession implements Session {
      */
     public void invalidate() {
         checkValid();
+        SessionManager.removeSessionCookie(request);
         attributes.clear();
         Cookie cookie = new Cookie(DEFAULT_SESSION_COOKIE_NAME, "");
         cookie.setMaxAge(0);
