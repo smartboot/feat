@@ -12,12 +12,10 @@ package tech.smartboot.feat.router.session;
 
 import tech.smartboot.feat.core.common.Cookie;
 import tech.smartboot.feat.core.common.FeatUtils;
-import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.Session;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -43,7 +41,7 @@ class MemorySession implements Session {
      * </p>
      */
     private volatile int maxAge;
-    
+
     /**
      * 会话唯一标识符
      * <p>
@@ -51,7 +49,7 @@ class MemorySession implements Session {
      * </p>
      */
     private final String sessionId;
-    
+
     /**
      * 关联的HTTP请求对象
      * <p>
@@ -59,7 +57,7 @@ class MemorySession implements Session {
      * </p>
      */
     private final HttpRequest request;
-    
+
     /**
      * 会话属性映射表
      * <p>
@@ -67,7 +65,7 @@ class MemorySession implements Session {
      * </p>
      */
     private final Map<String, String> attributes = new HashMap<>();
-    
+
     /**
      * 会话失效标志
      * <p>
@@ -88,12 +86,6 @@ class MemorySession implements Session {
     MemorySession(HttpRequest request) {
         this.sessionId = FeatUtils.createSessionId();
         this.request = request;
-        removeSessionCookie();
-        Cookie cookie = new Cookie(DEFAULT_SESSION_COOKIE_NAME, sessionId);
-        cookie.setHttpOnly(true);
-        cookie.setPath("/");
-        cookie.setMaxAge(1800);
-        request.getResponse().addCookie(cookie);
     }
 
     /**
@@ -179,31 +171,10 @@ class MemorySession implements Session {
      */
     public void invalidate() {
         checkValid();
-        removeSessionCookie();
         attributes.clear();
         Cookie cookie = new Cookie(DEFAULT_SESSION_COOKIE_NAME, "");
         cookie.setMaxAge(0);
         request.getResponse().addCookie(cookie);
         invalid = true;
-    }
-
-    /**
-     * 移除已存在的会话Cookie
-     * <p>
-     * 在本次响应中查找是否已经设置了会话Cookie，如果存在则将其移除，
-     * 避免重复设置会话Cookie
-     * </p>
-     */
-    private void removeSessionCookie() {
-        Collection<String> preValues = request.getResponse().getHeaders(HeaderName.SET_COOKIE);
-        //如果在本次请求中已经为session设置过Cookie了，那么需要将本次设置的Cookie移除掉
-        if (FeatUtils.isNotEmpty(preValues)) {
-            request.getResponse().setHeader(HeaderName.SET_COOKIE, null);
-            preValues.forEach(preValue -> {
-                if (!FeatUtils.startsWith(preValue, DEFAULT_SESSION_COOKIE_NAME + "=")) {
-                    request.getResponse().addHeader(HeaderName.SET_COOKIE, preValue);
-                }
-            });
-        }
     }
 }

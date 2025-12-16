@@ -87,6 +87,7 @@ public class LocalSessionManager extends SessionManager {
             @Override
             public void invalidate() {
                 sessions.remove(getSessionId());
+                removeSessionCookie(request);
                 super.invalidate();
             }
 
@@ -96,6 +97,8 @@ public class LocalSessionManager extends SessionManager {
                 unit.pauseTimeoutTask();
             }
         };
+        removeSessionCookie(request);
+        responseSessionId(request, session.getSessionId());
         session.setMaxAge(sessionOptions.getMaxAge());
         sessions.put(session.getSessionId(), unit);
         unit.session = session;

@@ -10,6 +10,7 @@
 
 package tech.smartboot.feat.cloud.session;
 
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.Session;
 import tech.smartboot.feat.router.session.SessionManager;
@@ -20,7 +21,8 @@ import tech.smartboot.redisun.Redisun;
  * @version v1.0 12/16/25
  */
 public class ClusterSessionManager extends SessionManager {
-    private Redisun redisun;
+    private final Redisun redisun;
+    private static final String SESSION_KEY_PREFIX = "feat_session:";
 
     public ClusterSessionManager(Redisun redisun) {
         this.redisun = redisun;
@@ -28,12 +30,40 @@ public class ClusterSessionManager extends SessionManager {
 
     @Override
     public Session getSession(HttpRequest request, boolean create) {
-        return null;
+        String sessionId = getSessionId(request);
+
+        // 如果存在sessionId，则尝试从Redis获取会话
+        if (sessionId != null) {
+            String sessionKey = SESSION_KEY_PREFIX + sessionId;
+            // 更新过期时间
+            int count = redisun.expire(sessionKey, sessionOptions.getMaxAge());
+            // 更新成功，说明存在该会话，返回RedisSession
+            if (count == 1) {
+                return new RedisSession(sessionId, sessionKey, redisun);
+            }
+        }
+
+        // 如果不允许创建新会话，则返回null
+        if (!create) {
+            return null;
+        }
+
+        // 创建新的会话
+        String newSessionId = FeatUtils.createSessionId();
+        String sessionKey = SESSION_KEY_PREFIX + newSessionId;
+
+        RedisSession redisSession = new RedisSession(newSessionId, sessionKey, redisun);
+        removeSessionCookie(request);
+        responseSessionId(request, newSessionId);
+        return redisSession;
     }
 
     @Override
     public void updateAccessTime(HttpRequest request) {
-
+        String sessionId = getSessionId(request);
+        if (sessionId != null) {
+            String sessionKey = SESSION_KEY_PREFIX + sessionId;
+            redisun.expire(sessionKey, sessionOptions.getMaxAge());
+        }
     }
-
 }

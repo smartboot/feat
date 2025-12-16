@@ -11,8 +11,12 @@
 package tech.smartboot.feat.router.session;
 
 import tech.smartboot.feat.core.common.Cookie;
+import tech.smartboot.feat.core.common.FeatUtils;
+import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.Session;
+
+import java.util.Collection;
 
 /**
  * @author 三刀
@@ -45,5 +49,33 @@ public abstract class SessionManager {
             }
         }
         return null;
+    }
+
+    protected void responseSessionId(HttpRequest request, String sessionId) {
+        Cookie cookie = new Cookie(Session.DEFAULT_SESSION_COOKIE_NAME, sessionId);
+        cookie.setHttpOnly(true);
+        cookie.setPath("/");
+        cookie.setMaxAge(getOptions().getMaxAge());
+        request.getResponse().addCookie(cookie);
+    }
+
+    /**
+     * 移除已存在的会话Cookie
+     * <p>
+     * 在本次响应中查找是否已经设置了会话Cookie，如果存在则将其移除，
+     * 避免重复设置会话Cookie
+     * </p>
+     */
+    protected void removeSessionCookie(HttpRequest request) {
+        Collection<String> preValues = request.getResponse().getHeaders(HeaderName.SET_COOKIE);
+        //如果在本次请求中已经为session设置过Cookie了，那么需要将本次设置的Cookie移除掉
+        if (FeatUtils.isNotEmpty(preValues)) {
+            request.getResponse().setHeader(HeaderName.SET_COOKIE, null);
+            preValues.forEach(preValue -> {
+                if (!FeatUtils.startsWith(preValue, Session.DEFAULT_SESSION_COOKIE_NAME + "=")) {
+                    request.getResponse().addHeader(HeaderName.SET_COOKIE, preValue);
+                }
+            });
+        }
     }
 }
