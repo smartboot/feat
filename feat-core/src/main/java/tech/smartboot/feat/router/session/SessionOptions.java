@@ -8,7 +8,7 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.router;
+package tech.smartboot.feat.router.session;
 
 /**
  * 会话配置选项类，用于配置会话相关参数

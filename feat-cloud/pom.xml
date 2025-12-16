@@ -31,6 +31,12 @@
             <groupId>tech.smartboot.feat</groupId>
             <artifactId>feat-ai</artifactId>
         </dependency>
+        <dependency>
+            <groupId>tech.smartboot</groupId>
+            <artifactId>redisun</artifactId>
+            <version>1.2.0</version>
+            <optional>true</optional>
+        </dependency>
     </dependencies>
 
 </project>

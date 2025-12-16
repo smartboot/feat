@@ -8,7 +8,7 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.router;
+package tech.smartboot.feat.router.session;
 
 import tech.smartboot.feat.core.common.Cookie;
 import tech.smartboot.feat.core.common.FeatUtils;

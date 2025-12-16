@@ -34,7 +34,7 @@ public class Context {
      * </p>
      */
     public final HttpRequest Request;
-    
+
     /**
      * HTTP响应对象，用于构建和发送响应给客户端
      * <p>
@@ -42,7 +42,7 @@ public class Context {
      * </p>
      */
     public final HttpResponse Response;
-    
+
     /**
      * 路径参数映射表，存储URL路径中的动态参数
      * <p>
@@ -50,12 +50,12 @@ public class Context {
      * </p>
      */
     private final Map<String, String> pathParams;
-    
+
     /**
      * 关联的路由器实例，用于获取会话等服务
      */
     private final Router router;
-    
+
     /**
      * 当前请求的会话对象，延迟初始化
      */
@@ -97,7 +97,7 @@ public class Context {
         if (session != null) {
             return session;
         }
-        session = router.getSession(Request, true).getSession();
+        session = router.getSessionManager().getSession(Request, true);
         return session;
     }
 }
