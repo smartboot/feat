@@ -55,7 +55,7 @@ public abstract class SessionManager {
         Cookie cookie = new Cookie(Session.DEFAULT_SESSION_COOKIE_NAME, sessionId);
         cookie.setHttpOnly(true);
         cookie.setPath("/");
-        cookie.setMaxAge(getOptions().getMaxAge());
+        cookie.setMaxAge(getOptions().getTimeout());
         request.getResponse().addCookie(cookie);
     }
 

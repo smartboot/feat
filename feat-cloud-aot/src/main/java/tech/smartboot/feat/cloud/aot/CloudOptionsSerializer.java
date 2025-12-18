@@ -125,7 +125,7 @@ final class CloudOptionsSerializer implements Serializer {
         loadFeatYaml();
 
         redisunEnable = JSONPath.eval(config, "$.feat.redis") != null;
-        redisSession = "redis".equals(JSONPath.eval(config, "$.server.session.manager"));
+        redisSession = "redis".equals(JSONPath.eval(config, "$.server.session['store-type']"));
     }
 
     private static void deleteFeatYamlFile(ProcessingEnvironment processingEnv) throws IOException {
@@ -471,7 +471,7 @@ final class CloudOptionsSerializer implements Serializer {
 
     @Override
     public void serializeRouter() throws IOException {
-        Object obj = JSONPath.eval(config, "$.server.session.maxAge");
+        Object obj = JSONPath.eval(config, "$.server.session.timeout");
         if (redisSession) {
             printWriter.println("\t\tRedisun redisun = applicationContext.getBean(\"redisun\");");
             printWriter.println("\t\tSessionManager manager=new ClusterSessionManager(redisun);");
@@ -479,7 +479,7 @@ final class CloudOptionsSerializer implements Serializer {
             printWriter.println("\t\tSessionManager manager=new LocalSessionManager();");
         }
         if (obj != null) {
-            printWriter.println("\t\tmanager.getOptions().setMaxAge(" + obj + ");");
+            printWriter.println("\t\tmanager.getOptions().setTimeout(" + obj + ");");
         }
         printWriter.println("\t\trouter.setSessionManager(manager);");
 

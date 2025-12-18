@@ -36,7 +36,7 @@ public class ClusterSessionManager extends SessionManager {
         if (sessionId != null) {
             String sessionKey = SESSION_KEY_PREFIX + sessionId;
             // 更新过期时间
-            int count = redisun.expire(sessionKey, sessionOptions.getMaxAge());
+            int count = redisun.expire(sessionKey, sessionOptions.getTimeout());
             // 更新成功，说明存在该会话，返回RedisSession
             if (count == 1) {
                 return new RedisSession(sessionId, sessionKey, request, redisun);
@@ -63,7 +63,7 @@ public class ClusterSessionManager extends SessionManager {
         String sessionId = getSessionId(request);
         if (sessionId != null) {
             String sessionKey = SESSION_KEY_PREFIX + sessionId;
-            redisun.expire(sessionKey, sessionOptions.getMaxAge());
+            redisun.expire(sessionKey, sessionOptions.getTimeout());
         }
     }
 }

@@ -28,25 +28,25 @@ public class SessionOptions {
      * 默认值为30分钟（1800秒）。
      * </p>
      */
-    private int maxAge = 30 * 60;
+    private int timeout = 30 * 60;
 
     /**
      * 获取会话最大存活时间
      *
      * @return 会话最大存活时间（秒）
      */
-    public int getMaxAge() {
-        return maxAge;
+    public int getTimeout() {
+        return timeout;
     }
 
     /**
      * 设置会话最大存活时间
      *
-     * @param maxAge 会话最大存活时间（秒）
+     * @param timeout 会话最大存活时间（秒）
      * @return 当前会话配置选项实例，支持链式调用
      */
-    public SessionOptions setMaxAge(int maxAge) {
-        this.maxAge = maxAge;
+    public SessionOptions setTimeout(int timeout) {
+        this.timeout = timeout;
         return this;
     }
 }

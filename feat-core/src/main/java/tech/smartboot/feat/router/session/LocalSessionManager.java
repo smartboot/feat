@@ -97,7 +97,7 @@ public class LocalSessionManager extends SessionManager {
             }
         };
         responseSessionCookie(request, session.getSessionId());
-        session.setMaxAge(sessionOptions.getMaxAge());
+        session.setMaxAge(sessionOptions.getTimeout());
         sessions.put(session.getSessionId(), unit);
         unit.session = session;
         return unit;
