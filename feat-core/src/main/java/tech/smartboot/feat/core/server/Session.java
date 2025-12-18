@@ -23,9 +23,9 @@ public interface Session {
 
     String get(String key);
 
-    int getMaxAge();
+    int getTimeout();
 
-    void setMaxAge(final int expiry);
+    void setTimeout(final int expiry);
 
     void invalidate();
 }

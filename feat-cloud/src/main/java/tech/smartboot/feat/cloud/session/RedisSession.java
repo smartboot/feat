@@ -53,12 +53,12 @@ public class RedisSession implements Session {
     }
 
     @Override
-    public int getMaxAge() {
+    public int getTimeout() {
         return maxAge;
     }
 
     @Override
-    public void setMaxAge(int expiry) {
+    public void setTimeout(int expiry) {
         this.maxAge = expiry;
         redisun.expire(sessionKey, maxAge);
     }

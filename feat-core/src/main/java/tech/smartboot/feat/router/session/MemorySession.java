@@ -134,7 +134,7 @@ class MemorySession implements Session {
      * @return 会话最大存活时间（秒）
      * @throws FeatException 如果会话已经失效则抛出异常
      */
-    public int getMaxAge() {
+    public int getTimeout() {
         checkValid();
         return maxAge;
     }
@@ -145,7 +145,7 @@ class MemorySession implements Session {
      * @param maxAge 会话最大存活时间（秒）
      * @throws FeatException 如果会话已经失效则抛出异常
      */
-    public void setMaxAge(int maxAge) {
+    public void setTimeout(int maxAge) {
         checkValid();
         this.maxAge = maxAge;
     }

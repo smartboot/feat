@@ -27,11 +27,11 @@ public class Bootstrap {
 
     /**
      * 处理HTTP GET请求的控制器方法
-     * 当访问路径"/hello"时，会返回"hello Feat Cloud"字符串
+     * 当访问路径"/"时，会返回"hello Feat Cloud"字符串
      *
      * @return 响应字符串"hello Feat Cloud"
      */
-    @RequestMapping("/hello")
+    @RequestMapping("/")
     public String helloWorld(Session session) {
         // 将访问次数存储在session中
         String visitCount = session.get("visitCount");

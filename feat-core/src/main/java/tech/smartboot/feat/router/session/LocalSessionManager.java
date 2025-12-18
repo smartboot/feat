@@ -91,13 +91,13 @@ public class LocalSessionManager extends SessionManager {
             }
 
             @Override
-            public void setMaxAge(int interval) {
-                super.setMaxAge(interval);
+            public void setTimeout(int interval) {
+                super.setTimeout(interval);
                 unit.pauseTimeoutTask();
             }
         };
         responseSessionCookie(request, session.getSessionId());
-        session.setMaxAge(sessionOptions.getTimeout());
+        session.setTimeout(sessionOptions.getTimeout());
         sessions.put(session.getSessionId(), unit);
         unit.session = session;
         return unit;
@@ -152,13 +152,13 @@ public class LocalSessionManager extends SessionManager {
          */
         synchronized void updateTimeoutTask() {
             pauseTimeoutTask();
-            if (session.getMaxAge() <= 0) {
+            if (session.getTimeout() <= 0) {
                 return;
             }
             timerTask = timer.schedule(() -> {
                 LOGGER.info("sessionId:{} has be expired, lastAccessedTime:{} ,maxInactiveInterval:{}", session.getSessionId());
                 session.invalidate();
-            }, session.getMaxAge(), TimeUnit.SECONDS);
+            }, session.getTimeout(), TimeUnit.SECONDS);
         }
 
         /**
