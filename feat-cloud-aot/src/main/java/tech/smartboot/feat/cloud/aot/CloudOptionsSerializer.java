@@ -77,7 +77,11 @@ final class CloudOptionsSerializer implements Serializer {
     private final List<String> services;
     private License license;
     private String modelName;
-    private boolean redisunEnable;
+    /**
+     * redisun 是否启用
+     */
+    private final boolean redisunEnable;
+    private boolean redisSession;
 
     public CloudOptionsSerializer(ProcessingEnvironment processingEnv, String config, List<String> services) throws Throwable {
         this.config = config;
@@ -121,6 +125,7 @@ final class CloudOptionsSerializer implements Serializer {
         loadFeatYaml();
 
         redisunEnable = JSONPath.eval(config, "$.feat.redis") != null;
+        redisSession = "redis".equals(JSONPath.eval(config, "$.server.session.manager"));
     }
 
     private static void deleteFeatYamlFile(ProcessingEnvironment processingEnv) throws IOException {
@@ -345,8 +350,11 @@ final class CloudOptionsSerializer implements Serializer {
         printWriter.println("import " + CloudService.class.getName() + ";");
         printWriter.println("import " + List.class.getName() + ";");
         printWriter.println("import " + SessionManager.class.getName() + ";");
-        printWriter.println("import " + LocalSessionManager.class.getName() + ";");
-        printWriter.println("import " + ClusterSessionManager.class.getName() + ";");
+        if (redisSession) {
+            printWriter.println("import " + ClusterSessionManager.class.getName() + ";");
+        } else {
+            printWriter.println("import " + LocalSessionManager.class.getName() + ";");
+        }
         printWriter.println("import " + ArrayList.class.getName() + ";");
         for (String service : services) {
             printWriter.println("import " + service + ";");
@@ -422,6 +430,14 @@ final class CloudOptionsSerializer implements Serializer {
         if (redisunEnable) {
             printWriter.println("\t\tapplicationContext.addBean(\"redisun\", Redisun.create(opt -> {");
             printWriter.println("\t\t\topt.setAddress(\"" + JSONPath.eval(config, "$.feat.redis.address") + "\");");
+            Object password = JSONPath.eval(config, "$.feat.redis.password");
+            if (password != null) {
+                printWriter.println("\t\t\topt.setPassword(\"" + password + "\");");
+            }
+            Object db = JSONPath.eval(config, "$.feat.redis.database");
+            if (db != null) {
+                printWriter.println("\t\t\topt.setDatabase(" + db + ");");
+            }
             printWriter.println("\t\t}));");
         }
 
@@ -455,10 +471,10 @@ final class CloudOptionsSerializer implements Serializer {
 
     @Override
     public void serializeRouter() throws IOException {
-        Object manager = JSONPath.eval(config, "$.server.session.manager");
         Object obj = JSONPath.eval(config, "$.server.session.maxAge");
-        if ("redis".equals(manager)) {
-            printWriter.println("\t\tSessionManager manager=new ClusterSessionManager(null);");
+        if (redisSession) {
+            printWriter.println("\t\tRedisun redisun = applicationContext.getBean(\"redisun\");");
+            printWriter.println("\t\tSessionManager manager=new ClusterSessionManager(redisun);");
         } else {
             printWriter.println("\t\tSessionManager manager=new LocalSessionManager();");
         }
