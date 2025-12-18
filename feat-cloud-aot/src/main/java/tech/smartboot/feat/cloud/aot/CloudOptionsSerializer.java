@@ -17,12 +17,16 @@ import org.yaml.snakeyaml.Yaml;
 import tech.smartboot.feat.cloud.AbstractCloudService;
 import tech.smartboot.feat.cloud.ApplicationContext;
 import tech.smartboot.feat.cloud.CloudService;
+import tech.smartboot.feat.cloud.session.ClusterSessionManager;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.server.ServerOptions;
 import tech.smartboot.feat.router.Router;
+import tech.smartboot.feat.router.session.LocalSessionManager;
+import tech.smartboot.feat.router.session.SessionManager;
+import tech.smartboot.redisun.Redisun;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.tools.FileObject;
@@ -73,6 +77,7 @@ final class CloudOptionsSerializer implements Serializer {
     private final List<String> services;
     private License license;
     private String modelName;
+    private boolean redisunEnable;
 
     public CloudOptionsSerializer(ProcessingEnvironment processingEnv, String config, List<String> services) throws Throwable {
         this.config = config;
@@ -114,6 +119,8 @@ final class CloudOptionsSerializer implements Serializer {
 
         //license验签
         loadFeatYaml();
+
+        redisunEnable = JSONPath.eval(config, "$.feat.redis") != null;
     }
 
     private static void deleteFeatYamlFile(ProcessingEnvironment processingEnv) throws IOException {
@@ -337,6 +344,9 @@ final class CloudOptionsSerializer implements Serializer {
         printWriter.println("import " + Router.class.getName() + ";");
         printWriter.println("import " + CloudService.class.getName() + ";");
         printWriter.println("import " + List.class.getName() + ";");
+        printWriter.println("import " + SessionManager.class.getName() + ";");
+        printWriter.println("import " + LocalSessionManager.class.getName() + ";");
+        printWriter.println("import " + ClusterSessionManager.class.getName() + ";");
         printWriter.println("import " + ArrayList.class.getName() + ";");
         for (String service : services) {
             printWriter.println("import " + service + ";");
@@ -344,6 +354,9 @@ final class CloudOptionsSerializer implements Serializer {
         if (isAutoSSL()) {
             printWriter.println("import " + SslPlugin.class.getName() + ";");
             printWriter.println("import " + AutoServerSSLContextFactory.class.getName() + ";");
+        }
+        if (redisunEnable) {
+            printWriter.println("import " + Redisun.class.getName() + ";");
         }
     }
 
@@ -404,6 +417,15 @@ final class CloudOptionsSerializer implements Serializer {
                 printWriter.println("\t\tapplicationContext.getOptions()." + field.getName() + "(" + obj + ");");
             }
         }
+
+        //集成 redisun
+        if (redisunEnable) {
+            printWriter.println("\t\tapplicationContext.addBean(\"redisun\", Redisun.create(opt -> {");
+            printWriter.println("\t\t\topt.setAddress(\"" + JSONPath.eval(config, "$.feat.redis.address") + "\");");
+            printWriter.println("\t\t}));");
+        }
+
+
         //特殊的配置
         if (isAutoSSL()) {
             printWriter.println("\t\tapplicationContext.getOptions().addPlugin(new SslPlugin<>(new AutoServerSSLContextFactory()));");
@@ -433,6 +455,18 @@ final class CloudOptionsSerializer implements Serializer {
 
     @Override
     public void serializeRouter() throws IOException {
+        Object manager = JSONPath.eval(config, "$.server.session.manager");
+        Object obj = JSONPath.eval(config, "$.server.session.maxAge");
+        if ("redis".equals(manager)) {
+            printWriter.println("\t\tSessionManager manager=new ClusterSessionManager(null);");
+        } else {
+            printWriter.println("\t\tSessionManager manager=new LocalSessionManager();");
+        }
+        if (obj != null) {
+            printWriter.println("\t\tmanager.getOptions().setMaxAge(" + obj + ");");
+        }
+        printWriter.println("\t\trouter.setSessionManager(manager);");
+
         printWriter.println("\t\tfor (CloudService service : services) {");
         printWriter.println("\t\t\tservice.router(applicationContext, router);");
         printWriter.println("\t\t}");

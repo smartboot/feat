@@ -303,4 +303,8 @@ public final class Router implements HttpHandler {
     SessionManager getSessionManager() {
         return sessionManager;
     }
+
+    public void setSessionManager(SessionManager sessionManager) {
+        this.sessionManager = sessionManager;
+    }
 }
