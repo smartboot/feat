@@ -1,0 +1,9 @@
+server:
+  session:
+    timeout: 1800
+    store-type: redis
+feat:
+  redis:
+    address: redis://127.0.0.1:6379
+    password:
+    database: 0
