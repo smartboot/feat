@@ -305,75 +305,9 @@ public String profile(Session session) {
 2. 用户的会话数据存储在 Redis 中
 3. 无论用户的请求被负载均衡器分发到哪个应用实例，都可以访问到相同的会话数据
 
-## 安全考虑
 
-### 1. Session ID 安全性
-
-Feat Cloud 自动生成安全的 Session ID，但你也可以通过配置加强安全性：
-
-```yaml
-server:
-  session:
-    timeout: 1800
-    store-type: redis
-    # 可以通过HTTPS传输Session ID
-    cookie-secure: true
-    # 防止XSS攻击获取Session ID
-    cookie-http-only: true
-```
-
-### 2. Redis 安全配置
-
-确保 Redis 服务器的安全配置：
-
-```yaml
-feat:
-  redis:
-    address: rediss://127.0.0.1:6380  # 使用SSL连接
-    password: your_redis_password      # 设置强密码
-    database: 0
-```
-
-## 故障排除
-
-### 常见问题
-
-1. **无法连接到 Redis**：
-   - 检查 Redis 服务器是否正在运行
-   - 验证配置文件中的地址和端口是否正确
-   - 检查防火墙设置
-
-2. **会话丢失**：
-   - 检查 Redis 配置，确认没有设置过短的过期时间
-   - 确认应用配置中的 session timeout 设置
-
-3. **性能问题**：
-   - 检查 Redis 服务器的性能指标
-   - 避免在会话中存储过多数据
-   - 考虑使用 Redis 集群提升性能
-
-### 日志调试
-
-启用调试日志可以帮助诊断问题：
-
-```java
-// 在启动时添加调试选项
-public static void main(String[] args) {
-    FeatCloud.cloudServer(options -> {
-        options.debug(true);
-    }).listen();
-}
-```
 
 ## 总结
-
-通过本文档，我们学习了如何在 Feat Cloud 中配置和使用分布式会话：
-
-1. 通过简单的 YAML 配置启用 Redis 分布式会话
-2. 使用 Session API 进行会话数据的增删改查
-3. 了解了分布式会话的工作原理和最佳实践
-4. 学习了在集群环境中的部署架构
-5. 掌握了安全配置和故障排除方法
 
 分布式会话是构建可扩展、高可用 Web 应用的基础组件。通过 Feat Cloud 内置的支持，你可以轻松地在应用中实现这一功能，为用户提供一致的使用体验。
 
