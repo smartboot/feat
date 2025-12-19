@@ -90,11 +90,12 @@ public class LocalSessionManager extends SessionManager {
                 timerTask = timer.schedule(new Runnable() {
                     @Override
                     public void run() {
-                        if (FeatUtils.currentTime().getTime() > getLatestAccessTime() + getTimeout() * 1000L) {
+                        long remainingTime = getTimeout() * 1000L - (FeatUtils.currentTime().getTime() - getLatestAccessTime());
+                        if (remainingTime > 0) {
+                            timerTask = timer.schedule(this, remainingTime, TimeUnit.MILLISECONDS);
+                        } else {
                             LOGGER.info("sessionId:{} has be expired, lastAccessedTime:{} ,maxInactiveInterval:{}", getSessionId());
                             invalidate();
-                        } else {
-                            timerTask = timer.schedule(this, getTimeout() * 1000L - (FeatUtils.currentTime().getTime() - getLatestAccessTime()), TimeUnit.MILLISECONDS);
                         }
                     }
                 }, getTimeout(), TimeUnit.SECONDS);
