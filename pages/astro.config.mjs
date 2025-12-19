@@ -99,7 +99,7 @@ export default defineConfig({
                     autogenerate: {directory: 'guides'},
                 },
                 {
-                    label: 'Feat Cloud开发',
+                    label: 'Feat Cloud教程',
                     autogenerate: {directory: 'cloud'},
                 },
                 {
