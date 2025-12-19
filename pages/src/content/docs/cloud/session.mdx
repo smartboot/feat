@@ -1,6 +1,6 @@
 ---
-title: 分布式 Session
-description: Feat Cloud 分布式会话管理详细教程与最佳实践
+title: Session 会话管理
+description: Feat 框架 Session 会话管理详细教程，涵盖本地 Session 和分布式 Session
 sidebar:
     order: 5
 ---
@@ -10,26 +10,98 @@ import Mermaid from '../../../components/Mermaid.astro';
 
 <CheckAuthorize/>
 
-分布式会话是构建可扩展 Web 应用的关键组件，特别是在集群部署环境中。通过本文档，您将学会如何在 Feat Cloud 中配置和使用基于 Redis 的分布式会话。
+会话(Session)是 Web 应用中维护用户状态的重要机制。Feat 框架支持两种会话管理模式：本地会话和分布式会话。通过本文档，您将学会如何在 Feat 中配置和使用这两种会话模式。
 
 ## 概述
 
-在传统的单机应用中，会话信息通常存储在服务器的内存中。但在分布式或集群环境中，这种方式会出现问题，因为用户的请求可能会被负载均衡器分发到不同的服务器实例，导致会话信息无法共享。
+会话(Session)是一种在服务器端存储用户状态信息的机制。当用户访问网站时，服务器会为每个用户创建一个唯一的会话，并通过 Cookie 将会话 ID 发送给客户端。客户端在后续请求中携带该会话 ID，服务器通过它识别用户并获取其状态信息。
 
-Feat Cloud 提供了内置的分布式会话支持，目前支持基于 Redis 的会话存储。通过将用户的会话信息存储在共享的 Redis 数据库中，所有的服务器实例都可以访问和更新同一个用户的会话数据，从而解决了集群环境下的会话共享问题。
+Feat 框架提供了两种会话管理模式：
 
-## 核心组件
+1. **本地会话** - 会话数据存储在单个应用实例的内存中
+2. **分布式会话** - 会话数据存储在共享的外部存储(如 Redis)中，适用于集群部署
+
+## 本地会话
+
+本地会话是 Feat Core 框架的默认会话管理方式，适用于单实例部署的应用。会话数据存储在应用实例的内存中，通过 Cookie 机制维护会话状态。
+
+### 核心组件
+
+本地会话主要由以下几个核心组件构成：
+
+1. **[LocalSessionManager](https://gitee.com/smartboot/feat/blob/master/feat-core/src/main/java/tech/smartboot/feat/router/session/LocalSessionManager.java)** - 负责管理会话的创建、获取和更新
+2. **[MemorySession](https://gitee.com/smartboot/feat/blob/master/feat-core/src/main/java/tech/smartboot/feat/router/session/MemorySession.java)** - 代表一个具体的会话实例，提供会话数据的操作接口
+
+### 工作原理
+
+本地会话的工作原理如下：
+
+<Mermaid code={`graph TD
+    A[用户请求] --> B{是否存在Session ID?}
+    B -->|是| C[从内存获取会话]
+    B -->|否| D[创建新会话]
+    C --> E[验证会话有效性]
+    E -->|有效| F[更新访问时间]
+    E -->|无效| D
+    D --> G[生成Session ID]
+    G --> H[存储到内存]
+    F --> I[处理业务逻辑]
+    H --> I
+    I --> J[返回响应]
+    J --> K[设置Cookie]
+`} />
+
+### 使用示例
+
+下面是一个使用本地会话的简单示例：
+
+```java
+public class Bootstrap {
+    public static void main(String[] args) {
+        Router router = new Router();
+        router.route("/visit", ctx -> {
+            Session session = ctx.session();
+            String visitCount = session.get("visitCount");
+            if (visitCount == null) {
+                visitCount = "0";
+            }
+            int count = Integer.parseInt(visitCount) + 1;
+            session.put("visitCount", String.valueOf(count));
+            ctx.Response.write("Visit count: " + count);
+        });
+        Feat.httpServer().httpHandler(router).listen();
+    }
+}
+```
+
+### 优缺点
+
+**优点：**
+- 实现简单，无需额外依赖
+- 访问速度快，直接从内存读取
+- 配置简单，开箱即用
+
+**缺点：**
+- 不适用于集群部署，会话无法共享
+- 应用重启后会话丢失
+- 占用应用内存资源
+
+## 分布式会话
+
+分布式会话是构建可扩展 Web 应用的关键组件，特别是在集群部署环境中。通过将用户的会话信息存储在共享的外部存储中，所有的服务器实例都可以访问和更新同一个用户的会话数据。
+
+### 核心组件
 
 Feat Cloud 的分布式会话主要由以下两个核心组件构成：
 
 1. **[ClusterSessionManager](https://gitee.com/smartboot/feat/blob/master/feat-cloud/src/main/java/tech/smartboot/feat/cloud/session/ClusterSessionManager.java)** - 负责管理会话的创建、获取和更新
 2. **[RedisSession](https://gitee.com/smartboot/feat/blob/master/feat-cloud/src/main/java/tech/smartboot/feat/cloud/session/RedisSession.java)** - 代表一个具体的会话实例，提供会话数据的操作接口
 
-## 配置指南
+### 配置指南
 
 要启用分布式会话功能，您需要在 `feat.yml` 配置文件中进行相应配置。
 
-### 基础配置
+#### 基础配置
 
 ```yaml
 server:
@@ -43,7 +115,7 @@ feat:
     database: 0          # Redis数据库索引
 ```
 
-### 配置说明
+#### 配置说明
 
 - **server.session.timeout**: 会话超时时间，单位为秒。默认值为1800秒（30分钟）。超过这个时间没有访问的会话会被自动清除。
 - **server.session.store-type**: 会话存储类型。设置为 `redis` 以启用分布式会话功能。
@@ -53,11 +125,11 @@ feat:
 - **feat.redis.password**: Redis 访问密码（如果需要的话）
 - **feat.redis.database**: Redis 数据库索引，默认为0
 
-## 使用示例
+### 使用示例
 
 下面通过一个完整的示例来展示如何使用分布式会话功能。
 
-### Maven 依赖
+#### Maven 依赖
 
 首先确保您的 `pom.xml` 文件中包含了必要的依赖：
 
@@ -76,7 +148,7 @@ feat:
 </dependencies>
 ```
 
-### 配置文件
+#### 配置文件
 
 创建 `src/main/resources/feat.yml` 配置文件：
 
@@ -92,7 +164,7 @@ feat:
     database: 0
 ```
 
-### 启动类
+#### 启动类
 
 创建 `Bootstrap.java` 启动类：
 
@@ -153,7 +225,7 @@ public class Bootstrap {
 }
 ```
 
-## 工作原理
+### 工作原理
 
 分布式会话的工作原理如下图所示：
 
@@ -172,46 +244,46 @@ public class Bootstrap {
     J --> K[设置Cookie]
 `} />
 
-## Session API
+### Session API
 
 RedisSession 提供了以下核心方法：
 
-### get(String key)
+#### get(String key)
 获取会话中指定键的值。
 
 ```java
 String username = session.get("username");
 ```
 
-### put(String key, String value)
+#### put(String key, String value)
 将会话数据存储到 Redis 中。
 
 ```java
 session.put("username", "FeatUser");
 ```
 
-### invalidate()
+#### invalidate()
 使当前会话失效，删除 Redis 中的会话数据。
 
 ```java
 session.invalidate();
 ```
 
-### getSessionId()
+#### getSessionId()
 获取当前会话的唯一标识符。
 
 ```java
 String sessionId = session.getSessionId();
 ```
 
-### setTimeout(int expiry)
+#### setTimeout(int expiry)
 设置会话的最大存活时间（秒）。
 
 ```java
 session.setTimeout(3600); // 设置会话1小时后过期
 ```
 
-### getTimeout()
+#### getTimeout()
 获取会话的最大存活时间（秒）。
 
 ```java
@@ -220,7 +292,12 @@ int maxAge = session.getTimeout();
 
 ## 最佳实践
 
-### 1. 合理设置会话超时时间
+### 1. 合理选择会话模式
+
+- **单实例应用**：使用本地会话，简单高效
+- **集群部署应用**：使用分布式会话，确保会话共享
+
+### 2. 合理设置会话超时时间
 
 根据应用的特点合理设置会话超时时间：
 
@@ -232,7 +309,7 @@ server:
     store-type: redis
 ```
 
-### 2. 及时清理会话数据
+### 3. 及时清理会话数据
 
 在用户登出或执行敏感操作后及时清理会话数据：
 
@@ -245,9 +322,9 @@ public String logout(Session session) {
 }
 ```
 
-### 3. 避免在会话中存储大量数据
+### 4. 避免在会话中存储大量数据
 
-会话数据存储在 Redis 中，应避免存储大量数据以节省内存和网络传输：
+会话数据存储在内存或 Redis 中，应避免存储大量数据以节省资源：
 
 ```java
 // 不推荐：存储大对象
@@ -258,7 +335,7 @@ session.put("userId", userId);
 session.put("username", username);
 ```
 
-### 4. 处理会话异常
+### 5. 处理会话异常
 
 在使用会话时要考虑异常情况：
 
@@ -307,6 +384,11 @@ public String profile(Session session) {
 
 ## 总结
 
-分布式会话是构建可扩展、高可用 Web 应用的基础组件。通过 Feat Cloud 内置的支持，您可以轻松地在应用中实现这一功能，为用户提供一致的使用体验。
+会话管理是 Web 应用开发中的重要环节。Feat 框架提供了本地会话和分布式会话两种解决方案，分别适用于不同的部署场景：
+
+- 本地会话适合单实例应用，性能好，配置简单
+- 分布式会话适合集群部署，能够保证会话共享，提供更好的可扩展性
+
+根据您的应用部署需求选择合适的会话管理方式，能够显著提升应用的可用性和用户体验。
 
 有关完整示例，请参见 [Redis Session 示例](https://gitee.com/smartboot/feat/tree/master/demo/redis_session)
