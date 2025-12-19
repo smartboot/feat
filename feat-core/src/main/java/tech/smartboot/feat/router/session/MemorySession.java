@@ -10,14 +10,19 @@
 
 package tech.smartboot.feat.router.session;
 
+import org.smartboot.socket.timer.HashedWheelTimer;
+import org.smartboot.socket.timer.TimerTask;
 import tech.smartboot.feat.core.common.Cookie;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.exception.FeatException;
+import tech.smartboot.feat.core.common.logging.Logger;
+import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.Session;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 基于内存的会话实现类
@@ -34,6 +39,7 @@ import java.util.Map;
  * @version v1.0
  */
 class MemorySession implements Session {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MemorySession.class);
     /**
      * 会话的最大存活时间（秒）
      * <p>
@@ -74,6 +80,17 @@ class MemorySession implements Session {
      */
     private boolean invalid = false;
 
+    private long latestAccessTime = FeatUtils.currentTime().getTime();
+    /**
+     * 定时任务实例
+     * <p>
+     * 用于管理会话超时的定时任务
+     * </p>
+     */
+    private TimerTask timerTask;
+
+    private HashedWheelTimer timer;
+
     /**
      * 构造一个新的内存会话实例
      * <p>
@@ -83,10 +100,35 @@ class MemorySession implements Session {
      *
      * @param request 关联的HTTP请求对象
      */
-    MemorySession(HttpRequest request) {
+    MemorySession(HttpRequest request, HashedWheelTimer timer) {
         this.sessionId = FeatUtils.createSessionId();
         this.request = request;
         SessionManager.removeSessionCookie(request);
+        updateTimeoutTask();
+    }
+
+    /**
+     * 更新超时任务
+     * <p>
+     * 取消当前超时任务并根据会话最大存活时间重新设置新的超时任务
+     * </p>
+     */
+    synchronized void updateTimeoutTask() {
+        pauseTimeoutTask();
+        if (getTimeout() <= 0) {
+            return;
+        }
+        timerTask = timer.schedule(new Runnable() {
+            @Override
+            public void run() {
+                if (FeatUtils.currentTime().getTime() > latestAccessTime + getTimeout() * 1000L) {
+                    LOGGER.info("sessionId:{} has be expired, lastAccessedTime:{} ,maxInactiveInterval:{}", getSessionId());
+                    invalidate();
+                } else {
+                    timerTask = timer.schedule(this, getTimeout() * 1000L - (FeatUtils.currentTime().getTime() - latestAccessTime), TimeUnit.MILLISECONDS);
+                }
+            }
+        }, getTimeout(), TimeUnit.SECONDS);
     }
 
     /**
@@ -148,6 +190,20 @@ class MemorySession implements Session {
     public void setTimeout(int maxAge) {
         checkValid();
         this.maxAge = maxAge;
+        pauseTimeoutTask();
+    }
+
+    /**
+     * 暂停超时任务
+     * <p>
+     * 取消当前的超时定时任务
+     * </p>
+     */
+    void pauseTimeoutTask() {
+        if (timerTask != null) {
+            timerTask.cancel();
+            timerTask = null;
+        }
     }
 
     /**
@@ -162,6 +218,7 @@ class MemorySession implements Session {
         if (invalid) {
             throw new FeatException("Session is invalid");
         }
+        latestAccessTime = FeatUtils.currentTime().getTime();
     }
 
     /**

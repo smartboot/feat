@@ -212,10 +212,6 @@ public final class Router implements HttpHandler {
 
             @Override
             public void handle(HttpRequest request, CompletableFuture<Void> completableFuture) throws Throwable {
-                sessionManager.updateAccessTime(request);
-                completableFuture.whenComplete((obj, throwable) -> {
-                    sessionManager.updateAccessTime(request);
-                });
                 Chain chain = new Chain(routerHandler.getRouterHandler(request), list);
                 chain.proceed(routerHandler.getContext(request), completableFuture);
                 if (chain.isInterrupted()) {

@@ -33,8 +33,6 @@ public abstract class SessionManager {
 
     public abstract Session getSession(HttpRequest request, boolean create);
 
-    public abstract void updateAccessTime(HttpRequest request);
-
     public final SessionOptions getOptions() {
         return sessionOptions;
     }

@@ -58,12 +58,4 @@ public class ClusterSessionManager extends SessionManager {
         return redisSession;
     }
 
-    @Override
-    public void updateAccessTime(HttpRequest request) {
-        String sessionId = getSessionId(request);
-        if (sessionId != null) {
-            String sessionKey = SESSION_KEY_PREFIX + sessionId;
-            redisun.expire(sessionKey, sessionOptions.getTimeout());
-        }
-    }
 }
