@@ -10,7 +10,7 @@ import Mermaid from '../../../components/Mermaid.astro';
 
 <CheckAuthorize/>
 
-让我们一起来探索 Feat Cloud 中强大的分布式会话功能！分布式会话是构建可扩展 Web 应用的关键组件，特别是在集群部署环境中。通过本文档，你将学会如何在 Feat Cloud 中配置和使用基于 Redis 的分布式会话。
+分布式会话是构建可扩展 Web 应用的关键组件，特别是在集群部署环境中。通过本文档，您将学会如何在 Feat Cloud 中配置和使用基于 Redis 的分布式会话。
 
 ## 概述
 
@@ -27,7 +27,7 @@ Feat Cloud 的分布式会话主要由以下两个核心组件构成：
 
 ## 配置指南
 
-要启用分布式会话功能，你需要在 `feat.yml` 配置文件中进行相应配置。
+要启用分布式会话功能，您需要在 `feat.yml` 配置文件中进行相应配置。
 
 ### 基础配置
 
@@ -55,11 +55,11 @@ feat:
 
 ## 使用示例
 
-下面我们通过一个完整的示例来展示如何使用分布式会话功能。
+下面通过一个完整的示例来展示如何使用分布式会话功能。
 
 ### Maven 依赖
 
-首先确保你的 `pom.xml` 文件中包含了必要的依赖：
+首先确保您的 `pom.xml` 文件中包含了必要的依赖：
 
 ```xml
 <dependencies>
@@ -155,7 +155,7 @@ public class Bootstrap {
 
 ## 工作原理
 
-让我们通过一个流程图来了解分布式会话的工作原理：
+分布式会话的工作原理如下图所示：
 
 <Mermaid code={`graph TD
     A[用户请求] --> B{是否存在Session ID?}
@@ -305,10 +305,8 @@ public String profile(Session session) {
 2. 用户的会话数据存储在 Redis 中
 3. 无论用户的请求被负载均衡器分发到哪个应用实例，都可以访问到相同的会话数据
 
-
-
 ## 总结
 
-分布式会话是构建可扩展、高可用 Web 应用的基础组件。通过 Feat Cloud 内置的支持，你可以轻松地在应用中实现这一功能，为用户提供一致的使用体验。
+分布式会话是构建可扩展、高可用 Web 应用的基础组件。通过 Feat Cloud 内置的支持，您可以轻松地在应用中实现这一功能，为用户提供一致的使用体验。
 
 有关完整示例，请参见 [Redis Session 示例](https://gitee.com/smartboot/feat/tree/master/demo/redis_session)
