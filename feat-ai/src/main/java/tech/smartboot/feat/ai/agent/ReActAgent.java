@@ -146,8 +146,8 @@ public class ReActAgent extends FeatAgent {
             templateData.put("tool_names", getToolNames());
 
 
-//            templateData.put("relevant_memories", memoryContext.toString());
-            templateData.put("agent_scratchpad", "");
+            templateData.put("relevant_memories", "无");
+            templateData.put("agent_scratchpad", "无");
 
             // 执行推理循环
             int maxIterations = options.getMaxIterations(); // 使用配置的最大迭代次数
