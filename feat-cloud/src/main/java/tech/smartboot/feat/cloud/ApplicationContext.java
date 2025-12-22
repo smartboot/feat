@@ -170,7 +170,7 @@ public final class ApplicationContext {
      *
      * @return 路由器实例
      */
-    public Router getRouter() {
+    Router getRouter() {
         return router;
     }
 
