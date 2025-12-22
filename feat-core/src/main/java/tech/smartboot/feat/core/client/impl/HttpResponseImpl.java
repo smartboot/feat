@@ -13,7 +13,6 @@ package tech.smartboot.feat.core.client.impl;
 import org.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.client.AbstractResponse;
 import tech.smartboot.feat.core.client.HttpResponse;
-import tech.smartboot.feat.core.client.stream.DeflaterInputStream;
 import tech.smartboot.feat.core.client.stream.GZIPInputStream;
 import tech.smartboot.feat.core.client.stream.InflaterStream;
 import tech.smartboot.feat.core.client.stream.Stream;
@@ -99,9 +98,9 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
                     if (FeatUtils.equals(HeaderValue.ContentEncoding.GZIP, contentEncoding)) {
                         return new GZIPInputStream(inputStream);
                     }
-                    if (FeatUtils.equals(HeaderValue.ContentEncoding.Deflate, contentEncoding)) {
-                        return new DeflaterInputStream(inputStream);
-                    }
+//                    if (FeatUtils.equals(HeaderValue.ContentEncoding.Deflate, contentEncoding)) {
+//                        return new InflaterInputStream(inputStream);
+//                    }
                     throw new FeatException("unsupported content encoding:" + contentEncoding);
                 }
             };
@@ -193,6 +192,8 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
                 default:
                     throw new IllegalStateException();
             }
+        } catch (RuntimeException e) {
+            throw e;
         } catch (Exception e) {
             throw new FeatException(e);
         }
