@@ -12,7 +12,7 @@ package tech.smartboot.feat.demo;
 
 import org.smartboot.socket.extension.plugins.SslPlugin;
 import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
-import org.smartboot.socket.extension.ssl.factory.PemServerSSLContextFactory;
+import org.smartboot.socket.extension.ssl.factory.AutoServerSSLContextFactory;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
@@ -49,7 +49,7 @@ public class Http2Demo {
             }
         }));
 //        SslPlugin sslPlugin=new SslPlugin(new ServerSSLContextFactory(HttpsDemo.class.getClassLoader().getResourceAsStream("server.keystore"), "123456", "123456"),ClientAuth.NONE);
-        SslPlugin sslPlugin = new SslPlugin(new PemServerSSLContextFactory(Http2Demo.class.getClassLoader().getResourceAsStream("example.org.pem"), Http2Demo.class.getClassLoader().getResourceAsStream("example.org-key.pem")), new Consumer<SSLEngine>() {
+        SslPlugin sslPlugin = new SslPlugin(new AutoServerSSLContextFactory(), new Consumer<SSLEngine>() {
             @Override
             public void accept(SSLEngine sslEngine) {
                 SSLParameters sslParameters = new SSLParameters();
