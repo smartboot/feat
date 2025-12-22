@@ -356,7 +356,7 @@ public class WebReader {
     public static Map<String, String> simulatorDeviceHeader() {
         Map<String, String> headers = new HashMap<>();
         headers.put(HeaderName.ACCEPT.getName(), "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7");
-        headers.put(HeaderName.ACCEPT_ENCODING.getName(), "gzip, deflate, zstd, dcb, dcz");
+        headers.put(HeaderName.ACCEPT_ENCODING.getName(), "gzip");
         headers.put(HeaderName.ACCEPT_LANGUAGE.getName(), "zh-CN,zh;q=0.9");
         headers.put(HeaderName.USER_AGENT.getName(), "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36");
         headers.put(HeaderName.CACHE_CONTROL.getName(), "max-age=0");
