@@ -53,7 +53,6 @@ public final class HttpEndpoint extends Endpoint implements HttpRequest, Reset {
     private HttpHandler serverHandler;
 
     private List<Part> parts;
-    private boolean multipartParsed;
 
     private final HttpResponseImpl response;
     /**
@@ -66,16 +65,6 @@ public final class HttpEndpoint extends Endpoint implements HttpRequest, Reset {
 
     private BodyInputStream inputStream;
     private Map<String, String> trailerFields;
-    private int state;
-
-    public int getState() {
-        return state;
-    }
-
-
-    public void setState(int flag) {
-        this.state = this.state | flag;
-    }
 
     void cancelHttpIdleTask() {
         synchronized (this) {
@@ -262,7 +251,7 @@ public final class HttpEndpoint extends Endpoint implements HttpRequest, Reset {
     }
 
     public Collection<Part> getParts(MultipartConfig configElement) throws IOException {
-        if (!multipartParsed) {
+        if (parts == null) {
             if (FeatUtils.isBlank(getContentType()) || !getContentType().startsWith(HeaderValue.ContentType.MULTIPART_FORM_DATA)) {
                 throw new FeatException("Multipart is not supported for content type " + getContentType());
             }
@@ -280,7 +269,6 @@ public final class HttpEndpoint extends Endpoint implements HttpRequest, Reset {
                     break;
                 }
             }
-            multipartParsed = true;
             setInputStream(BodyInputStream.EMPTY_INPUT_STREAM);
             remaining -= aioSession.readBuffer().position() - p;
             if (remaining != 0) {
@@ -327,6 +315,5 @@ public final class HttpEndpoint extends Endpoint implements HttpRequest, Reset {
             }
             parts = null;
         }
-        multipartParsed = false;
     }
 }
