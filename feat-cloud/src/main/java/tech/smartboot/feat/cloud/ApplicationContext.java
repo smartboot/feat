@@ -155,9 +155,9 @@ public final class ApplicationContext {
      */
     public void destroy() {
         // 依次调用各服务的destroy方法执行清理工作
-        for (CloudService aptLoader : services) {
+        for (CloudService service : services) {
             try {
-                aptLoader.destroy();
+                service.destroy();
             } catch (Throwable e) {
                 // 如果某个服务清理过程中出现异常，记录日志但继续处理其他服务
                 LOGGER.error("error destroying apt loader", e);
