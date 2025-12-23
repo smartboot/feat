@@ -92,7 +92,7 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
                 decodeState.setState(DecodeState.STATE_PROTOCOL_DECODE);
             }
             case DecodeState.STATE_PROTOCOL_DECODE: {
-                if (byteBuffer.remaining() < 10) {
+                if (byteBuffer.remaining() < 12) {
                     break;
                 }
                 long httpVersion = byteBuffer.getLong();
@@ -119,9 +119,6 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
             }
             // header结束判断
             case DecodeState.STATE_HEADER_END_CHECK: {
-                if (byteBuffer.remaining() < 2) {
-                    break;
-                }
                 //header解码结束
                 if (byteBuffer.get() == FeatUtils.CR) {
                     if (byteBuffer.get() != FeatUtils.LF) {
@@ -167,7 +164,7 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
             }
             // header line结束
             case DecodeState.STATE_HEADER_LINE_END: {
-                if (!byteBuffer.hasRemaining()) {
+                if (byteBuffer.remaining() < 3) {
                     break;
                 }
                 if (byteBuffer.get() != FeatUtils.LF) {
