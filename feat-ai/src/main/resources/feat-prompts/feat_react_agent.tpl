@@ -18,7 +18,7 @@
 4. 根据观察结果继续推理或给出最终答案
 6. 每次只能输出一个 **Thought** 和一个 **Action** ，或者 **AI** 回答。
 7. 禁止行为：
-    - 禁止回复内容中出现多个 Action、Action Input
+    - 一次只能执行一个Action，严禁同时执行多个Action！
     - 禁止输出Action执行结果(Observation)
     - 禁止循环推理
 
@@ -29,7 +29,6 @@ Thought: 详细说明为什么要使用该工具
 Action: 工具名称
 Action Input: 工具参数
 ```
-注意：一次只能执行一个Action，严禁同时执行多个Action！
 
 当你已经获得足够信息可以回答用户时，请按以下格式输出：
 ```
