@@ -123,7 +123,6 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
                     break;
                 }
                 //header解码结束
-                byteBuffer.mark();
                 if (byteBuffer.get() == FeatUtils.CR) {
                     if (byteBuffer.get() != FeatUtils.LF) {
                         throw new HttpException(HttpStatus.BAD_REQUEST);
@@ -131,7 +130,7 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
                     decodeState.setState(DecodeState.STATE_HEADER_CALLBACK);
                     return true;
                 }
-                byteBuffer.reset();
+                byteBuffer.position(byteBuffer.position() - 1);
                 if (request.getHeaderSize() < options.getHeaderLimiter()) {
                     decodeState.setState(DecodeState.STATE_HEADER_NAME);
                 } else {
