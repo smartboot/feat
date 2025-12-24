@@ -35,11 +35,11 @@ export default defineConfig({
                     }
                 },
                 {
-                //     tag: 'script',
-                //     attrs: {
-                //         src: 'https://smartboot.tech/js/gitee.js'
-                //     }
-                // },{
+                    tag: 'script',
+                    attrs: {
+                        src: 'https://smartboot.tech/js/gitee.js'
+                    }
+                },{
                     tag:'script',
                     content: `if(!location.pathname.endsWith("feat/")&&!location.pathname.endsWith("/unstar/")&&!location.pathname.endsWith("/auth/")){
                                 checkStar("smartboot","feat",function(){
