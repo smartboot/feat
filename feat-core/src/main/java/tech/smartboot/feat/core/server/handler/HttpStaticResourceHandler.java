@@ -15,12 +15,12 @@ import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpMethod;
 import tech.smartboot.feat.core.common.HttpStatus;
+import tech.smartboot.feat.core.common.Mimetypes;
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.common.io.FeatOutputStream;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
-import tech.smartboot.feat.core.common.Mimetypes;
 import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
@@ -273,7 +273,17 @@ public class HttpStaticResourceHandler implements HttpHandler {
         LOGGER.warn("file: {} not found!", request.getRequestURI());
         response.setHttpStatus(HttpStatus.NOT_FOUND);
         response.setHeader(HeaderName.CONTENT_TYPE, "text/html; charset=utf-8");
-
+        //return 404 page
+        try (InputStream inputStream = classLoader.getResourceAsStream("feat-404.html")) {
+            if (inputStream != null) {
+                byte[] bytes = new byte[4094];
+                int length;
+                while ((length = inputStream.read(bytes)) != -1) {
+                    response.getOutputStream().write(bytes, 0, length);
+                }
+                return;
+            }
+        }
         if (!HttpMethod.HEAD.equals(request.getMethod())) {
             throw new HttpException(HttpStatus.NOT_FOUND);
         }

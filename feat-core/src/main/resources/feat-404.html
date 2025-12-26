@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>页面未找到 - feat</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #333;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 500px;
+            padding: 20px;
+        }
+
+        .error-code {
+            font-size: 6rem;
+            font-weight: bold;
+            color: #6c757d;
+            margin-bottom: 20px;
+        }
+
+        .message {
+            margin: 20px 0;
+        }
+
+        .message h1 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            color: #495057;
+        }
+
+        .message p {
+            font-size: 1rem;
+            margin-bottom: 25px;
+            color: #6c757d;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: background 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #0056b3;
+        }
+
+        .links-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .link-btn {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #6c757d;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            transition: background 0.3s ease;
+        }
+
+        .link-btn:hover {
+            background: #545b62;
+        }
+
+        @media (max-width: 768px) {
+            .error-code {
+                font-size: 4rem;
+            }
+            
+            .message h1 {
+                font-size: 1.5rem;
+            }
+            
+            .links-container {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="error-code">
+            404
+        </div>
+        
+        <div class="message">
+            <h1>哎呀，页面迷路了</h1>
+            <p>您要访问的页面似乎不在这里，可能是被外星人带走了，也可能是藏在了 feat 框架的某个角落里</p>
+            <div class="links-container">
+                <a href="https://gitee.com/smartboot/feat" class="link-btn">代码仓库</a>
+                <a href="https://smartboot.tech/feat/" class="link-btn">文档中心</a>
+            </div>
+        </div>
+    </div>
+</body>
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?ee8630857921d8030d612dbd7d751b55";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+</html>

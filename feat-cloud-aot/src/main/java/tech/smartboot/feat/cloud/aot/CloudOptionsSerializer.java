@@ -81,7 +81,7 @@ final class CloudOptionsSerializer implements Serializer {
      * redisun 是否启用
      */
     private final boolean redisunEnable;
-    private boolean redisSession;
+    private final boolean redisSession;
 
     public CloudOptionsSerializer(ProcessingEnvironment processingEnv, String config, List<String> services) throws Throwable {
         this.config = config;
