@@ -234,7 +234,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                 featYaml = processingEnv.getFiler().getResource(StandardLocation.CLASS_OUTPUT, "", filename);
             } catch (IOException ignored) {
             }
-            if (featYaml != null) {
+            if (featYaml != null && new File(featYaml.toUri()).isFile()) {
                 break;
             }
         }

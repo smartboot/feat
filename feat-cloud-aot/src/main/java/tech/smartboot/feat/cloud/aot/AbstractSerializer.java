@@ -94,6 +94,7 @@ abstract class AbstractSerializer implements Serializer {
 
     public void serializeLoadBean() {
         printWriter.println("\t\tbean = new " + element.getSimpleName() + "(); ");
+        serializerValueSetter();
         //初始化通过方法实例化的bean
         for (Element se : element.getEnclosedElements()) {
             for (AnnotationMirror mirror : se.getAnnotationMirrors()) {
@@ -153,7 +154,6 @@ abstract class AbstractSerializer implements Serializer {
                 printWriter.append("\t\treflectAutowired(bean, \"").append(String.valueOf(field.getSimpleName())).append("\", loadBean(\"").append(field.getSimpleName().toString()).append("\", applicationContext));\n");
             }
         }
-        serializerValueSetter();
     }
 
     public void serializerValueSetter() {
@@ -163,7 +163,7 @@ abstract class AbstractSerializer implements Serializer {
             String paramName = value.value();
             String defaultValue = null;
             if (FeatUtils.isBlank(paramName)) {
-                paramName = field.getSimpleName().toString();
+                paramName = "$." + field.getSimpleName();
             } else if (FeatUtils.startsWith(paramName, "${") && FeatUtils.endsWith(paramName, "}")) {
                 paramName = paramName.substring(2, paramName.length() - 1);
                 int index = paramName.indexOf(":");
@@ -171,10 +171,15 @@ abstract class AbstractSerializer implements Serializer {
                     defaultValue = paramName.substring(index + 1);
                     paramName = paramName.substring(0, index);
                 }
+                StringBuilder sb = new StringBuilder("$");
+                for (String s : paramName.split("\\.")) {
+                    sb.append("['").append(s).append("']");
+                }
+                paramName = sb.toString();
             } else {
                 throw new FeatException("the value of Value on " + field.getEnclosingElement().getSimpleName() + "@" + field.getSimpleName() + " is not allowed to be empty.");
             }
-            Object paramValue = JSONPath.eval(config, "$." + paramName);
+            Object paramValue = JSONPath.eval(config, paramName);
             if (defaultValue == null && paramValue == null) {
                 return;
             }
