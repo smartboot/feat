@@ -463,6 +463,13 @@ final class CloudOptionsSerializer implements Serializer {
     }
 
     @Override
+    public void serializeLoadMethodBean() {
+        printWriter.println("\t\tfor (CloudService service : services) {");
+        printWriter.println("\t\t\tservice.loadMethodBean(applicationContext);");
+        printWriter.println("\t\t}");
+    }
+
+    @Override
     public void serializeAutowired() {
         printWriter.println("\t\tfor (CloudService service : services) {");
         printWriter.println("\t\t\tservice.autowired(applicationContext);");

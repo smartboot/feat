@@ -43,6 +43,8 @@ public interface CloudService {
      */
     void loadBean(ApplicationContext context) throws Throwable;
 
+    void loadMethodBean(ApplicationContext context) throws Throwable;
+
     /**
      * 执行依赖注入
      * <p>

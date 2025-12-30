@@ -102,6 +102,10 @@ public final class ApplicationContext {
             service.loadBean(this);
         }
 
+        for (CloudService service : services) {
+            service.loadMethodBean(this);
+        }
+
         // 依次调用各服务的autowired方法执行依赖注入
         for (CloudService service : services) {
             service.autowired(this);

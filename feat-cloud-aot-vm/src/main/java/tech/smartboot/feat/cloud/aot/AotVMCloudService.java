@@ -146,6 +146,11 @@ public class AotVMCloudService extends AbstractCloudService {
     }
 
     @Override
+    public void loadMethodBean(ApplicationContext context) throws Throwable {
+
+    }
+
+    @Override
     public void autowired(ApplicationContext context) throws Throwable {
         List<Object> list = new ArrayList<>();
         list.addAll(controllers);

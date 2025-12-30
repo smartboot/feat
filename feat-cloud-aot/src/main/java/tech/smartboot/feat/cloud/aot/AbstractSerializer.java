@@ -95,6 +95,10 @@ abstract class AbstractSerializer implements Serializer {
     public void serializeLoadBean() {
         printWriter.println("\t\tbean = new " + element.getSimpleName() + "(); ");
         serializerValueSetter();
+    }
+
+    @Override
+    public void serializeLoadMethodBean() {
         //初始化通过方法实例化的bean
         for (Element se : element.getEnclosedElements()) {
             for (AnnotationMirror mirror : se.getAnnotationMirrors()) {

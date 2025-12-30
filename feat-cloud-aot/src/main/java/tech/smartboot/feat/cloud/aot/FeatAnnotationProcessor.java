@@ -203,6 +203,10 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         serializer.serializeLoadBean();
         printWriter.println("\t}");
 
+        printWriter.println("\tpublic void loadMethodBean(ApplicationContext applicationContext) throws Throwable {");
+        serializer.serializeLoadMethodBean();
+        printWriter.println("\t}");
+
         printWriter.println();
         printWriter.println("\tpublic void autowired(ApplicationContext applicationContext) throws Throwable {");
         serializer.serializeAutowired();

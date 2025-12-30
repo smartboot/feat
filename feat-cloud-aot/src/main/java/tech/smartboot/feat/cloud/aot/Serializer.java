@@ -36,6 +36,9 @@ interface Serializer {
     default void serializeProperty() {
     }
 
+    default void serializeLoadMethodBean() {
+    }
+
     default void serializeLoadBean() {
     }
 
