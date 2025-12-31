@@ -11,6 +11,7 @@
 package tech.smartboot.feat.cloud;
 
 import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.ai.mcp.model.ResourceTemplate;
 import tech.smartboot.feat.ai.mcp.server.McpOptions;
@@ -134,6 +135,29 @@ public abstract class AbstractCloudService implements CloudService {
         }
         // 设置升级处理器，用于异步读取请求体
         request.setUpgrade(new AsyncBodyReadUpgrade(request, (int) contentLength));
+    }
+
+    protected JSONArray toJsonArray(HttpRequest request) {
+        try {
+            if (request.getContentType() != null && request.getContentType().startsWith(HeaderValue.ContentType.APPLICATION_JSON)) {
+                // 创建字节输出流用于存储请求体数据
+                ByteArrayOutputStream out = new ByteArrayOutputStream();
+                byte[] bytes = new byte[1024];
+                int len = 0;
+                // 获取输入流
+                InputStream inputStream = request.getInputStream();
+                // 循环读取请求体数据
+                while ((len = inputStream.read(bytes)) != -1) {
+                    out.write(bytes, 0, len);
+                }
+                // 将字节数组解析为JSONObject
+                return JSON.parseArray(out.toByteArray());
+            } else {
+                throw new HttpException(HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        } catch (Throwable e) {
+            throw new HttpException(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     /**

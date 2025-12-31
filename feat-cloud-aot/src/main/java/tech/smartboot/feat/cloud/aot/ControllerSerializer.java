@@ -186,6 +186,7 @@ final class ControllerSerializer extends AbstractSerializer {
                 StringBuilder newParams = new StringBuilder();
                 StringBuilder params = new StringBuilder();
                 int i = 0;
+                VariableElement structParam = null;
                 for (VariableElement param : ((ExecutableElement) se).getParameters()) {
                     if (first) {
                         first = false;
@@ -203,14 +204,31 @@ final class ControllerSerializer extends AbstractSerializer {
                     } else if (param.getAnnotation(PathParam.class) != null) {
                         PathParam pathParam = param.getAnnotation(PathParam.class);
                         params.append("ctx.pathParam(\"").append(pathParam.value()).append("\")");
+                    } else if (structParam != null) {
+                        throw new FeatException("使用方式不当," + structParam + "不能与" + param + "同时使用");
                     } else {
+                        Param paramAnnotation = param.getAnnotation(Param.class);
+                        // json 直接转结构体对象，先只支持List
+                        if (paramAnnotation == null && param.asType().toString().startsWith(List.class.getName())) {
+                            if (i > 0) {
+                                throw new FeatException("使用方式不当," + param + "不能与@Param同时使用");
+                            }
+                            String str = param.asType().toString();
+                            int start = str.indexOf("<");
+                            int end = str.indexOf(">");
+                            str = str.substring(start + 1, end);
+                            newParams.append("\t\t\t\t").append(param.asType().toString()).append(" jsonArray").append(i).append(" = toJsonArray(ctx.Request).toList(").append(str).append(".class);");
+                            params.append("jsonArray").append(i);
+                            structParam = param;
+                            continue;
+                        }
+
+                        if (paramAnnotation == null && param.asType().toString().startsWith("java")) {
+                            throw new FeatException("the param of " + element.getSimpleName() + "@" + se.getSimpleName() + " is not allowed to be empty.");
+                        }
                         if (i == 0) {
                             hasBody = true;
                             newParams.append("\t\t\t\tJSONObject jsonObject = getParams(ctx.Request);\n");
-                        }
-                        Param paramAnnotation = param.getAnnotation(Param.class);
-                        if (paramAnnotation == null && param.asType().toString().startsWith("java")) {
-                            throw new FeatException("the param of " + element.getSimpleName() + "@" + se.getSimpleName() + " is not allowed to be empty.");
                         }
                         newParams.append("\t\t\t\t");
                         if (paramAnnotation != null) {
