@@ -209,38 +209,38 @@ final class ControllerSerializer extends AbstractSerializer {
                     } else {
                         Param paramAnnotation = param.getAnnotation(Param.class);
                         // json 直接转结构体对象，先只支持List
-                        if (paramAnnotation == null && param.asType().toString().startsWith(List.class.getName())) {
+                        if (paramAnnotation == null) {
                             if (i > 0) {
                                 throw new FeatException("使用方式不当," + param + "不能与@Param同时使用");
                             }
                             String str = param.asType().toString();
-                            int start = str.indexOf("<");
-                            int end = str.indexOf(">");
-                            str = str.substring(start + 1, end);
-                            newParams.append("\t\t\t\t").append(param.asType().toString()).append(" jsonArray").append(i).append(" = toJsonArray(ctx.Request).toList(").append(str).append(".class);");
-                            params.append("jsonArray").append(i);
+                            if (str.startsWith(List.class.getName())) {
+                                int start = str.indexOf("<");
+                                int end = str.indexOf(">");
+                                str = str.substring(start + 1, end);
+                                newParams.append("\t\t\t\t").append(param.asType().toString()).append(" param").append(i).append(" = toJsonArray(ctx.Request).toList(").append(str).append(".class);");
+                            } else if (!str.startsWith("java.")) {
+                                newParams.append("\t\t\t\tJSONObject jsonObject = getParams(ctx.Request);\n");
+                                newParams.append("\t\t\t\t").append(param.asType().toString()).append(" param").append(i).append(" = jsonObject.to(").append(param.asType().toString()).append(".class);");
+                            } else {
+                                throw new FeatException("the param of " + element.getSimpleName() + "@" + se.getSimpleName() + " is not allowed to be empty.");
+                            }
+                            params.append("param").append(i);
                             structParam = param;
+                            hasBody = true;
                             continue;
-                        }
-
-                        if (paramAnnotation == null && param.asType().toString().startsWith("java")) {
-                            throw new FeatException("the param of " + element.getSimpleName() + "@" + se.getSimpleName() + " is not allowed to be empty.");
                         }
                         if (i == 0) {
                             hasBody = true;
                             newParams.append("\t\t\t\tJSONObject jsonObject = getParams(ctx.Request);\n");
                         }
                         newParams.append("\t\t\t\t");
-                        if (paramAnnotation != null) {
-                            if (param.asType().toString().startsWith(List.class.getName())) {
-                                newParams.append(param.asType().toString()).append(" param").append(i).append(" = jsonObject.getObject(\"").append(paramAnnotation.value()).append("\", java.util" + ".List.class);");
-                            } else {
-                                newParams.append(param.asType().toString()).append(" param").append(i).append(" = jsonObject.getObject(\"").append(paramAnnotation.value()).append("\", ").append(param.asType().toString()).append(".class);");
-                            }
+                        if (param.asType().toString().startsWith(List.class.getName())) {
+                            newParams.append(param.asType().toString()).append(" param").append(i).append(" = jsonObject.getObject(\"").append(paramAnnotation.value()).append("\", java.util" + ".List.class);");
                         } else {
-                            newParams.append(param.asType().toString()).append(" param").append(i).append(" = jsonObject.to(").append(param.asType().toString()).append(".class);");
+                            newParams.append(param.asType().toString()).append(" param").append(i).append(" = jsonObject.getObject(\"").append(paramAnnotation.value()).append("\", ").append(param.asType().toString()).append(".class);");
                         }
-//                                    newParams.append(param.asType().toString()).append(" param").append(i).append("=jsonObject.getObject(").append(param.asType().toString()).append(".class);");
+                        //                                    newParams.append(param.asType().toString()).append(" param").append(i).append("=jsonObject.getObject(").append(param.asType().toString()).append(".class);");
                         params.append("param").append(i);
                         i++;
                     }
