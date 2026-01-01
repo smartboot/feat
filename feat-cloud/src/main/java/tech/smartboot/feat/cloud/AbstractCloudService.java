@@ -185,7 +185,11 @@ public abstract class AbstractCloudService implements CloudService {
                     out.write(bytes, 0, len);
                 }
                 // 将字节数组解析为JSONObject
-                return JSON.parseObject(out.toByteArray());
+                JSONObject jsonObject = JSON.parseObject(out.toByteArray());
+                if (jsonObject == null) {
+                    throw new FeatException("invalid body for application/json request ");
+                }
+                return jsonObject;
             } else {
                 // 创建JSONObject用于存储参数
                 JSONObject jsonObject = new JSONObject();
@@ -195,6 +199,8 @@ public abstract class AbstractCloudService implements CloudService {
                 });
                 return jsonObject;
             }
+        } catch (FeatException e) {
+            throw e;
         } catch (Exception e) {
             // 如果解析过程中出现异常，则抛出FeatException
             throw new FeatException(e);
