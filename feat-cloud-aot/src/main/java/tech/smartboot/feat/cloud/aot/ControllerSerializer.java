@@ -84,6 +84,7 @@ final class ControllerSerializer extends AbstractSerializer {
         printWriter.println("import " + HttpEndpoint.class.getName() + ";");
         printWriter.println("import " + IOException.class.getName() + ";");
         printWriter.println("import " + AsyncBodyReadUpgrade.class.getName() + ";");
+        printWriter.println("import " + FeatUtils.class.getName() + ";");
     }
 
     @Override
@@ -193,17 +194,26 @@ final class ControllerSerializer extends AbstractSerializer {
                     } else {
                         params.append(", ");
                     }
-                    if (param.asType().toString().equals(HttpRequest.class.getName())) {
+                    final String paramType = param.asType().toString();
+                    if (paramType.equals(HttpRequest.class.getName())) {
                         params.append("ctx.Request");
-                    } else if (param.asType().toString().equals(HttpResponse.class.getName())) {
+                    } else if (paramType.equals(HttpResponse.class.getName())) {
                         params.append("ctx.Response");
-                    } else if (param.asType().toString().equals(Session.class.getName())) {
+                    } else if (paramType.equals(Session.class.getName())) {
                         params.append("ctx.session()");
-                    } else if (param.asType().toString().equals(Context.class.getName())) {
+                    } else if (paramType.equals(Context.class.getName())) {
                         params.append("ctx");
                     } else if (param.getAnnotation(PathParam.class) != null) {
                         PathParam pathParam = param.getAnnotation(PathParam.class);
-                        params.append("ctx.pathParam(\"").append(pathParam.value()).append("\")");
+                        if (paramType.equals(String.class.getName())) {
+                            params.append("ctx.pathParam(\"").append(pathParam.value()).append("\")");
+                        } else if (paramType.equals(Integer.class.getName()) || paramType.equals(int.class.getName())) {
+                            params.append("FeatUtils.toInt(ctx.pathParam(\"").append(pathParam.value()).append("\"), 0)");
+                        } else if (paramType.equals(Long.class.getName()) || paramType.equals(long.class.getName())) {
+                            params.append("FeatUtils.toLong(ctx.pathParam(\"").append(pathParam.value()).append("\"), 0)");
+                        } else {
+                            throw new FeatException(paramType + " is unSupport for @PathParam now!");
+                        }
                     } else if (structParam != null) {
                         throw new FeatException("使用方式不当," + structParam + "不能与" + param + "同时使用");
                     } else {
@@ -213,15 +223,14 @@ final class ControllerSerializer extends AbstractSerializer {
                             if (i > 0) {
                                 throw new FeatException("使用方式不当," + param + "不能与@Param同时使用");
                             }
-                            String str = param.asType().toString();
-                            if (str.startsWith(List.class.getName())) {
-                                int start = str.indexOf("<");
-                                int end = str.indexOf(">");
-                                str = str.substring(start + 1, end);
-                                newParams.append("\t\t\t\t").append(param.asType().toString()).append(" param").append(i).append(" = toJsonArray(ctx.Request).toList(").append(str).append(".class);");
-                            } else if (!str.startsWith("java.")) {
+                            if (paramType.startsWith(List.class.getName())) {
+                                int start = paramType.indexOf("<");
+                                int end = paramType.indexOf(">");
+                                String str = paramType.substring(start + 1, end);
+                                newParams.append("\t\t\t\t").append(paramType).append(" param").append(i).append(" = toJsonArray(ctx.Request).toList(").append(str).append(".class);");
+                            } else if (!paramType.startsWith("java.")) {
                                 newParams.append("\t\t\t\tJSONObject jsonObject = getParams(ctx.Request);\n");
-                                newParams.append("\t\t\t\t").append(param.asType().toString()).append(" param").append(i).append(" = jsonObject.to(").append(param.asType().toString()).append(".class);");
+                                newParams.append("\t\t\t\t").append(paramType).append(" param").append(i).append(" = jsonObject.to(").append(paramType).append(".class);");
                             } else {
                                 throw new FeatException("the param of " + element.getSimpleName() + "@" + se.getSimpleName() + " is not allowed to be empty.");
                             }
@@ -235,12 +244,11 @@ final class ControllerSerializer extends AbstractSerializer {
                             newParams.append("\t\t\t\tJSONObject jsonObject = getParams(ctx.Request);\n");
                         }
                         newParams.append("\t\t\t\t");
-                        if (param.asType().toString().startsWith(List.class.getName())) {
-                            newParams.append(param.asType().toString()).append(" param").append(i).append(" = jsonObject.getObject(\"").append(paramAnnotation.value()).append("\", java.util" + ".List.class);");
+                        if (paramType.startsWith(List.class.getName())) {
+                            newParams.append(paramType).append(" param").append(i).append(" = jsonObject.getObject(\"").append(paramAnnotation.value()).append("\", java.util" + ".List.class);");
                         } else {
-                            newParams.append(param.asType().toString()).append(" param").append(i).append(" = jsonObject.getObject(\"").append(paramAnnotation.value()).append("\", ").append(param.asType().toString()).append(".class);");
+                            newParams.append(paramType).append(" param").append(i).append(" = jsonObject.getObject(\"").append(paramAnnotation.value()).append("\", ").append(paramType).append(".class);");
                         }
-                        //                                    newParams.append(param.asType().toString()).append(" param").append(i).append("=jsonObject.getObject(").append(param.asType().toString()).append(".class);");
                         params.append("param").append(i);
                         i++;
                     }
