@@ -147,7 +147,7 @@ public final class JsonSerializer {
         }
 
         if (elements.isEmpty()) {
-            throw new FeatException("");
+            throw new FeatException("unSupport serialize for " + typeMirror + " now!");
         }
 
         printWriter.println(headBlank(i + 1) + "os.write('{');");
