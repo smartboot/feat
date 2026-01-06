@@ -106,7 +106,7 @@ public final class JsonSerializer {
         } else if (typeMirror.toString().startsWith("java.util.Map")) {
             mapSerializer.serialize(typeMirror, obj, i, parent);
             return;
-        } else if (typeMirror.toString().endsWith(".JSONObject")) {
+        } else if (typeMirror.toString().endsWith(".JSONObject") || typeMirror.toString().endsWith(".JSONArray")) {
             printWriter.println(headBlank(i) + "if (" + obj + " != null) {");
             printWriter.println(headBlank(i + 1) + "os.write(" + obj + ".toString().getBytes());");
             printWriter.println(headBlank(i) + "} else {");
