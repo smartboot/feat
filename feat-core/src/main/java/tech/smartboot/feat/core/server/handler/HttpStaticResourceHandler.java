@@ -103,14 +103,21 @@ public class HttpStaticResourceHandler implements HttpHandler {
 
 
         InputStream inputStream = classLoader.getResourceAsStream(classPath + fileName);
+
+        if (inputStream == null && !fileName.endsWith("/") && fileName.indexOf(".", fileName.lastIndexOf("/")) == -1) {
+            inputStream = classLoader.getResourceAsStream(classPath + fileName + ".html");
+            fileName += ".html";
+        }
+
         if (inputStream == null) {
             fileNotFound(request, response);
             completableFuture.complete(null);
             return;
         }
+        InputStream in = inputStream;
         completableFuture.whenComplete((r, t) -> {
             try {
-                inputStream.close();
+                in.close();
             } catch (IOException ignored) {
             }
         });
@@ -127,7 +134,7 @@ public class HttpStaticResourceHandler implements HttpHandler {
             public void accept(FeatOutputStream featOutputStream) {
                 int length;
                 try {
-                    if ((length = inputStream.read(bytes)) >= 0) {
+                    if ((length = in.read(bytes)) >= 0) {
                         outputStream.write(bytes, 0, length);
                         byte[] gzipBytes = byteArrayOutputStream.toByteArray();
                         byteArrayOutputStream.reset();
