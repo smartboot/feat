@@ -38,6 +38,12 @@ public class CloudOptions extends ServerOptions {
     private final Map<String, Object> externalBeans = new HashMap<>();
 
     /**
+     * 静态资源路径，用于指定静态资源文件的存放位置。默认为"classpath:static"。
+     *
+     */
+    private String staticLocations = "classpath:static";
+
+    /**
      * 获取包扫描范围数组
      *
      * @return 包扫描范围数组
@@ -90,4 +96,26 @@ public class CloudOptions extends ServerOptions {
         return this;
     }
 
+    /**
+     * 获取静态资源路径
+     *
+     * @return 静态资源路径
+     */
+    public String getStaticLocations() {
+        return staticLocations;
+    }
+
+    /**
+     * 设置静态资源路径
+     * <p>
+     * 用于指定静态资源文件的存放位置。默认为"classpath:static"。
+     * </p>
+     *
+     * @param staticLocations 静态资源路径
+     * @return 当前CloudOptions实例，支持链式调用
+     */
+    public CloudOptions setStaticLocations(String staticLocations) {
+        this.staticLocations = staticLocations;
+        return this;
+    }
 }

@@ -48,7 +48,7 @@ public final class ApplicationContext {
     /**
      * 路由器实例，用于处理HTTP请求路由
      */
-    private final Router router = new Router(new HttpStaticResourceHandler(opt -> opt.baseDir("classpath:static")));
+    private final Router router;
 
     /**
      * 云应用配置选项
@@ -67,6 +67,7 @@ public final class ApplicationContext {
      */
     ApplicationContext(CloudOptions options) {
         this.options = options;
+        router = new Router(new HttpStaticResourceHandler(opt -> opt.baseDir(options.getStaticLocations())));
     }
 
     /**
