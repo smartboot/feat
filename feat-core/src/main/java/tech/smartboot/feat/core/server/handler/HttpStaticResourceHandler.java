@@ -30,6 +30,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -90,6 +91,34 @@ public class HttpStaticResourceHandler implements HttpHandler {
         }
     }
 
+    private URL getClassPathURL(String fileName) throws IOException {
+        URL url = classLoader.getResource(classPath + fileName);
+
+        if (url != null && "file".equals(url.getProtocol())) {
+            File file = new File(url.getFile());
+            if (file.isFile()) {
+                return file.toURI().toURL();
+            }
+            file = new File(file, "index.html");
+            if (file.isFile()) {
+                return file.toURI().toURL();
+            } else {
+                return null;
+            }
+        }
+        if (url != null) {
+            return url;
+        }
+        if (fileName.equals("/")) {
+            return classLoader.getResource(classPath + fileName + "index.html");
+        }
+
+        if (fileName.indexOf(".", fileName.lastIndexOf("/")) == -1) {
+            return classLoader.getResource(classPath + fileName + ".html");
+        }
+        return null;
+    }
+
     public void handleClassPath(HttpRequest request, CompletableFuture<Void> completableFuture, String fileName) throws Throwable {
         HttpResponse response = request.getResponse();
 
@@ -101,23 +130,18 @@ public class HttpStaticResourceHandler implements HttpHandler {
             return;
         }
 
-
-        InputStream inputStream = classLoader.getResourceAsStream(classPath + fileName);
-
-        if (inputStream == null && !fileName.endsWith("/") && fileName.indexOf(".", fileName.lastIndexOf("/")) == -1) {
-            inputStream = classLoader.getResourceAsStream(classPath + fileName + ".html");
-            fileName += ".html";
-        }
-
-        if (inputStream == null) {
+        URL url = getClassPathURL(fileName);
+        if (url == null) {
             fileNotFound(request, response);
             completableFuture.complete(null);
             return;
         }
-        InputStream in = inputStream;
+        InputStream inputStream = url.openStream();
+        fileName = url.getFile();
+
         completableFuture.whenComplete((r, t) -> {
             try {
-                in.close();
+                inputStream.close();
             } catch (IOException ignored) {
             }
         });
@@ -134,7 +158,7 @@ public class HttpStaticResourceHandler implements HttpHandler {
             public void accept(FeatOutputStream featOutputStream) {
                 int length;
                 try {
-                    if ((length = in.read(bytes)) >= 0) {
+                    if ((length = inputStream.read(bytes)) >= 0) {
                         outputStream.write(bytes, 0, length);
                         byte[] gzipBytes = byteArrayOutputStream.toByteArray();
                         byteArrayOutputStream.reset();
