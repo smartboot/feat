@@ -44,6 +44,7 @@ final class MapperSerializer extends AbstractSerializer {
 
     @Override
     public void serializeLoadBean() {
+        StringBuilder sessionName = new StringBuilder("session");
         printWriter.println("\t\tbean = new " + element.getSimpleName() + "() { ");
         for (Element se : element.getEnclosedElements()) {
             String returnType = ((ExecutableElement) se).getReturnType().toString();
@@ -56,14 +57,18 @@ final class MapperSerializer extends AbstractSerializer {
                     printWriter.print(",");
                 }
                 printWriter.print(param.asType().toString() + " " + param.getSimpleName());
+                //当参数名称与session相同，则调整参数名称
+                if (sessionName.toString().equals(param.getSimpleName().toString())) {
+                    sessionName.append("$");
+                }
             }
             printWriter.println(") {");
-            printWriter.append(JsonSerializer.headBlank(1)).println("try (SqlSession session = factory.openSession(true)) {");
+            printWriter.append(JsonSerializer.headBlank(1)).println("try (SqlSession " + sessionName + " = factory.openSession(true)) {");
             printWriter.print(JsonSerializer.headBlank(2));
             if (!"void".equals(returnType)) {
                 printWriter.print("return ");
             }
-            printWriter.print("session.getMapper(" + element.getSimpleName() + ".class)." + se.getSimpleName() + "(");
+            printWriter.print(sessionName + ".getMapper(" + element.getSimpleName() + ".class)." + se.getSimpleName() + "(");
             first = true;
             for (VariableElement param : ((ExecutableElement) se).getParameters()) {
                 if (first) {
