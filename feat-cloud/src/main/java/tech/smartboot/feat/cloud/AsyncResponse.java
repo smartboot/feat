@@ -48,8 +48,9 @@ public final class AsyncResponse {
      *
      * @param result 响应结果对象
      */
-    public void complete(RestResult result) {
+    public AsyncResponse complete(RestResult result) {
         future.complete(result);
+        return this;
     }
 
     /**
@@ -58,7 +59,8 @@ public final class AsyncResponse {
      * 当异步操作完成后但不需要返回特定结果时，调用此方法完成响应处理。
      * </p>
      */
-    public void complete() {
+    public AsyncResponse complete() {
         complete(null);
+        return this;
     }
 }
