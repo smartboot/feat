@@ -109,18 +109,7 @@ public class MybatisSerializer extends ExtensionSerializer {
             throw new FeatException("unSupport datasource: " + dataSource);
         }
 
-
-        printWriter.append(headBlank(0)).println("Environment environment = new Environment(\"" + environment.getId() + "\",");
-        // 处理事务管理器
-        if (environment.getTransactionFactory() != null) {
-            printWriter.append(headBlank(0)).println("\tnew " + environment.getTransactionFactory().getClass().getName() + "(),");
-        } else {
-            printWriter.append(headBlank(0)).println("\tnew JdbcTransactionFactory(),");
-        }
-
-        printWriter.append(headBlank(0)).println("\t" + dataSourceCode + ");");
-
-        printWriter.append(headBlank(0)).println("Configuration configuration = new Configuration(environment);");
+        printWriter.append(headBlank(0)).println("Configuration configuration = new Configuration();");
 
         // 设置解析出的配置选项
         printWriter.append(headBlank(0)).println("configuration.setLazyLoadingEnabled(" + configuration.isLazyLoadingEnabled() + ");");
@@ -147,6 +136,16 @@ public class MybatisSerializer extends ExtensionSerializer {
 
         // 设置代理工厂
         printWriter.append(headBlank(0)).println("configuration.setProxyFactory(new " + configuration.getProxyFactory().getClass().getName() + "());");
+
+        // 处理环境
+        printWriter.append(headBlank(0)).println("Environment environment = new Environment(\"" + environment.getId() + "\",");
+        if (environment.getTransactionFactory() != null) {
+            printWriter.append(headBlank(0)).println("\tnew " + environment.getTransactionFactory().getClass().getName() + "(),");
+        } else {
+            printWriter.append(headBlank(0)).println("\tnew JdbcTransactionFactory(),");
+        }
+        printWriter.append(headBlank(0)).println("\t" + dataSourceCode + ");");
+        printWriter.append(headBlank(0)).println("configuration.setEnvironment(environment);");
 
         // 添加所有解析到的映射器
         Collection<Class<?>> mapperClasses = configuration.getMapperRegistry().getMappers();
