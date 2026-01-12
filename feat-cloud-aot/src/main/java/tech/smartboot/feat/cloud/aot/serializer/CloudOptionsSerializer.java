@@ -8,7 +8,7 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.cloud.aot;
+package tech.smartboot.feat.cloud.aot.serializer;
 
 import com.alibaba.fastjson2.JSONPath;
 import org.smartboot.socket.extension.plugins.SslPlugin;
@@ -17,6 +17,9 @@ import org.yaml.snakeyaml.Yaml;
 import tech.smartboot.feat.cloud.AbstractCloudService;
 import tech.smartboot.feat.cloud.ApplicationContext;
 import tech.smartboot.feat.cloud.CloudService;
+import tech.smartboot.feat.cloud.aot.FeatLicenseRepository;
+import tech.smartboot.feat.cloud.aot.License;
+import tech.smartboot.feat.cloud.aot.Serializer;
 import tech.smartboot.feat.cloud.session.ClusterSessionManager;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.exception.FeatException;
@@ -66,7 +69,7 @@ import java.util.Set;
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0 5/27/25
  */
-final class CloudOptionsSerializer implements Serializer {
+public final class CloudOptionsSerializer implements Serializer {
     private static final Logger logger = LoggerFactory.getLogger(CloudOptionsSerializer.class);
     private final String PACKAGE;
     private final String CLASS_NAME;

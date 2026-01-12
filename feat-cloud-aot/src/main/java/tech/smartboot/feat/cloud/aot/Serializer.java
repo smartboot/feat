@@ -17,7 +17,7 @@ import java.io.PrintWriter;
  * @author 三刀
  * @version v1.0 7/23/25
  */
-interface Serializer {
+public interface Serializer {
     default PrintWriter getPrintWriter() {
         throw new UnsupportedOperationException();
     }

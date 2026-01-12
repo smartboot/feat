@@ -8,7 +8,7 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.cloud.aot;
+package tech.smartboot.feat.cloud.aot.serializer;
 
 import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.JSONPath;
@@ -20,6 +20,7 @@ import tech.smartboot.feat.cloud.annotation.Bean;
 import tech.smartboot.feat.cloud.annotation.PostConstruct;
 import tech.smartboot.feat.cloud.annotation.PreDestroy;
 import tech.smartboot.feat.cloud.annotation.Value;
+import tech.smartboot.feat.cloud.aot.Serializer;
 import tech.smartboot.feat.cloud.aot.value.FeatValueSerializer;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.exception.FeatException;
@@ -44,7 +45,7 @@ import java.util.List;
  * @author 三刀
  * @version v1.0 7/23/25
  */
-abstract class AbstractSerializer implements Serializer {
+public abstract class AbstractSerializer implements Serializer {
     protected final String config;
     protected final PrintWriter printWriter;
     protected final Element element;

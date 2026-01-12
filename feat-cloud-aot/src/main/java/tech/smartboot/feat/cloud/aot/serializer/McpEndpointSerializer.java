@@ -8,7 +8,7 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.cloud.aot;
+package tech.smartboot.feat.cloud.aot.serializer;
 
 import tech.smartboot.feat.ai.mcp.enums.PromptType;
 import tech.smartboot.feat.ai.mcp.enums.RoleEnum;
@@ -25,6 +25,7 @@ import tech.smartboot.feat.cloud.annotation.mcp.Param;
 import tech.smartboot.feat.cloud.annotation.mcp.Prompt;
 import tech.smartboot.feat.cloud.annotation.mcp.Resource;
 import tech.smartboot.feat.cloud.annotation.mcp.Tool;
+import tech.smartboot.feat.cloud.aot.Serializer;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.exception.FeatException;
 
@@ -44,7 +45,7 @@ import java.util.stream.Collectors;
  * @author 三刀
  * @version v1.0 7/20/25
  */
-final class McpEndpointSerializer implements Serializer {
+public final class McpEndpointSerializer implements Serializer {
     private final ProcessingEnvironment processingEnv;
     private final List<Element> toolMethods;
     private final List<Element> promptMethods;

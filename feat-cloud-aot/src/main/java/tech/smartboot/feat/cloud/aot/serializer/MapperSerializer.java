@@ -8,7 +8,7 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.cloud.aot;
+package tech.smartboot.feat.cloud.aot.serializer;
 
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -24,7 +24,7 @@ import java.io.IOException;
  * @author 三刀
  * @version v1.0 7/23/25
  */
-final class MapperSerializer extends AbstractSerializer {
+public final class MapperSerializer extends AbstractSerializer {
     public MapperSerializer(ProcessingEnvironment processingEnv, String config, Element element) throws IOException {
         super(processingEnv, config, element);
     }

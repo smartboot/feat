@@ -8,12 +8,13 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.cloud.aot;
+package tech.smartboot.feat.cloud.aot.serializer;
 
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.ai.mcp.server.McpServer;
 import tech.smartboot.feat.cloud.AbstractCloudService;
 import tech.smartboot.feat.cloud.ApplicationContext;
+import tech.smartboot.feat.cloud.aot.Serializer;
 import tech.smartboot.feat.router.Router;
 
 import javax.annotation.processing.ProcessingEnvironment;

@@ -8,7 +8,7 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.cloud.aot;
+package tech.smartboot.feat.cloud.aot.serializer;
 
 import com.alibaba.fastjson2.JSONPath;
 import tech.smartboot.feat.cloud.AsyncBodyReadUpgrade;
@@ -49,7 +49,7 @@ import java.util.concurrent.CompletableFuture;
  * @author 三刀
  * @version v1.0 7/23/25
  */
-final class ControllerSerializer extends AbstractSerializer {
+public final class ControllerSerializer extends AbstractSerializer {
     private static final int RETURN_TYPE_VOID = 0;
     private static final int RETURN_TYPE_STRING = 1;
     private static final int RETURN_TYPE_OBJECT = 2;
