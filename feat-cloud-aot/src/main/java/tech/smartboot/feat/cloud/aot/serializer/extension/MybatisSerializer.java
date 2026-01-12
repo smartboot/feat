@@ -131,6 +131,12 @@ public class MybatisSerializer extends ExtensionSerializer {
         printWriter.append(headBlank(0)).println("configuration.setAutoMappingBehavior(AutoMappingBehavior.valueOf(\"" + configuration.getAutoMappingBehavior().name() + "\"));");
         printWriter.append(headBlank(0)).println("configuration.setDefaultExecutorType(ExecutorType.valueOf(\"" + configuration.getDefaultExecutorType().name() + "\"));");
         printWriter.append(headBlank(0)).println("configuration.setJdbcTypeForNull(org.apache.ibatis.type.JdbcType.valueOf(\"" + configuration.getJdbcTypeForNull().name() + "\"));");
+        if (configuration.getLogImpl() != null) {
+            printWriter.append(headBlank(0)).println("configuration.setLogImpl(" + configuration.getLogImpl().getName() + ".class);");
+        }
+        configuration.getInterceptors().forEach(interceptor -> {
+            printWriter.append(headBlank(0)).println("configuration.addInterceptor(new " + interceptor.getClass().getName() + "());");
+        });
         // 设置默认脚本语言
 //            LanguageDriver defaultLanguageDriver = parsedConfiguration.getDefaultScriptingLanguageInstance();
 //            if (defaultLanguageDriver != null) {
