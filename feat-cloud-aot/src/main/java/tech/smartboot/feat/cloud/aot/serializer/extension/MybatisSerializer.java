@@ -29,6 +29,7 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.tools.FileObject;
 import javax.tools.StandardLocation;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.util.Collection;
@@ -40,9 +41,26 @@ import static tech.smartboot.feat.cloud.aot.controller.JsonSerializer.headBlank;
  * @version v1.0 1/12/26
  */
 public class MybatisSerializer extends ExtensionSerializer {
+    private final Configuration configuration;
+    private String path;
 
-    public MybatisSerializer(ProcessingEnvironment processingEnv, String config, PrintWriter printWriter) {
+    public MybatisSerializer(ProcessingEnvironment processingEnv, String config, PrintWriter printWriter) throws IOException {
         super(processingEnv, config, printWriter);
+        Object obj = JSONPath.eval(config, "$.feat.mybatis.path");
+        if (obj == null) {
+            throw new FeatException("feat.mybatis.path is null");
+        }
+        path = obj.toString();
+        // 在编译时通过filer获取资源文件并解析XML
+        FileObject fileObject = processingEnv.getFiler().getResource(StandardLocation.CLASS_OUTPUT, "", path);
+        File file = new File(fileObject.toUri());
+        if (!file.isFile()) {
+            throw new FeatException("feat.mybatis.path:" + path + " is not exist");
+        }
+        InputStream inputStream = fileObject.openInputStream();
+        // 在编译期间解析XML配置
+        XMLConfigBuilder xmlConfigBuilder = new XMLConfigBuilder(inputStream, null, null);
+        configuration = xmlConfigBuilder.parse();
     }
 
     @Override
@@ -62,24 +80,7 @@ public class MybatisSerializer extends ExtensionSerializer {
 
     @Override
     public void serializeLoadBean() {
-        Object obj = JSONPath.eval(config, "$.feat.mybatis.path");
-        if (obj == null) {
-            throw new FeatException("feat.mybatis.path is null");
-        }
-        String path = obj.toString();
-
         try {
-            // 在编译时通过filer获取资源文件并解析XML
-            FileObject fileObject = processingEnv.getFiler().getResource(StandardLocation.CLASS_OUTPUT, "", path);
-            File file = new File(fileObject.toUri());
-            if (!file.isFile()) {
-                throw new FeatException("feat.mybatis.path:" + path + " is not exist");
-            }
-            InputStream inputStream = fileObject.openInputStream();
-
-            // 在编译期间解析XML配置
-            XMLConfigBuilder xmlConfigBuilder = new XMLConfigBuilder(inputStream, null, null);
-            Configuration configuration = xmlConfigBuilder.getConfiguration();
             // 生成静态代码，直接将解析到的配置值写入
             printWriter.append(headBlank(0)).println("// Static configuration generated at compile time from MyBatis XML: " + path);
 
