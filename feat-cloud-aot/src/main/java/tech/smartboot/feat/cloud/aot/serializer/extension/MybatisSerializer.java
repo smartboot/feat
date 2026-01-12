@@ -14,11 +14,14 @@ import com.alibaba.fastjson2.JSONPath;
 import org.apache.ibatis.builder.xml.XMLConfigBuilder;
 import org.apache.ibatis.datasource.pooled.PooledDataSource;
 import org.apache.ibatis.executor.loader.javassist.JavassistProxyFactory;
+import org.apache.ibatis.io.Resources;
+import org.apache.ibatis.jdbc.ScriptRunner;
 import org.apache.ibatis.mapping.Environment;
 import org.apache.ibatis.scripting.xmltags.XMLLanguageDriver;
 import org.apache.ibatis.session.AutoMappingBehavior;
 import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.session.ExecutorType;
+import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.apache.ibatis.transaction.TransactionFactory;
 import org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory;
@@ -37,12 +40,19 @@ import java.util.Collection;
 import static tech.smartboot.feat.cloud.aot.controller.JsonSerializer.headBlank;
 
 /**
+ * <pre>
+ *   feat
+ *     mybatis:
+ *       path: resources/mybatis_config.xml
+ *       initial-sql: init_db.sql
+ * </pre>
+ *
  * @author 三刀
  * @version v1.0 1/12/26
  */
 public class MybatisSerializer extends ExtensionSerializer {
     private final Configuration configuration;
-    private String path;
+    private final String xmlPath;
 
     public MybatisSerializer(ProcessingEnvironment processingEnv, String config, PrintWriter printWriter) throws IOException {
         super(processingEnv, config, printWriter);
@@ -50,12 +60,12 @@ public class MybatisSerializer extends ExtensionSerializer {
         if (obj == null) {
             throw new FeatException("feat.mybatis.path is null");
         }
-        path = obj.toString();
+        xmlPath = obj.toString();
         // 在编译时通过filer获取资源文件并解析XML
-        FileObject fileObject = processingEnv.getFiler().getResource(StandardLocation.CLASS_OUTPUT, "", path);
+        FileObject fileObject = processingEnv.getFiler().getResource(StandardLocation.CLASS_OUTPUT, "", xmlPath);
         File file = new File(fileObject.toUri());
         if (!file.isFile()) {
-            throw new FeatException("feat.mybatis.path:" + path + " is not exist");
+            throw new FeatException("feat.mybatis.path:" + xmlPath + " is not exist");
         }
         InputStream inputStream = fileObject.openInputStream();
         // 在编译期间解析XML配置
@@ -76,13 +86,16 @@ public class MybatisSerializer extends ExtensionSerializer {
         printWriter.println("import " + SqlSessionFactoryBuilder.class.getName() + ";");
         printWriter.println("import " + AutoMappingBehavior.class.getName() + ";");
         printWriter.println("import " + ExecutorType.class.getName() + ";");
+        printWriter.println("import " + SqlSessionFactory.class.getName() + ";");
+        printWriter.println("import " + ScriptRunner.class.getName() + ";");
+        printWriter.println("import " + Resources.class.getName() + ";");
     }
 
     @Override
     public void serializeLoadBean() {
         try {
             // 生成静态代码，直接将解析到的配置值写入
-            printWriter.append(headBlank(0)).println("// Static configuration generated at compile time from MyBatis XML: " + path);
+            printWriter.append(headBlank(0)).println("// Static configuration generated at compile time from MyBatis XML: " + xmlPath);
 
             printWriter.append(headBlank(0)).println("Environment environment = new Environment(\"" + configuration.getEnvironment().getId() + "\",");
 
@@ -131,8 +144,15 @@ public class MybatisSerializer extends ExtensionSerializer {
             for (Class<?> mapperClass : mapperClasses) {
                 printWriter.append(headBlank(0)).println("configuration.addMapper(" + mapperClass.getName() + ".class);");
             }
+            printWriter.append(headBlank(0)).println("SqlSessionFactory sessionFactory = new SqlSessionFactoryBuilder().build(configuration);");
 
-            printWriter.append(headBlank(0)).println("applicationContext.addBean(\"sessionFactory\", new SqlSessionFactoryBuilder().build(configuration));");
+            Object obj = JSONPath.eval(config, "$.feat.mybatis['initial-sql']");
+            if (obj != null) {
+                printWriter.append(headBlank(0)).println("ScriptRunner runner = new ScriptRunner(sessionFactory.openSession().getConnection());");
+                printWriter.append(headBlank(0)).println("runner.setLogWriter(null);");
+                printWriter.append(headBlank(0)).println("runner.runScript(Resources.getResourceAsReader(\"" + obj + "\"));");
+            }
+            printWriter.append(headBlank(0)).println("applicationContext.addBean(\"sessionFactory\", sessionFactory);");
         } catch (Exception e) {
             throw new FeatException(e);
         }
