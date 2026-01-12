@@ -29,6 +29,7 @@ import org.apache.ibatis.type.JdbcType;
 import tech.smartboot.feat.core.common.exception.FeatException;
 
 import javax.annotation.processing.ProcessingEnvironment;
+import javax.sql.DataSource;
 import javax.tools.FileObject;
 import javax.tools.StandardLocation;
 import java.io.File;
@@ -93,42 +94,45 @@ public class MybatisSerializer extends ExtensionSerializer {
 
     @Override
     public void serializeLoadBean() {
-        try {
-            // 生成静态代码，直接将解析到的配置值写入
-            printWriter.append(headBlank(0)).println("// Static configuration generated at compile time from MyBatis XML: " + xmlPath);
+        Environment environment = configuration.getEnvironment();
 
-            printWriter.append(headBlank(0)).println("Environment environment = new Environment(\"" + configuration.getEnvironment().getId() + "\",");
+        // 生成静态代码，直接将解析到的配置值写入
+        printWriter.append(headBlank(0)).println("// Static configuration generated at compile time from MyBatis XML: " + xmlPath);
+        // 处理数据源 - 从已解析的配置中获取数据源配置参数并重新构建
+        DataSource dataSource = environment.getDataSource();
+        String dataSourceCode = "";
+        // 尝试获取PooledDataSource的配置参数
+        if (dataSource instanceof PooledDataSource) {
+            PooledDataSource pooledDataSource = (PooledDataSource) dataSource;
+            dataSourceCode = "new PooledDataSource(" + (pooledDataSource.getDriver() == null ? "null" : "\"" + pooledDataSource.getDriver() + "\"") + ", " + (pooledDataSource.getUrl() == null ? "null" : "\"" + pooledDataSource.getUrl() + "\"") + ", " + (pooledDataSource.getUsername() == null ? "null" : "\"" + pooledDataSource.getUsername() + "\"") + ", " + (pooledDataSource.getPassword() == null ? "null" : "\"" + pooledDataSource.getPassword() + "\"") + ")";
+        } else {
+            throw new FeatException("unSupport datasource: " + dataSource);
+        }
 
-            // 处理事务管理器
-            if (configuration.getEnvironment() != null) {
-                printWriter.append(headBlank(0)).println("\tnew " + configuration.getEnvironment().getTransactionFactory().getClass().getName() + "(),");
 
-                // 处理数据源
-                Object dataSource = configuration.getEnvironment().getDataSource();
-                if (dataSource != null) {
-                    String dataSourceClassName = dataSource.getClass().getName();
-                    printWriter.append(headBlank(0)).println("\tnew " + dataSourceClassName + "());");
-                } else {
-                    printWriter.append(headBlank(0)).println("\tnew PooledDataSource());");
-                }
-            } else {
-                printWriter.append(headBlank(0)).println("\tnew JdbcTransactionFactory(),");
-                printWriter.append(headBlank(0)).println("\tnew PooledDataSource());");
-            }
+        printWriter.append(headBlank(0)).println("Environment environment = new Environment(\"" + environment.getId() + "\",");
+        // 处理事务管理器
+        if (environment.getTransactionFactory() != null) {
+            printWriter.append(headBlank(0)).println("\tnew " + environment.getTransactionFactory().getClass().getName() + "(),");
+        } else {
+            printWriter.append(headBlank(0)).println("\tnew JdbcTransactionFactory(),");
+        }
 
-            printWriter.append(headBlank(0)).println("Configuration configuration = new Configuration(environment);");
+        printWriter.append(headBlank(0)).println("\t" + dataSourceCode + ");");
 
-            // 设置解析出的配置选项
-            printWriter.append(headBlank(0)).println("configuration.setLazyLoadingEnabled(" + configuration.isLazyLoadingEnabled() + ");");
-            printWriter.append(headBlank(0)).println("configuration.setAggressiveLazyLoading(" + configuration.isAggressiveLazyLoading() + ");");
-            printWriter.append(headBlank(0)).println("configuration.setMultipleResultSetsEnabled(" + configuration.isMultipleResultSetsEnabled() + ");");
-            printWriter.append(headBlank(0)).println("configuration.setUseColumnLabel(" + configuration.isUseColumnLabel() + ");");
-            printWriter.append(headBlank(0)).println("configuration.setUseGeneratedKeys(" + configuration.isUseGeneratedKeys() + ");");
-            printWriter.append(headBlank(0)).println("configuration.setAutoMappingBehavior(AutoMappingBehavior.valueOf(\"" + configuration.getAutoMappingBehavior().name() + "\"));");
-            printWriter.append(headBlank(0)).println("configuration.setDefaultExecutorType(ExecutorType.valueOf(\"" + configuration.getDefaultExecutorType().name() + "\"));");
-            printWriter.append(headBlank(0)).println("configuration.setJdbcTypeForNull(org.apache.ibatis.type.JdbcType.valueOf(\"" + configuration.getJdbcTypeForNull().name() + "\"));");
+        printWriter.append(headBlank(0)).println("Configuration configuration = new Configuration(environment);");
 
-            // 设置默认脚本语言
+        // 设置解析出的配置选项
+        printWriter.append(headBlank(0)).println("configuration.setLazyLoadingEnabled(" + configuration.isLazyLoadingEnabled() + ");");
+        printWriter.append(headBlank(0)).println("configuration.setAggressiveLazyLoading(" + configuration.isAggressiveLazyLoading() + ");");
+        printWriter.append(headBlank(0)).println("configuration.setMultipleResultSetsEnabled(" + configuration.isMultipleResultSetsEnabled() + ");");
+        printWriter.append(headBlank(0)).println("configuration.setUseColumnLabel(" + configuration.isUseColumnLabel() + ");");
+        printWriter.append(headBlank(0)).println("configuration.setUseGeneratedKeys(" + configuration.isUseGeneratedKeys() + ");");
+        printWriter.append(headBlank(0)).println("configuration.setAutoMappingBehavior(AutoMappingBehavior.valueOf(\"" + configuration.getAutoMappingBehavior().name() + "\"));");
+        printWriter.append(headBlank(0)).println("configuration.setDefaultExecutorType(ExecutorType.valueOf(\"" + configuration.getDefaultExecutorType().name() + "\"));");
+        printWriter.append(headBlank(0)).println("configuration.setJdbcTypeForNull(org.apache.ibatis.type.JdbcType.valueOf(\"" + configuration.getJdbcTypeForNull().name() + "\"));");
+
+        // 设置默认脚本语言
 //            LanguageDriver defaultLanguageDriver = parsedConfiguration.getDefaultScriptingLanguageInstance();
 //            if (defaultLanguageDriver != null) {
 //                printWriter.println("configuration.setDefaultScriptingLanguage(new " + defaultLanguageDriver.getClass().getName() + "());");
@@ -136,25 +140,23 @@ public class MybatisSerializer extends ExtensionSerializer {
 //                printWriter.println("configuration.setDefaultScriptingLanguage(new " + XMLLanguageDriver.class.getName() + "());");
 //            }
 
-            // 设置代理工厂
-            printWriter.append(headBlank(0)).println("configuration.setProxyFactory(new " + configuration.getProxyFactory().getClass().getName() + "());");
+        // 设置代理工厂
+        printWriter.append(headBlank(0)).println("configuration.setProxyFactory(new " + configuration.getProxyFactory().getClass().getName() + "());");
 
-            // 添加所有解析到的映射器
-            Collection<Class<?>> mapperClasses = configuration.getMapperRegistry().getMappers();
-            for (Class<?> mapperClass : mapperClasses) {
-                printWriter.append(headBlank(0)).println("configuration.addMapper(" + mapperClass.getName() + ".class);");
-            }
-            printWriter.append(headBlank(0)).println("SqlSessionFactory sessionFactory = new SqlSessionFactoryBuilder().build(configuration);");
-
-            Object obj = JSONPath.eval(config, "$.feat.mybatis['initial-sql']");
-            if (obj != null) {
-                printWriter.append(headBlank(0)).println("ScriptRunner runner = new ScriptRunner(sessionFactory.openSession().getConnection());");
-                printWriter.append(headBlank(0)).println("runner.setLogWriter(null);");
-                printWriter.append(headBlank(0)).println("runner.runScript(Resources.getResourceAsReader(\"" + obj + "\"));");
-            }
-            printWriter.append(headBlank(0)).println("applicationContext.addBean(\"sessionFactory\", sessionFactory);");
-        } catch (Exception e) {
-            throw new FeatException(e);
+        // 添加所有解析到的映射器
+        Collection<Class<?>> mapperClasses = configuration.getMapperRegistry().getMappers();
+        for (Class<?> mapperClass : mapperClasses) {
+            printWriter.append(headBlank(0)).println("configuration.addMapper(" + mapperClass.getName() + ".class);");
         }
+        printWriter.append(headBlank(0)).println("SqlSessionFactory sessionFactory = new SqlSessionFactoryBuilder().build(configuration);");
+
+        Object obj = JSONPath.eval(config, "$.feat.mybatis['initial-sql']");
+        if (obj != null) {
+            printWriter.append(headBlank(0)).println("ScriptRunner runner = new ScriptRunner(sessionFactory.openSession().getConnection());");
+            printWriter.append(headBlank(0)).println("runner.setLogWriter(null);");
+            printWriter.append(headBlank(0)).println("runner.runScript(Resources.getResourceAsReader(\"" + obj + "\"));");
+        }
+        printWriter.append(headBlank(0)).println("applicationContext.addBean(\"sessionFactory\", sessionFactory);");
+
     }
 }
