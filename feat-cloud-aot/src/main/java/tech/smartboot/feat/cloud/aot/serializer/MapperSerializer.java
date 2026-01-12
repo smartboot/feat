@@ -10,15 +10,17 @@
 
 package tech.smartboot.feat.cloud.aot.serializer;
 
+import com.alibaba.fastjson2.JSONPath;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
-import tech.smartboot.feat.cloud.aot.controller.JsonSerializer;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.VariableElement;
 import java.io.IOException;
+
+import static tech.smartboot.feat.cloud.aot.controller.JsonSerializer.headBlank;
 
 /**
  * @author 三刀
@@ -63,8 +65,8 @@ public final class MapperSerializer extends AbstractSerializer {
                 }
             }
             printWriter.println(") {");
-            printWriter.append(JsonSerializer.headBlank(1)).println("try (SqlSession " + sessionName + " = factory.openSession(true)) {");
-            printWriter.print(JsonSerializer.headBlank(2));
+            printWriter.append(headBlank(1)).println("try (SqlSession " + sessionName + " = factory.openSession(true)) {");
+            printWriter.print(headBlank(2));
             if (!"void".equals(returnType)) {
                 printWriter.print("return ");
             }
@@ -79,7 +81,7 @@ public final class MapperSerializer extends AbstractSerializer {
                 printWriter.print(param.getSimpleName().toString());
             }
             printWriter.println(");");
-            printWriter.append(JsonSerializer.headBlank(1)).println("}");
+            printWriter.append(headBlank(1)).println("}");
             printWriter.println("\t\t\t}");
             printWriter.println();
         }
@@ -92,5 +94,9 @@ public final class MapperSerializer extends AbstractSerializer {
     public void serializeAutowired() {
         super.serializeAutowired();
         printWriter.println("\t\tfactory = applicationContext.getBean(\"sessionFactory\");");
+        //addMapper
+        if (JSONPath.eval(config, "$.feat.mybatis.path") != null) {
+            printWriter.println("\t\tfactory.getConfiguration().addMapper(" + element.getSimpleName() + ".class);");
+        }
     }
 }
