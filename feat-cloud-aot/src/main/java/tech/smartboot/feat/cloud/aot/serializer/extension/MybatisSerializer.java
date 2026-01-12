@@ -117,9 +117,13 @@ public class MybatisSerializer extends ExtensionSerializer {
         printWriter.append(headBlank(0)).println("configuration.setMultipleResultSetsEnabled(" + configuration.isMultipleResultSetsEnabled() + ");");
         printWriter.append(headBlank(0)).println("configuration.setUseColumnLabel(" + configuration.isUseColumnLabel() + ");");
         printWriter.append(headBlank(0)).println("configuration.setUseGeneratedKeys(" + configuration.isUseGeneratedKeys() + ");");
-        printWriter.append(headBlank(0)).println("configuration.setAutoMappingBehavior(AutoMappingBehavior.valueOf(\"" + configuration.getAutoMappingBehavior().name() + "\"));");
         printWriter.append(headBlank(0)).println("configuration.setDefaultExecutorType(ExecutorType.valueOf(\"" + configuration.getDefaultExecutorType().name() + "\"));");
         printWriter.append(headBlank(0)).println("configuration.setJdbcTypeForNull(org.apache.ibatis.type.JdbcType.valueOf(\"" + configuration.getJdbcTypeForNull().name() + "\"));");
+
+        printWriter.append(headBlank(0)).println("configuration.setAutoMappingBehavior(AutoMappingBehavior." + configuration.getAutoMappingBehavior() + ");");
+        if (configuration.isMapUnderscoreToCamelCase()) {
+            printWriter.append(headBlank(0)).println("configuration.setMapUnderscoreToCamelCase(true);");
+        }
         if (configuration.getLogImpl() != null) {
             printWriter.append(headBlank(0)).println("configuration.setLogImpl(" + configuration.getLogImpl().getName() + ".class);");
         }
