@@ -20,6 +20,8 @@ import tech.smartboot.feat.cloud.CloudService;
 import tech.smartboot.feat.cloud.aot.FeatLicenseRepository;
 import tech.smartboot.feat.cloud.aot.License;
 import tech.smartboot.feat.cloud.aot.Serializer;
+import tech.smartboot.feat.cloud.aot.serializer.extension.MybatisSerializer;
+import tech.smartboot.feat.cloud.aot.serializer.extension.RedisunSerializer;
 import tech.smartboot.feat.cloud.session.ClusterSessionManager;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.exception.FeatException;
@@ -29,7 +31,6 @@ import tech.smartboot.feat.core.server.ServerOptions;
 import tech.smartboot.feat.router.Router;
 import tech.smartboot.feat.router.session.LocalSessionManager;
 import tech.smartboot.feat.router.session.SessionManager;
-import tech.smartboot.redisun.Redisun;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.tools.FileObject;
@@ -80,11 +81,12 @@ public final class CloudOptionsSerializer implements Serializer {
     private final List<String> services;
     private License license;
     private String modelName;
-    /**
-     * redisun 是否启用
-     */
-    private final boolean redisunEnable;
     private final boolean redisSession;
+
+    /**
+     * 扩展点
+     */
+    private final List<Serializer> extensions = new ArrayList<>();
 
     public CloudOptionsSerializer(ProcessingEnvironment processingEnv, String config, List<String> services) throws Throwable {
         this.config = config;
@@ -127,8 +129,15 @@ public final class CloudOptionsSerializer implements Serializer {
         //license验签
         loadFeatYaml();
 
-        redisunEnable = JSONPath.eval(config, "$.feat.redis") != null;
         redisSession = "redis".equals(JSONPath.eval(config, "$.server.session['store-type']"));
+
+        if (JSONPath.eval(config, "$.feat.redis") != null) {
+            extensions.add(new RedisunSerializer(processingEnv, config, printWriter));
+        }
+
+        if (JSONPath.eval(config, "$.feat.mybatis") != null) {
+            extensions.add(new MybatisSerializer(processingEnv, config, printWriter));
+        }
     }
 
     private static void deleteFeatYamlFile(ProcessingEnvironment processingEnv) throws IOException {
@@ -366,9 +375,8 @@ public final class CloudOptionsSerializer implements Serializer {
             printWriter.println("import " + SslPlugin.class.getName() + ";");
             printWriter.println("import " + AutoServerSSLContextFactory.class.getName() + ";");
         }
-        if (redisunEnable) {
-            printWriter.println("import " + Redisun.class.getName() + ";");
-        }
+
+        extensions.forEach(Serializer::serializeImport);
     }
 
     @Override
@@ -429,22 +437,6 @@ public final class CloudOptionsSerializer implements Serializer {
             }
         }
 
-        //集成 redisun
-        if (redisunEnable) {
-            printWriter.println("\t\tapplicationContext.addBean(\"redisun\", Redisun.create(opt -> {");
-            printWriter.println("\t\t\topt.setAddress(\"" + JSONPath.eval(config, "$.feat.redis.address") + "\");");
-            Object password = JSONPath.eval(config, "$.feat.redis.password");
-            if (password != null) {
-                printWriter.println("\t\t\topt.setPassword(\"" + password + "\");");
-            }
-            Object db = JSONPath.eval(config, "$.feat.redis.database");
-            if (db != null) {
-                printWriter.println("\t\t\topt.setDatabase(" + db + ");");
-            }
-            printWriter.println("\t\t}));");
-        }
-
-
         //特殊的配置
         if (isAutoSSL()) {
             printWriter.println("\t\tapplicationContext.getOptions().addPlugin(new SslPlugin<>(new AutoServerSSLContextFactory()));");
@@ -458,6 +450,12 @@ public final class CloudOptionsSerializer implements Serializer {
             printWriter.println("\t\t\tservices.add(service);");
             printWriter.println("\t\t}");
         }
+
+        extensions.forEach(serializer -> {
+            printWriter.println("\t\t{");
+            serializer.serializeLoadBean();
+            printWriter.println("\t\t}");
+        });
     }
 
     private boolean isAutoSSL() {
