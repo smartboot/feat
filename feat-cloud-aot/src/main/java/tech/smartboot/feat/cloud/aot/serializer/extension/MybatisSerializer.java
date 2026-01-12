@@ -79,17 +79,18 @@ public class MybatisSerializer extends ExtensionSerializer {
 
             // 在编译期间解析XML配置
             XMLConfigBuilder xmlConfigBuilder = new XMLConfigBuilder(inputStream, null, null);
-            Configuration parsedConfiguration = xmlConfigBuilder.getConfiguration();
+            Configuration configuration = xmlConfigBuilder.getConfiguration();
             // 生成静态代码，直接将解析到的配置值写入
             printWriter.append(headBlank(0)).println("// Static configuration generated at compile time from MyBatis XML: " + path);
-            printWriter.append(headBlank(0)).println("Environment environment = new Environment(\"development\",");
+
+            printWriter.append(headBlank(0)).println("Environment environment = new Environment(\"" + configuration.getEnvironment().getId() + "\",");
 
             // 处理事务管理器
-            if (parsedConfiguration.getEnvironment() != null) {
-                printWriter.append(headBlank(0)).println("\tnew " + parsedConfiguration.getEnvironment().getTransactionFactory().getClass().getName() + "(),");
+            if (configuration.getEnvironment() != null) {
+                printWriter.append(headBlank(0)).println("\tnew " + configuration.getEnvironment().getTransactionFactory().getClass().getName() + "(),");
 
                 // 处理数据源
-                Object dataSource = parsedConfiguration.getEnvironment().getDataSource();
+                Object dataSource = configuration.getEnvironment().getDataSource();
                 if (dataSource != null) {
                     String dataSourceClassName = dataSource.getClass().getName();
                     printWriter.append(headBlank(0)).println("\tnew " + dataSourceClassName + "());");
@@ -104,14 +105,14 @@ public class MybatisSerializer extends ExtensionSerializer {
             printWriter.append(headBlank(0)).println("Configuration configuration = new Configuration(environment);");
 
             // 设置解析出的配置选项
-            printWriter.append(headBlank(0)).println("configuration.setLazyLoadingEnabled(" + parsedConfiguration.isLazyLoadingEnabled() + ");");
-            printWriter.append(headBlank(0)).println("configuration.setAggressiveLazyLoading(" + parsedConfiguration.isAggressiveLazyLoading() + ");");
-            printWriter.append(headBlank(0)).println("configuration.setMultipleResultSetsEnabled(" + parsedConfiguration.isMultipleResultSetsEnabled() + ");");
-            printWriter.append(headBlank(0)).println("configuration.setUseColumnLabel(" + parsedConfiguration.isUseColumnLabel() + ");");
-            printWriter.append(headBlank(0)).println("configuration.setUseGeneratedKeys(" + parsedConfiguration.isUseGeneratedKeys() + ");");
-            printWriter.append(headBlank(0)).println("configuration.setAutoMappingBehavior(AutoMappingBehavior.valueOf(\"" + parsedConfiguration.getAutoMappingBehavior().name() + "\"));");
-            printWriter.append(headBlank(0)).println("configuration.setDefaultExecutorType(ExecutorType.valueOf(\"" + parsedConfiguration.getDefaultExecutorType().name() + "\"));");
-            printWriter.append(headBlank(0)).println("configuration.setJdbcTypeForNull(org.apache.ibatis.type.JdbcType.valueOf(\"" + parsedConfiguration.getJdbcTypeForNull().name() + "\"));");
+            printWriter.append(headBlank(0)).println("configuration.setLazyLoadingEnabled(" + configuration.isLazyLoadingEnabled() + ");");
+            printWriter.append(headBlank(0)).println("configuration.setAggressiveLazyLoading(" + configuration.isAggressiveLazyLoading() + ");");
+            printWriter.append(headBlank(0)).println("configuration.setMultipleResultSetsEnabled(" + configuration.isMultipleResultSetsEnabled() + ");");
+            printWriter.append(headBlank(0)).println("configuration.setUseColumnLabel(" + configuration.isUseColumnLabel() + ");");
+            printWriter.append(headBlank(0)).println("configuration.setUseGeneratedKeys(" + configuration.isUseGeneratedKeys() + ");");
+            printWriter.append(headBlank(0)).println("configuration.setAutoMappingBehavior(AutoMappingBehavior.valueOf(\"" + configuration.getAutoMappingBehavior().name() + "\"));");
+            printWriter.append(headBlank(0)).println("configuration.setDefaultExecutorType(ExecutorType.valueOf(\"" + configuration.getDefaultExecutorType().name() + "\"));");
+            printWriter.append(headBlank(0)).println("configuration.setJdbcTypeForNull(org.apache.ibatis.type.JdbcType.valueOf(\"" + configuration.getJdbcTypeForNull().name() + "\"));");
 
             // 设置默认脚本语言
 //            LanguageDriver defaultLanguageDriver = parsedConfiguration.getDefaultScriptingLanguageInstance();
@@ -122,10 +123,10 @@ public class MybatisSerializer extends ExtensionSerializer {
 //            }
 
             // 设置代理工厂
-            printWriter.append(headBlank(0)).println("configuration.setProxyFactory(new " + parsedConfiguration.getProxyFactory().getClass().getName() + "());");
+            printWriter.append(headBlank(0)).println("configuration.setProxyFactory(new " + configuration.getProxyFactory().getClass().getName() + "());");
 
             // 添加所有解析到的映射器
-            Collection<Class<?>> mapperClasses = parsedConfiguration.getMapperRegistry().getMappers();
+            Collection<Class<?>> mapperClasses = configuration.getMapperRegistry().getMappers();
             for (Class<?> mapperClass : mapperClasses) {
                 printWriter.append(headBlank(0)).println("configuration.addMapper(" + mapperClass.getName() + ".class);");
             }
