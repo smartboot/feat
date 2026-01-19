@@ -11,6 +11,7 @@
 package tech.smartboot.feat.cloud.aot.serializer;
 
 import com.alibaba.fastjson2.JSONPath;
+import org.apache.ibatis.binding.MapperMethod;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 
@@ -19,6 +20,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.VariableElement;
 import java.io.IOException;
+import java.lang.reflect.Method;
 
 import static tech.smartboot.feat.cloud.aot.controller.JsonSerializer.headBlank;
 
@@ -47,6 +49,21 @@ public final class MapperSerializer extends AbstractSerializer {
     @Override
     public void serializeLoadBean() {
         StringBuilder sessionName = new StringBuilder("session");
+//        int i = 0;
+//        for (Element se : element.getEnclosedElements()) {
+//            printWriter.print("\t\t\t" + Method.class.getName() + " " + se.getSimpleName() + (i++) + " =" + element.getSimpleName() + ".class.getDeclaredMethod(\"" + se.getSimpleName() + "\"");
+//            for (VariableElement param : ((ExecutableElement) se).getParameters()) {
+//                printWriter.print(",");
+//                if (param.asType().toString().startsWith("java.util.List")) {
+//                    printWriter.print("java.util.List.class");
+//                } else {
+//                    printWriter.print(param.asType().toString() + ".class");
+//                }
+//
+//            }
+//            printWriter.append(");");
+//        }
+//        i = 0;
         printWriter.println("\t\tbean = new " + element.getSimpleName() + "() { ");
         for (Element se : element.getEnclosedElements()) {
             String returnType = ((ExecutableElement) se).getReturnType().toString();
@@ -70,6 +87,7 @@ public final class MapperSerializer extends AbstractSerializer {
             if (!"void".equals(returnType)) {
                 printWriter.print("return ");
             }
+//            printWriter.print("(" + returnType + ")new " + MapperMethod.class.getName() + "(" + element.getSimpleName() + ".class," + se.getSimpleName() + (i++) + "," + sessionName + ".getConfiguration()).execute(" + sessionName + ",new Object[]{");
             printWriter.print(sessionName + ".getMapper(" + element.getSimpleName() + ".class)." + se.getSimpleName() + "(");
             first = true;
             for (VariableElement param : ((ExecutableElement) se).getParameters()) {
@@ -81,6 +99,7 @@ public final class MapperSerializer extends AbstractSerializer {
                 printWriter.print(param.getSimpleName().toString());
             }
             printWriter.println(");");
+//            printWriter.println("});");
             printWriter.append(headBlank(1)).println("}");
             printWriter.println("\t\t\t}");
             printWriter.println();
