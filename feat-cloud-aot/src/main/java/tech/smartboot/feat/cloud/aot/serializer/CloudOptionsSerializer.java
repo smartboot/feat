@@ -105,7 +105,7 @@ public final class CloudOptionsSerializer implements Serializer {
         deleteBuildDir(buildDir);
 
         //清理feat.yaml文件
-        deleteFeatYamlFile(processingEnv);
+//        deleteFeatYamlFile(processingEnv);
 
 
         File f = new File(processingEnv.getFiler().getResource(StandardLocation.SOURCE_OUTPUT, "", className() + ".java").toUri()).getParentFile();
@@ -140,17 +140,17 @@ public final class CloudOptionsSerializer implements Serializer {
         }
     }
 
-    private static void deleteFeatYamlFile(ProcessingEnvironment processingEnv) throws IOException {
-        File buildDir;
-        buildDir = new File(processingEnv.getFiler().getResource(StandardLocation.CLASS_OUTPUT, "", "feat.yml").toUri());
-        if (buildDir.exists()) {
-            buildDir.delete();
-        }
-        buildDir = new File(processingEnv.getFiler().getResource(StandardLocation.CLASS_OUTPUT, "", "feat.yaml").toUri());
-        if (buildDir.exists()) {
-            buildDir.delete();
-        }
-    }
+//    private static void deleteFeatYamlFile(ProcessingEnvironment processingEnv) throws IOException {
+//        File buildDir;
+//        buildDir = new File(processingEnv.getFiler().getResource(StandardLocation.CLASS_OUTPUT, "", "feat.yml").toUri());
+//        if (buildDir.exists()) {
+//            buildDir.delete();
+//        }
+//        buildDir = new File(processingEnv.getFiler().getResource(StandardLocation.CLASS_OUTPUT, "", "feat.yaml").toUri());
+//        if (buildDir.exists()) {
+//            buildDir.delete();
+//        }
+//    }
 
     public static void main(String[] args) throws Exception {
         // 1. 生成密钥对（同上）
