@@ -499,35 +499,37 @@ public abstract class AbstractCloudService implements CloudService {
         // 获取字符串的字节数组
         byte[] bytes = value.getBytes();
         int start = 0;
-        // 遍历字节数据，处理特殊字符转义
+
+        // 使用查表法处理特殊字符转义，提高代码简洁性
         for (int i = 0; i < bytes.length; i++) {
             byte b = bytes[i];
-            if (b == '"') {
-                // 双引号转义处理
-                os.write(bytes, start, i - start);
-                os.write('\\');
-                os.write('"');
-                start = i + 1;
-            } else if (b == '\n') {
-                // 换行符转义处理
-                os.write(bytes, start, i - start);
-                os.write('\\');
-                os.write('n');
-                start = i + 1;
-            } else if (b == '\r') {
-                // 回车符转义处理
-                os.write(bytes, start, i - start);
-                os.write('\\');
-                os.write('r');
-                start = i + 1;
-            } else if (b == '\\') {
-                // 回车符转义处理
-                os.write(bytes, start, i - start);
-                os.write('\\');
-                os.write('\\');
-                start = i + 1;
+            byte escapeChar = 0;
+
+            // 根据字符类型确定转义字符
+            switch (b) {
+                case '"':
+                    escapeChar = '"';
+                    break;
+                case '\n':
+                    escapeChar = 'n';
+                    break;
+                case '\r':
+                    escapeChar = 'r';
+                    break;
+                case '\\':
+                    escapeChar = '\\';
+                    break;
+                default:
+                    continue; // 非特殊字符，继续循环
             }
+
+            // 统一处理转义逻辑
+            os.write(bytes, start, i - start);
+            os.write('\\');
+            os.write(escapeChar);
+            start = i + 1;
         }
+
         // 写入剩余的字节数据
         if (start < bytes.length) {
             os.write(bytes, start, bytes.length - start);
