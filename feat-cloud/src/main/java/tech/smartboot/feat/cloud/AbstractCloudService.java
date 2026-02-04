@@ -520,6 +520,12 @@ public abstract class AbstractCloudService implements CloudService {
                 os.write('\\');
                 os.write('r');
                 start = i + 1;
+            } else if (b == '\\') {
+                // 回车符转义处理
+                os.write(bytes, start, i - start);
+                os.write('\\');
+                os.write('\\');
+                start = i + 1;
             }
         }
         // 写入剩余的字节数据
