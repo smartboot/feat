@@ -93,8 +93,18 @@ public class HttpStaticResourceHandler implements HttpHandler {
 
     private URL getClassPathURL(String fileName) throws IOException {
         URL url = classLoader.getResource(classPath + fileName);
+        if (url == null) {
+            if (fileName.equals("/")) {
+                return classLoader.getResource(classPath + fileName + "index.html");
+            }
 
-        if (url != null && "file".equals(url.getProtocol())) {
+            if (fileName.indexOf(".", fileName.lastIndexOf("/")) == -1) {
+                return classLoader.getResource(classPath + fileName + ".html");
+            }
+            return null;
+        }
+
+        if ("file".equals(url.getProtocol())) {
             File file = new File(url.getFile());
             if (file.isFile()) {
                 return file.toURI().toURL();
@@ -106,17 +116,14 @@ public class HttpStaticResourceHandler implements HttpHandler {
                 return null;
             }
         }
-        if (url != null) {
-            return url;
-        }
-        if (fileName.equals("/")) {
-            return classLoader.getResource(classPath + fileName + "index.html");
-        }
-
+        // 适配目录下存在  /xx/ 和 /xx.html 的情况
         if (fileName.indexOf(".", fileName.lastIndexOf("/")) == -1) {
-            return classLoader.getResource(classPath + fileName + ".html");
+            URL htmlUrl = classLoader.getResource(classPath + fileName + ".html");
+            if (htmlUrl != null) {
+                return htmlUrl;
+            }
         }
-        return null;
+        return url;
     }
 
     public void handleClassPath(HttpRequest request, CompletableFuture<Void> completableFuture, String fileName) throws Throwable {
@@ -147,6 +154,11 @@ public class HttpStaticResourceHandler implements HttpHandler {
         });
         response.setHeader(HeaderName.LAST_MODIFIED, lastModifyDateFormat);
         response.setHeader(HeaderName.CONTENT_TYPE, Mimetypes.getInstance().getMimetype(fileName) + "; charset=utf-8");
+        //HEAD不输出内容
+        if (HttpMethod.HEAD.equals(request.getMethod())) {
+            completableFuture.complete(null);
+            return;
+        }
         response.setHeader(HeaderName.CONTENT_ENCODING, HeaderValue.ContentEncoding.GZIP);
 
         Consumer<FeatOutputStream> consumer = new Consumer<FeatOutputStream>() {
