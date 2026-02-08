@@ -47,6 +47,12 @@
             <artifactId>redisun</artifactId>
             <version>1.2.0</version>
             <scope>compile</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>io.github.smartboot.socket</groupId>
+                    <artifactId>aio-pro</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 </project>
