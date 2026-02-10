@@ -76,19 +76,8 @@ public class AgentOptions {
      */
     private final ChatOptions chatOptions = new ChatOptions();
 
-    /**
-     * 创建AgentOptions实例的静态工厂方法
-     * <p>
-     * 提供一种标准的方式来创建AgentOptions实例，
-     * 便于未来可能的扩展和修改。
-     * </p>
-     *
-     * @return 新创建的AgentOptions实例
-     */
-    public static AgentOptions create() {
-        return new AgentOptions();
+    AgentOptions() {
     }
-
 
     /**
      * 设置最大推理迭代次数

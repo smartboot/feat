@@ -12,6 +12,7 @@ package tech.smartboot.feat.ai;
 
 import tech.smartboot.feat.ai.agent.AgentOptions;
 import tech.smartboot.feat.ai.agent.FeatAgent;
+import tech.smartboot.feat.ai.agent.ReActAgent;
 import tech.smartboot.feat.ai.chat.ChatModel;
 import tech.smartboot.feat.ai.chat.ChatOptions;
 import tech.smartboot.feat.ai.embedding.EmbeddingModel;
@@ -45,9 +46,6 @@ public class FeatAI {
     }
 
     public static FeatAgent agent(Consumer<AgentOptions> consumer) {
-        AgentOptions options = new AgentOptions();
-        consumer.accept(options);
-//        return new ReActAgent(options);
-        return null;
+        return new ReActAgent(consumer);
     }
 }
