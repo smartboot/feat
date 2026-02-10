@@ -1,5 +1,6 @@
 package tech.smartboot.feat.ai.agent;
 
+import tech.smartboot.feat.ai.agent.trace.AgentTrace;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 
@@ -80,6 +81,7 @@ public abstract class FeatAgent {
      * @see AgentState 状态枚举定义
      */
     private AgentState state = AgentState.IDLE;
+    protected boolean cancel = false;
 
     /**
      * 执行用户任务的核心抽象方法，需要由具体的Agent实现类提供实际逻辑
@@ -102,7 +104,12 @@ public abstract class FeatAgent {
      * @return 经过处理后的结果字符串，应能准确回答用户问题或完成指定任务
      * @see #setState(AgentState) 状态更新方法
      */
-    public abstract CompletableFuture<String> execute(String input);
+    public CompletableFuture<String> execute(String input) {
+        return execute(input, (t, d) -> {
+        });
+    }
+
+    public abstract CompletableFuture<String> execute(String input, AgentTrace trace);
 
 
     /**
@@ -155,5 +162,9 @@ public abstract class FeatAgent {
         }
         this.state = state;
         logger.info("Agent状态变更: " + state);
+    }
+
+    public void cancel() {
+        this.cancel = true;
     }
 }

@@ -16,6 +16,7 @@ import tech.smartboot.feat.ai.agent.tools.SearchTool;
 import tech.smartboot.feat.ai.agent.tools.SubAgentTool;
 import tech.smartboot.feat.ai.agent.tools.TodoListTool;
 import tech.smartboot.feat.ai.agent.tools.WebPageReaderTool;
+import tech.smartboot.feat.ai.agent.trace.AgentTrace;
 import tech.smartboot.feat.ai.chat.ChatModel;
 import tech.smartboot.feat.ai.chat.ChatModelVendor;
 import tech.smartboot.feat.ai.chat.entity.Message;
@@ -114,11 +115,17 @@ public class ReActAgent extends FeatAgent {
         opts.accept(options);
     }
 
-    private void internalExecute(Map<String, String> templateData, int iteration, CompletableFuture<String> future) {
+    private void internalExecute(Map<String, String> templateData, int iteration, CompletableFuture<String> future, AgentTrace trace) {
+        if (cancel) {
+            future.completeExceptionally(new FeatException("canceled"));
+            return;
+        }
         if (iteration >= options.getMaxIterations()) {
             future.completeExceptionally(new FeatException("max iterations reached"));
             return;
         }
+        // 恢复运行状态
+        setState(AgentState.RUNNING);
         // 创建ChatModel实例
         ChatModel model = new ChatModel(options.chatOptions());
         model.chatStream(Collections.singletonList(Message.ofUser(options.getPrompt().prompt(templateData))), new StreamResponseCallback() {
@@ -156,24 +163,29 @@ public class ReActAgent extends FeatAgent {
                     String currentScratchpad = templateData.getOrDefault("agent_scratchpad", "");
                     templateData.put("agent_scratchpad", currentScratchpad + scratchpadEntry);
 
-                    // 恢复运行状态
-                    setState(AgentState.RUNNING);
-                    internalExecute(templateData, iteration + 1, future);
+                    if (cancel) {
+                        future.completeExceptionally(new FeatException("canceled"));
+                    } else {
+                        internalExecute(templateData, iteration + 1, future, trace);
+                    }
                 });
             }
 
             @Override
             public void onStreamResponse(String content) {
                 System.out.print(content);
+                // 通过异常抛出，结束流
+                if (cancel) {
+                    throw new FeatException("canceled");
+                }
             }
         });
     }
 
     @Override
-    public CompletableFuture<String> execute(String input) {
+    public CompletableFuture<String> execute(String input, AgentTrace trace) {
         CompletableFuture<String> completableFuture = new CompletableFuture<>();
-        // 设置状态为运行中
-        setState(AgentState.RUNNING);
+
         // 准备模板数据
         Map<String, String> templateData = new HashMap<>();
         templateData.put("date", new Date().toString());
@@ -182,8 +194,7 @@ public class ReActAgent extends FeatAgent {
         templateData.put("tool_names", getToolNames());
         templateData.put("relevant_memories", "无");
         templateData.put("agent_scratchpad", "无");
-
-        internalExecute(templateData, 0, completableFuture);
+        internalExecute(templateData, 0, completableFuture, trace);
         return completableFuture;
     }
 

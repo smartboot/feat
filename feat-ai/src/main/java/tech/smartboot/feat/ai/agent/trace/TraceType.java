@@ -8,11 +8,18 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.ai.agent;
+package tech.smartboot.feat.ai.agent.trace;
 
 /**
  * @author 三刀
  * @version v1.0 2/10/26
  */
-public interface AgentTrace {
+public enum TraceType {
+    MODEL("model"), TOOL("tool"),
+    ;
+    private String type;
+
+    TraceType(String type) {
+        this.type = type;
+    }
 }
