@@ -245,7 +245,8 @@ public final class ControllerSerializer extends AbstractSerializer {
                         }
                         newParams.append("\t\t\t\t");
                         if (paramType.startsWith(List.class.getName())) {
-                            newParams.append(paramType).append(" param").append(i).append(" = jsonObject.getObject(\"").append(paramAnnotation.value()).append("\", java.util" + ".List.class);");
+                            String type = paramType.substring(paramType.indexOf("<") + 1, paramType.indexOf(">"));
+                            newParams.append(paramType).append(" param").append(i).append(" = jsonObject.getList(\"").append(paramAnnotation.value()).append("\", ").append(type).append(".class);");
                         } else {
                             newParams.append(paramType).append(" param").append(i).append(" = jsonObject.getObject(\"").append(paramAnnotation.value()).append("\", ").append(paramType).append(".class);");
                         }
