@@ -224,6 +224,10 @@ public class ChatModelVendor extends Vendor {
         this.capability = capability;
     }
 
+    public ChatModelVendor(String baseUrl, String model) {
+        this(baseUrl, model, 0, null);
+    }
+
     /**
      * 获取请求预处理器
      *
