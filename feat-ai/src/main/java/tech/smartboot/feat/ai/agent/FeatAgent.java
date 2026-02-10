@@ -3,6 +3,8 @@ package tech.smartboot.feat.ai.agent;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 
+import java.util.concurrent.CompletableFuture;
+
 /**
  * AI Agent抽象基类，基于ReAct（Reasoning + Acting）范式实现
  * <p>
@@ -100,7 +102,8 @@ public abstract class FeatAgent {
      * @return 经过处理后的结果字符串，应能准确回答用户问题或完成指定任务
      * @see #setState(AgentState) 状态更新方法
      */
-    public abstract String execute(String input);
+    public abstract CompletableFuture<String> execute(String input);
+
 
     /**
      * 获取Agent当前运行状态，用于外部监控和流程控制

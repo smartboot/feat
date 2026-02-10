@@ -10,6 +10,8 @@
 
 package tech.smartboot.feat.ai.agent;
 
+import java.util.concurrent.ExecutionException;
+
 /**
  * ReActAgent测试类
  *
@@ -18,12 +20,12 @@ package tech.smartboot.feat.ai.agent;
  */
 public class ReActAgentTest {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws ExecutionException, InterruptedException {
         // 创建ReActAgent实例
         FeatAgent agent = new ReActAgent();
 
         // 执行测试
-        String result = agent.execute("阅读spring官方文档，对比下spring4和3的差别，生成一份详细的分析报告");
+        String result = agent.execute("smart-mqtt如何安装").get();
         System.out.println("\n\n最终结果:\n" + result);
         System.out.println("\nAgent最终状态: " + agent.getState());
     }

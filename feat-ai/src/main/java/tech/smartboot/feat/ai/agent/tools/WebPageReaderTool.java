@@ -14,6 +14,8 @@ import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.ai.agent.AgentTool;
 import tech.smartboot.feat.ai.agent.tools.reader.WebReader;
 
+import java.util.concurrent.CompletableFuture;
+
 /**
  * 网页内容读取工具，用于直接读取指定URL的网页内容并返回其文本内容
  * <p>
@@ -39,19 +41,16 @@ public class WebPageReaderTool implements AgentTool {
      * @return 网页的纯文本内容
      */
     @Override
-    public String execute(JSONObject parameters) {
+    public CompletableFuture<String> execute(JSONObject parameters) {
         String url = parameters.getString("url");
 
         if (url == null || url.isEmpty()) {
-            return "错误：必须提供'url'参数";
+            return CompletableFuture.completedFuture("错误：必须提供'url'参数");
         }
 
-        try {
-            // 使用现有的Searcher类来获取网页内容
-            return WebReader.read(url);
-        } catch (Throwable e) {
-            return "读取网页内容时发生错误: " + e.getMessage();
-        }
+        // 使用现有的Searcher类来获取网页内容
+        return WebReader.read(url);
+
     }
 
     /**

@@ -114,109 +114,77 @@ public class ReActAgent extends FeatAgent {
         opts.accept(options);
     }
 
-    /**
-     * Agent执行入口
-     * <p>
-     * 处理用户输入的核心方法，实现ReAct循环流程：
-     * 1. 初始化执行环境和上下文
-     * 2. 进入推理循环（最大迭代次数由配置决定）
-     * 3. 每次迭代中调用AI模型获取响应
-     * 4. 解析响应并执行相应操作（工具调用或返回结果）
-     * 5. 更新执行历史记录（scratchpad）
-     * 6. 循环直至得到最终答案或达到最大迭代次数
-     * </p>
-     *
-     * @param input 用户输入的任务描述或问题
-     * @return 执行结果，包含问题的答案或处理过程的总结
-     */
-    @Override
-    public String execute(String input) {
-        // 设置状态为运行中
-        setState(AgentState.RUNNING);
+    private void internalExecute(Map<String, String> templateData, int iteration, CompletableFuture<String> future) {
+        if (iteration >= options.getMaxIterations()) {
+            future.completeExceptionally(new FeatException("max iterations reached"));
+            return;
+        }
+        // 创建ChatModel实例
+        ChatModel model = new ChatModel(options.chatOptions());
+        model.chatStream(Collections.singletonList(Message.ofUser(options.getPrompt().prompt(templateData))), new StreamResponseCallback() {
 
-        try {
-            // 初始化Agent状态
-            StringBuilder fullResponse = new StringBuilder();
-
-            // 准备模板数据
-            Map<String, String> templateData = new HashMap<>();
-            templateData.put("date", new Date().toString());
-            templateData.put("input", input);
-            templateData.put("tool_descriptions", getToolDescriptions());
-            templateData.put("tool_names", getToolNames());
-
-
-            templateData.put("relevant_memories", "无");
-            templateData.put("agent_scratchpad", "无");
-
-            // 执行推理循环
-            int maxIterations = options.getMaxIterations(); // 使用配置的最大迭代次数
-            for (int i = 0; i < maxIterations; i++) {
-                fullResponse.setLength(0);
-                CompletableFuture<Boolean> isDone = new CompletableFuture<>();
-                // 创建ChatModel实例
-                ChatModel model = new ChatModel(options.chatOptions());
-                model.chatStream(Collections.singletonList(Message.ofUser(options.getPrompt().prompt(templateData))), new StreamResponseCallback() {
-
-                    @Override
-                    public void onCompletion(ResponseMessage responseMessage) {
-                        if (responseMessage.isSuccess()) {
-                            isDone.complete(true);
-                        } else {
-                            isDone.completeExceptionally(new FeatException(responseMessage.getError()));
-                        }
-                    }
-
-                    @Override
-                    public void onStreamResponse(String content) {
-                        System.out.print(content);
-                        fullResponse.append(content);
-                    }
-                });
-                isDone.get();
-
-                String response = fullResponse.append("\n").toString();
-
+            @Override
+            public void onCompletion(ResponseMessage responseMessage) {
+                if (!responseMessage.isSuccess()) {
+                    future.completeExceptionally(new FeatException(responseMessage.getError()));
+                    return;
+                }
+                String response = responseMessage.getContent() + '\n';
                 // 解析响应并决定下一步行动
                 AgentAction action = parseAgentResponse(response);
                 if (action == null) {
-                    // 如果无法解析动作，则结束循环
-                    break;
+                    logger.info("无法解析AI模型响应：" + response);
+                    future.completeExceptionally(new FeatException("invalid result:" + response));
+                    return;
                 }
-
                 if ("Final Answer".equals(action.getAction())) {
                     // 如果是最终答案，则结束
-                    break;
+                    future.complete(response);
+                    return;
                 }
 
                 // 设置状态为工具执行
                 setState(AgentState.TOOL_EXECUTION);
 
                 // 执行工具
-                String observation = executeTool(action.getAction(), action.getActionInput());
-                logger.info("执行工具: {}, 输入: {}, 观察结果: {}", action.getAction(), action.getActionInput(), observation);
+                executeTool(action.getAction(), action.getActionInput()).whenComplete((observation, throwable) -> {
+                    logger.info("执行工具: {}, 输入: {}, 观察结果: {}", action.getAction(), action.getActionInput(), observation);
+                    // 将动作和观察结果添加到历史记录中
+                    String scratchpadEntry = String.format("Thought: %s\nAction: %s\nAction Input: %s\nObservation: %s\n", action.getThought(), action.getAction(), action.getActionInput(), observation);
 
-                // 将动作和观察结果添加到历史记录中
-                String scratchpadEntry = String.format("Thought: %s\nAction: %s\nAction Input: %s\nObservation: %s\n", action.getThought(), action.getAction(), action.getActionInput(), observation);
+                    // 更新scratchpad数据
+                    String currentScratchpad = templateData.getOrDefault("agent_scratchpad", "");
+                    templateData.put("agent_scratchpad", currentScratchpad + scratchpadEntry);
 
-                // 更新scratchpad数据
-                String currentScratchpad = templateData.getOrDefault("agent_scratchpad", "");
-                templateData.put("agent_scratchpad", currentScratchpad + scratchpadEntry);
-
-                // 恢复运行状态
-                setState(AgentState.RUNNING);
+                    // 恢复运行状态
+                    setState(AgentState.RUNNING);
+                    internalExecute(templateData, iteration + 1, future);
+                });
             }
 
-            // 设置状态为完成
-            setState(AgentState.FINISHED);
+            @Override
+            public void onStreamResponse(String content) {
+                System.out.print(content);
+            }
+        });
+    }
 
-            return fullResponse.toString();
-        } catch (Exception e) {
-            // 设置状态为错误
-            setState(AgentState.ERROR);
-            logger.error("Agent执行出错: " + e.getMessage(), e);
-            return "Error: " + e.getMessage();
-        }
+    @Override
+    public CompletableFuture<String> execute(String input) {
+        CompletableFuture<String> completableFuture = new CompletableFuture<>();
+        // 设置状态为运行中
+        setState(AgentState.RUNNING);
+        // 准备模板数据
+        Map<String, String> templateData = new HashMap<>();
+        templateData.put("date", new Date().toString());
+        templateData.put("input", input);
+        templateData.put("tool_descriptions", getToolDescriptions());
+        templateData.put("tool_names", getToolNames());
+        templateData.put("relevant_memories", "无");
+        templateData.put("agent_scratchpad", "无");
+
+        internalExecute(templateData, 0, completableFuture);
+        return completableFuture;
     }
 
     /**
@@ -297,10 +265,10 @@ public class ReActAgent extends FeatAgent {
      * @param input    工具输入（字符串格式）
      * @return 工具执行结果
      */
-    private String executeTool(String toolName, String input) {
+    private CompletableFuture<String> executeTool(String toolName, String input) {
         AgentTool executor = options.getToolExecutor(toolName);
         if (executor == null) {
-            return "Error: Tool '" + toolName + "' not found.";
+            return CompletableFuture.completedFuture("Error: Tool '" + toolName + "' not found.");
         }
         int start = 0;
         for (; start < input.length(); start++) {
@@ -316,12 +284,8 @@ public class ReActAgent extends FeatAgent {
         }
         input = input.substring(start, end + 1);
 
-        try {
-            // 使用工具执行管理器来执行工具
-            return executeTool(toolName, JSONObject.parse(input));
-        } catch (Exception e) {
-            return "Error executing tool '" + toolName + "': " + e.getMessage();
-        }
+        // 使用工具执行管理器来执行工具
+        return executeTool(toolName, JSONObject.parse(input));
     }
 
     /**
@@ -335,17 +299,12 @@ public class ReActAgent extends FeatAgent {
      * @param parameters 工具参数（JSON对象格式）
      * @return 工具执行结果
      */
-    private String executeTool(String toolName, JSONObject parameters) {
+    private CompletableFuture<String> executeTool(String toolName, JSONObject parameters) {
         AgentTool executor = options.getToolExecutor(toolName);
         if (executor == null) {
-            return "错误：未找到名为 '" + toolName + "' 的工具";
+            return CompletableFuture.completedFuture("错误：未找到名为 '" + toolName + "' 的工具");
         }
-
-        try {
-            return executor.execute(parameters);
-        } catch (Exception e) {
-            return "执行工具 '" + toolName + "' 时出错: " + e.getMessage();
-        }
+        return executor.execute(parameters);
     }
 
     /**

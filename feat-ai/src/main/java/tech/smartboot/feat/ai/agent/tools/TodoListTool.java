@@ -15,6 +15,7 @@ import tech.smartboot.feat.ai.agent.AgentTool;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -65,27 +66,27 @@ public class TodoListTool implements AgentTool {
      * @return 操作结果字符串
      */
     @Override
-    public String execute(JSONObject parameters) {
+    public CompletableFuture<String> execute(JSONObject parameters) {
         String action = parameters.getString("action");
         String listId = parameters.getString("list_id");
 
         if (action == null) {
-            return "错误：必须提供'action'参数";
+            return CompletableFuture.completedFuture("错误：必须提供'action'参数");
         }
 
         switch (action) {
             case "create":
-                return createTodoList(parameters);
+                return CompletableFuture.completedFuture(createTodoList(parameters));
             case "add":
-                return addTodoItem(listId, parameters);
+                return CompletableFuture.completedFuture(addTodoItem(listId, parameters));
             case "complete":
-                return completeTodoItem(listId, parameters);
+                return CompletableFuture.completedFuture(completeTodoItem(listId, parameters));
             case "list":
-                return listTodoItems(listId);
+                return CompletableFuture.completedFuture(listTodoItems(listId));
             case "remove":
-                return removeTodoItem(listId, parameters);
+                return CompletableFuture.completedFuture(removeTodoItem(listId, parameters));
             default:
-                return "错误：不支持的操作 '" + action + "'";
+                return CompletableFuture.completedFuture("错误：不支持的操作 '" + action + "'");
         }
     }
 

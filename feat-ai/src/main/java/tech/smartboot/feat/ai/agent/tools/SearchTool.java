@@ -15,6 +15,7 @@ import tech.smartboot.feat.ai.agent.AgentTool;
 import tech.smartboot.feat.ai.agent.tools.reader.WebReader;
 import tech.smartboot.feat.core.client.HttpGet;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 /**
@@ -85,13 +86,13 @@ public class SearchTool implements AgentTool {
      * @return 搜索结果字符串
      */
     @Override
-    public String execute(JSONObject parameters) {
+    public CompletableFuture<String> execute(JSONObject parameters) {
         String query = parameters.getString("query");
         Integer maxResults = parameters.getInteger("max_results");
         String engine = parameters.getString("engine");
 
         if (query == null || query.isEmpty()) {
-            return "错误：必须提供'query'参数";
+            return CompletableFuture.completedFuture("错误：必须提供'query'参数");
         }
 
         if (maxResults == null) {
@@ -116,7 +117,7 @@ public class SearchTool implements AgentTool {
                     });
             }
         } catch (Throwable e) {
-            return "搜索过程中发生错误: " + e.getMessage();
+            return CompletableFuture.completedFuture("搜索过程中发生错误: " + e.getMessage());
         }
     }
 

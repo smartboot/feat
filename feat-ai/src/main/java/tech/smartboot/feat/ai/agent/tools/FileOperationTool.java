@@ -20,6 +20,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -121,32 +122,32 @@ public class FileOperationTool implements AgentTool {
      * @return 操作结果字符串
      */
     @Override
-    public String execute(JSONObject parameters) {
+    public CompletableFuture<String> execute(JSONObject parameters) {
         String action = parameters.getString("action");
 
         if (action == null) {
-            return "错误：必须提供'action'参数";
+            return CompletableFuture.completedFuture("错误：必须提供'action'参数");
         }
 
         try {
             switch (action) {
                 case "list_directory":
-                    return listDirectory(parameters);
+                    return CompletableFuture.completedFuture(listDirectory(parameters));
                 case "read_file":
-                    return readFile(parameters);
+                    return CompletableFuture.completedFuture(readFile(parameters));
                 case "write_file":
-                    return writeFile(parameters);
+                    return CompletableFuture.completedFuture(writeFile(parameters));
                 case "create_directory":
-                    return createDirectory(parameters);
+                    return CompletableFuture.completedFuture(createDirectory(parameters));
                 case "delete_file":
-                    return deleteFile(parameters);
+                    return CompletableFuture.completedFuture(deleteFile(parameters));
                 case "file_exists":
-                    return fileExists(parameters);
+                    return CompletableFuture.completedFuture(fileExists(parameters));
                 default:
-                    return "错误：不支持的操作 '" + action + "'";
+                    return CompletableFuture.completedFuture("错误：不支持的操作 '" + action + "'");
             }
         } catch (Exception e) {
-            return "执行操作时出错: " + e.getMessage();
+            return CompletableFuture.completedFuture("执行操作时出错: " + e.getMessage());
         }
     }
 

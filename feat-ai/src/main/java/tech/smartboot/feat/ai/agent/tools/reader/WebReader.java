@@ -12,7 +12,6 @@ package tech.smartboot.feat.ai.agent.tools.reader;
 
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpGet;
-import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HttpStatus;
@@ -21,7 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 /**
@@ -48,7 +47,7 @@ public class WebReader {
      * @param consumer 自定义HTTP GET请求的回调函数
      * @return 搜索结果的Markdown格式字符串
      */
-    public static String read(String url, Consumer<HttpGet> consumer) {
+    public static CompletableFuture<String> read(String url, Consumer<HttpGet> consumer) {
         WebReader searcher;
         if (url.startsWith(BaiduReader.BASE_URL)) {
             searcher = new BaiduReader();
@@ -60,26 +59,25 @@ public class WebReader {
             searcher = new WebReader();
         }
         HttpClient httpClient = new HttpClient(url);
-        httpClient.options().debug(false);
-        try {
-            HttpGet httpGet = httpClient.get();
-            if (consumer != null) {
-                consumer.accept(httpGet);
-            }
-            httpGet.header(header -> {
-                searcher.simulatorDeviceHeader().forEach(header::set);
-            });
-            searcher.initRequest(httpGet);
-            HttpResponse response = httpGet.submit().get(5, TimeUnit.SECONDS);
+        httpClient.options().debug(false).idleTimeout(5000);
+        HttpGet httpGet = httpClient.get();
+        if (consumer != null) {
+            consumer.accept(httpGet);
+        }
+        httpGet.header(header -> {
+            searcher.simulatorDeviceHeader().forEach(header::set);
+        });
+        searcher.initRequest(httpGet);
+        return httpGet.submit().thenApply(response -> {
             if (response.statusCode() != HttpStatus.OK.value()) {
                 return "请求失败.";
             } else {
                 return searcher.toMarkdown(response.body());
             }
-        } catch (Throwable e) {
-            e.printStackTrace();
-            return "请求失败.";
-        }
+        }).exceptionally(throwable -> {
+            throwable.printStackTrace();
+            return "请求失败";
+        });
     }
 
     /**
@@ -91,7 +89,7 @@ public class WebReader {
      * @param url 搜索URL
      * @return 搜索结果的Markdown格式字符串
      */
-    public static String read(String url) {
+    public static CompletableFuture<String> read(String url) {
         return read(url, null);
     }
 

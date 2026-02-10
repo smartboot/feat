@@ -14,6 +14,8 @@ import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.ai.agent.AgentTool;
 import tech.smartboot.feat.ai.agent.ReActAgent;
 
+import java.util.concurrent.CompletableFuture;
+
 /**
  * 子代理工具，用于委托任务给专门的子代理
  * <p>
@@ -41,28 +43,29 @@ public class SubAgentTool implements AgentTool {
      * @return 子代理执行结果的模拟字符串
      */
     @Override
-    public String execute(JSONObject parameters) {
+    public CompletableFuture<String> execute(JSONObject parameters) {
         String agentName = parameters.getString("agent_name");
         String task = parameters.getString("task");
 
         if (agentName == null || agentName.isEmpty()) {
-            return "错误：必须提供'agent_name'参数";
+            return CompletableFuture.completedFuture("错误：必须提供'agent_name'参数");
         }
 
         if (task == null || task.isEmpty()) {
-            return "错误：必须提供'task'参数";
+            return CompletableFuture.completedFuture("错误：必须提供'task'参数");
         }
 
         // 创建一个新的子代理实例来处理任务
         ReActAgent subAgent = new ReActAgent();
-        
+
         // 可以根据agent_name设置不同的配置，这里简化处理
-        try {
-            String result = subAgent.execute(task);
-            return String.format("子代理 '%s' 执行结果:\n%s", agentName, result);
-        } catch (Exception e) {
-            return String.format("子代理 '%s' 执行任务时发生错误: %s", agentName, e.getMessage());
-        }
+        CompletableFuture<String> future = new CompletableFuture<>();
+        CompletableFuture<String> result = subAgent.execute(task);
+        result.thenAccept(response -> future.complete(String.format("子代理 '%s' 执行结果:\n%s", agentName, response))).exceptionally(e -> {
+            future.complete(String.format("子代理 '%s' 执行任务时发生错误: %s", agentName, e.getMessage()));
+            return null;
+        });
+        return future;
     }
 
     /**

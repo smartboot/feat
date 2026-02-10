@@ -12,6 +12,8 @@ package tech.smartboot.feat.ai.agent;
 
 import com.alibaba.fastjson2.JSONObject;
 
+import java.util.concurrent.CompletableFuture;
+
 /**
  * AI代理工具执行器接口
  * <p>
@@ -46,7 +48,7 @@ public interface AgentTool {
      *                   参数格式应与{@link #getParametersSchema()}返回的JSON Schema保持一致
      * @return 执行结果，以字符串形式返回，便于AI Agent处理和理解
      */
-    String execute(JSONObject parameters);
+    CompletableFuture<String> execute(JSONObject parameters);
 
     /**
      * 获取工具的唯一标识名称
