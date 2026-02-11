@@ -8,18 +8,18 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.ai.agent.trace;
+package tech.smartboot.feat.ai.agent.hook;
+
+import tech.smartboot.feat.ai.chat.entity.Message;
 
 /**
  * @author 三刀
  * @version v1.0 2/10/26
  */
-public enum TraceType {
-    MODEL("model"), TOOL("tool"),
-    ;
-    private String type;
+public interface Hook {
+    default void preCall(Message message) {
+    }
 
-    TraceType(String type) {
-        this.type = type;
+    default void postCall(Message message) {
     }
 }

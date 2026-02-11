@@ -10,6 +10,7 @@
 
 package tech.smartboot.feat.ai.agent;
 
+import tech.smartboot.feat.ai.agent.hook.Hook;
 import tech.smartboot.feat.ai.chat.ChatOptions;
 import tech.smartboot.feat.ai.chat.prompt.Prompt;
 import tech.smartboot.feat.core.common.logging.Logger;
@@ -47,7 +48,8 @@ public class AgentOptions {
      * </p>
      */
     private Prompt prompt;
-
+    private Hook hook = new Hook() {
+    };
     /**
      * 最大推理迭代次数
      * <p>
@@ -193,5 +195,14 @@ public class AgentOptions {
 
     ActionParse actionParse() {
         return actionParse;
+    }
+
+    public Hook hook() {
+        return hook;
+    }
+
+    public AgentOptions hook(Hook hook) {
+        this.hook = hook;
+        return this;
     }
 }

@@ -16,7 +16,6 @@ import tech.smartboot.feat.ai.agent.tools.SearchTool;
 import tech.smartboot.feat.ai.agent.tools.SubAgentTool;
 import tech.smartboot.feat.ai.agent.tools.TodoListTool;
 import tech.smartboot.feat.ai.agent.tools.WebPageReaderTool;
-import tech.smartboot.feat.ai.agent.trace.AgentTrace;
 import tech.smartboot.feat.ai.chat.ChatModel;
 import tech.smartboot.feat.ai.chat.ChatModelVendor;
 import tech.smartboot.feat.ai.chat.entity.Message;
@@ -77,7 +76,7 @@ public class ReActAgent extends FeatAgent {
         opts.accept(options);
     }
 
-    private void internalExecute(Map<String, String> templateData, int iteration, CompletableFuture<String> future, AgentTrace trace) {
+    private void internalExecute(Map<String, String> templateData, int iteration, CompletableFuture<String> future) {
         if (cancel) {
             future.completeExceptionally(new FeatException("canceled"));
             return;
@@ -128,7 +127,7 @@ public class ReActAgent extends FeatAgent {
                     if (cancel) {
                         future.completeExceptionally(new FeatException("canceled"));
                     } else {
-                        internalExecute(templateData, iteration + 1, future, trace);
+                        internalExecute(templateData, iteration + 1, future);
                     }
                 });
             }
@@ -145,7 +144,7 @@ public class ReActAgent extends FeatAgent {
     }
 
     @Override
-    public CompletableFuture<String> execute(String input, AgentTrace trace) {
+    public CompletableFuture<String> execute(String input) {
         CompletableFuture<String> completableFuture = new CompletableFuture<>();
 
         // 准备模板数据
@@ -157,7 +156,7 @@ public class ReActAgent extends FeatAgent {
         templateData.put("relevant_memories", "无");
         templateData.put("agent_scratchpad", "无");
         templateData.put("system_prompt", options.chatOptions().getSystem());
-        internalExecute(templateData, 0, completableFuture, trace);
+        internalExecute(templateData, 0, completableFuture);
         return completableFuture;
     }
 

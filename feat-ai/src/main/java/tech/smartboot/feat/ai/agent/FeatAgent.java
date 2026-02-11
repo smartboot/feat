@@ -1,6 +1,6 @@
 package tech.smartboot.feat.ai.agent;
 
-import tech.smartboot.feat.ai.agent.trace.AgentTrace;
+import tech.smartboot.feat.ai.agent.hook.Hook;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 
@@ -104,12 +104,8 @@ public abstract class FeatAgent {
      * @return 经过处理后的结果字符串，应能准确回答用户问题或完成指定任务
      * @see #setState(AgentState) 状态更新方法
      */
-    public CompletableFuture<String> execute(String input) {
-        return execute(input, (t, d) -> {
-        });
-    }
+    public abstract CompletableFuture<String> execute(String input);
 
-    public abstract CompletableFuture<String> execute(String input, AgentTrace trace);
 
 
     /**
