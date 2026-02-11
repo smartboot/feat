@@ -156,6 +156,7 @@ public class ReActAgent extends FeatAgent {
         templateData.put("tool_names", getToolNames());
         templateData.put("relevant_memories", "无");
         templateData.put("agent_scratchpad", "无");
+        templateData.put("system_prompt", options.chatOptions().getSystem());
         internalExecute(templateData, 0, completableFuture, trace);
         return completableFuture;
     }
