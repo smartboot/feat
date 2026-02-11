@@ -1,9 +1,11 @@
 package tech.smartboot.feat.ai.agent;
 
-import tech.smartboot.feat.ai.agent.hook.Hook;
+import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -104,8 +106,11 @@ public abstract class FeatAgent {
      * @return 经过处理后的结果字符串，应能准确回答用户问题或完成指定任务
      * @see #setState(AgentState) 状态更新方法
      */
-    public abstract CompletableFuture<String> execute(String input);
+    public CompletableFuture<String> execute(String input) {
+        return execute(Collections.singletonList(Message.ofUser(input)));
+    }
 
+    public abstract CompletableFuture<String> execute(List<Message> messages);
 
 
     /**

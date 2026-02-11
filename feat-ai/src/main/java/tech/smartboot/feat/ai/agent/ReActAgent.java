@@ -29,6 +29,7 @@ import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -144,13 +145,16 @@ public class ReActAgent extends FeatAgent {
     }
 
     @Override
-    public CompletableFuture<String> execute(String input) {
+    public CompletableFuture<String> execute(List<Message> input) {
+        StringBuilder sb = new StringBuilder();
+        for (Message message : input) {
+            sb.append(message.getRole()).append(" : ").append(message.getContent().replace("\n", "\\n")).append("\n");
+        }
         CompletableFuture<String> completableFuture = new CompletableFuture<>();
-
         // 准备模板数据
         Map<String, String> templateData = new HashMap<>();
         templateData.put("date", new Date().toString());
-        templateData.put("input", input);
+        templateData.put("input", sb.toString());
         templateData.put("tool_descriptions", getToolDescriptions());
         templateData.put("tool_names", getToolNames());
         templateData.put("relevant_memories", "无");
