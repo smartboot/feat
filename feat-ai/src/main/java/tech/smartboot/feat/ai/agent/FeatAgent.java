@@ -165,6 +165,10 @@ public abstract class FeatAgent {
         logger.info("Agent状态变更: " + state);
     }
 
+    public AgentOptions options() {
+        return options;
+    }
+
     public void cancel() {
         this.cancel = true;
     }

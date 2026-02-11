@@ -10,6 +10,7 @@
 
 package tech.smartboot.feat.ai.agent.hook;
 
+import tech.smartboot.feat.ai.agent.AgentAction;
 import tech.smartboot.feat.ai.chat.entity.Message;
 
 import java.util.List;
@@ -23,5 +24,11 @@ public interface Hook {
     }
 
     default void postCall(Message message) {
+    }
+
+    default void preTool(AgentAction agentAction) {
+    }
+
+    default void postTool(AgentAction agentAction, String observation) {
     }
 }

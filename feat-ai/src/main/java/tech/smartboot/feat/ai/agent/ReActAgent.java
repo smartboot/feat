@@ -114,10 +114,14 @@ public class ReActAgent extends FeatAgent {
 
                 // 设置状态为工具执行
                 setState(AgentState.TOOL_EXECUTION);
-
+                options.hook().preTool(action);
                 // 执行工具
                 executeTool(action.getAction(), action.getActionInput()).whenComplete((observation, throwable) -> {
+                    if (throwable != null) {
+                        observation = throwable.getMessage();
+                    }
                     logger.info("执行工具: {}, 输入: {}, 观察结果: {}", action.getAction(), action.getActionInput(), observation);
+                    options.hook().postTool(action, observation);
                     // 将动作和观察结果添加到历史记录中
                     String scratchpadEntry = String.format("Thought: %s\nAction: %s\nAction Input: %s\nObservation: %s\n", action.getThought(), action.getAction(), action.getActionInput(), observation);
 
