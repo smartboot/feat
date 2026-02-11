@@ -146,6 +146,7 @@ public class ReActAgent extends FeatAgent {
 
     @Override
     public CompletableFuture<String> execute(List<Message> input) {
+        options.hook().preCall(input);
         StringBuilder sb = new StringBuilder();
         for (Message message : input) {
             sb.append(message.getRole()).append(" : ").append(message.getContent().replace("\n", "\\n")).append("\n");
@@ -161,6 +162,11 @@ public class ReActAgent extends FeatAgent {
         templateData.put("agent_scratchpad", "无");
         templateData.put("system_prompt", options.chatOptions().getSystem());
         internalExecute(templateData, 0, completableFuture);
+        completableFuture.thenApply(result -> {
+            Message output = Message.ofAssistant(result);
+            options.hook().postCall(output);
+            return output.getContent();
+        });
         return completableFuture;
     }
 

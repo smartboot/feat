@@ -12,12 +12,14 @@ package tech.smartboot.feat.ai.agent.hook;
 
 import tech.smartboot.feat.ai.chat.entity.Message;
 
+import java.util.List;
+
 /**
  * @author 三刀
  * @version v1.0 2/10/26
  */
 public interface Hook {
-    default void preCall(Message message) {
+    default void preCall(List<Message> message) {
     }
 
     default void postCall(Message message) {
