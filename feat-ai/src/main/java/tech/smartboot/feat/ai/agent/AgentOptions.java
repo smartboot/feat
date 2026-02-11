@@ -57,7 +57,7 @@ public class AgentOptions {
      * </p>
      */
     private int maxIterations = 20;
-
+    private ActionParse actionParse = new DefaultActionParse();
     /**
      * 工具执行器映射
      * <p>
@@ -189,5 +189,9 @@ public class AgentOptions {
      */
     public ChatOptions chatOptions() {
         return chatOptions;
+    }
+
+    ActionParse actionParse() {
+        return actionParse;
     }
 }

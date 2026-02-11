@@ -33,8 +33,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * 基于ReAct范式的AI Agent实现
@@ -54,42 +52,6 @@ public class ReActAgent extends FeatAgent {
 
     // 日志记录器
     private static final Logger logger = LoggerFactory.getLogger(ReActAgent.class.getName());
-
-    /**
-     * 匹配思考步骤的正则表达式
-     * <p>
-     * 用于从AI模型的响应中提取Thought部分的内容。
-     * 格式示例：Thought: 我需要搜索相关信息
-     * </p>
-     */
-    private static final Pattern THOUGHT_PATTERN = Pattern.compile("Thought:\\s*(.+)");
-
-    /**
-     * 匹配动作步骤的正则表达式
-     * <p>
-     * 用于从AI模型的响应中提取Action部分的内容，即要执行的工具名称。
-     * 格式示例：Action: search
-     * </p>
-     */
-    private static final Pattern ACTION_PATTERN = Pattern.compile("Action:\\s*([\\w_]+)");
-
-    /**
-     * 匹配动作输入的正则表达式
-     * <p>
-     * 用于从AI模型的响应中提取Action Input部分的内容，即传递给工具的参数。
-     * 格式示例：Action Input: {"query": "最新的人工智能技术"}
-     * </p>
-     */
-    private static final Pattern ACTION_INPUT_PATTERN = Pattern.compile("Action Input:\\s*(.+)", Pattern.DOTALL);
-
-    /**
-     * 匹配最终答案的正则表达式
-     * <p>
-     * 用于从AI模型的响应中提取最终答案。
-     * 格式示例：AI: 这是问题的答案...
-     * </p>
-     */
-    private static final Pattern FINAL_ANSWER_PATTERN = Pattern.compile("AI:\\s*(.+)");
 
     /**
      * 构造函数，初始化时注册标准工具集
@@ -138,15 +100,15 @@ public class ReActAgent extends FeatAgent {
                 }
                 String response = responseMessage.getContent() + '\n';
                 // 解析响应并决定下一步行动
-                AgentAction action = parseAgentResponse(response);
+                AgentAction action = options.actionParse().parse(response);
                 if (action == null) {
                     logger.info("无法解析AI模型响应：" + response);
                     future.completeExceptionally(new FeatException("invalid result:" + response));
                     return;
                 }
-                if ("Final Answer".equals(action.getAction())) {
+                if (AgentAction.FINAL_ANSWER.equals(action.getAction())) {
                     // 如果是最终答案，则结束
-                    future.complete(response);
+                    future.complete(action.getActionInput());
                     return;
                 }
 
@@ -198,70 +160,6 @@ public class ReActAgent extends FeatAgent {
         return completableFuture;
     }
 
-    /**
-     * 解析Agent响应，提取动作信息
-     * <p>
-     * 从AI模型的响应文本中提取关键信息，包括：
-     * 1. Thought（思考）: Agent的推理过程
-     * 2. Action（行动）: 要执行的操作或工具
-     * 3. Action Input（行动输入）: 传递给工具的参数
-     * </p>
-     * <p>
-     * 如果响应中包含最终答案（以"AI:"开头），则将其识别为最终结果。
-     * </p>
-     *
-     * @param response AI模型的原始响应文本
-     * @return 解析得到的Agent动作对象，如果无法解析则返回null
-     */
-    private AgentAction parseAgentResponse(String response) {
-        AgentAction action = new AgentAction();
-
-        int lastAI = response.lastIndexOf("AI:");
-        int lastAction = response.lastIndexOf("Action:");
-
-        // 查找最终答案
-        if (lastAI > lastAction) {
-            Matcher finalAnswerMatcher = FINAL_ANSWER_PATTERN.matcher(response);
-            if (finalAnswerMatcher.find()) {
-                action.setAction("Final Answer");
-                action.setActionInput(finalAnswerMatcher.group(1));
-                return action;
-            }
-        }
-
-        // 查找思考步骤
-        int lastThought = response.lastIndexOf("Thought:");
-        if (lastThought > 0) {
-            Matcher thoughtMatcher = THOUGHT_PATTERN.matcher(response.substring(lastThought));
-            if (thoughtMatcher.find()) {
-                action.setThought(thoughtMatcher.group(1));
-            }
-        }
-
-        response = response.substring(lastAction);
-
-        // 查找动作
-        Matcher actionMatcher = ACTION_PATTERN.matcher(response);
-        if (actionMatcher.find()) {
-            action.setAction(actionMatcher.group(1).trim());
-        }
-
-        // 查找动作输入
-        Matcher actionInputMatcher = ACTION_INPUT_PATTERN.matcher(response);
-        if (actionInputMatcher.find()) {
-            String actionInput = actionInputMatcher.group(1).trim();
-            // 将换行符标准化为 \n
-            actionInput = actionInput.replaceAll("\\R", "\n");
-            action.setActionInput(actionInput);
-        }
-
-        // 如果有动作但没有输入，则返回null
-        if (action.getAction() != null && action.getActionInput() == null) {
-            return null;
-        }
-
-        return action.getAction() != null ? action : null;
-    }
 
     /**
      * 执行工具
@@ -350,94 +248,5 @@ public class ReActAgent extends FeatAgent {
      */
     private String getToolNames() {
         return String.join(", ", options.getToolExecutors().keySet());
-    }
-
-    /**
-     * Agent动作内部类
-     * <p>
-     * 用于封装Agent在ReAct循环中的一次完整动作，包括：
-     * 1. Thought（思考）: Agent的推理内容
-     * 2. Action（行动）: 要执行的操作
-     * 3. Action Input（行动输入）: 操作的参数
-     * </p>
-     */
-    private static class AgentAction {
-        /**
-         * 思考内容
-         * <p>
-         * Agent对当前情况的分析和下一步行动计划的思考。
-         * </p>
-         */
-        private String thought;
-
-        /**
-         * 动作名称
-         * <p>
-         * 要执行的具体操作或工具名称。
-         * </p>
-         */
-        private String action;
-
-        /**
-         * 动作输入参数
-         * <p>
-         * 传递给动作或工具的参数信息。
-         * </p>
-         */
-        private String actionInput;
-
-        /**
-         * 获取思考内容
-         *
-         * @return 思考内容
-         */
-        public String getThought() {
-            return thought;
-        }
-
-        /**
-         * 设置思考内容
-         *
-         * @param thought 思考内容
-         */
-        public void setThought(String thought) {
-            this.thought = thought;
-        }
-
-        /**
-         * 获取动作名称
-         *
-         * @return 动作名称
-         */
-        public String getAction() {
-            return action;
-        }
-
-        /**
-         * 设置动作名称
-         *
-         * @param action 动作名称
-         */
-        public void setAction(String action) {
-            this.action = action;
-        }
-
-        /**
-         * 获取动作输入参数
-         *
-         * @return 动作输入参数
-         */
-        public String getActionInput() {
-            return actionInput;
-        }
-
-        /**
-         * 设置动作输入参数
-         *
-         * @param actionInput 动作输入参数
-         */
-        public void setActionInput(String actionInput) {
-            this.actionInput = actionInput;
-        }
     }
 }

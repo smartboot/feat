@@ -25,7 +25,7 @@ public class ReActAgentTest {
         FeatAgent agent = new ReActAgent();
 
         // 执行测试
-        String result = agent.execute("smart-mqtt如何安装").get();
+        String result = agent.execute("你是谁").get();
         System.out.println("\n\n最终结果:\n" + result);
         System.out.println("\nAgent最终状态: " + agent.getState());
     }
