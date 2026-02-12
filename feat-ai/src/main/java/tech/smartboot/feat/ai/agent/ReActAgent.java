@@ -145,6 +145,15 @@ public class ReActAgent extends FeatAgent {
                     throw new FeatException("canceled");
                 }
             }
+
+            @Override
+            public void onReasoning(String content) {
+                // 通过异常抛出，结束流
+                if (cancel) {
+                    throw new FeatException("canceled");
+                }
+                options.hook().onReasoning(content);
+            }
         });
     }
 

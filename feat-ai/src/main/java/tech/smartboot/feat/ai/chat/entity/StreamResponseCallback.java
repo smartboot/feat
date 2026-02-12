@@ -30,6 +30,10 @@ public interface StreamResponseCallback {
     default void onCompletion(ResponseMessage responseMessage) {
     }
 
+    default void onReasoning(String content) {
+
+    }
+
     /**
      * 处理流式响应数据
      * <p>

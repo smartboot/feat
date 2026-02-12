@@ -31,4 +31,7 @@ public interface Hook {
 
     default void postTool(AgentAction agentAction, String observation) {
     }
+
+    default void onReasoning(String agentAction) {
+    }
 }

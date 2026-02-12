@@ -92,6 +92,7 @@ public class ChatModel {
     public void chatStream(List<Message> messages, List<String> tools, StreamResponseCallback consumer) {
         HttpPost post = chat0(messages, tools, true);
         StringBuilder contentBuilder = new StringBuilder();
+        StringBuilder reasoningBuilder = new StringBuilder();
         Map<Integer, ToolCall> toolCallMap = new HashMap<>();
         AtomicInteger status = new AtomicInteger(STREAM_STATUS_INIT);
         post.onSuccess(response -> {
@@ -115,6 +116,7 @@ public class ChatModel {
                 ResponseMessage responseMessage = new ResponseMessage();
                 responseMessage.setRole(Message.ROLE_ASSISTANT);
                 responseMessage.setContent(contentBuilder.toString());
+                responseMessage.setReasoningContent(reasoningBuilder.toString());
                 responseMessage.setToolCalls(new ArrayList<>(toolCallMap.values()));
                 responseMessage.setSuccess(true);
                 status.set(STREAM_STATUS_COMPLETE);
@@ -150,8 +152,8 @@ public class ChatModel {
             }
             String reasoningContent = delta.getString("reasoning_content");
             if (reasoningContent != null) {
-                consumer.onStreamResponse(reasoningContent);
-                contentBuilder.append(reasoningContent);
+                consumer.onReasoning(reasoningContent);
+                reasoningBuilder.append(reasoningContent);
             }
             List<ToolCall> toolCalls = delta.getObject("tool_calls", new TypeReference<List<ToolCall>>() {
             });
