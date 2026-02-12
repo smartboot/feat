@@ -52,13 +52,13 @@ public class DefaultActionParse implements ActionParse {
     private static final Pattern FINAL_ANSWER_PATTERN = Pattern.compile("AI:\\s*(.+)");
 
     @Override
-    public AgentAction parse(String response) {
+    public ToolCaller parse(String response) {
         int lastAI = response.lastIndexOf("AI:");
         int lastAction = response.lastIndexOf("Action:");
 
         // 查找最终答案
         if (lastAI > lastAction) {
-            return AgentAction.finalAnswer(response.substring(lastAI + 3));
+            return ToolCaller.finalAnswer(response.substring(lastAI + 3));
         }
 
         String thought = null;
@@ -90,7 +90,7 @@ public class DefaultActionParse implements ActionParse {
 
         // 如果有动作但没有输入，则返回null
         if (action != null && actionInput != null) {
-            return AgentAction.toolAction(action, actionInput, thought);
+            return ToolCaller.toolAction(action, actionInput, thought);
         } else {
             return null;
         }

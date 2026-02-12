@@ -19,7 +19,7 @@ package tech.smartboot.feat.ai.agent;
  * 3. Action Input（行动输入）: 操作的参数
  * </p>
  */
-public class AgentAction {
+public class ToolCaller {
     static final String FINAL_ANSWER = "Final Answer:";
     /**
      * 思考内容
@@ -45,22 +45,25 @@ public class AgentAction {
      */
     private String actionInput;
 
-    private AgentAction() {
+    private String observation;
+    private Throwable throwable;
+
+    private ToolCaller() {
     }
 
-    public static AgentAction toolAction(String toolName, String input, String thought) {
-        AgentAction agentAction = new AgentAction();
-        agentAction.setThought(thought);
-        agentAction.setAction(toolName);
-        agentAction.setActionInput(input);
-        return agentAction;
+    public static ToolCaller toolAction(String toolName, String input, String thought) {
+        ToolCaller toolCaller = new ToolCaller();
+        toolCaller.setThought(thought);
+        toolCaller.setAction(toolName);
+        toolCaller.setActionInput(input);
+        return toolCaller;
     }
 
-    public static AgentAction finalAnswer(String answer) {
-        AgentAction agentAction = new AgentAction();
-        agentAction.setAction(FINAL_ANSWER);
-        agentAction.setActionInput(answer);
-        return agentAction;
+    public static ToolCaller finalAnswer(String answer) {
+        ToolCaller toolCaller = new ToolCaller();
+        toolCaller.setAction(FINAL_ANSWER);
+        toolCaller.setActionInput(answer);
+        return toolCaller;
     }
 
     /**
@@ -115,5 +118,21 @@ public class AgentAction {
      */
     public void setActionInput(String actionInput) {
         this.actionInput = actionInput;
+    }
+
+    public String getObservation() {
+        return observation;
+    }
+
+    public void setObservation(String observation) {
+        this.observation = observation;
+    }
+
+    public Throwable getThrowable() {
+        return throwable;
+    }
+
+    public void setThrowable(Throwable throwable) {
+        this.throwable = throwable;
     }
 }

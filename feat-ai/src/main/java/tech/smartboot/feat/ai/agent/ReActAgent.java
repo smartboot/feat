@@ -100,13 +100,13 @@ public class ReActAgent extends FeatAgent {
                 }
                 String response = responseMessage.getContent() + '\n';
                 // 解析响应并决定下一步行动
-                AgentAction action = options.actionParse().parse(response);
+                ToolCaller action = options.actionParse().parse(response);
                 if (action == null) {
                     logger.info("无法解析AI模型响应：" + response);
                     future.completeExceptionally(new FeatException("invalid result:" + response));
                     return;
                 }
-                if (AgentAction.FINAL_ANSWER.equals(action.getAction())) {
+                if (ToolCaller.FINAL_ANSWER.equals(action.getAction())) {
                     // 如果是最终答案，则结束
                     future.complete(action.getActionInput());
                     return;
@@ -117,11 +117,10 @@ public class ReActAgent extends FeatAgent {
                 options.hook().preTool(action);
                 // 执行工具
                 executeTool(action.getAction(), action.getActionInput()).whenComplete((observation, throwable) -> {
-                    if (throwable != null) {
-                        observation = throwable.getMessage();
-                    }
+                    action.setObservation(observation);
+                    action.setThrowable(throwable);
                     logger.info("执行工具: {}, 输入: {}, 观察结果: {}", action.getAction(), action.getActionInput(), observation);
-                    options.hook().postTool(action, observation);
+                    options.hook().postTool(action);
                     // 将动作和观察结果添加到历史记录中
                     String scratchpadEntry = String.format("Thought: %s\nAction: %s\nAction Input: %s\nObservation: %s\n", action.getThought(), action.getAction(), action.getActionInput(), observation);
 

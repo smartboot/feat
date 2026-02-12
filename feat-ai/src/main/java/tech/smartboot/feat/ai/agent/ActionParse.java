@@ -15,5 +15,5 @@ package tech.smartboot.feat.ai.agent;
  * @version v1.0 2/11/26
  */
 public interface ActionParse {
-    AgentAction parse(String response);
+    ToolCaller parse(String response);
 }
