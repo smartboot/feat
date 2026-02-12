@@ -44,7 +44,16 @@ class SseEventBuilderImpl implements SseEventBuilder {
 
     @Override
     public SseEventBuilder data(String data) {
-        sb.append("data:").append(data.replace("\n", "\\n")).append('\n');
+        sb.append("data:");
+        for (int i = 0; i < data.length(); i++) {
+            char c = data.charAt(i);
+            if (c == '\n') {
+                sb.append("\\n");
+            } else {
+                sb.append(c);
+            }
+        }
+        sb.append('\n');
         return this;
     }
 
