@@ -104,6 +104,12 @@ public class ChatModel {
                 responseMessage.setSuccess(false);
                 consumer.onCompletion(responseMessage);
             }
+        }).onFailure(throwable -> {
+            ResponseMessage responseMessage = new ResponseMessage();
+            responseMessage.setRole(Message.ROLE_ASSISTANT);
+            responseMessage.setError(throwable.getMessage());
+            responseMessage.setSuccess(false);
+            consumer.onCompletion(responseMessage);
         }).onSSE(sse -> sse.onData(event -> {
             if (status.get() == STREAM_STATUS_INIT) {
                 status.set(STREAM_STATUS_UPGRADE);
