@@ -229,18 +229,43 @@ public class HelloServer {
 
 ### 使用 Mermaid 画图
 
-流程图、序列图直接用 ` ```mermaid ` 代码块：
+**优先使用 Mermaid 图表**来解释流程和原理，特别是：
+- **泳道图（Sequence Diagram）**：展示多角色交互流程
+- **流程图（Flowchart）**：展示执行步骤和决策分支
+- **状态图（State Diagram）**：展示状态变化
+
+**为什么要用图表？**
+- 一张图胜过千言万语，能直观展示复杂流程
+- 泳道图特别适合展示「谁做了什么」的交互过程
+- 读者看一眼就能理解整体流程
+
+**示例 - 泳道图展示请求处理流程：**
+
+```mermaid
+sequenceDiagram
+    participant U as 用户
+    participant S as 服务器
+    participant D as 数据库
+    
+    U->>S: 发送请求
+    S->>D: 查询数据
+    D-->>S: 返回结果
+    S-->>U: 响应数据
+```
+
+**示例 - 流程图展示条件分支：**
 
 ```mermaid
 graph TD
-    A[用户请求] --> B{身份验证}
-    B -->|成功| C[处理请求]
-    B -->|失败| D[返回错误]
+    A[开始] --> B{是否登录?}
+    B -->|是| C[处理请求]
+    B -->|否| D[返回登录页]
     C --> E[返回结果]
     D --> E
+    E --> F[结束]
 ```
 
-<Aside type="tip">图表不是必须的。只有当流程复杂、用文字描述不清楚时才需要画图。</Aside>
+<Aside type="tip">复杂流程优先画图，简单流程用文字。能用图说明的，不要写长篇大论。</Aside>
 
 ---
 

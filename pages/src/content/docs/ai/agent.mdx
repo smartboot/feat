@@ -16,18 +16,6 @@ import CheckAuthorize from '../../../components/CheckAuthorize.astro'
 
 它基于 **ReAct（推理+行动）** 范式，能像人一样**思考 → 行动 → 观察 → 再思考**，通过循环迭代解决复杂的多步骤任务。
 
-**一个真实的例子：**
-
-> 你说："阅读 Spring 官方文档，对比 Spring Boot 2 和 3 的差异，生成一份分析报告"
-> 
-> Agent 会：
-> 1. 搜索 Spring 官方文档
-> 2. 读取文档内容
-> 3. 对比两个版本的差异
-> 4. 生成并保存分析报告
-
-完全自动，无需你一步步指导。
-
 <Aside type="tip">Agent 特别适合处理需要多步骤、多工具协作的复杂任务。</Aside>
 
 ---
@@ -72,8 +60,6 @@ public class AgentDemo {
 
 ReAct = **Reasoning（推理）+ Acting（行动）**
 
-Agent 解决问题的基本循环：
-
 ```mermaid
 graph TD
     A[收到任务] --> B[思考：我需要做什么？]
@@ -84,7 +70,7 @@ graph TD
     E -->|完成了| F[给出最终答案]
 ```
 
-**举个例子：**
+举个例子：
 
 你说："查找 Feat 框架的最新版本，并阅读它的更新日志"
 
@@ -246,24 +232,26 @@ ReActAgent agent = new ReActAgent(opts -> {
 ```java
 import tech.smartboot.feat.ai.agent.AgentTool;
 import com.alibaba.fastjson2.JSONObject;
+import java.util.concurrent.CompletableFuture;
 
-public class DatabaseTool implements AgentTool {
+public class CalculatorTool implements AgentTool {
     
     @Override
-    public String execute(JSONObject parameters) {
-        String sql = parameters.getString("sql");
-        // 执行 SQL 查询...
-        return "查询结果";
+    public CompletableFuture<String> execute(JSONObject parameters) {
+        String expression = parameters.getString("expression");
+        // 执行计算逻辑...
+        String result = "计算结果";
+        return CompletableFuture.completedFuture(result);
     }
     
     @Override
     public String getName() {
-        return "database_query";
+        return "calculator";
     }
     
     @Override
     public String getDescription() {
-        return "执行 SQL 查询，参数：sql (string)";
+        return "执行数学计算，参数：expression (string) 数学表达式";
     }
     
     @Override
@@ -271,9 +259,9 @@ public class DatabaseTool implements AgentTool {
         return "{\n"
             + "  \"type\": \"object\",\n"
             + "  \"properties\": {\n"
-            + "    \"sql\": {\"type\": \"string\", \"description\": \"SQL 语句\"}\n"
+            + "    \"expression\": {\"type\": \"string\", \"description\": \"数学表达式\"}\n"
             + "  },\n"
-            + "  \"required\": [\"sql\"]\n"
+            + "  \"required\": [\"expression\"]\n"
             + "}";
     }
 }
@@ -283,11 +271,39 @@ public class DatabaseTool implements AgentTool {
 
 ```java
 ReActAgent agent = new ReActAgent(opts -> {
-    opts.addTool(new DatabaseTool());
+    opts.addTool(new CalculatorTool());
 });
 ```
 
-现在 Agent 就能使用 `database_query` 工具执行 SQL 查询了。
+现在 Agent 就能使用 `calculator` 工具执行数学计算了。
+
+---
+
+## 监控 Agent 状态
+
+```java
+import tech.smartboot.feat.ai.agent.AgentState;
+
+// 获取当前状态
+AgentState state = agent.getState();
+System.out.println("Agent 状态: " + state);
+```
+
+状态说明：
+
+| 状态 | 说明 |
+|------|------|
+| `IDLE` | 空闲，等待任务 |
+| `RUNNING` | 正在推理 |
+| `TOOL_EXECUTION` | 正在执行工具 |
+| `FINISHED` | 任务完成 |
+| `ERROR` | 执行出错 |
+
+### 取消任务
+
+```java
+agent.cancel();  // 取消正在执行的任务
+```
 
 ---
 
@@ -323,18 +339,6 @@ Agent 会自动：
 3. 提取关键信息并总结
 4. 将报告写入文件
 
-### 案例：代码审查助手
-
-```java
-String task = "请审查 ./src/main/java 目录下的代码：\n"
-    + "1. 列出所有 Java 文件\n"
-    + "2. 读取每个文件的内容\n"
-    + "3. 检查是否存在潜在问题（空指针、资源未关闭等）\n"
-    + "4. 生成审查报告";
-
-String report = agent.execute(task).get();
-```
-
 ---
 
 ## 最佳实践
@@ -353,26 +357,11 @@ String report = agent.execute(task).get();
 
 ### 3. 选择合适的模型
 
-- **快速任务**：GPT-3.5、轻量级模型
-- **复杂推理**：GPT-4、DeepSeek V3、Claude
+- **快速任务**：轻量级模型
+- **复杂推理**：DeepSeek V3、GPT-4、Claude
 - **代码相关**：Codex、CodeLlama
 
-### 4. 监控执行过程
-
-```java
-// 获取当前状态
-AgentState state = agent.getState();
-System.out.println("Agent 状态: " + state);
-```
-
-状态说明：
-- `IDLE` - 空闲，等待任务
-- `RUNNING` - 正在推理
-- `TOOL_EXECUTION` - 正在执行工具
-- `FINISHED` - 任务完成
-- `ERROR` - 执行出错
-
-### 5. 错误处理
+### 4. 错误处理
 
 ```java
 import java.util.concurrent.ExecutionException;
@@ -393,12 +382,14 @@ try {
 ## 总结
 
 **Agent 的核心价值：**
+
 - 🤖 **自动化**：一次指令，自动完成多步骤任务
 - 🛠️ **工具化**：内置搜索、文件操作等常用工具
 - 🔧 **可扩展**：轻松添加自定义工具
 - 🧠 **智能化**：基于 ReAct 范式，能推理、能行动
 
 **适用场景：**
+
 - 信息收集与整理
 - 文档处理与生成
 - 代码审查与分析
