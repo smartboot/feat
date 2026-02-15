@@ -1,183 +1,289 @@
 ---
-title: 关于
-description: Feat AI 是一个功能强大的智能对话框架，支持多种模型和自定义配置
+title: Feat AI 概览
+description: Feat AI - Java AI 开发框架，提供统一的模型接入、Agent 智能体、向量存储等能力
 sidebar:
     order: 1
 ---
 
-Feat AI 是一个功能强大、灵活且高效的智能对话框架，旨在帮助开发者轻松集成和使用各种智能对话模型。它支持多种模型和自定义配置，提供了丰富的 API 接口，方便用户快速构建智能对话应用。
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+import CheckAuthorize from '../../../components/CheckAuthorize.astro'
 
-## 核心功能
+<CheckAuthorize/>
 
-Feat AI 提供了以下核心功能：
+**Feat AI** 是一个面向 Java 开发者的 AI 应用开发框架，提供统一、简洁的 API 来集成各种 AI 能力。无论是简单的聊天对话、复杂的智能 Agent，还是企业级的 RAG 应用，Feat AI 都能让你用几行代码轻松实现。
 
-### 多模型支持
+## 为什么选择 Feat AI？
 
-支持多种智能对话模型，如 DeepSeek-R1、Qwen2.5-72B 等，适用于不同的应用场景。Feat AI 提供了统一的接口来访问这些模型，使开发者可以轻松切换和比较不同模型的表现。
+| 特性 | 描述 |
+|------|------|
+| **流式 API 设计** | 链式配置风格，代码简洁直观 |
+| **统一模型接入** | 一套代码切换不同 AI 供应商（DeepSeek、OpenAI、Ollama 等） |
+| **纯 Java 实现** | 无额外依赖，原生支持 Java 生态 |
+| **响应式编程** | 基于 `CompletableFuture`，完美支持异步和高并发 |
+| **模块化设计** | 按需使用 Chat、Embedding、VectorStore、Agent 等模块 |
 
-### 灵活配置
+## 快速开始
 
-允许用户自定义 API 配置，如模型选择、API 密钥、系统提示等，满足个性化需求。通过 Options 类，开发者可以灵活地配置各种参数。
+### 1. 添加依赖
 
-### 异步处理
-
-支持异步回调机制，提升应用性能，避免阻塞主线程。通过 CompletableFuture 和回调函数，开发者可以轻松实现异步处理。
-
-### 流式响应
-
-支持流式响应，实时接收模型输出，适用于需要即时反馈的场景。这对于构建聊天机器人等实时交互应用非常有用。
-
-### 向量数据库支持
-
-Feat AI 集成了 Chroma 和 Milvus 向量数据库的支持，可以用于构建基于知识库的问答系统和推荐系统。
-
-### Agent 能力
-
-提供 Agent 功能，支持工具调用、记忆管理、搜索等能力，可以构建更智能的应用。
-
-## 关键接口
-
-### FeatAI 类
-
-`FeatAI` 是框架的入口类，用于创建各种 AI 模型实例。通过静态方法，用户可以创建不同的 AI 模型实例。
-
-```java
-public static ChatModel chatModel(Consumer<ChatOptions> consumer)
-public static EmbeddingModel embedding(Consumer<EmbeddingOptions> consumer)
-public static RerankerModel reranker(Consumer<RerankerOptions> consumer)
+```xml
+<dependency>
+    <groupId>tech.smartboot.feat</groupId>
+    <artifactId>feat-ai</artifactId>
+    <version>1.4.3</version>
+</dependency>
 ```
 
-- **chatModel**：创建对话模型实例，用于发送和处理聊天请求。
-- **embedding**：创建嵌入模型实例，用于生成文本的向量表示。
-- **reranker**：创建重排序模型实例，用于对搜索结果进行重新排序。
+### 2. 第一个 AI 程序
 
-### ChatOptions 类
-
-`ChatOptions` 类提供了丰富的配置选项，允许用户自定义对话模型的行为和环境。
-
-- **baseUrl**：设置模型的基 URL。
-- **model**：选择具体的模型。
-- **apiKey**：配置 API 密钥。
-- **system**：设置系统提示，指导模型的行为。
-- **debug**：启用调试模式，打印详细的请求和响应信息。
-
-### ChatModelVendor 类
-
-`ChatModelVendor` 类定义了预设的模型及其元数据，用户可以通过这些静态常量选择不同的模型。
-
-```java
-public static final ChatModelVendor DeepSeek_R1 = new ChatModelVendor("DeepSeek-R1", false);
-public static final ChatModelVendor Qwen2_5_72B_Instruct = new ChatModelVendor("Qwen2.5-72B-Instruct", true);
-```
-
-### ChatModel 类
-
-`ChatModel` 是发送和处理聊天请求的核心类，提供了以下方法：
-
-- **chat**：发送同步聊天请求。
-- **chatStream**：发送异步流式聊天请求。
-- **onSuccess**：处理成功的响应。
-- **onFailure**：处理失败的响应。
-
-## 快速上手
-
-### 初始化和配置
+<Tabs>
+<TabItem label="DeepSeek">
 
 ```java
 import tech.smartboot.feat.ai.FeatAI;
 import tech.smartboot.feat.ai.chat.ChatModel;
-import tech.smartboot.feat.ai.chat.ChatModelVendor;
 
-public class ChatDemo {
+public class HelloAI {
     public static void main(String[] args) {
-        // 创建 ChatModel 实例
-        ChatModel chatModel = FeatAI.chatModel(opts -> {
-            opts.model(ChatModelVendor.GiteeAI.Qwen2_5_72B_Instruct)
-                .system("你是一个乐于助人的助手。")
-                .debug(true);
+        // 创建聊天模型
+        ChatModel model = FeatAI.chatModel(opts -> opts
+            .baseUrl("https://api.deepseek.com/v1")
+            .apiKey(System.getenv("DEEPSEEK_API_KEY"))
+            .model("deepseek-chat")
+        );
+        
+        // 发送消息并接收流式响应
+        model.chatStream("你好，请介绍一下 Feat AI", response -> {
+            System.out.print(response.getContent());
         });
     }
 }
 ```
 
-### 发送同步请求
+</TabItem>
+<TabItem label="Ollama (本地)">
 
 ```java
-chatModel.chat("你好，请自我介绍一下。", rsp -> {
-    System.out.println("rsp: " + rsp.getContent());
-    System.out.println("usage: " + rsp.getUsage());
+import tech.smartboot.feat.ai.FeatAI;
+import tech.smartboot.feat.ai.chat.ChatModel;
+
+public class LocalAI {
+    public static void main(String[] args) {
+        // 连接本地 Ollama
+        ChatModel model = FeatAI.chatModel(opts -> opts
+            .baseUrl("http://localhost:11434/v1")
+            .model("qwen2.5:7b")
+        );
+        
+        model.chatStream("解释什么是 RAG", response -> {
+            System.out.println(response.getContent());
+        });
+    }
+}
+```
+
+</TabItem>
+</Tabs>
+
+## 核心模块
+
+### ChatModel - 聊天模型
+
+统一的聊天模型接口，支持流式和非流式对话：
+
+```java
+// 创建模型实例
+ChatModel chatModel = FeatAI.chatModel(opts -> opts
+    .model(ChatModelVendor.GiteeAI.Qwen2_5_72B_Instruct)
+);
+
+// 多轮对话 - 自动维护上下文
+chatModel.chat("你好", response1 -> {
+    // 第一次响应
+    chatModel.chat("刚才说了什么？", response2 -> {
+        // 第二次响应，模型记得上下文
+    });
 });
 ```
 
-### 发送异步流式请求
+**关键特性：**
+- 自动对话历史管理
+- 工具调用 (Function Calling)
+- JSON 结构化输出
+- 流式响应支持
+
+### Embedding - 文本嵌入
+
+将文本转换为向量表示，用于语义搜索和 RAG：
 
 ```java
-chatModel.chatStream("你好，请自我介绍一下。", new StreamResponseCallback() {
-    @Override
-    public void onStreamResponse(String content) {
-        System.out.print(content);
-    }
+import tech.smartboot.feat.ai.FeatAI;
+import tech.smartboot.feat.ai.embedding.EmbeddingModel;
 
-    @Override
-    public void onCompletion(ResponseMessage responseMessage) {
-        System.out.println("\nResponse completed.");
-    }
+// 创建嵌入模型
+EmbeddingModel embedding = FeatAI.embedding(opts -> opts
+    .baseUrl("https://api.siliconflow.cn/v1")
+    .apiKey(System.getenv("API_KEY"))
+    .model("BAAI/bge-m3")
+);
 
-    @Override
-    public void onFailure(Throwable throwable) {
-        System.err.println("Error: " + throwable.getMessage());
-    }
-});
+// 生成文本向量
+List<Float> vector = embedding.embed("这是一段需要嵌入的文本");
 ```
 
-有关完整示例，请参见 [ChatDemo.java](https://gitee.com/smartboot/feat/blob/master/feat-ai/src/test/java/tech/smartboot/feat/ai/demo/ChatDemo.java)
+### VectorStore - 向量存储
 
-## 高级功能
-
-### Agent 使用
-
-Feat AI 提供了 Agent 功能，可以构建更智能的应用：
+支持多种向量数据库，实现语义检索：
 
 ```java
-Agent agent = FeatAgent.createAgent(options -> {
-    options.name("智能助手")
-           .description("一个智能助手，可以回答问题和执行任务")
-           .model(ChatModelVendor.GiteeAI.DeepSeek_R1);
-});
+import tech.smartboot.feat.ai.vector.VectorStore;
+import tech.smartboot.feat.ai.vector.Document;
 
-agent.chat("今天北京天气怎么样？", response -> {
-    System.out.println(response.getContent());
-});
-```
-
-### 向量数据库集成
-
-Feat AI 集成了向量数据库，可以用于构建基于知识库的问答系统：
-
-```java
 // 创建 Chroma 向量存储
-VectorStore vectorStore = VectorStore.chroma(options -> {
-    options.baseUrl("http://localhost:8000");
-});
+VectorStore store = VectorStore.chroma(opts -> opts
+    .baseUrl("http://localhost:8000")
+    .collectionName("my-docs")
+);
 
 // 添加文档
-vectorStore.add(new Document()
-    .setId("1")
-    .setDocument("Feat 是一个高性能的 Java Web 框架")
-    .setMetadata(Map.of("type", "introduction")));
+store.add(new Document("content", "Feat AI 是一个 Java AI 框架"));
 
-// 搜索相似文档
-List<Document> results = vectorStore.search("什么是 Feat？");
+// 语义搜索
+List<Document> results = store.similaritySearch("什么是 Feat AI");
 ```
 
-## 总结
+**支持的存储：**
+- Chroma - 轻量级本地向量数据库
+- Milvus - 企业级分布式向量数据库
 
-Feat AI 是一个功能丰富、性能优越的智能对话框架，能够满足多种 AI 应用场景的需求。通过简单的 API 和灵活的配置选项，开发者可以快速构建高效的智能对话应用。其高性能、易用性和扩展性使其成为 AI 应用开发的理想选择。
+### Agent - 智能代理
 
-## 应用场景
+基于 ReAct 范式的智能 Agent，能够自主规划、使用工具完成复杂任务：
 
-- **智能客服**：实时回答用户问题，提升客户满意度。
-- **虚拟助手**：帮助用户完成日常任务，提高效率。
-- **内容生成**：生成高质量的文章、报告等文本内容。
-- **知识问答**：基于知识库的智能问答系统。
-- **代码助手**：帮助开发者编写和审查代码。
+```java
+import tech.smartboot.feat.ai.FeatAI;
+import tech.smartboot.feat.ai.agent.FeatAgent;
+import tech.smartboot.feat.ai.agent.AgentTool;
+
+// 创建 Agent
+FeatAgent agent = FeatAI.agent(opts -> opts
+    .maxIterations(20)
+    .prompt("你是一个专业的客服助手")
+    .tool("search", new SearchTool())
+    .tool("calculator", new CalculatorTool())
+);
+
+// 执行任务 - Agent 自动规划步骤
+String result = agent.execute(
+    "搜索 Feat 框架的最新版本，并计算 2.5 版本距今多少天了"
+).get();
+```
+
+### Reranker - 结果重排序
+
+提升 RAG 检索质量的交叉编码器：
+
+```java
+import tech.smartboot.feat.ai.FeatAI;
+import tech.smartboot.feat.ai.reranker.RerankerModel;
+
+RerankerModel reranker = FeatAI.reranker(opts -> opts
+    .baseUrl("https://api.siliconflow.cn/v1")
+    .model("BAAI/bge-reranker-v2-m3")
+);
+
+// 对搜索结果重排序
+List<Document> reranked = reranker.rerank(
+    query,
+    documents,
+    5  // 返回前5个
+);
+```
+
+## 完整 RAG 示例
+
+结合所有模块构建一个完整的检索增强生成应用：
+
+```java
+import tech.smartboot.feat.ai.FeatAI;
+import tech.smartboot.feat.ai.chat.ChatModel;
+import tech.smartboot.feat.ai.embedding.EmbeddingModel;
+import tech.smartboot.feat.ai.reranker.RerankerModel;
+import tech.smartboot.feat.ai.vector.VectorStore;
+import tech.smartboot.feat.ai.vector.Document;
+
+public class RagApplication {
+    
+    // 1. 初始化组件
+    EmbeddingModel embedding = FeatAI.embedding(opts -> opts
+        .model("BAAI/bge-m3")
+    );
+    
+    VectorStore vectorStore = VectorStore.chroma(opts -> opts
+        .collectionName("knowledge-base")
+    );
+    
+    RerankerModel reranker = FeatAI.reranker(opts -> opts
+        .model("BAAI/bge-reranker-v2-m3")
+    );
+    
+    ChatModel chatModel = FeatAI.chatModel(opts -> opts
+        .model(ChatModelVendor.DeepSeek.V3)
+    );
+    
+    // 2. 索引文档
+    public void indexDocuments(List<String> texts) {
+        List<Document> docs = texts.stream()
+            .map(text -> new Document("doc", text))
+            .toList();
+        vectorStore.add(docs);
+    }
+    
+    // 3. 回答问题
+    public void answer(String question) {
+        // 检索相关文档
+        List<Document> candidates = vectorStore.similaritySearch(
+            SearchRequest.builder()
+                .query(question)
+                .topK(10)
+                .build()
+        );
+        
+        // 重排序提升质量
+        List<Document> relevant = reranker.rerank(question, candidates, 3);
+        
+        // 构建增强提示词
+        String context = relevant.stream()
+            .map(Document::getContent)
+            .collect(Collectors.joining("\n\n"));
+        
+        String prompt = """
+            基于以下参考信息回答问题：
+            
+            参考信息：
+            {context}
+            
+            用户问题：{question}
+            
+            请只基于参考信息回答，不要编造内容。
+            """.replace("{context}", context)
+               .replace("{question}", question);
+        
+        // 生成回答
+        chatModel.chatStream(prompt, response -> {
+            System.out.print(response.getContent());
+        });
+    }
+}
+```
+
+## 核心 API 速查
+
+| 功能 | 入口类 | 示例 |
+|------|--------|------|
+| 聊天模型 | `FeatAI.chatModel()` | `FeatAI.chatModel(opts -> opts.model("gpt-4"))` |
+| 嵌入模型 | `FeatAI.embedding()` | `FeatAI.embedding(opts -> opts.model("bge-m3"))` |
+| 向量存储 | `VectorStore.chroma()` | `VectorStore.chroma(opts -> opts.baseUrl(...))` |
+| Agent | `FeatAI.agent()` | `FeatAI.agent(opts -> opts.maxIterations(10))` |
+| 重排序 | `FeatAI.reranker()` | `FeatAI.reranker(opts -> opts.model(...))` |
+
