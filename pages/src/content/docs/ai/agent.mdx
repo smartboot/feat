@@ -78,7 +78,7 @@ ReAct（Reasoning + Acting）是 Agent 的核心工作原理。这个范式让 A
 
 这个循环过程让 Agent 能够解决复杂的多步骤任务。
 
-<Mermaid code={`
+```mermaid
 graph TD
     A[开始] --> B[思考]
     B --> C[执行动作]
@@ -86,7 +86,7 @@ graph TD
     D --> E{是否完成?}
     E -->|否| B
     E -->|是| F[返回最终答案]
-`}/>
+```
 
 ### 2.2 Agent 状态管理
 
