@@ -144,44 +144,6 @@ Action Input: {
 }
 ```
 
-### 4. 待办事项工具（TodoListTool）
-
-管理任务列表，用于分解复杂任务。
-
-```json
-// 创建待办列表
-Action: todo_list
-Action Input: { "action": "create" }
-
-// 添加任务
-Action: todo_list
-Action Input: {
-  "action": "add",
-  "list_id": "todo_list_123",
-  "title": "搜索资料",
-  "description": "搜索 Java 21 新特性相关资料"
-}
-
-// 标记完成
-Action: todo_list
-Action Input: {
-  "action": "complete",
-  "list_id": "todo_list_123",
-  "item_id": 1
-}
-```
-
-### 5. 子 Agent 工具（SubAgentTool）
-
-创建子 Agent 处理子任务，实现任务委派。
-
-```json
-Action: sub_agent
-Action Input: {
-  "agent_name": "research_agent",
-  "task": "深入研究 Java 21 的虚拟线程特性"
-}
-```
 
 ---
 

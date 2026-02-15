@@ -13,8 +13,6 @@ package tech.smartboot.feat.ai.agent;
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.ai.agent.tools.FileOperationTool;
 import tech.smartboot.feat.ai.agent.tools.SearchTool;
-import tech.smartboot.feat.ai.agent.tools.SubAgentTool;
-import tech.smartboot.feat.ai.agent.tools.TodoListTool;
 import tech.smartboot.feat.ai.agent.tools.WebPageReaderTool;
 import tech.smartboot.feat.ai.chat.ChatModel;
 import tech.smartboot.feat.ai.chat.ChatModelVendor;
@@ -68,7 +66,7 @@ public class ReActAgent extends FeatAgent {
      * </p>
      */
     public ReActAgent() {
-        this(opts -> opts.addTool(new TodoListTool()).addTool(new FileOperationTool()).addTool(new SearchTool()).addTool(new WebPageReaderTool()).addTool(new SubAgentTool()).chatOptions().model(ChatModelVendor.GiteeAI.DeepSeek_V32));
+        this(opts -> opts.addTool(new FileOperationTool()).addTool(new SearchTool()).addTool(new WebPageReaderTool()).chatOptions().model(ChatModelVendor.GiteeAI.DeepSeek_V32));
 
     }
 
