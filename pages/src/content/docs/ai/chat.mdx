@@ -1,216 +1,667 @@
 ---
-title: Chat 对话模型
-description: 了解如何使用 Feat AI 的 Chat 对话模型进行智能对话
+title: Chat Models
 sidebar:
   order: 2
 ---
 
-import Mermaid from '../../../components/Mermaid.astro';
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 import CheckAuthorize from '../../../components/CheckAuthorize.astro'
 
 <CheckAuthorize/>
 
-Feat AI 的 Chat 对话模型提供了一种简单而强大的方式来与各种 AI 模型进行交互。它支持多种模型供应商、流式和非流式响应、函数调用等高级功能。
+Chat Models 是 Feat AI 的核心组件，为各种 AI 模型提供统一的对话接口。它们接收消息列表作为输入，返回模型生成的消息作为输出。
 
-## 核心组件
+## 概述
 
-### ChatModel 类
+Chat Models 的使用遵循简单的模式：
 
-[ChatModel](https://gitee.com/smartboot/feat/blob/master/feat-ai/src/main/java/tech/smartboot/feat/ai/chat/ChatModel.java) 是核心的聊天模型类，用于与 AI 模型进行交互。它提供了多种方法来发送聊天请求并处理响应：
-
-- **chat**：发送非流式聊天请求
-- **chatStream**：发送流式聊天请求
-
-### ChatOptions 类
-
-[ChatOptions](https://gitee.com/smartboot/feat/blob/master/feat-ai/src/main/java/tech/smartboot/feat/ai/chat/ChatOptions.java) 用于配置聊天模型的各种参数，包括模型供应商、API 密钥、系统提示等。
-
-### ChatModelVendor 类
-
-[ChatModelVendor](https://gitee.com/smartboot/feat/blob/master/feat-ai/src/main/java/tech/smartboot/feat/ai/chat/ChatModelVendor.java) 定义了不同的模型供应商及其能力，如 GiteeAI 和 Ollama。
-
-## 快速开始
-
-### 初始化 ChatModel
-
-要开始使用 Chat 对话模型，首先需要创建一个 [ChatModel](https://gitee.com/smartboot/feat/blob/master/feat-ai/src/main/java/tech/smartboot/feat/ai/chat/ChatModel.java) 实例：
+1. **初始化** - 使用 `FeatAI.chatModel()` 创建模型实例
+2. **配置** - 通过 `ChatOptions` 设置模型参数、API 密钥等
+3. **调用** - 发送消息并接收响应（流式或非流式）
 
 ```java
 import tech.smartboot.feat.ai.FeatAI;
 import tech.smartboot.feat.ai.chat.ChatModel;
 import tech.smartboot.feat.ai.chat.ChatModelVendor;
 
-// 创建 ChatModel 实例
-ChatModel chatModel = FeatAI.chatModel(opts -> {
+// 初始化
+ChatModel model = FeatAI.chatModel(opts -> {
+    opts.model(ChatModelVendor.GiteeAI.Qwen2_5_72B_Instruct);
+});
+
+// 调用
+model.chatStream("你好", response -> {
+    System.out.print(response.getContent());
+});
+```
+
+## 快速开始
+
+### 安装
+
+```xml
+<dependency>
+    <groupId>tech.smartboot.feat</groupId>
+    <artifactId>feat-ai</artifactId>
+    <version>1.4.3</version>
+</dependency>
+```
+
+### 第一个程序
+
+<Tabs>
+<TabItem label="GiteeAI">
+
+```java
+ChatModel model = FeatAI.chatModel(opts -> {
     opts.model(ChatModelVendor.GiteeAI.Qwen2_5_72B_Instruct)
-        .system("你是一个乐于助人的助手。")
+        .apiKey(System.getenv("GITEE_AI_API_KEY"));
+});
+
+model.chatStream("你好，请自我介绍", response -> {
+    System.out.print(response.getContent());
+});
+```
+
+</TabItem>
+<TabItem label="Ollama (本地)">
+
+```java
+ChatModel model = FeatAI.chatModel(opts -> {
+    opts.baseUrl("http://localhost:11434/v1")
+        .model("qwen2.5:7b");
+});
+
+model.chatStream("你好", response -> {
+    System.out.print(response.getContent());
+});
+```
+
+</TabItem>
+<TabItem label="DeepSeek">
+
+```java
+ChatModel model = FeatAI.chatModel(opts -> {
+    opts.baseUrl("https://api.deepseek.com/v1")
+        .apiKey(System.getenv("DEEPSEEK_API_KEY"))
+        .model("deepseek-chat");
+});
+
+model.chat("你好", response -> {
+    System.out.println(response.getContent());
+});
+```
+
+</TabItem>
+</Tabs>
+
+## 核心概念
+
+### Messages
+
+Chat Models 通过消息列表进行对话。每条消息都有角色（role）和内容（content）：
+
+```java
+import tech.smartboot.feat.ai.chat.entity.Message;
+
+// 用户消息
+Message userMsg = Message.ofUser("你好");
+
+// 系统消息 - 设定 AI 行为
+Message systemMsg = Message.ofSystem("你是专业助手");
+
+// AI 回复
+Message aiMsg = Message.ofAssistant("你好！有什么可以帮助你？");
+```
+
+### ChatOptions 配置
+
+所有模型参数通过 `ChatOptions` 链式配置：
+
+```java
+ChatModel model = FeatAI.chatModel(opts -> {
+    // 模型选择
+    opts.model(ChatModelVendor.GiteeAI.Qwen2_5_72B_Instruct)
+        // 或自定义
+        // .baseUrl("https://api.example.com/v1")
+        // .model("custom-model")
+        
+        // 认证
+        .apiKey("your-api-key")
+        
+        // 系统提示
+        .system("你是专业助手")
+        
+        // 调试
         .debug(true);
 });
 ```
 
-### 发送非流式请求
+### 响应类型
 
-使用 [chat](https://gitee.com/smartboot/feat/blob/master/feat-ai/src/main/java/tech/smartboot/feat/ai/chat/ChatModel.java#L118) 方法发送非流式请求：
+**非流式响应** - 一次性返回完整结果：
 
 ```java
-chatModel.chat("你好，请自我介绍一下。", responseMessage -> {
-    System.out.println("rsp: " + responseMessage.getContent());
-    System.out.println("usage: " + responseMessage.getUsage());
+model.chat("你好", response -> {
+    // response.getContent() - 文本内容
+    // response.getUsage() - Token 用量
+    // response.isSuccess() - 是否成功
+    // response.getError() - 错误信息（失败时）
 });
 ```
 
-### 发送流式请求
-
-使用 [chatStream](https://gitee.com/smartboot/feat/blob/master/feat-ai/src/main/java/tech/smartboot/feat/ai/chat/ChatModel.java#L46) 方法发送流式请求：
+**流式响应** - 实时接收生成内容：
 
 ```java
-chatModel.chatStream("你好，请自我介绍一下。", new StreamResponseCallback() {
+model.chatStream("你好", new StreamResponseCallback() {
+    @Override
+    public void onStreamResponse(String content) {
+        // 实时接收每个 token
+        System.out.print(content);
+    }
+    
+    @Override
+    public void onCompletion(ResponseMessage response) {
+        // 流式响应完成
+    }
+    
+    @Override
+    public void onFailure(Throwable throwable) {
+        // 处理错误
+    }
+});
+```
+
+## 使用指南
+
+### 多轮对话
+
+ChatModel 自动维护对话历史：
+
+```java
+ChatModel model = FeatAI.chatModel(opts -> {
+    opts.model(ChatModelVendor.GiteeAI.Qwen2_5_72B_Instruct);
+});
+
+// 第一轮
+model.chat("我叫张三", rsp1 -> {
+    System.out.println("AI: " + rsp1.getContent());
+    
+    // 第二轮 - 自动记住上下文
+    model.chat("我刚才说了什么？", rsp2 -> {
+        System.out.println("AI: " + rsp2.getContent());
+        // 输出包含 "张三"
+    });
+});
+```
+
+### 提示词模板 (Prompt Templates)
+
+Prompt Templates 提供参数化提示词构建能力，支持 `{{variable}}` 占位符语法，实现提示词的可复用和动态化。
+
+#### 基础语法
+
+使用双大括号定义参数占位符：
+
+```java
+import tech.smartboot.feat.ai.chat.prompt.Prompt;
+
+// 创建带参数的模板
+final Prompt template = new Prompt(
+    "你是一位 {{role}}，请为 {{product}} 撰写一份 {{type}}。" +
+    "目标读者是 {{audience}}，风格要求：{{style}}"
+);
+
+// 填充参数并发送
+model.chat(template, new Consumer<Map<String, String>>() {
+    @Override
+    public void accept(Map<String, String> params) {
+        params.put("role", "技术专家");
+        params.put("product", "Feat AI");
+        params.put("type", "产品介绍");
+        params.put("audience", "Java 开发者");
+        params.put("style", "专业且通俗易懂");
+    }
+}, new Consumer<ResponseMessage>() {
+    @Override
+    public void accept(ResponseMessage response) {
+        System.out.println(response.getContent());
+    }
+});
+```
+
+#### 无参数模板
+
+当模板不包含占位符时，系统会自动处理：
+
+```java
+// 无参数模板
+final Prompt simplePrompt = new Prompt("请总结以下内容：");
+
+// 等效于：请总结以下内容：\r\nUser:{{content}}
+model.chat(simplePrompt, new Consumer<Map<String, String>>() {
+    @Override
+    public void accept(Map<String, String> params) {
+        params.put(Prompt.CONTENT_PARAM_NAME, "需要总结的文本...");
+    }
+}, new Consumer<ResponseMessage>() {
+    @Override
+    public void accept(ResponseMessage response) {
+        System.out.println(response.getContent());
+    }
+});
+```
+
+**检查模板是否有参数**：
+
+```java
+Prompt prompt = new Prompt("你好 {{name}}");
+boolean hasParams = !prompt.isNoneParam();  // true
+
+Prompt simple = new Prompt("请总结：");
+boolean noParams = simple.isNoneParam();    // true
+```
+
+#### 流式模板响应
+
+模板同样支持流式输出，适合长文本生成场景：
+
+```java
+model.chatStream(template, new Consumer<Map<String, String>>() {
+    @Override
+    public void accept(Map<String, String> params) {
+        params.put("topic", "人工智能发展趋势");
+        params.put("wordCount", "1000");
+    }
+}, new StreamResponseCallback() {
     @Override
     public void onStreamResponse(String content) {
         System.out.print(content);
     }
-
+    
     @Override
-    public void onCompletion(ResponseMessage responseMessage) {
-        System.out.println("\nResponse completed.");
+    public void onCompletion(ResponseMessage response) {
+        System.out.println("\n生成完成！");
     }
-
+    
     @Override
     public void onFailure(Throwable throwable) {
-        System.err.println("Error: " + throwable.getMessage());
+        System.err.println("生成失败: " + throwable.getMessage());
     }
 });
 ```
 
-有关完整示例，请参见 [ChatDemo.java](https://gitee.com/smartboot/feat/blob/master/feat-ai/src/test/java/tech/smartboot/feat/ai/demo/ChatDemo.java)
+#### 预定义模板
 
-## 配置选项
-
-### 基本配置
-
-[ChatOptions](https://gitee.com/smartboot/feat/blob/master/feat-ai/src/main/java/tech/smartboot/feat/ai/chat/ChatOptions.java) 提供了多种配置选项：
+Feat AI 内置多种业务场景模板，开箱即用：
 
 ```java
-ChatModel chatModel = FeatAI.chatModel(opts -> {
-    opts.model(ChatModelVendor.GiteeAI.Qwen2_5_72B_Instruct)  // 选择模型
-        .baseUrl("https://ai.gitee.com/v1/")                   // 设置基础URL
-        .apiKey("your-api-key")                                // 设置API密钥
-        .system("你是一个乐于助人的助手。")                      // 设置系统提示
-        .debug(true);                                          // 启用调试模式
+import tech.smartboot.feat.ai.chat.prompt.PromptTemplate;
+
+// 微信公众号文章生成
+model.chat(PromptTemplate.WECHAT_EDITOR, new Consumer<Map<String, String>>() {
+    @Override
+    public void accept(Map<String, String> params) {
+        params.put("topic", "开源项目 Feat AI 介绍");
+        params.put("reference", "Feat AI 是一个 Java AI 开发框架，提供...");
+    }
+}, new Consumer<ResponseMessage>() {
+    @Override
+    public void accept(ResponseMessage response) {
+        System.out.println(response.getContent());
+    }
+});
+
+// 技术文档生成
+model.chat(PromptTemplate.PROJECT_DOCUMENT_EDITOR, new Consumer<Map<String, String>>() {
+    @Override
+    public void accept(Map<String, String> params) {
+        params.put("project", "MyProject");
+        params.put("version", "1.0.0");
+    }
+}, new Consumer<ResponseMessage>() {
+    @Override
+    public void accept(ResponseMessage response) {
+        System.out.println(response.getContent());
+    }
+});
+
+// Maven 项目架构图生成（输出 Mermaid 格式）
+model.chat(PromptTemplate.MAVEN_PROJECT_MERMAID, new Consumer<Map<String, String>>() {
+    @Override
+    public void accept(Map<String, String> params) {
+        params.put("file_list", pomXmlContent);
+    }
+}, new Consumer<ResponseMessage>() {
+    @Override
+    public void accept(ResponseMessage response) {
+        // 获取 Mermaid 格式的架构图
+        System.out.println(response.getContent());
+    }
+});
+
+// 代码生成
+model.chat(PromptTemplate.PROJECT_CODER, new Consumer<Map<String, String>>() {
+    @Override
+    public void accept(Map<String, String> params) {
+        params.put("input", "实现一个用户登录功能");
+        params.put("reference", existingCodeReference);
+    }
+}, new Consumer<ResponseMessage>() {
+    @Override
+    public void accept(ResponseMessage response) {
+        System.out.println(response.getContent());
+    }
 });
 ```
 
-### 模型供应商
+**可用的预定义模板**：
 
-Feat AI 支持多种模型供应商，包括 GiteeAI 和 Ollama：
+| 模板 | 用途 | 主要参数 |
+|------|------|----------|
+| `WECHAT_EDITOR` | 微信公众号文章 | `topic`, `reference` |
+| `PROJECT_DOCUMENT_EDITOR` | 技术文档 | `project`, `version` |
+| `MAVEN_PROJECT_MERMAID` | 架构图生成 | `file_list` |
+| `PROJECT_CODER` | 代码生成 | `input`, `reference` |
+
+#### 自定义业务模板
+
+封装可复用的业务模板：
 
 ```java
-// GiteeAI 模型
-opts.model(ChatModelVendor.GiteeAI.Qwen2_5_72B_Instruct)
+public class BusinessTemplates {
+    
+    // 技术博客模板
+    public static final Prompt TECH_BLOG = new Prompt(
+        "请撰写一篇关于 {{technology}} 的技术博客文章。\n" +
+        "目标读者：{{audience}}\n" +
+        "文章结构：\n" +
+        "1. 引言：介绍 {{technology}} 的背景和重要性\n" +
+        "2. 核心概念：解释关键技术点\n" +
+        "3. 代码示例：提供 {{language}} 示例代码\n" +
+        "4. 最佳实践：分享实用经验\n" +
+        "5. 总结：要点回顾\n" +
+        "字数要求：{{wordCount}} 字"
+    );
+    
+    // 代码审查模板
+    public static final Prompt CODE_REVIEW = new Prompt(
+        "请对以下 {{language}} 代码进行审查：\n" +
+        "```{{language}}\n{{code}}\n```\n" +
+        "审查维度：\n" +
+        "1. 潜在 Bug 和安全漏洞\n" +
+        "2. 性能优化建议\n" +
+        "3. 代码规范问题\n" +
+        "4. 可读性和可维护性\n" +
+        "5. 改进建议"
+    );
+    
+    // 邮件生成模板
+    public static final Prompt EMAIL_GENERATOR = new Prompt(
+        "请撰写一封 {{type}} 邮件。\n" +
+        "收件人：{{recipient}}\n" +
+        "主题：{{subject}}\n" +
+        "要点：{{keyPoints}}\n" +
+        "语气：{{tone}}"
+    );
+    
+    // 产品需求文档模板
+    public static final Prompt PRD_GENERATOR = new Prompt(
+        "请撰写 {{product}} 的产品需求文档。\n" +
+        "功能模块：{{module}}\n" +
+        "用户故事：{{userStory}}\n" +
+        "包含内容：\n" +
+        "1. 需求背景\n" +
+        "2. 功能描述\n" +
+        "3. 用户流程\n" +
+        "4. 接口定义\n" +
+        "5. 验收标准"
+    );
+}
 
-// Ollama 模型
-opts.model(ChatModelVendor.Ollama.Qwen3_06B)
+// 使用自定义模板
+public void generateTechBlog(final String technology) {
+    ChatModel model = FeatAI.chatModel(new Consumer<ChatOptions>() {
+        @Override
+        public void accept(ChatOptions opts) {
+            opts.model(ChatModelVendor.GiteeAI.Qwen2_5_72B_Instruct);
+        }
+    });
+    
+    model.chatStream(BusinessTemplates.TECH_BLOG, new Consumer<Map<String, String>>() {
+        @Override
+        public void accept(Map<String, String> params) {
+            params.put("technology", technology);
+            params.put("audience", "中级 Java 开发者");
+            params.put("language", "Java");
+            params.put("wordCount", "2000");
+        }
+    }, new StreamResponseCallback() {
+        @Override
+        public void onStreamResponse(String content) {
+            System.out.print(content);
+        }
+        
+        @Override
+        public void onCompletion(ResponseMessage response) {
+            System.out.println("\n博客生成完成！");
+        }
+        
+        @Override
+        public void onFailure(Throwable throwable) {
+            System.err.println("生成失败: " + throwable.getMessage());
+        }
+    });
+}
 ```
 
-有关完整示例，请参见 [OllamaDemo.java](https://gitee.com/smartboot/feat/blob/master/feat-ai/src/test/java/tech/smartboot/feat/ai/demo/OllamaDemo.java)
+#### 模板最佳实践
 
-## 高级功能
-
-### 函数调用
-
-Chat 模型支持函数调用功能，允许模型调用预定义的函数：
+**1. 参数验证**
 
 ```java
-ChatModel chatModel = FeatAI.chatModel(opts -> {
+public void safePromptUsage(final Prompt prompt, final Map<String, String> params) {
+    if (!prompt.isNoneParam()) {
+        // 检查必需参数
+        if (!params.containsKey("product")) {
+            throw new IllegalArgumentException("缺少必需参数: product");
+        }
+    }
+    
+    String finalPrompt = prompt.prompt(params);
+    System.out.println("最终提示词: " + finalPrompt);
+}
+```
+
+**2. 手动构建提示词**
+
+```java
+Prompt prompt = new Prompt("你好 {{name}}");
+Map<String, String> params = new HashMap<String, String>();
+params.put("name", "张三");
+
+// 直接获取构建后的字符串
+String finalText = prompt.prompt(params);
+// 输出: 你好 张三
+```
+
+**3. 模板缓存**
+
+```java
+public class PromptCache {
+    private static final Map<String, Prompt> CACHE = new HashMap<String, Prompt>();
+    
+    public static Prompt get(String name) {
+        Prompt prompt = CACHE.get(name);
+        if (prompt == null) {
+            prompt = loadFromConfig(name);
+            CACHE.put(name, prompt);
+        }
+        return prompt;
+    }
+    
+    private static Prompt loadFromConfig(String name) {
+        // 从配置文件加载
+        return new Prompt("默认模板");
+    }
+}
+```
+
+**4. 嵌套参数**
+
+```java
+// 支持在模板中多次使用同一参数
+Prompt prompt = new Prompt(
+    "产品 {{name}} 的特点：\n" +
+    "1. {{name}} 性能优秀\n" +
+    "2. {{name}} 易于使用"
+);
+
+Map<String, String> params = new HashMap<String, String>();
+params.put("name", "Feat AI");
+// 所有 {{name}} 都会被替换
+```
+
+### 工具调用 (Tool Calling)
+
+让模型调用外部函数：
+
+```java
+ChatModel model = FeatAI.chatModel(opts -> {
     opts.model(ChatModelVendor.GiteeAI.DeepSeek_R1)
-        .addFunction(Function.of("get_current_weather"))  // 添加函数
-        .system("你是一个天气助手，可以查询天气信息。");
+        .addFunction(Function.of("get_weather")
+            .description("获取天气")
+            .addProperty("city", "string", "城市名", true))
+        .addFunction(Function.of("get_time")
+            .description("获取时间"));
 });
 
-// 发送带有函数调用的请求
-chatModel.chat("今天北京的天气怎么样？", Arrays.asList("get_current_weather"), responseMessage -> {
-    System.out.println("函数调用结果: " + responseMessage.getToolCalls());
-});
-```
-
-### 响应格式控制
-
-可以控制模型的响应格式：
-
-```java
-chatModel.getOptions().responseFormat(ResponseFormat.JSON);
-```
-
-### 不进行思考模式
-
-某些模型支持直接输出结果而不展示思考过程：
-
-```java
-chatModel.getOptions().noThink(true);
-```
-
-## 工作流程
-
-<Mermaid code={`
-graph TD
-    A[创建 ChatModel] --> B[配置 ChatOptions]
-    B --> C[选择模型供应商]
-    C --> D[设置参数]
-    D --> E[发送请求]
-    E --> F{流式请求?}
-    F -->|是| G[chatStream]
-    F -->|否| H[chat]
-    G --> I[逐步接收响应]
-    H --> J[一次性接收响应]
-    I --> K[处理完成]
-    J --> K
-`} />
-
-## 最佳实践
-
-### 1. 错误处理
-
-始终处理可能的错误情况：
-
-```java
-chatModel.chat("你好", responseMessage -> {
-    if (responseMessage.isSuccess()) {
-        System.out.println("响应: " + responseMessage.getContent());
-    } else {
-        System.err.println("错误: " + responseMessage.getError());
+// 发送请求
+model.chat("北京天气怎么样？", Arrays.asList("get_weather"), response -> {
+    if (!response.getToolCalls().isEmpty()) {
+        for (ToolCall toolCall : response.getToolCalls()) {
+            System.out.println("函数: " + toolCall.getName());
+            System.out.println("参数: " + toolCall.getArguments());
+        }
     }
 });
 ```
 
-### 2. 资源管理
+### 结构化输出
 
-确保正确管理资源，特别是在使用流式响应时。
-
-### 3. 调试模式
-
-在开发阶段启用调试模式以获取详细信息：
+强制返回 JSON 格式：
 
 ```java
-opts.debug(true);
+ChatModel model = FeatAI.chatModel(opts -> {
+    opts.model(ChatModelVendor.GiteeAI.Qwen2_5_72B_Instruct)
+        .responseFormat(ResponseFormat.JSON);
+});
+
+model.chat("返回用户信息 JSON", response -> {
+    JSONObject json = JSON.parseObject(response.getContent());
+    System.out.println(json.getString("name"));
+});
 ```
 
-## 支持的模型
+## 集成 (Integrations)
 
-Feat AI 支持多种模型供应商和模型：
+Feat AI 支持多种模型供应商：
 
-### GiteeAI 模型
+### GiteeAI
 
-- DeepSeek-R1
-- Qwen2.5-72B-Instruct
-- Qwen3-235B-A22B-Instruct-2507
-- Kimi-K2-Instruct
+```java
+opts.model(ChatModelVendor.GiteeAI.DeepSeek_R1)
+opts.model(ChatModelVendor.GiteeAI.Qwen2_5_72B_Instruct)
+opts.model(ChatModelVendor.GiteeAI.Kimi_K2_Instruct)
+opts.model(ChatModelVendor.GiteeAI.Qwen3_235B_A22B_Instruct)
+```
 
-### Ollama 模型
+### Ollama
 
-- Qwen3_06B
-- Qwen2.5_3B
-- Deepseek-r1_7B
+```java
+opts.model(ChatModelVendor.Ollama.Qwen3_06B)
+opts.model(ChatModelVendor.Ollama.Qwen2_5_3B)
+opts.model(ChatModelVendor.Ollama.Deepseek_r1_7B)
+```
 
-## 总结
+### 自定义 OpenAI 兼容 API
 
-Feat AI 的 Chat 对话模型提供了一个强大而灵活的接口来与各种 AI 模型进行交互。通过简单的 API 和丰富的配置选项，开发者可以轻松构建智能对话应用。其支持多种模型供应商、流式和非流式响应、函数调用等高级功能，使其成为构建 AI 应用的理想选择。
+```java
+opts.baseUrl("https://api.custom.com/v1")
+    .apiKey("your-key")
+    .model("custom-model")
+```
+
+## API 参考
+
+### FeatAI
+
+| 方法 | 说明 |
+|------|------|
+| `chatModel(Consumer<ChatOptions>)` | 创建 ChatModel 实例 |
+
+### ChatOptions
+
+| 方法 | 说明 |
+|------|------|
+| `model(ChatModelVendor)` | 选择模型供应商 |
+| `baseUrl(String)` | 自定义 API 地址 |
+| `apiKey(String)` | 设置 API 密钥 |
+| `system(String)` | 设置系统提示 |
+| `debug(boolean)` | 启用调试 |
+| `addFunction(Function)` | 添加工具函数 |
+| `responseFormat(ResponseFormat)` | 设置响应格式 |
+| `noThink(boolean)` | 禁用思考模式 |
+
+### ChatModel
+
+| 方法 | 说明 |
+|------|------|
+| `chat(String, Consumer<ResponseMessage>)` | 非流式对话 |
+| `chatStream(String, StreamResponseCallback)` | 流式对话 |
+| `chat(Prompt, Consumer<Map>, Consumer<ResponseMessage>)` | 模板非流式 |
+| `chatStream(Prompt, Consumer<Map>, StreamResponseCallback)` | 模板流式 |
+
+## 示例：完整应用
+
+```java
+public class CustomerServiceBot {
+    
+    private final ChatModel chatModel;
+    private final Prompt prompt = new Prompt(
+        "你是 {{company}} 的客服。当前用户：{{user}}"
+    );
+    
+    public CustomerServiceBot() {
+        this.chatModel = FeatAI.chatModel(opts -> {
+            opts.model(ChatModelVendor.GiteeAI.Qwen2_5_72B_Instruct);
+        });
+    }
+    
+    public void chat(final String userName, final String question) {
+        // 设置系统提示
+        chatModel.chat(prompt, params -> {
+            params.put("company", "SmartBoot");
+            params.put("user", userName);
+        }, rsp -> {});
+        
+        // 处理问题
+        chatModel.chatStream(question, new StreamResponseCallback() {
+            @Override
+            public void onStreamResponse(String content) {
+                System.out.print(content);
+            }
+            
+            @Override
+            public void onCompletion(ResponseMessage response) {
+                System.out.println("\n[完成]");
+            }
+            
+            @Override
+            public void onFailure(Throwable throwable) {
+                System.err.println("错误: " + throwable.getMessage());
+            }
+        });
+    }
+}
+```
