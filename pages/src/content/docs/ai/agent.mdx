@@ -5,7 +5,6 @@ sidebar:
     order: 6
 ---
 
-import Mermaid from '../../../components/Mermaid.astro';
 import CheckAuthorize from '../../../components/CheckAuthorize.astro'
 
 <CheckAuthorize/>
@@ -109,7 +108,7 @@ System.out.println("当前状态: " + state);
 
 Feat AI Agent 采用了模块化设计，主要包括以下几个核心组件：
 
-<Mermaid code={`
+```mermaid
 graph TB
     A[Agent接口] --> B[FeatAgent抽象类]
     B --> C[ReActAgent实现类]
@@ -128,7 +127,7 @@ graph TB
     style C fill:#FFE4B5,stroke:#333
     style D fill:#E6E6FA,stroke:#333
     style F fill:#E6E6FA,stroke:#333
-`} />
+```
 
 ### 3.1 核心组件说明
 
@@ -146,7 +145,7 @@ graph TB
 
 Agent 的工作流程如下图所示：
 
-<Mermaid code={`
+```mermaid
 sequenceDiagram
     participant U as 用户
     participant R as ReActAgent
@@ -161,7 +160,7 @@ sequenceDiagram
         T->>R: 返回结果
     end
     R->>U: 返回最终结果
-`} />
+```
 
 ## 4. 内置工具详解
 
