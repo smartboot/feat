@@ -104,6 +104,11 @@ public class ChatModelVendor extends Vendor {
         public static final ChatModelVendor Kimi_K2_Instruct = new GiteeAI("Kimi-K2-Instruct", CAPABILITY_FUNCTION_CALL, null);
 
         /**
+         * Kimi-K2.5-Instruct模型
+         */
+        public static final ChatModelVendor Kimi_K25_Instruct = new GiteeAI("Kimi-K2.5", CAPABILITY_THINK | CAPABILITY_FUNCTION_CALL, null);
+
+        /**
          * DeepSeek-R1-Distill-Qwen-32B模型
          */
         public static final ChatModelVendor DeepSeek_R1_Distill_Qwen_32B = new GiteeAI("DeepSeek-R1-Distill-Qwen-32B", 0, qwen_pre_request);
