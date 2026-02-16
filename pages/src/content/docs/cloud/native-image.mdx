@@ -6,7 +6,6 @@ sidebar:
 ---
 
 import CheckAuthorize from '../../../components/CheckAuthorize.astro'
-import Mermaid from '../../../components/Mermaid.astro'
 import {Aside, TabItem, Tabs} from "@astrojs/starlight/components";
 
 <CheckAuthorize/>
@@ -105,7 +104,7 @@ native-image \
 
 ## 构建流程详解
 
-<Mermaid code={`
+```mermaid
 graph TD
     A[准备源代码] --> B[选择构建方式]
     B --> C1[使用 Maven 插件<br/>需要JDK21+]
@@ -116,7 +115,7 @@ graph TD
     D --> G[生成原生可执行文件]
     F --> G
     G --> H[测试原生应用]
-`} />
+```
 
 ## 最佳实践
 

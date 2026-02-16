@@ -4,7 +4,6 @@ description: Feat 框架 Session 会话管理快速入门教程
 sidebar:
     order: 5
 ---
-import Mermaid from '../../../components/Mermaid.astro';
 
 会话(Session)是Web应用中用来跟踪用户状态的机制。HTTP协议本身是无状态的，Session允许我们在多个请求之间保存用户信息。
 
@@ -109,25 +108,27 @@ public class Bootstrap {
 
 ### 本地Session
 
-<Mermaid code={`graph TD
+```mermaid
+graph TD
     A[用户请求] --> B{Cookie中有Session ID?}
     B -->|是| C[从内存中获取Session]
     B -->|否| D[创建新Session]
     C --> E[处理业务逻辑]
     D --> E
     E --> F[返回响应]
-`} />
+```
 
 ### Redis Session
 
-<Mermaid code={`graph TD
+```mermaid
+graph TD
     A[用户请求] --> B{Cookie中有Session ID?}
     B -->|是| C[从Redis获取Session]
     B -->|否| D[创建新Session]
     C --> E[处理业务逻辑]
     D --> E
     E --> F[返回响应]
-`} />
+```
 
 ## 最佳实践
 

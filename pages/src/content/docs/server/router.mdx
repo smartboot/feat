@@ -5,7 +5,6 @@ sidebar:
   order: 3
 ---
 
-import Mermaid from '../../../components/Mermaid.astro';
 
 让我们一起来探索 Feat 框架中强大的 Router 组件！它就像一个聪明的交通警察，能够准确地将每个 HTTP 请求引导到正确的处理程序。当你的应用程序逐渐变得复杂，拥有越来越多的 API 接口时，Router 就是你管理这些接口的得力助手。
 
@@ -88,7 +87,7 @@ router.route("/static/*", ctx -> {
 
 来看一个形象的路由匹配示意图：
 
-<Mermaid code={`
+```mermaid
 graph TD
     A[根路径 /] --> B[api]
     A --> C[user]
@@ -108,7 +107,7 @@ graph TD
     style G fill:#E91E63
     style H fill:#E91E63
     style I fill:#E91E63
-`} />
+```
 
 ## 会话管理（Session）
 
@@ -164,7 +163,7 @@ router.route("/logout", ctx -> {
 
 Session 的生命周期管理示意图：
 
-<Mermaid code={`
+```mermaid
 graph LR
     A[创建Session] --> B[访问/更新]
     B --> C[重置超时]
@@ -178,7 +177,7 @@ graph LR
     style C fill:#FFC107
     style D fill:#FF5722
     style E fill:#F44336
-`} />
+```
 
 ## 拦截器机制
 
@@ -218,7 +217,7 @@ router.addInterceptor("/admin/*", new AuthInterceptor());
 
 拦截器执行流程如下：
 
-<Mermaid code={`
+```mermaid
 graph LR
     A[客户端请求] --> B[拦截器1前置处理]
     B --> C[拦截器2前置处理]
@@ -234,7 +233,7 @@ graph LR
     style E fill:#2196F3
     style F fill:#2196F3
     style G fill:#4CAF50
-`} />
+```
 
 ## 完整示例
 

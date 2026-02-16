@@ -5,8 +5,6 @@ sidebar:
     order: 4
 ---
 import CheckAuthorize from '../../../components/CheckAuthorize.astro'
-import {TabItem, Tabs, Aside} from "@astrojs/starlight/components";
-import Mermaid from '../../../components/Mermaid.astro';
 
 <CheckAuthorize/>
 
@@ -33,7 +31,8 @@ Feat Cloud 提供以下核心注解：
 
 当我们发起一个 HTTP 请求时，Controller 是如何处理它的呢？让我们通过下面的流程图来了解一下：
 
-<Mermaid code={`graph TD
+```mermaid
+graph TD
     A[HTTP请求到达] --> B{路径匹配}
     B -->|匹配成功| C[找到对应Controller]
     C --> D{方法匹配}
@@ -45,7 +44,7 @@ Feat Cloud 提供以下核心注解：
     
     B -->|匹配失败| J[404错误]
     D -->|匹配失败| K[405错误]
-`}/>
+```
 
 是不是很清晰？接下来我们就来详细了解每个注解的使用方法。
 

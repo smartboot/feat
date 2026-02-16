@@ -6,7 +6,6 @@ sidebar:
 ---
 import {TabItem, Tabs,Aside} from "@astrojs/starlight/components";
 import CheckAuthorize from '../../../components/CheckAuthorize.astro'
-import Mermaid from '../../../components/Mermaid.astro';
 
 <CheckAuthorize/>
 
@@ -27,7 +26,7 @@ import Mermaid from '../../../components/Mermaid.astro';
 
 下面是整个系统的架构概览：
 
-<Mermaid code={`
+```mermaid
 graph TD
     A[客户端] --> B[Controller层]
     B --> C[Service层]
@@ -38,7 +37,7 @@ graph TD
     style C fill:#98FB98,stroke:#333
     style D fill:#FFB6C1,stroke:#333
     style E fill:#DDA0DD,stroke:#333
-`} />
+```
 
 ## 环境准备
 
@@ -391,7 +390,7 @@ public class UserController {
 
 数据在整个系统中的流转过程如下所示：
 
-<Mermaid code={`
+```mermaid
 sequenceDiagram
     participant Client as 客户端
     participant Controller as Controller层
@@ -407,7 +406,7 @@ sequenceDiagram
     Mapper-->>Service: 返回对象
     Service-->>Controller: 返回业务结果
     Controller-->>Client: 返回HTTP响应
-`} />
+```
 
 ## 测试 API 接口
 

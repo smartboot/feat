@@ -5,7 +5,6 @@ sidebar:
     order: 6
 ---
 
-import Mermaid from '../../../components/Mermaid.astro';
 import CheckAuthorize from '../../../components/CheckAuthorize.astro'
 
 <CheckAuthorize/>
@@ -93,14 +92,14 @@ public class SSEDemo {
 
 SSE 工作原理示意图：
 
-<Mermaid code={`
+```mermaid
 graph LR
     A[浏览器客户端] -->|HTTP GET /events| B[服务器]
     B -->|Server-Sent Events| A
     
     style A fill:#4CAF50
     style B fill:#2196F3
-`} />
+```
 
 ## 协议选择建议
 

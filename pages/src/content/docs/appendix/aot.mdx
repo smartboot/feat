@@ -6,7 +6,6 @@ sidebar:
 ---
 
 import CheckAuthorize from '../../../components/CheckAuthorize.astro'
-import Mermaid from '../../../components/Mermaid.astro'
 import { TabItem, Tabs, Aside } from "@astrojs/starlight/components";
 
 <CheckAuthorize/>
@@ -21,7 +20,7 @@ Feat框架通过AOT（Ahead-of-Time）编译技术实现零反射的运行时环
 
 AOT编译的核心是`FeatAnnotationProcessor`，基于Java APT技术在编译期扫描和处理注解：
 
-<Mermaid code={`
+```mermaid
 sequenceDiagram
     participant Compiler as Java编译器
     participant Processor as FeatAnnotationProcessor
@@ -37,7 +36,7 @@ sequenceDiagram
     end
     
     Processor->>File: 生成SPI配置文件
-`} />
+```
 
 实际的注解处理器支持以下注解：
 
@@ -60,7 +59,7 @@ public Set<String> getSupportedAnnotationTypes() {
 
 Feat采用模板方法模式设计了序列化器体系：
 
-<Mermaid code={`
+```mermaid
 classDiagram
     class Serializer {
         +serializeLoadBean()
@@ -88,7 +87,7 @@ classDiagram
     Serializer <|-- ControllerSerializer
     Serializer <|-- BeanSerializer
     Serializer <|-- MapperSerializer
-`} />
+```
 
 优化策略包括：
 1. **死代码消除**：分析依赖关系，只生成实际使用的代码
@@ -184,7 +183,7 @@ AOT 编译器会将其转换为优化后的代码，完全避免了运行时反�
 
 生成的服务类通过Java SPI机制进行加载：
 
-<Mermaid code={`
+```mermaid
 graph LR
     A[编译期] --> B[生成CloudService实现]
     B --> C[创建SPI配置文件]
@@ -194,7 +193,7 @@ graph LR
     F --> G[加载所有CloudService]
     G --> H[按order排序]
     H --> I[依次执行生命周期]
-`} />
+```
 
 ### 核心优势
 
@@ -222,7 +221,7 @@ AOT 模式让我们的应用在启动时就达到最佳性能状态，尤其适�
 
 两种模式都遵循相同的Bean生命周期管理规范：
 
-<Mermaid code={`
+```mermaid
 stateDiagram-v2
     [*] --> 创建实例: loadBean()
     创建实例 --> 属性注入: autowired()
@@ -246,7 +245,7 @@ stateDiagram-v2
         AOT: 预生成路由代码
         VM: 反射解析@RequestMapping
     end note
-`} />
+```
 
 ### 启用AOT VM模式
 
