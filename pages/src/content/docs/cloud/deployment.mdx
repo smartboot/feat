@@ -1,6 +1,6 @@
 ---
-title: 打包&发布应用
-description: 从打包到部署的最佳实践
+title: 打包与部署
+description: 如何将 Feat 应用打包并部署到生产环境
 sidebar:
     order: 99
 ---
@@ -10,11 +10,13 @@ import CheckAuthorize from '../../../components/CheckAuthorize.astro'
 
 <CheckAuthorize/>
 
+本指南介绍如何将 Feat 应用打包为可执行文件，并使用 Docker 进行部署。
+
 ## 打包为 Fat Jar
 
-Feat 应用可以通过 Maven 的 `maven-shade-plugin` 插件打包成一个包含所有依赖的可执行 jar 包（也称为 fat jar）。
+使用 Maven 的 `maven-shade-plugin` 插件打包成包含所有依赖的可执行 jar 包。
 
-在 `pom.xml` 中添加以下配置：
+### 配置 pom.xml
 
 ```xml title="pom.xml"
 <build>
@@ -31,7 +33,7 @@ Feat 应用可以通过 Maven 的 `maven-shade-plugin` 插件打包成一个包�
                     </goals>
                     <configuration>
                         <transformers>
-                            <!-- 采用追加的方式 -->
+                            <!-- 追加方式合并服务文件 -->
                             <transformer
                                     implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                                 <resource>META-INF/services/tech.smartboot.feat.cloud.CloudService</resource>
@@ -49,27 +51,24 @@ Feat 应用可以通过 Maven 的 `maven-shade-plugin` 插件打包成一个包�
 ```
 
 <Aside>
-    请将 `your.package.MainClass` 替换为您的主类的完整类名。
+    请将 `your.package.MainClass` 替换为你的主类完整类名。
 </Aside>
 
-执行以下命令进行打包：
+### 执行打包
 
 ```bash
 mvn clean package
 ```
 
+打包完成后，在 `target` 目录下会生成包含所有依赖的 jar 文件。
+
 ## Docker 部署
 
-Feat 应用支持多种 Docker 部署方式，包括传统的基于 JRE 的镜像和高性能的 Native 镜像。下面我们将详细介绍这两种部署方式。
+### 基于 JRE 的部署
 
-有关完整示例，请参见 <a href="https://gitee.com/smartboot/feat/tree/master/demo/helloworld_docker" target="_blank">helloworld_docker</a>
-### 基于 JRE 的 Docker 部署
-
-对于传统的 Docker 部署方式，我们可以使用 JRE 镜像来运行打包好的 jar 文件。
+适用于传统部署场景，使用 JRE 镜像运行 jar 文件。
 
 #### 创建 Dockerfile
-
-创建一个基于轻量级 JRE 镜像的 Dockerfile：
 
 ```dockerfile title="Dockerfile"
 FROM eclipse-temurin:21.0.7_6-jre-alpine
@@ -81,11 +80,7 @@ EXPOSE 8080
 CMD ["java", "-jar", "helloworld.jar"]
 ```
 
-这个 Dockerfile 使用了 Eclipse Temurin 的 Alpine Linux 版本 JRE 镜像，这是一个非常轻量级的选择。
-
-#### 构建和运行
-
-使用以下命令构建和运行基于 JRE 的镜像：
+#### 构建并运行
 
 ```bash
 # 构建镜像
@@ -95,40 +90,31 @@ docker build -t feat-docker:jre .
 docker run -p 8080:8080 feat-docker:jre
 ```
 
-现在你可以通过访问 `http://localhost:8080/hello` 来测试你的应用了。
+测试：`http://localhost:8080/hello`
 
 ### 构建 Native 镜像
 
-Feat 支持使用 GraalVM 将应用编译为本地可执行文件，从而获得更快的启动速度和更低的资源消耗。我们可以将这些 Native 应用程序打包到 Docker 镜像中，以实现高效的容器化部署。
+使用 GraalVM 将应用编译为本地可执行文件，获得更快的启动速度和更低的资源消耗。
 
 #### 创建 Dockerfile
-
-以下是一个用于构建 Feat Native 应用的 Dockerfile 示例：
 
 ```dockerfile title="Dockerfile"
 FROM container-registry.oracle.com/graalvm/native-image:21-ol8 AS builder
 
 COPY target/helloworld_docker*.jar helloworld.jar
 
-# Build
+# 编译为本地可执行文件
 RUN native-image --no-fallback -jar helloworld.jar
 
-# 运行阶段：用 ubuntu 最小镜像
+# 运行阶段：使用轻量级基础镜像
 FROM ubuntu:18.04
 EXPOSE 8080
 
-# Copy the native executable into the containers
 COPY --from=builder /app/helloworld helloworld
 ENTRYPOINT ["/helloworld"]
 ```
 
-这个 Dockerfile 采用了多阶段构建：
-1. 第一阶段使用 GraalVM 镜像将 jar 包编译为本地可执行文件
-2. 第二阶段使用轻量级的 Ubuntu 镜像作为运行环境，复制编译好的可执行文件
-
-#### 构建和运行
-
-执行以下命令构建并运行 Docker 镜像：
+#### 构建并运行
 
 ```bash
 # 打包应用
@@ -141,8 +127,19 @@ docker build -t feat-docker:native .
 docker run -p 8080:8080 feat-docker:native
 ```
 
-现在你可以通过访问 `http://localhost:8080/hello` 来测试你的应用了。
+测试：`http://localhost:8080/hello`
 
 <Aside>
-    注意：示例中使用的是 docker 命令，如果你使用的是 podman，只需将命令中的 docker 替换为 podman 即可。
+    如使用 podman，只需将命令中的 `docker` 替换为 `podman` 即可。
 </Aside>
+
+## 部署方式对比
+
+| 部署方式 | 启动速度 | 内存占用 | 适用场景 |
+|----------|----------|----------|----------|
+| Fat Jar + JRE | 中等 | 中等 | 传统部署、开发测试 |
+| Native 镜像 | 极快（毫秒级） | 极低 | 云原生、Serverless、微服务 |
+
+## 完整示例
+
+有关完整示例，请参见 [helloworld_docker 示例项目](https://gitee.com/smartboot/feat/tree/master/demo/helloworld_docker)

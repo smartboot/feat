@@ -1,6 +1,6 @@
 ---
 title: CloudOptions 配置参考
-description: Feat Cloud 服务的核心配置参数详细说明
+description: Feat Cloud 服务核心配置参数详细说明
 sidebar:
     order: 3
 ---
@@ -10,74 +10,37 @@ import {Aside, TabItem, Tabs} from "@astrojs/starlight/components";
 
 <CheckAuthorize/>
 
-## API 概览
+本文档详细说明 `CloudOptions` 的所有配置参数及其使用方法。
 
-`CloudOptions` 是 Feat Cloud 服务的核心配置类，定义了服务启动时的所有配置参数。该类继承自 [`ServerOptions`](/feat/server/serveroptions/)，因此除自身特有配置项外，还支持 `ServerOptions` 中的所有配置项（如端口、线程池、SSL 等）。
+## 类概览
 
-### 继承关系
+`CloudOptions` 是 Feat Cloud 服务的核心配置类，继承自 [`ServerOptions`](/feat/server/serveroptions/)，因此支持 `ServerOptions` 中的所有配置项（如端口、线程池、SSL 等）。
 
 ```
 CloudOptions extends ServerOptions
 ```
 
-### 主要配置类别
-
-| 配置类别 | 说明 |
-|---------|------|
-| **组件扫描** | 控制 Feat Cloud 启动时扫描的包路径范围 |
-| **Bean 注册** | 支持向容器中注册外部 Bean 实例 |
-| **静态资源** | 指定静态资源文件的存放位置 |
-
----
-
-## 参数详解
+## 配置参数
 
 ### packages
 
-**类型**: `String[]`
+指定 Feat Cloud 启动时扫描的包路径数组。
 
-**默认值**: `null`
+| 属性 | 值 |
+|------|-----|
+| **类型** | `String[]` |
+| **默认值** | `null`（扫描所有包） |
+| **必填** | 否 |
 
-**说明**: 用于指定 Feat Cloud 启动时扫描的包路径数组，限制组件扫描范围以提升启动性能。若未指定，默认扫描所有包。
+**用途**：限制组件扫描范围以提升启动性能。
 
-**适用场景**: 大型项目中需要精确控制扫描范围，避免扫描无关包导致启动变慢。
-
----
-
-### registerBean
-
-**方法签名**: `public CloudOptions registerBean(String key, Object value)`
-
-**返回值**: `CloudOptions`（支持链式调用）
-
-**说明**: 用于在应用启动前注册需要注入的 Bean 实例。注册的 Bean 会被存入内部 `externalBeans` 映射表，在应用启动时可用于依赖注入。
-
-**适用场景**: 需要集成第三方组件（如数据源、缓存、消息队列等）或手动创建的 Bean 实例时。
-
----
-
-### staticLocations
-
-**类型**: `String`
-
-**默认值**: `"classpath:static"`
-
-**说明**: 指定静态资源文件的存放位置。用于配置静态 HTML、CSS、JavaScript 等资源的根路径。
-
-**适用场景**: 需要自定义静态资源存放目录时，如将静态资源放在 `classpath:public` 或文件系统路径。
-
----
-
-## 使用示例
-
-### 配置扫描包路径
+**示例**：
 
 <Tabs>
 <TabItem label="Lambda 方式">
 
 ```java
 FeatCloud.cloudServer(options -> {
-    // 指定扫描多个包路径
     options.setPackages(
         "com.example.controller",
         "com.example.service"
@@ -91,25 +54,35 @@ FeatCloud.cloudServer(options -> {
 ```java
 CloudOptions options = new CloudOptions();
 options.setPackages("com.example.controller", "com.example.service");
-
 FeatCloud.cloudServer(options).listen();
 ```
 
 </TabItem>
 </Tabs>
 
-### 注册外部 Bean
+---
+
+### registerBean
+
+向容器中注册外部 Bean 实例。
+
+| 属性 | 值 |
+|------|-----|
+| **方法签名** | `public CloudOptions registerBean(String key, Object value)` |
+| **返回值** | `CloudOptions`（支持链式调用） |
+| **必填** | 否 |
+
+**用途**：集成第三方组件或手动创建的 Bean 实例。
+
+**示例**：
 
 <Tabs>
-<TabItem label="Lambda 方式">
+<TabItem label="注册外部 Bean">
 
 ```java
 FeatCloud.cloudServer(options -> {
-    // 注册数据源
     options.registerBean("dataSource", createDataSource());
-    // 注册 Redis 模板
     options.registerBean("redisTemplate", createRedisTemplate());
-    // 注册消息队列生产者
     options.registerBean("mqProducer", createMQProducer());
 }).listen();
 ```
@@ -138,7 +111,45 @@ public class UserController {
 </TabItem>
 </Tabs>
 
-### 组合配置示例
+<Aside type="caution">
+  若注册的 Bean 名称与已存在的 Bean 冲突，将抛出 `FeatException` 异常。
+  建议使用业务前缀，如 `appDataSource` 而非 `dataSource`。
+</Aside>
+
+---
+
+### staticLocations
+
+指定静态资源文件的存放位置。
+
+| 属性 | 值 |
+|------|-----|
+| **类型** | `String` |
+| **默认值** | `"classpath:static"` |
+| **必填** | 否 |
+
+**用途**：配置静态 HTML、CSS、JavaScript 等资源的根路径。
+
+**示例**：
+
+```java
+// 使用默认路径
+FeatCloud.cloudServer().listen();
+
+// 自定义类路径
+FeatCloud.cloudServer(options -> {
+    options.setStaticLocations("classpath:assets");
+}).listen();
+
+// 使用文件系统路径
+FeatCloud.cloudServer(options -> {
+    options.setStaticLocations("file:/var/www/static");
+}).listen();
+```
+
+---
+
+## 完整配置示例
 
 ```java
 public class Application {
@@ -162,56 +173,35 @@ public class Application {
 }
 ```
 
-### 配置静态资源路径
-
-```java
-// 使用默认的 classpath:static
-FeatCloud.cloudServer().listen();
-
-// 自定义静态资源路径
-FeatCloud.cloudServer(options -> {
-    options.setStaticLocations("classpath:assets");
-}).listen();
-
-// 使用文件系统路径
-FeatCloud.cloudServer(options -> {
-    options.setStaticLocations("file:/var/www/static");
-}).listen();
-```
-
----
-
 ## 异常处理
 
 ### Bean 名称冲突
 
-若使用 `registerBean` 注册 Bean 时，指定的键名与已存在的 Bean 名称冲突，将抛出 `FeatException` 异常。
-
-**异常信息示例**:
 ```
 tech.smartboot.feat.core.common.exception.FeatException: bean dataSource already exists
 ```
 
-<Aside type="caution">
-注册 Bean 前确保键名未被占用。建议使用有业务含义的前缀，如 `appDataSource` 而非 `dataSource`，以避免与框架内置 Bean 冲突。
-</Aside>
+**解决方案**：使用唯一名称，添加业务前缀。
 
 ### 无效包路径
 
-若 `packages` 配置的路径不存在或无法访问，启动时可能产生以下情况：
+若配置的包路径不存在，扫描结果为空，组件可能无法加载。建议在配置前验证包路径有效性。
 
-- 包路径不存在：扫描结果为空，不会报错，但组件可能无法加载
-- 包路径格式错误：启动日志中会输出警告信息
+## 继承配置
 
-**建议做法**: 配置前验证包路径有效性，使用 IDE 的自动补全功能确保路径正确。
+`CloudOptions` 继承自 `ServerOptions`，因此也支持以下常用配置：
 
----
+| 配置项 | 说明 |
+|--------|------|
+| `port` | 服务端口，默认 8080 |
+| `threadNum` | 线程池大小 |
+| `readBufferSize` | 读缓冲区大小 |
+| `writeBufferSize` | 写缓冲区大小 |
 
+详见 [`ServerOptions` 配置参考](/feat/server/serveroptions/)
 
 ## 相关链接
 
 - [`ServerOptions` 配置参考](/feat/server/serveroptions/) - 继承的基础配置项
 - [快速开始](/feat/cloud/getstart/) - CloudOptions 的入门使用
 - [控制器开发](/feat/cloud/controller/) - 使用注册 Bean 开发控制器
-
----
