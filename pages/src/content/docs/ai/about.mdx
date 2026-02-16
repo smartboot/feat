@@ -37,6 +37,30 @@ import CheckAuthorize from '../../../components/CheckAuthorize.astro'
 ### 2. 第一个 AI 程序
 
 <Tabs>
+<TabItem label="GiteeAI">
+
+```java
+import tech.smartboot.feat.ai.FeatAI;
+import tech.smartboot.feat.ai.chat.ChatModel;
+import tech.smartboot.feat.ai.chat.ChatModelVendor;
+
+public class HelloAI {
+    public static void main(String[] args) {
+        // 创建聊天模型
+        ChatModel model = FeatAI.chatModel(opts -> opts
+            .model(ChatModelVendor.GiteeAI.Qwen2_5_72B_Instruct)
+            .apiKey(System.getenv("GITEE_AI_API_KEY"))
+        );
+        
+        // 发送消息并接收流式响应
+        model.chatStream("你好，请介绍一下 Feat AI", response -> {
+            System.out.print(response);
+        });
+    }
+}
+```
+
+</TabItem>
 <TabItem label="DeepSeek">
 
 ```java
@@ -119,12 +143,11 @@ chatModel.chat("你好", response1 -> {
 ```java
 import tech.smartboot.feat.ai.FeatAI;
 import tech.smartboot.feat.ai.embedding.EmbeddingModel;
+import tech.smartboot.feat.ai.vendor.EmbeddingModelVendor;
 
 // 创建嵌入模型
 EmbeddingModel embedding = FeatAI.embedding(opts -> opts
-    .baseUrl("https://api.siliconflow.cn/v1")
-    .apiKey(System.getenv("API_KEY"))
-    .model("BAAI/bge-m3")
+    .model(EmbeddingModelVendor.GiteeAI.BGE_M3)
 );
 
 // 生成文本向量
@@ -136,20 +159,24 @@ List<Float> vector = embedding.embed("这是一段需要嵌入的文本");
 支持多种向量数据库，实现语义检索：
 
 ```java
-import tech.smartboot.feat.ai.vector.VectorStore;
-import tech.smartboot.feat.ai.vector.Document;
+ public static void main(String[] args) {
 
-// 创建 Chroma 向量存储
-VectorStore store = VectorStore.chroma(opts -> opts
-    .baseUrl("http://localhost:8000")
-    .collectionName("my-docs")
-);
+    // 创建 Chroma 向量存储
+    VectorStore store = VectorStore.chroma(opts -> opts
+            .setUrl("http://localhost:8000")
+            .collectionName("my-docs")
+    );
 
-// 添加文档
-store.add(new Document("content", "Feat AI 是一个 Java AI 框架"));
+    // 添加文档
+    Document doc = new Document();
+    doc.setId("doc1");
+    doc.setDocument("Feat AI 是一个基于开源 LLM 的工具包，用于构建智能应用。");
+    doc.setMetadata(Collections.singletonMap("source", "https://gitee.com/smartboot/feat"));
+    store.add(doc);
 
-// 语义搜索
-List<Document> results = store.similaritySearch("什么是 Feat AI");
+    // 语义搜索
+    List<Document> results = store.similaritySearch("什么是 Feat AI");
+}
 ```
 
 **支持的存储：**
@@ -186,10 +213,10 @@ String result = agent.execute(
 ```java
 import tech.smartboot.feat.ai.FeatAI;
 import tech.smartboot.feat.ai.reranker.RerankerModel;
+import tech.smartboot.feat.ai.vendor.RerankerModelVendor;
 
 RerankerModel reranker = FeatAI.reranker(opts -> opts
-    .baseUrl("https://api.siliconflow.cn/v1")
-    .model("BAAI/bge-reranker-v2-m3")
+    .model(RerankerModelVendor.GiteeAI.BGE_RERANKER_V2_M3)
 );
 
 // 对搜索结果重排序
@@ -200,90 +227,14 @@ List<Document> reranked = reranker.rerank(
 );
 ```
 
-## 完整 RAG 示例
-
-结合所有模块构建一个完整的检索增强生成应用：
-
-```java
-import tech.smartboot.feat.ai.FeatAI;
-import tech.smartboot.feat.ai.chat.ChatModel;
-import tech.smartboot.feat.ai.embedding.EmbeddingModel;
-import tech.smartboot.feat.ai.reranker.RerankerModel;
-import tech.smartboot.feat.ai.vector.VectorStore;
-import tech.smartboot.feat.ai.vector.Document;
-
-public class RagApplication {
-    
-    // 1. 初始化组件
-    EmbeddingModel embedding = FeatAI.embedding(opts -> opts
-        .model("BAAI/bge-m3")
-    );
-    
-    VectorStore vectorStore = VectorStore.chroma(opts -> opts
-        .collectionName("knowledge-base")
-    );
-    
-    RerankerModel reranker = FeatAI.reranker(opts -> opts
-        .model("BAAI/bge-reranker-v2-m3")
-    );
-    
-    ChatModel chatModel = FeatAI.chatModel(opts -> opts
-        .model(ChatModelVendor.DeepSeek.V3)
-    );
-    
-    // 2. 索引文档
-    public void indexDocuments(List<String> texts) {
-        List<Document> docs = texts.stream()
-            .map(text -> new Document("doc", text))
-            .toList();
-        vectorStore.add(docs);
-    }
-    
-    // 3. 回答问题
-    public void answer(String question) {
-        // 检索相关文档
-        List<Document> candidates = vectorStore.similaritySearch(
-            SearchRequest.builder()
-                .query(question)
-                .topK(10)
-                .build()
-        );
-        
-        // 重排序提升质量
-        List<Document> relevant = reranker.rerank(question, candidates, 3);
-        
-        // 构建增强提示词
-        String context = relevant.stream()
-            .map(Document::getContent)
-            .collect(Collectors.joining("\n\n"));
-        
-        String prompt = """
-            基于以下参考信息回答问题：
-            
-            参考信息：
-            {context}
-            
-            用户问题：{question}
-            
-            请只基于参考信息回答，不要编造内容。
-            """.replace("{context}", context)
-               .replace("{question}", question);
-        
-        // 生成回答
-        chatModel.chatStream(prompt, response -> {
-            System.out.print(response.getContent());
-        });
-    }
-}
-```
 
 ## 核心 API 速查
 
 | 功能 | 入口类 | 示例 |
 |------|--------|------|
-| 聊天模型 | `FeatAI.chatModel()` | `FeatAI.chatModel(opts -> opts.model("gpt-4"))` |
-| 嵌入模型 | `FeatAI.embedding()` | `FeatAI.embedding(opts -> opts.model("bge-m3"))` |
-| 向量存储 | `VectorStore.chroma()` | `VectorStore.chroma(opts -> opts.baseUrl(...))` |
+| 聊天模型 | `FeatAI.chatModel()` | `FeatAI.chatModel(opts -> opts.model(ChatModelVendor.GiteeAI.Qwen2_5_72B_Instruct))` |
+| 嵌入模型 | `FeatAI.embedding()` | `FeatAI.embedding(opts -> opts.model(EmbeddingModelVendor.GiteeAI.BGE_M3))` |
+| 向量存储 | `VectorStore.chroma()` | `VectorStore.chroma(opts -> opts.collectionName("docs"))` |
 | Agent | `FeatAI.agent()` | `FeatAI.agent(opts -> opts.maxIterations(10))` |
-| 重排序 | `FeatAI.reranker()` | `FeatAI.reranker(opts -> opts.model(...))` |
+| 重排序 | `FeatAI.reranker()` | `FeatAI.reranker(opts -> opts.model(RerankerModelVendor.GiteeAI.BGE_RERANKER_V2_M3))` |
 

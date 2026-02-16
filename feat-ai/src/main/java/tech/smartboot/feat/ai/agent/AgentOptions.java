@@ -126,7 +126,7 @@ public class AgentOptions {
      * @param prompt 提示词模板对象
      * @return 当前实例，支持链式调用
      */
-    public AgentOptions prompt(Prompt prompt) {
+    AgentOptions prompt(Prompt prompt) {
         this.prompt = prompt;
         return this;
     }
@@ -140,7 +140,7 @@ public class AgentOptions {
      * @param prompt 提示词模板字符串
      * @return 当前实例，支持链式调用
      */
-    public AgentOptions prompt(String prompt) {
+    AgentOptions prompt(String prompt) {
         return prompt(new Prompt(prompt));
     }
 
@@ -154,7 +154,7 @@ public class AgentOptions {
      * @param executor 工具执行器实例
      * @return 当前实例，支持链式调用
      */
-    public AgentOptions addTool(AgentTool executor) {
+    public AgentOptions tool(AgentTool executor) {
         toolExecutors.put(executor.getName(), executor);
         logger.info("添加工具执行器: " + executor.getName());
         return this;

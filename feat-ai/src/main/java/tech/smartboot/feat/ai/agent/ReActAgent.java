@@ -66,7 +66,7 @@ public class ReActAgent extends FeatAgent {
      * </p>
      */
     public ReActAgent() {
-        this(opts -> opts.addTool(new FileOperationTool()).addTool(new SearchTool()).addTool(new WebPageReaderTool()).chatOptions().model(ChatModelVendor.GiteeAI.DeepSeek_V32));
+        this(opts -> opts.tool(new FileOperationTool()).tool(new SearchTool()).tool(new WebPageReaderTool()).chatOptions().model(ChatModelVendor.GiteeAI.DeepSeek_V32));
 
     }
 
