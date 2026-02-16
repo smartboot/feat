@@ -63,6 +63,28 @@ graph TD
 
 ## 第一步：配置 MyBatis
 
+### 创建 feat.yaml 配置文件
+
+在 `src/main/resources` 目录下创建 `feat.yaml`：
+
+```yaml
+feat:
+  mybatis:
+    path: mybatis/mybatis-config.xml
+    initial-sql: mybatis/ddl/schema.sql
+```
+
+**配置项说明：**
+
+| 配置项 | 必填 | 说明 |
+|--------|------|------|
+| `feat.mybatis.path` | 是 | MyBatis XML 配置文件路径，相对于 `src/main/resources` |
+| `feat.mybatis.initial-sql` | 否 | 数据库初始化 SQL 脚本路径，应用启动时自动执行 |
+
+<Aside type="tip">
+配置 `initial-sql` 后，Feat Cloud 会在编译期将 SQL 初始化逻辑嵌入生成的代码中，应用启动时自动执行，无需手动编写初始化代码。
+</Aside>
+
 ### 创建 MyBatis 配置文件
 
 在 `src/main/resources/mybatis` 目录下创建 `mybatis-config.xml`：
@@ -88,8 +110,8 @@ graph TD
 </configuration>
 ```
 
-<Aside type="tip">
-配置文件可以放置在任意子目录下，例如 `src/main/resources/mybatis/mybatis-config.xml`。建议将配置文件放在专门的目录中以便管理。
+<Aside type="caution">
+当前仅支持 `POOLED` 数据源类型（`PooledDataSource`）和 `JDBC` 事务管理器（`JdbcTransactionFactory`）。
 </Aside>
 
 ### 创建数据库表结构
@@ -111,47 +133,47 @@ CREATE TABLE IF NOT EXISTS user_info
 );
 
 -- 插入初始数据
-insert ignore into user_info(username, password, role, `desc`) 
+insert ignore into user_info(username, password, role, `desc`)
 values ('feat', 'feat', 'admin', '超级账户');
 
-insert ignore into user_info(username, password, role, `desc`) 
+insert ignore into user_info(username, password, role, `desc`)
 values ('admin', 'admin123', 'admin', '管理员用户');
 
-insert ignore into user_info(username, password, role, `desc`) 
+insert ignore into user_info(username, password, role, `desc`)
 values ('user1', 'password1', 'user', '普通用户1');
 ```
 
-## 第二步：创建核心组件
+## 编译期代码生成原理
 
-### 实例化 SessionFactory Bean
+Feat Cloud 在编译期解析 `feat.yaml` 和 MyBatis XML 配置，自动生成 `SqlSessionFactory` Bean 的初始化代码。生成的代码包含以下要素：
 
-创建一个 Bootstrap 类来初始化 SqlSessionFactory：
+- **数据源配置**：从 XML 解析的数据源参数（驱动、URL、用户名、密码）
+- **事务管理器**：`JdbcTransactionFactory`
+- **配置选项**：延迟加载、自动映射行为、默认执行器类型等
+- **拦截器**：XML 中配置的拦截器列表
+- **映射器注册**：`mappers` 包扫描结果
+- **数据库初始化**：`initial-sql` 指定的脚本执行
 
-```java
+生成的 `SqlSessionFactory` Bean 名称为 `sessionFactory`，可直接注入使用。
+
+### 创建应用入口
+
+创建主类启动 Feat Cloud 应用：
+
+```java title="Bootstrap.java"
 @Bean
 public class Bootstrap {
-    @Bean
-    public SqlSessionFactory sessionFactory() throws IOException {
-        // 加载 MyBatis 配置文件
-        InputStream inputStream = Resources.getResourceAsStream("mybatis/mybatis-config.xml");
-        SqlSessionFactory sessionFactory = new SqlSessionFactoryBuilder().build(inputStream);
-        
-        // 初始化数据库表结构
-        ScriptRunner runner = new ScriptRunner(sessionFactory.openSession().getConnection());
-        runner.setLogWriter(null);
-        runner.runScript(Resources.getResourceAsReader("mybatis/ddl/schema.sql"));
-        return sessionFactory;
-    }
-
     public static void main(String[] args) {
         FeatCloud.cloudServer().listen();
     }
 }
 ```
 
-<Aside type="caution">
-生成的 SqlSessionFactory 对象 bean 名称必须为 **sessionFactory**。这是 Feat Cloud 约定的固定名称。
+<Aside type="tip">
+当配置了 `feat.mybatis.initial-sql` 后，无需手动编写数据库初始化代码，SQL 脚本会在应用启动时自动执行。
 </Aside>
+
+## 第二步：创建核心组件
 
 ### 定义实体类
 
@@ -450,11 +472,11 @@ public boolean insert(User user) {
 @Bean
 public class UserService {
     @Autowired
-    private SqlSessionFactory sqlSessionFactory;
+    private SqlSessionFactory sessionFactory;
     
     // 手动管理事务的批量插入方法
     public boolean batchInsert(List<User> users) {
-        SqlSession sqlSession = sqlSessionFactory.openSession();
+        SqlSession sqlSession = sessionFactory.openSession();
         try {
             UserMapper userMapper = sqlSession.getMapper(UserMapper.class);
             for (User user : users) {
