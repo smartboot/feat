@@ -8,18 +8,56 @@ sidebar:
 import { Image } from '@astrojs/starlight/components';
 
 ## v1.5.0 (孵化中)
+
 ### 版本特性
+
 - **Feat Core：**
-    - [client] 更先进的 gzip 异步解析算法。
+  - [client] 重构 GZIP 输入流实现，支持完整的头部解析和更先进的异步解码算法。
+  - [client] 修复 SSE 事件数据中的换行符转义问题。
+  - [server] 修复静态资源处理器中的路径解析、HEAD 请求、空指针异常和 404 页面返回问题。
+  - [server] 优化静态资源处理器的类路径资源定位功能，支持配置静态资源路径。
+  - [server] 修复 HTTP 协议解析中的缓冲区边界检查和字节缓冲区位置错误。
+  - [core] 添加方法实例化 Bean 的支持。
+  - [core] 优化字节树子节点获取逻辑。
+  - [router] 支持花括号 `{}` 形式的路径参数匹配。
+  - 移除过时的 DeflaterInputStream 引用并优化异常处理。
+  - 升级 smart-socket 至 1.8.2。
+
 - **Feat AI：**
-- **Feat Cloud**
-    - RequestMapping 支持 `{}`的路径匹配方式。
-    - 改进 AOT 编译逻辑，优化用户体验。
-    - 支持分布式会话
+  - 实现 ReAct Agent 智能体，支持系统提示词、工具执行钩子和异常处理。
+  - AI 代理工具改为异步执行模式，优化执行流程和消息处理机制。
+  - 新增流式响应错误处理机制和失败处理机制。
+  - 新增 Kimi-K2.5-Instruct 模型支持。
+  - 重构提示词模板接口设计，优化 ReAct 智能体提示模板结构。
+  - 新增子代理任务委托功能。
+  - 实现 AI Agent 动作解析功能。
+  - 新增 WebReader 网页阅读器功能，支持读取和转换网页内容。
+
+- **Feat Cloud：**
+  - 新增 MyBatis 集成支持，包括配置序列化、编译期 XML 配置解析和代码生成。
+  - 新增分布式会话管理功能，集成 Redisun 支持集群会话管理。
+  - 重构会话管理架构，实现本地会话管理器和集群会话管理器。
+  - 改进 AOT 编译逻辑，支持扩展序列化器（MyBatis 和 Redisun 集成）。
+  - RequestMapping 支持 `{}` 花括号形式的路径参数匹配。
+  - 新增静态资源路径配置功能。
+  - 新增 JSONArray 支持和结构体参数处理。
+  - 增强控制器序列化器的参数处理能力，支持复杂类型参数。
+  - 修复 JSON 解析空值导致的异常问题。
+  - 修复列表参数反序列化问题。
+  - 新增 Docker 部署支持，包括 JRE 版本和原生镜像示例。
+  - 添加 Fat Jar 打包支持。
+  - AsyncResponse 的 complete 方法返回类型调整为 AsyncResponse。
+
 ### 升级指南
-无
+1. 升级版本后处理编译报错问题。
+2. 若使用了 `AsyncResponse@complete` 方法，注意其返回类型已变更为 `AsyncResponse`。
+3. 若需技术支持可通过 [Gitee ISSUE](https://gitee.com/smartboot/feat/issues) 提交反馈。
+
 ### 兼容性说明
-无
+1. `AsyncResponse@complete` 方法返回类型从 `void` 修改为 `AsyncResponse`。
+2. `ApplicationContext` 类已设为 final，构造函数访问权限调整。
+3. Feat AI 模块中 Agent 相关接口存在多处重构，如 AgentOptions 构造方式、工具接口等。
+
 
 ## v1.4.0 (2025-11-28)
 ### 版本特性
