@@ -12,6 +12,57 @@ import CheckAuthorize from '../../../components/CheckAuthorize.astro'
 
 Feat AI 是一个 Java 语言的 AI 应用开发框架，旨在简化与大语言模型（LLM）的集成。
 
+## 架构概览
+
+Feat AI 采用分层架构设计，让开发者可以灵活地在不同层级上使用框架能力：
+
+```mermaid
+graph TB
+    subgraph 应用层[应用层]
+        A1[AI Agent<br/>FeatAgent]
+        A2[对话应用<br/>ChatModel]
+        A3[RAG 检索<br/>VectorStore + Reranker]
+        A4[文本嵌入<br/>EmbeddingModel]
+    end
+    
+    subgraph 核心抽象层[核心抽象层]
+        B1[ChatModel<br/>对话模型接口]
+        B2[EmbeddingModel<br/>嵌入模型接口]
+        B3[VectorStore<br/>向量存储接口]
+        B4[FeatAgent<br/>智能代理]
+        B5[RerankerModel<br/>重排序接口]
+    end
+    
+    subgraph 供应商实现层[供应商实现层]
+        C1[GiteeAI]
+        C2[DeepSeek]
+        C3[Ollama]
+        C4[OpenAI]
+        C5[Chroma<br/>Milvus]
+    end
+    
+    A1 --> B4
+    A2 --> B1
+    A3 --> B3
+    A3 --> B5
+    A4 --> B2
+    
+    B1 --> C1
+    B1 --> C2
+    B1 --> C3
+    B1 --> C4
+    B2 --> C1
+    B2 --> C3
+    B3 --> C5
+    B5 --> C1
+    
+    style 应用层 fill:#e1f5ff,stroke:#01579b,stroke-width:2px
+    style 核心抽象层 fill:#fff3e0,stroke:#ef6c00,stroke-width:2px
+    style 供应商实现层 fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+```
+
+Feat AI 通过统一抽象层，让一套代码可以无缝切换不同的 AI 供应商实现。
+
 ## 为什么需要 Feat AI？
 
 与大语言模型集成并非易事。除了基本的 API 调用，你还需要处理：
