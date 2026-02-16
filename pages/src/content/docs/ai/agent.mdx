@@ -10,50 +10,18 @@ import CheckAuthorize from '../../../components/CheckAuthorize.astro'
 
 <CheckAuthorize/>
 
-**Feat AI Agent** 是一个基于 ReAct（Reasoning + Acting）范式的智能代理框架。它使 AI 能够像人一样**思考 → 行动 → 观察 → 再思考**，通过多轮迭代自动完成复杂的多步骤任务。
+Agent 是 Feat AI 的高级功能，使 AI 能够自主规划、使用工具并执行多步骤任务。
 
-### 为什么选择 Feat Agent?
+## 概述
 
-- **开箱即用**：内置搜索、文件操作、网页阅读等常用工具
-- **异步设计**：基于 `CompletableFuture`，天然支持高并发场景
-- **可扩展**：轻松集成自定义工具和 AI 模型
-- **类型安全**：纯 Java 实现，编译期类型检查
+传统的 Chat Model 只能进行对话，而 Agent 能够：
 
-### 架构概览
+- **自主规划** - 分析任务并制定执行计划
+- **使用工具** - 调用搜索、文件操作、计算等外部能力
+- **多轮迭代** - 通过观察结果持续优化行动
+- **完成复杂任务** - 自动处理需要多个步骤的目标
 
-```mermaid
-graph TD
-    subgraph Agent核心
-        A[ReActAgent] --> B[推理引擎]
-        A --> C[工具注册表]
-        A --> D[状态管理器]
-    end
-    
-    subgraph 工具层
-        C --> E[SearchTool]
-        C --> F[FileOperationTool]
-        C --> G[WebPageReaderTool]
-        C --> H[自定义工具]
-    end
-    
-    subgraph AI模型层
-        B --> I[ChatModel]
-        I --> J[DeepSeek]
-        I --> K[GPT]
-        I --> L[其他模型]
-    end
-```
-
-**核心组件：**
-
-| 组件 | 职责 | 关键类 |
-|------|------|--------|
-| **Agent** | 任务调度、推理循环 | `ReActAgent`, `FeatAgent` |
-| **Tool** | 执行具体动作 | `AgentTool` 接口 |
-| **ChatModel** | AI 模型交互 | `ChatModel` 配置 |
-| **State** | 执行状态追踪 | `AgentState` 枚举 |
-
----
+Feat AI 的 Agent 基于 **ReAct（Reasoning + Acting）** 范式，让 AI 像人一样**思考 → 行动 → 观察 → 再思考**。
 
 ## 核心概念
 
@@ -63,47 +31,32 @@ ReAct = **Reasoning（推理）** + **Acting（行动）**
 
 Agent 通过循环执行以下步骤完成任务：
 
-```mermaid
-sequenceDiagram
-    participant U as 用户
-    participant A as Agent
-    participant T as 工具
-    participant M as AI模型
-    
-    U->>A: 提交任务
-    loop 直到任务完成
-        A->>M: 思考：下一步做什么？
-        M-->>A: 需要搜索/读取文件/...
-        A->>T: 调用工具执行动作
-        T-->>A: 返回执行结果
-        A->>M: 观察结果，继续思考
-    end
-    A-->>U: 返回最终答案
+```
+用户: 搜索 Java 21 新特性并总结
+
+Agent: 
+  Thought: 用户需要了解 Java 21 的新特性，我应该先搜索相关信息。
+  Action: search
+  Action Input: {"query": "Java 21 新特性"}
+  
+Agent:
+  Observation: 搜索结果显示 Java 21 主要特性包括...
+  Thought: 现在我已经获得了足够的信息，可以总结了。
+  Final Answer: Java 21 的主要新特性包括：1. 虚拟线程正式发布...
 ```
 
-### Agent 生命周期
+### 架构组件
 
-```mermaid
-stateDiagram-v2
-    [*] --> IDLE: 创建
-    IDLE --> RUNNING: execute()
-    RUNNING --> TOOL_EXECUTION: 调用工具
-    TOOL_EXECUTION --> RUNNING: 获取结果
-    RUNNING --> FINISHED: 任务完成
-    RUNNING --> ERROR: 执行异常
-    TOOL_EXECUTION --> ERROR: 工具失败
-    ERROR --> [*]
-    FINISHED --> IDLE: 重置
-    FINISHED --> [*]
-```
+| 组件 | 职责 | 关键类 |
+|------|------|--------|
+| **Agent** | 任务调度、推理循环 | `FeatAgent`, `ReActAgent` |
+| **Tool** | 执行具体动作 | `AgentTool` 接口 |
+| **ChatModel** | AI 模型交互 | `ChatModel` 配置 |
+| **State** | 执行状态追踪 | `AgentState` 枚举 |
 
----
-
-## 快速入门
+## 快速开始
 
 ### 安装
-
-在 `pom.xml` 中添加依赖：
 
 ```xml
 <dependency>
@@ -145,8 +98,6 @@ Thought: 现在我已经获得了足够的信息，可以总结了。
 Final Answer: Java 21 的主要新特性包括：1. 虚拟线程正式发布... 2. ...
 ```
 
----
-
 ## 深入指南
 
 ### Agent 配置
@@ -161,18 +112,21 @@ FeatAgent agent = new ReActAgent();
 
 // 方式 2：指定模型
 FeatAgent agent = new ReActAgent(opts -> {
-    opts.chatOptions()
-        .model(ChatModelVendor.GiteeAI.DeepSeek_V32);
+    opts.chatOptions.model(ChatModelVendor.GiteeAI.DeepSeek_V32);
 });
 
 // 方式 3：完整配置
 FeatAgent agent = new ReActAgent(opts -> {
-    opts.chatOptions()
+    opts.chatOptions
         .model(ChatModelVendor.GiteeAI.DeepSeek_V32)
         .temperature(0.7f)      // 创造性程度
         .maxTokens(2000);       // 最大输出长度
 });
 ```
+
+<Aside type="note">
+`chatOptions` 是 `AgentOptions` 的字段（类型为 `ChatOptions`），使用 `.` 访问而非 `()`。
+</Aside>
 
 #### 控制迭代次数
 
@@ -239,9 +193,6 @@ import tech.smartboot.feat.ai.agent.AgentTool;
 import com.alibaba.fastjson2.JSONObject;
 import java.util.concurrent.CompletableFuture;
 
-/**
- * 自定义计算器工具示例
- */
 public class CalculatorTool implements AgentTool {
     
     @Override
@@ -271,7 +222,6 @@ public class CalculatorTool implements AgentTool {
     @Override
     public CompletableFuture<String> execute(JSONObject params) {
         String expression = params.getString("expression");
-        // 执行计算逻辑
         String result = evaluate(expression);
         return CompletableFuture.completedFuture(result);
     }
@@ -287,22 +237,19 @@ public class CalculatorTool implements AgentTool {
 
 ```java
 FeatAgent agent = new ReActAgent(opts -> {
-    opts.addTool(new CalculatorTool())
-        .addTool(new AnotherCustomTool());
+    // 通过 toolExecutors Map 注册工具
+    opts.toolExecutors.put("calculator", new CalculatorTool());
+    opts.toolExecutors.put("another", new AnotherCustomTool());
 });
 ```
 
+<Aside type="note">
+`toolExecutors` 是 `AgentOptions` 的字段，直接通过 `put()` 方法注册工具。
+</Aside>
+
 ### 异步与并发
 
-#### 为什么使用异步？
-
-Agent 的核心操作（调用 AI 模型、执行工具）都涉及 I/O 等待。采用异步设计可以：
-
-- **提高吞吐量**：不阻塞线程，单个线程可管理多个 Agent
-- **资源高效**：减少线程创建，降低内存开销
-- **组合灵活**：利用 `CompletableFuture` 组合多个任务
-
-#### 基础异步调用
+Agent 的所有操作都是异步的，返回 `CompletableFuture`：
 
 ```java
 import java.util.concurrent.CompletableFuture;
@@ -414,8 +361,6 @@ try {
 }
 ```
 
----
-
 ## 完整示例
 
 ### 场景：自动化调研报告生成
@@ -463,8 +408,6 @@ public class ResearchReportGenerator {
 }
 ```
 
----
-
 ## 最佳实践
 
 ### 任务描述
@@ -472,7 +415,7 @@ public class ResearchReportGenerator {
 **推荐做法：**
 
 ```java
-// ✅ 清晰、具体、可验证
+// 清晰、具体、可验证
 agent.execute(
     "读取 ./data/sales.csv，统计第三列的平均值，" +
     "将结果保存到 ./output/average.txt"
@@ -482,10 +425,10 @@ agent.execute(
 **避免做法：**
 
 ```java
-// ❌ 过于模糊
+// 过于模糊
 agent.execute("帮我处理这个文件");
 
-// ❌ 缺少上下文
+// 缺少上下文
 agent.execute("分析一下数据");
 ```
 
@@ -523,8 +466,6 @@ try {
 3. **批量并发**：使用异步 API 同时处理多个独立任务
 4. **选择合适的模型**：简单任务用轻量级模型
 
----
-
 ## API 参考
 
 ### FeatAgent 接口
@@ -554,16 +495,18 @@ public interface FeatAgent {
 
 ```java
 new ReActAgent(opts -> {
-    opts.maxIterations(int)              // 最大迭代次数
-        .addTool(AgentTool)              // 添加自定义工具
-        .chatOptions()                   // 模型配置
-            .model(ModelVendor)          // 选择模型
-            .temperature(float)          // 温度参数
-            .maxTokens(int);             // 最大 token 数
+    opts.maxIterations(int);             // 最大迭代次数
+    // 工具通过 toolExecutors Map 注册
+    opts.toolExecutors.put("toolName", toolInstance);
+    // 模型通过 chatOptions 字段配置
+    opts.chatOptions.model(ChatModelVendor.GiteeAI.DeepSeek_V32);
 });
 ```
 
----
+<Aside type="note">
+- `toolExecutors` 是 `Map<String, AgentTool>` 类型的字段
+- `chatOptions` 是 `ChatOptions` 类型的字段，用于配置 AI 模型
+</Aside>
 
 ## 常见问题
 
@@ -573,10 +516,8 @@ A: 1) 增加 `maxIterations` 2) 简化任务描述 3) 拆分为多个小任务
 
 **Q: 如何让 Agent 更听话？**
 
-A: 降低 `temperature`（如 0.3），提供更详细的任务描述和示例
+A: 通过 `opts.chatOptions.temperature(0.3f)` 降低随机性，提供更详细的任务描述和示例
 
 **Q: 自定义工具不生效？**
 
 A: 检查 `getName()` 是否返回唯一标识，`getDescription()` 是否清晰描述了工具用途
-
----
