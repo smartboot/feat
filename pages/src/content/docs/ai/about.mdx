@@ -192,18 +192,19 @@ import tech.smartboot.feat.ai.FeatAI;
 import tech.smartboot.feat.ai.agent.FeatAgent;
 import tech.smartboot.feat.ai.agent.AgentTool;
 
-// 创建 Agent
+ // 创建 Agent
 FeatAgent agent = FeatAI.agent(opts -> opts
-    .maxIterations(20)
-    .prompt("你是一个专业的客服助手")
-    .tool("search", new SearchTool())
-    .tool("calculator", new CalculatorTool())
+        .maxIterations(20)
+        .tool(new SearchTool())
+        .chatOptions().model(ChatModelVendor.GiteeAI.Kimi_K25_Instruct)
+        .system("你是一个专业的客服助手")
 );
 
 // 执行任务 - Agent 自动规划步骤
 String result = agent.execute(
-    "搜索 Feat 框架的最新版本，并计算 2.5 版本距今多少天了"
+        "搜索 Feat 框架的最新版本，并计算 1.0 版本距今多少天了"
 ).get();
+System.out.println(result);
 ```
 
 ### Reranker - 结果重排序
