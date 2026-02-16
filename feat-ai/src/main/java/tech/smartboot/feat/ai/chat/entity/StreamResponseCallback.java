@@ -42,4 +42,8 @@ public interface StreamResponseCallback {
      * @param content 接收到的数据内容片段
      */
     void onStreamResponse(String content);
+
+    default void onError(Throwable throwable) {
+        throwable.printStackTrace();
+    }
 }

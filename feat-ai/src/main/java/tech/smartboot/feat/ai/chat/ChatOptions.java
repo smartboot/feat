@@ -72,6 +72,11 @@ public class ChatOptions extends Options {
         return baseUrl(model.baseUrl());
     }
 
+    public ChatOptions model(String model) {
+        this.model = new ChatModelVendor(model);
+        return this;
+    }
+
     /**
      * 设置API密钥
      *

@@ -54,7 +54,7 @@ public class HelloAI {
         
         // 发送消息并接收流式响应
         model.chatStream("你好，请介绍一下 Feat AI", response -> {
-            System.out.print(response.getContent());
+            System.out.print(response);
         });
     }
 }
@@ -74,9 +74,9 @@ public class LocalAI {
             .baseUrl("http://localhost:11434/v1")
             .model("qwen2.5:7b")
         );
-        
+
         model.chatStream("解释什么是 RAG", response -> {
-            System.out.println(response.getContent());
+            System.out.print(response);
         });
     }
 }

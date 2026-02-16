@@ -25,6 +25,7 @@ import tech.smartboot.feat.ai.chat.prompt.Prompt;
 import tech.smartboot.feat.core.client.HttpPost;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
+import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 
@@ -49,6 +50,7 @@ public class ChatModel {
     private static final int STREAM_STATUS_INIT = 0;
     private static final int STREAM_STATUS_UPGRADE = 1;
     private static final int STREAM_STATUS_COMPLETE = 2;
+    private static final int STREAM_STATUS_ERROR = 3;
 
     /**
      * 构造函数
@@ -98,18 +100,12 @@ public class ChatModel {
         post.onSuccess(response -> {
             //若sse升级成功，则忽略onSuccess逻辑
             if (status.get() == STREAM_STATUS_INIT) {
-                ResponseMessage responseMessage = new ResponseMessage();
-                responseMessage.setRole(Message.ROLE_ASSISTANT);
-                responseMessage.setError(response.body());
-                responseMessage.setSuccess(false);
-                consumer.onCompletion(responseMessage);
+                status.set(STREAM_STATUS_ERROR);
+                consumer.onError(new FeatException(response.body()));
             }
         }).onFailure(throwable -> {
-            ResponseMessage responseMessage = new ResponseMessage();
-            responseMessage.setRole(Message.ROLE_ASSISTANT);
-            responseMessage.setError(throwable.getMessage());
-            responseMessage.setSuccess(false);
-            consumer.onCompletion(responseMessage);
+            status.set(STREAM_STATUS_ERROR);
+            consumer.onError(throwable);
         }).onSSE(sse -> sse.onData(event -> {
             if (status.get() == STREAM_STATUS_INIT) {
                 status.set(STREAM_STATUS_UPGRADE);
