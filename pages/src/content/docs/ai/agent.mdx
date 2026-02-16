@@ -1,523 +1,117 @@
 ---
-title: Agent
-description: Feat AI Agent 使用指南 - 让 AI 像人一样思考和行动，自动完成复杂任务
+title: 使用 Agent
+description: 如何用 Feat AI 的 ReAct Agent 与工具完成任务
 sidebar:
-    order: 6
+    order: 3
 ---
 
 import { Aside } from '@astrojs/starlight/components';
-import CheckAuthorize from '../../../components/CheckAuthorize.astro'
 
-<CheckAuthorize/>
+Feat AI 的 Agent 基于 **ReAct**（Reasoning + Acting）范式：模型先推理任务，再调用工具执行，根据结果继续推理，直到给出最终答案。本文说明如何创建 Agent、注册工具并执行任务。
 
-Agent 是 Feat AI 的高级功能，使 AI 能够自主规划、使用工具并执行多步骤任务。
+## 任务描述
 
-## 概述
+- 创建一个可执行自然语言任务的 Agent
+- 为 Agent 配置可用工具（如网页读取、搜索等）
+- 执行一次任务并获取最终文本结果与状态
 
-传统的 Chat Model 只能进行对话，而 Agent 能够：
+## 解决方案
 
-- **自主规划** - 分析任务并制定执行计划
-- **使用工具** - 调用搜索、文件操作、计算等外部能力
-- **多轮迭代** - 通过观察结果持续优化行动
-- **完成复杂任务** - 自动处理需要多个步骤的目标
+### 创建 Agent
 
-Feat AI 的 Agent 基于 **ReAct（Reasoning + Acting）** 范式，让 AI 像人一样**思考 → 行动 → 观察 → 再思考**。
-
-## 核心概念
-
-### ReAct 范式
-
-ReAct = **Reasoning（推理）** + **Acting（行动）**
-
-Agent 通过循环执行以下步骤完成任务：
-
-```
-用户: 搜索 Java 21 新特性并总结
-
-Agent: 
-  Thought: 用户需要了解 Java 21 的新特性，我应该先搜索相关信息。
-  Action: search
-  Action Input: {"query": "Java 21 新特性"}
-  
-Agent:
-  Observation: 搜索结果显示 Java 21 主要特性包括...
-  Thought: 现在我已经获得了足够的信息，可以总结了。
-  Final Answer: Java 21 的主要新特性包括：1. 虚拟线程正式发布...
-```
-
-### 架构组件
-
-| 组件 | 职责 | 关键类 |
-|------|------|--------|
-| **Agent** | 任务调度、推理循环 | `FeatAgent`, `ReActAgent` |
-| **Tool** | 执行具体动作 | `AgentTool` 接口 |
-| **ChatModel** | AI 模型交互 | `ChatModel` 配置 |
-| **State** | 执行状态追踪 | `AgentState` 枚举 |
-
-## 快速开始
-
-### 安装
-
-```xml
-<dependency>
-    <groupId>tech.smartboot.feat</groupId>
-    <artifactId>feat-ai</artifactId>
-    <version>1.4.3</version>
-</dependency>
-```
-
-### 最小示例
+通过 `FeatAI.agent(opts -> ...)` 得到的是基于 ReAct 的 `FeatAgent` 实现（当前为 `ReActAgent`）。在 `opts` 中至少要配置对话模型；若需调用网页、搜索等能力，需在此处注册相应工具。若直接使用 `new ReActAgent()` 无参构造，则会使用内置的默认工具集（如网页读取、搜索、文件操作）和默认模型。
 
 ```java
-import tech.smartboot.feat.ai.agent.ReActAgent;
+import tech.smartboot.feat.ai.FeatAI;
 import tech.smartboot.feat.ai.agent.FeatAgent;
-import java.util.concurrent.ExecutionException;
 
-public class QuickStart {
-    public static void main(String[] args) throws ExecutionException, InterruptedException {
-        // 1. 初始化 Agent（使用默认配置）
-        FeatAgent agent = new ReActAgent();
-        
-        // 2. 执行任务并获取结果
-        String result = agent.execute(
-            "搜索 Java 21 新特性并总结"
-        ).get();
-        
-        System.out.println(result);
-    }
-}
+FeatAgent agent = FeatAI.agent(opts -> {
+    opts.chatOptions().model(ChatModelVendor.GiteeAI.Qwen2_5_72B_Instruct);
+    // 可选：opts.maxIterations(20);
+});
 ```
 
-**预期输出：**
-```
-Thought: 用户需要了解 Java 21 的新特性，我应该先搜索相关信息。
-Action: search
-Action Input: {"query": "Java 21 新特性"}
-Observation: 搜索结果显示 Java 21 主要特性包括...
-Thought: 现在我已经获得了足够的信息，可以总结了。
-Final Answer: Java 21 的主要新特性包括：1. 虚拟线程正式发布... 2. ...
-```
+若使用 Ollama，可配置 `chatOptions().baseUrl(...).model(...)`，并确保本机已运行对应模型。
 
-## 深入指南
+### 配置工具（可选）
 
-### Agent 配置
-
-#### 配置 AI 模型
+Agent 通过 **工具** 与外界交互（读网页、搜资料、操作文件等）。在 `AgentOptions` 上注册实现 `AgentTool` 的工具即可：
 
 ```java
+FeatAgent agent = FeatAI.agent(opts -> {
+    opts.chatOptions().model(...);
+    opts.tool(new SearchTool());           // 搜索
+    opts.tool(new WebPageReaderTool());    // 读取网页
+    opts.tool(new FileOperationTool());    // 文件操作
+});
+```
+
+Feat AI 内置部分工具（如 `SearchTool`、`WebPageReaderTool`），位于 `tech.smartboot.feat.ai.agent.tools` 包，可按需查阅源码与构造方式。自定义工具需实现 `AgentTool` 接口（名称、描述、参数、执行逻辑）。
+
+### 执行任务
+
+`FeatAgent#execute(String)` 接收一句自然语言任务，返回 `CompletableFuture<String>`，结果为 Agent 给出的**最终文本**。可同步等待：
+
+```java
+String result = agent.execute("从 https://smartboot.tech/smart-mqtt/ 中给我看看这款产品的定价是多少").get();
+System.out.println("最终结果:\n" + result);
+System.out.println("Agent 状态: " + agent.getState());
+```
+
+执行过程中 Agent 会多次调用模型与工具，直到满足结束条件或达到 `maxIterations`。
+
+### 完整示例（基于 feat-ai 测试）
+
+下面示例基于 `feat-ai` 模块的 `ReActAgentTest`，演示创建 Agent、执行任务并打印结果与状态（JDK 8 可运行）：
+
+```java
+import tech.smartboot.feat.ai.FeatAI;
+import tech.smartboot.feat.ai.agent.FeatAgent;
 import tech.smartboot.feat.ai.chat.ChatModelVendor;
 
-// 方式 1：使用默认配置（GiteeAI + DeepSeek V3）
-FeatAgent agent = new ReActAgent();
+import java.util.concurrent.ExecutionException;
 
-// 方式 2：指定模型
-FeatAgent agent = new ReActAgent(opts -> {
-    opts.chatOptions.model(ChatModelVendor.GiteeAI.DeepSeek_V32);
-});
+public class AgentDemo {
+    public static void main(String[] args) throws ExecutionException, InterruptedException {
+        FeatAgent agent = FeatAI.agent(opts -> {
+            opts.chatOptions().model(ChatModelVendor.GiteeAI.Qwen2_5_72B_Instruct);
+            opts.tool(new tech.smartboot.feat.ai.agent.tools.WebPageReaderTool());
+        });
 
-// 方式 3：完整配置
-FeatAgent agent = new ReActAgent(opts -> {
-    opts.chatOptions
-        .model(ChatModelVendor.GiteeAI.DeepSeek_V32)
-        .temperature(0.7f)      // 创造性程度
-        .maxTokens(2000);       // 最大输出长度
-});
-```
+        String result = agent.execute(
+                "从 https://smartboot.tech/smart-mqtt/ 中给我看看这款产品的定价是多少"
+        ).get();
 
-<Aside type="note">
-`chatOptions` 是 `AgentOptions` 的字段（类型为 `ChatOptions`），使用 `.` 访问而非 `()`。
-</Aside>
-
-#### 控制迭代次数
-
-防止任务陷入无限循环：
-
-```java
-FeatAgent agent = new ReActAgent(opts -> {
-    opts.maxIterations(20);  // 最大思考-行动循环次数
-});
+        System.out.println("\n最终结果:\n" + result);
+        System.out.println("\nAgent 最终状态: " + agent.getState());
+    }
+}
 ```
 
 <Aside type="caution">
-迭代次数包括所有思考轮次，复杂任务可能需要 20-50 次。建议始终设置上限。
+使用 Gitee AI 时需设置环境变量 `FEAT_AI_API_KEY`。若使用 Ollama，将 `chatOptions()` 改为 `baseUrl("http://localhost:11434/v1").model("qwen2.5:7b")` 等即可。
 </Aside>
 
-### 工具系统
-
-#### 内置工具
-
-ReActAgent 默认注册以下工具：
-
-**SearchTool - 网络搜索**
-
-```java
-// Agent 会自动调用，格式如下：
-Action: search
-Action Input: {
-    "query": "搜索关键词",
-    "engine": "baidu",    // 或 "bing"
-    "max_results": 5
-}
-```
-
-**WebPageReaderTool - 网页内容提取**
-
-```java
-Action: web_page_reader
-Action Input: {
-    "url": "https://example.com/page"
-}
-```
-
-**FileOperationTool - 文件操作**
-
-支持的操作：
-- `read_file` - 读取文件内容
-- `write_file` - 写入文件
-- `list_directory` - 列出目录
-
-```java
-Action: file_operation
-Action Input: {
-    "action": "read_file",
-    "path": "./data.txt"
-}
-```
-
-#### 自定义工具
-
-实现 `AgentTool` 接口创建自定义工具：
-
-```java
-import tech.smartboot.feat.ai.agent.AgentTool;
-import com.alibaba.fastjson2.JSONObject;
-import java.util.concurrent.CompletableFuture;
-
-public class CalculatorTool implements AgentTool {
-    
-    @Override
-    public String getName() {
-        return "calculator";
-    }
-    
-    @Override
-    public String getDescription() {
-        return "执行数学计算。输入应为有效的数学表达式，如 '2 + 2' 或 'sqrt(16)'";
-    }
-    
-    @Override
-    public String getParametersSchema() {
-        return "{"
-            + "  \"type\": \"object\","
-            + "  \"properties\": {"
-            + "    \"expression\": {"
-            + "      \"type\": \"string\","
-            + "      \"description\": \"数学表达式\""
-            + "    }"
-            + "  },"
-            + "  \"required\": [\"expression\"]"
-            + "}";
-    }
-    
-    @Override
-    public CompletableFuture<String> execute(JSONObject params) {
-        String expression = params.getString("expression");
-        String result = evaluate(expression);
-        return CompletableFuture.completedFuture(result);
-    }
-    
-    private String evaluate(String expr) {
-        // 计算实现...
-        return "计算结果";
-    }
-}
-```
-
-注册自定义工具：
-
-```java
-FeatAgent agent = new ReActAgent(opts -> {
-    // 通过 toolExecutors Map 注册工具
-    opts.toolExecutors.put("calculator", new CalculatorTool());
-    opts.toolExecutors.put("another", new AnotherCustomTool());
-});
-```
-
-<Aside type="note">
-`toolExecutors` 是 `AgentOptions` 的字段，直接通过 `put()` 方法注册工具。
-</Aside>
-
-### 异步与并发
-
-Agent 的所有操作都是异步的，返回 `CompletableFuture`：
-
-```java
-import java.util.concurrent.CompletableFuture;
-
-// 提交任务，立即返回 Future
-CompletableFuture<String> future = agent.execute("搜索 Java 新特性");
-
-// 非阻塞方式处理结果
-future.thenAccept(result -> {
-    System.out.println("任务完成: " + result);
-});
-
-// 或者阻塞等待
-String result = future.get();
-```
-
-#### 批量并发处理
-
-```java
-import java.util.Arrays;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.concurrent.CompletableFuture;
-
-public class ConcurrentDemo {
-    public static void main(String[] args) {
-        FeatAgent agent = new ReActAgent();
-        
-        // 定义多个任务
-        List<String> tasks = Arrays.asList(
-            "搜索 Spring Boot 最新版本",
-            "搜索 Vue 3 新特性",
-            "搜索 React 18 更新"
-        );
-        
-        // 同时提交所有任务
-        List<CompletableFuture<String>> futures = new ArrayList<>();
-        for (String task : tasks) {
-            futures.add(agent.execute(task));
-        }
-        
-        // 等待全部完成
-        CompletableFuture<Void> allDone = CompletableFuture.allOf(
-            futures.toArray(new CompletableFuture[0])
-        );
-        
-        // 处理结果
-        allDone.thenRun(() -> {
-            for (CompletableFuture<String> f : futures) {
-                try {
-                    System.out.println(f.get());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }).join();
-    }
-}
-```
-
-#### 超时与异常处理
-
-```java
-import java.util.concurrent.TimeUnit;
-
-String result = agent.execute("复杂任务")
-    .orTimeout(30, TimeUnit.SECONDS)  // 30 秒超时
-    .exceptionally(ex -> {
-        System.err.println("任务失败: " + ex.getMessage());
-        return "执行失败，请重试";
-    })
-    .get();
-```
-
-### 状态监控
-
-#### 获取当前状态
-
-```java
-import tech.smartboot.feat.ai.agent.AgentState;
-
-AgentState state = agent.getState();
-System.out.println("当前状态: " + state);
-```
-
-| 状态 | 含义 | 可执行操作 |
-|------|------|-----------|
-| `IDLE` | 空闲，等待任务 | `execute()` |
-| `RUNNING` | 正在推理 | `getState()`, `cancel()` |
-| `TOOL_EXECUTION` | 执行工具中 | `getState()`, `cancel()` |
-| `FINISHED` | 任务完成 | `execute()`（新任务） |
-| `ERROR` | 执行出错 | `execute()`（重试） |
-
-#### 取消任务
-
-```java
-// 启动任务
-CompletableFuture<String> future = agent.execute("长时间运行的任务");
-
-// 5 秒后取消
-Thread.sleep(5000);
-agent.cancel();
-
-// 处理取消异常
-try {
-    future.get();
-} catch (InterruptedException e) {
-    System.out.println("任务已取消");
-}
-```
-
-## 完整示例
-
-### 场景：自动化调研报告生成
-
-需求：调研某个技术主题，自动收集资料并生成报告文件。
-
-```java
-import tech.smartboot.feat.ai.agent.ReActAgent;
-import tech.smartboot.feat.ai.agent.FeatAgent;
-import java.util.concurrent.ExecutionException;
-
-public class ResearchReportGenerator {
-    
-    public static void main(String[] args) throws ExecutionException, InterruptedException {
-        // 初始化 Agent，配置更多迭代次数
-        FeatAgent agent = new ReActAgent(opts -> {
-            opts.maxIterations(30)
-                .chatOptions()
-                .temperature(0.5f);  // 降低随机性，更聚焦
-        });
-        
-        // 定义调研任务
-        String topic = "微服务框架 2024 发展趋势";
-        String task = String.format(
-            "请完成以下调研任务：\n" +
-            "1. 搜索 \"%s\" 相关信息\n" +
-            "2. 阅读至少 3 篇相关文章\n" +
-            "3. 总结关键趋势和技术要点\n" +
-            "4. 生成格式化的 Markdown 报告\n" +
-            "5. 将报告保存到 ./report.md",
-            topic
-        );
-        
-        System.out.println("开始调研：" + topic);
-        
-        // 执行任务
-        long startTime = System.currentTimeMillis();
-        String result = agent.execute(task).get();
-        long duration = (System.currentTimeMillis() - startTime) / 1000;
-        
-        System.out.println("调研完成！耗时：" + duration + " 秒");
-        System.out.println("\n执行摘要：");
-        System.out.println(result);
-    }
-}
-```
-
-## 最佳实践
-
-### 任务描述
-
-**推荐做法：**
-
-```java
-// 清晰、具体、可验证
-agent.execute(
-    "读取 ./data/sales.csv，统计第三列的平均值，" +
-    "将结果保存到 ./output/average.txt"
-);
-```
-
-**避免做法：**
-
-```java
-// 过于模糊
-agent.execute("帮我处理这个文件");
-
-// 缺少上下文
-agent.execute("分析一下数据");
-```
-
-### 迭代次数设置
-
-| 任务复杂度 | 建议迭代次数 | 示例 |
-|-----------|-------------|------|
-| 简单（单次查询） | 5-10 | "查询天气" |
-| 中等（多步骤） | 10-20 | "搜索并总结" |
-| 复杂（调研报告） | 20-50 | "多源信息整合" |
-
-### 错误处理策略
-
-```java
-try {
-    String result = agent.execute(task).get();
-} catch (ExecutionException e) {
-    Throwable cause = e.getCause();
-    if (cause instanceof TimeoutException) {
-        // 重试或降级
-        System.err.println("任务超时，建议减少任务范围");
-    } else {
-        System.err.println("执行失败: " + cause.getMessage());
-    }
-} catch (InterruptedException e) {
-    Thread.currentThread().interrupt();
-    System.err.println("任务被中断");
-}
-```
-
-### 性能优化
-
-1. **复用 Agent 实例**：Agent 是线程安全的，可以复用
-2. **合理设置超时**：防止长时间等待
-3. **批量并发**：使用异步 API 同时处理多个独立任务
-4. **选择合适的模型**：简单任务用轻量级模型
-
-## API 参考
-
-### FeatAgent 接口
-
-```java
-public interface FeatAgent {
-    /**
-     * 执行任务，返回 CompletableFuture
-     * @param task 任务描述
-     * @return 异步结果
-     */
-    CompletableFuture<String> execute(String task);
-    
-    /**
-     * 获取当前状态
-     */
-    AgentState getState();
-    
-    /**
-     * 取消正在执行的任务
-     */
-    void cancel();
-}
-```
-
-### ReActAgent 构造选项
-
-```java
-new ReActAgent(opts -> {
-    opts.maxIterations(int);             // 最大迭代次数
-    // 工具通过 toolExecutors Map 注册
-    opts.toolExecutors.put("toolName", toolInstance);
-    // 模型通过 chatOptions 字段配置
-    opts.chatOptions.model(ChatModelVendor.GiteeAI.DeepSeek_V32);
-});
-```
-
-<Aside type="note">
-- `toolExecutors` 是 `Map<String, AgentTool>` 类型的字段
-- `chatOptions` 是 `ChatOptions` 类型的字段，用于配置 AI 模型
-</Aside>
-
-## 常见问题
-
-**Q: 任务总是超时怎么办？**
-
-A: 1) 增加 `maxIterations` 2) 简化任务描述 3) 拆分为多个小任务
-
-**Q: 如何让 Agent 更听话？**
-
-A: 通过 `opts.chatOptions.temperature(0.3f)` 降低随机性，提供更详细的任务描述和示例
-
-**Q: 自定义工具不生效？**
-
-A: 检查 `getName()` 是否返回唯一标识，`getDescription()` 是否清晰描述了工具用途
+## 常用配置
+
+| 配置 | 方法 | 说明 |
+|------|------|------|
+| 对话模型 | `chatOptions()` | 配置模型、baseUrl、API Key 等，与 [对话与流式](/feat/ai/chat/) 一致 |
+| 最大迭代 | `maxIterations(int)` | 限制推理+工具调用轮数，默认 20 |
+| 工具 | `tool(AgentTool)` | 注册一个工具，可多次调用注册多个 |
+| 提示词 | `prompt(String)` 或 `prompt(Prompt)` | 自定义 Agent 的系统提示/行为模板 |
+| 钩子 | `hook(Hook)` | 在执行过程的关键节点插入自定义逻辑 |
+
+## 注意事项
+
+- **API Key**：使用 Gitee AI 时必须设置 `FEAT_AI_API_KEY`。
+- **超时与异常**：`execute(...).get()` 会阻塞直到完成或异常；生产环境建议使用 `get(timeout, unit)` 或 `thenAccept` 等异步方式。
+- **工具依赖**：部分内置工具可能依赖外部服务（如搜索、网页抓取），需网络或额外配置；自定义工具需保证线程安全与异常处理。
+- **迭代上限**：复杂任务可能触及 `maxIterations`，可根据需要调大或优化提示词/工具设计。
+
+## 相关链接
+
+- [Feat AI 简介](/feat/ai/about/)：ReAct 与能力概览
+- [开始使用 Feat AI](/feat/ai/getstart/)：依赖与对话模型配置
+- [对话与流式](/feat/ai/chat/)：`ChatOptions` 详细用法
+- 项目内：`feat-ai` 模块 `agent` 包下的 `ReActAgentTest`、`AgentTool`、内置 tools

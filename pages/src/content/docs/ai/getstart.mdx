@@ -1,0 +1,133 @@
+---
+title: 开始使用
+description: 从零搭建第一个 Feat AI 对话程序
+sidebar:
+    order: 1
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+本教程将带你完成第一次 Feat AI 调用：引入依赖、创建对话模型、发送一条消息并看到回复。完成后你将掌握 Feat AI 的基本用法。
+
+## 学习目标
+
+- 在 Maven 项目中引入 `feat-ai` 依赖
+- 使用 `FeatAI.chatModel(...)` 创建对话模型
+- 调用 `chat()` 或 `chatStream()` 与模型交互
+- 区分云端 API（如 Gitee AI）与本地模型（如 Ollama）的配置方式
+
+## 前置条件
+
+- **JDK 1.8** 或更高版本
+- **Maven 3.0** 或更高版本
+- 任选其一：
+  - **Gitee AI**：需配置 API Key（环境变量 `FEAT_AI_API_KEY`）
+  - **Ollama**：本地已安装并运行 [Ollama](https://ollama.ai/)，默认 `http://localhost:11434`
+
+<Aside type="caution">
+使用 Gitee AI 时，必须在环境变量中设置 `FEAT_AI_API_KEY`，否则会抛出 `IllegalArgumentException`。
+</Aside>
+
+## 实践步骤
+
+### 第一步：引入依赖
+
+在项目的 `pom.xml` 中加入 `feat-ai` 依赖（Feat 父 POM 或版本属性中需包含 `feat.version`）：
+
+```xml title="pom.xml"
+<dependency>
+    <groupId>tech.smartboot.feat</groupId>
+    <artifactId>feat-ai</artifactId>
+    <version>${feat.version}</version>
+</dependency>
+```
+
+`feat-ai` 已传递依赖 `feat-core`，无需单独引入。
+
+### 第二步：创建对话模型
+
+以 **本地 Ollama** 为例，指定 baseUrl 和模型名即可：
+
+```java
+import tech.smartboot.feat.ai.FeatAI;
+import tech.smartboot.feat.ai.chat.ChatModel;
+
+public class HelloFeatAI {
+    public static void main(String[] args) {
+        ChatModel model = FeatAI.chatModel(opts -> opts
+                .baseUrl("http://localhost:11434/v1")
+                .model("qwen2.5:7b")
+        );
+        // 下一步将用 model 发送消息
+    }
+}
+```
+
+若使用 **Gitee AI**，可选用内置的 `ChatModelVendor`，并确保已设置 `FEAT_AI_API_KEY`：
+
+```java
+import tech.smartboot.feat.ai.FeatAI;
+import tech.smartboot.feat.ai.chat.ChatModel;
+import tech.smartboot.feat.ai.chat.ChatModelVendor;
+
+ChatModel model = FeatAI.chatModel(opts -> opts
+        .model(ChatModelVendor.GiteeAI.Qwen2_5_72B_Instruct)
+);
+```
+
+### 第三步：发送消息并处理回复
+
+**同步对话**：`chat()` 在回调中拿到完整回复与用量信息。
+
+```java
+model.chat("解释什么是 RAG", response -> {
+    System.out.println("回复: " + response.getContent());
+    System.out.println("用量: " + response.getUsage());
+});
+```
+
+**流式对话**：`chatStream()` 逐段输出，适合长回答或实时展示。
+
+```java
+model.chatStream("解释什么是 RAG", content -> {
+    System.out.print(content);
+});
+```
+
+### 第四步：完整可运行示例
+
+下面是一段基于 **Ollama** 的完整示例（JDK 8 可运行）：
+
+```java title="HelloFeatAI.java"
+import tech.smartboot.feat.ai.FeatAI;
+import tech.smartboot.feat.ai.chat.ChatModel;
+
+public class HelloFeatAI {
+    public static void main(String[] args) {
+        ChatModel model = FeatAI.chatModel(opts -> opts
+                .baseUrl("http://localhost:11434/v1")
+                .model("qwen2.5:7b")
+        );
+
+        model.chatStream("用一句话解释什么是 RAG", content -> {
+            System.out.print(content);
+        });
+    }
+}
+```
+
+## 验证结果
+
+- **Ollama**：先在本机执行 `ollama run qwen2.5:7b`（或你配置的模型），再运行上述程序，控制台应逐字输出模型回复。
+- **Gitee AI**：设置好 `FEAT_AI_API_KEY` 后运行，应得到云端模型的回复；若未设置，会报错提示设置环境变量。
+
+<Aside type="tip">
+项目内更多可运行示例见 `feat-ai` 模块下的 `demo` 包，如 `LocalAI`、`ChatDemo`、`OllamaDemo`。
+</Aside>
+
+## 总结回顾
+
+- 引入 **feat-ai** 依赖后，通过 **`FeatAI.chatModel(opts -> ...)`** 创建对话模型。
+- **Ollama**：`baseUrl("http://localhost:11434/v1")` + `model("模型名")`。
+- **Gitee AI**：`model(ChatModelVendor.GiteeAI.xxx)`，并配置 **`FEAT_AI_API_KEY`**。
+- **同步**用 `chat()`，**流式**用 `chatStream()`；后续可在此基础上增加系统提示、函数调用等，见 [对话与流式](/feat/ai/chat/)。

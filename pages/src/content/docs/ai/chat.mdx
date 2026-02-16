@@ -1,421 +1,138 @@
 ---
-title: Chat Models
+title: 对话与流式
+description: 如何配置对话模型、流式输出与系统提示
 sidebar:
-  order: 2
+    order: 2
 ---
 
-import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
-import CheckAuthorize from '../../../components/CheckAuthorize.astro'
+import { Aside } from '@astrojs/starlight/components';
 
-<CheckAuthorize/>
+本文说明如何用 Feat AI 完成单轮/多轮对话、流式输出、系统提示等常见任务。假设你已能创建 `ChatModel`（见 [开始使用](/feat/ai/getstart/)）。
 
-Chat Model 是 Feat AI 的核心组件，提供与大语言模型（LLM）对话的统一接口。
+## 任务描述
 
-## 概述
+- 配置对话模型（baseUrl、模型、API Key、系统提示等）
+- 发送单条消息并获取完整回复（同步）
+- 以流式方式逐段接收回复
+- 设置系统提示（角色/风格）或关闭“思考”输出（部分模型）
 
-Chat Model 通过以下抽象简化与 LLM 的交互：
+## 解决方案
 
-1. **统一接口** - 无论使用哪个供应商（DeepSeek、OpenAI、Ollama），API 保持一致
-2. **自动历史管理** - 自动维护对话上下文，无需手动管理
-3. **流式支持** - 基于 `CompletableFuture` 的异步设计，支持实时流式输出
-4. **工具调用** - 支持 Function Calling，让 AI 能够调用外部工具
+### 创建对话模型
+
+通过 `FeatAI.chatModel(opts -> ...)` 创建，常用配置：
+
+| 配置 | 方法 | 说明 |
+|------|------|------|
+| 服务地址 | `baseUrl(String)` | 兼容 OpenAI 的 API 根地址，如 Ollama 的 `http://localhost:11434/v1` |
+| 模型 | `model(String)` 或 `model(ChatModelVendor)` | 模型名或内置厂商枚举 |
+| API Key | `apiKey(String)` 或环境变量 `FEAT_AI_API_KEY` | 云端 API 必填 |
+| 系统提示 | `system(String)` | 设定角色或风格，如「你是一个诗人」 |
+| 调试 | `debug(boolean)` | 为 true 时打印请求/响应便于排查 |
+| 关闭思考 | `noThink(true)` | 部分模型会输出“思考”内容，设为 true 可关闭 |
+
+示例：本地 Ollama + 系统提示 + 关闭思考：
+
+```java
+ChatModel model = FeatAI.chatModel(opts -> opts
+        .baseUrl("http://localhost:11434/v1")
+        .model("qwen2.5:7b")
+        .system("你是一个擅长生成藏头诗的诗人。")
+        .noThink(true)
+);
+```
+
+### 同步对话：chat()
+
+单条消息、一次性拿到完整回复和用量信息：
+
+```java
+model.chat("根据关键词「情」「人」「节」生成一句藏头诗", response -> {
+    System.out.println(response.getContent());
+    System.out.println(response.getUsage());
+});
+```
+
+多轮对话可自行维护消息列表，并调用支持 `List<Message>` 的接口（见 API 参考）。
+
+### 流式对话：chatStream()
+
+逐段输出，适合长回答或实时展示。回调中可区分「内容片段」与「完成」：
+
+```java
+model.chatStream("用三句话介绍 Feat 框架", new StreamResponseCallback() {
+    @Override
+    public void onStreamResponse(String content) {
+        System.out.print(content);
+    }
+
+    @Override
+    public void onCompletion(ResponseMessage responseMessage) {
+        System.out.println("\n生成完成");
+    }
+});
+```
+
+<Aside type="tip">
+流式接口还有仅传 `(String content) -> ...` 的简化写法，只处理内容片段，不处理完成事件。
+</Aside>
+
+### 完整示例（基于 feat-ai demo）
+
+下面示例来自 `feat-ai` 模块的 `OllamaDemo`，演示：创建模型、系统提示、流式与同步两种调用方式（JDK 8 可运行）：
 
 ```java
 import tech.smartboot.feat.ai.FeatAI;
 import tech.smartboot.feat.ai.chat.ChatModel;
-import tech.smartboot.feat.ai.chat.ChatModelVendor;
-
-// 创建模型实例
-ChatModel model = FeatAI.chatModel(opts -> {
-    opts.model(ChatModelVendor.GiteeAI.Qwen2_5_72B_Instruct);
-});
-
-// 发送消息
-model.chatStream("你好", response -> {
-    System.out.print(response.getContent());
-});
-```
-
-## 快速开始
-
-### 安装
-
-```xml
-<dependency>
-    <groupId>tech.smartboot.feat</groupId>
-    <artifactId>feat-ai</artifactId>
-    <version>1.4.3</version>
-</dependency>
-```
-
-### 第一个程序
-
-<Tabs>
-<TabItem label="GiteeAI">
-
-```java
-ChatModel model = FeatAI.chatModel(opts -> {
-    opts.model(ChatModelVendor.GiteeAI.Qwen2_5_72B_Instruct)
-        .apiKey(System.getenv("GITEE_AI_API_KEY"));
-});
-
-model.chatStream("你好，请自我介绍", response -> {
-    System.out.print(response.getContent());
-});
-```
-
-</TabItem>
-<TabItem label="Ollama (本地)">
-
-```java
-ChatModel model = FeatAI.chatModel(opts -> {
-    opts.baseUrl("http://localhost:11434/v1")
-        .model("qwen2.5:7b");
-});
-
-model.chatStream("你好", response -> {
-    System.out.print(response.getContent());
-});
-```
-
-</TabItem>
-<TabItem label="DeepSeek">
-
-```java
-ChatModel model = FeatAI.chatModel(opts -> {
-    opts.baseUrl("https://api.deepseek.com/v1")
-        .apiKey(System.getenv("DEEPSEEK_API_KEY"))
-        .model("deepseek-chat");
-});
-
-model.chat("你好", response -> {
-    System.out.println(response.getContent());
-});
-```
-
-</TabItem>
-</Tabs>
-
-## 核心概念
-
-### Messages
-
-Chat Model 通过消息列表进行对话。每条消息都有角色（role）和内容（content）：
-
-```java
-import tech.smartboot.feat.ai.chat.entity.Message;
-
-// 用户消息
-Message userMsg = Message.ofUser("你好");
-
-// 系统消息 - 设定 AI 行为
-Message systemMsg = Message.ofSystem("你是专业助手");
-
-// AI 回复
-Message aiMsg = Message.ofAssistant("你好！有什么可以帮助你？");
-```
-
-### ChatOptions 配置
-
-所有模型参数通过 `ChatOptions` 链式配置：
-
-```java
-ChatModel model = FeatAI.chatModel(opts -> {
-    // 模型选择
-    opts.model(ChatModelVendor.GiteeAI.Qwen2_5_72B_Instruct)
-        // 或自定义
-        // .baseUrl("https://api.example.com/v1")
-        // .model("custom-model")
-        
-        // 认证
-        .apiKey("your-api-key")
-        
-        // 系统提示
-        .system("你是专业助手")
-        
-        // 调试
-        .debug(true);
-});
-```
-
-### 响应类型
-
-**非流式响应** - 一次性返回完整结果：
-
-```java
-// chat 方法返回 CompletableFuture
-CompletableFuture<ResponseMessage> future = model.chat("你好");
-future.thenAccept(response -> {
-    // response.getContent() - 文本内容
-    // response.getUsage() - Token 用量
-});
-
-// 或使用回调版本
-model.chat(Collections.singletonList(Message.ofUser("你好")),
-    Collections.emptyList(),
-    response -> {
-        System.out.println(response.getContent());
-    });
-```
-
-**流式响应** - 实时接收生成内容：
-
-```java
-model.chatStream("你好", new StreamResponseCallback() {
-    @Override
-    public void onStreamResponse(String content) {
-        // 实时接收每个 token
-        System.out.print(content);
-    }
-    
-    @Override
-    public void onReasoning(String reasoning) {
-        // 接收思考过程（如 DeepSeek R1）
-    }
-});
-```
-
-## 使用指南
-
-### 多轮对话
-
-ChatModel 自动维护对话历史：
-
-```java
-ChatModel model = FeatAI.chatModel(opts -> {
-    opts.model(ChatModelVendor.GiteeAI.Qwen2_5_72B_Instruct);
-});
-
-// 第一轮
-model.chat("我叫张三").thenAccept(rsp1 -> {
-    System.out.println("AI: " + rsp1.getContent());
-    
-    // 第二轮 - 自动记住上下文
-    model.chat("我刚才说了什么？").thenAccept(rsp2 -> {
-        System.out.println("AI: " + rsp2.getContent());
-        // 输出包含 "张三"
-    });
-});
-```
-
-### 提示词模板 (Prompt Templates)
-
-Prompt Templates 提供参数化提示词构建能力，支持 `{{variable}}` 占位符语法：
-
-```java
-import tech.smartboot.feat.ai.chat.prompt.Prompt;
-import tech.smartboot.feat.ai.chat.entity.Message;
-
-// 创建带参数的模板
-Prompt template = new Prompt(
-    "你是一位 {{role}}，请为 {{product}} 撰写一份 {{type}}。"
-);
-
-// 使用模板：先设置系统提示，再发送用户消息
-Map<String, String> params = new HashMap<>();
-params.put("role", "技术专家");
-params.put("product", "Feat AI");
-params.put("type", "产品介绍");
-
-// 填充模板并作为系统提示
-String systemPrompt = template.prompt(params);
-ChatModel model = FeatAI.chatModel(opts -> {
-    opts.model(ChatModelVendor.GiteeAI.Qwen2_5_72B_Instruct)
-        .system(systemPrompt);
-});
-
-// 发送用户消息
-model.chat("开始介绍", response -> {
-    System.out.println(response.getContent());
-});
-```
-
-**流式模板响应**：
-
-```java
-model.chatStream(template, params -> {
-    params.put("topic", "人工智能发展趋势");
-    params.put("wordCount", "1000");
-}, new StreamResponseCallback() {
-    @Override
-    public void onStreamResponse(String content) {
-        System.out.print(content);
-    }
-    
-    @Override
-    public void onCompletion(ResponseMessage response) {
-        System.out.println("\n生成完成！");
-    }
-    
-    @Override
-    public void onFailure(Throwable throwable) {
-        System.err.println("生成失败: " + throwable.getMessage());
-    }
-});
-```
-
-**预定义模板**：
-
-```java
-import tech.smartboot.feat.ai.chat.prompt.PromptTemplate;
-
-// 微信公众号文章生成
-model.chat(PromptTemplate.WECHAT_EDITOR, params -> {
-    params.put("topic", "开源项目 Feat AI 介绍");
-    params.put("reference", "Feat AI 是一个 Java AI 开发框架...");
-}, response -> {
-    System.out.println(response.getContent());
-});
-
-// 技术文档生成
-model.chat(PromptTemplate.PROJECT_DOCUMENT_EDITOR, params -> {
-    params.put("project", "MyProject");
-    params.put("version", "1.0.0");
-}, response -> {
-    System.out.println(response.getContent());
-});
-```
-
-### 工具调用 (Tool Calling)
-
-让模型调用外部函数：
-
-```java
-ChatModel model = FeatAI.chatModel(opts -> {
-    opts.model(ChatModelVendor.GiteeAI.DeepSeek_R1)
-        .addFunction(Function.of("get_weather")
-            .description("获取天气")
-            .addProperty("city", "string", "城市名", true))
-        .addFunction(Function.of("get_time")
-            .description("获取时间"));
-});
-
-// 发送请求
-model.chat("北京天气怎么样？", Arrays.asList("get_weather"), response -> {
-    if (!response.getToolCalls().isEmpty()) {
-        for (ToolCall toolCall : response.getToolCalls()) {
-            System.out.println("函数: " + toolCall.getName());
-            System.out.println("参数: " + toolCall.getArguments());
-        }
-    }
-});
-```
-
-### 结构化输出
-
-强制返回 JSON 格式：
-
-```java
-ChatModel model = FeatAI.chatModel(opts -> {
-    opts.model(ChatModelVendor.GiteeAI.Qwen2_5_72B_Instruct)
-        .responseFormat(ResponseFormat.JSON);
-});
-
-model.chat("返回用户信息 JSON", response -> {
-    JSONObject json = JSON.parseObject(response.getContent());
-    System.out.println(json.getString("name"));
-});
-```
-
-## 集成 (Integrations)
-
-Feat AI 支持多种模型供应商：
-
-### GiteeAI
-
-```java
-opts.model(ChatModelVendor.GiteeAI.DeepSeek_R1)
-opts.model(ChatModelVendor.GiteeAI.Qwen2_5_72B_Instruct)
-opts.model(ChatModelVendor.GiteeAI.Kimi_K2_Instruct)
-opts.model(ChatModelVendor.GiteeAI.Qwen3_235B_A22B_Instruct)
-```
-
-### Ollama
-
-```java
-opts.model(ChatModelVendor.Ollama.Qwen3_06B)
-opts.model(ChatModelVendor.Ollama.Qwen2_5_3B)
-opts.model(ChatModelVendor.Ollama.Deepseek_r1_7B)
-```
-
-### 自定义 OpenAI 兼容 API
-
-```java
-opts.baseUrl("https://api.custom.com/v1")
-    .apiKey("your-key")
-    .model("custom-model")
-```
-
-## API 参考
-
-### FeatAI
-
-| 方法 | 说明 |
-|------|------|
-| `chatModel(Consumer<ChatOptions>)` | 创建 ChatModel 实例 |
-
-### ChatOptions
-
-| 方法 | 说明 |
-|------|------|
-| `model(ChatModelVendor)` | 选择模型供应商 |
-| `baseUrl(String)` | 自定义 API 地址 |
-| `apiKey(String)` | 设置 API 密钥 |
-| `system(String)` | 设置系统提示 |
-| `debug(boolean)` | 启用调试 |
-| `addFunction(Function)` | 添加工具函数 |
-| `responseFormat(ResponseFormat)` | 设置响应格式 |
-| `noThink(boolean)` | 禁用思考模式 |
-
-### ChatModel
-
-| 方法 | 说明 |
-|------|------|
-| `chat(String, Consumer<ResponseMessage>)` | 非流式对话 |
-| `chatStream(String, StreamResponseCallback)` | 流式对话 |
-| `chat(Prompt, Consumer<Map>, Consumer<ResponseMessage>)` | 模板非流式 |
-| `chatStream(Prompt, Consumer<Map>, StreamResponseCallback)` | 模板流式 |
-
-## 完整示例
-
-```java
-public class CustomerServiceBot {
-    
-    private final ChatModel chatModel;
-    private final Prompt prompt = new Prompt(
-        "你是 {{company}} 的客服。当前用户：{{user}}"
-    );
-    
-    public CustomerServiceBot() {
-        this.chatModel = FeatAI.chatModel(opts -> {
-            opts.model(ChatModelVendor.GiteeAI.Qwen2_5_72B_Instruct);
-        });
-    }
-    
-    public void chat(final String userName, final String question) {
-        // 设置系统提示
-        chatModel.chat(prompt, params -> {
-            params.put("company", "SmartBoot");
-            params.put("user", userName);
-        }, rsp -> {});
-        
-        // 处理问题
-        chatModel.chatStream(question, new StreamResponseCallback() {
+import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
+import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
+
+public class ChatDemoExample {
+    public static void main(String[] args) {
+        ChatModel model = FeatAI.chatModel(opts -> opts
+                .baseUrl("http://localhost:11434/v1")
+                .model("qwen2.5:7b")
+                .system("你是一个擅长生成藏头诗的诗人。")
+                .noThink(true)
+        );
+
+        String prompt = "根据以下关键词生成一句藏头诗：情,人,节,快,乐";
+
+        // 流式
+        model.chatStream(prompt, new StreamResponseCallback() {
             @Override
             public void onStreamResponse(String content) {
                 System.out.print(content);
             }
-            
             @Override
-            public void onCompletion(ResponseMessage response) {
-                System.out.println("\n[完成]");
+            public void onCompletion(ResponseMessage responseMessage) {
+                System.out.println("\n生成完成！");
             }
-            
-            @Override
-            public void onFailure(Throwable throwable) {
-                System.err.println("错误: " + throwable.getMessage());
-            }
+        });
+
+        // 同步
+        model.chat(prompt, response -> {
+            System.out.println(response.getContent());
+            System.out.println("生成完成！");
         });
     }
 }
 ```
+
+## 替代方案
+
+- **Gitee AI**：使用 `opts.model(ChatModelVendor.GiteeAI.Qwen2_5_72B_Instruct)` 等，并设置 `FEAT_AI_API_KEY`，无需手动写 baseUrl。
+- **自定义 baseUrl**：任意兼容 OpenAI 格式的接口均可通过 `baseUrl(...)` + `model(...)` 对接。
+
+## 注意事项
+
+- 使用 Gitee AI 时 **必须** 设置环境变量 `FEAT_AI_API_KEY`，否则会抛出 `IllegalArgumentException`。
+- Ollama 的 baseUrl 通常为 `http://localhost:11434/v1`，且不要以 `/` 结尾；Feat AI 会自动去掉末尾斜杠。
+- 部分模型会先输出“思考”再输出答案，若不需要可设置 `noThink(true)`。
+- 流式回调可能在非主线程执行，若在 UI 或其它线程敏感场景使用，需自行做线程切换。
+
+## 相关链接
+
+- [开始使用 Feat AI](/feat/ai/getstart/)：首次创建 `ChatModel`
+- [Feat AI 简介](/feat/ai/about/)：模块能力概览
+- 项目内可运行示例：`feat-ai` 模块 `demo` 包下的 `ChatDemo`、`OllamaDemo`、`LocalAI`

@@ -1,211 +1,124 @@
 ---
-title: Embedding
-description: Feat AI 文本嵌入功能 - 将文本转换为向量表示
+title: Embedding 与向量
+description: 如何使用 Feat AI 做文本向量化与典型用法
 sidebar:
     order: 4
 ---
 
 import { Aside } from '@astrojs/starlight/components';
-import CheckAuthorize from '../../../components/CheckAuthorize.astro'
 
-<CheckAuthorize/>
+Feat AI 的 **Embedding** 能力将文本转换为固定维度的向量，常用于检索、去重、聚类或作为 RAG（检索增强生成）的向量来源。本文说明如何创建嵌入模型、对单条或批量文本做向量化。
 
-Embedding Model 用于将文本转换为数值向量（高维空间中的点），使计算机能够理解和比较文本的语义含义。
+## 任务描述
 
-## 概述
+- 创建 Embedding 模型并指定厂商/模型
+- 对单条文本或一批文本进行向量化（embed）
+- 将得到的向量用于检索、RAG 等场景（与向量库配合时需自行对接）
 
-文本嵌入是以下应用的基础：
+## 解决方案
 
-- **语义搜索** - 找到与查询语义相似的文档
-- **文本分类** - 基于语义将文本归类
-- **聚类分析** - 发现文本之间的相似性分组
-- **推荐系统** - 推荐语义相似的内容
+### 创建 Embedding 模型
 
-Feat AI 提供统一的 `EmbeddingModel` 接口，支持多种嵌入模型供应商。
+通过 `FeatAI.embedding(opts -> ...)` 创建，常用配置为指定模型（厂商枚举或模型名）：
 
 ```java
 import tech.smartboot.feat.ai.FeatAI;
 import tech.smartboot.feat.ai.embedding.EmbeddingModel;
-import tech.smartboot.feat.ai.vendor.EmbeddingModelVendor;
+import tech.smartboot.feat.ai.embedding.EmbeddingModelVendor;
 
-// 创建嵌入模型
-EmbeddingModel model = FeatAI.embedding(opts -> opts
-    .model(EmbeddingModelVendor.GiteeAI.BGE_M3)
+EmbeddingModel model = FeatAI.embedding(opt -> opt
+        .model(EmbeddingModelVendor.GiteeAI.bce_embedding_base_v1)
 );
-
-// 生成向量
-List<Float> vector = model.embed("这是一段文本");
 ```
 
-## 快速开始
+使用 **Ollama** 时，可选用 Ollama 的 Embedding 模型，例如：
 
-### 单句嵌入
+```java
+EmbeddingModel model = FeatAI.embedding(opt -> opt
+        .model(EmbeddingModelVendor.Ollama.nomic_embed_text)
+);
+```
+
+<Aside type="tip">
+Gitee AI 的 Embedding 通常需要配置 `FEAT_AI_API_KEY`；Ollama 则只需本地服务可用，无需 API Key。
+</Aside>
+
+### 单条文本向量化
+
+`embed(String)` 返回一个 `float[]`，即该文本的向量表示：
+
+```java
+float[] vector = model.embed("你好！");
+System.out.println(Arrays.toString(vector));
+```
+
+### 批量文本向量化
+
+`embed(List<String>)` 一次请求多句，返回 `List<float[]>`，顺序与输入一致：
+
+```java
+List<String> texts = Arrays.asList("Hello World", "你好");
+List<float[]> vectors = model.embed(texts);
+for (float[] v : vectors) {
+    System.out.println(Arrays.toString(v));
+}
+```
+
+批量调用有利于减少请求次数，建议在可能时使用。
+
+### 完整示例（基于 feat-ai 测试）
+
+下面示例基于 `feat-ai` 模块的 `EmbeddingTest`，演示 Gitee AI 与 Ollama 两种用法（JDK 8 可运行）：
 
 ```java
 import tech.smartboot.feat.ai.FeatAI;
 import tech.smartboot.feat.ai.embedding.EmbeddingModel;
-import tech.smartboot.feat.ai.vendor.EmbeddingModelVendor;
+import tech.smartboot.feat.ai.embedding.EmbeddingModelVendor;
 
-EmbeddingModel model = FeatAI.embedding(opts -> opts
-    .model(EmbeddingModelVendor.GiteeAI.BGE_M3)
-);
-
-// 对单句文本进行嵌入
-float[] embedding = model.embed("你好！");
-System.out.println("向量维度: " + embedding.length);  // 768
-```
-
-### 批量嵌入
-
-```java
 import java.util.Arrays;
 import java.util.List;
 
-EmbeddingModel model = FeatAI.embedding(opts -> opts
-    .model(EmbeddingModelVendor.GiteeAI.BGE_LARGE_ZH_V1_5)
-);
-
-List<float[]> embeddings = model.embed(Arrays.asList(
-    "Hello World",
-    "你好"
-));
-
-embeddings.forEach(embed -> 
-    System.out.println(Arrays.toString(embed))
-);
-```
-
-## 模型选择
-
-### GiteeAI 模型
-
-```java
-// 基础版模型
-EmbeddingModel bceBaseModel = FeatAI.embedding(opts -> opts
-    .model(EmbeddingModelVendor.GiteeAI.BCE_BASE_V1)
-);
-
-// 小型中文模型
-EmbeddingModel bgeSmallModel = FeatAI.embedding(opts -> opts
-    .model(EmbeddingModelVendor.GiteeAI.BGE_SMALL_ZH_V1_5)
-);
-
-// 大型中文模型
-EmbeddingModel bgeLargeModel = FeatAI.embedding(opts -> opts
-    .model(EmbeddingModelVendor.GiteeAI.BGE_LARGE_ZH_V1_5)
-);
-```
-
-### Ollama 本地模型
-
-```java
-EmbeddingModel ollamaModel = FeatAI.embedding(opts -> {
-    opts.baseUrl("http://localhost:11434/v1")
-        .model(EmbeddingModelVendor.Ollama.NOMIC_EMBED_TEXT);
-});
-
-List<float[]> embeddings = ollamaModel.embed(Arrays.asList(
-    "Hello World",
-    "你好"
-));
-```
-
-<Aside type="note">
-需要先启动 Ollama 服务。`nomic-embed-text` 是一个高性能的开源嵌入模型。
-</Aside>
-
-### 自定义模型
-
-```java
-EmbeddingModel customModel = FeatAI.embedding(opts -> {
-    opts.baseUrl("http://your-model-server/v1")
-        .model("your-model-name")
-        .apiKey("your-api-key");
-});
-```
-
-## 使用示例
-
-### 文本相似度计算
-
-```java
-import tech.smartboot.feat.ai.FeatAI;
-import tech.smartboot.feat.ai.vendor.EmbeddingModelVendor;
-
-public class TextSimilarityExample {
+public class EmbeddingDemo {
     public static void main(String[] args) {
-        EmbeddingModel model = FeatAI.embedding(opts -> opts
-            .model(EmbeddingModelVendor.GiteeAI.BCE_BASE_V1)
+        // Gitee AI
+        EmbeddingModel giteeModel = FeatAI.embedding(opt ->
+                opt.model(EmbeddingModelVendor.GiteeAI.bce_embedding_base_v1)
         );
+        float[] single = giteeModel.embed("你好！");
+        System.out.println("单条: " + Arrays.toString(single));
 
-        float[] embedding1 = model.embed("你好！");
-        float[] embedding2 = model.embed("您好！");
-
-        // 计算余弦相似度
-        double similarity = cosineSimilarity(embedding1, embedding2);
-        System.out.println("文本相似度: " + similarity);  // 0.85+
-    }
-
-    private static double cosineSimilarity(float[] a, float[] b) {
-        double dotProduct = 0.0;
-        double normA = 0.0;
-        double normB = 0.0;
-
-        for (int i = 0; i < a.length; i++) {
-            dotProduct += a[i] * b[i];
-            normA += Math.pow(a[i], 2);
-            normB += Math.pow(b[i], 2);
+        List<float[]> batch = giteeModel.embed(Arrays.asList("Hello World", "你好"));
+        for (float[] v : batch) {
+            System.out.println(Arrays.toString(v));
         }
 
-        return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+        // Ollama
+        EmbeddingModel ollamaModel = FeatAI.embedding(opt ->
+                opt.model(EmbeddingModelVendor.Ollama.nomic_embed_text)
+        );
+        List<float[]> ollamaVectors = ollamaModel.embed(Arrays.asList("Hello World", "你好"));
+        ollamaVectors.forEach(v -> System.out.println(Arrays.toString(v)));
     }
 }
 ```
 
-### 与 Chroma 集成
+## 典型用法
 
-```java
-import tech.smartboot.feat.ai.FeatAI;
-import tech.smartboot.feat.ai.vector.VectorStore;
-import tech.smartboot.feat.ai.vector.Document;
+- **检索 / RAG**：将文档块或问题转为向量，写入向量库（如 Chroma、Milvus）；查询时用问题向量做相似度检索，再将检索结果交给对话模型生成答案。Feat AI 提供 `ChromaVectorStore`、`MilvusVectorStore` 等，可与 Embedding 配合使用。
+- **去重 / 聚类**：对文本做 embed 后，用余弦相似度等度量做相似度计算，用于去重或聚类。
+- **语义搜索**：用查询向量在已有向量集合中做最近邻搜索。
 
-// 创建带嵌入模型的向量存储
-VectorStore store = VectorStore.chroma(opts -> opts
-    .url("http://localhost:8000")
-    .collectionName("my_collection")
-    .embeddingModel(FeatAI.embedding(embedOpts -> 
-        embedOpts.model(EmbeddingModelVendor.GiteeAI.BGE_M3)
-    ))
-);
+向量维度与数值范围由具体模型决定，不同模型之间向量不可混用（维度可能不同）。
 
-// 添加文档（自动嵌入）
-Document doc = new Document("doc1", "Feat AI 是一个 Java AI 开发框架");
-store.add(doc);
+## 注意事项
 
-// 语义搜索
-List<Document> results = store.similaritySearch("什么是 Feat AI", 5);
-```
+- 使用 Gitee AI 时需设置环境变量 **`FEAT_AI_API_KEY`**。
+- Ollama 需先拉取并运行对应 Embedding 模型，例如：`ollama run nomic-embed-text`。
+- 批量请求时注意厂商对单次请求条数或 token 数的限制，必要时自行分批。
+- 向量库的写入、索引与查询需参考各自文档；Feat AI 的向量库集成见项目内 `vector` 包。
 
-## API 参考
+## 相关链接
 
-### FeatAI
-
-| 方法 | 说明 |
-|------|------|
-| `embedding(Consumer<EmbeddingOptions>)` | 创建 EmbeddingModel 实例 |
-
-### EmbeddingOptions
-
-| 方法 | 说明 |
-|------|------|
-| `model(EmbeddingModelVendor)` | 选择嵌入模型 |
-| `baseUrl(String)` | 自定义 API 地址 |
-| `apiKey(String)` | 设置 API 密钥 |
-| `debug(boolean)` | 启用调试 |
-
-### EmbeddingModel
-
-| 方法 | 说明 |
-|------|------|
-| `embed(String)` | 嵌入单句文本 |
-| `embed(List<String>)` | 批量嵌入 |
+- [开始使用 Feat AI](/feat/ai/getstart/)：依赖与基础配置
+- [Feat AI 简介](/feat/ai/about/)：能力概览
+- 项目内：`feat-ai` 模块 `EmbeddingTest`、`EmbeddingModelVendor`、`vector` 包（Chroma、Milvus 等）
