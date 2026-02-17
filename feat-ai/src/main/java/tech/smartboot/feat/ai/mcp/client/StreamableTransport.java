@@ -20,6 +20,7 @@ import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.client.HttpRest;
 import tech.smartboot.feat.core.common.FeatUtils;
+import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.exception.FeatException;
@@ -40,28 +41,25 @@ final class StreamableTransport extends Transport {
 
     public StreamableTransport(McpOptions options) {
         super(options);
-        httpClient = new HttpClient(options.getBaseUrl());
-        String sseUrl = options.getBaseUrl().endsWith("/") ? options.getBaseUrl() : options.getBaseUrl() + "/";
-        if (options.getSseEndpoint().charAt(0) == '/') {
-            sseUrl += options.getMcpEndpoint().substring(1);
-        } else {
-            sseUrl += options.getMcpEndpoint();
-        }
-        sseClient = Feat.httpClient(options.getBaseUrl());
+        httpClient = new HttpClient(options.getUrl());
+        sseClient = Feat.httpClient(options.getUrl());
+        httpClient.options().debug(true);
     }
 
     @Override
     void initialized() {
-        sseClient.post(options.getMcpEndpoint())
+        sseClient.post()
                 .header(header -> {
                     options.getHeaders().forEach(header::set);
                     header.set(Request.HEADER_SESSION_ID, sessionId);
+                    //The client MUST include an Accept header, listing both application/json and text/event-stream as supported content types.
+                    header.set(HeaderName.ACCEPT, "application/json,text/event-stream");
                 })
                 .onSSE(sse -> sse.onData(event -> {
                     JSONObject jsonObject = JSONObject.parseObject(event.getData());
                     Response<JSONObject> response = handleServerRequest(jsonObject);
                     if (response != null) {
-                        doRequest(httpClient.post(options.getMcpEndpoint()), response);
+                        doRequest(httpClient.post(), response);
                         return;
                     }
                     options.getNotificationHandler().accept(jsonObject.getString("method"));
@@ -76,11 +74,11 @@ final class StreamableTransport extends Transport {
 
     @Override
     protected CompletableFuture<Response<JSONObject>> doRequest(CompletableFuture<Response<JSONObject>> future, Request<JSONObject> request) {
-        if (FeatUtils.isBlank(options.getMcpEndpoint())) {
+        if (FeatUtils.isBlank(options.getUrl())) {
             future.completeExceptionally(new FeatException("endpoint not found"));
             return future;
         }
-        HttpRest httpRest = httpClient.post(options.getMcpEndpoint());
+        HttpRest httpRest = httpClient.post();
         doRequest(httpRest, request);
         httpRest.onSuccess(response -> {
             if (response.statusCode() == HttpStatus.ACCEPTED.value()) {
@@ -107,7 +105,7 @@ final class StreamableTransport extends Transport {
         Request<JSONObject> request = new Request<>();
         request.setMethod(method);
         byte[] body = JSONObject.toJSONString(request).getBytes();
-        httpClient.post(options.getMcpEndpoint()).header(header -> {
+        httpClient.post().header(header -> {
             options.getHeaders().forEach(header::set);
             header.setContentType(HeaderValue.ContentType.APPLICATION_JSON).setContentLength(body.length);
             if (FeatUtils.isNotBlank(sessionId)) {

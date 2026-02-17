@@ -43,11 +43,13 @@ final class SseTransport extends Transport {
 
     public SseTransport(McpOptions options) {
         super(options);
-        httpClient = new HttpClient(options.getBaseUrl());
-        sseClient = Feat.httpClient(options.getBaseUrl(), opt -> {
+        httpClient = new HttpClient(options.getUrl());
+        httpClient.options().debug(true);
+        sseClient = Feat.httpClient(options.getUrl(), opt -> {
             opt.setHeaders(options.getHeaders());
         });
-        sseClient.post(options.getSseEndpoint())
+        sseClient.options().debug(true);
+        sseClient.post()
                 .onSSE(sse -> sse.onEvent("endpoint", event -> {
                             endpoint = event.getData();
                             latch.countDown();

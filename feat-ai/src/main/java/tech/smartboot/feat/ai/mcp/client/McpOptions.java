@@ -17,6 +17,7 @@ import tech.smartboot.feat.ai.mcp.model.Roots;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -26,9 +27,7 @@ import java.util.function.Consumer;
  * @version v1.0 7/8/25
  */
 public class McpOptions {
-    private String baseUrl;
-    private String mcpEndpoint = "/mcp";
-    private String sseEndpoint = "/sse";
+    private String url;
     private final Implementation implementation = Implementation.of("feat-mcp-client", "Feat MCP", Feat.VERSION);
     private boolean roots;
     private boolean sampling;
@@ -42,33 +41,14 @@ public class McpOptions {
     McpOptions() {
     }
 
-    public String getBaseUrl() {
-        return baseUrl;
+    public String getUrl() {
+        return url;
     }
 
-    public McpOptions baseUrl(String baseUrl) {
-        this.baseUrl = baseUrl;
+    public McpOptions url(String url) {
+        this.url = url;
         return this;
     }
-
-    public String getMcpEndpoint() {
-        return mcpEndpoint;
-    }
-
-    public McpOptions setMcpEndpoint(String mcpEndpoint) {
-        this.mcpEndpoint = mcpEndpoint;
-        return this;
-    }
-
-    public String getSseEndpoint() {
-        return sseEndpoint;
-    }
-
-    public McpOptions setSseEndpoint(String sseEndpoint) {
-        this.sseEndpoint = sseEndpoint;
-        return this;
-    }
-
 
     public Implementation getImplementation() {
         return implementation;
@@ -124,11 +104,14 @@ public class McpOptions {
         this.notificationHandler = notificationHandler;
     }
 
-    public McpOptions header(Map<String, String> header) {
+    public McpOptions header(Consumer<Map<String, String>> header) {
         if (header == null) {
             throw new NullPointerException();
         }
-        this.headers = header;
+        if (this.headers.equals(Collections.emptyMap())) {
+            this.headers = new HashMap<>();
+        }
+        header.accept(this.headers);
         return this;
     }
 

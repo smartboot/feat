@@ -193,7 +193,6 @@ public class McpServer {
                 Request<McpInitializeRequest> req = JSON.parseObject(FeatUtils.asString(request.getInputStream()), new TypeReference<Request<McpInitializeRequest>>() {
                 });
                 if (req == null) {
-                    request.getResponse().close();
                     throw new HttpException(HttpStatus.BAD_REQUEST);
                 }
                 session.setInitializeRequest(req.getParams());
