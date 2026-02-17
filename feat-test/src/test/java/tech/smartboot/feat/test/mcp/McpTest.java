@@ -41,7 +41,6 @@ import java.util.function.Consumer;
  */
 public class McpTest {
     private McpServer mcp;
-    private McpClient sseClient;
     private McpClient streamClient;
     private HttpServer mcpServer;
 
@@ -96,8 +95,6 @@ public class McpTest {
         mcp.enableSSE(router);
         mcpServer = Feat.httpServer(opt -> opt.debug(true)).httpHandler(router).listen(3002);
 
-        sseClient = McpClient.sse(opt -> opt.url("http://localhost:3002/sse").rootsEnable());
-        sseClient.initialize();
         streamClient = McpClient.streamable(opt -> opt.url("http://localhost:3002/mcp").rootsEnable());
         streamClient.initialize();
     }
@@ -105,7 +102,6 @@ public class McpTest {
     @After
     public void destroy() {
         mcpServer.shutdown();
-        sseClient.close();
         if (streamClient != null) {
             streamClient.close();
         }
@@ -113,9 +109,9 @@ public class McpTest {
 
     @Test
     public void test() throws Exception {
-        System.out.println(JSONObject.toJSONString(sseClient.listTools()));
-        System.out.println(JSONObject.toJSONString(sseClient.listPrompts()));
-        System.out.println(JSONObject.toJSONString(sseClient.listResources()));
+        System.out.println(JSONObject.toJSONString(streamClient.listTools()));
+        System.out.println(JSONObject.toJSONString(streamClient.listPrompts()));
+        System.out.println(JSONObject.toJSONString(streamClient.listResources()));
 
 
     }
@@ -126,7 +122,7 @@ public class McpTest {
             String code = promptContext.getArguments().getString("code");
             return PromptMessage.ofText(RoleEnum.User, "Please review the following code and provide suggestions for improvement:" + code);
         }));
-        System.out.println(JSONObject.toJSONString(sseClient.getPrompt("code_review_1")));
+        System.out.println(JSONObject.toJSONString(streamClient.getPrompt("code_review_1")));
     }
 
     @Test
@@ -134,15 +130,15 @@ public class McpTest {
         mcp.addTool(ServerTool.of("test_aaa").title("测试").description("测试").inputSchema(Tool.stringProperty("name", "用户名称"), Tool.requiredStringProperty("age", "用户年龄")).outputSchema(Tool.requiredNumberProperty("age", "年龄")).doAction(toolContext -> {
             return ToolResult.ofText("aaa");
         }));
-        ToolCalledResult result = sseClient.callTool("test_aaa");
+        ToolCalledResult result = streamClient.callTool("test_aaa");
         Assert.assertEquals("aaa", ((ToolResult.TextContent) (result.getContent().get(0))).getText());
-        ToolCalledResult streamClient = sseClient.callTool("test_aaa");
-        Assert.assertEquals("aaa", ((ToolResult.TextContent) (result.getContent().get(0))).getText());
+        ToolCalledResult result1 = streamClient.callTool("test_aaa");
+        Assert.assertEquals("aaa", ((ToolResult.TextContent) (result1.getContent().get(0))).getText());
     }
 
     @Test
     public void roots() throws Exception {
-        sseClient.addRoot("file:///", "root");
+        streamClient.addRoot("file:///", "root");
         streamClient.addRoot("file:///", "root");
         Thread.sleep(1000);
     }

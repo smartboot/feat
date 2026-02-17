@@ -68,22 +68,6 @@ public class McpClient {
         });
     }
 
-    /**
-     * 创建基于SSE (Server-Sent Events) 协议的MCP客户端
-     *
-     * <p><strong>注意：</strong>此方法已被标记为废弃，因为MCP规范不再推荐使用SSE协议。
-     * 建议使用 {@link #streamable(Consumer)} 替代。</p>
-     *
-     * @param opt MCP配置选项消费者函数，用于配置客户端参数
-     * @return 配置好的MCP客户端实例
-     * @deprecated MCP 规范已不推荐使用 SSE，请使用 {@link #streamable(Consumer)}
-     */
-    @Deprecated
-    public static McpClient sse(Consumer<McpOptions> opt) {
-        McpOptions options = new McpOptions();
-        opt.accept(options);
-        return new McpClient(options, new SseTransport(options));
-    }
 
     /**
      * 创建基于Streamable协议的MCP客户端（推荐方式）
@@ -157,7 +141,7 @@ public class McpClient {
                     transport.initialized();
                     future.complete(initializeResponse);
                 } else {
-                    future.completeExceptionally(new FeatException("notification failed"));
+                    future.completeExceptionally(new FeatException(r.body()));
                 }
             });
 

@@ -37,6 +37,7 @@ public class McpOptions {
     private Map<String, String> headers = Collections.emptyMap();
     private Consumer<String> notificationHandler = (method) -> {
     };
+    private boolean debug = false;
 
     McpOptions() {
     }
@@ -117,5 +118,14 @@ public class McpOptions {
 
     Map<String, String> getHeaders() {
         return headers;
+    }
+
+    public McpOptions debug(boolean debug) {
+        this.debug = debug;
+        return this;
+    }
+
+    public boolean debug() {
+        return debug;
     }
 }

@@ -41,6 +41,7 @@ class HttpRestImpl implements HttpRest {
     private Map<String, String> queryParams = null;
     private boolean commit = false;
     private RequestBody body;
+    private boolean sse = false;
 
     private final HttpResponseImpl response;
 
@@ -179,7 +180,9 @@ class HttpRestImpl implements HttpRest {
     public HttpRestImpl onSuccess(Consumer<HttpResponse> consumer) {
         completableFuture.thenAccept(httpResponse -> {
             try {
-                consumer.accept(httpResponse);
+                if (!sse) {
+                    consumer.accept(httpResponse);
+                }
             } catch (Throwable e) {
                 if (throwableConsumer != null) {
                     throwableConsumer.accept(e);
@@ -302,5 +305,9 @@ class HttpRestImpl implements HttpRest {
 
     public CompletableFuture<HttpResponseImpl> getCompletableFuture() {
         return completableFuture;
+    }
+
+    public void sseUpgrade() {
+        sse = true;
     }
 }

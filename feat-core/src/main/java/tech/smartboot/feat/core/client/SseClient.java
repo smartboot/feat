@@ -28,16 +28,17 @@ public final class SseClient {
 
     private final Map<String, Consumer<SseEvent>> eventHandlers = new ConcurrentHashMap<>();
 
-    private volatile Consumer<SseClient> onOpen = client -> {
+    private volatile Consumer<HttpResponse> onOpen = client -> {
     };
 
-    private final HttpRest httpRest;
+    private final HttpRestImpl httpRest;
 
-    SseClient(Predicate<HttpResponse> predicate, HttpRest rest) {
+    SseClient(Predicate<HttpResponse> predicate, HttpRestImpl rest) {
         this.httpRest = rest;
         // 设置事件流处理器
         httpRest.onResponseHeader(resp -> {
             if (predicate.test(resp)) {
+                httpRest.sseUpgrade();
                 httpRest.onResponseBody(new ServerSentEventStream() {
                     public void onEvent(HttpResponse httpResponse, Map<String, String> event) throws IOException {
                         // 创建事件对象
@@ -59,7 +60,7 @@ public final class SseClient {
                     }
                 });
                 // 通知连接成功
-                onOpen.accept(this);
+                onOpen.accept(resp);
             }
         });
     }
@@ -79,7 +80,7 @@ public final class SseClient {
      * 连接打开时触发
      *
      */
-    public SseClient onOpen(Consumer<SseClient> consumer) {
+    public SseClient onOpen(Consumer<HttpResponse> consumer) {
         this.onOpen = consumer;
         return this;
     }
