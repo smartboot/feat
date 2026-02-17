@@ -21,7 +21,6 @@ import tech.smartboot.feat.ai.mcp.model.ToolListResponse;
 import tech.smartboot.feat.ai.mcp.model.ToolResult;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -176,30 +175,6 @@ public class McpTool implements AgentTool {
         schema.put("required", required);
 
         return schema.toJSONString();
-    }
-
-    private String buildToolArgsDescription(Tool tool) {
-        StringBuilder desc = new StringBuilder();
-        if (tool.getDescription() != null) {
-            desc.append(tool.getDescription());
-        }
-        if (tool.getInputSchema() != null && tool.getInputSchema().getProperties() != null) {
-            desc.append(" 参数：");
-            List<String> params = new ArrayList<>();
-            for (Map.Entry<String, Tool.Property> entry : tool.getInputSchema().getProperties().entrySet()) {
-                Tool.Property property = entry.getValue();
-                String paramDesc = entry.getKey();
-                if (property.getDescription() != null) {
-                    paramDesc += "(" + property.getDescription() + ")";
-                }
-                if (property.isRequired()) {
-                    paramDesc += "[必填]";
-                }
-                params.add(paramDesc);
-            }
-            desc.append(String.join(", ", params));
-        }
-        return desc.toString();
     }
 
     /**
