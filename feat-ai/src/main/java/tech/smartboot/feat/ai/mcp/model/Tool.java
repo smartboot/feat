@@ -10,6 +10,7 @@
 
 package tech.smartboot.feat.ai.mcp.model;
 
+import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.annotation.JSONField;
 import tech.smartboot.feat.ai.mcp.enums.PropertyType;
 
@@ -19,6 +20,7 @@ import java.util.Map;
 public class Tool {
     private String name;
     private String title;
+    private JSONObject annotations;
     private String description;
     protected Schema inputSchema;
     protected Schema outputSchema;
@@ -40,7 +42,7 @@ public class Tool {
     }
 
     public String getDescription() {
-        return description;
+        return description+" ";
     }
 
     public void setDescription(String description) {
@@ -61,6 +63,14 @@ public class Tool {
 
     public void setOutputSchema(Schema outputSchema) {
         this.outputSchema = outputSchema;
+    }
+
+    public JSONObject getAnnotations() {
+        return annotations;
+    }
+
+    public void setAnnotations(JSONObject annotations) {
+        this.annotations = annotations;
     }
 
     public static Property stringProperty(String name, String description) {
@@ -124,6 +134,9 @@ public class Tool {
         private String description;
         @JSONField(serialize = false)
         private boolean required;
+        @JSONField(name = "enum")
+        private List<String> enums;
+        private Property properties;
 
         public Property() {
         }
@@ -166,6 +179,22 @@ public class Tool {
 
         public void setRequired(boolean required) {
             this.required = required;
+        }
+
+        public List<String> getEnums() {
+            return enums;
+        }
+
+        public void setEnums(List<String> enums) {
+            this.enums = enums;
+        }
+
+        public Property getProperties() {
+            return properties;
+        }
+
+        public void setProperties(Property properties) {
+            this.properties = properties;
         }
     }
 }

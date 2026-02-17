@@ -10,9 +10,9 @@
 
 package tech.smartboot.feat.ai.agent.tools;
 
-import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.ai.agent.AgentTool;
+import tech.smartboot.feat.ai.agent.FeatAgent;
 import tech.smartboot.feat.ai.mcp.client.McpClient;
 import tech.smartboot.feat.ai.mcp.client.McpOptions;
 import tech.smartboot.feat.ai.mcp.model.Tool;
@@ -20,16 +20,16 @@ import tech.smartboot.feat.ai.mcp.model.ToolCalledResult;
 import tech.smartboot.feat.ai.mcp.model.ToolListResponse;
 import tech.smartboot.feat.ai.mcp.model.ToolResult;
 
-import java.util.ArrayList;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 /**
- * MCP工具，将MCP服务器的所有工具封装为Agent可用的工具
+ * MCP工具，将MCP服务器的单个工具封装为Agent可用的工具
  * <p>
- * 该工具自动从MCP服务器获取工具列表，并为每个MCP工具创建对应的Agent工具。
+ * 该工具类用于将MCP服务器中的单个工具映射为AI Agent可识别的工具。
+ * 每个McpTool实例对应MCP服务器中的一个具体工具。
+ * </p>
+ * <p>
  * 使用示例：
  * </p>
  * <pre>
@@ -39,8 +39,8 @@ import java.util.function.Consumer;
  * );
  *
  * // 方式2：手动创建并注册
- * McpClient client = McpClient.newSseClient(opt -> opt.host("http://localhost:8080"));
- * McpTool.register(agent.options(), client);
+ * McpClient client = McpClient.streamable(opt -> opt.host("http://localhost:8080"));
+ * McpTool.register(agent, opt -> opt.host("http://localhost:8080"));
  * </pre>
  *
  * @author 三刀 zhengjunweimail@163.com
@@ -49,57 +49,55 @@ import java.util.function.Consumer;
 public class McpTool implements AgentTool {
 
     private final McpClient mcpClient;
-    private final String name;
-    private final String description;
-    private final Map<String, Tool> toolCache = new ConcurrentHashMap<>();
+    private final Tool tool;
 
-    public McpTool(String name, String description, Consumer<McpOptions> opt) {
-        this.name = name;
-        this.description = description;
-        this.mcpClient = McpClient.streamable(opt);
-        initialize();
+    /**
+     * 创建MCP工具实例
+     *
+     * @param client MCP客户端
+     * @param tool   MCP工具定义
+     */
+    public McpTool(McpClient client, Tool tool) {
+        this.mcpClient = client;
+        this.tool = tool;
     }
 
-
-    private void initialize() {
+    /**
+     * 注册MCP客户端的所有工具到指定的Agent
+     * <p>
+     * 该方法会：
+     * 1. 创建并初始化MCP客户端
+     * 2. 获取MCP服务器上的所有工具列表
+     * 3. 为每个MCP工具创建对应的McpTool实例并注册到Agent
+     * </p>
+     *
+     * @param agent 目标Agent
+     * @param opt   MCP配置选项
+     * @return 初始化完成的MCP客户端实例
+     */
+    public static McpClient register(FeatAgent agent, Consumer<McpOptions> opt) {
+        McpClient mcpClient = McpClient.streamable(opt);
         mcpClient.initialize();
         ToolListResponse response = mcpClient.listTools();
         if (response != null && response.getTools() != null) {
             for (Tool tool : response.getTools()) {
-                toolCache.put(tool.getName(), tool);
+                agent.options().tool(new McpTool(mcpClient, tool));
             }
         }
+        return mcpClient;
     }
 
     @Override
     public CompletableFuture<String> execute(JSONObject parameters) {
-        String toolName = parameters.getString("tool_name");
-        JSONObject arguments = parameters.getJSONObject("arguments");
-
-        if (toolName == null || toolName.isEmpty()) {
-            return CompletableFuture.completedFuture(buildAvailableToolsInfo());
-        }
-
-        Tool tool = toolCache.get(toolName);
-        if (tool == null) {
-            return CompletableFuture.completedFuture("Error: Tool '" + toolName + "' not found. Available: " + String.join(", ", toolCache.keySet()));
-        }
-
-        return mcpClient.asyncCallTool(toolName, arguments).thenApply(this::formatResult);
+        return mcpClient.asyncCallTool(tool.getName(), parameters).thenApply(this::formatResult);
     }
 
-    private String buildAvailableToolsInfo() {
-        StringBuilder sb = new StringBuilder("Available MCP tools:\n");
-        for (Tool tool : toolCache.values()) {
-            sb.append("- ").append(tool.getName());
-            if (tool.getDescription() != null) {
-                sb.append(": ").append(tool.getDescription());
-            }
-            sb.append("\n");
-        }
-        return sb.toString();
-    }
-
+    /**
+     * 格式化工具执行结果
+     *
+     * @param result 工具调用结果
+     * @return 格式化后的字符串
+     */
     private String formatResult(ToolCalledResult result) {
         if (result == null) {
             return "";
@@ -110,6 +108,12 @@ public class McpTool implements AgentTool {
         return extractContent(result);
     }
 
+    /**
+     * 从结果中提取内容
+     *
+     * @param result 工具调用结果
+     * @return 提取的内容字符串
+     */
     private String extractContent(ToolCalledResult result) {
         if (result.getContent() == null || result.getContent().isEmpty()) {
             return "";
@@ -133,55 +137,35 @@ public class McpTool implements AgentTool {
 
     @Override
     public String getName() {
-        return name;
+        return "mcpTool_" + tool.getName();
     }
 
     @Override
     public String getDescription() {
-        return description + ". Available tools: " + String.join(", ", toolCache.keySet());
+        return tool.getDescription() + " annotations:" + tool.getAnnotations();
     }
 
     @Override
     public String getParametersSchema() {
-        JSONObject schema = new JSONObject();
-        schema.put("type", "object");
-
-        JSONObject properties = new JSONObject();
-
-        JSONObject toolNameProp = new JSONObject();
-        toolNameProp.put("type", "string");
-        toolNameProp.put("description", "要调用的MCP工具名称");
-        toolNameProp.put("enum", new ArrayList<>(toolCache.keySet()));
-        properties.put("tool_name", toolNameProp);
-
-        JSONObject argumentsProp = new JSONObject();
-        argumentsProp.put("type", "object");
-        argumentsProp.put("description", "传递给MCP工具的参数，根据选择的工具不同而有不同的结构");
-
-        // 为每个MCP工具添加参数描述
-        JSONArray anyOf = new JSONArray();
-        anyOf.addAll(toolCache.values());
-
-
-        if (!anyOf.isEmpty()) {
-            argumentsProp.put("anyOf", anyOf);
-        }
-        properties.put("arguments", argumentsProp);
-
-        schema.put("properties", properties);
-
-        JSONArray required = new JSONArray();
-        required.add("tool_name");
-        schema.put("required", required);
-
-        return schema.toJSONString();
+        return JSONObject.from(tool.getInputSchema()).toJSONString();
     }
 
     /**
      * 获取底层MCP客户端
+     *
+     * @return MCP客户端实例
      */
     public McpClient client() {
         return mcpClient;
+    }
+
+    /**
+     * 获取工具定义
+     *
+     * @return 工具定义对象
+     */
+    public Tool tool() {
+        return tool;
     }
 
     /**

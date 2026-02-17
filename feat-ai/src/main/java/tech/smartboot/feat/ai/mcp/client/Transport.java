@@ -17,6 +17,7 @@ import tech.smartboot.feat.ai.mcp.model.Response;
 import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.client.HttpRest;
 import tech.smartboot.feat.core.common.FeatUtils;
+import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
 
 import java.util.concurrent.CompletableFuture;
@@ -59,6 +60,7 @@ abstract class Transport {
             if (FeatUtils.isNotBlank(sessionId)) {
                 header.set(Request.HEADER_SESSION_ID, sessionId);
             }
+            header.set(HeaderName.ACCEPT, "application/json,text/event-stream");
         }).body(b -> b.write(body)).onSuccess(future::complete).onFailure(future::completeExceptionally).submit();
         return future;
     }

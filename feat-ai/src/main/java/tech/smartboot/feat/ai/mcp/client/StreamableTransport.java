@@ -19,7 +19,7 @@ import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.client.HttpRest;
 import tech.smartboot.feat.core.common.FeatUtils;
-import tech.smartboot.feat.core.common.HeaderValue;
+import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
@@ -55,21 +55,21 @@ final class StreamableTransport extends Transport {
         HttpRest httpRest = httpClient.post();
         doRequest(httpRest, request);
         httpRest.onSuccess(response -> {
-                    throw new UnsupportedOperationException();
-//                    if (response.statusCode() == HttpStatus.ACCEPTED.value()) {
-//                        future.complete(null);
-//                        return;
-//                    }
-//                    if (FeatUtils.isBlank(sessionId)) {
-//                        sessionId = response.getHeader(Request.HEADER_SESSION_ID);
-//                    }
-//                    Response<JSONObject> rsp = JSONObject.parseObject(response.body(), new TypeReference<Response<JSONObject>>() {
-//                    });
-//                    if (rsp.getError() != null) {
-//                        future.completeExceptionally(new McpException(rsp.getError().getInteger("code"), rsp.getError().getString("message")));
-//                    } else {
-//                        future.complete(rsp);
-//                    }
+//                    throw new UnsupportedOperationException();
+                    if (response.statusCode() == HttpStatus.ACCEPTED.value()) {
+                        future.complete(null);
+                        return;
+                    }
+                    if (FeatUtils.isBlank(sessionId)) {
+                        sessionId = response.getHeader(Request.HEADER_SESSION_ID);
+                    }
+                    Response<JSONObject> rsp = JSONObject.parseObject(response.body(), new TypeReference<Response<JSONObject>>() {
+                    });
+                    if (rsp.getError() != null) {
+                        future.completeExceptionally(new McpException(rsp.getError().getInteger("code"), rsp.getError().getString("message")));
+                    } else {
+                        future.complete(rsp);
+                    }
                 }).onFailure(future::completeExceptionally)
                 .onSSE(sse -> sse.onOpen(client -> {
                     logger.info("sse open");
@@ -97,18 +97,10 @@ final class StreamableTransport extends Transport {
 
     @Override
     public CompletableFuture<HttpResponse> sendNotification(String method) {
-        CompletableFuture<HttpResponse> future = new CompletableFuture<>();
         Request<JSONObject> request = new Request<>();
         request.setMethod(method);
-        byte[] body = JSONObject.toJSONString(request).getBytes();
-        httpClient.post().header(header -> {
-            options.getHeaders().forEach(header::set);
-            header.setContentType(HeaderValue.ContentType.APPLICATION_JSON).setContentLength(body.length);
-            if (FeatUtils.isNotBlank(sessionId)) {
-                header.set(Request.HEADER_SESSION_ID, sessionId);
-            }
-        }).body(b -> b.write(body)).onSuccess(future::complete).onFailure(future::completeExceptionally).submit();
-        return future;
+        HttpRest httpRest = httpClient.post();
+        return doRequest(httpRest, request);
     }
 
     @Override
