@@ -20,7 +20,7 @@ import java.lang.annotation.Target;
 
 /**
  * MCP服务端点注解
- * 
+ * <p>
  * 用于定义MCP服务的端点配置，包括服务基本信息和各类MCP操作的端点地址。
  * 该注解定义了MCP服务的核心配置信息，包括服务名称、标题、版本以及各种MCP操作的端点。
  *
@@ -60,14 +60,20 @@ public @interface McpEndpoint {
      * SSE端点地址
      * 用于建立SSE连接的端点URL路径
      * 对应MCP协议中的SSE通信机制
+     *
+     * @deprecated MCP 官方不推荐使用
      */
+    @Deprecated
     String sseEndpoint();
 
     /**
      * SSE消息端点地址
      * 用于发送SSE消息的端点URL路径
      * 对应MCP协议中的SSE消息传递机制
+     *
+     * @deprecated MCP 官方不推荐使用
      */
+    @Deprecated
     String sseMessageEndpoint();
 
 
@@ -82,6 +88,7 @@ public @interface McpEndpoint {
      * 资源功能开关
      * 控制是否启用MCP资源(resources/list)功能
      * 默认值：true(启用)
+     *
      * @see <a href="https://modelcontextprotocol.io/specification#resources">MCP Resources</a>
      */
     boolean resourceEnable() default true;
@@ -90,6 +97,7 @@ public @interface McpEndpoint {
      * 工具功能开关
      * 控制是否启用MCP工具(tools/list, tools/call)功能
      * 默认值：true(启用)
+     *
      * @see <a href="https://modelcontextprotocol.io/specification#tools">MCP Tools</a>
      */
     boolean toolEnable() default true;
@@ -99,6 +107,7 @@ public @interface McpEndpoint {
      * 提示词功能开关
      * 控制是否启用MCP提示词(prompts/list)功能
      * 默认值：true(启用)
+     *
      * @see <a href="https://modelcontextprotocol.io/specification#prompts">MCP Prompts</a>
      */
     boolean promptsEnable() default true;
@@ -108,6 +117,7 @@ public @interface McpEndpoint {
      * 日志功能开关
      * 控制是否启用MCP日志(logging)功能
      * 默认值：true(启用)
+     *
      * @see <a href="https://modelcontextprotocol.io/specification#logging">MCP Logging</a>
      */
     boolean loggingEnable() default true;

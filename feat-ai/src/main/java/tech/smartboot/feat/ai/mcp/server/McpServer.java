@@ -46,6 +46,7 @@ import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.upgrade.sse.SSEUpgrade;
 import tech.smartboot.feat.core.server.upgrade.sse.SseEmitter;
 import tech.smartboot.feat.router.Context;
+import tech.smartboot.feat.router.Router;
 import tech.smartboot.feat.router.RouterHandler;
 
 import java.io.IOException;
@@ -301,7 +302,7 @@ public class McpServer {
         session.rootsList();
     }
 
-    public RouterHandler sseHandler() {
+    private RouterHandler sseHandler() {
         return ctx -> {
             String sessionId = ctx.Request.getHeader(Request.HEADER_SESSION_ID);
             StreamSession session;
@@ -330,7 +331,7 @@ public class McpServer {
         };
     }
 
-    public RouterHandler sseMessageHandler() {
+    private RouterHandler sseMessageHandler() {
         return ctx -> {
             StreamSession session = sseEmitters.get(ctx.Request.getParameter("session_id"));
             ctx.Response.setHttpStatus(HttpStatus.ACCEPTED);
@@ -348,7 +349,7 @@ public class McpServer {
         };
     }
 
-    public RouterHandler mcpHandler() {
+    private RouterHandler mcpHandler() {
         return new RouterHandler() {
             @Override
             public void handle(Context ctx, CompletableFuture<Void> completableFuture) throws Throwable {
@@ -415,5 +416,15 @@ public class McpServer {
                 throw new IllegalStateException();
             }
         };
+    }
+
+    public void enableSSE(Router router) {
+        router.route(options.getSseEndpoint(), sseHandler());
+        router.route(options.getSseMessageEndpoint(), sseMessageHandler());
+    }
+
+
+    public void enableStreamable(Router router) {
+        router.route(options.getMcpEndpoint(), mcpHandler());
     }
 }

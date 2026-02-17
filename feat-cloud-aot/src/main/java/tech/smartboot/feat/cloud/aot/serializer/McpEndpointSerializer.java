@@ -264,13 +264,10 @@ public final class McpEndpointSerializer implements Serializer {
     public void serializeRouter() {
         //注册Router
         if (FeatUtils.isNotBlank(mcpEndpoint.streamableEndpoint)) {
-            printWriter.println("\t\trouter.route(\"" + mcpEndpoint.streamableEndpoint + "\", mcpServer.mcpHandler());");
+            printWriter.println("\t\tmcpServer.enableStreamable(router);");
         }
-        if (FeatUtils.isNotBlank(mcpEndpoint.sseEndpoint)) {
-            printWriter.println("\t\trouter.route(\"" + mcpEndpoint.sseEndpoint + "\", mcpServer.sseHandler());");
-        }
-        if (FeatUtils.isNotBlank(mcpEndpoint.sseMessageEndpoint)) {
-            printWriter.println("\t\trouter.route(\"" + mcpEndpoint.sseMessageEndpoint + "\", mcpServer.sseMessageHandler());");
+        if (FeatUtils.isNotBlank(mcpEndpoint.sseEndpoint) || FeatUtils.isNotBlank(mcpEndpoint.sseMessageEndpoint)) {
+            printWriter.println("\t\tmcpServer.enableSSE(router);");
         }
     }
 

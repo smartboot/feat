@@ -92,9 +92,8 @@ public class McpTest {
         mcp.addResourceTemplate(ResourceTemplate.of("file:///{path}", "testTemplate").title("\uD83D\uDCC1 Project Files").description("Access files in the project directory").mimeType("application/octet-stream"));
 
         Router router = new Router();
-        router.route(mcp.getOptions().getSseEndpoint(), mcp.sseHandler());
-        router.route(mcp.getOptions().getSseMessageEndpoint(), mcp.sseMessageHandler());
-        router.route(mcp.getOptions().getMcpEndpoint(), mcp.mcpHandler());
+        mcp.enableStreamable(router);
+        mcp.enableSSE(router);
         mcpServer = Feat.httpServer(opt -> opt.debug(true)).httpHandler(router).listen(3002);
 
         sseClient = McpClient.newSseClient(opt -> opt.baseUrl("http://localhost:3002").setMcpEndpoint("/mcp").rootsEnable());
