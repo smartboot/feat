@@ -81,17 +81,10 @@ public class McpTool implements AgentTool {
 
         Tool tool = toolCache.get(toolName);
         if (tool == null) {
-            return CompletableFuture.completedFuture(
-                    "Error: Tool '" + toolName + "' not found. Available: " + String.join(", ", toolCache.keySet())
-            );
+            return CompletableFuture.completedFuture("Error: Tool '" + toolName + "' not found. Available: " + String.join(", ", toolCache.keySet()));
         }
 
-        try {
-            ToolCalledResult result = mcpClient.callTool(toolName, arguments);
-            return CompletableFuture.completedFuture(formatResult(result));
-        } catch (Exception e) {
-            return CompletableFuture.completedFuture("Error: " + e.getMessage());
-        }
+        return mcpClient.asyncCallTool(toolName, arguments).thenApply(this::formatResult);
     }
 
     private String buildAvailableToolsInfo() {
@@ -166,31 +159,8 @@ public class McpTool implements AgentTool {
 
         // 为每个MCP工具添加参数描述
         JSONArray anyOf = new JSONArray();
-        for (Tool tool : toolCache.values()) {
-            JSONObject toolArgsSchema = new JSONObject();
-            toolArgsSchema.put("title", tool.getName() + "参数");
-            toolArgsSchema.put("description", buildToolArgsDescription(tool));
+        anyOf.addAll(toolCache.values());
 
-            if (tool.getInputSchema() != null && tool.getInputSchema().getProperties() != null) {
-                JSONObject toolProperties = new JSONObject();
-                for (Map.Entry<String, Tool.Property> entry : tool.getInputSchema().getProperties().entrySet()) {
-                    Tool.Property property = entry.getValue();
-                    JSONObject propSchema = new JSONObject();
-                    propSchema.put("type", property.getType());
-                    if (property.getDescription() != null) {
-                        propSchema.put("description", property.getDescription());
-                    }
-                    toolProperties.put(entry.getKey(), propSchema);
-                }
-                toolArgsSchema.put("properties", toolProperties);
-
-                // 添加required字段
-                if (tool.getInputSchema().getRequired() != null) {
-                    toolArgsSchema.put("required", tool.getInputSchema().getRequired());
-                }
-            }
-            anyOf.add(toolArgsSchema);
-        }
 
         if (!anyOf.isEmpty()) {
             argumentsProp.put("anyOf", anyOf);
