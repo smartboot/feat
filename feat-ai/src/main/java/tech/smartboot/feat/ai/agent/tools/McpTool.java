@@ -14,6 +14,7 @@ import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.ai.agent.AgentTool;
 import tech.smartboot.feat.ai.mcp.client.McpClient;
+import tech.smartboot.feat.ai.mcp.client.McpOptions;
 import tech.smartboot.feat.ai.mcp.model.Tool;
 import tech.smartboot.feat.ai.mcp.model.ToolCalledResult;
 import tech.smartboot.feat.ai.mcp.model.ToolListResponse;
@@ -24,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 
 /**
  * MCP工具，将MCP服务器的所有工具封装为Agent可用的工具
@@ -52,10 +54,10 @@ public class McpTool implements AgentTool {
     private final String description;
     private final Map<String, Tool> toolCache = new ConcurrentHashMap<>();
 
-    public McpTool(String name, String description, McpClient mcpClient) {
+    public McpTool(String name, String description, Consumer<McpOptions> opt) {
         this.name = name;
         this.description = description;
-        this.mcpClient = mcpClient;
+        this.mcpClient = McpClient.streamable(opt);
         initialize();
     }
 
