@@ -96,9 +96,9 @@ public class McpTest {
         mcp.enableSSE(router);
         mcpServer = Feat.httpServer(opt -> opt.debug(true)).httpHandler(router).listen(3002);
 
-        sseClient = McpClient.newSseClient(opt -> opt.baseUrl("http://localhost:3002").setMcpEndpoint("/mcp").rootsEnable());
+        sseClient = McpClient.sse(opt -> opt.baseUrl("http://localhost:3002").setMcpEndpoint("/mcp").rootsEnable());
         sseClient.initialize();
-        streamClient = McpClient.newStreamableClient(opt -> opt.baseUrl("http://localhost:3002").setMcpEndpoint("/mcp").rootsEnable());
+        streamClient = McpClient.streamable(opt -> opt.baseUrl("http://localhost:3002").setMcpEndpoint("/mcp").rootsEnable());
         streamClient.initialize();
     }
 
