@@ -418,6 +418,10 @@ public class McpServer {
         };
     }
 
+    /**
+     * @deprecated MCP 规范已不推荐使用 SSE
+     */
+    @Deprecated
     public void enableSSE(Router router) {
         router.route(options.getSseEndpoint(), sseHandler());
         router.route(options.getSseMessageEndpoint(), sseMessageHandler());
