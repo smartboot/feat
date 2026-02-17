@@ -47,7 +47,8 @@ final class StreamableTransport extends Transport {
     }
 
     @Override
-    protected CompletableFuture<Response<JSONObject>> doRequest(CompletableFuture<Response<JSONObject>> future, Request<JSONObject> request) {
+    protected CompletableFuture<Response<JSONObject>> doRequest(Request<JSONObject> request) {
+        CompletableFuture<Response<JSONObject>> future = new CompletableFuture<>();
         if (FeatUtils.isBlank(options.getUrl())) {
             future.completeExceptionally(new FeatException("endpoint not found"));
             return future;

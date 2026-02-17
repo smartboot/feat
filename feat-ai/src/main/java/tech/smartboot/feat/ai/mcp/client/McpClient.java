@@ -21,7 +21,6 @@ import tech.smartboot.feat.ai.mcp.model.PromptListResponse;
 import tech.smartboot.feat.ai.mcp.model.PromptMessage;
 import tech.smartboot.feat.ai.mcp.model.Resource;
 import tech.smartboot.feat.ai.mcp.model.ResourceListResponse;
-import tech.smartboot.feat.ai.mcp.model.Response;
 import tech.smartboot.feat.ai.mcp.model.Roots;
 import tech.smartboot.feat.ai.mcp.model.ToolCalledResult;
 import tech.smartboot.feat.ai.mcp.model.ToolListResponse;
@@ -128,9 +127,8 @@ public class McpClient {
         request.setCapabilities(capabilitiesJson);
         request.setClientInfo(options.getImplementation());
 
-        CompletableFuture<Response<JSONObject>> f = transport.asyncRequest("initialize", JSONObject.from(request));
-        f.thenAccept(response -> {
-            McpInitializeResponse initializeResponse = response.getResult().to(McpInitializeResponse.class);
+        CompletableFuture<McpInitializeResponse> f = transport.asyncRequest("initialize", JSONObject.from(request), McpInitializeResponse.class);
+        f.thenAccept(initializeResponse -> {
             //After successful initialization, the client MUST send an initialized notification to indicate it is ready to begin normal operations
             CompletableFuture<HttpResponse> notification = transport.sendNotification("notifications/initialized");
             notification.whenComplete((r, e) -> {
@@ -200,17 +198,11 @@ public class McpClient {
      */
     public CompletableFuture<ToolListResponse> asyncListTools(String nextCursor) {
         stateCheck();
-        CompletableFuture<ToolListResponse> future = new CompletableFuture<>();
         JSONObject param = new JSONObject();
         if (FeatUtils.isNotBlank(nextCursor)) {
             param.put("cursor", nextCursor);
         }
-        CompletableFuture<Response<JSONObject>> f = transport.asyncRequest("tools/list", param);
-        f.thenAccept(response -> {
-            ToolListResponse toolListResponse = response.getResult().to(ToolListResponse.class);
-            future.complete(toolListResponse);
-        });
-        return future;
+        return transport.asyncRequest("tools/list", param, ToolListResponse.class);
     }
 
     /**
@@ -288,11 +280,11 @@ public class McpClient {
             param.put("arguments", arguments);
         }
         CompletableFuture<ToolCalledResult> future = new CompletableFuture<>();
-        CompletableFuture<Response<JSONObject>> f = transport.asyncRequest("tools/call", param);
+        CompletableFuture<JSONObject> f = transport.asyncRequest("tools/call", param, JSONObject.class);
         f.thenAccept(response -> {
-            JSONArray content = response.getResult().getJSONArray("content");
+            JSONArray content = response.getJSONArray("content");
             ToolCalledResult callToolResult = new ToolCalledResult();
-            callToolResult.setError(response.getResult().getBooleanValue("isError"));
+            callToolResult.setError(response.getBooleanValue("isError"));
             for (int i = 0; i < content.size(); i++) {
                 JSONObject contentItem = content.getJSONObject(i);
                 String type = contentItem.getString("type");
@@ -374,17 +366,11 @@ public class McpClient {
      */
     public CompletableFuture<PromptListResponse> asyncListPrompts(String nextCursor) {
         stateCheck();
-        CompletableFuture<PromptListResponse> future = new CompletableFuture<>();
         JSONObject param = new JSONObject();
         if (FeatUtils.isNotBlank(nextCursor)) {
             param.put("cursor", nextCursor);
         }
-        CompletableFuture<Response<JSONObject>> f = transport.asyncRequest("prompts/list", param);
-        f.thenAccept(response -> {
-            PromptListResponse toolListResponse = response.getResult().to(PromptListResponse.class);
-            future.complete(toolListResponse);
-        });
-        return future;
+        return transport.asyncRequest("prompts/list", param, PromptListResponse.class);
     }
 
     /**
@@ -442,10 +428,10 @@ public class McpClient {
         if (arguments != null) {
             param.put("arguments", arguments);
         }
-        CompletableFuture<Response<JSONObject>> f = transport.asyncRequest("prompts/get", param);
+        CompletableFuture<JSONObject> f = transport.asyncRequest("prompts/get", param, JSONObject.class);
         CompletableFuture<PromptGetResult> future = new CompletableFuture<>();
         f.thenAccept(response -> {
-            JSONObject result = response.getResult();
+            JSONObject result = response;
             PromptGetResult promptMessage = new PromptGetResult();
             promptMessage.setDescription(result.getString("description"));
             JSONArray messages = result.getJSONArray("messages");
@@ -563,17 +549,11 @@ public class McpClient {
      */
     public CompletableFuture<ResourceListResponse> asyncListResources(String nextCursor) {
         stateCheck();
-        CompletableFuture<ResourceListResponse> future = new CompletableFuture<>();
         JSONObject param = new JSONObject();
         if (FeatUtils.isNotBlank(nextCursor)) {
             param.put("cursor", nextCursor);
         }
-        CompletableFuture<Response<JSONObject>> f = transport.asyncRequest("resources/list", param);
-        f.thenAccept(response -> {
-            ResourceListResponse toolListResponse = response.getResult().to(ResourceListResponse.class);
-            future.complete(toolListResponse);
-        });
-        return future;
+        return transport.asyncRequest("resources/list", param, ResourceListResponse.class);
     }
 
     /**
@@ -608,7 +588,6 @@ public class McpClient {
      * @param name 根目录显示名称
      * @throws FeatException         当roots功能未启用时抛出
      * @throws IllegalStateException 当客户端未初始化时抛出
-     * @see McpOptions#setRoots(boolean)
      */
     public void addRoot(String uri, String name) {
         if (!options.isRoots()) {
@@ -628,7 +607,6 @@ public class McpClient {
      * @param uri 要移除的根目录URI
      * @throws FeatException         当roots功能未启用时抛出
      * @throws IllegalStateException 当客户端未初始化时抛出
-     * @see McpOptions#setRoots(boolean)
      * @see #addRoot(String, String)
      */
     public void removeRoot(String uri) {

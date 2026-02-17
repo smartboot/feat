@@ -22,7 +22,7 @@ public class ServerTool extends Tool {
     private Consumer<ToolContext> action;
 
     private ServerTool(String name) {
-        super(name);
+        setName(name);
         inputSchema = new Schema();
         inputSchema.setType("object");
         inputSchema.setProperties(new HashMap<>());

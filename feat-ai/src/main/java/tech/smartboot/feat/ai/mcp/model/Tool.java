@@ -17,13 +17,13 @@ import java.util.List;
 import java.util.Map;
 
 public class Tool {
-    private final String name;
+    private String name;
     private String title;
     private String description;
     protected Schema inputSchema;
     protected Schema outputSchema;
 
-    public Tool(String name) {
+    public void setName(String name) {
         this.name = name;
     }
 
@@ -119,11 +119,14 @@ public class Tool {
 
     public static class Property {
         @JSONField(serialize = false)
-        private final String name;
-        private final String type;
-        private final String description;
+        private String name;
+        private String type;
+        private String description;
         @JSONField(serialize = false)
-        private final boolean required;
+        private boolean required;
+
+        public Property() {
+        }
 
         Property(String name, PropertyType type, String description, boolean required) {
             this.name = name;
@@ -147,6 +150,22 @@ public class Tool {
 
         public boolean isRequired() {
             return required;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public void setType(String type) {
+            this.type = type;
+        }
+
+        public void setDescription(String description) {
+            this.description = description;
+        }
+
+        public void setRequired(boolean required) {
+            this.required = required;
         }
     }
 }

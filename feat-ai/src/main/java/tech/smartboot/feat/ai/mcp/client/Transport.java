@@ -35,18 +35,20 @@ abstract class Transport {
         this.options = options;
     }
 
-    public CompletableFuture<Response<JSONObject>> asyncRequest(String method, JSONObject param) {
-        CompletableFuture<Response<JSONObject>> future = new CompletableFuture<>();
+    public <T> CompletableFuture<T> asyncRequest(String method, JSONObject param, Class<T> clazz) {
         Request<JSONObject> request = new Request<>();
         request.setMethod(method);
         request.setParams(param);
         request.setId(requestId.incrementAndGet());
-        return doRequest(future, request);
+        return doRequest(request).thenApply(response -> response.getResult().to(clazz)).exceptionally(throwable -> {
+            throwable.printStackTrace();
+            return null;
+        });
     }
 
     abstract void initialized();
 
-    protected abstract CompletableFuture<Response<JSONObject>> doRequest(CompletableFuture<Response<JSONObject>> future, Request<JSONObject> request);
+    protected abstract CompletableFuture<Response<JSONObject>> doRequest(Request<JSONObject> request);
 
     protected final CompletableFuture<HttpResponse> doRequest(HttpRest httpRest, JsonRpc request) {
         CompletableFuture<HttpResponse> future = new CompletableFuture<>();
