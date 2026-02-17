@@ -20,7 +20,6 @@ import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.client.HttpRest;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderValue;
-import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
@@ -56,20 +55,21 @@ final class StreamableTransport extends Transport {
         HttpRest httpRest = httpClient.post();
         doRequest(httpRest, request);
         httpRest.onSuccess(response -> {
-                    if (response.statusCode() == HttpStatus.ACCEPTED.value()) {
-                        future.complete(null);
-                        return;
-                    }
-                    if (FeatUtils.isBlank(sessionId)) {
-                        sessionId = response.getHeader(Request.HEADER_SESSION_ID);
-                    }
-                    Response<JSONObject> rsp = JSONObject.parseObject(response.body(), new TypeReference<Response<JSONObject>>() {
-                    });
-                    if (rsp.getError() != null) {
-                        future.completeExceptionally(new McpException(rsp.getError().getInteger("code"), rsp.getError().getString("message")));
-                    } else {
-                        future.complete(rsp);
-                    }
+                    throw new UnsupportedOperationException();
+//                    if (response.statusCode() == HttpStatus.ACCEPTED.value()) {
+//                        future.complete(null);
+//                        return;
+//                    }
+//                    if (FeatUtils.isBlank(sessionId)) {
+//                        sessionId = response.getHeader(Request.HEADER_SESSION_ID);
+//                    }
+//                    Response<JSONObject> rsp = JSONObject.parseObject(response.body(), new TypeReference<Response<JSONObject>>() {
+//                    });
+//                    if (rsp.getError() != null) {
+//                        future.completeExceptionally(new McpException(rsp.getError().getInteger("code"), rsp.getError().getString("message")));
+//                    } else {
+//                        future.complete(rsp);
+//                    }
                 }).onFailure(future::completeExceptionally)
                 .onSSE(sse -> sse.onOpen(client -> {
                     logger.info("sse open");
