@@ -76,7 +76,7 @@ public class McpTool implements AgentTool {
      * @param opt   MCP配置选项
      * @return 初始化完成的MCP客户端实例
      */
-    public static McpClient register(FeatAgent agent, Consumer<McpOptions> opt) {
+    private static McpClient register(FeatAgent agent, Consumer<McpOptions> opt) {
         McpClient mcpClient = McpClient.streamable(opt);
         McpInitializeResponse initialize = mcpClient.initialize();
         mcpClient.listTools(null).getTools().forEach(tool -> {
