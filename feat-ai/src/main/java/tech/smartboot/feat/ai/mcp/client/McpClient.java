@@ -56,6 +56,7 @@ public class McpClient {
     private final McpOptions options;
     private final Transport transport;
     private boolean initialized = false;
+    private McpInitializeResponse initializeResponse;
 
     private McpClient(McpOptions options, Transport transport) {
         this.options = options;
@@ -108,6 +109,9 @@ public class McpClient {
      * @see #initialize()
      */
     public CompletableFuture<McpInitializeResponse> asyncInitialize() {
+        if (initialized) {
+            return CompletableFuture.completedFuture(initializeResponse);
+        }
         CompletableFuture<McpInitializeResponse> future = new CompletableFuture<>();
         McpInitializeRequest request = new McpInitializeRequest();
         request.setProtocolVersion(McpInitializeRequest.PROTOCOL_VERSION);
@@ -128,16 +132,17 @@ public class McpClient {
         request.setClientInfo(options.getImplementation());
 
         CompletableFuture<McpInitializeResponse> f = transport.asyncRequest("initialize", JSONObject.from(request), McpInitializeResponse.class);
-        f.thenAccept(initializeResponse -> {
+        f.thenAccept(response -> {
             //After successful initialization, the client MUST send an initialized notification to indicate it is ready to begin normal operations
             CompletableFuture<HttpResponse> notification = transport.sendNotification("notifications/initialized");
             notification.whenComplete((r, e) -> {
                 if (e != null) {
                     future.completeExceptionally(e);
                 } else if (r.statusCode() == HttpStatus.ACCEPTED.value()) {
+                    this.initializeResponse = response;
                     initialized = true;
                     transport.initialized();
-                    future.complete(initializeResponse);
+                    future.complete(response);
                 } else {
                     future.completeExceptionally(new FeatException(r.body()));
                 }

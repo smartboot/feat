@@ -37,14 +37,15 @@ import java.util.List;
 public class McpToolDemo {
 
     public static void main(String[] args) throws Exception {
+//        System.setProperty("javax.net.debug", "ssl,handshake,alert");
         System.out.println("\n========== 示例3: ReActAgent 集成 MCP 工具 ==========");
 
         // 创建 MCP 客户端
         McpClient mcpClient = McpClient.streamable(opt -> {
-            opt.debug(true).url("http://remote.mcpservers.org/fetch/mcp");
+            opt.debug(false).url("https://remote.mcpservers.org/fetch/mcp");
         });
         McpInitializeResponse initialize = mcpClient.initialize();
-        List<Tool> toolList = mcpClient.listTools(null).getTools();
+        List<Tool> toolList = mcpClient.listTools().getTools();
         try {
 
             // 创建 ReActAgent 并添加 MCP 工具
@@ -66,10 +67,10 @@ public class McpToolDemo {
                 // 配置模型（示例使用 GiteeAI）
                 opt.chatOptions().model(ChatModelVendor.GiteeAI.Kimi_K25_Instruct);
             });
-           
+
 
             // 使用 Agent 执行任务
-            String task = "smartboot组织下的开源项目feat的作者是谁";
+            String task = "smart-socket的最新版是多少";
             System.out.println("任务: " + task);
 
             // Agent 会智能决策何时调用 MCP 工具
