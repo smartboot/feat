@@ -15,11 +15,6 @@ import tech.smartboot.feat.ai.agent.ReActAgent;
 import tech.smartboot.feat.ai.agent.tools.McpTool;
 import tech.smartboot.feat.ai.chat.ChatModelVendor;
 import tech.smartboot.feat.ai.mcp.client.McpClient;
-import tech.smartboot.feat.ai.mcp.model.McpInitializeResponse;
-import tech.smartboot.feat.ai.mcp.model.Tool;
-import tech.smartboot.feat.core.common.FeatUtils;
-
-import java.util.List;
 
 /**
  * McpTool 使用示例
@@ -44,30 +39,18 @@ public class McpToolDemo {
         McpClient mcpClient = McpClient.streamable(opt -> {
             opt.debug(false).url("https://remote.mcpservers.org/fetch/mcp");
         });
-        McpInitializeResponse initialize = mcpClient.initialize();
-        List<Tool> toolList = mcpClient.listTools().getTools();
+        mcpClient.initialize();
         try {
 
             // 创建 ReActAgent 并添加 MCP 工具
             FeatAgent agent = new ReActAgent(opt -> {
                 // 添加 MCP 工具到 Agent
 //                opt.tool(mcpTool);
-                toolList.forEach(tool -> {
-                    opt.tool(new McpTool(mcpClient, tool) {
-                        @Override
-                        public String getName() {
-                            if (FeatUtils.isNotBlank(initialize.getServerInfo().getName())) {
-                                return initialize.getServerInfo().getName() + "_" + tool.getName();
-                            } else {
-                                return super.getName();
-                            }
-                        }
-                    });
-                });
+
                 // 配置模型（示例使用 GiteeAI）
                 opt.chatOptions().model(ChatModelVendor.GiteeAI.Kimi_K25_Instruct);
             });
-
+            McpTool.register(agent, mcpClient);
 
             // 使用 Agent 执行任务
             String task = "smart-socket的最新版是多少";

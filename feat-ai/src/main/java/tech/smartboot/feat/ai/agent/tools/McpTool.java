@@ -14,7 +14,6 @@ import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.ai.agent.AgentTool;
 import tech.smartboot.feat.ai.agent.FeatAgent;
 import tech.smartboot.feat.ai.mcp.client.McpClient;
-import tech.smartboot.feat.ai.mcp.client.McpOptions;
 import tech.smartboot.feat.ai.mcp.model.McpInitializeResponse;
 import tech.smartboot.feat.ai.mcp.model.Tool;
 import tech.smartboot.feat.ai.mcp.model.ToolCalledResult;
@@ -22,7 +21,6 @@ import tech.smartboot.feat.ai.mcp.model.ToolResult;
 import tech.smartboot.feat.core.common.FeatUtils;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
 
 /**
  * MCP工具，将MCP服务器的单个工具封装为Agent可用的工具
@@ -63,23 +61,10 @@ public class McpTool implements AgentTool {
         this.tool = tool;
     }
 
-    /**
-     * 注册MCP客户端的所有工具到指定的Agent
-     * <p>
-     * 该方法会：
-     * 1. 创建并初始化MCP客户端
-     * 2. 获取MCP服务器上的所有工具列表
-     * 3. 为每个MCP工具创建对应的McpTool实例并注册到Agent
-     * </p>
-     *
-     * @param agent 目标Agent
-     * @param opt   MCP配置选项
-     * @return 初始化完成的MCP客户端实例
-     */
-    private static McpClient register(FeatAgent agent, Consumer<McpOptions> opt) {
-        McpClient mcpClient = McpClient.streamable(opt);
+
+    public static McpClient register(FeatAgent agent, McpClient mcpClient) {
         McpInitializeResponse initialize = mcpClient.initialize();
-        mcpClient.listTools(null).getTools().forEach(tool -> {
+        mcpClient.listTools().getTools().forEach(tool -> {
             agent.options().tool(new McpTool(mcpClient, tool) {
                 @Override
                 public String getName() {

@@ -57,6 +57,7 @@ public class McpClient {
     private final Transport transport;
     private boolean initialized = false;
     private McpInitializeResponse initializeResponse;
+    private ToolListResponse toolListResponse;
 
     private McpClient(McpOptions options, Transport transport) {
         this.options = options;
@@ -203,11 +204,20 @@ public class McpClient {
      */
     public CompletableFuture<ToolListResponse> asyncListTools(String nextCursor) {
         stateCheck();
+        if (nextCursor == null && toolListResponse != null) {
+            return CompletableFuture.completedFuture(toolListResponse);
+        }
         JSONObject param = new JSONObject();
         if (FeatUtils.isNotBlank(nextCursor)) {
             param.put("cursor", nextCursor);
         }
-        return transport.asyncRequest("tools/list", param, ToolListResponse.class);
+        CompletableFuture<ToolListResponse> future = transport.asyncRequest("tools/list", param, ToolListResponse.class);
+        if (nextCursor == null) {
+            future.thenAccept(response -> {
+                toolListResponse = response;
+            });
+        }
+        return future;
     }
 
     /**
