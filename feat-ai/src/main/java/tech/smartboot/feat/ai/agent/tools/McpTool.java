@@ -15,10 +15,11 @@ import tech.smartboot.feat.ai.agent.AgentTool;
 import tech.smartboot.feat.ai.agent.FeatAgent;
 import tech.smartboot.feat.ai.mcp.client.McpClient;
 import tech.smartboot.feat.ai.mcp.client.McpOptions;
+import tech.smartboot.feat.ai.mcp.model.McpInitializeResponse;
 import tech.smartboot.feat.ai.mcp.model.Tool;
 import tech.smartboot.feat.ai.mcp.model.ToolCalledResult;
-import tech.smartboot.feat.ai.mcp.model.ToolListResponse;
 import tech.smartboot.feat.ai.mcp.model.ToolResult;
+import tech.smartboot.feat.core.common.FeatUtils;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -77,13 +78,19 @@ public class McpTool implements AgentTool {
      */
     public static McpClient register(FeatAgent agent, Consumer<McpOptions> opt) {
         McpClient mcpClient = McpClient.streamable(opt);
-        mcpClient.initialize();
-        ToolListResponse response = mcpClient.listTools();
-        if (response != null && response.getTools() != null) {
-            for (Tool tool : response.getTools()) {
-                agent.options().tool(new McpTool(mcpClient, tool));
-            }
-        }
+        McpInitializeResponse initialize = mcpClient.initialize();
+        mcpClient.listTools(null).getTools().forEach(tool -> {
+            agent.options().tool(new McpTool(mcpClient, tool) {
+                @Override
+                public String getName() {
+                    if (FeatUtils.isNotBlank(initialize.getServerInfo().getName())) {
+                        return initialize.getServerInfo().getName() + "_" + tool.getName();
+                    } else {
+                        return super.getName();
+                    }
+                }
+            });
+        });
         return mcpClient;
     }
 
