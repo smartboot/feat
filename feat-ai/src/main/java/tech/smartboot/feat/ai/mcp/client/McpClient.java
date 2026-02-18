@@ -664,4 +664,8 @@ public class McpClient {
     public void close() {
         transport.close();
     }
+
+    public boolean initialized() {
+        return initialized;
+    }
 }
