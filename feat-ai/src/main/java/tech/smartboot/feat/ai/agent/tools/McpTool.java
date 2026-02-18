@@ -149,7 +149,7 @@ public class McpTool implements AgentTool {
 
     @Override
     public String getDescription() {
-        return tool.getDescription() + " annotations:" + tool.getAnnotations();
+        return tool.getDescription() + (tool.getAnnotations() == null ? "" : (" annotations:" + tool.getAnnotations()));
     }
 
     @Override

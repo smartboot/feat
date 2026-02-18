@@ -76,16 +76,19 @@ public class DefaultActionParse implements ActionParse {
         response = response.substring(lastAction);
 
         // 查找动作
-        Matcher actionMatcher = ACTION_PATTERN.matcher(response);
-        if (actionMatcher.find()) {
-            action = actionMatcher.group(1).trim();
+        int index = response.indexOf('\n');
+        if (index > 0) {
+            action = response.substring(7, index).trim();
         }
 
         // 查找动作输入
-        Matcher actionInputMatcher = ACTION_INPUT_PATTERN.matcher(response);
-        if (actionInputMatcher.find()) {
-            // 将换行符标准化为 \n
-            actionInput = actionInputMatcher.group(1).trim().replaceAll("\\R", "\n");
+        int startInput = response.indexOf("Action Input:");
+        if (startInput > 0) {
+            startInput = startInput + "Action Input:".length();
+            int endInput = response.indexOf('\n', startInput);
+            if (endInput > 0) {
+                actionInput = response.substring(startInput, endInput).trim();
+            }
         }
 
         // 如果有动作但没有输入，则返回null
