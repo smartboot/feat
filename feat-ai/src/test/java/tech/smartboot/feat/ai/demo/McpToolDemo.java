@@ -33,7 +33,7 @@ public class McpToolDemo {
 
     public static void main(String[] args) throws Exception {
 //        System.setProperty("javax.net.debug", "ssl,handshake,alert");
-        System.out.println("\n========== 示例3: ReActAgent 集成 MCP 工具 ==========");
+        System.out.println("\n========== 示例: ReActAgent 集成 MCP 工具 ==========");
 
         // 创建 MCP 客户端
         McpClient mcpClient = McpClient.streamable(opt -> {
@@ -46,11 +46,11 @@ public class McpToolDemo {
             FeatAgent agent = new ReActAgent(opt -> {
                 // 添加 MCP 工具到 Agent
 //                opt.tool(mcpTool);
-
+                McpTool.register(opt, mcpClient);
                 // 配置模型（示例使用 GiteeAI）
                 opt.chatOptions().model(ChatModelVendor.GiteeAI.Kimi_K25_Instruct);
             });
-            McpTool.register(agent, mcpClient);
+
 
             // 使用 Agent 执行任务
             String task = "smart-socket的最新版是多少";
@@ -63,7 +63,7 @@ public class McpToolDemo {
             System.out.println("Agent 创建成功，包含 MCP 工具: " + mcpClient);
 
         } finally {
-//            mcpClient.close();
+            mcpClient.close();
         }
     }
 }

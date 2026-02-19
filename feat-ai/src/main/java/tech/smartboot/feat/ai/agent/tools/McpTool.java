@@ -11,8 +11,8 @@
 package tech.smartboot.feat.ai.agent.tools;
 
 import com.alibaba.fastjson2.JSONObject;
+import tech.smartboot.feat.ai.agent.AgentOptions;
 import tech.smartboot.feat.ai.agent.AgentTool;
-import tech.smartboot.feat.ai.agent.FeatAgent;
 import tech.smartboot.feat.ai.mcp.client.McpClient;
 import tech.smartboot.feat.ai.mcp.model.McpInitializeResponse;
 import tech.smartboot.feat.ai.mcp.model.Tool;
@@ -23,24 +23,6 @@ import tech.smartboot.feat.core.common.FeatUtils;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * MCP工具，将MCP服务器的单个工具封装为Agent可用的工具
- * <p>
- * 该工具类用于将MCP服务器中的单个工具映射为AI Agent可识别的工具。
- * 每个McpTool实例对应MCP服务器中的一个具体工具。
- * </p>
- * <p>
- * 使用示例：
- * </p>
- * <pre>
- * // 方式1：在AgentOptions中直接配置
- * ReActAgent agent = new ReActAgent(opt -> opt
- *     .mcp(mcp -> mcp.sse("http://localhost:8080/sse"))
- * );
- *
- * // 方式2：手动创建并注册
- * McpClient client = McpClient.streamable(opt -> opt.host("http://localhost:8080"));
- * McpTool.register(agent, opt -> opt.host("http://localhost:8080"));
- * </pre>
  *
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
@@ -62,10 +44,10 @@ public class McpTool implements AgentTool {
     }
 
 
-    public static McpClient register(FeatAgent agent, McpClient mcpClient) {
+    public static McpClient register(AgentOptions options, McpClient mcpClient) {
         McpInitializeResponse initialize = mcpClient.initialize();
         mcpClient.listTools().getTools().forEach(tool -> {
-            agent.options().tool(new McpTool(mcpClient, tool) {
+            options.tool(new McpTool(mcpClient, tool) {
                 @Override
                 public String getName() {
                     if (FeatUtils.isNotBlank(initialize.getServerInfo().getName())) {
@@ -129,7 +111,7 @@ public class McpTool implements AgentTool {
 
     @Override
     public String getName() {
-        return "mcpTool_" + tool.getName();
+        return "mcpTool" + this.hashCode() + "_" + tool.getName();
     }
 
     @Override
@@ -140,31 +122,6 @@ public class McpTool implements AgentTool {
     @Override
     public String getParametersSchema() {
         return JSONObject.from(tool.getInputSchema()).toJSONString();
-    }
-
-    /**
-     * 获取底层MCP客户端
-     *
-     * @return MCP客户端实例
-     */
-    public McpClient client() {
-        return mcpClient;
-    }
-
-    /**
-     * 获取工具定义
-     *
-     * @return 工具定义对象
-     */
-    public Tool tool() {
-        return tool;
-    }
-
-    /**
-     * 关闭MCP连接
-     */
-    public void close() {
-        mcpClient.close();
     }
 
 }
