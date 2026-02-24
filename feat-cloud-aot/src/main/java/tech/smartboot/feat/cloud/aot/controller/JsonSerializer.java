@@ -124,26 +124,32 @@ public final class JsonSerializer {
         //提取父类的字段
         TypeMirror temp = typeMirror;
         while (!temp.toString().startsWith("java.")) {
-            for (Element element : ((DeclaredType) temp).asElement().getEnclosedElements()) {
-                if (element.getKind() != ElementKind.FIELD) {
-                    continue;
-                }
-                if (element.getModifiers().contains(Modifier.STATIC)) {
-                    continue;
-                }
-                if (fields.contains(element.getSimpleName().toString())) {
-                    continue;
-                }
-                fields.add(element.getSimpleName().toString());
+            try {
+                for (Element element : ((DeclaredType) temp).asElement().getEnclosedElements()) {
+                    if (element.getKind() != ElementKind.FIELD) {
+                        continue;
+                    }
+                    if (element.getModifiers().contains(Modifier.STATIC)) {
+                        continue;
+                    }
+                    if (fields.contains(element.getSimpleName().toString())) {
+                        continue;
+                    }
+                    fields.add(element.getSimpleName().toString());
 
-                JSONField jsonField = element.getAnnotation(JSONField.class);
-                if (jsonField != null && !jsonField.serialize()) {
-                    continue;
-                }
+                    JSONField jsonField = element.getAnnotation(JSONField.class);
+                    if (jsonField != null && !jsonField.serialize()) {
+                        continue;
+                    }
 
-                elements.add(element);
+                    elements.add(element);
+                }
+                temp = ((TypeElement) ((DeclaredType) temp).asElement()).getSuperclass();
+            } catch (Throwable e) {
+                System.err.println("unSupport serialize for " + typeMirror + " now!");
+                throw e;
             }
-            temp = ((TypeElement) ((DeclaredType) temp).asElement()).getSuperclass();
+
         }
 
         if (elements.isEmpty()) {
