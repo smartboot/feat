@@ -38,9 +38,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -54,7 +52,7 @@ public abstract class AbstractSerializer implements Serializer {
     private final String packageName;
     private final String className;
     protected ProcessingEnvironment processingEnv;
-    private static final String date = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
+
 
     public AbstractSerializer(ProcessingEnvironment processingEnv, String config, Element element) throws IOException {
         this.config = config;
@@ -63,21 +61,15 @@ public abstract class AbstractSerializer implements Serializer {
         if (FeatUtils.isBlank(packageName)) {
             throw new FeatException("Compilation for class " + element.getSimpleName() + " with an empty package is not supported. Please declare a valid package (e.g., 'com.example.service') for the class.");
         }
-        this.className = element.getSimpleName() + "_v" + date;
+        this.className = element.getSimpleName() + "CloudService";
 
         this.processingEnv = processingEnv;
 
-        // 清理旧文件
         FileObject preFileObject = processingEnv.getFiler().getResource(StandardLocation.SOURCE_OUTPUT, packageName, className + ".java");
-        File f = new File(preFileObject.toUri()).getParentFile();
-        if (f.isDirectory()) {
-            for (File file : f.listFiles()) {
-                if (file.getName().startsWith(element.getSimpleName() + "_v")) {
-                    System.out.println("delete service file: " + file.getAbsolutePath() + " " + (file.delete() ? "success" : "fail"));
-                }
-            }
+        File f = new File(preFileObject.toUri());
+        if (f.exists()) {
+            f.delete();
         }
-
 
         JavaFileObject javaFileObject = processingEnv.getFiler().createSourceFile(packageName + "." + className);
         Writer writer = javaFileObject.openWriter();
