@@ -113,9 +113,5 @@ public final class MapperSerializer extends AbstractSerializer {
     public void serializeAutowired() {
         super.serializeAutowired();
         printWriter.println("\t\tfactory = applicationContext.getBean(\"sessionFactory\");");
-        //addMapper
-        if (JSONPath.eval(config, "$.feat.mybatis.path") != null) {
-            printWriter.println("\t\tfactory.getConfiguration().addMapper(" + element.getSimpleName() + ".class);");
-        }
     }
 }

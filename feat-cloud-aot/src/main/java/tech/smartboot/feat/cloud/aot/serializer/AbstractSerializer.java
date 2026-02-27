@@ -31,7 +31,10 @@ import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.VariableElement;
+import javax.tools.FileObject;
 import javax.tools.JavaFileObject;
+import javax.tools.StandardLocation;
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
@@ -63,12 +66,18 @@ public abstract class AbstractSerializer implements Serializer {
         this.className = element.getSimpleName() + "_v" + date;
 
         this.processingEnv = processingEnv;
-// 动态类名，无需删除旧文件
-//        FileObject preFileObject = processingEnv.getFiler().getResource(StandardLocation.SOURCE_OUTPUT, packageName, className + ".java");
-//        File f = new File(preFileObject.toUri());
-//        if (f.exists()) {
-//            System.out.println("delete service file: " + preFileObject.toUri() + " " + (f.delete() ? "success" : "fail"));
-//        }
+
+        // 清理旧文件
+        FileObject preFileObject = processingEnv.getFiler().getResource(StandardLocation.SOURCE_OUTPUT, packageName, className + ".java");
+        File f = new File(preFileObject.toUri()).getParentFile();
+        if (f.isDirectory()) {
+            for (File file : f.listFiles()) {
+                if (file.getName().startsWith(element.getSimpleName() + "_v")) {
+                    System.out.println("delete service file: " + file.getAbsolutePath() + " " + (file.delete() ? "success" : "fail"));
+                }
+            }
+        }
+
 
         JavaFileObject javaFileObject = processingEnv.getFiler().createSourceFile(packageName + "." + className);
         Writer writer = javaFileObject.openWriter();
