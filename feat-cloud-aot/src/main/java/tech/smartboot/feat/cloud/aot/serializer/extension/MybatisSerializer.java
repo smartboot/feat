@@ -151,11 +151,7 @@ public class MybatisSerializer extends ExtensionSerializer {
         printWriter.append(headBlank(0)).println("\t" + dataSourceCode + ");");
         printWriter.append(headBlank(0)).println("configuration.setEnvironment(environment);");
 
-        // 添加所有解析到的映射器
-        Collection<Class<?>> mapperClasses = configuration.getMapperRegistry().getMappers();
-        for (Class<?> mapperClass : mapperClasses) {
-            printWriter.append(headBlank(0)).println("configuration.addMapper(" + mapperClass.getName() + ".class);");
-        }
+
         printWriter.append(headBlank(0)).println("SqlSessionFactory sessionFactory = new SqlSessionFactoryBuilder().build(configuration);");
 
         Object obj = JSONPath.eval(config, "$.feat.mybatis['initial-sql']");
