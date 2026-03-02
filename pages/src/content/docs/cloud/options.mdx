@@ -10,110 +10,45 @@ import {Aside, TabItem, Tabs} from "@astrojs/starlight/components";
 
 <CheckAuthorize/>
 
-本文档详细说明 `CloudOptions` 的所有配置参数及其使用方法。
-
-## 类概览
-
-`CloudOptions` 是 Feat Cloud 服务的核心配置类，继承自 [`ServerOptions`](/feat/server/serveroptions/)，因此支持 `ServerOptions` 中的所有配置项（如端口、线程池、SSL 等）。
-
-```
-CloudOptions extends ServerOptions
-```
+`CloudOptions` 是 Feat Cloud 服务的核心配置类，继承自 [`ServerOptions`](/feat/server/serveroptions/)，除本文档列出的特有配置外，还支持端口、线程池、SSL 等基础配置。
 
 ## 配置参数
 
 ### packages
 
-指定 Feat Cloud 启动时扫描的包路径数组。
+指定启动时扫描的包路径，用于限制组件扫描范围。
 
 | 属性 | 值 |
 |------|-----|
 | **类型** | `String[]` |
 | **默认值** | `null`（扫描所有包） |
-| **必填** | 否 |
-
-**用途**：限制组件扫描范围以提升启动性能。
-
-**示例**：
-
-<Tabs>
-<TabItem label="Lambda 方式">
 
 ```java
 FeatCloud.cloudServer(options -> {
-    options.setPackages(
-        "com.example.controller",
-        "com.example.service"
-    );
+    options.setPackages("com.example.controller", "com.example.service");
 }).listen();
 ```
-
-</TabItem>
-<TabItem label="配置对象方式">
-
-```java
-CloudOptions options = new CloudOptions();
-options.setPackages("com.example.controller", "com.example.service");
-FeatCloud.cloudServer(options).listen();
-```
-
-</TabItem>
-</Tabs>
 
 ---
 
 ### registerBean
 
-向容器中注册外部 Bean 实例。
+向容器注册外部 Bean 实例，注册后可通过 `@Autowired` 注入使用。
 
 | 属性 | 值 |
 |------|-----|
-| **方法签名** | `public CloudOptions registerBean(String key, Object value)` |
+| **方法签名** | `CloudOptions registerBean(String key, Object value)` |
 | **返回值** | `CloudOptions`（支持链式调用） |
-| **必填** | 否 |
-
-**用途**：集成第三方组件或手动创建的 Bean 实例。
-
-**示例**：
-
-<Tabs>
-<TabItem label="注册外部 Bean">
 
 ```java
 FeatCloud.cloudServer(options -> {
     options.registerBean("dataSource", createDataSource());
     options.registerBean("redisTemplate", createRedisTemplate());
-    options.registerBean("mqProducer", createMQProducer());
 }).listen();
 ```
 
-</TabItem>
-<TabItem label="配合 @Autowired 使用">
-
-```java
-@Controller
-public class UserController {
-    
-    @Autowired
-    private DataSource dataSource;
-    
-    @Autowired  
-    private RedisTemplate redisTemplate;
-    
-    @RequestMapping("/user/{id}")
-    public User getUser(@PathParam Integer id) {
-        // 使用注入的 Bean 处理业务
-        return userService.findById(id);
-    }
-}
-```
-
-</TabItem>
-</Tabs>
-
 <Aside type="caution">
-  若注册的 Bean 名称与已存在的 Bean 冲突，将抛出 `FeatException` 异常。
-  建议使用业务前缀，如 `appDataSource` 而非 `dataSource`。
+  Bean 名称冲突时抛出 `FeatException`，建议使用业务前缀如 `appDataSource`。
 </Aside>
 
 ---
@@ -126,36 +61,29 @@ public class UserController {
 |------|-----|
 | **类型** | `String` |
 | **默认值** | `"classpath:static"` |
-| **必填** | 否 |
 
-**用途**：配置静态 HTML、CSS、JavaScript 等资源的根路径。
-
-**示例**：
+支持三种路径格式：
 
 ```java
-// 使用默认路径
-FeatCloud.cloudServer().listen();
+// 类路径（默认）
+options.setStaticLocations("classpath:static");
 
 // 自定义类路径
-FeatCloud.cloudServer(options -> {
-    options.setStaticLocations("classpath:assets");
-}).listen();
+options.setStaticLocations("classpath:assets");
 
-// 使用文件系统路径
-FeatCloud.cloudServer(options -> {
-    options.setStaticLocations("file:/var/www/static");
-}).listen();
+// 文件系统路径
+options.setStaticLocations("file:/var/www/static");
 ```
 
 ---
 
-## 完整配置示例
+## 完整示例
 
 ```java
 public class Application {
     public static void main(String[] args) {
         FeatCloud.cloudServer(options -> {
-            // 配置扫描包
+            // 限制扫描范围
             options.setPackages("com.example");
             
             // 注册外部 Bean
@@ -165,43 +93,19 @@ public class Application {
                 .password("password")
                 .build());
             
-            // 配置静态资源路径
+            // 静态资源路径
             options.setStaticLocations("classpath:public");
-                
         }).listen();
     }
 }
 ```
 
-## 异常处理
+## 继承的配置
 
-### Bean 名称冲突
-
-```
-tech.smartboot.feat.core.common.exception.FeatException: bean dataSource already exists
-```
-
-**解决方案**：使用唯一名称，添加业务前缀。
-
-### 无效包路径
-
-若配置的包路径不存在，扫描结果为空，组件可能无法加载。建议在配置前验证包路径有效性。
-
-## 继承配置
-
-`CloudOptions` 继承自 `ServerOptions`，因此也支持以下常用配置：
-
-| 配置项 | 说明 |
-|--------|------|
-| `port` | 服务端口，默认 8080 |
-| `threadNum` | 线程池大小 |
-| `readBufferSize` | 读缓冲区大小 |
-| `writeBufferSize` | 写缓冲区大小 |
-
-详见 [`ServerOptions` 配置参考](/feat/server/serveroptions/)
+`CloudOptions` 继承自 `ServerOptions`，支持端口、线程数、缓冲区、安全等配置，详见 [`ServerOptions` 配置参考](/feat/server/serveroptions/)。
 
 ## 相关链接
 
-- [`ServerOptions` 配置参考](/feat/server/serveroptions/) - 继承的基础配置项
-- [快速开始](/feat/cloud/getstart/) - CloudOptions 的入门使用
+- [快速开始](/feat/cloud/getstart/) - CloudOptions 入门使用
 - [控制器开发](/feat/cloud/controller/) - 使用注册 Bean 开发控制器
+- [ServerOptions 配置参考](/feat/server/serveroptions/) - 继承的基础配置项
