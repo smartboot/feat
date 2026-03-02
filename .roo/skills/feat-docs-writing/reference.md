@@ -423,5 +423,4 @@ component.method(value);
 ## 延伸阅读
 
 - 更详细的类型对比、示例模板见 [reference.md](reference.md)
-- 权威完整版指南见项目内 `pages/src/content/docs/appendix/ai_prompt.mdx`
 - Diataxis 框架原文：https://diataxis.fr/
