@@ -1,142 +1,30 @@
 ---
-title: WebSocket详解
-description: Feat Client
+title: WebSocket 客户端详解
+description: 本教程将带你掌握 Feat WebSocketClient 的使用方法，实现全双工实时通信
 sidebar:
     order: 2
 ---
 import CheckAuthorize from '../../../components/CheckAuthorize.astro'
+import { Aside } from '@astrojs/starlight/components';
 
 <CheckAuthorize/>
-随着 Web 技术的快速发展，WebSocket 已经成为实时通信应用的首选技术。它能够实现浏览器与服务器之间的全双工通信，适用于实时聊天、在线游戏、股票交易、物联设备控制等场景。
 
-WebSocketClient 是 Feat 框架中的一款高性能 WebSocket 客户端实现，旨在为开发者提供灵活、高效、易用的 WebSocket 开发体验。无论你是要构建实时聊天应用，还是要开发物联网设备控制系统，WebSocketClient 都能满足你的需求。
+WebSocket 能够实现客户端与服务器之间的全双工通信，适用于实时聊天、在线游戏、股票交易、物联网设备控制等场景。
 
-让我们一起来探索这个强大的工具吧！
+## 你将学到
 
----
+- 如何建立 WebSocket 连接
+- 如何发送和接收消息
+- 如何配置客户端选项
+- 如何实现错误处理和重连机制
 
-## 核心功能
+## 前置条件
 
-Feat WebSocketClient 提供了以下核心功能：
+- JDK 8 或更高版本
+- 熟悉 Java Lambda 表达式
+- 了解 WebSocket 协议基本概念
 
-1. **WebSocket 连接管理**：
-- 支持 WebSocket 协议（ws:// 和 wss://）。
-- 支持连接建立、断开、重连等生命周期管理。
-- 提供连接状态监控和事件通知。
-
-2. **消息传输**：
-- 支持文本消息（String）和二进制消息（byte[]）的发送与接收。
-- 支持消息的异步处理，避免阻塞主线程。
-
-3. **事件监听**：
-- 提供 `onOpen`（连接成功）、`onClose`（连接关闭）、`onError`（发生错误）、`onMessage`（接收消息）等事件回调，方便开发者处理各种场景。
-
-4. **配置灵活**：
-- 支持设置连接超时、读写缓冲区大小、代理配置等。
-- 支持自定义 SSL/TLS 配置，满足安全通信需求。
-
----
-
-## 核心接口
-
-在深入了解具体用法之前，让我们先了解一下 WebSocketClient 的核心接口。
-
-### WebSocketClient 类
-
-`WebSocketClient` 是客户端的主要入口类，提供了以下核心方法：
-
-- **构造方法**：
-```java
-public WebSocketClient(String url)
-  ```
-使用 WebSocket URL 初始化客户端实例，支持 `ws://` 和 `wss://` 协议。
-
-- **配置方法**：
-```java
-public WebSocketOptions options()
-  ```
-获取配置对象，用于设置客户端的各项参数，如超时时间、读写缓冲区大小、代理等。
-
-- **连接方法**：
-```java
-public void connect(WebSocketListener listener)
-  ```
-使用指定的监听器建立 WebSocket 连接。
-
-- **发送消息**：
-```java
-public void sendMessage(String message) throws IOException
-public void sendBinary(byte[] bytes) throws IOException
-  ```
-发送文本消息或二进制消息。
-
-- **关闭连接**：
-```java
-public void close()
-  ```
-关闭 WebSocket 连接。
-
-### WebSocketListener 接口
-
-`WebSocketListener` 是事件监听接口，定义了以下方法：
-
-- **onOpen**：
-```java
-void onOpen(WebSocketClient client, WebSocketResponse response)
-  ```
-连接成功时触发。
-
-- **onClose**：
-```java
-void onClose(WebSocketClient client, WebSocketResponse response, CloseReason reason)
-  ```
-连接关闭时触发。
-
-- **onError**：
-```java
-void onError(WebSocketClient client, WebSocketResponse response, Throwable throwable)
-  ```
-发生错误时触发。
-
-- **onMessage**：
-```java
-void onMessage(WebSocketClient client, String message)
-void onMessage(WebSocketClient client, byte[] message)
-  ```
-接收到文本消息或二进制消息时触发。
-
-### WebSocketOptions 类
-
-`WebSocketOptions` 提供了丰富的配置选项，包括：
-
-- **设置连接超时**：
-```java
-public WebSocketOptions connectTimeout(int connectTimeout)
-  ```
-
-- **设置代理**：
-```java
-public WebSocketOptions proxy(String host, int port, String username, String password)
-  ```
-
-- **设置读写缓冲区大小**：
-```java
-public WebSocketOptions readBufferSize(int readBufferSize)
-public WebSocketOptions writeBufferSize(int writeBufferSize)
-  ```
-
-- **启用调试模式**：
-```java
-public WebSocketOptions debug(boolean debug)
-  ```
-
----
-
-## 使用示例
-
-掌握了基本概念后，让我们通过一些实际的例子来看看如何使用这些功能。
-
-### 基本用法
+## 快速上手
 
 以下是一个简单的示例，展示了如何使用 Feat WebSocketClient 连接 WebSocket 服务器并处理消息：
 
@@ -145,6 +33,87 @@ import tech.smartboot.feat.core.client.WebSocketClient;
 import tech.smartboot.feat.core.client.WebSocketListener;
 import tech.smartboot.feat.core.client.WebSocketResponse;
 
+public class WebSocketDemo {
+    public static void main(String[] args) {
+        WebSocketClient client = new WebSocketClient("ws://localhost:8080/ws");
+        client.options().debug(true); // 开启调试模式
+
+        client.connect(new WebSocketListener() {
+            @Override
+            public void onOpen(WebSocketClient client, WebSocketResponse response) {
+                System.out.println("WebSocket 连接成功");
+                try {
+                    client.sendMessage("Hello Feat WebSocket");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onMessage(WebSocketClient client, String message) {
+                System.out.println("接收到消息：" + message);
+            }
+
+            @Override
+            public void onClose(WebSocketClient client, WebSocketResponse response, CloseReason reason) {
+                System.out.println("WebSocket 连接关闭，关闭原因：" + reason);
+            }
+
+            @Override
+            public void onError(WebSocketClient client, WebSocketResponse response, Throwable throwable) {
+                System.out.println("发生错误：" + throwable.getMessage());
+            }
+        });
+    }
+}
+```
+
+---
+
+## API 参考：核心接口
+
+在深入了解具体用法之前，让我们先了解一下 WebSocketClient 的核心接口。
+
+### WebSocketClient 类
+
+`WebSocketClient` 是客户端的主要入口类：
+
+| 方法 | 说明 |
+|------|------|
+| `WebSocketClient(String url)` | 构造方法，支持 `ws://` 和 `wss://` 协议 |
+| `options()` | 获取配置对象 |
+| `connect(WebSocketListener)` | 建立连接 |
+| `sendMessage(String)` | 发送文本消息 |
+| `sendBinary(byte[])` | 发送二进制消息 |
+| `close()` | 关闭连接 |
+
+### WebSocketListener 接口
+
+`WebSocketListener` 是事件监听接口：
+
+| 方法 | 触发时机 |
+|------|----------|
+| `onOpen(client, response)` | 连接成功 |
+| `onMessage(client, String)` | 接收文本消息 |
+| `onMessage(client, byte[])` | 接收二进制消息 |
+| `onClose(client, response, reason)` | 连接关闭 |
+| `onError(client, response, throwable)` | 发生错误 |
+
+### WebSocketOptions 配置
+
+| 配置项 | 说明 |
+|--------|------|
+| `connectTimeout(int)` | 连接超时时间（毫秒） |
+| `readBufferSize(int)` | 读缓冲区大小 |
+| `writeBufferSize(int)` | 写缓冲区大小 |
+| `proxy(host, port, user, password)` | 代理配置 |
+| `debug(boolean)` | 调试模式 |
+
+---
+
+## 高级配置
+
+```
 public class WebSocketDemo {
     public static void main(String[] args) {
         WebSocketClient client = new WebSocketClient("ws://localhost:8080/ws");

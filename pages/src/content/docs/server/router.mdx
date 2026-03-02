@@ -1,14 +1,32 @@
 ---
 title: Router 路由组件
-description: Feat Router 是一个功能强大的 HTTP 请求分发器，支持多种路由匹配方式和高级功能
+description: 本教程将带你掌握 Feat Router 的使用方法，包括路由配置、Session 管理和拦截器机制
 sidebar:
   order: 3
 ---
 
+import { Aside } from '@astrojs/starlight/components';
 
-让我们一起来探索 Feat 框架中强大的 Router 组件！它就像一个聪明的交通警察，能够准确地将每个 HTTP 请求引导到正确的处理程序。当你的应用程序逐渐变得复杂，拥有越来越多的 API 接口时，Router 就是你管理这些接口的得力助手。
+本教程将带你掌握 Feat Router 组件的使用方法，它就像一个聪明的交通警察，能够准确地将每个 HTTP 请求引导到正确的处理程序。
 
-## Router 是什么？
+## 你将学到
+
+- 如何创建和配置 Router
+- 使用多种路由匹配模式（精确匹配、路径参数、通配符）
+- 管理 Session 会话状态
+- 使用拦截器实现请求预处理
+
+## 前置条件
+
+在开始本教程之前，请确保你已完成：
+
+- [Feat Server 快速入门](/feat/server/getstart/) - 了解基本的 HTTP 服务器创建
+- JDK 8 或更高版本
+- 熟悉 Java Lambda 表达式
+
+## Router 简介
+
+Router 组件是 Feat 框架中负责 HTTP 请求路由分发的核心组件。它不仅能根据请求路径将请求分发到对应的处理器，还提供了 Session 管理、请求拦截等强大功能。
 
 Router 组件是 Feat 框架中负责 HTTP 请求路由分发的核心组件。它不仅能根据请求路径将请求分发到对应的处理器，还提供了 Session 管理、请求拦截等强大功能。
 
@@ -142,7 +160,7 @@ router.route("/login", ctx -> {
 router.route("/profile", ctx -> {
     Session session = ctx.session(); // 获取 Session 但不创建
     if (session != null) {
-        String username = (String) session.get("username");
+        String username = session.get("username");
         ctx.Response.write("欢迎，" + username);
     } else {
         ctx.Response.setHttpStatus(HttpStatus.UNAUTHORIZED);
@@ -159,6 +177,11 @@ router.route("/logout", ctx -> {
     }
     ctx.Response.write("已退出登录");
 });
+```
+
+<Aside type="tip" title="Session 类型说明">
+  Feat 的 Session 只支持存储 **String 类型的值**。`session.put(key, value)` 方法的 value 参数必须是 String 类型，`session.get(key)` 返回的也是 String 类型。如果需要存储复杂对象，建议先序列化为 JSON 字符串。
+</Aside>
 ```
 
 Session 的生命周期管理示意图：
@@ -267,7 +290,7 @@ public class CompleteRouterDemo {
         // Session 示例
         router.route("/login", ctx -> {
             Session session = ctx.session();
-            session.put("loginTime", System.currentTimeMillis());
+            session.put("loginTime", String.valueOf(System.currentTimeMillis()));
             session.put("username", "张三");
             ctx.Response.write("登录成功");
         });
@@ -276,7 +299,7 @@ public class CompleteRouterDemo {
             String id = ctx.pathParam("id");
             Session session = ctx.session(); // 获取 Session 但不创建
             if (session != null) {
-                Long loginTime = (Long) session.get("loginTime");
+                String loginTime = session.get("loginTime");
                 ctx.Response.write("用户 " + id + "，登录时间: " + loginTime);
             } else {
                 ctx.Response.setHttpStatus(HttpStatus.UNAUTHORIZED);

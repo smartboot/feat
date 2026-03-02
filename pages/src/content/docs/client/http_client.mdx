@@ -1,16 +1,28 @@
 ---
-title: HttpClient详解
-description: Feat HttpClient 是一个功能强大的HTTP客户端库，支持多种请求方法和高级配置
+title: HttpClient 详解
+description: 本教程将带你掌握 Feat HttpClient 的使用方法，包括发送请求、处理响应和配置选项
 sidebar:
     order: 1
 ---
 import CheckAuthorize from '../../../components/CheckAuthorize.astro'
+import { Aside } from '@astrojs/starlight/components';
 
 <CheckAuthorize/>
 
-在网络编程中，我们经常需要与其他服务进行通信，而 HTTP 是最常见的通信协议之一。Feat HttpClient 是一个功能强大、灵活且高效的 HTTP 客户端库，旨在帮助开发者轻松发送 HTTP 请求、处理响应，并支持多种高级功能。
+Feat HttpClient 是一个功能强大、灵活且高效的 HTTP 客户端库，旨在帮助开发者轻松发送 HTTP 请求、处理响应。无论你是要调用第三方 API，还是构建微服务间的通信，HttpClient 都能胜任。
 
-无论你是要调用第三方 API，还是构建微服务间的通信，HttpClient 都能胜任。让我们一起来看看它有多强大吧！
+## 你将学到
+
+- 如何创建 HttpClient 实例
+- 如何发送 GET、POST 等 HTTP 请求
+- 如何使用异步回调处理响应
+- 如何配置客户端选项
+
+## 前置条件
+
+- JDK 8 或更高版本
+- 熟悉 Java Lambda 表达式
+- 了解基本的 HTTP 协议概念
 
 ## 快速上手
 
@@ -83,58 +95,25 @@ HttpClient httpClient = new HttpClient("smartboot.tech", 443);
 
 这两种方式各有优势，你可以根据实际需求选择。
 
-## Options 配置
+---
 
-通过 `HttpClient.options()` 方法可以对客户端进行详细配置，支持链式调用，非常方便。
+## API 参考：Options 配置
 
-### host
-**类型:** `String`
+通过 `HttpClient.options()` 方法可以对客户端进行详细配置，支持链式调用。
 
-**默认值:** `null`
+| 配置项 | 类型 | 默认值 | 说明 |
+|--------|------|--------|------|
+| `host` | `String` | `null` | 服务地址，必填项 |
+| `port` | `int` | `80` | 服务端口 |
+| `connectTimeout` | `int` | `0` | 连接超时时间（毫秒），0 表示永不超时 |
+| `readBufferSize` | `int` | `1024` | 读缓冲区大小（字节） |
+| `writeBufferSize` | `int` | `1024` | 写缓冲区大小（字节） |
+| `debug` | `boolean` | `false` | 是否开启调试模式 |
+| `proxy` | `ProxyOptions` | `null` | 代理配置 |
 
-服务地址，必填项。
-
-### port
-**类型:** `int`
-
-**默认值:** `80`
-
-服务端口。
-
-### connectTimeout
-**类型:** `int`
-
-**默认值:** `0`
-
-连接超时时间，单位毫秒。设置为 0 表示永不超时。
-
-### readBufferSize
-**类型:** `int`
-
-**默认值:** `1024`
-
-读缓冲区大小，单位：字节。合理的大小可以减少系统调用次数，提高性能。
-
-### writeBufferSize
-**类型:** `int`
-
-**默认值:** `1024`
-
-写缓冲区大小，单位：字节。合理的大小可以减少系统调用次数，提高性能。
-
-### debug
-**类型:** `boolean`
-
-**默认值:** `false`
-
-是否开启调试模式。启用后会在控制台打印请求和响应的详细信息，非常适合排查问题。
-
-### proxy
-**类型:** `ProxyOptions`
-
-**默认值:** `null`
-
-代理配置，适用于需要通过代理服务器访问目标服务的场景。
+<Aside type="tip">
+  调试模式会在控制台打印请求和响应的详细信息，非常适合开发阶段排查问题。生产环境请关闭。
+</Aside>
 
 ## HTTP请求
 
@@ -179,13 +158,20 @@ public class HttpGetDemo {
 }
 ```
 
-## 异步回调
+---
 
-HttpClient 提供了强大的异步回调机制，可以在请求发送后立即返回，而不需要等待请求完成。这对于构建高性能应用非常重要。
+## API 参考：异步回调
 
-### onResponseHeader
+HttpClient 提供了强大的异步回调机制，可以在请求发送后立即返回，而不需要等待请求完成。
 
-当响应 Header 解析完成后，会触发 onResponseHeader 回调。在这个回调中，你可以检查响应的状态码和头部信息：
+| 回调方法 | 触发时机 | 用途 |
+|----------|----------|------|
+| `onResponseHeader` | 响应 Header 解析完成后 | 检查状态码和头部信息 |
+| `onResponseBody` | 接收到 Body 内容时 | 流式处理响应体 |
+| `onSuccess` | 请求成功完成时 | 处理完整响应 |
+| `onFailure` | 请求失败时 | 处理异常、超时 |
+
+### onResponseHeader 示例
 
 ```java title=ResponseHeaderDemo.java "onResponseHeader"
 public class ResponseHeaderDemo {
@@ -202,9 +188,7 @@ public class ResponseHeaderDemo {
 }
 ```
 
-### onResponseBody
-
-对于存在响应体的请求，当 `onResponseHeader` 回调结束并开始接收到 Body 内容时，会触发 onResponseBody 回调。
+### onResponseBody 示例
 
 ```java title=ResponseBodyDemo.java "onResponseBody"
 public class ResponseBodyDemo {
@@ -225,18 +209,9 @@ public class ResponseBodyDemo {
 }
 ```
 
-onResponseBody 的参数是一个 Stream 对象，用于消费响应体的内容：
-- response: HttpResponse 对象，表示当前的响应。
-- bytes: 字节数组，表示接收到的响应体内容。
-- end: boolean 值，表示是否接收到了响应体的最后一部分内容。
-
-### onSuccess
-
-当请求成功时，会触发 onSuccess 回调。该回调发生于 onResponseBody 正常结束之后。
-
-### onFailure
-
-当请求失败时，会触发 onFailure 回调。在这里你可以处理网络异常、超时等问题。
+<Aside type="tip">
+  `onResponseBody` 的 Stream 回调参数：`response`（当前响应对象）、`bytes`（接收到的数据）、`end`（是否为最后一部分数据）。
+</Aside>
 
 ## 最佳实践
 

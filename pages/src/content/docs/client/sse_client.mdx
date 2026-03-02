@@ -1,94 +1,29 @@
 ---
-title: SSE客户端详解
-description: Feat SSE Client
+title: SSE 客户端详解
+description: 本教程将带你掌握 Feat SSEClient 的使用方法，实现服务器推送数据的实时接收
 sidebar:
     order: 3
 ---
 import CheckAuthorize from '../../../components/CheckAuthorize.astro'
+import { Aside } from '@astrojs/starlight/components';
 
 <CheckAuthorize/>
 
-Server-Sent Events (SSE) 是一种服务器向浏览器推送实时更新的技术。与 WebSocket 不同，SSE 是单向通信，只能服务器向客户端推送数据，但使用更简单，因为它是基于 HTTP 协议的。
+Server-Sent Events (SSE) 是一种服务器向客户端推送实时更新的技术。与 WebSocket 不同，SSE 是单向通信，只能服务器向客户端推送数据，但使用更简单，因为它是基于 HTTP 协议的。
 
-Feat SSEClient 是 Feat 框架中的一款高性能 SSE 客户端实现，旨在为开发者提供灵活、高效、易用的实时数据接收体验。无论你是要构建实时通知系统、股票行情展示，还是其他需要服务器推送数据的应用，SSE 都是一个绝佳的选择。
+## 你将学到
 
-让我们一起来探索 Feat SSEClient 的强大功能吧！
+- 如何建立 SSE 连接
+- 如何处理不同类型的事件
+- 如何实现错误处理和重连机制
 
----
+## 前置条件
 
-## 核心功能
+- JDK 8 或更高版本
+- 熟悉 Java Lambda 表达式
+- 了解基本的 HTTP 协议概念
 
-Feat SSEClient 提供了以下核心功能：
-
-1. **SSE 连接管理**：
-- 支持 SSE 协议
-- 支持连接建立、断开、重连等生命周期管理
-- 提供连接状态监控和事件通知
-
-2. **事件处理**：
-- 支持不同类型事件的处理
-- 支持默认数据事件处理
-- 提供错误处理和连接关闭处理
-
-3. **配置灵活**：
-- 支持设置连接超时、读写缓冲区大小等
-- 支持自定义 HTTP 头部
-- 支持断点续传（Last-Event-ID）
-
----
-
-## 核心接口
-
-在开始使用 SSEClient 之前，让我们先了解一下它的核心接口。
-
-### HttpRest.onSSE() 方法
-
-要使用 SSE 客户端，需要通过 `HttpRest.onSSE()` 方法注册 SSE 处理器：
-
-```java
-HttpClient client = Feat.httpClient("http://localhost:8080");
-client.get("/sse").onSSE(sseClient -> {
-    // 配置 SSE 事件处理器
-});
-```
-
-### SseClient 类
-
-`SseClient` 是在 `onSSE()` 回调中提供的客户端对象，提供了以下核心方法：
-
-- **事件处理方法**：
-```java
-public SseClient onData(Consumer<SseEvent> handler)
-public SseClient onEvent(String eventType, Consumer<SseEvent> handler)
-```
-
-- **连接状态方法**：
-```java
-public SseClient onOpen(Consumer<SseClient> handler)
-```
-
-- **控制方法**：
-通过 `HttpRest` 提交请求：
-```java
-httpRest.submit()
-```
-
-### SseEvent 类
-
-`SseEvent` 封装了从服务器接收到的事件数据，包含以下属性：
-
-- **id**: 事件ID，通过 `getId()` 获取
-- **event**: 事件类型，通过 `getEvent()` 获取
-- **data**: 事件数据，通过 `getData()` 获取
-- **retry**: 重试时间，通过 `getRetry()` 获取
-
----
-
-## 使用示例
-
-掌握了基本概念后，让我们通过一些实际的例子来看看如何使用这些功能。
-
-### 基本用法
+## 快速上手
 
 以下是一个简单的示例，展示了如何使用 Feat SSEClient 连接 SSE 服务器并处理消息：
 
@@ -119,7 +54,47 @@ public class SSEClientDemo {
 }
 ```
 
-### 处理特定事件类型
+---
+
+## API 参考：核心接口
+
+在开始使用 SSEClient 之前，让我们先了解一下它的核心接口。
+
+### HttpRest.onSSE() 方法
+
+要使用 SSE 客户端，需要通过 `HttpRest.onSSE()` 方法注册 SSE 处理器：
+
+```java
+HttpClient client = Feat.httpClient("http://localhost:8080");
+client.get("/sse").onSSE(sseClient -> {
+    // 配置 SSE 事件处理器
+});
+```
+
+### SseClient 类
+
+`SseClient` 是在 `onSSE()` 回调中提供的客户端对象：
+
+| 方法 | 说明 |
+|------|------|
+| `onData(Consumer<SseEvent>)` | 处理默认数据事件 |
+| `onEvent(String, Consumer<SseEvent>)` | 处理特定类型事件 |
+| `onOpen(Consumer<SseClient>)` | 连接成功回调 |
+
+### SseEvent 类
+
+`SseEvent` 封装了从服务器接收到的事件数据：
+
+| 属性 | 获取方法 | 说明 |
+|------|----------|------|
+| id | `getId()` | 事件 ID |
+| event | `getEvent()` | 事件类型 |
+| data | `getData()` | 事件数据 |
+| retry | `getRetry()` | 重试时间 |
+
+---
+
+## 处理特定事件类型
 
 SSE 支持不同的事件类型，可以通过 onEvent 方法处理特定类型的事件：
 
