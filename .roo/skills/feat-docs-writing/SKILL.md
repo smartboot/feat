@@ -11,7 +11,7 @@ description: Applies Feat documentation writing standards based on Diataxis (tut
 
 - **实用至上**：代码优先，让读者能快速动手实践
 - **结构清晰**：每种文档类型有明确的结构模板
-- **真实可靠**：示例来自 `feat-test` 模块的真实可运行代码
+- **真实可靠**：示例优先来自 `demo` 模块的真实可运行代码，也可参考 `feat-test` 模块
 - **用户导向**：从读者角度出发，降低学习门槛
 - **体系完整**：文档间相互链接，避免内容重复，形成知识网络
 
@@ -468,7 +468,7 @@ Feat 采用 CompletableFuture...
 
 ### 通用要求
 
-1. **来源要求**：优先使用 `feat-test`、`feat-ai` 模块中的真实代码
+1. **来源要求**：优先使用 `demo` 模块中的真实代码，也可参考 `feat-test` 模块
 2. **完整性**：教程和操作指南的代码必须可直接运行（含 main 方法）
 3. **注释规范**：关键逻辑必须有注释，复杂步骤需说明原因
 4. **验证方式**：说明如何运行和验证代码效果
@@ -717,16 +717,32 @@ graph TD
 
 ## 十二、示例库索引
 
-编写文档时可参考以下示例代码：
+编写文档时可参考以下示例代码。**优先使用 `demo` 模块中的示例**，也可参考 `feat-test` 模块。
+
+### demo 模块示例（优先）
 
 | 示例 | 路径 | 适用文档类型 |
 |------|------|--------------|
-| HelloWorld | `feat-test/.../demo/HelloWorld.java` | 教程、快速入门 |
-| RouterSessionDemo | `feat-test/.../router/RouterSessionDemo.java` | 教程、操作指南 |
-| AsyncHttpDemo | `feat-test/.../demo/AsyncHttpDemo.java` | 概念解释、操作指南 |
-| HttpsPemDemo | `feat-test/.../demo/HttpsPemDemo.java` | 操作指南 |
-| 控制器示例 | `feat-test/.../controller/` | 操作指南、参考 |
-| MyBatis 完整示例 | `demo/mybatis/` | 教程 |
+| HelloWorld | `demo/feat_static/src/main/java/.../Bootstrap.java` | 教程、快速入门 |
+| MyBatis 完整示例 | `demo/mybatis/` | 教程、数据库集成 |
+| 文件服务器 | `demo/feat_static/src/main/java/...` | 操作指南 |
+| Native Image 示例 | `demo/helloworld_native/` | Native Image 部署 |
+
+### feat-test 模块示例（补充参考）
+
+| 示例 | 路径 | 适用文档类型 |
+|------|------|--------------|
+| HelloFeat | `feat-test/src/main/java/.../demo/HelloFeat.java` | 教程、快速入门 |
+| RouterSessionDemo | `feat-test/src/main/java/.../router/RouterSessionDemo.java` | 教程、操作指南 |
+| AsyncHttpDemo | `feat-test/src/main/java/.../demo/AsyncHttpDemo.java` | 概念解释、操作指南 |
+| HttpsPemDemo | `feat-test/src/main/java/.../demo/HttpsPemDemo.java` | 操作指南 |
+| 控制器示例 | `feat-test/src/main/java/.../controller/` | 操作指南、参考 |
+| WebSocket 示例 | `feat-test/src/main/java/.../demo/WebSocketDemo.java` | 操作指南 |
+| SSE 示例 | `feat-test/src/main/java/.../demo/SSEDemo.java` | 操作指南 |
+
+<Aside type="tip">
+  如果当前 demo 模块中缺少所需示例，可使用 `feat-docs-example-generator` skill 自动生成新的示例模块。
+</Aside>
 
 ---
 
