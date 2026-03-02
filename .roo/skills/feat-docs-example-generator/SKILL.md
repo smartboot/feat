@@ -7,6 +7,35 @@ description: Automatically generates runnable demo modules for Feat documentatio
 
 自动为 Feat 文档生成可运行的示例代码模块。
 
+## 核心原则：优先扩展，谨慎新建
+
+**重要**：在创建新模块之前，必须先评估是否可以扩展现有模块。
+
+### 优先策略
+
+| 策略 | 优先级 | 适用场景 | 注意事项 |
+|------|--------|----------|----------|
+| **扩展现有模块** | ⭐⭐⭐ 优先 | 现有模块有类似功能，可通过添加新类/方法补充 | 必须不影响原有示例的运行 |
+| **新建独立模块** | ⭐ 最后选择 | 现有模块无法扩展，或示例功能完全独立 | 仅在扩展不可行时使用 |
+
+### 扩展现有模块的条件
+
+满足以下**全部条件**时，选择扩展而非新建：
+
+1. ✅ 现有模块的依赖满足新示例需求
+2. ✅ 新示例与现有示例属于同一功能领域
+3. ✅ 添加新示例不会破坏现有示例的独立性
+4. ✅ 新示例不需要额外的外部资源（如数据库、Redis 等）
+
+### 必须新建模块的条件
+
+满足以下**任一条件**时，选择新建模块：
+
+1. ❌ 新示例需要不同的依赖组合（如新增数据库驱动）
+2. ❌ 新示例与现有模块功能领域完全不同
+3. ❌ 新示例需要独占式的外部资源配置
+4. ❌ 扩展会显著增加现有模块的复杂度
+
 ## 触发条件
 
 当以下情况发生时使用本技能：
@@ -53,14 +82,63 @@ demo/
 - **依赖组件**：需要哪些 Feat 模块？
 - **运行环境**：是否需要外部依赖（数据库、Redis 等）？
 
-### 步骤 2：创建模块目录
+### 步骤 2：评估扩展可能性（关键步骤）
+
+**必须完成此步骤**，确定是扩展现有模块还是新建模块。
+
+#### 2.1 检索现有模块
+
+检查 `demo/` 目录下的现有模块，评估是否可以扩展：
+
+```
+demo/
+├── feat_static/        # 文件服务器、静态资源
+├── helloworld/         # 基础 HelloWorld
+├── helloworld_native/  # Native Image 示例
+├── mybatis/            # MyBatis 数据库集成
+└── redis_session/      # Redis Session 示例
+```
+
+#### 2.2 扩展可行性评估表
+
+| 检查项 | 扩展可行 | 需新建 |
+|--------|----------|--------|
+| 依赖兼容性 | 现有依赖满足需求 | 需要新增依赖 |
+| 功能相关性 | 与现有示例属于同一领域 | 功能完全独立 |
+| 资源独立性 | 不需要独占资源 | 需要独立数据库/中间件 |
+| 代码隔离性 | 新增类不影响现有示例 | 会干扰现有示例运行 |
+
+#### 2.3 扩展实施原则
+
+如果决定扩展，必须遵守：
+
+1. **添加新类**：在现有模块中添加新的 Controller/Service/Handler 类
+2. **独立入口**：新示例可通过不同的 URL 路径访问
+3. **不修改现有代码**：保持原有示例的代码和功能不变
+4. **可选配置**：新增配置项使用默认值，不影响原有行为
+
+**扩展示例**：
+
+```
+demo/mybatis/
+└── src/main/java/tech/smartboot/feat/demo/mybatis/
+    ├── Bootstrap.java           # 原有启动类（不变）
+    ├── controller/
+    │   ├── UserController.java  # 原有 Controller（不变）
+    │   └── OrderController.java # 新增：订单示例 ✅
+    └── service/
+        ├── UserService.java     # 原有 Service（不变）
+        └── OrderService.java    # 新增：订单服务 ✅
+```
+
+### 步骤 3：创建模块目录（仅新建时执行）
 
 ```bash
 mkdir -p demo/{module-name}/src/main/java/tech/smartboot/feat/demo/{module}
 mkdir -p demo/{module-name}/src/main/resources
 ```
 
-### 步骤 3：生成 pom.xml
+### 步骤 4：生成 pom.xml（仅新建时执行）
 
 使用以下模板，根据实际需求调整：
 
@@ -98,42 +176,63 @@ mkdir -p demo/{module-name}/src/main/resources
 </project>
 ```
 
-### 步骤 4：生成 Bootstrap.java
+### 步骤 5：生成/修改代码文件
 
-**标准模板**：
+#### 新建模块时
+
+创建 Bootstrap.java 启动类：
 
 ```java
 package tech.smartboot.feat.demo.{module};
 
-import tech.smartboot.feat.Feat;
-import tech.smartboot.feat.cloud.CloudOptions;
+import tech.smartboot.feat.cloud.FeatCloud;
+import tech.smartboot.feat.cloud.annotation.Bean;
 
 /**
  * {模块名称}示例
- * 
+ *
  * 【文档类型】教程/操作指南/概念解释/参考
  * 【目的】演示 {功能描述}
  * 【前置条件】{需要的前置知识或环境}
  * 【验证方式】{如何运行和验证}
- * 
+ *
  * @author Feat Team
  */
+@Bean
 public class Bootstrap {
     
     public static void main(String[] args) {
-        // 1. 创建 CloudOptions 配置
-        CloudOptions options = CloudOptions.create()
-            .port(8080);
-        
-        // 2. 启动 Feat 应用
-        Feat.run(options);
+        // 启动 Feat Cloud 应用
+        FeatCloud.cloudServer().listen();
         
         System.out.println("{模块名称}示例已启动，访问 http://localhost:8080");
     }
 }
 ```
 
-### 步骤 5：生成配置文件（如需要）
+#### 扩展模块时
+
+在现有模块中添加新的业务类：
+
+```java
+// ✅ 正确：添加新的 Controller，不影响现有代码
+@Controller("/order")  // 不同的路径前缀
+public class OrderController {
+    
+    @RequestMapping("/list")
+    public List<Order> list() {
+        // 新示例的实现
+    }
+}
+```
+
+**扩展时的注意事项**：
+
+1. **路径隔离**：新 Controller 使用不同的基础路径（如 `/order` vs 原有的 `/user`）
+2. **不修改原有类**：保持现有 Controller/Service 的代码不变
+3. **独立可运行**：新示例应能独立运行，不依赖特定数据
+
+### 步骤 6：生成配置文件（如需要）
 
 **feat.yaml 模板**：
 
@@ -145,7 +244,7 @@ server:
 # 根据需要添加其他配置
 ```
 
-### 步骤 6：添加业务代码
+### 步骤 7：添加业务代码
 
 根据示例需求，添加：
 
