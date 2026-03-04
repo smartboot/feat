@@ -16,22 +16,177 @@ import tech.smartboot.feat.ai.chat.entity.Message;
 import java.util.List;
 
 /**
+ * Agent 执行钩子接口，提供在 Agent 生命周期各个关键节点的回调方法
+ * <p>
+ * Hook 接口允许开发者在 Agent 执行的不同阶段插入自定义逻辑，实现以下功能：
+ * </p>
+ * <ul>
+ *     <li>消息处理前后的预处理和后处理</li>
+ *     <li>工具调用前后的拦截和监控</li>
+ *     <li>推理过程的实时跟踪</li>
+ *     <li>流式响应的内容捕获</li>
+ * </ul>
+ * <p>
+ * 所有方法都提供了默认空实现，开发者可以根据需要选择性地重写特定方法。
+ * </p>
+ * <p>
+ * 典型使用场景包括：
+ * </p>
+ * <ul>
+ *     <li>日志记录和审计</li>
+ *     <li>性能监控和指标收集</li>
+ *     <li>消息内容的修改或增强</li>
+ *     <li>工具调用的权限验证</li>
+ *     <li>实时进度展示</li>
+ * </ul>
+ *
  * @author 三刀
  * @version v1.0 2/10/26
+ * @see tech.smartboot.feat.ai.agent.AgentOptions#hook(Hook) 设置 Hook 的方法
+ * @see tech.smartboot.feat.ai.agent.ReActAgent ReActAgent 中的实际使用示例
  */
 public interface Hook {
+    /**
+     * 在调用 AI 模型前执行的预处理回调方法
+     * <p>
+     * 此方法在 Agent 准备向 AI 模型发送请求之前被调用，可以用于：
+     * </p>
+     * <ul>
+     *     <li>检查和验证消息列表的完整性</li>
+     *     <li>对消息内容进行预处理或增强</li>
+     *     <li>记录请求前的状态信息</li>
+     *     <li>添加额外的上下文信息到消息中</li>
+     * </ul>
+     * <p>
+     * 注意：在此阶段修改消息列表可能会影响 AI 模型的响应结果。
+     * </p>
+     *
+     * @param message 即将发送给 AI 模型的消息列表，包含用户输入和历史对话记录
+     *                消息类型可以是用户消息 (user)、系统消息 (system) 或助手消息 (assistant)
+     * @see Message 消息类定义
+     * @see tech.smartboot.feat.ai.chat.ChatModel#chatStream 流式聊天请求
+     */
     default void preCall(List<Message> message) {
     }
 
+    /**
+     * 在 AI 模型调用完成后执行的后处理回调方法
+     * <p>
+     * 此方法在 Agent 接收到 AI 模型的完整响应后被调用，可以用于：
+     * </p>
+     * <ul>
+     *     <li>处理和转换 AI 的输出内容</li>
+     *     <li>记录响应结果用于日志或审计</li>
+     *     <li>提取响应中的关键信息</li>
+     *     <li>对响应内容进行后处理（如格式化、过滤等）</li>
+     * </ul>
+     * <p>
+     * 此时消息已包含 AI 的完整回答，但还未返回给用户。
+     * </p>
+     *
+     * @param message AI 模型返回的响应消息，包含最终的回答内容
+     *                通常为助手角色 (assistant) 的消息
+     * @see Message 消息类定义
+     */
     default void postCall(Message message) {
     }
 
+    /**
+     * 在工具调用前执行的预处理回调方法
+     * <p>
+     * 当 Agent 决定调用某个工具（如文件操作、网络搜索等）时，
+     * 此方法会在实际执行工具之前被调用，可以用于：
+     * </p>
+     * <ul>
+     *     <li>验证工具调用的合法性和权限</li>
+     *     <li>记录工具调用的详细日志</li>
+     *     <li>修改或增强工具的输入参数</li>
+     *     <li>实施速率限制或其他控制策略</li>
+     * </ul>
+     * <p>
+     * 此阶段是监控和控制 Agent 行为的关键节点。
+     * </p>
+     *
+     * @param toolCaller 工具调用信息对象，包含：
+     *                   - thought: Agent 的思考过程
+     *                   - action: 要执行的工具名称
+     *                   - actionInput: 传递给工具的参数
+     * @see ToolCaller 工具调用者类定义
+     * @see tech.smartboot.feat.ai.agent.AgentTool 工具执行器接口
+     */
     default void preTool(ToolCaller toolCaller) {
     }
 
+    /**
+     * 在工具调用完成后执行的后处理回调方法
+     * <p>
+     * 此方法在工具执行完毕并获得观察结果后被调用，可以用于：
+     * </p>
+     * <ul>
+     *     <li>记录工具执行的结果和性能指标</li>
+     *     <li>处理工具执行过程中的异常情况</li>
+     *     <li>分析和统计工具使用情况</li>
+     *     <li>根据执行结果决定是否需要后续操作</li>
+     * </ul>
+     * <p>
+     * 此时 toolCaller 已包含工具的观察结果 (observation) 和可能的异常信息 (throwable)。
+     * </p>
+     *
+     * @param toolCaller 工具调用信息对象，此时已包含：
+     *                   - observation: 工具执行的观察结果或输出
+     *                   - throwable: 如果执行失败，包含相关的异常信息
+     * @see ToolCaller 工具调用者类定义
+     */
     default void postTool(ToolCaller toolCaller) {
     }
 
+    /**
+     * 在 Agent 进行推理思考时触发的回调方法
+     * <p>
+     * 某些 AI 模型（如 DeepSeek-R1 等具有思考能力的模型）会输出推理过程，
+     * 此方法会在接收到这些推理内容时被调用，可以用于：
+     * </p>
+     * <ul>
+     *     <li>实时展示 Agent 的思考过程</li>
+     *     <li>记录推理内容用于分析和调试</li>
+     *     <li>提取关键的推理步骤或决策点</li>
+     *     <li>实现思维链 (Chain of Thought) 的可视化</li>
+     * </ul>
+     * <p>
+     * 注意：并非所有模型都支持输出推理内容，这取决于模型的能力。
+     * </p>
+     *
+     * @param agentAction Agent 的推理思考内容字符串，通常包含：
+     *                    - 对当前问题的分析
+     *                    - 制定解决方案的思路
+     *                    - 选择特定工具的理由
+     * @see tech.smartboot.feat.ai.chat.entity.Message#getReasoningContent() 获取推理内容
+     */
     default void onReasoning(String agentAction) {
+    }
+
+    /**
+     * 在接收到流式响应内容时触发的回调方法
+     * <p>
+     * 当使用流式聊天 API 时，AI 模型会逐步返回响应内容，
+     * 每接收到一部分内容就会调用此方法，可以用于：
+     * </p>
+     * <ul>
+     *     <li>实现打字机效果的实时输出</li>
+     *     <li>逐步显示 AI 的回答内容</li>
+     *     <li>实时处理和分析响应内容</li>
+     *     <li>实现响应内容的即时翻译或其他处理</li>
+     * </ul>
+     * <p>
+     * 此方法可能被多次调用，每次传递一部分内容，
+     * 直到完整的响应全部传输完毕。
+     * </p>
+     *
+     * @param content 当前接收到的响应内容片段，通常是文本字符串
+     *                多次调用的内容拼接起来构成完整的响应
+     * @see tech.smartboot.feat.ai.chat.ChatModel#chatStream 流式聊天方法
+     * @see tech.smartboot.feat.ai.chat.entity.StreamResponseCallback 流式响应回调接口
+     */
+    default void onStreamResponse(String content) {
     }
 }

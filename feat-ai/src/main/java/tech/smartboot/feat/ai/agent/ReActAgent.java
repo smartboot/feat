@@ -141,6 +141,7 @@ public class ReActAgent extends FeatAgent {
                 if (cancel) {
                     throw new FeatException("canceled");
                 }
+                options.hook().onStreamResponse(content);
             }
 
             @Override
