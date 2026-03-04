@@ -516,6 +516,9 @@ public abstract class AbstractCloudService implements CloudService {
                 case '\r':
                     escapeChar = 'r';
                     break;
+                case '\t':
+                    escapeChar = 't';
+                    break;
                 case '\\':
                     escapeChar = '\\';
                     break;
