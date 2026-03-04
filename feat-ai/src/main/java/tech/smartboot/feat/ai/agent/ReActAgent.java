@@ -134,14 +134,58 @@ public class ReActAgent extends FeatAgent {
                 });
             }
 
+
+            // 解析流式响应，区分推理部分和结果部分
+            final StringBuilder stream = new StringBuilder();
+            final int PHASE_WAIT_REASONING = 0;
+            final int PHASE_REASONING = 1;
+            final int PHASE_WAIT_RESULT = 2;
+            final int PHASE_RESULT = 3;
+
+            // 记录当前阶段：0=等待Thought, 1=推理中, 2=结果中
+            int phase = PHASE_WAIT_REASONING;
+            int index = 0;
+
             @Override
             public void onStreamResponse(String content) {
                 System.out.print(content);
-                // 通过异常抛出，结束流
                 if (cancel) {
                     throw new FeatException("canceled");
                 }
-                options.hook().onStreamResponse(content);
+                stream.append(content);
+                // 处理推理部分
+                if (phase == PHASE_WAIT_REASONING) {
+                    int thoughtPos = stream.indexOf("Thought:");
+                    if (thoughtPos == -1) {
+                        return;
+                    }
+                    index = thoughtPos + 8;
+                    phase = PHASE_REASONING;
+                }
+                // 处理推理结果
+                if (phase == PHASE_REASONING) {
+                    int endPos = stream.indexOf("\n", index);
+                    if (endPos == -1) {
+                        options.hook().onAgentReasoning(stream.substring(index));
+                        index = stream.length();
+                        return;
+                    }
+                    options.hook().onModelReasoning(stream.substring(index, endPos));
+                    index = endPos + 1;
+                    phase = PHASE_WAIT_RESULT;
+                }
+                if (phase == PHASE_WAIT_RESULT) {
+                    int actionPos = stream.indexOf("\nAI:");
+                    if (actionPos == -1) {
+                        return;
+                    }
+                    phase = PHASE_RESULT;
+                    index = actionPos + 4;
+                }
+                if (phase == PHASE_RESULT) {
+                    options.hook().onStreamResponse(stream.substring(index));
+                    index = stream.length();
+                }
             }
 
             @Override
@@ -150,7 +194,7 @@ public class ReActAgent extends FeatAgent {
                 if (cancel) {
                     throw new FeatException("canceled");
                 }
-                options.hook().onReasoning(content);
+                options.hook().onModelReasoning(content);
             }
         });
     }

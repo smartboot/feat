@@ -162,7 +162,10 @@ public interface Hook {
      *                    - 选择特定工具的理由
      * @see tech.smartboot.feat.ai.chat.entity.Message#getReasoningContent() 获取推理内容
      */
-    default void onReasoning(String agentAction) {
+    default void onModelReasoning(String agentAction) {
+    }
+
+    default void onAgentReasoning(String agentAction) {
     }
 
     /**
