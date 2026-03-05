@@ -183,7 +183,7 @@ public class ReActAgent extends FeatAgent {
                     index = actionPos + 4;
                 }
                 if (phase == PHASE_RESULT) {
-                    options.hook().onStreamResponse(stream.substring(index));
+                    options.hook().onFinalAnswer(stream.substring(index));
                     index = stream.length();
                 }
             }

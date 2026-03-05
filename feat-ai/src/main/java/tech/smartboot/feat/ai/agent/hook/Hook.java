@@ -190,6 +190,6 @@ public interface Hook {
      * @see tech.smartboot.feat.ai.chat.ChatModel#chatStream 流式聊天方法
      * @see tech.smartboot.feat.ai.chat.entity.StreamResponseCallback 流式响应回调接口
      */
-    default void onStreamResponse(String content) {
+    default void onFinalAnswer(String content) {
     }
 }
