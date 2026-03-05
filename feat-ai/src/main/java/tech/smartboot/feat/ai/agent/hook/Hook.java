@@ -141,21 +141,18 @@ public interface Hook {
     }
 
     /**
-     * 在流式响应中处理不完整的推理内容时触发的回调方法
+     * 在流式响应中处理 Agent 限定的 Thought 内容时触发的回调方法（不完整片段）
      * <p>
-     * 此方法在 ReAct 模式的流式响应解析过程中，当推理内容尚未以换行符结束时被调用。
-     * 具体场景如下：
+     * 此方法在 ReAct 模式的流式响应解析过程中被调用。
+     * 当模型在主内容 (content) 中输出带有 Agent 提示词限定的 "Thought:" 内容时，
+     * 在遇到第一个换行符之前的推理内容会通过此方法回调，此时内容尚不完整。
      * </p>
-     * <ul>
-     *     <li>在 ReAct 模式中，当模型输出 "Thought:" 后，在遇到第一个换行符之前，</li>
-     *        持续累积的推理内容会通过此方法回调，此时内容尚不完整</li>
-     * </ul>
      * <p>
      * 与 {@link #onModelReasoning(String)} 的区别：
      * </p>
      * <ul>
-     *     <li>onAgentReasoning: 当推理内容流中未找到换行符（内容不完整）时被调用</li>
-     *     <li>onModelReasoning: 当推理内容流中找到换行符（内容完整）时被调用</li>
+     *     <li>onAgentReasoning: 处理来自 content 中的 Thought 内容（受 Agent 提示词控制）</li>
+     *     <li>onModelReasoning: 处理来自 reasoning_content 字段的内容（模型自身的推理能力输出）</li>
      * </ul>
      * <p>
      * 典型使用场景：
@@ -166,38 +163,33 @@ public interface Hook {
      *     <li>监控推理过程的中间状态</li>
      * </ul>
      *
-     * @param agentAction 当前接收到的推理内容片段（尚未以换行符结束）
+     * @param agentAction 当前接收到的 Thought 内容片段（尚未以换行符结束）
      *                    可能是一个不完整的句子或思考过程
-     * @see #onModelReasoning(String) 完整推理内容回调
-     * @see tech.smartboot.feat.ai.chat.entity.Message#getReasoningContent() 获取推理内容
+     * @see #onModelReasoning(String) 模型推理内容回调
      */
     default void onAgentReasoning(String agentAction) {
     }
 
     /**
-     * 在获得完整推理内容后触发的回调方法
+     * 在接收到模型推理内容时触发的回调方法
      * <p>
-     * 此方法在两种场景被调用：
+     * 此方法在推理模型返回完整的推理内容时被调用。
+     * 具体来说，当模型在响应中的 reasoning_content 字段输出推理内容时，
+     * 该内容会通过此方法回调。
      * </p>
-     * <ol>
-     *     <li>ReAct 模式流式响应解析中：当推理内容以换行符结束时（即完整的 Thought 内容）</li>
-     *     <li>推理模型 API 中：当使用支持推理能力的模型（如 DeepSeek-R1 等）时，
-     *         模型在推理内容字段 (reasoning_content) 中输出的内容会通过此方法回调</li>
-     * </ol>
      * <p>
      * 典型使用场景：
      * </p>
      * <ul>
-     *     <li>记录完整的推理内容用于分析和调试</li>
+     *     <li>记录模型推理内容用于分析和调试</li>
      *     <li>提取关键的推理步骤或决策点</li>
      *     <li>实现思维链 (Chain of Thought) 的可视化</li>
-     *     <li>展示 Agent 对当前问题的分析和解决方案思路</li>
+     *     <li>展示模型的思考过程和推理能力</li>
      * </ul>
      *
-     * @param agentAction 推理内容字符串，来源不同含义不同：
-     *                    - ReAct 模式：完整的 Thought 内容（以换行符结束）
-     *                    - 推理模型：模型输出的推理/思考过程
-     * @see #onAgentReasoning(String) 不完整推理内容回调
+     * @param agentAction 模型输出的推理内容，通常是模型自身的思考过程
+     *                    来自响应中的 reasoning_content 字段
+     * @see #onAgentReasoning(String) Agent 限定的 Thought 内容回调
      * @see tech.smartboot.feat.ai.chat.entity.Message#getReasoningContent() 获取推理内容
      */
     default void onModelReasoning(String agentAction) {
