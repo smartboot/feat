@@ -163,11 +163,11 @@ public interface Hook {
      *     <li>监控推理过程的中间状态</li>
      * </ul>
      *
-     * @param agentAction 当前接收到的 Thought 内容片段（尚未以换行符结束）
+     * @param reasoning 当前接收到的 Thought 内容片段（尚未以换行符结束）
      *                    可能是一个不完整的句子或思考过程
      * @see #onModelReasoning(String) 模型推理内容回调
      */
-    default void onAgentReasoning(String agentAction) {
+    default void onAgentReasoning(String reasoning) {
     }
 
     /**
@@ -187,12 +187,12 @@ public interface Hook {
      *     <li>展示模型的思考过程和推理能力</li>
      * </ul>
      *
-     * @param agentAction 模型输出的推理内容，通常是模型自身的思考过程
+     * @param reasoning 模型输出的推理内容，通常是模型自身的思考过程
      *                    来自响应中的 reasoning_content 字段
      * @see #onAgentReasoning(String) Agent 限定的 Thought 内容回调
      * @see tech.smartboot.feat.ai.chat.entity.Message#getReasoningContent() 获取推理内容
      */
-    default void onModelReasoning(String agentAction) {
+    default void onModelReasoning(String reasoning) {
     }
 
     /**
