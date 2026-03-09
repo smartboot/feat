@@ -1,0 +1,144 @@
+---
+const features = [
+  {
+    letter: 'F',
+    title: 'ree',
+    color: '#fa541c',
+    description: '基于AGPL-3.0开源协议，保障技术透明与社区共建。合规授权企业可自由商用，共建开放生态。'
+  },
+  {
+    letter: 'E',
+    title: 'lastic',
+    color: '#722ed1',
+    description: '柔性伸缩架构，轻松应对海量并发请求，支持十万级、百万级 QPS，满足高并发场景需求。'
+  },
+  {
+    letter: 'A',
+    title: 'dvanced',
+    color: '#52c41a',
+    description: '全面支持 HTTP/1.0、1.1、2.0、WebSocket、SSE、TLS/SSL 等现代 Web 技术，内置路由、文件上传、WAF 等丰富功能。'
+  },
+  {
+    letter: 'T',
+    title: 'iny',
+    color: '#eb2f96',
+    description: '微内核架构，基于自研smart-socket通信引擎。冷启动耗时低于 100ms，极致性能与资源效率的完美平衡。'
+  }
+];
+---
+
+<section class="features-section">
+  <div class="section-header">
+    <h2 class="section-title">产品特色</h2>
+    <p class="section-subtitle">F.R.E.A.T - 五大核心优势</p>
+  </div>
+  
+  <div class="features-grid">
+    {features.map((feature) => (
+      <div class="feature-card">
+        <div class="feature-icon" style={`--icon-bg: ${feature.color};`}>
+          <span>{feature.letter}</span>
+        </div>
+        <div class="feature-content">
+          <h3>
+            <span class="feature-highlight" style={`--highlight-color: ${feature.color};`}>
+              {feature.letter}
+            </span>
+            {feature.title}
+          </h3>
+          <p>{feature.description}</p>
+        </div>
+      </div>
+    ))}
+  </div>
+</section>
+
+<style>
+  .features-section {
+    padding: 5rem 1rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .section-header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .section-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+  }
+
+  .section-subtitle {
+    color: #64748b;
+    font-size: 1.1rem;
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .feature-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+    transition: all 0.3s ease;
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+    border: 1px solid #e2e8f0;
+  }
+
+  .feature-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+  }
+
+  .feature-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    background: var(--icon-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.75rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .feature-content h3 {
+    font-size: 1.25rem;
+    margin-bottom: 0.75rem;
+    color: #1e293b;
+  }
+
+  .feature-highlight {
+    color: var(--highlight-color);
+    font-weight: 700;
+  }
+
+  .feature-content p {
+    color: #64748b;
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  @media (max-width: 768px) {
+    .section-title {
+      font-size: 2rem;
+    }
+
+    .feature-card {
+      flex-direction: column;
+      text-align: center;
+    }
+  }
+</style>

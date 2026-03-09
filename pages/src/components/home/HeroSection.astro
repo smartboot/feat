@@ -1,0 +1,531 @@
+---
+const codeLines = [
+  '@Controller',
+  'public class Application {',
+  '    @RequestMapping("/")',
+  '    public String helloWorld() {',
+  '        return "hello Feat Cloud";',
+  '    }',
+  '',
+  '    public static void main(String[] args) {',
+  '        Feat.cloudServer().listen();',
+  '    }',
+  '}'
+];
+---
+
+<section class="hero-section">
+  <div class="hero-bg">
+    <div class="gradient-orb orb-1"></div>
+    <div class="gradient-orb orb-2"></div>
+    <div class="gradient-orb orb-3"></div>
+    <div class="grid-pattern"></div>
+  </div>
+  
+  <div class="hero-container">
+    <!-- Left: Content -->
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span class="badge-icon">⚡</span>
+        <span>高性能 · 低资源 · 现代化</span>
+      </div>
+      
+      <h1 class="hero-title">
+        <span class="title-gradient">Feat</span>
+        <span class="title-sub">Java Web 服务开发框架</span>
+      </h1>
+      
+      <p class="hero-tagline">
+        运行性能超 <strong>Vert.x</strong>，开发体验近似 <strong>SpringBoot</strong>
+        <br />
+        以 <span class="highlight">AI 原生</span> 和 <span class="highlight">云原生</span> 双引擎驱动
+      </p>
+      
+      <div class="hero-actions">
+        <a href="./guides/about/" class="btn btn-primary">
+          <span>Feat 启程</span>
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </a>
+        <a href="https://github.com/smartboot/feat" target="_blank" class="btn btn-secondary">
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+          </svg>
+          <span>GitHub</span>
+        </a>
+      </div>
+    </div>
+    
+    <!-- Right: Code Editor with Typewriter Effect -->
+    <div class="hero-code">
+      <div class="code-window">
+        <div class="code-header">
+          <div class="code-dots">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <span class="code-title">Application.java</span>
+        </div>
+        <div class="code-content">
+          <pre><code id="typewriter-code"></code><span class="cursor">|</span></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script define:vars={{ codeLines }}>
+  const codeElement = document.getElementById('typewriter-code');
+  const cursor = document.querySelector('.cursor');
+  let lineIndex = 0;
+  let charIndex = 0;
+  let currentLine = '';
+  
+  function getIndentLevel(line) {
+    let indent = 0;
+    for (let char of line) {
+      if (char === ' ') indent++;
+      else break;
+    }
+    return Math.floor(indent / 4);
+  }
+  
+  function typeNextChar() {
+    if (lineIndex >= codeLines.length) {
+      // Reset after delay
+      setTimeout(() => {
+        lineIndex = 0;
+        charIndex = 0;
+        currentLine = '';
+        codeElement.innerHTML = '';
+        typeNextChar();
+      }, 3000);
+      return;
+    }
+    
+    const line = codeLines[lineIndex];
+    
+    if (charIndex === 0 && lineIndex > 0) {
+      codeElement.innerHTML += '\n';
+    }
+    
+    if (charIndex < line.length) {
+      const char = line[charIndex];
+      currentLine += char;
+      
+      // Update display with syntax highlighting
+      updateDisplay();
+      
+      charIndex++;
+      const delay = char === ' ' ? 30 : Math.random() * 50 + 30;
+      setTimeout(typeNextChar, delay);
+    } else {
+      lineIndex++;
+      charIndex = 0;
+      currentLine = '';
+      setTimeout(typeNextChar, 100);
+    }
+  }
+  
+  function updateDisplay() {
+    let html = '';
+    const lines = codeElement.innerHTML.split('\n');
+    
+    codeLines.slice(0, lineIndex).forEach((line, idx) => {
+      html += highlightLine(line) + '\n';
+    });
+    
+    if (lineIndex < codeLines.length) {
+      html += highlightLine(currentLine);
+    }
+    
+    codeElement.innerHTML = html;
+  }
+  
+  function highlightLine(line) {
+    // Simple syntax highlighting
+    let highlighted = line
+      .replace(/(@\w+)/g, '<span class="token-annotation">$1</span>')
+      .replace(/(public|class|static|void|return)/g, '<span class="token-keyword">$1</span>')
+      .replace(/(String)/g, '<span class="token-type">$1</span>')
+      .replace(/(".*?")/g, '<span class="token-string">$1</span>')
+      .replace(/(\w+)\s*\(/g, '<span class="token-function">$1</span>(')
+      .replace(/(Feat)/g, '<span class="token-class">$1</span>');
+    
+    // Preserve indentation
+    const indentLevel = getIndentLevel(line);
+    if (indentLevel > 0) {
+      highlighted = '<span class="token-indent">' + '    '.repeat(indentLevel) + '</span>' + highlighted.trimStart();
+    }
+    
+    return highlighted;
+  }
+  
+  // Start typing animation when page loads
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', typeNextChar);
+  } else {
+    typeNextChar();
+  }
+</script>
+
+<style>
+  .hero-section {
+    position: relative;
+    min-height: 90vh;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    padding: 4rem 1rem;
+  }
+
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+    z-index: 0;
+  }
+
+  .gradient-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.4;
+    animation: float 20s infinite ease-in-out;
+  }
+
+  .orb-1 {
+    width: 600px;
+    height: 600px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    top: -200px;
+    right: -100px;
+    animation-delay: 0s;
+  }
+
+  .orb-2 {
+    width: 500px;
+    height: 500px;
+    background: linear-gradient(135deg, #06b6d4, #3b82f6);
+    bottom: -150px;
+    left: -100px;
+    animation-delay: -5s;
+  }
+
+  .orb-3 {
+    width: 400px;
+    height: 400px;
+    background: linear-gradient(135deg, #f59e0b, #ef4444);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    animation-delay: -10s;
+  }
+
+  .grid-pattern {
+    position: absolute;
+    inset: 0;
+    background-image: 
+      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%);
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(30px, -30px) scale(1.05); }
+    66% { transform: translate(-20px, 20px) scale(0.95); }
+  }
+
+  .hero-container {
+    position: relative;
+    z-index: 1;
+    max-width: 1400px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+    padding: 0 2rem;
+  }
+
+  .hero-content {
+    text-align: left;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 50px;
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #e2e8f0;
+    font-size: 0.9rem;
+    margin-bottom: 2rem;
+    animation: fadeInUp 0.8s ease-out;
+  }
+
+  .badge-icon {
+    font-size: 1.2rem;
+  }
+
+  .hero-title {
+    margin: 0 0 1.5rem;
+    animation: fadeInUp 0.8s ease-out 0.1s both;
+  }
+
+  .title-gradient {
+    display: block;
+    font-size: 5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+
+  .title-sub {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: #94a3b8;
+    margin-top: 0.5rem;
+  }
+
+  .hero-tagline {
+    font-size: 1.25rem;
+    color: #cbd5e1;
+    line-height: 1.8;
+    margin-bottom: 2.5rem;
+    animation: fadeInUp 0.8s ease-out 0.2s both;
+  }
+
+  .hero-tagline strong {
+    color: #fff;
+    font-weight: 600;
+  }
+
+  .highlight {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 600;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 1rem;
+    animation: fadeInUp 0.8s ease-out 0.3s both;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.875rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: none;
+    font-size: 1rem;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: white;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(99, 102, 241, 0.5);
+  }
+
+  .btn-secondary {
+    background: rgba(255,255,255,0.1);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+
+  .btn-secondary:hover {
+    background: rgba(255,255,255,0.2);
+  }
+
+  .btn-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  /* Code Window Styles */
+  .hero-code {
+    animation: fadeInUp 0.8s ease-out 0.4s both;
+  }
+
+  .code-window {
+    background: #1e1e1e;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 
+      0 25px 50px -12px rgba(0,0,0,0.5),
+      0 0 0 1px rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .code-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    background: #252526;
+    border-bottom: 1px solid #333;
+  }
+
+  .code-dots {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .code-dots span {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+  }
+
+  .code-dots span:nth-child(1) { background: #ff5f56; }
+  .code-dots span:nth-child(2) { background: #ffbd2e; }
+  .code-dots span:nth-child(3) { background: #27c93f; }
+
+  .code-title {
+    color: #858585;
+    font-size: 0.85rem;
+    font-family: monospace;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .code-content {
+    padding: 1.5rem;
+    background: #1e1e1e;
+    min-height: 280px;
+  }
+
+  .code-content pre {
+    margin: 0;
+    font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: #d4d4d4;
+  }
+
+  .code-content code {
+    white-space: pre;
+  }
+
+  .cursor {
+    display: inline-block;
+    color: #6366f1;
+    font-weight: bold;
+    animation: blink 1s infinite;
+    margin-left: 2px;
+  }
+
+  @keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+  }
+
+  /* Syntax Highlighting */
+  .token-keyword {
+    color: #569cd6;
+  }
+
+  .token-type {
+    color: #4ec9b0;
+  }
+
+  .token-string {
+    color: #ce9178;
+  }
+
+  .token-annotation {
+    color: #9cdcfe;
+  }
+
+  .token-function {
+    color: #dcdcaa;
+  }
+
+  .token-class {
+    color: #4ec9b0;
+  }
+
+  .token-indent {
+    color: transparent;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (max-width: 1024px) {
+    .hero-container {
+      grid-template-columns: 1fr;
+      gap: 3rem;
+    }
+
+    .hero-content {
+      text-align: center;
+    }
+
+    .hero-actions {
+      justify-content: center;
+    }
+
+    .hero-code {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .title-gradient {
+      font-size: 3.5rem;
+    }
+
+    .title-sub {
+      font-size: 1.1rem;
+    }
+
+    .hero-tagline {
+      font-size: 1rem;
+    }
+
+    .code-content {
+      min-height: 240px;
+      padding: 1rem;
+    }
+
+    .code-content pre {
+      font-size: 0.8rem;
+    }
+  }
+</style>

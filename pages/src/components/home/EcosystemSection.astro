@@ -1,0 +1,108 @@
+---
+const projects = [
+  {
+    name: 'smart-socket',
+    description: 'Java AIO 实现的支持百万级长连接通信框架',
+    href: 'https://smartboot.tech/smart-socket/'
+  },
+  {
+    name: 'smart-servlet',
+    description: '提供一个自主可控的轻量级 Tomcat/Undertow 可替代版本，基于 Feat 重新定义下一代 Servlet 容器!',
+    href: 'https://smartboot.tech/smart-servlet/'
+  },
+  {
+    name: 'smart-mqtt',
+    description: '一款面向物联网领域的 MQTT 消息中间件产品',
+    href: 'https://smartboot.tech/smart-mqtt/enterprise.html'
+  },
+  {
+    name: 'Redisun',
+    description: '基于 smart-socket 开发的轻量级 Redis 客户端，专为 Java 平台设计，支持异步非阻塞 I/O 操作',
+    href: 'https://smartboot.tech/redisun/'
+  }
+];
+---
+
+<section class="ecosystem-section">
+  <div class="section-header">
+    <h2 class="section-title">生态项目</h2>
+    <p class="section-subtitle">smartboot 技术生态</p>
+  </div>
+  
+  <div class="ecosystem-grid">
+    {projects.map((project) => (
+      <a href={project.href} target="_blank" class="ecosystem-card">
+        <h3>{project.name}</h3>
+        <p>{project.description}</p>
+      </a>
+    ))}
+  </div>
+</section>
+
+<style>
+  .ecosystem-section {
+    padding: 5rem 1rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .section-header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .section-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+  }
+
+  .section-subtitle {
+    color: #64748b;
+    font-size: 1.1rem;
+  }
+
+  .ecosystem-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+  }
+
+  .ecosystem-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .ecosystem-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+    border-color: #6366f1;
+  }
+
+  .ecosystem-card h3 {
+    font-size: 1.25rem;
+    color: #1e293b;
+    margin-bottom: 0.75rem;
+  }
+
+  .ecosystem-card p {
+    color: #64748b;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  @media (max-width: 768px) {
+    .section-title {
+      font-size: 2rem;
+    }
+  }
+</style>

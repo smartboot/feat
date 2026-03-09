@@ -1,0 +1,68 @@
+---
+---
+
+<section class="stats-section">
+  <div class="stats-grid">
+    <div class="stat-item">
+      <div class="stat-number"><100ms</div>
+      <div class="stat-label">冷启动耗时</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number">100万+</div>
+      <div class="stat-label">并发连接</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number">10万+</div>
+      <div class="stat-label">QPS 支持</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number">AGPL-3.0</div>
+      <div class="stat-label">开源协议</div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .stats-section {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    padding: 4rem 1rem;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  .stat-item {
+    text-align: center;
+    padding: 1.5rem;
+  }
+
+  .stat-number {
+    font-size: 2.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.5rem;
+  }
+
+  .stat-label {
+    color: #64748b;
+    font-size: 1rem;
+  }
+
+  @media (max-width: 768px) {
+    .stats-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .stat-number {
+      font-size: 1.75rem;
+    }
+  }
+</style>

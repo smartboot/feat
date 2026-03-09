@@ -1,0 +1,113 @@
+---
+---
+
+<section class="code-section">
+  <div class="code-container">
+    <div class="code-header">
+      <div class="code-dots">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+      <span class="code-title">Application.java</span>
+    </div>
+    <pre class="code-block"><code>@Controller
+public class Application &#123;
+    @RequestMapping("/")
+    public String helloWorld() &#123;
+        return "hello Feat Cloud";
+    &#125;
+
+    public static void main(String[] args) &#123;
+        Feat.cloudServer().listen();
+    &#125;
+&#125;</code></pre>
+  </div>
+  
+  <div class="performance-section">
+    <h2 class="section-title">卓越的性能表现</h2>
+    <img src="../assets/performance.svg" alt="Performance" class="performance-chart" />
+  </div>
+</section>
+
+<style>
+  .code-section {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    padding: 5rem 1rem;
+  }
+
+  .code-container {
+    max-width: 700px;
+    margin: 0 auto 4rem;
+    background: #1e293b;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+  }
+
+  .code-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    background: #0f172a;
+    border-bottom: 1px solid #334155;
+  }
+
+  .code-dots {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .code-dots span {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+  }
+
+  .code-dots span:nth-child(1) { background: #ef4444; }
+  .code-dots span:nth-child(2) { background: #f59e0b; }
+  .code-dots span:nth-child(3) { background: #22c55e; }
+
+  .code-title {
+    color: #94a3b8;
+    font-size: 0.875rem;
+    font-family: monospace;
+  }
+
+  .code-block {
+    margin: 0;
+    padding: 1.5rem;
+    background: transparent;
+    overflow-x: auto;
+  }
+
+  .code-block code {
+    font-family: 'Fira Code', 'Consolas', monospace;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #e2e8f0;
+  }
+
+  .performance-section {
+    text-align: center;
+  }
+
+  .section-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 2rem;
+  }
+
+  .performance-chart {
+    max-width: 100%;
+    height: auto;
+  }
+
+  @media (max-width: 768px) {
+    .section-title {
+      font-size: 2rem;
+    }
+  }
+</style>

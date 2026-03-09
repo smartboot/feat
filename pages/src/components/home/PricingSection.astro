@@ -1,0 +1,275 @@
+---
+import PaymentQrCode from '../PaymentQrCode.astro';
+
+const plans = [
+  {
+    name: '企业版',
+    price: '5000',
+    currency: '元',
+    period: '永久授权',
+    featured: true,
+    badge: '推荐',
+    features: ['全部功能模块', '专业技术支持', '5个文档访问权限', '优先体验新功能', '企业级安全保障'],
+    action: { type: 'payment', label: '立即购买' }
+  },
+  {
+    name: '社区版',
+    price: '免费',
+    period: '面向个人开源项目',
+    featured: false,
+    features: ['完整开源代码', '全部功能模块', '社区技术支持'],
+    action: { type: 'link', label: '申请入口', href: 'https://gitee.com/smartboot/feat/issues/new?template=support_plan_gitee.yml' }
+  },
+  {
+    name: '教育/创业支持',
+    price: '免费申请',
+    period: '针对特殊群体的优惠计划',
+    featured: false,
+    features: ['高校教育助力计划', '创业企业扶持计划', 'Gitee个人开源项目支持', '优先获得学习资源'],
+    action: { 
+      type: 'dual', 
+      links: [
+        { label: '创业企业申请', href: 'https://gitee.com/smartboot/feat/issues/new?template=support_plan.yml' },
+        { label: '教育机构申请', href: 'https://gitee.com/smartboot/feat/issues/new?template=support_plan_education.yml' }
+      ]
+    }
+  }
+];
+---
+
+<section class="pricing-section">
+  <div class="section-header">
+    <h2 class="section-title">定价方案</h2>
+    <p class="section-subtitle">选择适合您的方案</p>
+  </div>
+  
+  <div class="pricing-grid">
+    {plans.map((plan) => (
+      <div class={`pricing-card ${plan.featured ? 'featured' : ''}`}>
+        {plan.featured && <div class="pricing-badge">{plan.badge}</div>}
+        <div class="pricing-header">
+          <h3>{plan.name}</h3>
+          <div class="pricing-price">
+            <span class={`price ${plan.price === '免费' || plan.price === '免费申请' ? 'free' : ''}`}>{plan.price}</span>
+            {plan.currency && <span class="currency">{plan.currency}</span>}
+          </div>
+          <p class="pricing-period">{plan.period}</p>
+        </div>
+        <ul class="pricing-features">
+          {plan.features.map((feature) => (
+            <li><span class="check">✓</span> {feature}</li>
+          ))}
+        </ul>
+        <div class={`pricing-action ${plan.action.type === 'dual' ? 'dual' : ''}`}>
+          {plan.action.type === 'payment' && <PaymentQrCode buttonLabel={plan.action.label} />}
+          {plan.action.type === 'link' && (
+            <a href={plan.action.href} target="_blank" class="btn btn-outline">{plan.action.label}</a>
+          )}
+          {plan.action.type === 'dual' && plan.action.links?.map((link) => (
+            <a href={link.href} target="_blank" class="btn btn-small">{link.label}</a>
+          ))}
+        </div>
+      </div>
+    ))}
+  </div>
+</section>
+
+<style>
+  .pricing-section {
+    padding: 5rem 1rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .section-header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .section-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+  }
+
+  .section-subtitle {
+    color: #64748b;
+    font-size: 1.1rem;
+  }
+
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+  }
+
+  .pricing-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    border: 2px solid #e2e8f0;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s ease;
+  }
+
+  .pricing-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+  }
+
+  .pricing-card.featured {
+    border-color: #fbbf24;
+    box-shadow: 0 4px 20px rgba(251, 191, 36, 0.2);
+  }
+
+  .pricing-badge {
+    position: absolute;
+    top: -12px;
+    right: 20px;
+    background: linear-gradient(135deg, #f59e0b, #fbbf24);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  .pricing-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .pricing-header h3 {
+    font-size: 1.5rem;
+    color: #1e293b;
+    margin-bottom: 1rem;
+  }
+
+  .pricing-price {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 0.25rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .price {
+    font-size: 3rem;
+    font-weight: 800;
+    color: #ea580c;
+  }
+
+  .price.free {
+    font-size: 2rem;
+    color: #3b82f6;
+  }
+
+  .currency {
+    font-size: 1.25rem;
+    color: #64748b;
+  }
+
+  .pricing-period {
+    color: #64748b;
+    font-size: 0.9rem;
+  }
+
+  .pricing-features {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.5rem;
+    flex-grow: 1;
+  }
+
+  .pricing-features li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+    color: #374151;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  .pricing-features li:last-child {
+    border-bottom: none;
+  }
+
+  .check {
+    width: 20px;
+    height: 20px;
+    background: #22c55e;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  .pricing-action {
+    text-align: center;
+  }
+
+  .pricing-action.dual {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.875rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: none;
+    font-size: 1rem;
+  }
+
+  .btn-outline {
+    background: transparent;
+    color: #3b82f6;
+    border: 2px solid #3b82f6;
+  }
+
+  .btn-outline:hover {
+    background: #3b82f6;
+    color: white;
+  }
+
+  .btn-small {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    background: #27ae60;
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+  }
+
+  .btn-small:hover {
+    background: #229954;
+  }
+
+  @media (max-width: 768px) {
+    .section-title {
+      font-size: 2rem;
+    }
+
+    .pricing-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

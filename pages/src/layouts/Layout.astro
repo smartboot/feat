@@ -1,0 +1,63 @@
+---
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Feat是一款基于Java语言开发的轻量级、高性能Web服务器" />
+  <meta name="keywords" content="smart-http,feat,web,java web,web服务器,java服务器,高性能web服务器" />
+  <title>{title}</title>
+  <link rel="icon" type="image/svg+xml" href="/feat/favicon.svg" />
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?ee8630857921d8030d612dbd7d751b55";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+</head>
+<body>
+  <slot />
+</body>
+</html>
+
+<style is:global>
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    line-height: 1.6;
+    color: #1e293b;
+  }
+  
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+  
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
+  
+  ul, ol {
+    list-style: none;
+  }
+</style>
