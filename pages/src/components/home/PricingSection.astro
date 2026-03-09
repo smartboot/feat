@@ -349,50 +349,109 @@ const plans = [
     }
     
     .pricing-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .pricing-card.featured {
-      grid-column: span 2;
-      max-width: 400px;
-      margin: 0 auto;
-    }
-  }
-
-  @media (max-width: 768px) {
-    .pricing-section {
-      padding: 3rem 1rem;
-    }
-    
-    .section-title {
-      font-size: 1.375rem;
-    }
-
-    .pricing-grid {
       grid-template-columns: 1fr;
+      gap: 1.5rem;
+      max-width: 480px;
+      margin: 0 auto;
     }
     
     .pricing-card.featured {
       grid-column: span 1;
       max-width: none;
+      order: -1;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .pricing-section {
+      padding: 2.5rem 1rem;
     }
     
-    .price {
-      font-size: 2.25rem;
+    .section-header {
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+    }
+    
+    .section-title {
+      font-size: 1.5rem;
+    }
+
+    .pricing-grid {
+      gap: 1rem;
     }
     
     .pricing-card {
-      padding: 1.5rem;
+      padding: 1.25rem;
+      border-radius: 12px;
+    }
+    
+    .pricing-header {
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+    }
+    
+    .pricing-header h3 {
+      font-size: 1rem;
+    }
+    
+    .price {
+      font-size: 2rem;
+    }
+    
+    .pricing-features li {
+      padding: 0.5rem 0;
+      font-size: 0.8125rem;
+    }
+    
+    .btn {
+      padding: 0.625rem 1rem;
+      font-size: 0.875rem;
     }
   }
   
   @media (max-width: 480px) {
+    .pricing-section {
+      padding: 2rem 0.75rem;
+    }
+    
+    .section-desc {
+      font-size: 0.875rem;
+    }
+    
+    .pricing-card {
+      padding: 1rem;
+    }
+    
+    .pricing-header h3 {
+      font-size: 0.9375rem;
+    }
+    
+    .price {
+      font-size: 1.75rem;
+    }
+    
+    .currency {
+      font-size: 0.875rem;
+    }
+    
+    .pricing-period {
+      font-size: 0.75rem;
+    }
+    
+    .check {
+      width: 16px;
+      height: 16px;
+    }
+    
     .pricing-action.dual {
       flex-direction: column;
+      gap: 0.5rem;
     }
     
     .btn-small {
       min-width: 100%;
+      padding: 0.625rem;
+      font-size: 0.8125rem;
     }
   }
 </style>
