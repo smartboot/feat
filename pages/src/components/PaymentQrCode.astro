@@ -14,11 +14,11 @@ const modalId = 'payment-modal-' + Math.random().toString(36).substr(2, 9);
   <div class="modal-overlay" data-modal-overlay={modalId} style="display: none;">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>开通企业授权</h3>
+        <h3>企业赞助支持</h3>
         <button type="button" class="close-btn" data-close-modal>×</button>
       </div>
       <div class="modal-body">
-        <p class="modal-subtitle">扫码支付 5000 元，添加微信好友获取授权码</p>
+        <p class="modal-subtitle">赞助 5000 元支持 Feat 开源项目，获取企业级服务与商业授权</p>
         
         <div class="qr-container">
           <div class="qr-item-pay">
@@ -42,15 +42,15 @@ const modalId = 'payment-modal-' + Math.random().toString(36).substr(2, 9);
               <img src="https://smartboot.tech/img/qrcode/personal_wx.png" alt="加微信好友" loading="lazy" />
             </div>
             <div class="friend-info">
-              <span class="qr-tag friend">加好友领授权</span>
-              <span class="note-text">备注：Feat企业授权</span>
+              <span class="qr-tag friend">加好友获取服务</span>
+              <span class="note-text">备注：Feat企业赞助</span>
             </div>
           </div>
         </div>
         
         <div class="modal-footer">
-          <span class="price-tag">¥5000 永久授权</span>
-          <span class="step-hint">① 扫码支付 → ② 加微信好友 → ③ 获取授权码</span>
+          <span class="price-tag">¥5000 企业赞助</span>
+          <span class="step-hint">① 扫码赞助 → ② 加微信好友 → ③ 获取商业授权与服务支持</span>
         </div>
       </div>
     </div>
