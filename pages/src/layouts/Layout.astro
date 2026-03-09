@@ -1,9 +1,18 @@
 ---
 interface Props {
   title: string;
+  description?: string;
+  keywords?: string;
+  image?: string;
 }
 
-const { title } = Astro.props;
+const { title, description, keywords, image } = Astro.props;
+
+// 默认 SEO 元数据
+const defaultDescription = 'Feat 是一款基于 Java 语言开发的轻量级、高性能 Web 服务器，以 AI 原生和云原生双引擎驱动，运行性能超 Vert.x，开发体验近似 SpringBoot';
+const defaultKeywords = 'smart-http,feat,web,java web,web 服务器，java 服务器，高性能 web 服务器，AI 原生，云原生，开源框架';
+const siteUrl = 'https://smartboot.tech/feat';
+const imageUrl = image || '/feat/og-image.png';
 ---
 
 <!DOCTYPE html>
@@ -11,10 +20,40 @@ const { title } = Astro.props;
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Feat是一款基于Java语言开发的轻量级、高性能Web服务器" />
-  <meta name="keywords" content="smart-http,feat,web,java web,web服务器,java服务器,高性能web服务器" />
+  <meta name="color-scheme" content="dark light" />
+  
+  <!-- SEO Meta Tags -->
   <title>{title}</title>
+  <meta name="description" content={description || defaultDescription} />
+  <meta name="keywords" content={keywords || defaultKeywords} />
+  <meta name="author" content="SmartBoot Team" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href={siteUrl} />
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content={siteUrl} />
+  <meta property="og:title" content={title} />
+  <meta property="og:description" content={description || defaultDescription} />
+  <meta property="og:image" content={imageUrl} />
+  
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:url" content={siteUrl} />
+  <meta name="twitter:title" content={title} />
+  <meta name="twitter:description" content={description || defaultDescription} />
+  <meta name="twitter:image" content={imageUrl} />
+  
+  <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="/feat/favicon.svg" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/feat/apple-touch-icon.png" />
+  <link rel="manifest" href="/feat/manifest.json" />
+  
+  <!-- Preload Critical Assets -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  
+  <!-- 百度统计 -->
   <script>
     var _hmt = _hmt || [];
     (function() {
@@ -24,40 +63,224 @@ const { title } = Astro.props;
       s.parentNode.insertBefore(hm, s);
     })();
   </script>
+  
+  <!-- 性能优化：减少重排重绘 -->
+  <style>
+    /* 关键 CSS 内联，避免阻塞渲染 */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    html {
+      scroll-behavior: smooth;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans SC', sans-serif;
+      line-height: 1.6;
+      color: #334155;
+      background-color: #ffffff;
+      overflow-x: hidden;
+    }
+    
+    /* 图片优化 */
+    img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+    
+    /* 链接样式 */
+    a {
+      text-decoration: none;
+      color: inherit;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    /* 列表样式 */
+    ul, ol {
+      list-style: none;
+    }
+    
+    /* 按钮优化 */
+    button {
+      cursor: pointer;
+      border: none;
+      outline: none;
+      background: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    /* 加载状态占位符 */
+    .skeleton {
+      background: linear-gradient(
+        90deg,
+        rgba(255,255,255,0.03) 25%,
+        rgba(255,255,255,0.08) 50%,
+        rgba(255,255,255,0.03) 75%
+      );
+      background-size: 200% 100%;
+      animation: skeleton-loading 1.5s infinite;
+    }
+    
+    @keyframes skeleton-loading {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+  </style>
 </head>
 <body>
+  <!-- 跳过链接，提高可访问性 -->
+  <a href="#main-content" class="skip-link">跳到主要内容</a>
+  
   <slot />
+  
+  <!-- 滚动动画脚本 -->
+  <script>
+    // 滚动动画观察器
+    const observerOptions = {
+      root: null,
+      rootMargin: '0px 0px -100px 0px',
+      threshold: 0.1
+    };
+
+    const animateOnScroll = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('animate-in');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, observerOptions);
+
+    // 观察需要动画的元素
+    document.querySelectorAll('[data-animate]').forEach((el) => {
+      el.classList.add('animate-ready');
+      animateOnScroll.observe(el);
+    });
+
+    // 平滑滚动到锚点
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        const href = this.getAttribute('href');
+        if (href === '#') return;
+        
+        const target = document.querySelector(href);
+        if (target) {
+          e.preventDefault();
+          target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      });
+    });
+
+    // 性能优化：延迟加载非关键资源
+    if ('loading' in HTMLImageElement.prototype) {
+      const images = document.querySelectorAll('img[loading="lazy"]');
+      images.forEach(img => {
+        img.src = img.dataset.src || img.src;
+      });
+    }
+  </script>
 </body>
 </html>
 
 <style is:global>
-  * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
+  /* ===== 全局动画样式 ===== */
+  
+  /* 滚动动画基础 */
+  [data-animate] {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
   }
   
-  html {
-    scroll-behavior: smooth;
+  [data-animate].animate-ready {
+    /* 准备动画 */
   }
   
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    line-height: 1.6;
-    color: #1e293b;
+  [data-animate].animate-in {
+    opacity: 1;
+    transform: translateY(0);
   }
   
-  img {
-    max-width: 100%;
-    height: auto;
+  /* 不同方向的动画 */
+  [data-animate="fade-left"] {
+    transform: translateX(-30px);
   }
   
-  a {
-    text-decoration: none;
-    color: inherit;
+  [data-animate="fade-left"].animate-in {
+    transform: translateX(0);
   }
   
-  ul, ol {
-    list-style: none;
+  [data-animate="fade-right"] {
+    transform: translateX(30px);
+  }
+  
+  [data-animate="fade-right"].animate-in {
+    transform: translateX(0);
+  }
+  
+  [data-animate="scale-up"] {
+    transform: scale(0.9);
+  }
+  
+  [data-animate="scale-up"].animate-in {
+    transform: scale(1);
+  }
+  
+  /* 跳过链接 */
+  .skip-link {
+    position: absolute;
+    top: -100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #6366f1;
+    color: #fff;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    z-index: 9999;
+    transition: top 0.3s ease;
+  }
+  
+  .skip-link:focus {
+    top: 1rem;
+  }
+  
+  /* 自定义滚动条 */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.5);
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border-radius: 5px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+  }
+  
+  /* 文本选择样式 */
+  ::selection {
+    background: rgba(99, 102, 241, 0.3);
+    color: #fff;
+  }
+  
+  /* 焦点样式 */
+  :focus-visible {
+    outline: 2px solid #6366f1;
+    outline-offset: 2px;
   }
 </style>

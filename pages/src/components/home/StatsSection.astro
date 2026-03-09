@@ -1,68 +1,287 @@
 ---
+import performanceChart from '../../assets/performance.svg';
+
+const highlights = [
+  { 
+    label: '性能对比', 
+    value: '超越 Vert.x',
+    desc: 'TechEmpower 基准测试验证'
+  },
+  { 
+    label: '开发体验', 
+    value: '类 SpringBoot',
+    desc: '注解驱动，零配置上手'
+  },
+  { 
+    label: '生态支持', 
+    value: 'AI + 云原生',
+    desc: '内置 MCP、函数调用等 AI 能力'
+  }
+];
 ---
 
-<section class="stats-section">
-  <div class="stats-grid">
-    <div class="stat-item">
-      <div class="stat-number"><100ms</div>
-      <div class="stat-label">冷启动耗时</div>
+<section class="stats-section" id="performance">
+  <div class="stats-container">
+    <div class="section-header">
+      <div class="section-label">性能数据</div>
+      <h2 class="section-title">卓越的性能表现</h2>
+      <p class="section-subtitle">Benchmark 实测数据，用结果说话</p>
     </div>
-    <div class="stat-item">
-      <div class="stat-number">100万+</div>
-      <div class="stat-label">并发连接</div>
+    
+    <div class="highlights-row">
+      {highlights.map((item) => (
+        <div class="highlight-item">
+          <span class="highlight-label">{item.label}</span>
+          <span class="highlight-value">{item.value}</span>
+          <span class="highlight-desc">{item.desc}</span>
+        </div>
+      ))}
     </div>
-    <div class="stat-item">
-      <div class="stat-number">10万+</div>
-      <div class="stat-label">QPS 支持</div>
-    </div>
-    <div class="stat-item">
-      <div class="stat-number">AGPL-3.0</div>
-      <div class="stat-label">开源协议</div>
+    
+    <div class="performance-card">
+      <div class="performance-header">
+        <h3>TechEmpower Framework Benchmarks</h3>
+        <span class="performance-badge">JSON 序列化测试</span>
+      </div>
+      <div class="performance-chart-wrapper">
+        <img src={performanceChart.src} alt="Performance Benchmark" class="performance-chart" />
+      </div>
+      <div class="performance-footer">
+        <div class="perf-stats">
+          <div class="perf-stat">
+            <span class="perf-num">7.9M</span>
+            <span class="perf-label">响应/秒</span>
+          </div>
+          <div class="perf-stat">
+            <span class="perf-num">2.3ms</span>
+            <span class="perf-label">平均延迟</span>
+          </div>
+          <div class="perf-stat">
+            <span class="perf-num">99.9%</span>
+            <span class="perf-label">成功率</span>
+          </div>
+        </div>
+        <a href="https://www.techempower.com/benchmarks/" target="_blank" rel="noopener noreferrer" class="benchmark-link">
+          <span>查看完整 Benchmark</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M7 17L17 7M17 7H7M17 7V17"/>
+          </svg>
+        </a>
+      </div>
     </div>
   </div>
 </section>
 
 <style>
   .stats-section {
-    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-    padding: 4rem 1rem;
+    background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+    padding: 6rem 2rem;
+    position: relative;
   }
 
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 2rem;
-    max-width: 1000px;
+  .stats-container {
+    max-width: 1200px;
     margin: 0 auto;
   }
 
-  .stat-item {
+  .section-header {
     text-align: center;
+    margin-bottom: 3rem;
+  }
+  
+  .section-label {
+    display: inline-block;
+    padding: 0.375rem 1rem;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    color: #059669;
+    font-weight: 500;
+    margin-bottom: 1rem;
+  }
+
+  .section-title {
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 0.75rem;
+    letter-spacing: -0.02em;
+  }
+
+  .section-subtitle {
+    color: #64748b;
+    font-size: 1.125rem;
+  }
+  
+  .highlights-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+  }
+  
+  .highlight-item {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    transition: all 0.3s ease;
+  }
+  
+  .highlight-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.08);
+    border-color: #cbd5e1;
+  }
+  
+  .highlight-label {
+    display: block;
+    font-size: 0.875rem;
+    color: #64748b;
+    margin-bottom: 0.5rem;
+  }
+  
+  .highlight-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 0.25rem;
+  }
+  
+  .highlight-desc {
+    display: block;
+    font-size: 0.875rem;
+    color: #94a3b8;
+  }
+
+  .performance-card {
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+    box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.05);
+  }
+  
+  .performance-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  
+  .performance-header h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+  }
+  
+  .performance-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.75rem;
+    background: #eff6ff;
+    color: #2563eb;
+    border-radius: 9999px;
+    font-weight: 500;
+  }
+  
+  .performance-chart-wrapper {
     padding: 1.5rem;
   }
 
-  .stat-number {
-    font-size: 2.5rem;
-    font-weight: 800;
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 0.5rem;
+  .performance-chart {
+    width: 100%;
+    height: auto;
+    display: block;
   }
-
-  .stat-label {
+  
+  .performance-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+    background: #f8fafc;
+    border-top: 1px solid #f1f5f9;
+  }
+  
+  .perf-stats {
+    display: flex;
+    gap: 2rem;
+  }
+  
+  .perf-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+  
+  .perf-num {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #1e293b;
+  }
+  
+  .perf-label {
+    font-size: 0.75rem;
     color: #64748b;
-    font-size: 1rem;
+  }
+  
+  .benchmark-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1rem;
+    background: #1e293b;
+    color: #ffffff;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+  
+  .benchmark-link:hover {
+    background: #334155;
+    transform: translateY(-1px);
+  }
+  
+  .benchmark-link svg {
+    width: 16px;
+    height: 16px;
   }
 
   @media (max-width: 768px) {
-    .stats-grid {
-      grid-template-columns: repeat(2, 1fr);
+    .stats-section {
+      padding: 4rem 1rem;
     }
-
-    .stat-number {
-      font-size: 1.75rem;
+    
+    .section-title {
+      font-size: 1.875rem;
+    }
+    
+    .highlights-row {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    
+    .performance-footer {
+      flex-direction: column;
+      gap: 1rem;
+      align-items: flex-start;
+    }
+    
+    .perf-stats {
+      width: 100%;
+      justify-content: space-between;
+    }
+    
+    .benchmark-link {
+      width: 100%;
+      justify-content: center;
     }
   }
 </style>

@@ -3,106 +3,243 @@ const projects = [
   {
     name: 'smart-socket',
     description: 'Java AIO 实现的支持百万级长连接通信框架',
-    href: 'https://smartboot.tech/smart-socket/'
+    href: 'https://smartboot.tech/smart-socket/',
+    tag: '核心引擎'
   },
   {
     name: 'smart-servlet',
     description: '提供一个自主可控的轻量级 Tomcat/Undertow 可替代版本，基于 Feat 重新定义下一代 Servlet 容器!',
-    href: 'https://smartboot.tech/smart-servlet/'
+    href: 'https://smartboot.tech/smart-servlet/',
+    tag: 'Web 容器'
   },
   {
     name: 'smart-mqtt',
     description: '一款面向物联网领域的 MQTT 消息中间件产品',
-    href: 'https://smartboot.tech/smart-mqtt/enterprise.html'
+    href: 'https://smartboot.tech/smart-mqtt/',
+    tag: '物联网'
   },
   {
     name: 'Redisun',
     description: '基于 smart-socket 开发的轻量级 Redis 客户端，专为 Java 平台设计，支持异步非阻塞 I/O 操作',
-    href: 'https://smartboot.tech/redisun/'
+    href: 'https://smartboot.tech/redisun/',
+    tag: '数据存储'
   }
 ];
 ---
 
-<section class="ecosystem-section">
-  <div class="section-header">
-    <h2 class="section-title">生态项目</h2>
-    <p class="section-subtitle">smartboot 技术生态</p>
-  </div>
-  
-  <div class="ecosystem-grid">
-    {projects.map((project) => (
-      <a href={project.href} target="_blank" class="ecosystem-card">
-        <h3>{project.name}</h3>
-        <p>{project.description}</p>
-      </a>
-    ))}
+<section class="ecosystem-section" id="ecosystem">
+  <div class="ecosystem-container">
+    <div class="section-header">
+      <div class="section-label">技术生态</div>
+      <h2 class="section-title">生态项目</h2>
+      <p class="section-subtitle">smartboot 技术生态，构建完整解决方案</p>
+    </div>
+    
+    <div class="ecosystem-grid">
+      {projects.map((project, index) => (
+        <a href={project.href} target="_blank" rel="noopener noreferrer" class="ecosystem-card" data-index={index}>
+          <div class="card-header">
+            <span class="project-tag">{project.tag}</span>
+            <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M7 17L17 7M17 7H7M17 7V17"/>
+            </svg>
+          </div>
+          <h3>{project.name}</h3>
+          <p>{project.description}</p>
+          <div class="card-footer">
+            <span class="explore-link">了解更多</span>
+          </div>
+        </a>
+      ))}
+    </div>
   </div>
 </section>
 
 <style>
   .ecosystem-section {
-    padding: 5rem 1rem;
+    padding: 6rem 2rem;
+    background: #ffffff;
+    position: relative;
+  }
+  
+  .ecosystem-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
+  }
+
+  .ecosystem-container {
     max-width: 1200px;
     margin: 0 auto;
   }
 
   .section-header {
     text-align: center;
-    margin-bottom: 3rem;
+    margin-bottom: 4rem;
+  }
+  
+  .section-label {
+    display: inline-block;
+    padding: 0.375rem 1rem;
+    background: rgba(139, 92, 246, 0.1);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    color: #7c3aed;
+    font-weight: 500;
+    margin-bottom: 1rem;
   }
 
   .section-title {
-    font-size: 2.5rem;
+    font-size: 2.25rem;
     font-weight: 700;
     color: #1e293b;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
+    letter-spacing: -0.02em;
   }
 
   .section-subtitle {
     color: #64748b;
-    font-size: 1.1rem;
+    font-size: 1.125rem;
   }
 
   .ecosystem-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
     gap: 1.5rem;
-    margin-top: 2rem;
   }
 
   .ecosystem-card {
-    background: white;
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    background: #f8fafc;
+    border-radius: 16px;
+    padding: 2rem;
     border: 1px solid #e2e8f0;
-    transition: all 0.3s ease;
     text-decoration: none;
     color: inherit;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .ecosystem-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #8b5cf6, #3b82f6);
+    transform: scaleX(0);
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .ecosystem-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.12);
-    border-color: #6366f1;
+    box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.1);
+    border-color: #cbd5e1;
+    background: #ffffff;
+  }
+  
+  .ecosystem-card:hover::before {
+    transform: scaleX(1);
+  }
+  
+  .ecosystem-card:hover .arrow-icon {
+    transform: translate(4px, -4px);
+    opacity: 1;
+  }
+  
+  .ecosystem-card:hover .explore-link {
+    color: #7c3aed;
+  }
+  
+  .ecosystem-card:hover .explore-link::after {
+    transform: translateX(4px);
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+  
+  .project-tag {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.75rem;
+    background: rgba(139, 92, 246, 0.1);
+    color: #7c3aed;
+    border-radius: 9999px;
+    font-weight: 500;
+  }
+
+  .arrow-icon {
+    width: 20px;
+    height: 20px;
+    color: #94a3b8;
+    opacity: 0.5;
+    transition: all 0.3s ease;
   }
 
   .ecosystem-card h3 {
-    font-size: 1.25rem;
+    font-size: 1.375rem;
+    font-weight: 600;
     color: #1e293b;
-    margin-bottom: 0.75rem;
+    margin: 0 0 0.75rem;
+    transition: color 0.3s ease;
+  }
+  
+  .ecosystem-card:hover h3 {
+    color: #7c3aed;
   }
 
   .ecosystem-card p {
     color: #64748b;
     font-size: 0.95rem;
-    line-height: 1.5;
-    margin: 0;
+    line-height: 1.7;
+    margin: 0 0 1.5rem;
+  }
+  
+  .card-footer {
+    display: flex;
+    align-items: center;
+  }
+  
+  .explore-link {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: color 0.3s ease;
+  }
+  
+  .explore-link::after {
+    content: '→';
+    transition: transform 0.3s ease;
   }
 
   @media (max-width: 768px) {
+    .ecosystem-section {
+      padding: 4rem 1rem;
+    }
+    
     .section-title {
-      font-size: 2rem;
+      font-size: 1.875rem;
+    }
+    
+    .ecosystem-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .ecosystem-card {
+      padding: 1.5rem;
     }
   }
 </style>

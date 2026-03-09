@@ -3,13 +3,46 @@ import FeatUsers from '../FeatUsers.astro';
 ---
 
 <section class="users-section">
-  <FeatUsers />
+  <div class="users-container">
+    <div class="section-header">
+      <h2 class="section-title">用户案例</h2>
+      <p class="section-subtitle">深受开发者信赖</p>
+    </div>
+    <FeatUsers />
+  </div>
 </section>
 
 <style>
   .users-section {
-    padding: 3rem 1rem;
+    padding: 5rem 2rem;
+    background: #ffffff;
+  }
+
+  .users-container {
     max-width: 1200px;
     margin: 0 auto;
+  }
+
+  .section-header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .section-title {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+  }
+
+  .section-subtitle {
+    color: #64748b;
+    font-size: 1rem;
+  }
+
+  @media (max-width: 768px) {
+    .section-title {
+      font-size: 1.75rem;
+    }
   }
 </style>

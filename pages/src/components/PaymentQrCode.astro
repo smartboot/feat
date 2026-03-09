@@ -1,76 +1,472 @@
-PaymentQrCode.astro
 ---
-const { buttonLabel = "永久授权", buttonStyle = "display: inline-block; background-color: #e67e22; color: white; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.8rem; border: none; cursor: pointer;" } = Astro.props;
+const { buttonLabel = "永久授权" } = Astro.props;
+const modalId = 'payment-modal-' + Math.random().toString(36).substr(2, 9);
 ---
 
-<div>
-  <button id="paymentQrCodeBtn" type="button" style={buttonStyle}>
+<div class="payment-wrapper">
+  <button type="button" class="btn btn-primary payment-btn" data-payment-trigger data-modal-id={modalId}>
     {buttonLabel}
   </button>
-  
-  <div id="qrCodeModal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 1000; justify-content: center; align-items: center;">
-    <div class="modal-content" style="background: white; border-radius: 12px; padding: 1.5rem; width: 90%; max-width: 800px; position: relative; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);">
-      <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid #eee;">
-        <h3 style="margin: 0; color: #2c3e50;">开通授权</h3>
-        <button id="closeModalBtn" type="button" style="background: none; border: none; font-size: 1.8rem; cursor: pointer; color: #7f8c8d; padding: 0; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">×</button>
-      </div>
-      <div class="payment-steps" style="display: flex; flex-direction: column; align-items: center; margin-bottom: 1.5rem;">
+</div>
 
+<!-- 使用 Fragment 将弹框内容渲染到 body 级别 -->
+<template data-payment-modal-template={modalId}>
+  <div class="modal-overlay" data-modal-overlay={modalId} style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>开通企业授权</h3>
+        <button type="button" class="close-btn" data-close-modal>×</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-subtitle">扫码支付 5000 元，添加微信好友获取授权码</p>
         
-        <div class="payment-content" style="display: flex; gap: 1.5rem; width: 100%; flex-wrap: wrap;">
-          <div class="payment-section" style="flex: 1; min-width: 300px; max-width: 450px; display: flex; flex-direction: column;">
-            <h4 style="text-align: center; margin: 0 0 0.25rem; color: #2c3e50; font-size: 1.1rem; font-weight: 600;">捐赠二维码</h4>
-            <div class="payment-options" style="display: flex; gap: 1.5rem; flex-wrap: wrap; justify-content: center; align-items: flex-end; flex: 1;">
-              <div class="payment-option" style="display: flex; flex-direction: column; align-items: center;">
-                <img src="https://smartboot.tech/wx_pay.png" alt="微信支付二维码" style="width: 180px; height: 190px; border: 1px solid #ddd; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" />
-              </div>
-              <div class="payment-option" style="display: flex; flex-direction: column; align-items: center;">
-                <img src="https://smartboot.tech/ali_pay.png" alt="支付宝二维码" style="width: 180px; height: 190px; border: 1px solid #ddd; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" />
-              </div>
+        <div class="qr-container">
+          <div class="qr-item-pay">
+            <div class="qr-img-box">
+              <img src="https://smartboot.tech/wx_pay.png" alt="微信支付" loading="lazy" />
             </div>
+            <span class="qr-tag wx">微信支付</span>
           </div>
           
-          <div class="divider" style="width: 1px; background: #ddd; height: 190px; align-self: flex-end;"></div>
+          <div class="qr-item-pay">
+            <div class="qr-img-box">
+              <img src="https://smartboot.tech/ali_pay.png" alt="支付宝" loading="lazy" />
+            </div>
+            <span class="qr-tag ali">支付宝</span>
+          </div>
           
-          <div class="wechat-section" style="flex: 1; min-width: 200px; max-width: 300px; display: flex; flex-direction: column;">
-            <h4 style="text-align: center; margin: 0 0 0.25rem; color: #2c3e50; font-size: 1.1rem; font-weight: 600;">添加好友</h4>
-            <div class="wechat-option" style="display: flex; flex-direction: column; align-items: center; margin-top: auto;">
-              <p style="margin: 0.25rem 0 0.5rem; font-size: 0.9rem; color: #7f8c8d; line-height: 1.4;"></p>
-              <img src="https://smartboot.tech/img/qrcode/personal_wx.png" alt="微信二维码" style="width: 180px; height: 190px; border: 1px solid #ddd; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" />
+          <div class="qr-divider"></div>
+          
+          <div class="qr-item-friend">
+            <div class="qr-img-box large">
+              <img src="https://smartboot.tech/img/qrcode/personal_wx.png" alt="加微信好友" loading="lazy" />
+            </div>
+            <div class="friend-info">
+              <span class="qr-tag friend">加好友领授权</span>
+              <span class="note-text">备注：Feat企业授权</span>
             </div>
           </div>
         </div>
+        
+        <div class="modal-footer">
+          <span class="price-tag">¥5000 永久授权</span>
+          <span class="step-hint">① 扫码支付 → ② 加微信好友 → ③ 获取授权码</span>
+        </div>
       </div>
-      <p class="payment-note" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #eee; font-size: 0.9rem; color: #7f8c8d; text-align: center; line-height: 1.5;">完成捐赠后及时添加好友（备注：<b>Feat企业授权</b>）获取授权码</p>
     </div>
   </div>
-</div>
+</template>
 
-<script>
-  const openModal = () => {
-    document.getElementById('qrCodeModal').style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-  };
-
-  const closeModal = () => {
-    document.getElementById('qrCodeModal').style.display = 'none';
-    document.body.style.overflow = 'auto';
-  };
-
-  document.getElementById('paymentQrCodeBtn').addEventListener('click', openModal);
-  document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+<style>
+  .payment-wrapper {
+    width: 100%;
+  }
   
-  // 点击遮罩层关闭弹窗
-  document.getElementById('qrCodeModal').addEventListener('click', (e) => {
-    if (e.target === e.currentTarget) {
-      closeModal();
-    }
-  });
+  .payment-btn {
+    width: 100%;
+    padding: 0.875rem 1.5rem;
+    border-radius: 10px;
+    font-weight: 500;
+    font-size: 0.95rem;
+    cursor: pointer;
+    border: none;
+    background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
+    color: white;
+    box-shadow: 0 4px 14px rgba(234, 88, 12, 0.25);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
   
-  // 按ESC键关闭弹窗
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      closeModal();
+  .payment-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(234, 88, 12, 0.35);
+  }
+
+  /* 使用 :global 确保样式应用到 body 级别的弹框 */
+  :global(.modal-overlay) {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 10000;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+
+  :global(.modal-overlay.active) {
+    display: flex;
+  }
+
+  :global(.modal-content) {
+    background: white;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 700px;
+    max-height: 90vh;
+    overflow: hidden;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    animation: modalSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  @keyframes modalSlideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-20px) scale(0.95);
     }
-  });
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  :global(.modal-header) {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #e2e8f0;
+    background: #f8fafc;
+  }
+
+  :global(.modal-header h3) {
+    margin: 0;
+    color: #1e293b;
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+
+  :global(.close-btn) {
+    background: none;
+    border: none;
+    font-size: 1.75rem;
+    cursor: pointer;
+    color: #64748b;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    line-height: 1;
+    padding: 0;
+  }
+
+  :global(.close-btn:hover) {
+    background: #e2e8f0;
+    color: #1e293b;
+  }
+
+  :global(.modal-body) {
+    padding: 1.25rem;
+    overflow-y: auto;
+    max-height: calc(90vh - 60px);
+  }
+
+  /* 副标题 */
+  :global(.modal-subtitle) {
+    text-align: center;
+    color: #64748b;
+    font-size: 0.9375rem;
+    margin: 0 0 1.25rem;
+  }
+
+  /* 紧凑二维码容器 */
+  :global(.qr-container) {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+  }
+
+  /* 支付二维码项 */
+  :global(.qr-item-pay) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  /* 好友二维码项 */
+  :global(.qr-item-friend) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  /* 二维码图片容器 */
+  :global(.qr-img-box) {
+    width: 160px;
+    height: 160px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: white;
+    border: 1px solid #e2e8f0;
+  }
+
+  :global(.qr-img-box.large) {
+    width: 180px;
+    height: 180px;
+  }
+
+  :global(.qr-img-box img) {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  /* 分隔线 */
+  :global(.qr-divider) {
+    width: 1px;
+    height: 110px;
+    background: linear-gradient(180deg, transparent, #e2e8f0, transparent);
+    align-self: center;
+    margin: 0 0.25rem;
+  }
+
+  /* 标签样式 */
+  :global(.qr-tag) {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    padding: 0.25rem 0.625rem;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+
+  :global(.qr-tag.wx) {
+    background: #22c55e;
+    color: white;
+  }
+
+  :global(.qr-tag.ali) {
+    background: #3b82f6;
+    color: white;
+  }
+
+  :global(.qr-tag.friend) {
+    background: #f97316;
+    color: white;
+  }
+
+  /* 好友信息 */
+  :global(.friend-info) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.375rem;
+  }
+
+  :global(.note-text) {
+    font-size: 0.75rem;
+    color: #64748b;
+  }
+
+  /* 底部信息 */
+  :global(.modal-footer) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e2e8f0;
+  }
+
+  :global(.price-tag) {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #ea580c;
+  }
+
+  :global(.step-hint) {
+    font-size: 0.8125rem;
+    color: #64748b;
+  }
+
+  /* 平板响应式 */
+  @media (max-width: 640px) {
+    :global(.modal-content) {
+      max-width: 95vw;
+      margin: 1rem;
+    }
+
+    :global(.modal-body) {
+      padding: 1rem;
+    }
+
+    :global(.qr-container) {
+      gap: 0.75rem;
+    }
+
+    :global(.qr-img-box) {
+      width: 130px;
+      height: 130px;
+    }
+
+    :global(.qr-img-box.large) {
+      width: 150px;
+      height: 150px;
+    }
+
+    :global(.qr-divider) {
+      height: 120px;
+      margin: 0 0.25rem;
+    }
+
+    :global(.qr-tag) {
+      font-size: 0.75rem;
+      padding: 0.25rem 0.625rem;
+    }
+
+    :global(.note-text) {
+      font-size: 0.75rem;
+    }
+  }
+
+  /* 手机响应式 */
+  @media (max-width: 400px) {
+    :global(.modal-content) {
+      margin: 0.5rem;
+      border-radius: 12px;
+    }
+
+    :global(.modal-subtitle) {
+      font-size: 0.875rem;
+      margin-bottom: 1rem;
+    }
+
+    :global(.qr-container) {
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    :global(.qr-divider) {
+      display: none;
+    }
+
+    :global(.qr-img-box) {
+      width: 120px;
+      height: 120px;
+    }
+
+    :global(.qr-img-box.large) {
+      width: 140px;
+      height: 140px;
+    }
+
+    :global(.price-tag) {
+      font-size: 1.125rem;
+    }
+
+    :global(.step-hint) {
+      font-size: 0.75rem;
+      text-align: center;
+    }
+  }
+</style>
+
+<script is:inline>
+  (function() {
+    // 确保只在页面加载完成后执行一次
+    if (window.__paymentModalInitialized) return;
+    window.__paymentModalInitialized = true;
+    
+    // 将所有弹框模板的 HTML 移动到 body 末尾
+    const initModals = function() {
+      document.querySelectorAll('[data-payment-modal-template]').forEach(function(template) {
+        const modalId = template.getAttribute('data-payment-modal-template');
+        const modalHtml = template.innerHTML;
+        
+        // 创建容器并插入到 body 末尾
+        var container = document.createElement('div');
+        container.innerHTML = modalHtml;
+        container.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:0;overflow:visible;z-index:10000;';
+        document.body.appendChild(container);
+        
+        // 存储引用
+        var overlay = container.querySelector('[data-modal-overlay]');
+        if (overlay) {
+          overlay.removeAttribute('data-modal-overlay');
+          overlay.setAttribute('data-modal-overlay-id', modalId);
+        }
+        
+        // 移除模板
+        template.remove();
+      });
+      
+      // 绑定事件
+      bindEvents();
+    };
+    
+    const bindEvents = function() {
+      // 触发按钮事件
+      document.querySelectorAll('[data-payment-trigger]').forEach(function(trigger) {
+        trigger.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          var modalId = trigger.getAttribute('data-modal-id');
+          var overlay = document.querySelector('[data-modal-overlay-id="' + modalId + '"]');
+          
+          if (overlay) {
+            overlay.style.display = 'flex';
+            void overlay.offsetHeight; // 强制重绘
+            overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            var scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+            if (scrollbarWidth > 0) {
+              document.body.style.paddingRight = scrollbarWidth + 'px';
+            }
+          }
+        });
+      });
+      
+      // 关闭按钮和遮罩点击事件（使用事件委托）
+      document.addEventListener('click', function(e) {
+        var closeBtn = e.target.closest('[data-close-modal]');
+        var overlay = e.target.closest('.modal-overlay.active');
+        
+        if (closeBtn) {
+          e.preventDefault();
+          e.stopPropagation();
+          var activeOverlay = closeBtn.closest('.modal-overlay');
+          if (activeOverlay) {
+            closeModal(activeOverlay);
+          }
+        } else if (overlay && e.target === overlay) {
+          closeModal(overlay);
+        }
+      });
+      
+      // ESC 键关闭
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          var activeOverlay = document.querySelector('.modal-overlay.active');
+          if (activeOverlay) {
+            closeModal(activeOverlay);
+          }
+        }
+      });
+    };
+    
+    var closeModal = function(overlay) {
+      overlay.classList.remove('active');
+      setTimeout(function() {
+        if (!overlay.classList.contains('active')) {
+          overlay.style.display = 'none';
+        }
+      }, 300);
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    };
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initModals);
+    } else {
+      initModals();
+    }
+  })();
 </script>

@@ -1,46 +1,58 @@
 ---
-const codeLines = [
-  '@Controller',
-  'public class Application {',
-  '    @RequestMapping("/")',
-  '    public String helloWorld() {',
-  '        return "hello Feat Cloud";',
-  '    }',
-  '',
-  '    public static void main(String[] args) {',
-  '        Feat.cloudServer().listen();',
-  '    }',
-  '}'
+import TerminalEditor from './TerminalEditor.astro';
+
+const javaCode = `<span class="keyword">package</span> <span class="class">com.example</span>;
+
+<span class="keyword">import</span> <span class="class">tech.smartboot.feat.cloud.annotation.Controller</span>;
+<span class="keyword">import</span> <span class="class">tech.smartboot.feat.cloud.annotation.RequestMapping</span>;
+<span class="keyword">import</span> <span class="class">tech.smartboot.feat.Feat</span>;
+
+<span class="comment">// 一个简单的 Feat Cloud 应用示例</span>
+<span class="annotation">@Controller</span>
+<span class="keyword">public</span> <span class="keyword">class</span> <span class="class">Application</span> {
+
+    <span class="annotation">@RequestMapping</span>(<span class="string">"/"</span>)
+    <span class="keyword">public</span> <span class="type">String</span> <span class="function">helloWorld</span>() {
+        <span class="keyword">return</span> <span class="string">"hello Feat Cloud"</span>;
+    }
+
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="function">main</span>(<span class="type">String</span>[] args) {
+        <span class="class">Feat</span>.<span class="function">cloudServer</span>().<span class="function">listen</span>();
+    }
+}`;
+
+const codeFiles = [
+  {
+    name: 'Application.java',
+    icon: 'java' as const,
+    content: javaCode,
+    lineCount: javaCode.split('\n').length,
+  },
 ];
 ---
 
 <section class="hero-section">
-  <div class="hero-bg">
+  <div class="hero-background">
     <div class="gradient-orb orb-1"></div>
     <div class="gradient-orb orb-2"></div>
-    <div class="gradient-orb orb-3"></div>
-    <div class="grid-pattern"></div>
   </div>
-  
   <div class="hero-container">
-    <!-- Left: Content -->
     <div class="hero-content">
       <div class="hero-badge">
-        <span class="badge-icon">⚡</span>
-        <span>高性能 · 低资源 · 现代化</span>
+        <span class="badge-dot"></span>
+        <span>v1.5.1 已发布</span>
       </div>
-      
       <h1 class="hero-title">
-        <span class="title-gradient">Feat</span>
+        <span class="title-highlight">Feat</span>
         <span class="title-sub">Java Web 服务开发框架</span>
       </h1>
-      
+
       <p class="hero-tagline">
-        运行性能超 <strong>Vert.x</strong>，开发体验近似 <strong>SpringBoot</strong>
-        <br />
-        以 <span class="highlight">AI 原生</span> 和 <span class="highlight">云原生</span> 双引擎驱动
+        运行性能超 <span class="highlight-text">Vert.x</span>，开发体验近似 <span class="highlight-text">SpringBoot</span>
+        <span class="tagline-divider"></span>
+        <span class="tagline-secondary">AI 原生 · 云原生 双引擎驱动</span>
       </p>
-      
+
       <div class="hero-actions">
         <a href="./guides/about/" class="btn btn-primary">
           <span>Feat 启程</span>
@@ -48,7 +60,7 @@ const codeLines = [
             <path d="M5 12h14M12 5l7 7-7 7"/>
           </svg>
         </a>
-        <a href="https://github.com/smartboot/feat" target="_blank" class="btn btn-secondary">
+        <a href="https://github.com/smartboot/feat" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
           <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
           </svg>
@@ -56,8 +68,7 @@ const codeLines = [
         </a>
       </div>
     </div>
-    
-    <!-- Right: Code Editor with Typewriter Effect -->
+
     <div class="hero-code">
       <div class="code-window">
         <div class="code-header">
@@ -66,174 +77,65 @@ const codeLines = [
             <span></span>
             <span></span>
           </div>
-          <span class="code-title">Application.java</span>
+          <span class="code-filename">Application.java</span>
         </div>
         <div class="code-content">
-          <pre><code id="typewriter-code"></code><span class="cursor">|</span></pre>
+          <TerminalEditor files={codeFiles} defaultFile={0} />
         </div>
       </div>
     </div>
   </div>
+  
+  <div class="scroll-hint">
+    <span class="scroll-text">向下滚动探索</span>
+    <div class="scroll-line"></div>
+  </div>
 </section>
-
-<script define:vars={{ codeLines }}>
-  const codeElement = document.getElementById('typewriter-code');
-  const cursor = document.querySelector('.cursor');
-  let lineIndex = 0;
-  let charIndex = 0;
-  let currentLine = '';
-  
-  function getIndentLevel(line) {
-    let indent = 0;
-    for (let char of line) {
-      if (char === ' ') indent++;
-      else break;
-    }
-    return Math.floor(indent / 4);
-  }
-  
-  function typeNextChar() {
-    if (lineIndex >= codeLines.length) {
-      // Reset after delay
-      setTimeout(() => {
-        lineIndex = 0;
-        charIndex = 0;
-        currentLine = '';
-        codeElement.innerHTML = '';
-        typeNextChar();
-      }, 3000);
-      return;
-    }
-    
-    const line = codeLines[lineIndex];
-    
-    if (charIndex === 0 && lineIndex > 0) {
-      codeElement.innerHTML += '\n';
-    }
-    
-    if (charIndex < line.length) {
-      const char = line[charIndex];
-      currentLine += char;
-      
-      // Update display with syntax highlighting
-      updateDisplay();
-      
-      charIndex++;
-      const delay = char === ' ' ? 30 : Math.random() * 50 + 30;
-      setTimeout(typeNextChar, delay);
-    } else {
-      lineIndex++;
-      charIndex = 0;
-      currentLine = '';
-      setTimeout(typeNextChar, 100);
-    }
-  }
-  
-  function updateDisplay() {
-    let html = '';
-    const lines = codeElement.innerHTML.split('\n');
-    
-    codeLines.slice(0, lineIndex).forEach((line, idx) => {
-      html += highlightLine(line) + '\n';
-    });
-    
-    if (lineIndex < codeLines.length) {
-      html += highlightLine(currentLine);
-    }
-    
-    codeElement.innerHTML = html;
-  }
-  
-  function highlightLine(line) {
-    // Simple syntax highlighting
-    let highlighted = line
-      .replace(/(@\w+)/g, '<span class="token-annotation">$1</span>')
-      .replace(/(public|class|static|void|return)/g, '<span class="token-keyword">$1</span>')
-      .replace(/(String)/g, '<span class="token-type">$1</span>')
-      .replace(/(".*?")/g, '<span class="token-string">$1</span>')
-      .replace(/(\w+)\s*\(/g, '<span class="token-function">$1</span>(')
-      .replace(/(Feat)/g, '<span class="token-class">$1</span>');
-    
-    // Preserve indentation
-    const indentLevel = getIndentLevel(line);
-    if (indentLevel > 0) {
-      highlighted = '<span class="token-indent">' + '    '.repeat(indentLevel) + '</span>' + highlighted.trimStart();
-    }
-    
-    return highlighted;
-  }
-  
-  // Start typing animation when page loads
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', typeNextChar);
-  } else {
-    typeNextChar();
-  }
-</script>
 
 <style>
   .hero-section {
-    position: relative;
-    min-height: 90vh;
+    min-height: auto;
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    justify-content: flex-start;
+    padding: 3rem 2rem 3rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    position: relative;
     overflow: hidden;
-    padding: 4rem 1rem;
   }
-
-  .hero-bg {
+  
+  .hero-background {
     position: absolute;
     inset: 0;
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
-    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
   }
-
+  
   .gradient-orb {
     position: absolute;
     border-radius: 50%;
     filter: blur(80px);
     opacity: 0.4;
-    animation: float 20s infinite ease-in-out;
   }
-
+  
   .orb-1 {
     width: 600px;
     height: 600px;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
     top: -200px;
     right: -100px;
-    animation-delay: 0s;
+    animation: float 20s ease-in-out infinite;
   }
-
+  
   .orb-2 {
-    width: 500px;
-    height: 500px;
-    background: linear-gradient(135deg, #06b6d4, #3b82f6);
-    bottom: -150px;
-    left: -100px;
-    animation-delay: -5s;
-  }
-
-  .orb-3 {
     width: 400px;
     height: 400px;
-    background: linear-gradient(135deg, #f59e0b, #ef4444);
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    animation-delay: -10s;
+    background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
+    bottom: -100px;
+    left: -100px;
+    animation: float 25s ease-in-out infinite reverse;
   }
-
-  .grid-pattern {
-    position: absolute;
-    inset: 0;
-    background-image: 
-      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
-    background-size: 60px 60px;
-    mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%);
-  }
-
+  
   @keyframes float {
     0%, 100% { transform: translate(0, 0) scale(1); }
     33% { transform: translate(30px, -30px) scale(1.05); }
@@ -241,90 +143,111 @@ const codeLines = [
   }
 
   .hero-container {
-    position: relative;
-    z-index: 1;
     max-width: 1400px;
     margin: 0 auto;
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4rem;
+    grid-template-columns: 1fr 1.6fr;
+    gap: 3rem;
     align-items: center;
-    padding: 0 2rem;
+    position: relative;
+    z-index: 1;
   }
 
   .hero-content {
-    text-align: left;
+    max-width: 600px;
   }
-
+  
   .hero-badge {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: rgba(255,255,255,0.1);
-    backdrop-filter: blur(10px);
-    border-radius: 50px;
-    border: 1px solid rgba(255,255,255,0.2);
-    color: #e2e8f0;
-    font-size: 0.9rem;
-    margin-bottom: 2rem;
-    animation: fadeInUp 0.8s ease-out;
+    padding: 0.375rem 0.875rem;
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    color: #2563eb;
+    font-weight: 500;
+    margin-bottom: 1rem;
   }
-
-  .badge-icon {
-    font-size: 1.2rem;
+  
+  .badge-dot {
+    width: 6px;
+    height: 6px;
+    background: #10b981;
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(1.2); }
   }
 
   .hero-title {
-    margin: 0 0 1.5rem;
-    animation: fadeInUp 0.8s ease-out 0.1s both;
+    margin-bottom: 1rem;
   }
 
-  .title-gradient {
+  .title-highlight {
     display: block;
     font-size: 5rem;
     font-weight: 800;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    background: linear-gradient(135deg, #1e293b 0%, #475569 50%, #1e293b 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    line-height: 1.1;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.03em;
+    margin-bottom: 0.75rem;
+    line-height: 1;
   }
 
   .title-sub {
     display: block;
     font-size: 1.5rem;
-    font-weight: 500;
-    color: #94a3b8;
-    margin-top: 0.5rem;
+    color: #64748b;
+    font-weight: 400;
+    letter-spacing: -0.01em;
   }
 
   .hero-tagline {
-    font-size: 1.25rem;
-    color: #cbd5e1;
-    line-height: 1.8;
-    margin-bottom: 2.5rem;
-    animation: fadeInUp 0.8s ease-out 0.2s both;
+    font-size: 1.125rem;
+    color: #475569;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
   }
 
-  .hero-tagline strong {
-    color: #fff;
+  .highlight-text {
+    color: #1e293b;
     font-weight: 600;
+    position: relative;
+    padding: 0 0.25rem;
   }
-
-  .highlight {
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    font-weight: 600;
+  
+  .highlight-text::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, rgba(59, 130, 246, 0.3) 0%, rgba(139, 92, 246, 0.3) 100%);
+    z-index: -1;
+    border-radius: 2px;
+  }
+  
+  .tagline-divider {
+    display: block;
+    height: 0.5rem;
+  }
+  
+  .tagline-secondary {
+    color: #64748b;
+    font-size: 1rem;
   }
 
   .hero-actions {
     display: flex;
     gap: 1rem;
-    animation: fadeInUp 0.8s ease-out 0.3s both;
     flex-wrap: wrap;
   }
 
@@ -332,35 +255,52 @@ const codeLines = [
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.875rem 1.5rem;
-    border-radius: 8px;
-    font-weight: 600;
+    padding: 0.875rem 1.75rem;
+    border-radius: 10px;
+    font-weight: 500;
     text-decoration: none;
-    transition: all 0.3s ease;
-    cursor: pointer;
-    border: none;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     font-size: 1rem;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.5s;
+  }
+  
+  .btn:hover::before {
+    transform: translateX(100%);
   }
 
   .btn-primary {
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
     color: white;
-    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+    box-shadow: 0 4px 14px rgba(30, 41, 59, 0.25);
   }
 
   .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(99, 102, 241, 0.5);
+    box-shadow: 0 6px 20px rgba(30, 41, 59, 0.35);
   }
 
   .btn-secondary {
-    background: rgba(255,255,255,0.1);
-    color: white;
-    border: 1px solid rgba(255,255,255,0.2);
+    background: #ffffff;
+    color: #1e293b;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   }
 
   .btn-secondary:hover {
-    background: rgba(255,255,255,0.2);
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   }
 
   .btn-icon {
@@ -368,121 +308,95 @@ const codeLines = [
     height: 1.25rem;
   }
 
-  /* Code Window Styles */
   .hero-code {
-    animation: fadeInUp 0.8s ease-out 0.4s both;
+    width: 100%;
+    position: relative;
   }
-
+  
   .code-window {
-    background: #1e1e1e;
+    background: #1e293b;
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: 
-      0 25px 50px -12px rgba(0,0,0,0.5),
-      0 0 0 1px rgba(255,255,255,0.1);
-    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow:
+      0 25px 50px -12px rgba(0, 0, 0, 0.25),
+      0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+    transform: perspective(1000px) rotateY(-5deg) rotateX(2deg);
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   }
-
+  
+  .code-window:hover {
+    transform: perspective(1000px) rotateY(-2deg) rotateX(1deg);
+  }
+  
   .code-header {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0.75rem;
     padding: 0.75rem 1rem;
-    background: #252526;
-    border-bottom: 1px solid #333;
+    background: rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   }
-
+  
   .code-dots {
     display: flex;
-    gap: 0.5rem;
+    gap: 0.375rem;
   }
-
+  
   .code-dots span {
-    width: 12px;
-    height: 12px;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
   }
-
+  
   .code-dots span:nth-child(1) { background: #ff5f56; }
   .code-dots span:nth-child(2) { background: #ffbd2e; }
   .code-dots span:nth-child(3) { background: #27c93f; }
-
-  .code-title {
-    color: #858585;
-    font-size: 0.85rem;
-    font-family: monospace;
-    margin-left: auto;
-    margin-right: auto;
+  
+  .code-filename {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    font-family: 'Monaco', 'Consolas', monospace;
   }
-
+  
   .code-content {
-    padding: 1.5rem;
-    background: #1e1e1e;
-    min-height: 280px;
+    padding: 0.75rem;
   }
-
-  .code-content pre {
-    margin: 0;
-    font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
-    font-size: 0.9rem;
-    line-height: 1.6;
-    color: #d4d4d4;
+  
+  .scroll-hint {
+    position: absolute;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    color: #94a3b8;
+    font-size: 0.875rem;
+    opacity: 0.7;
+    animation: fadeInUp 1s ease-out 2s both;
   }
-
-  .code-content code {
-    white-space: pre;
+  
+  .scroll-line {
+    width: 1px;
+    height: 40px;
+    background: linear-gradient(180deg, #94a3b8 0%, transparent 100%);
+    animation: scrollLine 2s ease-in-out infinite;
   }
-
-  .cursor {
-    display: inline-block;
-    color: #6366f1;
-    font-weight: bold;
-    animation: blink 1s infinite;
-    margin-left: 2px;
+  
+  @keyframes scrollLine {
+    0%, 100% { transform: scaleY(1); opacity: 1; }
+    50% { transform: scaleY(0.5); opacity: 0.5; }
   }
-
-  @keyframes blink {
-    0%, 50% { opacity: 1; }
-    51%, 100% { opacity: 0; }
-  }
-
-  /* Syntax Highlighting */
-  .token-keyword {
-    color: #569cd6;
-  }
-
-  .token-type {
-    color: #4ec9b0;
-  }
-
-  .token-string {
-    color: #ce9178;
-  }
-
-  .token-annotation {
-    color: #9cdcfe;
-  }
-
-  .token-function {
-    color: #dcdcaa;
-  }
-
-  .token-class {
-    color: #4ec9b0;
-  }
-
-  .token-indent {
-    color: transparent;
-  }
-
+  
   @keyframes fadeInUp {
     from {
       opacity: 0;
-      transform: translateY(30px);
+      transform: translateX(-50%) translateY(20px);
     }
     to {
-      opacity: 1;
-      transform: translateY(0);
+      opacity: 0.7;
+      transform: translateX(-50%) translateY(0);
     }
   }
 
@@ -491,41 +405,40 @@ const codeLines = [
       grid-template-columns: 1fr;
       gap: 3rem;
     }
-
+    
     .hero-content {
       text-align: center;
+      max-width: 100%;
     }
-
+    
     .hero-actions {
       justify-content: center;
     }
-
-    .hero-code {
-      max-width: 600px;
-      margin: 0 auto;
+    
+    .title-highlight {
+      font-size: 4rem;
+    }
+    
+    .code-window {
+      transform: none;
+    }
+    
+    .code-window:hover {
+      transform: none;
     }
   }
 
   @media (max-width: 768px) {
-    .title-gradient {
-      font-size: 3.5rem;
+    .hero-section {
+      padding: 5rem 1rem 3rem;
     }
-
+    
+    .title-highlight {
+      font-size: 3rem;
+    }
+    
     .title-sub {
-      font-size: 1.1rem;
-    }
-
-    .hero-tagline {
-      font-size: 1rem;
-    }
-
-    .code-content {
-      min-height: 240px;
-      padding: 1rem;
-    }
-
-    .code-content pre {
-      font-size: 0.8rem;
+      font-size: 1.25rem;
     }
   }
 </style>
