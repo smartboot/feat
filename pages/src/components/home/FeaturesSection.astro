@@ -38,9 +38,16 @@ const features = [
 <section class="features-section" id="features">
   <div class="features-container">
     <div class="section-header">
-      <div class="section-label">为什么选择 Feat</div>
-      <h2 class="section-title">产品特色</h2>
-      <p class="section-subtitle">F.E.A.T - 四大核心优势</p>
+      <div class="title-group">
+        <span class="section-label">Features</span>
+        <h2 class="section-title">产品特色</h2>
+      </div>
+      <p class="section-desc">
+        <span class="desc-highlight">F</span>ree · 
+        <span class="desc-highlight">E</span>lastic · 
+        <span class="desc-highlight">A</span>dvanced · 
+        <span class="desc-highlight">T</span>iny
+      </p>
     </div>
     
     <div class="features-grid">
@@ -68,20 +75,9 @@ const features = [
 
 <style>
   .features-section {
-    padding: 6rem 2rem;
+    padding: 4rem 2rem;
     background: #ffffff;
     position: relative;
-  }
-  
-  .features-section::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 200px;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
   }
 
   .features-container {
@@ -90,47 +86,69 @@ const features = [
   }
 
   .section-header {
-    text-align: center;
-    margin-bottom: 4rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 3rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid #e2e8f0;
   }
-  
+
+  .title-group {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+  }
+
   .section-label {
-    display: inline-block;
-    padding: 0.375rem 1rem;
-    background: rgba(59, 130, 246, 0.1);
-    border: 1px solid rgba(59, 130, 246, 0.2);
-    border-radius: 9999px;
-    font-size: 0.875rem;
-    color: #2563eb;
-    font-weight: 500;
-    margin-bottom: 1rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #ea580c;
+    padding: 0.375rem 0.75rem;
+    background: linear-gradient(135deg, rgba(234, 88, 12, 0.1) 0%, rgba(249, 115, 22, 0.08) 100%);
+    border: 1px solid rgba(234, 88, 12, 0.2);
+    border-radius: 6px;
   }
 
   .section-title {
-    font-size: 2.25rem;
+    font-size: 1.625rem;
     font-weight: 700;
     color: #1e293b;
-    margin-bottom: 0.75rem;
+    margin: 0;
     letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #1e293b 0%, #475569 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 
-  .section-subtitle {
+  .section-desc {
     color: #64748b;
-    font-size: 1.125rem;
+    font-size: 0.95rem;
+    margin: 0;
+    font-weight: 500;
+  }
+
+  .desc-highlight {
+    color: #ea580c;
+    font-weight: 700;
+    font-size: 1.05rem;
   }
 
   .features-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 1.5rem;
+    gap: 1.25rem;
   }
 
   .feature-card {
     background: #ffffff;
     border-radius: 16px;
-    padding: 2rem;
+    padding: 1.75rem;
     border: 1px solid #e2e8f0;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
   }
@@ -144,7 +162,7 @@ const features = [
     height: 3px;
     background: var(--feature-color);
     transform: scaleX(0);
-    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
   
   .feature-card:hover {
@@ -171,25 +189,20 @@ const features = [
   }
 
   .feature-icon-wrapper {
-    width: 56px;
-    height: 56px;
+    width: 52px;
+    height: 52px;
     border-radius: 12px;
     background: rgba(var(--feature-color-rgb), 0.1);
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.25rem;
     transition: all 0.3s ease;
-    border: 2px solid transparent;
-  }
-  
-  .feature-icon-wrapper:has(+ *) {
-    --feature-color-rgb: 59, 130, 246;
   }
 
   .feature-icon {
-    width: 28px;
-    height: 28px;
+    width: 26px;
+    height: 26px;
     color: var(--feature-color);
     transition: color 0.3s ease;
   }
@@ -203,45 +216,39 @@ const features = [
     display: flex;
     align-items: flex-start;
     gap: 0.5rem;
-    margin-bottom: 1rem;
+    margin-bottom: 0.875rem;
   }
 
   .feature-letter {
-    font-size: 2.5rem;
+    font-size: 2rem;
     font-weight: 800;
     line-height: 1;
     opacity: 0.3;
-    transition: opacity 0.3s ease;
   }
-  
-  .feature-card:hover .feature-letter {
-    opacity: 0.6;
-  }
-  
+
   .feature-titles {
     flex: 1;
   }
 
   .feature-title {
-    font-size: 1.25rem;
+    font-size: 1.125rem;
     font-weight: 600;
     color: #1e293b;
     margin: 0 0 0.25rem;
     display: flex;
     align-items: baseline;
-    gap: 0;
   }
   
   .feature-subtitle {
-    font-size: 0.875rem;
+    font-size: 0.8rem;
     color: #64748b;
     font-weight: 400;
   }
 
   .feature-description {
     color: #475569;
-    font-size: 0.95rem;
-    line-height: 1.7;
+    font-size: 0.875rem;
+    line-height: 1.6;
     margin: 0;
   }
   
@@ -252,10 +259,16 @@ const features = [
     height: 3px;
     width: 0;
     background: var(--progress-color);
-    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   @media (max-width: 1024px) {
+    .section-header {
+      flex-direction: column;
+      gap: 0.75rem;
+      align-items: flex-start;
+    }
+    
     .features-grid {
       grid-template-columns: repeat(2, 1fr);
     }
@@ -263,11 +276,17 @@ const features = [
 
   @media (max-width: 640px) {
     .features-section {
-      padding: 4rem 1rem;
+      padding: 3rem 1rem;
+    }
+    
+    .title-group {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.5rem;
     }
     
     .section-title {
-      font-size: 1.875rem;
+      font-size: 1.375rem;
     }
     
     .features-grid {
