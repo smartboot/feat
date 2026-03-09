@@ -5,7 +5,7 @@ const javaCode = `<span class="keyword">package</span> <span class="class">com.e
 
 <span class="keyword">import</span> <span class="class">tech.smartboot.feat.cloud.annotation.Controller</span>;
 <span class="keyword">import</span> <span class="class">tech.smartboot.feat.cloud.annotation.RequestMapping</span>;
-<span class="keyword">import</span> <span class="class">tech.smartboot.feat.Feat</span>;
+<span class="keyword">import</span> <span class="class">tech.smartboot.feat.cloud.FeatCloud</span>;
 
 <span class="comment">// 一个简单的 Feat Cloud 应用示例</span>
 <span class="annotation">@Controller</span>
@@ -17,7 +17,7 @@ const javaCode = `<span class="keyword">package</span> <span class="class">com.e
     }
 
     <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="function">main</span>(<span class="type">String</span>[] args) {
-        <span class="class">Feat</span>.<span class="function">cloudServer</span>().<span class="function">listen</span>();
+        <span class="class">FeatCloud</span>.<span class="function">cloudServer</span>().<span class="function">listen</span>();
     }
 }`;
 
