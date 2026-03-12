@@ -11,6 +11,7 @@
 package tech.smartboot.feat.ai.a2a.model;
 
 import com.alibaba.fastjson2.JSONObject;
+import tech.smartboot.feat.ai.a2a.enums.TaskState;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +33,7 @@ public class TaskResponse {
     /**
      * 任务状态
      */
-    private TaskStatus status;
+    private TaskState status;
 
     /**
      * 产出物列表
@@ -56,11 +57,11 @@ public class TaskResponse {
         this.id = id;
     }
 
-    public TaskStatus getStatus() {
+    public TaskState getStatus() {
         return status;
     }
 
-    public void setStatus(TaskStatus status) {
+    public void setStatus(TaskState status) {
         this.status = status;
     }
 
@@ -92,5 +93,31 @@ public class TaskResponse {
         }
         this.artifacts.add(artifact);
         return this;
+    }
+
+    /**
+     * 创建成功的任务响应
+     *
+     * @param taskId 任务ID
+     * @return TaskResponse实例
+     */
+    public static TaskResponse success(String taskId) {
+        TaskResponse response = new TaskResponse();
+        response.setId(taskId);
+        response.setStatus(TaskState.COMPLETED);
+        return response;
+    }
+
+    /**
+     * 创建失败的任务响应
+     *
+     * @param taskId 任务ID
+     * @return TaskResponse实例
+     */
+    public static TaskResponse failed(String taskId) {
+        TaskResponse response = new TaskResponse();
+        response.setId(taskId);
+        response.setStatus(TaskState.FAILED);
+        return response;
     }
 }

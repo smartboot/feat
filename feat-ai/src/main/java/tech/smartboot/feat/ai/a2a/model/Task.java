@@ -48,6 +48,11 @@ public class Task {
     private List<Message> history;
 
     /**
+     * 任务产出物列表
+     */
+    private List<Artifact> artifacts;
+
+    /**
      * 任务元数据
      */
     private JSONObject metadata;
@@ -122,6 +127,14 @@ public class Task {
         this.history = history;
     }
 
+    public List<Artifact> getArtifacts() {
+        return artifacts;
+    }
+
+    public void setArtifacts(List<Artifact> artifacts) {
+        this.artifacts = artifacts;
+    }
+
     public JSONObject getMetadata() {
         return metadata;
     }
@@ -176,6 +189,21 @@ public class Task {
 
     public void setTags(List<String> tags) {
         this.tags = tags;
+    }
+
+    /**
+     * 添加产出物
+     *
+     * @param artifact 产出物
+     * @return 当前Task实例（链式调用）
+     */
+    public Task addArtifact(Artifact artifact) {
+        if (this.artifacts == null) {
+            this.artifacts = new ArrayList<>();
+        }
+        this.artifacts.add(artifact);
+        this.updatedAt = System.currentTimeMillis();
+        return this;
     }
 
     /**
@@ -241,5 +269,27 @@ public class Task {
      */
     public boolean isCompleted() {
         return state != null && state.isFinal();
+    }
+
+    /**
+     * 更新任务状态
+     *
+     * @param newState 新状态
+     */
+    public void updateState(TaskState newState) {
+        this.state = newState;
+        this.updatedAt = System.currentTimeMillis();
+        if (newState.isFinal() && this.completedAt == 0) {
+            this.completedAt = this.updatedAt;
+        }
+    }
+
+    /**
+     * 检查是否已超时
+     *
+     * @return 如果已超时返回true
+     */
+    public boolean isTimedOut() {
+        return timeout > 0 && System.currentTimeMillis() - createdAt > timeout;
     }
 }

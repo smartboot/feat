@@ -10,6 +10,8 @@
 
 package tech.smartboot.feat.ai.a2a.enums;
 
+import com.alibaba.fastjson2.annotation.JSONField;
+
 /**
  * A2A 任务状态枚举
  *
@@ -54,6 +56,7 @@ public enum TaskState {
      */
     UNKNOWN("unknown");
 
+    @JSONField(value = true)
     private final String value;
 
     TaskState(String value) {

@@ -119,4 +119,44 @@ public class Artifact {
         this.parts.add(part);
         return this;
     }
+
+    /**
+     * 标记产出物为已完成
+     *
+     * @return 当前Artifact实例（链式调用）
+     */
+    public Artifact markComplete() {
+        this.complete = true;
+        return this;
+    }
+
+    /**
+     * 创建文本产出物
+     *
+     * @param name 产出物名称
+     * @param text 文本内容
+     * @return Artifact实例
+     */
+    public static Artifact text(String name, String text) {
+        Artifact artifact = new Artifact();
+        artifact.setName(name);
+        artifact.addPart(Part.text(text));
+        artifact.markComplete();
+        return artifact;
+    }
+
+    /**
+     * 创建文件产出物
+     *
+     * @param name 产出物名称
+     * @param file 文件内容
+     * @return Artifact实例
+     */
+    public static Artifact file(String name, FileContent file) {
+        Artifact artifact = new Artifact();
+        artifact.setName(name);
+        artifact.addPart(Part.file(file));
+        artifact.markComplete();
+        return artifact;
+    }
 }

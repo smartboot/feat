@@ -25,7 +25,6 @@ import tech.smartboot.feat.ai.a2a.model.Task;
 import tech.smartboot.feat.ai.a2a.model.TaskCancelRequest;
 import tech.smartboot.feat.ai.a2a.model.TaskQueryRequest;
 import tech.smartboot.feat.ai.a2a.model.TaskResponse;
-import tech.smartboot.feat.ai.a2a.model.TaskStatus;
 import tech.smartboot.feat.ai.a2a.enums.AgentSkill;
 import tech.smartboot.feat.ai.a2a.enums.Role;
 import tech.smartboot.feat.ai.a2a.enums.TaskState;
@@ -163,11 +162,7 @@ public class A2AServerDemo {
             // 构建响应
             TaskResponse response = new TaskResponse();
             response.setId(taskId);
-
-            TaskStatus status = new TaskStatus();
-            status.setState(task.getState());
-            status.setMessage(createAgentResponse(task));
-            response.setStatus(status);
+            response.setStatus(task.getState());
 
             logger.info("Task {} completed with state: {}", taskId, task.getState());
             return response;
@@ -194,9 +189,7 @@ public class A2AServerDemo {
 
             TaskResponse response = new TaskResponse();
             response.setId(request.getId());
-            TaskStatus status = new TaskStatus();
-            status.setState(TaskState.CANCELED);
-            response.setStatus(status);
+            response.setStatus(TaskState.CANCELED);
             return response;
         }
 
@@ -208,10 +201,7 @@ public class A2AServerDemo {
             TaskResponse response = new TaskResponse();
             response.setId(request.getId());
             if (task != null) {
-                TaskStatus status = new TaskStatus();
-                status.setState(task.getState());
-                status.setMessage(task.getHistory().isEmpty() ? null : task.getHistory().get(task.getHistory().size() - 1));
-                response.setStatus(status);
+                response.setStatus(task.getState());
             }
             return response;
         }

@@ -164,4 +164,49 @@ public class Part {
         part.setFunctionResponse(functionResponse);
         return part;
     }
+
+    /**
+     * 检查是否为文本类型
+     *
+     * @return 如果是文本类型返回true
+     */
+    public boolean isText() {
+        return type == PartType.TEXT;
+    }
+
+    /**
+     * 检查是否为文件类型
+     *
+     * @return 如果是文件类型返回true
+     */
+    public boolean isFile() {
+        return type == PartType.FILE;
+    }
+
+    /**
+     * 检查是否为数据类型
+     *
+     * @return 如果是数据类型返回true
+     */
+    public boolean isData() {
+        return type == PartType.DATA;
+    }
+
+    /**
+     * 检查是否为函数调用类型
+     *
+     * @return 如果是函数调用类型返回true
+     */
+    public boolean isFunctionCall() {
+        return type == PartType.FUNCTION_CALL;
+    }
+
+    /**
+     * 检查是否为函数响应类型
+     *
+     * @return 如果是函数响应类型返回true
+     */
+    public boolean isFunctionResponse() {
+        return type == PartType.FUNCTION_RESPONSE;
+    }
 }

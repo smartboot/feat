@@ -53,6 +53,11 @@ public class Skill {
      */
     private JSONObject parameters;
 
+    /**
+     * 技能标签列表
+     */
+    private List<String> tags;
+
     public String getId() {
         return id;
     }
@@ -99,5 +104,13 @@ public class Skill {
 
     public void setParameters(JSONObject parameters) {
         this.parameters = parameters;
+    }
+
+    public List<String> getTags() {
+        return tags;
+    }
+
+    public void setTags(List<String> tags) {
+        this.tags = tags;
     }
 }

@@ -10,6 +10,8 @@
 
 package tech.smartboot.feat.ai.a2a.enums;
 
+import com.alibaba.fastjson2.annotation.JSONField;
+
 /**
  * A2A 消息部分内容类型枚举
  *
@@ -44,6 +46,7 @@ public enum PartType {
      */
     FUNCTION_RESPONSE("function_response");
 
+    @JSONField(value = true)
     private final String value;
 
     PartType(String value) {

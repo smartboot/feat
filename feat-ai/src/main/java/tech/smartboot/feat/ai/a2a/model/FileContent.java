@@ -39,6 +39,11 @@ public class FileContent {
      */
     private String uri;
 
+    /**
+     * 文件大小（字节）
+     */
+    private Long size;
+
     public String getName() {
         return name;
     }
@@ -69,5 +74,13 @@ public class FileContent {
 
     public void setUri(String uri) {
         this.uri = uri;
+    }
+
+    public Long getSize() {
+        return size;
+    }
+
+    public void setSize(Long size) {
+        this.size = size;
     }
 }

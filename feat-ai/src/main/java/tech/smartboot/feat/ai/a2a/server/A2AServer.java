@@ -104,27 +104,29 @@ public class A2AServer {
         // 注册Agent Card端点
         router.route("/.well-known/agent.json", new RouterHandler() {
             @Override
-            public void handle(Context ctx, CompletableFuture<Void> completableFuture) throws Throwable {
+            public void handle(Context ctx) throws Throwable {
                 handleAgentCard(ctx);
-                completableFuture.complete(null);
             }
 
             @Override
-            public void handle(Context ctx) throws Exception {
-                throw new IllegalStateException();
+            public void handle(Context ctx, CompletableFuture<Void> completableFuture) throws Throwable {
+                handleAgentCard(ctx);
+                completableFuture.complete(null);
             }
         });
 
         // 注册JSON-RPC端点
         router.route("/", new RouterHandler() {
             @Override
-            public void handle(Context ctx, CompletableFuture<Void> completableFuture) throws Throwable {
-                handleJsonRpc(ctx, completableFuture);
+            public void handle(Context ctx) throws Throwable {
+                CompletableFuture<Void> future = new CompletableFuture<>();
+                handleJsonRpc(ctx, future);
+                future.get();
             }
 
             @Override
-            public void handle(Context ctx) throws Exception {
-                throw new IllegalStateException();
+            public void handle(Context ctx, CompletableFuture<Void> completableFuture) throws Throwable {
+                handleJsonRpc(ctx, completableFuture);
             }
         });
 

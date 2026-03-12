@@ -107,4 +107,30 @@ public class Message {
         message.addPart(Part.text(text));
         return message;
     }
+
+    /**
+     * 创建包含文件的用户消息
+     *
+     * @param file 文件内容
+     * @return Message实例
+     */
+    public static Message userMessageWithFile(FileContent file) {
+        Message message = new Message();
+        message.setRole(Role.USER);
+        message.addPart(Part.file(file));
+        return message;
+    }
+
+    /**
+     * 创建包含函数调用的智能体消息
+     *
+     * @param functionCall 函数调用
+     * @return Message实例
+     */
+    public static Message agentMessageWithFunction(FunctionCall functionCall) {
+        Message message = new Message();
+        message.setRole(Role.AGENT);
+        message.addPart(Part.functionCall(functionCall));
+        return message;
+    }
 }

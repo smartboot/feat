@@ -10,6 +10,8 @@
 
 package tech.smartboot.feat.ai.a2a.enums;
 
+import com.alibaba.fastjson2.annotation.JSONField;
+
 /**
  * A2A 角色枚举
  *
@@ -29,6 +31,7 @@ public enum Role {
      */
     AGENT("agent");
 
+    @JSONField(value = true)
     private final String value;
 
     Role(String value) {

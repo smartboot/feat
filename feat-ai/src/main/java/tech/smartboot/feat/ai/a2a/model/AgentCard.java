@@ -51,7 +51,12 @@ public class AgentCard {
     /**
      * 智能体URL
      */
-     private String url;
+    private String url;
+
+    /**
+     * 智能体文档URL
+     */
+    private String documentationUrl;
 
     /**
      * 提供商信息
@@ -128,6 +133,14 @@ public class AgentCard {
 
     public void setUrl(String url) {
         this.url = url;
+    }
+
+    public String getDocumentationUrl() {
+        return documentationUrl;
+    }
+
+    public void setDocumentationUrl(String documentationUrl) {
+        this.documentationUrl = documentationUrl;
     }
 
     public Provider getProvider() {

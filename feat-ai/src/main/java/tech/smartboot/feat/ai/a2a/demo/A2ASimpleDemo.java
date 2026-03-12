@@ -103,7 +103,7 @@ public class A2ASimpleDemo {
         logger.info("JSON-RPC:  http://localhost:8080/");
         logger.info("========================================");
         logger.info("Press Enter to stop the server...");
-        System.in.read();
+        Thread.sleep(600000);
     }
 
     /**
@@ -207,8 +207,8 @@ public class A2ASimpleDemo {
 
         TaskResponse response = new TaskResponse();
         response.setId(taskId);
-        response.setStatus(new tech.smartboot.feat.ai.a2a.model.TaskStatus(TaskState.COMPLETED));
-        
+        response.setStatus(TaskState.COMPLETED);
+
         logger.info("Task {} created and completed", taskId);
         return response;
     }
@@ -237,7 +237,7 @@ public class A2ASimpleDemo {
 
         TaskResponse response = new TaskResponse();
         response.setId(req.getId());
-        response.setStatus(new tech.smartboot.feat.ai.a2a.model.TaskStatus(TaskState.CANCELED));
+        response.setStatus(TaskState.CANCELED);
         return response;
     }
 

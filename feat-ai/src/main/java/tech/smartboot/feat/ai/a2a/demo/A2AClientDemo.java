@@ -19,7 +19,6 @@ import tech.smartboot.feat.ai.a2a.model.Task;
 import tech.smartboot.feat.ai.a2a.model.TaskCancelRequest;
 import tech.smartboot.feat.ai.a2a.model.TaskQueryRequest;
 import tech.smartboot.feat.ai.a2a.model.TaskResponse;
-import tech.smartboot.feat.ai.a2a.enums.Role;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 
@@ -95,7 +94,7 @@ public class A2AClientDemo {
         TaskCancelRequest taskCancelRequest = new TaskCancelRequest();
         taskCancelRequest.setId(cancelResponse.getId());
         TaskResponse cancelledResponse = client.cancelTask(taskCancelRequest);
-        logger.info("Task cancelled. Status: {}", cancelledResponse.getStatus().getState());
+        logger.info("Task cancelled. Status: {}", cancelledResponse.getStatus());
 
         logger.info("\n=== A2A Client Demo Completed ===");
     }
@@ -145,21 +144,9 @@ public class A2AClientDemo {
         logger.info("  Task ID: {}", response.getId());
         
         if (response.getStatus() != null) {
-            logger.info("  State: {}", response.getStatus().getState());
-            
-            if (response.getStatus().getMessage() != null) {
-                Message message = response.getStatus().getMessage();
-                logger.info("  Message Role: {}", message.getRole());
-                
-                if (message.getParts() != null && !message.getParts().isEmpty()) {
-                    String text = message.getParts().get(0).getText();
-                    if (text != null) {
-                        logger.info("  Response Text: {}", text);
-                    }
-                }
-            }
+            logger.info("  State: {}", response.getStatus());
         }
-        
+
         if (response.getArtifacts() != null && !response.getArtifacts().isEmpty()) {
             logger.info("  Artifacts: {}", response.getArtifacts().size());
         }

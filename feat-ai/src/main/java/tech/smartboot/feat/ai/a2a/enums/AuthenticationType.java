@@ -10,6 +10,8 @@
 
 package tech.smartboot.feat.ai.a2a.enums;
 
+import com.alibaba.fastjson2.annotation.JSONField;
+
 /**
  * A2A 认证类型枚举
  *
@@ -44,6 +46,7 @@ public enum AuthenticationType {
      */
     CUSTOM("custom");
 
+    @JSONField(value = true)
     private final String value;
 
     AuthenticationType(String value) {

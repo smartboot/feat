@@ -49,6 +49,11 @@ public class A2AServerOptions {
     private String agentUrl;
 
     /**
+     * 智能体文档URL
+     */
+    private String documentationUrl;
+
+    /**
      * 提供商信息
      */
     private Provider provider;
@@ -118,6 +123,14 @@ public class A2AServerOptions {
 
     public void setAgentUrl(String agentUrl) {
         this.agentUrl = agentUrl;
+    }
+
+    public String getDocumentationUrl() {
+        return documentationUrl;
+    }
+
+    public void setDocumentationUrl(String documentationUrl) {
+        this.documentationUrl = documentationUrl;
     }
 
     public Provider getProvider() {
@@ -237,6 +250,7 @@ public class A2AServerOptions {
         card.setDescription(agentDescription);
         card.setVersion(agentVersion);
         card.setUrl(agentUrl);
+        card.setDocumentationUrl(documentationUrl);
         card.setProvider(provider);
         card.setCapabilities(capabilities);
         card.setSkills(skills);

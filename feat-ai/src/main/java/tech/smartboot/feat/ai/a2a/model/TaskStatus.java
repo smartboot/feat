@@ -82,4 +82,36 @@ public class TaskStatus {
     public void setMetadata(JSONObject metadata) {
         this.metadata = metadata;
     }
+
+    /**
+     * 检查状态是否为最终状态
+     *
+     * @return 如果是最终状态返回true
+     */
+    public boolean isFinal() {
+        return state != null && state.isFinal();
+    }
+
+    /**
+     * 创建任务状态更新
+     *
+     * @param state 任务状态
+     * @return TaskStatus实例
+     */
+    public static TaskStatus of(TaskState state) {
+        return new TaskStatus(state);
+    }
+
+    /**
+     * 创建带消息的任务状态更新
+     *
+     * @param state 任务状态
+     * @param message 状态消息
+     * @return TaskStatus实例
+     */
+    public static TaskStatus of(TaskState state, Message message) {
+        TaskStatus status = new TaskStatus(state);
+        status.setMessage(message);
+        return status;
+    }
 }
