@@ -52,6 +52,37 @@ import {Aside} from "@astrojs/starlight/components";
   最新版本的 IntelliJ IDEA 已无需此配置，该步骤为可选项。
 </Aside>
 
+### 配置 maven-clean-plugin（推荐）
+
+为缓解 IDEA 增量编译可能导致 APT（注解处理器）失效的问题，建议在 `pom.xml` 中配置 `maven-clean-plugin`：
+
+```xml title="pom.xml"
+<build>
+    <plugins>
+        <!-- 自动执行 clean：每次编译前清理 -->
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-clean-plugin</artifactId>
+            <version>3.3.2</version>
+            <!-- 绑定到 validate 阶段（编译前最早执行） -->
+            <executions>
+                <execution>
+                    <id>auto-clean</id>
+                    <phase>validate</phase>
+                    <goals>
+                        <goal>clean</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
+```
+
+<Aside type="tip">
+  该配置会在每次编译前自动执行 `clean`，确保 APT 生成的代码始终是最新的。
+</Aside>
+
 ## 步骤 3：编写启动类
 
 在 `src/main/java` 目录下创建 [`Bootstrap.java`](https://gitee.com/smartboot/feat/blob/master/demo/helloworld/src/main/java/tech/smartboot/feat/Bootstrap.java) 文件：
@@ -80,13 +111,13 @@ public class Bootstrap {
 ```
 Feat Router:
  |-> /hello ==> Bootstrap@helloWorld
- ________   ________        _        _________
-|_   __  | |_   __  |      / \      |  _   _  |
-  | |_ \_|   | |_ \_|     / _ \     |_/ | | \_|
-  |  _|      |  _| _     / ___ \        | |
- _| |_      _| |__/ |  _/ /   \ \_     _| |_
-|_____|    |________| |____| |____|   |_____|
- :: Feat :: (v1.4.0)
+  ________   ________        _        _________
+ |_   __  | |_   __  |      / \      |  _   _  |
+   | |_ \_|   | |_ \_|     / _ \     |_/ | | \_|
+   |  _|      |  _| _     / ___ \        | |
+  _| |_      _| |__/ |  _/ /   \ \_     _| |_
+ |_____|    |________| |____| |____|   |_____|
+  :: Feat :: (v1.4.0)
 🎉Congratulations, the feat startup is successful. cost: 71ms
 http://0.0.0.0:8080/
 ```
