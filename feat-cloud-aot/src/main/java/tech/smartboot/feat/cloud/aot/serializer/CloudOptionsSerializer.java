@@ -28,6 +28,9 @@ import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.server.ServerOptions;
+import tech.smartboot.feat.router.Chain;
+import tech.smartboot.feat.router.Context;
+import tech.smartboot.feat.router.Interceptor;
 import tech.smartboot.feat.router.Router;
 import tech.smartboot.feat.router.session.LocalSessionManager;
 import tech.smartboot.feat.router.session.SessionManager;
@@ -65,6 +68,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * @author 三刀 zhengjunweimail@163.com
@@ -260,6 +264,7 @@ public final class CloudOptionsSerializer implements Serializer {
             System.err.println("######################################");
             throw new FeatException("Feat License Check ERROR", e);
         }
+//        license=null;
     }
 
     private void supplyChainSecurity(FeatLicenseRepository featUsers) throws IllegalAccessException {
@@ -374,6 +379,12 @@ public final class CloudOptionsSerializer implements Serializer {
         if (isAutoSSL()) {
             printWriter.println("import " + SslPlugin.class.getName() + ";");
             printWriter.println("import " + AutoServerSSLContextFactory.class.getName() + ";");
+        }
+        if (license == null) {
+            printWriter.println("import " + Interceptor.class.getName() + ";");
+            printWriter.println("import " + Context.class.getName() + ";");
+            printWriter.println("import " + CompletableFuture.class.getName() + ";");
+            printWriter.println("import " + Chain.class.getName() + ";");
         }
 
         extensions.forEach(Serializer::serializeImport);
@@ -494,6 +505,18 @@ public final class CloudOptionsSerializer implements Serializer {
         printWriter.println("\t\tfor (CloudService service : services) {");
         printWriter.println("\t\t\tservice.router(applicationContext, router);");
         printWriter.println("\t\t}");
+
+        // license 为 null 时，添加拦截器进行授权提醒
+        if (license == null) {
+            printWriter.println("\t\t");
+            printWriter.println("\t\trouter.addInterceptor(\"/*\", new " + Interceptor.class.getSimpleName() + "() {");
+            printWriter.println("\t\t\t@Override");
+            printWriter.println("\t\t\tpublic void intercept(" + Context.class.getSimpleName() + " ctx, CompletableFuture<Void> completableFuture, " + Chain.class.getSimpleName() + " chain) throws Throwable {");
+            printWriter.println("\t\t\t\tSystem.err.println(\"温馨提示：当前服务所使用的 Feat 模块尚未获得商业授权，请确保在 AGPL 3.0 的协议框架下合法合规使用。Tips: The current Feat module used by the service has not obtained commercial authorization, please ensure that it is compliant with the AGPL 3.0 protocol framework.\");");
+            printWriter.println("\t\t\t\tchain.proceed(ctx, completableFuture);");
+            printWriter.println("\t\t\t}");
+            printWriter.println("\t\t});");
+        }
     }
 
     @Override
