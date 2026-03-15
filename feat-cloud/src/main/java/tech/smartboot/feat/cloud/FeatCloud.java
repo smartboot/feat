@@ -83,7 +83,7 @@ public class FeatCloud {
             server.options().shutdownHook(application::destroy);
         }
         // 设置HTTP请求处理器为应用路由器
-        server.httpHandler(application.getRouter());
+        server.httpHandler(opt.getRouter());
         // 添加JVM关闭钩子，确保服务器能够优雅关闭
         Runtime.getRuntime().addShutdownHook(new Thread(server::shutdown));
         return server;

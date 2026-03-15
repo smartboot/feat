@@ -12,6 +12,8 @@ package tech.smartboot.feat.cloud;
 
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.server.ServerOptions;
+import tech.smartboot.feat.core.server.handler.HttpStaticResourceHandler;
+import tech.smartboot.feat.router.Router;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -42,6 +44,8 @@ public class CloudOptions extends ServerOptions {
      *
      */
     private String staticLocations = "classpath:static";
+
+    private Router router;
 
     /**
      * 获取包扫描范围数组
@@ -116,6 +120,18 @@ public class CloudOptions extends ServerOptions {
      */
     public CloudOptions setStaticLocations(String staticLocations) {
         this.staticLocations = staticLocations;
+        return setRouter(new Router(new HttpStaticResourceHandler(opt -> opt.baseDir(staticLocations))));
+    }
+
+    public Router getRouter() {
+        if (router == null) {
+            setStaticLocations(staticLocations);
+        }
+        return router;
+    }
+
+    public CloudOptions setRouter(Router router) {
+        this.router = router;
         return this;
     }
 }

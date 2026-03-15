@@ -12,8 +12,6 @@ package tech.smartboot.feat.cloud;
 
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
-import tech.smartboot.feat.core.server.handler.HttpStaticResourceHandler;
-import tech.smartboot.feat.router.Router;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -46,11 +44,6 @@ public final class ApplicationContext {
     private Map<String, Object> namedBeans = new HashMap<>();
 
     /**
-     * 路由器实例，用于处理HTTP请求路由
-     */
-    private final Router router;
-
-    /**
      * 云应用配置选项
      */
     private final CloudOptions options;
@@ -67,7 +60,6 @@ public final class ApplicationContext {
      */
     ApplicationContext(CloudOptions options) {
         this.options = options;
-        router = new Router(new HttpStaticResourceHandler(opt -> opt.baseDir(options.getStaticLocations())));
     }
 
     /**
@@ -122,7 +114,7 @@ public final class ApplicationContext {
 
         // 依次调用各服务的router方法配置路由
         for (CloudService service : services) {
-            service.router(this, router);
+            service.router(this, options.getRouter());
         }
 
         // 释放namedBeans内存（启动完成后不再需要）
@@ -170,14 +162,6 @@ public final class ApplicationContext {
         }
     }
 
-    /**
-     * 获取路由器实例
-     *
-     * @return 路由器实例
-     */
-    Router getRouter() {
-        return router;
-    }
 
     /**
      * 根据名称获取Bean实例
