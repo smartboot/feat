@@ -18,6 +18,7 @@ import tech.smartboot.feat.core.common.DecodeState;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
+import tech.smartboot.feat.core.common.HttpProtocol;
 import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.common.io.FeatOutputStream;
@@ -307,9 +308,18 @@ public final class HttpMessageProcessor extends AbstractMessageProcessor<HttpEnd
             return false;
         }
         //非keepAlive或者 body部分未读取完毕,释放连接资源
-        if (HeaderValue.Connection.CLOSE.equals(request.getHeader(HeaderName.CONNECTION)) || !request.getInputStream().isFinished()) {
+        String connection = request.getHeader(HeaderName.CONNECTION);
+        if (HeaderValue.Connection.CLOSE.equals(connection) || !request.getInputStream().isFinished()) {
             request.getResponse().close();
             return false;
+        }
+        if (HttpProtocol.HTTP_10.equals(request.getProtocol())) {
+            if (HeaderValue.Connection.KEEPALIVE.equalsIgnoreCase(connection)) {
+                request.getResponse().setHeader(HeaderName.CONNECTION, HeaderValue.Connection.KEEPALIVE);
+            } else {
+                request.getResponse().close();
+                return false;
+            }
         }
         return true;
     }
