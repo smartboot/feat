@@ -11,6 +11,9 @@
 package tech.smartboot.feat.ai.agent;
 
 import tech.smartboot.feat.ai.agent.hook.Hook;
+import tech.smartboot.feat.ai.agent.memory.Memory;
+import tech.smartboot.feat.ai.agent.memory.MemoryOptions;
+import tech.smartboot.feat.ai.agent.memory.VectorMemoryOptions;
 import tech.smartboot.feat.ai.chat.ChatOptions;
 import tech.smartboot.feat.ai.chat.prompt.Prompt;
 import tech.smartboot.feat.core.common.logging.Logger;
@@ -18,6 +21,7 @@ import tech.smartboot.feat.core.common.logging.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 
 /**
@@ -77,6 +81,30 @@ public class AgentOptions {
      * </p>
      */
     private final ChatOptions chatOptions = new ChatOptions();
+
+    /**
+     * 记忆系统
+     * <p>
+     * 用于存储和检索Agent的历史交互记录。
+     * 支持短期记忆和长期记忆两种模式。
+     * </p>
+     */
+    private Memory memory;
+
+    /**
+     * 是否启用记忆检索
+     */
+    private boolean memoryEnabled = false;
+
+    /**
+     * 记忆检索数量
+     */
+    private int memoryTopK = 5;
+
+    /**
+     * 会话ID，用于隔离不同会话的记忆
+     */
+    private String sessionId;
 
     AgentOptions() {
     }
@@ -204,5 +232,174 @@ public class AgentOptions {
     public AgentOptions hook(Hook hook) {
         this.hook = hook;
         return this;
+    }
+
+    // ==================== 记忆系统相关方法 ====================
+
+    /**
+     * 设置记忆系统
+     * <p>
+     * 配置Agent使用的记忆存储实现，支持InMemoryMemory和VectorMemory。
+     * </p>
+     *
+     * @param memory 记忆系统实例
+     * @return 当前实例
+     */
+    public AgentOptions memory(Memory memory) {
+        this.memory = memory;
+        this.memoryEnabled = true;
+        logger.info("设置记忆系统: {}", memory.getClass().getSimpleName());
+        return this;
+    }
+
+    /**
+     * 创建基于内存的记忆系统
+     * <p>
+     * 使用内存存储记忆，适合开发和测试场景。
+     * </p>
+     *
+     * @param consumer 配置选项消费者
+     * @return 当前实例
+     */
+    public AgentOptions memory(Consumer<MemoryOptions> consumer) {
+        this.memory = Memory.inMemory(consumer);
+        this.memoryEnabled = true;
+        logger.info("创建InMemoryMemory记忆系统");
+        return this;
+    }
+
+    /**
+     * 创建基于向量的记忆系统
+     * <p>
+     * 使用向量数据库存储记忆，支持语义检索，适合生产环境。
+     * 需要配置VectorStore和EmbeddingModel。
+     * </p>
+     *
+     * @param consumer 配置选项消费者
+     * @return 当前实例
+     */
+    public AgentOptions vectorMemory(Consumer<VectorMemoryOptions> consumer) {
+        VectorMemoryOptions options = new VectorMemoryOptions();
+        consumer.accept(options);
+        // 将Agent的sessionId同步到VectorMemoryOptions
+        if (this.sessionId != null && options.getSessionId() == null) {
+            options.sessionId(this.sessionId);
+        }
+        this.memory = Memory.vector(opts -> {
+            opts.vectorStore(options.getVectorStore())
+                .embeddingModel(options.getEmbeddingModel())
+                .collectionName(options.getCollectionName())
+                .vectorDimension(options.getVectorDimension())
+                .sessionId(options.getSessionId());
+            // 同步其他配置
+            if (options.getSessionId() != null) {
+                opts.disableSessionIsolation();
+            }
+        });
+        this.memoryEnabled = true;
+        logger.info("创建VectorMemory记忆系统");
+        return this;
+    }
+
+    /**
+     * 禁用记忆系统
+     * <p>
+     * 关闭记忆检索和存储功能。
+     * </p>
+     *
+     * @return 当前实例
+     */
+    public AgentOptions disableMemory() {
+        this.memoryEnabled = false;
+        logger.info("禁用记忆系统");
+        return this;
+    }
+
+    /**
+     * 启用记忆系统
+     * <p>
+     * 如果尚未配置记忆系统，会自动创建一个默认的InMemoryMemory。
+     * </p>
+     *
+     * @return 当前实例
+     */
+    public AgentOptions enableMemory() {
+        if (this.memory == null) {
+            this.memory = Memory.inMemory(opts -> {});
+        }
+        this.memoryEnabled = true;
+        logger.info("启用记忆系统");
+        return this;
+    }
+
+    /**
+     * 设置记忆检索数量
+     * <p>
+     * 控制每次检索返回的记忆条数。
+     * </p>
+     *
+     * @param topK 检索数量
+     * @return 当前实例
+     */
+    public AgentOptions memoryTopK(int topK) {
+        this.memoryTopK = Math.max(1, topK);
+        return this;
+    }
+
+    /**
+     * 设置会话ID
+     * <p>
+     * 用于隔离不同会话的记忆。设置后会同步到记忆系统（如果已配置）。
+     * 对于VectorMemory，会动态更新其sessionId配置。
+     * </p>
+     *
+     * @param sessionId 会话ID
+     * @return 当前实例
+     */
+    public AgentOptions sessionId(String sessionId) {
+        this.sessionId = sessionId;
+        // 如果记忆系统已配置且是VectorMemory，同步更新sessionId
+        if (this.memory instanceof tech.smartboot.feat.ai.agent.memory.VectorMemory) {
+            ((tech.smartboot.feat.ai.agent.memory.VectorMemory) this.memory).setSessionId(sessionId);
+        }
+        return this;
+    }
+
+    // ==================== Getter方法 ====================
+
+    /**
+     * 获取记忆系统
+     *
+     * @return Memory实例，可能为null
+     */
+    public Memory getMemory() {
+        return memory;
+    }
+
+    /**
+     * 判断是否启用了记忆系统
+     *
+     * @return true表示启用
+     */
+    public boolean isMemoryEnabled() {
+        return memoryEnabled;
+    }
+
+    /**
+     * 获取记忆检索数量
+     *
+     * @return 检索数量
+     */
+    public int getMemoryTopK() {
+        return memoryTopK;
+    }
+
+    /**
+     * 获取会话ID
+     *
+     * @return 会话ID
+     */
+    public String getSessionId() {
+        return sessionId;
     }
 }

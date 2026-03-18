@@ -45,6 +45,10 @@
             <artifactId>feat-cloud-starter</artifactId>
         </dependency>
         <dependency>
+            <groupId>tech.smartboot.feat</groupId>
+            <artifactId>feat-ai</artifactId>
+        </dependency>
+        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>${junit.version}</version>
