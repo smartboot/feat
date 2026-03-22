@@ -62,18 +62,41 @@ FeatCloud.cloudServer(options -> {
 | **类型** | `String` |
 | **默认值** | `"classpath:static"` |
 
-支持三种路径格式：
+**路径格式说明：**
+
+- **`classpath:xxx`** - 类路径资源，从应用的类加载器中加载（推荐用于打包后的资源）
+- **`file:xxx`** 或 **直接路径** - 文件系统路径，指向服务器本地目录
+
+**使用示例：**
 
 ```java
-// 类路径（默认）
+// 类路径（默认，从 resources/static 目录加载）
 options.setStaticLocations("classpath:static");
 
-// 自定义类路径
-options.setStaticLocations("classpath:assets");
-
-// 文件系统路径
+// 文件系统绝对路径
 options.setStaticLocations("file:/var/www/static");
+
+// 文件系统相对路径
+options.setStaticLocations("./public");
 ```
+
+**功能特性：**
+
+| 特性 | 说明 |
+|------|------|
+| **自动首页** | 访问目录时自动返回 `index.html` |
+| **缓存支持** | 支持 HTTP 304 缓存（基于 `Last-Modified` 头） |
+| **GZIP 压缩** | 类路径资源自动启用 GZIP 压缩传输 |
+| **MIME 类型** | 自动识别常见文件类型的 `Content-Type` |
+| **404 处理** | 找不到资源时返回 `feat-404.html`（如果存在）或 404 状态码 |
+
+<Aside type="tip">
+  类路径资源使用 `Thread.currentThread().getContextClassLoader()` 加载，支持开发模式和打包后的 JAR 运行模式。
+</Aside>
+
+<Aside type="caution">
+  当路径以 `classpath:` 开头时，资源从类加载器加载；其他情况视为文件系统路径，必须是有效的目录。
+</Aside>
 
 ---
 
