@@ -65,7 +65,7 @@ FeatCloud.cloudServer(options -> {
 **路径格式说明：**
 
 - **`classpath:xxx`** - 类路径资源，从应用的类加载器中加载（推荐用于打包后的资源）
-- **`file:xxx`** 或 **直接路径** - 文件系统路径，指向服务器本地目录
+- **直接路径** - 文件系统路径，指向服务器本地目录
 
 **使用示例：**
 
@@ -74,7 +74,7 @@ FeatCloud.cloudServer(options -> {
 options.setStaticLocations("classpath:static");
 
 // 文件系统绝对路径
-options.setStaticLocations("file:/var/www/static");
+options.setStaticLocations("/var/www/static");
 
 // 文件系统相对路径
 options.setStaticLocations("./public");
