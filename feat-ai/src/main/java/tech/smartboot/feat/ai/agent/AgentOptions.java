@@ -154,7 +154,7 @@ public class AgentOptions {
      * @param prompt 提示词模板对象
      * @return 当前实例，支持链式调用
      */
-    AgentOptions prompt(Prompt prompt) {
+    public AgentOptions prompt(Prompt prompt) {
         this.prompt = prompt;
         return this;
     }
@@ -168,7 +168,7 @@ public class AgentOptions {
      * @param prompt 提示词模板字符串
      * @return 当前实例，支持链式调用
      */
-    AgentOptions prompt(String prompt) {
+    public AgentOptions prompt(String prompt) {
         return prompt(new Prompt(prompt));
     }
 
