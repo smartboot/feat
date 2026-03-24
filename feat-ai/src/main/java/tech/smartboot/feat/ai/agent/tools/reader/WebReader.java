@@ -12,23 +12,25 @@ package tech.smartboot.feat.ai.agent.tools.reader;
 
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpGet;
-import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HttpStatus;
 
-import java.util.ArrayList;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
- * 搜索器抽象基类
+ * 网页内容阅读器
  * <p>
- * 该类定义了网络搜索功能的基础框架，支持不同搜索引擎的实现。
- * 通过模板方法模式，具体的搜索引擎实现只需要关注请求的URL和结果解析逻辑，
- * 而通用的HTTP请求处理、错误处理等由基类统一处理。
+ * 参考 r.jina.ai 的实现原理，提供高质量的网页内容提取功能：
+ * 1. 使用 Readability 风格算法提取主要内容区域
+ * 2. 过滤广告、导航、脚本等干扰内容
+ * 3. 输出 LLM 友好的 Markdown 格式
  * </p>
  *
  * @author 三刀
@@ -37,27 +39,38 @@ import java.util.function.Consumer;
 public class WebReader {
 
     /**
-     * 执行搜索操作的通用方法
+     * 执行网页读取操作的通用方法（支持格式指定）
      * <p>
-     * 根据URL自动选择合适的搜索引擎实现，并执行搜索请求。
-     * 支持自定义HTTP GET请求参数。
+     * 根据URL自动选择合适的阅读器实现，并执行请求。
+     * 支持自定义HTTP GET请求参数和响应格式。
      * </p>
      *
-     * @param url      搜索URL
+     * @param url      目标URL
      * @param consumer 自定义HTTP GET请求的回调函数
-     * @return 搜索结果的Markdown格式字符串
+     * @return 读取结果字符串
      */
     public static CompletableFuture<String> read(String url, Consumer<HttpGet> consumer) {
-        WebReader searcher;
+        WebReader reader;
         if (url.startsWith(BaiduReader.BASE_URL)) {
-            searcher = new BaiduReader();
+            reader = new BaiduReader();
         } else if (url.startsWith(BingReader.BASE_URL)) {
-            searcher = new BingReader();
+            reader = new BingReader();
         } else if (url.startsWith(OsChinaNewsReader.BASE_URL)) {
-            searcher = new OsChinaNewsReader();
+            reader = new OsChinaNewsReader();
         } else {
-            searcher = new WebReader();
+            reader = new WebReader();
         }
+        return reader.doRead(url, consumer);
+    }
+
+    /**
+     * 执行实际的网页读取操作
+     *
+     * @param url      目标URL
+     * @param consumer 自定义HTTP GET请求的回调函数
+     * @return 读取结果字符串
+     */
+    protected CompletableFuture<String> doRead(String url, Consumer<HttpGet> consumer) {
         HttpClient httpClient = new HttpClient(url);
         httpClient.options().debug(false).idleTimeout(5000);
         HttpGet httpGet = httpClient.get();
@@ -65,18 +78,22 @@ public class WebReader {
             consumer.accept(httpGet);
         }
         httpGet.header(header -> {
-            searcher.simulatorDeviceHeader().forEach(header::set);
+            simulatorDeviceHeader().forEach(header::set);
         });
-        searcher.initRequest(httpGet);
+        initRequest(httpGet);
         return httpGet.submit().thenApply(response -> {
             if (response.statusCode() != HttpStatus.OK.value()) {
                 return "请求失败.";
             } else {
-                return searcher.toMarkdown(response.body());
+                String body = response.body();
+                if (body == null || body.isEmpty()) {
+                    return "请求失败：返回内容为空.";
+                }
+                return toMarkdown(body, url);
             }
         }).exceptionally(throwable -> {
             throwable.printStackTrace();
-            return "请求失败";
+            return "请求失败: " + throwable.getMessage();
         });
     }
 
@@ -107,84 +124,348 @@ public class WebReader {
     /**
      * 将HTML内容转换为Markdown格式
      * <p>
-     * 抽象方法，由具体搜索引擎实现，负责将搜索引擎返回的HTML内容
-     * 解析并转换为适合AI处理的Markdown格式文本。
+     * 参考 r.jina.ai 的实现原理，使用 Readability 风格的算法提取主要内容，
+     * 过滤广告、导航、脚本等干扰内容，生成 LLM 友好的 Markdown。
      * </p>
      *
-     * @param html HTML格式的搜索结果
-     * @return Markdown格式的搜索结果
+     * @param html HTML格式的网页内容
+     * @param url  原始URL，用于构建相对链接
+     * @return Markdown格式的网页内容
      */
-    protected String toMarkdown(String html) {
+    protected String toMarkdown(String html, String url) {
         if (html == null || html.isEmpty()) {
             return "";
         }
 
-        // 提取<head>标签中的信息
-        int index = html.indexOf("</head>");
-        String headMarkdown = "";
-        if (index > 0) {
-            headMarkdown = extractHeadInformation(html.substring(0, index + 7));
+        // 提取页面元信息
+        PageMetadata metadata = extractPageMetadata(html, url);
+
+        // 提取主要内容（Readability 风格）
+        String mainContent = extractMainContent(html);
+
+        // 转换为 Markdown
+        String markdownContent = htmlToMarkdown(mainContent, url);
+
+        // 组装最终输出（参考 r.jina.ai 格式）
+        StringBuilder result = new StringBuilder();
+        result.append("Title: ").append(metadata.title).append("\n\n");
+        result.append("URL Source: ").append(metadata.sourceUrl).append("\n\n");
+        if (!metadata.publishedTime.isEmpty()) {
+            result.append("Published Time: ").append(metadata.publishedTime).append("\n\n");
+        }
+        result.append("Markdown Content:\n");
+        result.append(markdownContent);
+
+        return result.toString();
+    }
+
+
+    /**
+     * 页面元数据结构
+     */
+    protected static class PageMetadata {
+        String title = "";
+        String sourceUrl = "";
+        String publishedTime = "";
+        String description = "";
+        String author = "";
+    }
+
+    /**
+     * 提取页面元数据
+     *
+     * @param html 原始 HTML
+     * @param url  原始 URL
+     * @return 页面元数据
+     */
+    protected PageMetadata extractPageMetadata(String html, String url) {
+        PageMetadata metadata = new PageMetadata();
+        metadata.sourceUrl = url != null ? url : "";
+
+        // 提取标题
+        Pattern titlePattern = Pattern.compile("(?i)<title[^>]*>(.*?)</title>");
+        Matcher titleMatcher = titlePattern.matcher(html);
+        if (titleMatcher.find()) {
+            metadata.title = titleMatcher.group(1).trim().replaceAll("[\\r\\n]+", " ");
         }
 
-        String body = html.substring(index + 7).replaceAll("\\s+", " ");
+        // 提取 og:title（优先使用）
+        Pattern ogTitlePattern = Pattern.compile(
+                "(?i)<meta[^>]*property=[\"']og:title[\"'][^>]*content=[\"']([^\"']*)[\"']");
+        Matcher ogTitleMatcher = ogTitlePattern.matcher(html);
+        if (ogTitleMatcher.find()) {
+            metadata.title = ogTitleMatcher.group(1).trim();
+        }
 
-        // Remove script and style tags
-        body = body.replaceAll("(?is)<script[^>]*>.*?</script>", "");
-        body = body.replaceAll("(?is)<style[^>]*>.*?</style>", "");
-        //移除display:none
-        // 优化正则表达式以更准确地匹配具有display:none样式的元素
-        body = body.replaceAll("(?is)<[^>]*style\\s*=\\s*[\"'][^\"']*display\\s*:\\s*none[^\"']*[\"'][^>]*>.*?</[^>]*>", "");
-//        body = body.replaceAll("(?is)<footer[^>]*>.*?</footer>", "");
+        // 提取描述
+        Pattern descPattern = Pattern.compile(
+                "(?i)<meta[^>]*name=[\"']description[\"'][^>]*content=[\"']([^\"']*)[\"']");
+        Matcher descMatcher = descPattern.matcher(html);
+        if (descMatcher.find()) {
+            metadata.description = descMatcher.group(1).trim();
+        }
 
-        // Remove HTML comments
-        body = body.replaceAll("(?is)<!--.*?-->", "");
+        // 提取作者
+        Pattern authorPattern = Pattern.compile(
+                "(?i)<meta[^>]*name=[\"']author[\"'][^>]*content=[\"']([^\"']*)[\"']");
+        Matcher authorMatcher = authorPattern.matcher(html);
+        if (authorMatcher.find()) {
+            metadata.author = authorMatcher.group(1).trim();
+        }
 
-        //循环移除空标签
-        String preBody = body;
-        while (true) {
-            body = body.replaceAll("(?is)<[^/>]*>\\s*</[^>]*>", "");
-            if (body.equals(preBody)) {
+        // 提取发布时间（常见格式）
+        String[] timePatterns = {
+                "(?i)<meta[^>]*name=[\"']publish-date[\"'][^>]*content=[\"']([^\"']*)[\"']",
+                "(?i)<meta[^>]*name=[\"']published_date[\"'][^>]*content=[\"']([^\"']*)[\"']",
+                "(?i)<meta[^>]*name=[\"']article:published_time[\"'][^>]*content=[\"']([^\"']*)[\"']",
+                "(?i)<time[^>]*datetime=[\"']([^\"']*)[\"']"
+        };
+        for (String pattern : timePatterns) {
+            Pattern timeRegex = Pattern.compile(pattern);
+            Matcher timeMatcher = timeRegex.matcher(html);
+            if (timeMatcher.find()) {
+                metadata.publishedTime = timeMatcher.group(1).trim();
                 break;
-            } else {
-                preBody = body;
             }
         }
 
-        // Handle headings
-        body = body.replaceAll("(?is)<h1[^>]*>([^>]*)</h1>", "\n# $1");
-        body = body.replaceAll("(?is)<h2[^>]*>([^>]*)</h2>", "\n## $1");
-        body = body.replaceAll("(?is)<h3[^>]*>([^>]*)</h3>", "\n#### $1");
-        body = body.replaceAll("(?is)<h4[^>]*>([^>]*)</h4>", "\n##### $1");
-        body = body.replaceAll("(?is)<h5[^>]*>([^>]*)</h5>", "\n###### $1");
-        body = body.replaceAll("(?is)<h6[^>]*>([^>]*)</h6>", "\n###### $1");
+        return metadata;
+    }
 
-        // Handle paragraphs
+    /**
+     * 提取主要内容（Readability 风格算法）
+     * <p>
+     * 基于启发式算法识别页面主要内容区域，过滤导航、广告、侧边栏等。
+     * </p>
+     *
+     * @param html 原始 HTML
+     * @return 主要内容区域的 HTML
+     */
+    protected String extractMainContent(String html) {
+        if (html == null || html.isEmpty()) {
+            return "";
+        }
+
+        // 首先尝试找到 article 标签
+        Pattern articlePattern = Pattern.compile(
+                "(?is)<article[^>]*>(.*?)</article>", Pattern.DOTALL);
+        Matcher articleMatcher = articlePattern.matcher(html);
+        if (articleMatcher.find()) {
+            String article = articleMatcher.group(1);
+            // 确保 article 内容足够长
+            if (article.length() > 200) {
+                return article;
+            }
+        }
+
+        // 尝试找到 main 标签
+        Pattern mainPattern = Pattern.compile(
+                "(?is)<main[^>]*>(.*?)</main>", Pattern.DOTALL);
+        Matcher mainMatcher = mainPattern.matcher(html);
+        if (mainMatcher.find()) {
+            String main = mainMatcher.group(1);
+            if (main.length() > 200) {
+                return main;
+            }
+        }
+
+        // 提取 body
+        int bodyStart = html.indexOf("<body");
+        int bodyEnd = html.lastIndexOf("</body>");
+        if (bodyStart < 0 || bodyEnd < 0 || bodyEnd <= bodyStart) {
+            bodyStart = html.indexOf("</head>");
+            if (bodyStart < 0) {
+                bodyStart = 0;
+            } else {
+                bodyStart += 7;
+            }
+            bodyEnd = html.length();
+        } else {
+            // 找到 body 标签的结束位置
+            bodyStart = html.indexOf(">", bodyStart) + 1;
+        }
+
+        String body = html.substring(bodyStart, bodyEnd);
+
+        // 使用启发式评分找到最佳内容块
+        return findBestContentBlock(body);
+    }
+
+    /**
+     * 使用启发式算法找到最佳内容块
+     *
+     * @param body body 部分的 HTML
+     * @return 最佳内容块
+     */
+    protected String findBestContentBlock(String body) {
+        // 先移除 script、style、nav 等明显非内容标签
+        String cleaned = body.replaceAll("(?is)<script[^>]*>.*?</script>", "");
+        cleaned = cleaned.replaceAll("(?is)<style[^>]*>.*?</style>", "");
+        cleaned = cleaned.replaceAll("(?is)<nav[^>]*>.*?</nav>", "");
+        cleaned = cleaned.replaceAll("(?is)<header[^>]*>.*?</header>", "");
+        cleaned = cleaned.replaceAll("(?is)<footer[^>]*>.*?</footer>", "");
+        cleaned = cleaned.replaceAll("(?is)<aside[^>]*>.*?</aside>", "");
+        cleaned = cleaned.replaceAll("(?is)<!--.*?-->", "");
+
+        // 查找可能的 content 区域
+        // 优先查找 id 或 class 包含 content、article、post 等关键字的 div
+        String[] contentPatterns = {
+                "(?is)<div[^>]*class=[\"'][^\"']*content[^\"']*[\"'][^>]*>(.*?)</div>",
+                "(?is)<div[^>]*class=[\"'][^\"']*article[^\"']*[\"'][^>]*>(.*?)</div>",
+                "(?is)<div[^>]*class=[\"'][^\"']*post[^\"']*[\"'][^>]*>(.*?)</div>",
+                "(?is)<div[^>]*id=[\"'][^\"']*content[^\"']*[\"'][^>]*>(.*?)</div>",
+                "(?is)<div[^>]*id=[\"'][^\"']*article[^\"']*[\"'][^>]*>(.*?)</div>",
+                "(?is)<section[^>]*>(.*?)</section>"
+        };
+
+        String bestBlock = "";
+        int bestScore = 0;
+
+        for (String pattern : contentPatterns) {
+            Pattern regex = Pattern.compile(pattern, Pattern.DOTALL);
+            Matcher matcher = regex.matcher(cleaned);
+            while (matcher.find()) {
+                String block = matcher.group(1);
+                int score = scoreContentBlock(block);
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestBlock = block;
+                }
+            }
+        }
+
+        // 如果没有找到足够好的内容块，返回清理后的 body
+        if (bestBlock.isEmpty() || bestScore < 100) {
+            return cleaned;
+        }
+
+        return bestBlock;
+    }
+
+    /**
+     * 对内容块进行评分
+     *
+     * @param block HTML 内容块
+     * @return 内容质量分数
+     */
+    protected int scoreContentBlock(String block) {
+        if (block == null || block.isEmpty()) {
+            return 0;
+        }
+
+        int score = 0;
+
+        // 文本长度加分
+        int textLength = block.replaceAll("(?i)<[^>]*>", "").length();
+        score += textLength;
+
+        // 段落数量加分
+        Pattern pPattern = Pattern.compile("(?i)<p[^>]*>");
+        Matcher pMatcher = pPattern.matcher(block);
+        int pCount = 0;
+        while (pMatcher.find()) {
+            pCount++;
+        }
+        score += pCount * 100;
+
+        // 链接密度减分（链接比例过高可能是导航）
+        int linkCount = 0;
+        Pattern aPattern = Pattern.compile("(?i)<a[^>]*>");
+        Matcher aMatcher = aPattern.matcher(block);
+        while (aMatcher.find()) {
+            linkCount++;
+        }
+        if (textLength > 0 && linkCount > 0) {
+            double linkDensity = (double) linkCount / (textLength / 50.0);
+            if (linkDensity > 1.0) {
+                score -= (int) (linkDensity * 100);
+            }
+        }
+
+        // 包含负面关键词减分
+        String[] negativeIndicators = {"comment", "sidebar", "widget", "advertisement", "ad-", "menu", "nav"};
+        String lowerBlock = block.toLowerCase();
+        for (String indicator : negativeIndicators) {
+            if (lowerBlock.contains(indicator)) {
+                score -= 50;
+            }
+        }
+
+        // 正面关键词加分
+        String[] positiveIndicators = {"content", "article", "post", "entry", "text"};
+        for (String indicator : positiveIndicators) {
+            if (lowerBlock.contains(indicator)) {
+                score += 50;
+            }
+        }
+
+        return score;
+    }
+
+    /**
+     * 将 HTML 转换为 Markdown
+     *
+     * @param html 原始 HTML
+     * @param url  原始 URL（用于处理相对链接）
+     * @return Markdown 格式文本
+     */
+    protected String htmlToMarkdown(String html, String url) {
+        if (html == null || html.isEmpty()) {
+            return "";
+        }
+
+        String body = html;
+
+        // 规范化空白字符
+        body = body.replaceAll("\\s+", " ");
+
+        // 移除 script 和 style
+        body = body.replaceAll("(?is)<script[^>]*>.*?</script>", "");
+        body = body.replaceAll("(?is)<style[^>]*>.*?</style>", "");
+
+        // 移除 display:none 元素
+        body = body.replaceAll("(?is)<[^>]*style\\s*=\\s*[\"'][^\"']*display\\s*:\\s*none[^\"']*[\"'][^>]*>.*?</[^>]*>", "");
+
+        // 移除注释
+        body = body.replaceAll("(?is)<!--.*?-->", "");
+
+        // 移除空标签
+        String prevBody;
+        do {
+            prevBody = body;
+            body = body.replaceAll("(?is)<[^/>]*>\\s*</[^>]*>", "");
+        } while (!body.equals(prevBody));
+
+        // 转换标题
+        body = body.replaceAll("(?is)<h1[^>]*>(.*?)</h1>", "\n# $1\n");
+        body = body.replaceAll("(?is)<h2[^>]*>(.*?)</h2>", "\n## $1\n");
+        body = body.replaceAll("(?is)<h3[^>]*>(.*?)</h3>", "\n### $1\n");
+        body = body.replaceAll("(?is)<h4[^>]*>(.*?)</h4>", "\n#### $1\n");
+        body = body.replaceAll("(?is)<h5[^>]*>(.*?)</h5>", "\n##### $1\n");
+        body = body.replaceAll("(?is)<h6[^>]*>(.*?)</h6>", "\n###### $1\n");
+
+        // 转换段落和块级元素
         body = body.replaceAll("(?i)<p[^>]*>", "\n\n");
         body = body.replaceAll("(?i)</p>", "\n");
-
-        body = body.replaceAll("(?i)<div[^>]*>", "\n\n");
+        body = body.replaceAll("(?i)<div[^>]*>", "\n");
         body = body.replaceAll("(?i)</div>", "\n");
-
-
-        // Handle line breaks
         body = body.replaceAll("(?i)<br[^>]*/?>", "\n");
 
-        // Handle bold/strong
+        // 转换格式标签
         body = body.replaceAll("(?i)<strong[^>]*>(.*?)</strong>", "**$1**");
         body = body.replaceAll("(?i)<b[^>]*>(.*?)</b>", "**$1**");
-
-        // Handle italic/em
         body = body.replaceAll("(?i)<em[^>]*>(.*?)</em>", "*$1*");
         body = body.replaceAll("(?i)<i[^>]*>(.*?)</i>", "*$1*");
 
-        // Handle links
-        body = body.replaceAll("(?i)<a[^>]*href=[\"']([^\"']*)[\"'][^>]*>(.*?)</a>", "[$2]($1)");
+        // 转换链接 - 处理相对链接
+        body = resolveLinks(body, url);
 
-        // Handle images
+        // 转换图片
         body = body.replaceAll("(?i)<img[^>]*src=[\"']([^\"']*)[\"'][^>]*alt=[\"']([^\"']*)[\"'][^>]*/?>", "![$2]($1)");
         body = body.replaceAll("(?i)<img[^>]*alt=[\"']([^\"']*)[\"'][^>]*src=[\"']([^\"']*)[\"'][^>]*/?>", "![$1]($2)");
+        body = body.replaceAll("(?i)<img[^>]*src=[\"']([^\"']*)[\"'][^>]*/?>", "![Image]($1)");
 
-        // Handle lists
+        // 转换列表
         body = body.replaceAll("(?i)<ul[^>]*>", "\n");
         body = body.replaceAll("(?i)</ul>", "\n");
         body = body.replaceAll("(?i)<ol[^>]*>", "\n");
@@ -192,155 +473,109 @@ public class WebReader {
         body = body.replaceAll("(?i)<li[^>]*>", "\n- ");
         body = body.replaceAll("(?i)</li>", "\n");
 
-        // Handle code blocks
+        // 转换代码块
         body = body.replaceAll("(?i)<pre[^>]*>", "\n```\n");
         body = body.replaceAll("(?i)</pre>", "\n```\n");
         body = body.replaceAll("(?i)<code[^>]*>", "`");
         body = body.replaceAll("(?i)</code>", "`");
 
-        // Handle blockquotes
+        // 转换引用
         body = body.replaceAll("(?i)<blockquote[^>]*>", "\n> ");
         body = body.replaceAll("(?i)</blockquote>", "\n");
 
-        // Handle horizontal rules
+        // 转换水平线
         body = body.replaceAll("(?i)<hr[^>]*/?>", "\n---\n");
 
-        // Remove remaining HTML tags
+        // 移除剩余的 HTML 标签
         body = body.replaceAll("(?i)<[^>]*>", "");
 
-        // Clean up extra whitespace
+        // 解码 HTML 实体
+        body = body.replaceAll("<", "<");
+        body = body.replaceAll(">", ">");
+        body = body.replaceAll("&", "&");
+        body = body.replaceAll("\"", "\"");
+        body = body.replaceAll("'", "'");
+        body = body.replaceAll("&nbsp;", " ");
+
+        // 清理多余空白
         body = body.replaceAll("\n\\s+\n", "\n\n");
         body = body.replaceAll("\n{3,}", "\n\n");
         body = body.trim();
 
-        StringBuilder markdown = new StringBuilder();
-        markdown.append("# 网站基础信息\r\n").append(headMarkdown);
-        markdown.append("\r\n# 网站Body\r\n");
-        markdown.append(body);
-        return markdown.toString();
+        return body;
     }
 
     /**
-     * 提取HTML head标签中的信息
-     * <p>
-     * 从HTML的head部分提取标题、元数据和链接信息，包括：
-     * - 页面标题(title)
-     * - 字符编码(charset)
-     * - 页面描述(description)
-     * - 页面关键词(keywords)
-     * - 样式表链接(stylesheet)
-     * - 网站图标链接(favicon)
-     * - RSS订阅链接
-     * </p>
+     * 处理 HTML 中的链接，将相对链接转换为绝对链接
      *
-     * @param html 完整的HTML内容
-     * @return 替换<head>部分后的HTML内容
+     * @param html    HTML 内容
+     * @param baseUrl 基础 URL
+     * @return 处理后的 HTML
      */
-    private String extractHeadInformation(String html) {
-        String headPattern = "(?is)<head[^>]*>.*?</head>";
-        String titlePattern = "(?i)<title[^>]*>(.*?)</title>";
-        List<String> rssList = new ArrayList<>();
-        String title = "";
-        String charset = "";
-        String description = "";
-        String keywords = "";
-        // 查找<head>块
-        java.util.regex.Pattern headRegex = java.util.regex.Pattern.compile(headPattern);
-        java.util.regex.Matcher headMatcher = headRegex.matcher(html);
-
-        if (headMatcher.find()) {
-            String headContent = headMatcher.group();
-
-            // 从<head>中提取<title>
-            java.util.regex.Pattern titleRegex = java.util.regex.Pattern.compile(titlePattern);
-            java.util.regex.Matcher titleMatcher = titleRegex.matcher(headContent);
-
-            if (titleMatcher.find()) {
-                title = titleMatcher.group(1).trim();
-                // 移除换行符并添加到替换内容中
-                title = title.replaceAll("[\\r\\n]+", " ");
-            }
-
-            // 提取<meta>标签信息
-            java.util.regex.Pattern metaPattern = java.util.regex.Pattern.compile("(?i)<meta\\s+([^>]*?)>");
-            java.util.regex.Matcher metaMatcher = metaPattern.matcher(headContent);
-
-            while (metaMatcher.find()) {
-                String metaTag = metaMatcher.group(1);
-
-                // 提取charset信息
-                if (metaTag.contains("charset")) {
-                    java.util.regex.Pattern charsetPattern = java.util.regex.Pattern.compile("(?i)charset=['\"]?([^'\"\\s>]+)");
-                    java.util.regex.Matcher charsetMatcher = charsetPattern.matcher(metaTag);
-                    if (charsetMatcher.find()) {
-                        charset = charsetMatcher.group(1).trim();
-                    }
-                }
-
-                // 提取description信息
-                if (metaTag.contains("name=\"description\"") || metaTag.contains("name='description'")) {
-                    java.util.regex.Pattern descPattern = java.util.regex.Pattern.compile("(?i)content=['\"]([^\"']*)['\"]");
-                    java.util.regex.Matcher descMatcher = descPattern.matcher(metaTag);
-                    if (descMatcher.find()) {
-                        description = descMatcher.group(1).trim();
-                        description = description.replaceAll("[\\r\\n]+", " ");
-                    }
-                }
-
-                // 提取keywords信息
-                if (metaTag.contains("name=\"keywords\"") || metaTag.contains("name='keywords'")) {
-                    java.util.regex.Pattern keywordsPattern = java.util.regex.Pattern.compile("(?i)content=['\"]([^\"']*)['\"]");
-                    java.util.regex.Matcher keywordsMatcher = keywordsPattern.matcher(metaTag);
-                    if (keywordsMatcher.find()) {
-                        keywords = keywordsMatcher.group(1).trim();
-                        keywords = keywords.replaceAll("[\\r\\n]+", " ");
-                    }
-                }
-            }
-
-            // 提取<link>标签信息
-            java.util.regex.Pattern linkPattern = java.util.regex.Pattern.compile("(?i)<link\\s+([^>]*?)>");
-            java.util.regex.Matcher linkMatcher = linkPattern.matcher(headContent);
-
-            while (linkMatcher.find()) {
-                String linkTag = linkMatcher.group(1);
-
-                // 提取RSS链接
-                if (linkTag.contains("type=\"application/rss+xml\"") || linkTag.contains("type='application/rss+xml'")) {
-                    java.util.regex.Pattern hrefPattern = java.util.regex.Pattern.compile("(?i)href=['\"]([^\"']*)['\"]");
-                    java.util.regex.Matcher hrefMatcher = hrefPattern.matcher(linkTag);
-
-                    java.util.regex.Pattern titlePatternLink = java.util.regex.Pattern.compile("(?i)title=['\"]([^\"']*)['\"]");
-                    java.util.regex.Matcher titleMatcherLink = titlePatternLink.matcher(linkTag);
-
-                    String rssTitle = "";
-                    String rssUrl = "";
-                    if (hrefMatcher.find()) {
-                        rssUrl = hrefMatcher.group(1);
-                    }
-
-                    if (titleMatcherLink.find()) {
-                        rssTitle = titleMatcherLink.group(1);
-                    } else {
-                        rssTitle = rssUrl;
-                    }
-                    if (FeatUtils.isNotBlank(rssUrl)) {
-                        rssList.add('[' + rssTitle + "](" + rssUrl + ")");
-                    }
-                }
-            }
+    protected String resolveLinks(String html, String baseUrl) {
+        if (baseUrl == null || baseUrl.isEmpty()) {
+            return html.replaceAll("(?i)<a[^>]*href=[\"']([^\"']*)[\"'][^>]*>(.*?)</a>", "[$2]($1)");
         }
-        StringBuilder sb = new StringBuilder();
-        sb.append("**标题**: ").append(title).append("\r\n");
-        sb.append("**编码**: ").append(charset).append("\r\n");
-        sb.append("**描述**: ").append(description).append("\r\n");
-        sb.append("**关键词**: ").append(keywords).append("\r\n");
-        sb.append("**RSS订阅**: ");
-        rssList.forEach(rss -> sb.append("\n\t- ").append(rss));
-        sb.append("\r\n");
 
-        return sb.toString();
+        Pattern linkPattern = Pattern.compile("(?i)<a[^>]*href=[\"']([^\"']*)[\"'][^>]*>(.*?)</a>");
+        Matcher matcher = linkPattern.matcher(html);
+
+        StringBuffer result = new StringBuffer();
+        while (matcher.find()) {
+            String href = matcher.group(1);
+            String text = matcher.group(2);
+
+            // 转换为绝对链接
+            String absoluteHref = href;
+            if (href.startsWith("/") && !href.startsWith("//")) {
+                try {
+                    URL base = new URL(baseUrl);
+                    absoluteHref = base.getProtocol() + "://" + base.getHost() + href;
+                } catch (MalformedURLException e) {
+                    // 忽略转换错误，保持原链接
+                }
+            } else if (href.startsWith("#")) {
+                // 锚点链接
+                absoluteHref = baseUrl + href;
+            } else if (!href.startsWith("http://") && !href.startsWith("https://") && !href.startsWith("//") && !href.startsWith("mailto:")) {
+                // 相对路径
+                try {
+                    URL base = new URL(baseUrl);
+                    String basePath = base.getPath();
+                    if (basePath.endsWith("/")) {
+                        absoluteHref = base.getProtocol() + "://" + base.getHost() + basePath + href;
+                    } else {
+                        int lastSlash = basePath.lastIndexOf('/');
+                        if (lastSlash >= 0) {
+                            basePath = basePath.substring(0, lastSlash + 1);
+                        } else {
+                            basePath = "/";
+                        }
+                        absoluteHref = base.getProtocol() + "://" + base.getHost() + basePath + href;
+                    }
+                } catch (MalformedURLException e) {
+                    // 忽略转换错误
+                }
+            }
+
+            String replacement = "[" + Matcher.quoteReplacement(text) + "](" + Matcher.quoteReplacement(absoluteHref) + ")";
+            matcher.appendReplacement(result, replacement);
+        }
+        matcher.appendTail(result);
+
+        return result.toString();
     }
+
+    /**
+     * 兼容性方法：将HTML内容转换为Markdown格式（旧版本）
+     *
+     * @param html HTML格式的搜索结果
+     * @return Markdown格式的搜索结果
+     */
+    protected String toMarkdown(String html) {
+        return toMarkdown(html, null);
+    }
+
 
     /**
      * 获取基础HTTP请求头
