@@ -51,7 +51,7 @@ public final class HttpClient {
 
     private final String uri;
 
-    public HttpClient(String url) {
+    public HttpClient(final String url) {
         int schemaIndex = url.indexOf("://");
         if (schemaIndex == -1) {
             throw new IllegalArgumentException("invalid url:" + url);
@@ -59,6 +59,10 @@ public final class HttpClient {
         String schema = url.substring(0, schemaIndex);
         int uriIndex = url.indexOf("/", schemaIndex + 3);
         int portIndex = url.indexOf(":", schemaIndex + 3);
+        // 避免对于 https://r.jina.ai/https://smartboot.tech 这种情况的误判
+        if (uriIndex > 0 && uriIndex < portIndex) {
+            portIndex = -1;
+        }
         boolean http = FeatUtils.SCHEMA_HTTP.equals(schema);
         boolean https = !http && FeatUtils.SCHEMA_HTTPS.equals(schema);
 
