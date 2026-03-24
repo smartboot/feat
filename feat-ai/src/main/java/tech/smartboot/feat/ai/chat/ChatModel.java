@@ -291,6 +291,9 @@ public class ChatModel {
         if (options.responseFormat() != null) {
             jsonObject.put("response_format", JSONObject.of("type", options.responseFormat().getType()));
         }
+        if (options.getTemperature() != null) {
+            jsonObject.put("temperature", options.getTemperature());
+        }
 
         List<Tool> toolList = new ArrayList<>();
         for (String tool : tools) {

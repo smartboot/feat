@@ -51,6 +51,11 @@ public class ChatOptions extends Options {
     private ChatModelVendor model;
 
     /**
+     * 温度参数，控制生成文本的随机性，范围通常为 0.0 到 2.0
+     */
+    private Double temperature;
+
+    /**
      * 设置基础URL
      *
      * @param baseUrl 基础URL
@@ -198,5 +203,25 @@ public class ChatOptions extends Options {
      */
     public ChatModelVendor getModel() {
         return model;
+    }
+
+    /**
+     * 设置温度参数
+     *
+     * @param temperature 温度参数，控制生成文本的随机性，范围通常为 0.0 到 2.0
+     * @return 当前ChatOptions实例，用于链式调用
+     */
+    public ChatOptions temperature(double temperature) {
+        this.temperature = temperature;
+        return this;
+    }
+
+    /**
+     * 获取温度参数
+     *
+     * @return 温度参数
+     */
+    public Double getTemperature() {
+        return temperature;
     }
 }

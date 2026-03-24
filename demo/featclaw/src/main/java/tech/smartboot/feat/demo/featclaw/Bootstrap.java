@@ -11,7 +11,6 @@
 package tech.smartboot.feat.demo.featclaw;
 
 import tech.smartboot.feat.ai.FeatAI;
-import tech.smartboot.feat.ai.agent.AgentOptions;
 import tech.smartboot.feat.ai.agent.FeatAgent;
 import tech.smartboot.feat.ai.agent.tools.FileOperationTool;
 import tech.smartboot.feat.ai.agent.tools.SearchTool;
@@ -56,7 +55,7 @@ public class Bootstrap {
      * FeatClaw 专用提示词模板
      */
     private static final Prompt FEATCLAW_PROMPT = new Prompt(
-        FeatUtils.getResourceAsString("feat-prompts/featclaw_agent.tpl")
+            FeatUtils.getResourceAsString("feat-prompts/featclaw_agent.tpl")
     );
 
     /**
@@ -118,13 +117,12 @@ public class Bootstrap {
         FeatAgent agent = FeatAI.agent(opts -> {
             // 配置 AI 模型
             opts.chatOptions()
-                .model(ChatModelVendor.GiteeAI.DeepSeek_V32)
-//                .temperature(0.7f)
-            ;
-            
+                    .model(ChatModelVendor.GiteeAI.DeepSeek_V32)
+                    .temperature(0.7f);
+
             // 使用 FeatClaw 专用提示词模板
             opts.prompt(FEATCLAW_PROMPT);
-            
+
             // 启用核心工具
             opts.tool(new FileOperationTool());
             opts.tool(new CodeGeneratorTool());
@@ -132,14 +130,14 @@ public class Bootstrap {
             opts.tool(new ShellExecuteTool());
             opts.tool(new SearchTool());
             opts.tool(new WebPageReaderTool());
-            
+
             // 启用记忆功能
             opts.enableMemory();
         });
 
         // 对话历史（用于保持上下文）
         List<Message> conversationHistory = new ArrayList<Message>();
-        
+
         // 添加系统提示
         conversationHistory.add(Message.ofSystem(
             "你是 FeatClaw，一个智能软件开发助手。你可以帮助用户分析项目、生成代码、" +
@@ -148,38 +146,38 @@ public class Bootstrap {
 
         // 读取用户输入
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-        
+
         try {
             while (true) {
                 System.out.print("\nFeatClaw > ");
                 String userInput = reader.readLine();
-                
+
                 if (userInput == null) {
                     break;
                 }
-                
+
                 userInput = userInput.trim();
-                
+
                 // 处理特殊命令
                 if (userInput.isEmpty()) {
                     continue;
                 }
-                
+
                 String lowerInput = userInput.toLowerCase();
                 if (lowerInput.equals("exit") || lowerInput.equals("quit")) {
                     System.out.println("\n感谢使用 FeatClaw，再见！\n");
                     break;
                 }
-                
+
                 if (lowerInput.equals("clear")) {
                     conversationHistory.clear();
                     conversationHistory.add(Message.ofSystem(
-                        "你是 FeatClaw，一个智能软件开发助手。"
+                            "你是 FeatClaw，一个智能软件开发助手。"
                     ));
                     System.out.println("\n对话历史已清空。\n");
                     continue;
                 }
-                
+
                 if (lowerInput.equals("help")) {
                     System.out.println(HELP_MESSAGE);
                     continue;
@@ -187,23 +185,23 @@ public class Bootstrap {
 
                 // 添加用户消息到历史
                 conversationHistory.add(Message.ofUser(userInput));
-                
+
                 // 显示处理中提示
                 System.out.println("\n思考中...\n");
-                
+
                 try {
                     // 执行 Agent
                     CompletableFuture<String> future = agent.execute(conversationHistory);
                     String response = future.get();
-                    
+
                     // 添加助手回复到历史
                     conversationHistory.add(Message.ofAssistant(response));
-                    
+
                     // 显示响应
                     System.out.println("============================================================\n");
                     System.out.println(response);
                     System.out.println("\n============================================================");
-                    
+
                 } catch (Exception e) {
                     System.err.println("\n错误: " + e.getMessage());
                     e.printStackTrace();
