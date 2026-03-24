@@ -87,10 +87,8 @@ public class JinaAgentToolDemo {
         // 执行工具
         String result = jinaTool.execute(params).get();
 
-        // 显示结果（只显示前500字符）
-        System.out.println("提取结果（前500字符）：");
-        System.out.println(truncate(result, 500));
         System.out.println("\n[完整内容长度: " + result.length() + " 字符]");
+        System.out.println(result);
     }
 
     /**
@@ -139,16 +137,6 @@ public class JinaAgentToolDemo {
 
             System.out.println("\n");
         }
-    }
-
-    /**
-     * 截断字符串
-     */
-    private static String truncate(String str, int maxLength) {
-        if (str == null || str.length() <= maxLength) {
-            return str;
-        }
-        return str.substring(0, maxLength) + "... [已截断]";
     }
 
     /**
