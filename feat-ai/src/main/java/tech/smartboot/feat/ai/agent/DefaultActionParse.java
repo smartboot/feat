@@ -19,22 +19,6 @@ import java.util.regex.Pattern;
  */
 public class DefaultActionParse implements ActionParse {
     /**
-     * 匹配动作输入的正则表达式
-     * <p>
-     * 用于从AI模型的响应中提取Action Input部分的内容，即传递给工具的参数。
-     * 格式示例：Action Input: {"query": "最新的人工智能技术"}
-     * </p>
-     */
-    private static final Pattern ACTION_INPUT_PATTERN = Pattern.compile("Action Input:\\s*(.+)", Pattern.DOTALL);
-    /**
-     * 匹配动作步骤的正则表达式
-     * <p>
-     * 用于从AI模型的响应中提取Action部分的内容，即要执行的工具名称。
-     * 格式示例：Action: search
-     * </p>
-     */
-    private static final Pattern ACTION_PATTERN = Pattern.compile("Action:\\s*([\\w_]+)");
-    /**
      * 匹配思考步骤的正则表达式
      * <p>
      * 用于从AI模型的响应中提取Thought部分的内容。
@@ -42,14 +26,17 @@ public class DefaultActionParse implements ActionParse {
      * </p>
      */
     private static final Pattern THOUGHT_PATTERN = Pattern.compile("Thought:\\s*(.+)");
+
     /**
-     * 匹配最终答案的正则表达式
+     * 匹配 Action Input XML 标签的正则表达式
      * <p>
-     * 用于从AI模型的响应中提取最终答案。
-     * 格式示例：AI: 这是问题的答案...
+     * 用于提取被 <action_input>...</action_input> 标签包裹的内容。
+     * 支持多行内容，使用 DOTALL 模式让 . 匹配换行符。
      * </p>
      */
-    private static final Pattern FINAL_ANSWER_PATTERN = Pattern.compile("AI:\\s*(.+)");
+    private static final Pattern ACTION_INPUT_PATTERN = Pattern.compile(
+        "<action_input>([\\s\\S]*?)</action_input>", Pattern.DOTALL
+    );
 
     @Override
     public ToolCaller parse(String response) {
@@ -81,14 +68,10 @@ public class DefaultActionParse implements ActionParse {
             action = response.substring(7, index).trim();
         }
 
-        // 查找动作输入
-        int startInput = response.indexOf("Action Input:");
-        if (startInput > 0) {
-            startInput = startInput + "Action Input:".length();
-            int endInput = response.indexOf('\n', startInput);
-            if (endInput > 0) {
-                actionInput = response.substring(startInput, endInput).trim();
-            }
+        // 查找动作输入 - 使用 XML 标签匹配
+        Matcher actionInputMatcher = ACTION_INPUT_PATTERN.matcher(response);
+        if (actionInputMatcher.find()) {
+            actionInput = actionInputMatcher.group(1).trim();
         }
 
         // 如果有动作但没有输入，则返回null

@@ -154,22 +154,27 @@ public class AgentOptions {
      * @param prompt 提示词模板对象
      * @return 当前实例，支持链式调用
      */
-    public AgentOptions prompt(Prompt prompt) {
+    AgentOptions prompt(Prompt prompt) {
         this.prompt = prompt;
         return this;
     }
 
     /**
-     * 通过字符串设置提示词模板
+     * 通过字符串设置系统提示词补充内容
      * <p>
-     * 将字符串转换为Prompt对象并设置为当前Agent的提示词模板。
+     * 外部传入的提示词字符串会作为默认模板的补充增强，
+     * 通过填充 {{system_prompt}} 变量来实现，而不是替换整个模板。
+     * 这是为了确保Agent能正确解析执行过程中的输出格式。
      * </p>
      *
-     * @param prompt 提示词模板字符串
+     * @param systemPrompt 系统提示词补充内容字符串
      * @return 当前实例，支持链式调用
      */
-    public AgentOptions prompt(String prompt) {
-        return prompt(new Prompt(prompt));
+    public AgentOptions systemPrompt(String systemPrompt) {
+        // 将外部提示词作为 system_prompt 变量存储在 Prompt 中
+        // 实际渲染时会与默认模板合并
+        this.chatOptions.system(systemPrompt);
+        return this;
     }
 
     /**

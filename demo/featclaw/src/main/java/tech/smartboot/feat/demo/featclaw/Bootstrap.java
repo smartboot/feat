@@ -52,13 +52,6 @@ import java.util.concurrent.CompletableFuture;
 public class Bootstrap {
 
     /**
-     * FeatClaw 专用提示词模板
-     */
-    private static final Prompt FEATCLAW_PROMPT = new Prompt(
-            FeatUtils.getResourceAsString("feat-prompts/featclaw_agent.tpl")
-    );
-
-    /**
      * 欢迎信息
      */
     private static final String WELCOME_MESSAGE = 
@@ -121,7 +114,7 @@ public class Bootstrap {
                     .temperature(0.7f);
 
             // 使用 FeatClaw 专用提示词模板
-            opts.prompt(FEATCLAW_PROMPT);
+            opts.systemPrompt(FeatUtils.getResourceAsString("feat-prompts/featclaw_agent.tpl"));
 
             // 启用核心工具
             opts.tool(new FileOperationTool());

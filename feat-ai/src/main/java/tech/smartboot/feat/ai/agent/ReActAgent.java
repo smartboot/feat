@@ -11,7 +11,6 @@
 package tech.smartboot.feat.ai.agent;
 
 import com.alibaba.fastjson2.JSONObject;
-import tech.smartboot.feat.ai.agent.memory.Memory;
 import tech.smartboot.feat.ai.agent.memory.MemoryMessage;
 import tech.smartboot.feat.ai.agent.memory.MemoryRole;
 import tech.smartboot.feat.ai.agent.tools.FileOperationTool;
@@ -22,6 +21,7 @@ import tech.smartboot.feat.ai.chat.ChatModelVendor;
 import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
+import tech.smartboot.feat.ai.chat.prompt.Prompt;
 import tech.smartboot.feat.ai.chat.prompt.PromptTemplate;
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.logging.Logger;
@@ -35,7 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 /**
  * 基于ReAct范式的AI Agent实现
@@ -76,7 +75,7 @@ public class ReActAgent extends FeatAgent {
     }
 
     public ReActAgent(Consumer<AgentOptions> opts) {
-        options.prompt(PromptTemplate.loadPrompt("feat_react_agent.tpl")).chatOptions().model(ChatModelVendor.GiteeAI.DeepSeek_V32);
+        options.prompt(new Prompt(PromptTemplate.loadPrompt("feat_react_agent.tpl"))).chatOptions().model(ChatModelVendor.GiteeAI.DeepSeek_V32);
         opts.accept(options);
     }
 
