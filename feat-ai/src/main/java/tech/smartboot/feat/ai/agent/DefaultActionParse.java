@@ -27,17 +27,6 @@ public class DefaultActionParse implements ActionParse {
      */
     private static final Pattern THOUGHT_PATTERN = Pattern.compile("Thought:\\s*(.+)");
 
-    /**
-     * 匹配 Action Input XML 标签的正则表达式
-     * <p>
-     * 用于提取被 <action_input>...</action_input> 标签包裹的内容。
-     * 支持多行内容，使用 DOTALL 模式让 . 匹配换行符。
-     * </p>
-     */
-    private static final Pattern ACTION_INPUT_PATTERN = Pattern.compile(
-        "<action_input>([\\s\\S]*?)</action_input>", Pattern.DOTALL
-    );
-
     @Override
     public ToolCaller parse(String response) {
         int lastAI = response.lastIndexOf("AI:");
@@ -68,10 +57,11 @@ public class DefaultActionParse implements ActionParse {
             action = response.substring(7, index).trim();
         }
 
-        // 查找动作输入 - 使用 XML 标签匹配
-        Matcher actionInputMatcher = ACTION_INPUT_PATTERN.matcher(response);
-        if (actionInputMatcher.find()) {
-            actionInput = actionInputMatcher.group(1).trim();
+        // 查找动作输入
+        int startInput = response.indexOf("Action Input:");
+        if (startInput > 0) {
+            startInput = startInput + "Action Input:".length();
+            actionInput = response.substring(startInput).trim();
         }
 
         // 如果有动作但没有输入，则返回null

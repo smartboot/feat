@@ -24,7 +24,7 @@
         ```
         Thought: (在此处详细阐述你为何要调用此工具，以及你期望得到什么信息)
         Action: (从 [{{tool_names}}] 中精确选择一个工具名称)
-        Action Input: <action_input>(以JSON格式提供该工具所需的具体参数)</action_input>
+        Action Input: (以JSON格式提供该工具所需的具体参数,尽量不要换行)
         ```
     *   如果已获得足够信息并可以形成最终答案，则必须按以下 **单一** 格式输出，且**不得**再包含任何`Action`：
         ```

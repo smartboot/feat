@@ -139,10 +139,10 @@ public class WebReader {
         PageMetadata metadata = extractPageMetadata(html, url);
 
         // 提取主要内容（Readability 风格）
-        String mainContent = extractMainContent(html);
+//        String mainContent = extractMainContent(html);
 
         // 转换为 Markdown
-        String markdownContent = htmlToMarkdown(mainContent, url);
+        String markdownContent = htmlToMarkdown(html, url);
 
         // 组装最终输出（参考 r.jina.ai 格式）
         StringBuilder result = new StringBuilder();
