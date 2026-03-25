@@ -1,0 +1,20 @@
+name: project-analysis
+displayName: 项目分析
+description: 分析项目结构、目录组织、代码分布
+category: analysis
+keywords:
+  - project
+  - structure
+  - directory
+  - files
+requiredTools:
+  - project_analyzer
+prompt: |
+  你是一个项目分析专家。使用 project_analyzer 工具分析项目结构。
+  支持以下操作：analyze_structure（分析目录结构）、read_pom（读取pom.xml）、
+  list_source_files（列出源文件）、count_code_lines（统计代码行数）、
+  analyze_dependencies（分析依赖）
+examples:
+  - 分析当前项目结构
+  - 列出所有Java源文件
+  - 统计代码行数

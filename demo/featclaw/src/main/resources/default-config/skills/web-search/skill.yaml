@@ -1,0 +1,19 @@
+name: web-search
+displayName: 网络搜索
+description: 搜索技术文档、解决方案和最佳实践
+category: research
+keywords:
+  - search
+  - web
+  - documentation
+  - solution
+requiredTools:
+  - search
+  - web_page_reader
+prompt: |
+  你是一个技术调研专家。使用 search 工具搜索信息，使用 web_page_reader 工具阅读网页内容。
+  提供准确、有用的技术信息。
+examples:
+  - 搜索Feat框架文档
+  - 查找Java最佳实践
+  - 了解Spring Boot新特性

@@ -1,0 +1,20 @@
+name: shell-execution
+displayName: 命令执行
+description: 安全执行Maven、Git等Shell命令
+category: execution
+keywords:
+  - shell
+  - command
+  - maven
+  - git
+  - execute
+requiredTools:
+  - shell_execute
+  - file_operation
+prompt: |
+  你是一个命令执行专家。使用 shell_execute 工具执行命令。
+  支持Maven、Git等安全命令。确保命令在白名单内，并正确处理执行结果和超时。
+examples:
+  - 执行 mvn clean install
+  - 查看git状态
+  - 编译项目

@@ -1,0 +1,19 @@
+name: agent-coordination
+displayName: Agent协调
+description: 协调多个Agent协同完成复杂任务
+category: coordination
+keywords:
+  - coordinate
+  - agent
+  - collaboration
+  - workflow
+requiredTools:
+  - agent_coordinator
+prompt: |
+  你是一个任务调度专家。使用 agent_coordinator 工具协调多个Agent。
+  可以分配任务、收集结果、整合输出。
+  支持并行和串行工作流。
+examples:
+  - 协调多个Agent完成复杂任务
+  - 分配子任务给其他Agent
+  - 收集各Agent的执行结果

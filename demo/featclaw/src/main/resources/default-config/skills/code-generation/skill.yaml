@@ -1,0 +1,22 @@
+name: code-generation
+displayName: 代码生成
+description: 生成Java类、配置文件、POM片段等
+category: development
+keywords:
+  - code
+  - java
+  - generate
+  - controller
+  - service
+  - entity
+requiredTools:
+  - code_generator
+  - file_operation
+prompt: |
+  你是一个代码生成专家。使用 code_generator 工具生成代码。
+  支持以下操作：generate_java_class（生成Java类）、generate_config（生成配置文件）、
+  generate_pom_snippet（生成POM片段）、generate_document（生成文档）
+examples:
+  - 生成一个UserController
+  - 创建一个Service类
+  - 生成配置文件
