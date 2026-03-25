@@ -55,8 +55,6 @@ public class WebReader {
             reader = new BaiduReader();
         } else if (url.startsWith(BingReader.BASE_URL)) {
             reader = new BingReader();
-        } else if (url.startsWith(OsChinaNewsReader.BASE_URL)) {
-            reader = new OsChinaNewsReader();
         } else {
             reader = new WebReader();
         }
