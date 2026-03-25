@@ -400,7 +400,13 @@ public class ReActAgent extends FeatAgent {
         input = input.substring(start, end + 1);
 
         // 使用工具执行管理器来执行工具
-        return executeTool(toolName, JSONObject.parse(input));
+        try {
+            return executeTool(toolName, JSONObject.parse(input));
+        } catch (Throwable e) {
+            logger.error("exception tool:{} input:{} ", toolName, input, e);
+            return CompletableFuture.completedFuture("Error: Invalid input format.");
+        }
+
     }
 
     /**

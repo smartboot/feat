@@ -61,7 +61,13 @@ public class DefaultActionParse implements ActionParse {
         int startInput = response.indexOf("Action Input:");
         if (startInput > 0) {
             startInput = startInput + "Action Input:".length();
-            actionInput = response.substring(startInput).trim();
+            int endInput = response.length();
+            // 如果模型自己生成了Observation，需要截断，防止虚假执行
+            int observationPos = response.indexOf("Observation:", startInput);
+            if (observationPos > 0) {
+                endInput = observationPos;
+            }
+            actionInput = response.substring(startInput, endInput).trim();
         }
 
         // 如果有动作但没有输入，则返回null
