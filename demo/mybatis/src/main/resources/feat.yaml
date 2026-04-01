@@ -1,3 +1,4 @@
 feat:
   mybatis:
     path: mybatis/mybatis-config.xml
+    initial-sql: mybatis/ddl/schema.sql

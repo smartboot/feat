@@ -4,30 +4,32 @@ description: 在 Feat Cloud 中集成 MyBatis 进行数据库操作
 sidebar:
     order: 5
 ---
-import {TabItem, Tabs,Aside} from "@astrojs/starlight/components";
+import { Aside } from '@astrojs/starlight/components'
 import CheckAuthorize from '../../../components/CheckAuthorize.astro'
 
 <CheckAuthorize/>
 
-本教程将指导你在 Feat Cloud 中集成 MyBatis，构建一个完整的用户管理系统。
+本章介绍如何在 Feat Cloud 中集成 MyBatis，实现数据持久化操作。
 
-## 你将学到
+<Aside type="tip">
+本章假设你已熟悉 MyBatis 基础用法。如需了解 Feat Cloud Controller 开发，请先阅读 [Controller 开发实践](/feat/cloud/controller/)。
+</Aside>
 
-- 配置 MyBatis 环境
-- 创建数据库表结构
-- 实现数据访问层（Mapper）
-- 构建业务逻辑层（Service）
-- 创建 REST API 控制器
+有关完整示例，请参见 [Gitee 仓库中的 MyBatis 示例](https://gitee.com/smartboot/feat/tree/master/demo/mybatis)。
 
-有关完整示例，请参见 [Gitee 仓库中的 MyBatis 示例](https://gitee.com/smartboot/feat/tree/master/demo/mybatis)
+---
 
-## 前置准备
+## 添加依赖
 
-### 添加依赖
-
-在 `pom.xml` 中添加以下依赖：
+在 `pom.xml` 中添加 MyBatis 和数据库驱动依赖：
 
 ```xml
+<dependency>
+    <groupId>tech.smartboot.feat</groupId>
+    <artifactId>feat-cloud-starter</artifactId>
+    <version>1.5.3</version><!--以当前最新版本号为准-->
+</dependency>
+
 <dependency>
     <groupId>org.mybatis</groupId>
     <artifactId>mybatis</artifactId>
@@ -42,9 +44,11 @@ import CheckAuthorize from '../../../components/CheckAuthorize.astro'
 </dependency>
 ```
 
-## 步骤 1：配置 MyBatis
+---
 
-### 创建 feat.yaml 配置文件
+## 配置 MyBatis
+
+### feat.yaml 配置
 
 在 `src/main/resources` 目录下创建 `feat.yaml`：
 
@@ -63,10 +67,10 @@ feat:
 | `feat.mybatis.initial-sql` | 否 | 数据库初始化 SQL 脚本路径，应用启动时自动执行 |
 
 <Aside type="tip">
-  配置 `initial-sql` 后，Feat Cloud 会在应用启动时自动执行 SQL 初始化脚本，无需手动编写初始化代码。
+配置 `initial-sql` 后，Feat Cloud 会在应用启动时自动执行 SQL 初始化脚本，无需手动编写初始化代码。
 </Aside>
 
-### 创建 MyBatis 配置文件
+### MyBatis 配置文件
 
 在 `src/main/resources/mybatis` 目录下创建 `mybatis-config.xml`：
 
@@ -76,6 +80,10 @@ feat:
         PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-config.dtd">
 <configuration>
+    <settings>
+        <!-- 开启 SQL 日志输出 -->
+        <setting name="logImpl" value="STDOUT_LOGGING"/>
+    </settings>
     <environments default="h2_mem">
         <environment id="h2_mem">
             <transactionManager type="JDBC"/>
@@ -92,10 +100,10 @@ feat:
 ```
 
 <Aside type="caution">
-  当前仅支持 `POOLED` 数据源类型和 `JDBC` 事务管理器。
+当前仅支持 `POOLED` 数据源类型和 `JDBC` 事务管理器。
 </Aside>
 
-### 创建数据库表结构
+### 数据库初始化脚本
 
 在 `src/main/resources/mybatis/ddl` 目录下创建 `schema.sql`：
 
@@ -113,7 +121,7 @@ CREATE TABLE IF NOT EXISTS user_info
     PRIMARY KEY (username)
 );
 
--- 插入初始数据
+-- 初始数据
 INSERT IGNORE INTO user_info(username, password, role, `desc`)
 VALUES ('feat', 'feat', 'admin', '超级账户');
 
@@ -121,7 +129,11 @@ INSERT IGNORE INTO user_info(username, password, role, `desc`)
 VALUES ('admin', 'admin123', 'admin', '管理员用户');
 ```
 
-### 创建应用启动类
+---
+
+## 创建应用启动类
+
+配置完成后，只需创建一个简单的启动类：
 
 ```java title="Bootstrap.java"
 @Bean
@@ -132,9 +144,89 @@ public class Bootstrap {
 }
 ```
 
-## 步骤 2：定义实体类
+<Aside type="tip">
+Feat Cloud 在编译期自动解析 `feat.yaml` 配置，生成 `SqlSessionFactory` Bean。生成的 Bean 名称 为 `sessionFactory`，可直接通过 `@Autowired` 注入使用。
+</Aside>
 
-创建 `User` 实体类，对应数据库中的 `user_info` 表：
+---
+
+## 多数据源配置
+
+当需要连接多个数据库时，可以通过 `@Bean` 注解手动定义多个 `SqlSessionFactory`：
+
+```java title="Bootstrap.java"
+@Bean
+public class Bootstrap {
+
+    // 主数据源
+    @Bean
+    public SqlSessionFactory primarySessionFactory() throws IOException {
+        InputStream inputStream = Resources.getResourceAsStream("mybatis/mybatis-config-primary.xml");
+        SqlSessionFactory sessionFactory = new SqlSessionFactoryBuilder().build(inputStream);
+
+        // 执行主数据源初始化脚本
+        ScriptRunner runner = new ScriptRunner(sessionFactory.openSession().getConnection());
+        runner.setLogWriter(null);
+        runner.runScript(Resources.getResourceAsReader("mybatis/ddl/schema-primary.sql"));
+
+        return sessionFactory;
+    }
+
+    // 从数据源
+    @Bean
+    public SqlSessionFactory secondarySessionFactory() throws IOException {
+        InputStream inputStream = Resources.getResourceAsStream("mybatis/mybatis-config-secondary.xml");
+        SqlSessionFactory sessionFactory = new SqlSessionFactoryBuilder().build(inputStream);
+
+        // 执行从数据源初始化脚本
+        ScriptRunner runner = new ScriptRunner(sessionFactory.openSession().getConnection());
+        runner.setLogWriter(null);
+        runner.runScript(Resources.getResourceAsReader("mybatis/ddl/schema-secondary.sql"));
+
+        return sessionFactory;
+    }
+
+    public static void main(String[] args) {
+        FeatCloud.cloudServer().listen();
+    }
+}
+```
+
+在 Service 中通过指定 Bean 名称注入对应的 `SqlSessionFactory`：
+
+```java title="UserService.java"
+@Bean
+public class UserService {
+
+    @Autowired("primarySessionFactory")
+    private SqlSessionFactory primarySessionFactory;
+
+    @Autowired("secondarySessionFactory")
+    private SqlSessionFactory secondarySessionFactory;
+
+    public User findFromPrimary(String username) {
+        SqlSession session = primarySessionFactory.openSession();
+        UserMapper mapper = session.getMapper(UserMapper.class);
+        return mapper.selectByUsername(username);
+    }
+
+    public User findFromSecondary(String username) {
+        SqlSession session = secondarySessionFactory.openSession();
+        UserMapper mapper = session.getMapper(UserMapper.class);
+        return mapper.selectByUsername(username);
+    }
+}
+```
+
+<Aside type="caution">
+使用多数据源时，不要在 `feat.yaml` 中配置 `feat.mybatis.path`，避免与手动定义的 Bean 产生冲突。
+</Aside>
+
+---
+
+## 定义实体类
+
+创建与数据库表对应的实体类：
 
 ```java title="User.java"
 public class User {
@@ -145,7 +237,7 @@ public class User {
     private Date createTime;
     private Date editTime;
 
-    // 构造函数
+    // 必须有无参构造方法
     public User() {}
 
     public User(String username, String password, String desc, String role) {
@@ -155,35 +247,32 @@ public class User {
         this.role = role;
     }
 
-    // getter 和 setter 方法
+    // Getter 和 Setter 方法
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
-    
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
-    
     public String getDesc() { return desc; }
     public void setDesc(String desc) { this.desc = desc; }
-    
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
-    
     public Date getCreateTime() { return createTime; }
     public void setCreateTime(Date createTime) { this.createTime = createTime; }
-    
     public Date getEditTime() { return editTime; }
     public void setEditTime(Date editTime) { this.editTime = editTime; }
 }
 ```
 
-## 步骤 3：实现数据访问层
+---
 
-使用 MyBatis 注解方式定义 `UserMapper` 接口：
+## 实现 Mapper 接口
+
+使用 MyBatis 注解定义数据访问接口：
 
 ```java title="UserMapper.java"
 @Mapper
 public interface UserMapper {
-    
+
     @Select("SELECT * FROM user_info WHERE username = #{username}")
     @Results({
         @Result(property = "username", column = "username"),
@@ -214,27 +303,23 @@ public interface UserMapper {
 
     @Delete("DELETE FROM user_info WHERE username = #{username}")
     int deleteByUsername(@Param("username") String username);
-
-    @Select("SELECT * FROM user_info WHERE role = #{role}")
-    @Results({
-        @Result(property = "username", column = "username"),
-        @Result(property = "password", column = "password"),
-        @Result(property = "desc", column = "desc"),
-        @Result(property = "role", column = "role"),
-        @Result(property = "createTime", column = "create_time"),
-        @Result(property = "editTime", column = "edit_time")
-    })
-    List<User> selectByRole(@Param("role") String role);
 }
 ```
 
-## 步骤 4：构建业务逻辑层
+<Aside type="tip">
+`@Results` 注解用于指定列名到属性名的映射。如果列名与属性名一致（如 `username`），可省略该列的映射配置。
+</Aside>
 
-创建 `UserService` 类处理业务逻辑：
+---
+
+## 构建 Service 层
+
+使用 `@Bean` 和 `@Autowired` 注解构建业务逻辑层：
 
 ```java title="UserService.java"
 @Bean
 public class UserService {
+
     @Autowired
     private UserMapper userMapper;
 
@@ -244,10 +329,6 @@ public class UserService {
 
     public List<User> findAll() {
         return userMapper.selectAll();
-    }
-
-    public List<User> findByRole(String role) {
-        return userMapper.selectByRole(role);
     }
 
     public boolean insert(User user) {
@@ -279,80 +360,73 @@ public class UserService {
 }
 ```
 
-## 步骤 5：创建 REST API 控制器
+---
 
-创建 `UserController` 类提供 RESTful API：
+## 创建 REST API
+
+使用 `@Controller` 注解创建 RESTful API，完整用法请参考 [Controller 开发实践](/feat/cloud/controller/)：
 
 ```java title="UserController.java"
 @Controller
 public class UserController {
+
     @Autowired
     private UserService userService;
 
-    // 获取所有用户
+    // GET /users - 获取所有用户
     @RequestMapping("/users")
     public RestResult<List<User>> getAllUsers() {
-        List<User> users = userService.findAll();
-        return RestResult.ok(users);
+        return RestResult.ok(userService.findAll());
     }
 
-    // 根据用户名获取用户
+    // GET /users/{username} - 根据用户名获取用户
     @RequestMapping("/users/{username}")
     public RestResult<User> getUserByUsername(@PathParam("username") String username) {
         User user = userService.findByUsername(username);
         if (user != null) {
             return RestResult.ok(user);
-        } else {
-            return RestResult.fail("User not found");
         }
+        return RestResult.fail("User not found");
     }
 
-    // 根据角色获取用户
-    @RequestMapping("/users/role/{role}")
-    public RestResult<List<User>> getUsersByRole(@PathParam("role") String role) {
-        List<User> users = userService.findByRole(role);
-        return RestResult.ok(users);
-    }
-
-    // 创建用户
+    // POST /users - 创建用户
     @RequestMapping(value = "/users", method = RequestMethod.POST)
     public RestResult<String> createUser(User user) {
         boolean success = userService.insert(user);
-        return success ? RestResult.ok("User created successfully") 
+        return success ? RestResult.ok("User created successfully")
                        : RestResult.fail("Failed to create user");
     }
 
-    // 更新用户
+    // PUT /users - 更新用户
     @RequestMapping(value = "/users", method = RequestMethod.PUT)
     public RestResult<String> updateUser(User user) {
         boolean success = userService.update(user);
-        return success ? RestResult.ok("User updated successfully") 
+        return success ? RestResult.ok("User updated successfully")
                        : RestResult.fail("Failed to update user");
     }
 
-    // 删除用户
+    // DELETE /users/{username} - 删除用户
     @RequestMapping(value = "/users/{username}", method = RequestMethod.DELETE)
     public RestResult<String> deleteUser(@PathParam("username") String username) {
         boolean success = userService.deleteByUsername(username);
-        return success ? RestResult.ok("User deleted successfully") 
+        return success ? RestResult.ok("User deleted successfully")
                        : RestResult.fail("Failed to delete user");
     }
 }
 ```
 
-## 步骤 6：测试 API 接口
+---
 
-启动应用后，可以通过以下 HTTP 请求测试 API：
+## 测试 API
 
-```
+启动应用后，可以通过 HTTP 请求测试 API：
+
+```http
 ### 获取所有用户
 GET http://localhost:8080/users
 
-### 根据用户名获取特定用户
+### 根据用户名获取用户
 GET http://localhost:8080/users/feat
-
-### 根据角色获取用户列表
-GET http://localhost:8080/users/role/admin
 
 ### 创建新用户
 POST http://localhost:8080/users
@@ -365,58 +439,34 @@ Content-Type: application/json
   "role": "user"
 }
 
-### 更新用户信息
+### 更新用户
 PUT http://localhost:8080/users
 Content-Type: application/json
 
 {
   "username": "newuser",
-  "password": "newpassword123",
-  "desc": "Updated test user",
+  "password": "newpassword",
+  "desc": "Updated user",
   "role": "user"
 }
 
-### 删除特定用户
+### 删除用户
 DELETE http://localhost:8080/users/newuser
 ```
 
-## 工作原理
+---
 
-Feat Cloud 在编译期解析 `feat.yaml` 和 MyBatis XML 配置，自动生成 `SqlSessionFactory` Bean。生成的 `SqlSessionFactory` Bean 名称为 `sessionFactory`，可直接注入使用。
+## 事务管理
 
-数据流转过程：
-
-```
-客户端 -> Controller层 -> Service层 -> Mapper层 -> 数据库
-```
-
-## 最佳实践
-
-### 1. 错误处理
-
-使用日志记录异常，而非简单打印堆栈：
-
-```java
-public boolean insert(User user) {
-    try {
-        return userMapper.insert(user) > 0;
-    } catch (Exception e) {
-        LOGGER.error("Failed to insert user: " + user.getUsername(), e);
-        return false;
-    }
-}
-```
-
-### 2. 手动事务管理
-
-Feat Cloud 暂不提供事务注解，需要手动管理事务：
+Feat Cloud 暂不提供事务注解，需手动管理事务：
 
 ```java
 @Bean
 public class UserService {
+
     @Autowired
     private SqlSessionFactory sessionFactory;
-    
+
     public boolean batchInsert(List<User> users) {
         SqlSession sqlSession = sessionFactory.openSession();
         try {
@@ -428,7 +478,6 @@ public class UserService {
             return true;
         } catch (Exception e) {
             sqlSession.rollback();
-            LOGGER.error("Failed to batch insert users", e);
             return false;
         } finally {
             sqlSession.close();
@@ -437,31 +486,44 @@ public class UserService {
 }
 ```
 
-### 3. 分页查询
+<Aside type="caution">
+事务管理必须在 `SqlSession` 级别手动控制，记得在 `finally` 块中关闭 `SqlSession`。
+</Aside>
 
-对于可能返回大量数据的查询，实现分页功能：
+---
 
-```java
-@Select("SELECT * FROM user_info LIMIT #{offset}, #{limit}")
-@Results({
-    @Result(property = "username", column = "username"),
-    @Result(property = "password", column = "password"),
-    @Result(property = "desc", column = "desc"),
-    @Result(property = "role", column = "role"),
-    @Result(property = "createTime", column = "create_time"),
-    @Result(property = "editTime", column = "edit_time")
-})
-List<User> selectWithPagination(@Param("offset") int offset, @Param("limit") int limit);
+## 工作原理
+
+Feat Cloud 在编译期解析 `feat.yaml` 和 MyBatis XML 配置，自动生成 `SqlSessionFactory` Bean。
+
+```mermaid
+sequenceDiagram
+    participant Config as feat.yaml
+    participant Serializer as MybatisSerializer
+    participant XML as mybatis-config.xml
+    participant SQL as initial-sql
+    participant Code as 生成代码
+    participant Context as ApplicationContext
+
+    Config->>Serializer: 读取配置路径
+    XML->>Serializer: 解析 MyBatis 配置
+    Serializer->>Serializer: 解析数据源配置
+    Serializer->>Serializer: 解析 Mapper 配置
+    Serializer->>Code: 生成 Configuration 构建代码
+    SQL->>Serializer: 读取初始化脚本路径
+    Serializer->>Code: 生成 ScriptRunner 执行代码
+    Code->>Context: 注册 sessionFactory Bean
 ```
+
+---
 
 ## 总结
 
-通过本教程，你已经学会了：
+通过本章，你已学会：
 
 1. 配置 MyBatis 环境和数据库连接
-2. 创建数据库表结构和初始化数据
-3. 实现实体类、Mapper 接口、Service 类和 Controller 类
-4. 构建 RESTful API 接口
-5. 测试 API 功能
-
-这种分层架构使代码更加清晰，便于维护和扩展。
+2. 使用 `feat.mybatis.initial-sql` 自动初始化数据库
+3. 实现 Mapper、Service、Controller 三层架构
+4. 构建 RESTful API 进行 CRUD 操作
+5. 手动管理数据库事务
+6. 通过 `@Bean` 方式配置多数据源

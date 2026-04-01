@@ -10,29 +10,11 @@
 
 package tech.smartboot.feat.demo.mybatis;
 
-import org.apache.ibatis.io.Resources;
-import org.apache.ibatis.jdbc.ScriptRunner;
-import org.apache.ibatis.session.SqlSessionFactory;
-import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import tech.smartboot.feat.cloud.FeatCloud;
 import tech.smartboot.feat.cloud.annotation.Bean;
 
-import java.io.IOException;
-import java.io.InputStream;
-
 @Bean
 public class Bootstrap {
-    @Bean
-    public SqlSessionFactory sessionFactory() throws IOException {
-        InputStream inputStream = Resources.getResourceAsStream("mybatis/mybatis-config.xml");
-        SqlSessionFactory sessionFactory = new SqlSessionFactoryBuilder().build(inputStream);
-        ScriptRunner runner = new ScriptRunner(sessionFactory.openSession().getConnection());
-        runner.setLogWriter(null);
-        runner.runScript(Resources.getResourceAsReader("mybatis/ddl/schema.sql"));
-        return sessionFactory;
-    }
-
-
     public static void main(String[] args) {
         FeatCloud.cloudServer().listen();
     }
