@@ -19,6 +19,7 @@ const modalId = 'payment-modal-' + Math.random().toString(36).substr(2, 9);
       </div>
       <div class="modal-body">
         <p class="modal-subtitle">赞助 5000 元支持 Feat 开源项目，获取企业级服务与商业授权</p>
+        <p class="modal-note">企业若存在资金压力也可选择 <span class="highlight">499元/年</span> 的订阅制赞助</p>
         
         <div class="qr-container">
           <div class="qr-item-pay">
@@ -171,6 +172,18 @@ const modalId = 'payment-modal-' + Math.random().toString(36).substr(2, 9);
     color: #64748b;
     font-size: 0.9375rem;
     margin: 0 0 1.25rem;
+  }
+
+  :global(.modal-note) {
+    text-align: center;
+    color: #94a3b8;
+    font-size: 0.8125rem;
+    margin: -0.75rem 0 1.25rem;
+  }
+
+  :global(.modal-note .highlight) {
+    color: #f97316;
+    font-weight: 600;
   }
 
   /* 紧凑二维码容器 */
@@ -336,6 +349,11 @@ const modalId = 'payment-modal-' + Math.random().toString(36).substr(2, 9);
     :global(.modal-subtitle) {
       font-size: 0.875rem;
       margin-bottom: 1rem;
+    }
+
+    :global(.modal-note) {
+      font-size: 0.75rem;
+      margin: -0.5rem 0 1rem;
     }
 
     :global(.qr-container) {
