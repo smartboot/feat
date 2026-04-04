@@ -54,29 +54,72 @@ public class HttpClientDemo {
 
 ---
 
+## API 接口说明
+
+### 核心方法
+
+| 方法 | 参数 | 返回值 | 说明 |
+|------|------|--------|------|
+| `HttpClient(String url)` | url: 完整的请求 URL | HttpClient | 创建 HttpClient 实例 |
+| `HttpClient(String host, int port)` | host: 主机地址<br/>port: 端口号 | HttpClient | 创建 HttpClient 实例 |
+| `options()` | - | HttpClientOptions | 获取配置选项 |
+| `get(String path)` | path: 请求路径 | HttpRequest | 创建 GET 请求 |
+| `post(String path)` | path: 请求路径 | HttpRequest | 创建 POST 请求 |
+| `put(String path)` | path: 请求路径 | HttpRequest | 创建 PUT 请求 |
+| `delete(String path)` | path: 请求路径 | HttpRequest | 创建 DELETE 请求 |
+| `rest(HttpMethod method, String path)` | method: HTTP 方法<br/>path: 请求路径 | HttpRequest | 创建通用请求 |
+
+### HttpRequest 方法
+
+| 方法 | 参数 | 返回值 | 说明 |
+|------|------|--------|------|
+| `header(String name, String value)` | name: 头名称<br/>value: 头值 | HttpRequest | 设置请求头 |
+| `body(String body)` | body: 请求体 | HttpRequest | 设置请求体 |
+| `body(byte[] body)` | body: 请求体字节数组 | HttpRequest | 设置请求体 |
+| `onResponseHeader(Consumer<HttpResponse> callback)` | callback: 回调函数 | HttpRequest | 响应头回调 |
+| `onResponseBody(Stream callback)` | callback: 流式回调 | HttpRequest | 响应体流式回调 |
+| `onSuccess(Consumer<HttpResponse> callback)` | callback: 成功回调 | HttpRequest | 请求成功回调 |
+| `onFailure(Consumer<Throwable> callback)` | callback: 失败回调 | HttpRequest | 请求失败回调 |
+| `submit()` | - | void | 提交请求 |
+
+### HttpResponse 方法
+
+| 方法 | 返回值 | 说明 |
+|------|--------|------|
+| `statusCode()` | int | 获取状态码 |
+| `body()` | String | 获取响应体 |
+| `getHeader(String name)` | String | 获取指定响应头 |
+| `getHeaderNames()` | Set&lt;String&gt; | 获取所有响应头名称 |
+
+---
+
 ## HttpClient 实例化
 
 HttpClient 提供了两种实例化方式，让你可以根据不同的场景选择最适合的方式。
 
-**方式一：完整的请求URL**
+### 方式一：完整的请求URL
 
 这种方式最为直观，只需要传入完整的 URL 即可：
 
 ```java
+// HTTP 请求
 HttpClient client = new HttpClient("http://127.0.0.1:8080");
 
+// HTTPS 请求
 HttpClient client = new HttpClient("https://smartboot.tech/feat/");
 ```
 
 HttpClient 会自动解析 URL 中的 host 和 port 信息，并识别是否使用 HTTPS 协议。
 
-**方式二：指定 host、port**
+### 方式二：指定 host、port
 
 如果你更喜欢分别指定主机和端口，也可以这样：
 
 ```java
+// HTTP 请求
 HttpClient httpClient = new HttpClient("127.0.0.1", 8080);
 
+// HTTPS 请求
 HttpClient httpClient = new HttpClient("smartboot.tech", 443);
 ```
 
@@ -84,7 +127,7 @@ HttpClient httpClient = new HttpClient("smartboot.tech", 443);
 
 ---
 
-## API 参考：Options 配置
+## 配置选项
 
 通过 `HttpClient.options()` 方法可以对客户端进行详细配置，支持链式调用。
 
@@ -98,9 +141,22 @@ HttpClient httpClient = new HttpClient("smartboot.tech", 443);
 | `debug` | `boolean` | `false` | 是否开启调试模式 |
 | `proxy` | `ProxyOptions` | `null` | 代理配置 |
 
+### 配置示例
+
+```java
+HttpClient client = new HttpClient("https://api.example.com");
+client.options()
+        .connectTimeout(5000)  // 5秒超时
+        .readBufferSize(4096)  // 4KB 读缓冲区
+        .writeBufferSize(4096) // 4KB 写缓冲区
+        .debug(true);          // 开启调试模式
+```
+
 <Aside type="tip">
   调试模式会在控制台打印请求和响应的详细信息，非常适合开发阶段排查问题。生产环境请关闭。
 </Aside>
+
+---
 
 ## HTTP请求
 
@@ -108,18 +164,18 @@ HttpClient 提供了多种方式来发送 HTTP 请求，满足不同的使用场
 
 ### 通用请求方法
 
-HttpClient 提供了 [rest()](#) 方法用于发送通用的 HTTP 请求。rest() 方法的参数包括：
-- method: HTTP 请求方法，如 GET、POST、PUT、DELETE 等。
-- path: 请求路径，如 /api/user。
+HttpClient 提供了 `rest()` 方法用于发送通用的 HTTP 请求：
 
-请求构造完毕后，需要调用 submit() 方法发送请求。
+```java
+import tech.smartboot.feat.core.client.HttpClient;
+import tech.smartboot.feat.core.client.HttpMethod;
 
-```java title=HttpRestDemo.java "rest" "HttpMethod.GET" "submit"
 public class HttpRestDemo {
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         // 创建 HttpClient 实例
         HttpClient client = new HttpClient("https://smartboot.tech");
         client.options().debug(true);
+        
         // 发送 GET 请求
         client.rest(HttpMethod.GET, "/feat/").onSuccess(response -> {
             System.out.println("Status Code: " + response.statusCode());
@@ -131,23 +187,56 @@ public class HttpRestDemo {
 
 ### 专用请求方法
 
-对于 GET、POST 等常见的 HTTP 请求方法，HttpClient 提供了对应的方法，如 [get()](#)、[post()](#) 等，使用起来更加直观：
+对于常见的 HTTP 请求方法，HttpClient 提供了对应的便捷方法：
 
-```java title=HttpGetDemo.java "get" "submit"
-public class HttpGetDemo {
-    public static void main(String[] args) {
-        HttpClient httpClient = new HttpClient("https://smartboot.tech");
-        httpClient.get("/feat/")
-                .onSuccess(response -> System.out.println(response.body()))
-                .onFailure(Throwable::printStackTrace)
-                .submit();
-    }
-}
+#### GET 请求
+
+```java
+HttpClient httpClient = new HttpClient("https://api.example.com");
+httpClient.get("/users")
+        .header("Authorization", "Bearer token")
+        .onSuccess(response -> System.out.println(response.body()))
+        .onFailure(Throwable::printStackTrace)
+        .submit();
+```
+
+#### POST 请求
+
+```java
+HttpClient httpClient = new HttpClient("https://api.example.com");
+httpClient.post("/users")
+        .header("Content-Type", "application/json")
+        .body("{\"name\": \"张三\", \"age\": 25}")
+        .onSuccess(response -> System.out.println("Status: " + response.statusCode()))
+        .onFailure(Throwable::printStackTrace)
+        .submit();
+```
+
+#### PUT 请求
+
+```java
+HttpClient httpClient = new HttpClient("https://api.example.com");
+httpClient.put("/users/1")
+        .header("Content-Type", "application/json")
+        .body("{\"name\": \"李四\", \"age\": 30}")
+        .onSuccess(response -> System.out.println("Update successful"))
+        .onFailure(Throwable::printStackTrace)
+        .submit();
+```
+
+#### DELETE 请求
+
+```java
+HttpClient httpClient = new HttpClient("https://api.example.com");
+httpClient.delete("/users/1")
+        .onSuccess(response -> System.out.println("Delete successful"))
+        .onFailure(Throwable::printStackTrace)
+        .submit();
 ```
 
 ---
 
-## API 参考：异步回调
+## 异步回调
 
 HttpClient 提供了强大的异步回调机制，可以在请求发送后立即返回，而不需要等待请求完成。
 
@@ -160,24 +249,25 @@ HttpClient 提供了强大的异步回调机制，可以在请求发送后立即
 
 ### onResponseHeader 示例
 
-```java title=ResponseHeaderDemo.java "onResponseHeader"
-public class ResponseHeaderDemo {
-    public static void main(String[] args) {
-        HttpClient httpClient = new HttpClient("https://smartboot.tech");
-        httpClient.get("/feat/")
-                .onResponseHeader(response -> {
-                    for (String name : response.getHeaderNames()) {
-                        System.out.println(name + ": " + response.getHeader(name));
-                    }
-                })
-                .submit();
-    }
-}
+```java
+HttpClient httpClient = new HttpClient("https://smartboot.tech");
+httpClient.get("/feat/")
+        .onResponseHeader(response -> {
+            System.out.println("Status Code: " + response.statusCode());
+            for (String name : response.getHeaderNames()) {
+                System.out.println(name + ": " + response.getHeader(name));
+            }
+        })
+        .submit();
 ```
 
 ### onResponseBody 示例
 
-```java title=ResponseBodyDemo.java "onResponseBody"
+```java
+import tech.smartboot.feat.core.client.HttpResponse;
+import tech.smartboot.feat.core.client.HttpClient.Stream;
+import java.io.IOException;
+
 public class ResponseBodyDemo {
     public static void main(String[] args) {
         HttpClient httpClient = new HttpClient("https://smartboot.tech");
@@ -196,29 +286,279 @@ public class ResponseBodyDemo {
 }
 ```
 
+### 完整回调示例
+
+```java
+HttpClient httpClient = new HttpClient("https://api.example.com");
+httpClient.get("/users")
+        .header("Authorization", "Bearer token")
+        .onResponseHeader(response -> {
+            System.out.println("Status: " + response.statusCode());
+        })
+        .onResponseBody((response, bytes, end) -> {
+            System.out.print(new String(bytes));
+            if (end) {
+                System.out.println("\nResponse complete");
+            }
+        })
+        .onSuccess(response -> {
+            System.out.println("Request successful");
+        })
+        .onFailure(e -> {
+            System.err.println("Request failed: " + e.getMessage());
+            e.printStackTrace();
+        })
+        .submit();
+```
+
 <Aside type="tip">
   `onResponseBody` 的 Stream 回调参数：`response`（当前响应对象）、`bytes`（接收到的数据）、`end`（是否为最后一部分数据）。
 </Aside>
+
+---
+
+## 使用场景
+
+### 场景 1：调用 RESTful API
+
+**适用条件**：需要与 RESTful API 进行通信
+
+**示例**：
+
+```java
+HttpClient client = new HttpClient("https://api.github.com");
+client.get("/users/octocat")
+        .header("Accept", "application/json")
+        .onSuccess(response -> {
+            System.out.println("GitHub user info: " + response.body());
+        })
+        .onFailure(e -> {
+            System.err.println("Failed to get user info: " + e.getMessage());
+        })
+        .submit();
+```
+
+### 场景 2：文件上传
+
+**适用条件**：需要上传文件到服务器
+
+**示例**：
+
+```java
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+
+public class FileUploadDemo {
+    public static void main(String[] args) throws IOException {
+        HttpClient client = new HttpClient("http://localhost:8080");
+        
+        // 读取文件内容
+        File file = new File("example.txt");
+        byte[] fileContent = new byte[(int) file.length()];
+        try (FileInputStream fis = new FileInputStream(file)) {
+            fis.read(fileContent);
+        }
+        
+        // 发送文件
+        client.post("/upload")
+                .header("Content-Type", "application/octet-stream")
+                .body(fileContent)
+                .onSuccess(response -> {
+                    System.out.println("Upload successful: " + response.body());
+                })
+                .onFailure(e -> {
+                    System.err.println("Upload failed: " + e.getMessage());
+                })
+                .submit();
+    }
+}
+```
+
+### 场景 3：微服务间通信
+
+**适用条件**：在微服务架构中，服务之间需要相互调用
+
+**示例**：
+
+```java
+public class ServiceCommunication {
+    private final HttpClient userServiceClient;
+    private final HttpClient orderServiceClient;
+    
+    public ServiceCommunication() {
+        // 初始化客户端实例（建议单例）
+        this.userServiceClient = new HttpClient("http://user-service:8080");
+        this.orderServiceClient = new HttpClient("http://order-service:8080");
+        
+        // 配置超时和缓冲区
+        userServiceClient.options().connectTimeout(3000);
+        orderServiceClient.options().connectTimeout(3000);
+    }
+    
+    public void getUserOrders(String userId) {
+        // 先获取用户信息
+        userServiceClient.get("/users/" + userId)
+                .onSuccess(userResponse -> {
+                    System.out.println("User info: " + userResponse.body());
+                    
+                    // 再获取用户订单
+                    orderServiceClient.get("/orders?userId=" + userId)
+                            .onSuccess(orderResponse -> {
+                                System.out.println("User orders: " + orderResponse.body());
+                            })
+                            .onFailure(e -> {
+                                System.err.println("Failed to get orders: " + e.getMessage());
+                            })
+                            .submit();
+                })
+                .onFailure(e -> {
+                    System.err.println("Failed to get user: " + e.getMessage());
+                })
+                .submit();
+    }
+}
+```
+
+---
 
 ## 最佳实践
 
 在使用 HttpClient 时，有一些最佳实践可以帮助你写出更好的代码：
 
-1. **合理设置超时时间**：避免请求无限期挂起
-2. **正确处理异常**：使用 onFailure 回调处理各种异常情况
-3. **复用 HttpClient 实例**：避免频繁创建和销毁客户端实例
-4. **使用连接池**：对于高并发场景，合理配置连接池参数
-5. **启用调试模式**：在开发和调试阶段，可以开启 debug 模式查看详细日志
+### 1. 实例管理
 
-## 总结
+- **复用 HttpClient 实例**：避免频繁创建和销毁客户端实例，建议使用单例模式
+- **连接池管理**：对于高并发场景，合理配置连接池参数
+- **资源释放**：不需要时关闭客户端连接
 
-通过这篇文章，我们学习了 Feat HttpClient 的核心功能：
+### 2. 超时设置
 
-1. 如何实例化 HttpClient
-2. 如何配置客户端选项
-3. 如何发送各种类型的 HTTP 请求
-4. 如何使用异步回调处理响应
+- **合理设置超时时间**：避免请求无限期挂起
+- **根据网络环境调整**：内网服务可以设置较短超时，外网服务设置较长超时
+- **示例**：
+  ```java
+  client.options().connectTimeout(5000); // 5秒连接超时
+  ```
 
-HttpClient 的设计兼顾了易用性和功能性，无论是简单场景还是复杂需求都能很好地满足。掌握了这些知识，你就可以在项目中灵活运用 HttpClient 来处理各种 HTTP 通信需求了。
+### 3. 异常处理
 
-有关完整示例，请参见 [HttpClient 测试代码](https://gitee.com/smartboot/feat/blob/master/feat-core/src/main/java/tech/smartboot/feat/core/client/HttpClient.java)
+- **全面的异常处理**：使用 onFailure 回调处理各种异常情况
+- **错误重试机制**：对于临时网络问题，实现适当的重试逻辑
+- **日志记录**：记录请求失败的详细信息，便于排查问题
+
+### 4. 性能优化
+
+- **缓冲区大小**：根据实际数据大小调整读写缓冲区
+- **调试模式**：开发阶段开启，生产环境关闭
+- **异步处理**：充分利用异步回调，避免阻塞主线程
+
+### 5. 安全实践
+
+- **HTTPS 使用**：敏感数据传输使用 HTTPS
+- **认证信息保护**：避免在代码中硬编码认证信息
+- **请求验证**：验证服务端响应，防止恶意返回
+
+---
+
+## 故障排除
+
+| 问题 | 可能原因 | 解决方案 |
+|------|----------|----------|
+| 连接超时 | 网络问题或服务不可用 | 检查网络连接，增加超时时间，实现重试机制 |
+| 404 Not Found | 请求路径错误 | 检查 API 路径是否正确 |
+| 401 Unauthorized | 认证失败 | 检查认证信息是否正确，确保 token 有效 |
+| 403 Forbidden | 权限不足 | 检查用户权限，确保有访问资源的权限 |
+| 500 Internal Server Error | 服务端错误 | 检查服务端日志，联系服务提供者 |
+| 连接被拒绝 | 服务未启动或端口错误 | 确认服务是否运行，检查端口配置 |
+| SSL 握手失败 | 证书问题 | 检查证书是否有效，是否添加到信任库 |
+
+### 调试技巧
+
+1. **开启调试模式**：
+   ```java
+   client.options().debug(true);
+   ```
+
+2. **检查网络连接**：
+   - 使用 `ping` 命令检查目标服务器是否可达
+   - 使用 `curl` 命令测试 API 是否正常
+
+3. **查看详细错误信息**：
+   ```java
+   .onFailure(e -> {
+       System.err.println("Error: " + e.getMessage());
+       e.printStackTrace();
+   })
+   ```
+
+---
+
+## 完整示例
+
+### 综合示例
+
+```java
+import tech.smartboot.feat.core.client.HttpClient;
+import tech.smartboot.feat.core.client.HttpResponse;
+import tech.smartboot.feat.core.client.HttpClient.Stream;
+import java.io.IOException;
+
+public class HttpClientCompleteDemo {
+    public static void main(String[] args) {
+        // 创建 HttpClient 实例
+        HttpClient client = new HttpClient("https://api.example.com");
+        
+        // 配置客户端
+        client.options()
+                .connectTimeout(5000)
+                .readBufferSize(4096)
+                .writeBufferSize(4096)
+                .debug(true);
+        
+        // 发送 POST 请求
+        client.post("/api/users")
+                .header("Content-Type", "application/json")
+                .header("Authorization", "Bearer your-token-here")
+                .body("{\"name\": \"张三\", \"email\": \"zhangsan@example.com\"}")
+                .onResponseHeader(response -> {
+                    System.out.println("Status Code: " + response.statusCode());
+                    System.out.println("Content-Type: " + response.getHeader("Content-Type"));
+                })
+                .onResponseBody(new Stream() {
+                    @Override
+                    public void stream(HttpResponse response, byte[] bytes, boolean end) throws IOException {
+                        System.out.print(new String(bytes));
+                        if (end) {
+                            System.out.println("\nResponse completed");
+                        }
+                    }
+                })
+                .onSuccess(response -> {
+                    System.out.println("\nRequest successful!");
+                    System.out.println("Response body: " + response.body());
+                })
+                .onFailure(e -> {
+                    System.err.println("\nRequest failed:");
+                    e.printStackTrace();
+                })
+                .submit();
+        
+        // 注意：由于是异步请求，主线程需要等待
+        try {
+            Thread.sleep(10000); // 等待 10 秒让请求完成
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+---
+
+## 相关链接
+
+- [SSE Client](/feat/client/sse_client/)：处理服务器发送事件
+- [WebSocket Client](/feat/client/ws_client/)：实现双向实时通信
+- [Feat 服务器](/feat/server/getstart/)：构建 HTTP 服务器
+- [Feat Cloud](/feat/cloud/getstart/)：构建 Web 应用

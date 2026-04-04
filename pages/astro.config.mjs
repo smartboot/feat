@@ -111,14 +111,14 @@ export default defineConfig({
                     autogenerate: {directory: 'ai'},
                 },
                 {
-                    label: 'Feat Core教程',
-                    items:[
+                    label: '核心功能',
+                    items: [
                         {
-                            label: 'Http Server',
+                            label: 'HTTP 服务器',
                             autogenerate: {directory: 'server'},
                         },
                         {
-                            label: 'Http Client',
+                            label: 'HTTP 客户端',
                             autogenerate: {directory: 'client'},
                         }
                     ]

@@ -11,6 +11,29 @@ sidebar:
 
 让我们一起来看看 ServerOptions 提供了哪些强大的配置选项吧！
 
+## API 接口说明
+
+### ServerOptions 核心方法
+
+| 方法 | 参数 | 返回值 | 说明 |
+|------|------|--------|------|
+| `port(int)` | port: 端口号 | ServerOptions | 设置服务器监听端口 |
+| `host(String)` | host: 主机地址 | ServerOptions | 设置服务器绑定的主机地址 |
+| `serverName(String)` | name: 服务器名称 | ServerOptions | 设置服务器名称 |
+| `bannerEnabled(boolean)` | enabled: 是否启用 | ServerOptions | 是否显示启动 banner |
+| `setIdleTimeout(long)` | timeout: 超时时间(毫秒) | ServerOptions | 设置连接闲置超时时间 |
+| `shutdownHook(Runnable)` | hook: 关闭钩子 | ServerOptions | 设置服务器关闭钩子 |
+| `threadNum(int)` | num: 线程数 | ServerOptions | 设置工作线程数 |
+| `readBufferSize(int)` | size: 缓冲区大小(字节) | ServerOptions | 设置读缓冲区大小 |
+| `writeBufferSize(int)` | size: 缓冲区大小(字节) | ServerOptions | 设置写缓冲区大小 |
+| `setLowMemory(boolean)` | enabled: 是否启用 | ServerOptions | 启用低内存模式 |
+| `group(AsynchronousChannelGroup)` | group: 通道组 | ServerOptions | 设置异步通道组 |
+| `setMaxRequestSize(long)` | size: 最大请求大小(字节) | ServerOptions | 设置最大请求报文大小 |
+| `headerLimiter(int)` | limit: 最大头数量 | ServerOptions | 设置请求头数量限制 |
+| `debug(boolean)` | enabled: 是否启用 | ServerOptions | 开启调试模式 |
+| `addPlugin(Plugin<HttpEndpoint>)` | plugin: 插件 | ServerOptions | 添加服务器插件 |
+| `proxyProtocolSupport()` | - | ServerOptions | 启用代理协议支持 |
+
 ## 基础配置
 
 ### port
@@ -24,6 +47,8 @@ options.port(9090);
 
 **使用场景：** 自定义服务端口、避免端口冲突、多服务部署
 
+**适用条件：** 1-65535 之间的有效端口号，避免使用系统保留端口
+
 ### host
 **类型:** `String` **默认值:** `null`（监听所有网卡）
 
@@ -36,6 +61,8 @@ options.host("0.0.0.0");   // 监听所有网卡（默认行为）
 
 **使用场景：** 限制访问来源、多网卡环境绑定特定 IP、安全隔离
 
+**适用条件：** 有效的 IP 地址或主机名，`null` 表示监听所有网卡
+
 ### serverName
 **类型:** `String` **默认值:** `"feat/" + Feat.VERSION`
 
@@ -46,6 +73,8 @@ options.serverName("my-awesome-app/v1.0");
 ```
 
 **使用场景：** 标识应用名称和版本、满足合规要求
+
+**最佳实践：** 生产环境建议自定义服务器名称，避免暴露框架版本信息
 
 ### bannerEnabled
 **类型:** `boolean` **默认值:** `true`
@@ -58,6 +87,8 @@ options.bannerEnabled(false);
 
 **使用场景：** 生产环境隐藏版本信息、保持控制台输出简洁
 
+**最佳实践：** 开发环境启用，生产环境禁用
+
 ### idleTimeout
 **类型:** `long` **默认值:** `60000`（毫秒）
 
@@ -68,6 +99,10 @@ options.setIdleTimeout(120000); // 2分钟
 ```
 
 **使用场景：** 防止空闲连接占用资源、优化连接管理、长连接超时控制
+
+**最佳实践：**
+- 长连接场景：设置较长超时时间（如 2-5 分钟）
+- 短连接场景：设置较短超时时间（如 30 秒-1 分钟）
 
 ### shutdownHook
 **类型:** `Runnable` **默认值:** `null`
@@ -83,6 +118,8 @@ options.shutdownHook(() -> {
 
 **使用场景：** 资源清理、状态保存、关闭通知、优雅停机
 
+**最佳实践：** 在钩子中执行轻量级操作，避免阻塞服务器关闭过程
+
 ## 性能调优
 
 ### threadNum
@@ -97,6 +134,12 @@ options.threadNum(8);
 **最佳实践：**
 - IO 密集型应用：CPU 核数的 2-4 倍
 - CPU 密集型应用：CPU 核数的 1-2 倍
+- 容器环境：根据容器 CPU 限制设置，避免资源争用
+
+**调优建议：**
+1. 从默认值开始，通过压测确定最优线程数
+2. 监控 CPU 使用率，避免线程数过高导致上下文切换开销增大
+3. 结合应用特性和硬件资源进行调整
 
 ### readBufferSize
 **类型:** `int` **默认值:** `8 * 1024`（8KB）
@@ -107,7 +150,10 @@ options.threadNum(8);
 options.readBufferSize(16 * 1024); // 16KB
 ```
 
-**最佳实践：** 缓冲区至少要能容纳一个完整的 URL 或 Header 值，文件上传场景适当增加
+**最佳实践：**
+- 缓冲区至少要能容纳一个完整的 URL 或 Header 值
+- 文件上传场景适当增加（如 16KB-32KB）
+- 内存受限环境保持默认值或适当减小
 
 ### writeBufferSize
 **类型:** `int` **默认值:** `8 * 1024`（8KB）
@@ -118,7 +164,10 @@ options.readBufferSize(16 * 1024); // 16KB
 options.writeBufferSize(16 * 1024); // 16KB
 ```
 
-**最佳实践：** 响应大文件时适当增加，注意内存资源平衡
+**最佳实践：**
+- 响应大文件时适当增加（如 16KB-32KB）
+- 注意内存资源平衡，避免设置过大导致内存占用过高
+- 结合网络带宽和响应大小进行调整
 
 ### lowMemory
 **类型:** `boolean` **默认值:** `false`
@@ -130,6 +179,8 @@ options.setLowMemory(true);
 ```
 
 **使用场景：** 嵌入式设备、容器化部署、资源受限环境
+
+**注意：** 启用低内存模式可能会影响性能，仅在内存资源确实受限的情况下使用
 
 ### group
 **类型:** `AsynchronousChannelGroup` **默认值:** `null`
@@ -145,6 +196,8 @@ options.group(channelGroup);
 
 **使用场景：** 自定义异步 IO 线程池、多服务共享线程池资源
 
+**最佳实践：** 仅在需要精细控制线程池行为时使用，否则使用默认配置
+
 ## 安全设置
 
 ### maxRequestSize
@@ -156,7 +209,10 @@ options.group(channelGroup);
 options.setMaxRequestSize(10 * 1024 * 1024); // 10MB
 ```
 
-**最佳实践：** 根据业务需求设置合理限制，文件上传场景适当调大
+**最佳实践：**
+- 根据业务需求设置合理限制
+- 文件上传场景适当调大（如 10MB-50MB）
+- 普通 API 接口设置较小值（如 1MB-2MB）
 
 ### headerLimiter
 **类型:** `int` **默认值:** `100`
@@ -168,6 +224,10 @@ options.headerLimiter(50);
 ```
 
 **使用场景：** 防止 HTTP 头部攻击、限制异常请求、保护服务器资源
+
+**最佳实践：**
+- 一般场景设置为 50-100
+- 严格安全要求场景设置为 30-50
 
 ### secure
 **类型:** `boolean` **默认值:** `false`
@@ -181,6 +241,8 @@ options.addPlugin(new SslPlugin<>("keystore.jks", "password", "JKS"));
 
 **使用场景：** 保护敏感数据传输、提高服务安全性、满足合规要求
 
+**最佳实践：** 生产环境必须启用 HTTPS，开发环境可根据需要决定
+
 ### proxyProtocolSupport
 **类型:** `方法`
 
@@ -191,6 +253,8 @@ options.proxyProtocolSupport();
 ```
 
 **使用场景：** 负载均衡环境、获取客户端真实 IP、与代理服务器集成
+
+**适用条件：** 服务器前面有支持代理协议的负载均衡器或代理服务器
 
 ## 调试功能
 
@@ -225,7 +289,15 @@ pluginList.add(new CustomPlugin<>());
 options.addPlugin(pluginList);
 ```
 
-**常用插件：** SslPlugin（HTTPS）、ProxyProtocolPlugin（代理协议）、StreamMonitorPlugin（流量监控）
+**常用插件：**
+- `SslPlugin`：提供 HTTPS 支持
+- `ProxyProtocolPlugin`：提供代理协议支持
+- `StreamMonitorPlugin`：监控流量和连接状态
+- `CustomPlugin`：自定义插件实现
+
+**最佳实践：**
+- 只添加必要的插件，避免过多插件影响性能
+- 自定义插件需注意线程安全和性能影响
 
 ## 配置示例
 
@@ -279,21 +351,93 @@ Feat.httpServer(options -> {
 .listen(443);
 ```
 
-## 最佳实践
+### 容器环境配置
 
-### 性能优化
-- 根据应用特性和硬件资源合理设置线程数
-- 通过压测确定最优缓冲区大小
-- 生产环境关闭调试功能
-- 容器环境适当降低线程数和缓冲区大小
+```java
+Feat.httpServer(options -> {
+    // 基础配置
+    options.serverName("container-app");
+    options.bannerEnabled(false);
+    options.setIdleTimeout(60000); // 1分钟
+    
+    // 性能调优（容器环境资源受限）
+    options.threadNum(Math.max(4, Runtime.getRuntime().availableProcessors()));
+    options.readBufferSize(8 * 1024);
+    options.writeBufferSize(8 * 1024);
+    options.setLowMemory(true); // 启用低内存模式
+    
+    // 安全设置
+    options.setMaxRequestSize(5 * 1024 * 1024); // 5MB
+    options.headerLimiter(50);
+    
+    // 调试功能
+    options.debug(false);
+})
+.listen(8080);
+```
 
-### 安全防护
-- 设置合理的请求大小限制和请求头数量限制
-- 修改默认服务器名称，避免暴露版本信息
-- 生产环境禁用 banner 显示
-- 敏感数据传输启用 HTTPS
+## 性能调优最佳实践
 
-### 环境差异化配置
-- 开发环境：启用调试功能，放宽资源限制
-- 测试环境：模拟生产配置，进行性能测试
-- 生产环境：关闭调试功能，加强安全限制
+### 线程数调优
+1. **初始设置**：从默认值开始（CPU 核数的 2 倍）
+2. **压测分析**：通过压测工具（如 JMeter、Gatling）测试不同线程数下的性能
+3. **监控指标**：关注 CPU 使用率、响应时间、吞吐量
+4. **调优原则**：
+   - IO 密集型：增加线程数（2-4 倍 CPU 核数）
+   - CPU 密集型：减少线程数（1-2 倍 CPU 核数）
+   - 容器环境：根据容器 CPU 限制调整
+
+### 缓冲区调优
+1. **读缓冲区**：
+   - 小请求：8KB 默认值即可
+   - 大请求/文件上传：16KB-32KB
+2. **写缓冲区**：
+   - 小响应：8KB 默认值即可
+   - 大响应/文件下载：16KB-32KB
+3. **内存平衡**：缓冲区大小 × 并发连接数 = 内存使用量，需根据服务器内存资源调整
+
+### 连接管理
+1. **空闲超时**：
+   - 短连接：30秒-1分钟
+   - 长连接：2-5分钟
+2. **连接数限制**：通过应用层实现连接数控制，避免资源耗尽
+
+## 安全最佳实践
+
+1. **HTTPS 配置**：
+   - 使用最新的 TLS 版本
+   - 配置强密码套件
+   - 定期更新证书
+
+2. **请求限制**：
+   - 设置合理的 `maxRequestSize` 防止 DoS 攻击
+   - 设置 `headerLimiter` 防止头部攻击
+   - 实现请求速率限制
+
+3. **信息泄露防护**：
+   - 自定义 `serverName` 隐藏版本信息
+   - 禁用 `bannerEnabled` 避免版本泄露
+   - 关闭 `debug` 模式
+
+4. **网络安全**：
+   - 生产环境使用 `host` 限制访问来源
+   - 启用 `proxyProtocolSupport` 正确获取客户端 IP
+
+## 故障排除
+
+| 问题 | 可能原因 | 解决方案 |
+|------|----------|----------|
+| 端口被占用 | 端口已被其他进程使用 | 更换端口或停止占用端口的进程 |
+| 内存溢出 | 缓冲区设置过大或并发连接过多 | 调整缓冲区大小，启用低内存模式，增加内存资源 |
+| 性能下降 | 线程数不合理或调试模式开启 | 调整线程数，关闭调试模式，进行性能调优 |
+| 连接超时 | idleTimeout 设置过小 | 增加 idleTimeout 值 |
+| 413 Request Entity Too Large | maxRequestSize 设置过小 | 增大 maxRequestSize 值 |
+| 无法获取客户端真实 IP | 未启用代理协议 | 启用 proxyProtocolSupport() |
+| HTTPS 配置失败 | 证书无效或密码错误 | 检查证书文件和密码，确保证书有效 |
+
+## 相关链接
+
+- [开始使用 Feat 服务器](/feat/server/getstart/)：快速搭建第一个 Web 服务
+- [Router 路由组件](/feat/server/router/)：处理不同的请求路径
+- [异步处理](/feat/server/async/)：提升服务器性能
+- [HTTPS 配置](/feat/server/https/)：启用安全通信
