@@ -28,8 +28,6 @@ import { Aside } from '@astrojs/starlight/components';
 
 Router 组件是 Feat 框架中负责 HTTP 请求路由分发的核心组件。它不仅能根据请求路径将请求分发到对应的处理器，还提供了 Session 管理、请求拦截等强大功能。
 
-Router 组件是 Feat 框架中负责 HTTP 请求路由分发的核心组件。它不仅能根据请求路径将请求分发到对应的处理器，还提供了 Session 管理、请求拦截等强大功能。
-
 想象一下，当你的应用程序有成百上千个不同的 API 接口时，如果没有一个好的路由机制，代码将会变得多么混乱！而 Router 正是解决这个问题的利器。
 
 ## 快速上手
@@ -182,7 +180,6 @@ router.route("/logout", ctx -> {
 <Aside type="tip" title="Session 类型说明">
   Feat 的 Session 只支持存储 **String 类型的值**。`session.put(key, value)` 方法的 value 参数必须是 String 类型，`session.get(key)` 返回的也是 String 类型。如果需要存储复杂对象，建议先序列化为 JSON 字符串。
 </Aside>
-```
 
 Session 的生命周期管理示意图：
 
