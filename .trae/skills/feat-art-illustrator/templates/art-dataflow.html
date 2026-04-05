@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据流图 - 手绘风格</title>
+    <style>
+        :root {
+            --art-warm-cream: #fef9f3;
+            --art-soft-pink: #fce4ec;
+            --art-lavender: #f3e5f5;
+            --art-mint: #e8f5e9;
+            --art-peach: #fff3e0;
+            --art-sky: #e3f2fd;
+            --art-primary: #6b5b95;
+            --art-secondary: #f7cac9;
+            --art-accent: #88b04b;
+            --art-highlight: #ff6f61;
+            --art-line: #5d4e37;
+            --art-line-light: #8b7355;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 
+                "PingFang SC",
+                "Hiragino Sans GB",
+                "Microsoft YaHei",
+                sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #f0f0f0;
+        }
+        
+        .container {
+            width: 900px;
+            height: 600px;
+            position: relative;
+            overflow: hidden;
+            background: var(--art-warm-cream);
+            padding: 30px 40px;
+        }
+        
+        .sketch-border {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            right: 12px;
+            bottom: 12px;
+            border: 3px solid var(--art-line);
+            border-radius: 16px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 10;
+        }
+        
+        .title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--art-line);
+        }
+        
+        .subtitle {
+            font-size: 13px;
+            color: var(--art-line-light);
+            margin-top: 6px;
+        }
+        
+        .flow-area {
+            position: relative;
+            height: calc(100% - 80px);
+            z-index: 1;
+        }
+        
+        .feedback-bar {
+            position: absolute;
+            top: 0;
+            left: 120px;
+            right: 120px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .feedback-line {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            height: 28px;
+            border: 2px dashed var(--art-accent);
+            border-bottom: none;
+            border-radius: 14px 14px 0 0;
+        }
+        
+        .feedback-text {
+            position: relative;
+            background: var(--art-warm-cream);
+            padding: 0 12px;
+            font-size: 11px;
+            color: var(--art-accent);
+            font-weight: 600;
+        }
+        
+        .main-flow {
+            position: absolute;
+            top: 60px;
+            left: 0;
+            right: 0;
+            bottom: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+        }
+        
+        .flow-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 130px;
+        }
+        
+        .step-node {
+            width: 64px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .node-shape {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 3px solid var(--art-line);
+        }
+        
+        .node-shape.circle {
+            border-radius: 50%;
+        }
+        
+        .node-shape.rounded {
+            border-radius: 12px;
+        }
+        
+        .node-shape.diamond {
+            width: 52px;
+            height: 52px;
+            transform: rotate(45deg);
+            left: 6px;
+            top: 6px;
+        }
+        
+        .step-node.input .node-shape { background: var(--art-sky); }
+        .step-node.process .node-shape { background: var(--art-lavender); }
+        .step-node.decision .node-shape { background: var(--art-peach); }
+        .step-node.output .node-shape { background: var(--art-mint); }
+        
+        .step-icon {
+            position: relative;
+            z-index: 2;
+            font-size: 26px;
+        }
+        
+        .step-node.decision .step-icon {
+            transform: rotate(0deg);
+        }
+        
+        .step-label {
+            margin-top: 12px;
+            text-align: center;
+        }
+        
+        .step-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--art-line);
+        }
+        
+        .step-desc {
+            font-size: 10px;
+            color: var(--art-line-light);
+            margin-top: 2px;
+        }
+        
+        .step-type {
+            display: inline-block;
+            font-size: 9px;
+            color: var(--art-primary);
+            background: rgba(107, 91, 149, 0.1);
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-top: 6px;
+            border: 1px dashed var(--art-line-light);
+        }
+        
+        .flow-arrow {
+            width: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 60px;
+        }
+        
+        .arrow-icon {
+            font-size: 22px;
+            color: var(--art-primary);
+            opacity: 0.7;
+        }
+        
+        .flow-line {
+            position: absolute;
+            top: 50%;
+            left: 100px;
+            right: 100px;
+            height: 2px;
+            background: repeating-linear-gradient(
+                90deg,
+                var(--art-primary) 0px,
+                var(--art-primary) 8px,
+                transparent 8px,
+                transparent 16px
+            );
+            opacity: 0.3;
+            transform: translateY(-50%);
+            z-index: 0;
+        }
+        
+        .legend {
+            position: absolute;
+            bottom: 20px;
+            left: 40px;
+            display: flex;
+            gap: 20px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 10px;
+            color: var(--art-line-light);
+        }
+        
+        .legend-shape {
+            width: 14px;
+            height: 14px;
+            border: 2px solid var(--art-line);
+        }
+        
+        .legend-shape.circle { border-radius: 50%; background: var(--art-sky); }
+        .legend-shape.rounded { border-radius: 4px; background: var(--art-lavender); }
+        .legend-shape.diamond { transform: rotate(45deg); width: 10px; height: 10px; background: var(--art-peach); }
+        
+        .deco {
+            position: absolute;
+            font-size: 16px;
+            opacity: 0.4;
+            z-index: 0;
+        }
+        
+        .brand {
+            position: absolute;
+            bottom: 20px;
+            right: 25px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--art-line-light);
+            z-index: 10;
+        }
+        
+        .brand-icon {
+            width: 24px;
+            height: 24px;
+            background: var(--art-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 10px;
+            border: 2px solid var(--art-line);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sketch-border"></div>
+        
+        <span class="deco" style="top: 30px; left: 30px;">📊</span>
+        <span class="deco" style="top: 35px; right: 35px;">🔄</span>
+        <span class="deco" style="bottom: 50px; left: 35px;">📈</span>
+        <span class="deco" style="bottom: 45px; right: 30px;">💾</span>
+        
+        <div class="header">
+            <h1 class="title">AI Agent 数据流</h1>
+            <p class="subtitle">从输入到输出的完整数据处理链路</p>
+        </div>
+        
+        <div class="flow-area">
+            <div class="feedback-bar">
+                <div class="feedback-line"></div>
+                <span class="feedback-text">🔄 反馈循环</span>
+            </div>
+            
+            <div class="flow-line"></div>
+            
+            <div class="main-flow">
+                <div class="flow-step">
+                    <div class="step-node input">
+                        <div class="node-shape circle"></div>
+                        <span class="step-icon">💬</span>
+                    </div>
+                    <div class="step-label">
+                        <div class="step-title">用户请求</div>
+                        <div class="step-desc">自然语言输入</div>
+                        <span class="step-type">String</span>
+                    </div>
+                </div>
+                
+                <div class="flow-arrow">
+                    <span class="arrow-icon">→</span>
+                </div>
+                
+                <div class="flow-step">
+                    <div class="step-node process">
+                        <div class="node-shape rounded"></div>
+                        <span class="step-icon">🔍</span>
+                    </div>
+                    <div class="step-label">
+                        <div class="step-title">意图识别</div>
+                        <div class="step-desc">NLP 分析</div>
+                        <span class="step-type">Intent</span>
+                    </div>
+                </div>
+                
+                <div class="flow-arrow">
+                    <span class="arrow-icon">→</span>
+                </div>
+                
+                <div class="flow-step">
+                    <div class="step-node decision">
+                        <div class="node-shape diamond"></div>
+                        <span class="step-icon">❓</span>
+                    </div>
+                    <div class="step-label">
+                        <div class="step-title">路由决策</div>
+                        <div class="step-desc">分支选择</div>
+                        <span class="step-type">Branch</span>
+                    </div>
+                </div>
+                
+                <div class="flow-arrow">
+                    <span class="arrow-icon">→</span>
+                </div>
+                
+                <div class="flow-step">
+                    <div class="step-node process">
+                        <div class="node-shape rounded"></div>
+                        <span class="step-icon">🧠</span>
+                    </div>
+                    <div class="step-label">
+                        <div class="step-title">模型推理</div>
+                        <div class="step-desc">LLM 处理</div>
+                        <span class="step-type">Reasoning</span>
+                    </div>
+                </div>
+                
+                <div class="flow-arrow">
+                    <span class="arrow-icon">→</span>
+                </div>
+                
+                <div class="flow-step">
+                    <div class="step-node output">
+                        <div class="node-shape circle"></div>
+                        <span class="step-icon">✅</span>
+                    </div>
+                    <div class="step-label">
+                        <div class="step-title">结果响应</div>
+                        <div class="step-desc">结构化输出</div>
+                        <span class="step-type">Response</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-shape circle"></div>
+                <span>输入/输出</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-shape rounded"></div>
+                <span>处理</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-shape diamond"></div>
+                <span>决策</span>
+            </div>
+        </div>
+        
+        <div class="brand">
+            <div class="brand-icon">F</div>
+            <span>Feat</span>
+        </div>
+    </div>
+</body>
+</html>
