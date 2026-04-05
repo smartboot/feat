@@ -135,22 +135,16 @@
             position: absolute;
             font-size: 28px;
             opacity: 0.5;
-            animation: float-gentle 6s ease-in-out infinite;
         }
         
-        @keyframes float-gentle {
-            0%, 100% { transform: translateY(0) rotate(0deg); }
-            50% { transform: translateY(-20px) rotate(5deg); }
-        }
-        
-        .float-item:nth-child(1) { top: 15%; left: 10%; animation-delay: 0s; }
-        .float-item:nth-child(2) { top: 20%; right: 15%; animation-delay: -1s; }
-        .float-item:nth-child(3) { top: 60%; left: 8%; animation-delay: -2s; }
-        .float-item:nth-child(4) { top: 70%; right: 12%; animation-delay: -3s; }
-        .float-item:nth-child(5) { top: 40%; left: 5%; animation-delay: -0.5s; font-size: 20px; }
-        .float-item:nth-child(6) { top: 35%; right: 8%; animation-delay: -1.5s; font-size: 20px; }
-        .float-item:nth-child(7) { bottom: 20%; left: 15%; animation-delay: -2.5s; font-size: 24px; }
-        .float-item:nth-child(8) { bottom: 25%; right: 18%; animation-delay: -3.5s; font-size: 24px; }
+        .float-item:nth-child(1) { top: 15%; left: 10%; }
+        .float-item:nth-child(2) { top: 20%; right: 15%; }
+        .float-item:nth-child(3) { top: 60%; left: 8%; }
+        .float-item:nth-child(4) { top: 70%; right: 12%; }
+        .float-item:nth-child(5) { top: 40%; left: 5%; font-size: 20px; }
+        .float-item:nth-child(6) { top: 35%; right: 8%; font-size: 20px; }
+        .float-item:nth-child(7) { bottom: 20%; left: 15%; font-size: 24px; }
+        .float-item:nth-child(8) { bottom: 25%; right: 18%; font-size: 24px; }
         
         .deco-line {
             position: absolute;
