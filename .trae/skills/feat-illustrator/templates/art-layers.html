@@ -269,7 +269,7 @@
             right: 30px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             font-size: 14px;
             color: var(--art-line-light);
             z-index: 1;
@@ -285,8 +285,13 @@
             justify-content: center;
             color: white;
             font-weight: 700;
-            font-size: 12px;
+            font-size: 13px;
             border: 2px solid var(--art-line);
+            flex-shrink: 0;
+        }
+        
+        .brand span {
+            display: block;
         }
     </style>
 </head>
@@ -297,7 +302,6 @@
         <span class="deco" style="top: 30px; left: 30px;">🏗️</span>
         <span class="deco" style="top: 35px; right: 35px;">📐</span>
         <span class="deco" style="bottom: 50px; left: 35px;">🔧</span>
-        <span class="deco" style="bottom: 45px; right: 30px;">⚙️</span>
         
         <div class="header">
             <h1 class="title">分层架构设计</h1>

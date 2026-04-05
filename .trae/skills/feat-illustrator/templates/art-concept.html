@@ -232,7 +232,7 @@
             right: 30px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             font-size: 14px;
             color: var(--art-line-light);
         }
@@ -247,8 +247,13 @@
             justify-content: center;
             color: white;
             font-weight: 700;
-            font-size: 12px;
+            font-size: 13px;
             border: 2px solid var(--art-line);
+            flex-shrink: 0;
+        }
+        
+        .brand span {
+            display: block;
         }
     </style>
 </head>
@@ -259,7 +264,6 @@
         <div class="corner-deco top-left">✿</div>
         <div class="corner-deco top-right">❀</div>
         <div class="corner-deco bottom-left">✿</div>
-        <div class="corner-deco bottom-right">❀</div>
         
         <div class="deco-line top"></div>
         <div class="deco-line bottom"></div>

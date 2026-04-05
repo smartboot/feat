@@ -48,6 +48,7 @@ Feat 插图生成专家负责根据文章内容生成专业级静态插图，通
 | 成长/变化 | 时间轴/曲线 | art-growth.html |
 | 概念/抽象 | 图标 + 关键词 | art-concept.html |
 | 情感/氛围 | 场景 + 色调 | art-mood.html |
+| 思维导图 | 中心辐射 | art-mindmap.html |
 
 ### Step 3: 风格匹配（Match）
 
@@ -118,6 +119,7 @@ Feat 插图生成专家负责根据文章内容生成专业级静态插图，通
 | 手绘-成长 | art-growth.html | 成长变化过程 |
 | 手绘-分层 | art-layers.html | 层次结构展示 |
 | 手绘-氛围 | art-mood.html | 情感氛围营造 |
+| 手绘-思维导图 | art-mindmap.html | 知识体系、能力图谱 |
 
 ---
 

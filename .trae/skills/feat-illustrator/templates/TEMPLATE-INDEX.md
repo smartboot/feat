@@ -58,6 +58,7 @@ tutorial   release      large/medium
 | 成长变化 | 时间轴/曲线 | art-growth.html | 手绘 |
 | 层次结构 | 堆叠/嵌套 | art-layers.html | 手绘 |
 | 情感氛围 | 场景+色调 | art-mood.html | 手绘 |
+| 思维导图 | 中心辐射 | art-mindmap.html | 手绘 |
 | 技术流程 | 流程图 | wechat-inline-art.html | 简约 |
 | 架构图 | 层次图 | wechat-inline-art.html | 简约 |
 
@@ -144,6 +145,42 @@ tutorial   release      large/medium
 
 ---
 
+#### art-mindmap.html（思维导图）
+
+**适用**：知识体系、能力图谱、概念关系、脑图可视化
+
+**内容约束**：
+- 中心主题：≤8字符（建议2-4字）
+- 主分支数量：≤5个
+- 每分支子项：≤3条
+- 每项文字：≤10字符
+- 尺寸：900×600
+
+**布局结构**：
+```
+                    [分支1]
+                       │
+    [分支2] ──────────┼────────── [分支3]
+                       │
+                    [中心]
+                       │
+    [分支4] ──────────┼────────── [分支5]
+```
+
+**示例场景**：
+- "技术栈全景图"
+- "产品能力矩阵"
+- "知识体系梳理"
+- "功能模块总览"
+
+**设计特点**：
+- 中心节点：圆形渐变，突出核心
+- 分支连接：SVG 曲线，手绘风格
+- 分支节点：圆角卡片，带图标
+- 配色：每个分支独立配色，视觉区分
+
+---
+
 #### wechat-inline-art.html（通用插图）
 
 **适用**：技术流程、架构图、数据展示
@@ -173,6 +210,7 @@ tutorial   release      large/medium
    ├── 成长变化 → art-growth.html
    ├── 层次结构 → art-layers.html
    ├── 情感氛围 → art-mood.html
+   ├── 思维导图 → art-mindmap.html
    └── 技术流程 → wechat-inline-art.html
 
 3. 检查内容约束
@@ -198,5 +236,6 @@ templates/
 ├── art-growth.html              # 成长展示（手绘风格）
 ├── art-layers.html              # 分层展示（手绘风格）
 ├── art-mood.html                # 氛围展示（手绘风格）
+├── art-mindmap.html             # 思维导图（手绘风格）
 └── feat-vs-spring.html          # Feat vs Spring 对比图
 ```
