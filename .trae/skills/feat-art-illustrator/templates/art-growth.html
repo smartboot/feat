@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>手绘风格成长展示 - 900×500</title>
+    <style>
+        :root {
+            --art-warm-cream: #fef9f3;
+            --art-soft-pink: #fce4ec;
+            --art-lavender: #f3e5f5;
+            --art-mint: #e8f5e9;
+            --art-peach: #fff3e0;
+            --art-sky: #e3f2fd;
+            --art-primary: #6b5b95;
+            --art-secondary: #f7cac9;
+            --art-accent: #88b04b;
+            --art-highlight: #ff6f61;
+            --art-line: #5d4e37;
+            --art-line-light: #8b7355;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 
+                "PingFang SC",
+                "Hiragino Sans GB",
+                "Microsoft YaHei",
+                sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #f0f0f0;
+        }
+        
+        .container {
+            width: 900px;
+            height: 500px;
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(180deg, var(--art-sky) 0%, var(--art-mint) 100%);
+            padding: 40px 50px;
+        }
+        
+        .sketch-border {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            right: 15px;
+            bottom: 15px;
+            border: 3px solid var(--art-line);
+            border-radius: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--art-line);
+        }
+        
+        .subtitle {
+            font-size: 14px;
+            color: var(--art-line-light);
+            margin-top: 8px;
+        }
+        
+        .content {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            position: relative;
+            z-index: 1;
+            height: calc(100% - 120px);
+            padding-bottom: 20px;
+        }
+        
+        .stage {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+        
+        .stage-icon {
+            font-size: 40px;
+            margin-bottom: 12px;
+            transition: transform 0.3s;
+        }
+        
+        .stage:nth-child(1) .stage-icon { font-size: 32px; }
+        .stage:nth-child(2) .stage-icon { font-size: 40px; }
+        .stage:nth-child(3) .stage-icon { font-size: 52px; }
+        .stage:nth-child(4) .stage-icon { font-size: 64px; }
+        
+        .stage-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--art-line);
+            margin-bottom: 6px;
+        }
+        
+        .stage-desc {
+            font-size: 12px;
+            color: var(--art-line-light);
+            text-align: center;
+            max-width: 120px;
+        }
+        
+        .ground {
+            position: absolute;
+            bottom: 60px;
+            left: 50px;
+            right: 50px;
+            height: 20px;
+            background: var(--art-mint);
+            border-top: 3px solid var(--art-accent);
+            border-radius: 10px 10px 0 0;
+            z-index: 0;
+        }
+        
+        .tree-trunk {
+            position: absolute;
+            bottom: 80px;
+            width: 8px;
+            height: 60px;
+            background: linear-gradient(180deg, var(--art-accent) 0%, #5d4037 100%);
+            border-radius: 4px;
+            z-index: 0;
+        }
+        
+        .tree-trunk:nth-of-type(1) { left: 150px; height: 30px; }
+        .tree-trunk:nth-of-type(2) { left: 320px; height: 50px; }
+        .tree-trunk:nth-of-type(3) { left: 500px; height: 70px; }
+        .tree-trunk:nth-of-type(4) { left: 700px; height: 90px; }
+        
+        .sun {
+            position: absolute;
+            top: 60px;
+            right: 80px;
+            font-size: 48px;
+            opacity: 0.8;
+        }
+        
+        .cloud {
+            position: absolute;
+            font-size: 32px;
+            opacity: 0.6;
+        }
+        
+        .cloud:nth-of-type(1) { top: 70px; left: 100px; }
+        .cloud:nth-of-type(2) { top: 90px; left: 300px; }
+        .cloud:nth-of-type(3) { top: 60px; left: 550px; }
+        
+        .arrow-path {
+            position: absolute;
+            bottom: 180px;
+            left: 120px;
+            right: 120px;
+            height: 3px;
+            background: repeating-linear-gradient(
+                90deg,
+                var(--art-line) 0px,
+                var(--art-line) 8px,
+                transparent 8px,
+                transparent 16px
+            );
+            opacity: 0.4;
+            z-index: 0;
+        }
+        
+        .brand {
+            position: absolute;
+            bottom: 25px;
+            right: 30px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: var(--art-line-light);
+            z-index: 1;
+        }
+        
+        .brand-icon {
+            width: 28px;
+            height: 28px;
+            background: var(--art-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 12px;
+            border: 2px solid var(--art-line);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sketch-border"></div>
+        
+        <span class="sun">☀️</span>
+        <span class="cloud">☁️</span>
+        <span class="cloud">☁️</span>
+        <span class="cloud">☁️</span>
+        
+        <div class="header">
+            <h1 class="title">从种子到大树</h1>
+            <p class="subtitle">程序员成长的四个阶段</p>
+        </div>
+        
+        <div class="arrow-path"></div>
+        
+        <div class="content">
+            <div class="stage">
+                <span class="stage-icon">🌱</span>
+                <h3 class="stage-title">新手期</h3>
+                <p class="stage-desc">学习基础<br>积累经验</p>
+            </div>
+            
+            <div class="stage">
+                <span class="stage-icon">🌿</span>
+                <h3 class="stage-title">成长期</h3>
+                <p class="stage-desc">独立开发<br>解决问题</p>
+            </div>
+            
+            <div class="stage">
+                <span class="stage-icon">🌳</span>
+                <h3 class="stage-title">成熟期</h3>
+                <p class="stage-desc">架构设计<br>团队协作</p>
+            </div>
+            
+            <div class="stage">
+                <span class="stage-icon">🌲</span>
+                <h3 class="stage-title">专家期</h3>
+                <p class="stage-desc">技术引领<br>价值创造</p>
+            </div>
+        </div>
+        
+        <div class="brand">
+            <div class="brand-icon">F</div>
+            <span>Feat</span>
+        </div>
+    </div>
+</body>
+</html>

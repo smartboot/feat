@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>手绘风格流程展示 - 900×500</title>
+    <style>
+        :root {
+            --art-warm-cream: #fef9f3;
+            --art-soft-pink: #fce4ec;
+            --art-lavender: #f3e5f5;
+            --art-mint: #e8f5e9;
+            --art-peach: #fff3e0;
+            --art-sky: #e3f2fd;
+            --art-primary: #6b5b95;
+            --art-secondary: #f7cac9;
+            --art-accent: #88b04b;
+            --art-highlight: #ff6f61;
+            --art-line: #5d4e37;
+            --art-line-light: #8b7355;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 
+                "PingFang SC",
+                "Hiragino Sans GB",
+                "Microsoft YaHei",
+                sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #f0f0f0;
+        }
+        
+        .container {
+            width: 900px;
+            height: 500px;
+            position: relative;
+            overflow: hidden;
+            background: var(--art-warm-cream);
+            padding: 40px 50px;
+        }
+        
+        .sketch-border {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            right: 15px;
+            bottom: 15px;
+            border: 3px solid var(--art-line);
+            border-radius: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--art-line);
+        }
+        
+        .subtitle {
+            font-size: 14px;
+            color: var(--art-line-light);
+            margin-top: 8px;
+        }
+        
+        .content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            z-index: 1;
+            padding: 0 20px;
+        }
+        
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 140px;
+        }
+        
+        .step-number {
+            width: 36px;
+            height: 36px;
+            background: var(--art-secondary);
+            border: 3px solid var(--art-line);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--art-line);
+            margin-bottom: 12px;
+        }
+        
+        .step-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+        
+        .step-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--art-line);
+            margin-bottom: 8px;
+            text-align: center;
+        }
+        
+        .step-desc {
+            font-size: 12px;
+            color: var(--art-line-light);
+            text-align: center;
+            line-height: 1.4;
+        }
+        
+        .arrow {
+            font-size: 32px;
+            color: var(--art-primary);
+            margin: 0 -10px;
+            opacity: 0.7;
+        }
+        
+        .path-line {
+            position: absolute;
+            top: 50%;
+            left: 100px;
+            right: 100px;
+            height: 3px;
+            background: repeating-linear-gradient(
+                90deg,
+                var(--art-line) 0px,
+                var(--art-line) 10px,
+                transparent 10px,
+                transparent 20px
+            );
+            opacity: 0.3;
+            z-index: 0;
+        }
+        
+        .deco-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+        }
+        
+        .deco {
+            position: absolute;
+            font-size: 20px;
+            opacity: 0.4;
+        }
+        
+        .brand {
+            position: absolute;
+            bottom: 25px;
+            right: 30px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: var(--art-line-light);
+            z-index: 1;
+        }
+        
+        .brand-icon {
+            width: 28px;
+            height: 28px;
+            background: var(--art-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 12px;
+            border: 2px solid var(--art-line);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sketch-border"></div>
+        
+        <div class="deco-elements">
+            <span class="deco" style="top: 50px; left: 40px;">✨</span>
+            <span class="deco" style="top: 60px; right: 50px;">💫</span>
+            <span class="deco" style="bottom: 50px; left: 60px;">🌟</span>
+            <span class="deco" style="bottom: 60px; right: 40px;">⭐</span>
+        </div>
+        
+        <div class="header">
+            <h1 class="title">AI Agent 执行流程</h1>
+            <p class="subtitle">从用户输入到最终答案的完整链路</p>
+        </div>
+        
+        <div class="path-line"></div>
+        
+        <div class="content">
+            <div class="step">
+                <div class="step-number">1</div>
+                <span class="step-icon">💬</span>
+                <h3 class="step-title">用户输入</h3>
+                <p class="step-desc">接收用户的问题或指令</p>
+            </div>
+            
+            <span class="arrow">→</span>
+            
+            <div class="step">
+                <div class="step-number">2</div>
+                <span class="step-icon">🧠</span>
+                <h3 class="step-title">模型推理</h3>
+                <p class="step-desc">AI 深度思考分析问题</p>
+            </div>
+            
+            <span class="arrow">→</span>
+            
+            <div class="step">
+                <div class="step-number">3</div>
+                <span class="step-icon">🔗</span>
+                <h3 class="step-title">Hook 拦截</h3>
+                <p class="step-desc">捕获推理过程数据</p>
+            </div>
+            
+            <span class="arrow">→</span>
+            
+            <div class="step">
+                <div class="step-number">4</div>
+                <span class="step-icon">📊</span>
+                <h3 class="step-title">可视化</h3>
+                <p class="step-desc">展示推理细节</p>
+            </div>
+            
+            <span class="arrow">→</span>
+            
+            <div class="step">
+                <div class="step-number">5</div>
+                <span class="step-icon">✅</span>
+                <h3 class="step-title">输出答案</h3>
+                <p class="step-desc">返回最终结果</p>
+            </div>
+        </div>
+        
+        <div class="brand">
+            <div class="brand-icon">F</div>
+            <span>Feat</span>
+        </div>
+    </div>
+</body>
+</html>

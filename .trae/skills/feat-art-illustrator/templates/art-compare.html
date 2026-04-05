@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>手绘风格对比展示 - 900×500</title>
+    <style>
+        :root {
+            --art-warm-cream: #fef9f3;
+            --art-soft-pink: #fce4ec;
+            --art-lavender: #f3e5f5;
+            --art-mint: #e8f5e9;
+            --art-peach: #fff3e0;
+            --art-sky: #e3f2fd;
+            --art-primary: #6b5b95;
+            --art-secondary: #f7cac9;
+            --art-accent: #88b04b;
+            --art-highlight: #ff6f61;
+            --art-line: #5d4e37;
+            --art-line-light: #8b7355;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 
+                "PingFang SC",
+                "Hiragino Sans GB",
+                "Microsoft YaHei",
+                sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #f0f0f0;
+        }
+        
+        .container {
+            width: 900px;
+            height: 500px;
+            position: relative;
+            overflow: hidden;
+            background: var(--art-warm-cream);
+            padding: 40px;
+        }
+        
+        .sketch-border {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            right: 15px;
+            bottom: 15px;
+            border: 3px solid var(--art-line);
+            border-radius: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--art-line);
+            display: inline-block;
+            position: relative;
+        }
+        
+        .title::before,
+        .title::after {
+            content: '〰️';
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 20px;
+        }
+        
+        .title::before { left: -40px; }
+        .title::after { right: -40px; }
+        
+        .content {
+            display: flex;
+            gap: 30px;
+            position: relative;
+            z-index: 1;
+            height: calc(100% - 100px);
+        }
+        
+        .side {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            border-radius: 16px;
+            position: relative;
+        }
+        
+        .side.left {
+            background: var(--art-sky);
+            border: 3px dashed var(--art-line);
+            transform: rotate(-0.5deg);
+        }
+        
+        .side.right {
+            background: var(--art-mint);
+            border: 3px dashed var(--art-line);
+            transform: rotate(0.5deg);
+        }
+        
+        .side-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+        
+        .side-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--art-line);
+            margin-bottom: 12px;
+        }
+        
+        .side-desc {
+            font-size: 14px;
+            color: var(--art-line-light);
+            text-align: center;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+        
+        .feature-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--art-line);
+            background: rgba(255,255,255,0.6);
+            padding: 6px 12px;
+            border-radius: 12px;
+        }
+        
+        .vs-badge {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            background: var(--art-secondary);
+            border: 3px solid var(--art-line);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--art-line);
+            z-index: 2;
+        }
+        
+        .deco-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+        }
+        
+        .deco {
+            position: absolute;
+            font-size: 24px;
+            opacity: 0.5;
+        }
+        
+        .brand {
+            position: absolute;
+            bottom: 25px;
+            right: 30px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: var(--art-line-light);
+            z-index: 1;
+        }
+        
+        .brand-icon {
+            width: 28px;
+            height: 28px;
+            background: var(--art-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 12px;
+            border: 2px solid var(--art-line);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sketch-border"></div>
+        
+        <div class="deco-elements">
+            <span class="deco" style="top: 60px; left: 50px;">☁️</span>
+            <span class="deco" style="top: 80px; right: 60px;">☁️</span>
+            <span class="deco" style="bottom: 60px; left: 80px;">🌱</span>
+            <span class="deco" style="bottom: 80px; right: 50px;">🌿</span>
+        </div>
+        
+        <div class="header">
+            <h1 class="title">传统 vs 现代</h1>
+        </div>
+        
+        <div class="content">
+            <div class="side left">
+                <span class="side-icon">🐢</span>
+                <h2 class="side-title">传统方式</h2>
+                <p class="side-desc">按部就班，稳步前行</p>
+                <div class="feature-list">
+                    <div class="feature-item">📋 固定流程</div>
+                    <div class="feature-item">⏰ 周期较长</div>
+                    <div class="feature-item">👥 依赖人工</div>
+                    <div class="feature-item">📊 经验驱动</div>
+                </div>
+            </div>
+            
+            <div class="vs-badge">VS</div>
+            
+            <div class="side right">
+                <span class="side-icon">🐇</span>
+                <h2 class="side-title">现代方式</h2>
+                <p class="side-desc">敏捷高效，智能驱动</p>
+                <div class="feature-list">
+                    <div class="feature-item">⚡ 灵活迭代</div>
+                    <div class="feature-item">🚀 快速交付</div>
+                    <div class="feature-item">🤖 AI 辅助</div>
+                    <div class="feature-item">📈 数据驱动</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="brand">
+            <div class="brand-icon">F</div>
+            <span>Feat</span>
+        </div>
+    </div>
+</body>
+</html>
