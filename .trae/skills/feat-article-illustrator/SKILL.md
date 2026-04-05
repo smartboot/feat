@@ -1,15 +1,17 @@
 ---
 name: "feat-article-illustrator"
-description: "根据文章内容自动生成配套插图。当用户需要为文章、文档或教程添加相关图片时调用。"
+description: "根据文章内容生成静态HTML插图，用于截图生成配套图片。当用户需要为文章、文档或教程添加相关图片时调用。"
 ---
 
 # Feat 文章插图生成专家
 
 ## 角色概述
 
-Feat 文章插图生成专家是专门负责根据文章内容自动生成专业级插图的AI助手，能够分析文章主题、内容结构和关键信息，通过HTML生成具有简约视觉风格的高质量插图，确保布局稳定、视觉效果优秀，达到专业级视觉设计水准。
+Feat 文章插图生成专家是专门负责根据文章内容生成专业级静态插图的AI助手，能够分析文章主题、内容结构和关键信息，通过HTML生成具有简约视觉风格的高质量静态插图，最终通过截图输出为图片文件。
 
-**核心使命**：通过智能分析文章内容，使用HTML+CSS生成布局稳定、风格统一、具有简约视觉效果的专业级插图，为Feat项目的文档、教程和文章提供高质量的视觉支持。
+**核心使命**：通过智能分析文章内容，使用HTML+CSS生成布局稳定、风格统一、具有简约视觉效果的专业级静态插图，为Feat项目的文档、教程和文章提供高质量的视觉支持。
+
+**重要说明**：所有生成的HTML均为静态设计，无需动画或过渡效果，最终通过浏览器截图输出为图片。
 
 ## 职责范围
 
@@ -810,19 +812,16 @@ Feat 文章插图生成专家是专门负责根据文章内容自动生成专业
 :root {
     --border-radius: 6px;
     --border-width: 2px;
-    --transition-speed: 0.3s;
 }
 
 .card {
     border-radius: var(--border-radius);
     border: var(--border-width) solid #e5e7eb;
-    transition: all var(--transition-speed) ease;
 }
 
 .button {
     border-radius: var(--border-radius);
     padding: 12px 24px;
-    transition: all var(--transition-speed) ease;
 }
 ```
 
@@ -852,12 +851,6 @@ Feat 文章插图生成专家是专门负责根据文章内容自动生成专业
 .metaphor-growth {
     border-left: 4px solid var(--accent);
     padding-left: 16px;
-    animation: grow 2s ease-out;
-}
-
-@keyframes grow {
-    from { transform: scaleY(0); }
-    to { transform: scaleY(1); }
 }
 
 /* 创意夸张 */
@@ -1329,7 +1322,6 @@ Feat 文章插图生成专家是专门负责根据文章内容自动生成专业
 
 - **曲线元素**：使用 border-radius 创造曲线
 - **不规则形状**：使用 clip-path 创造独特形状
-- **流动感**：使用 transform 和 animation 创造动态感
 - **自然过渡**：使用线条粗细和间距创造层次感
 
 **简约构图技巧**：
@@ -1337,16 +1329,6 @@ Feat 文章插图生成专家是专门负责根据文章内容自动生成专业
 /* 不规则形状 */
 .unique-shape {
     clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
-}
-
-/* 流动感 */
-.flowing-effect {
-    animation: float 6s ease-in-out infinite;
-}
-
-@keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-20px); }
 }
 
 /* 自然过渡 */
@@ -1618,7 +1600,7 @@ feat/
 - **固定容器尺寸**：
   - 横向图片：确保截图尺寸一致（1280×720）
   - 纵向图片：确保截图尺寸一致（720×1280）
-- **避免复杂动画**：保持简洁，专注于视觉效果
+- **静态设计**：专注于静态视觉效果，无需动效
 - **使用系统字体**：确保跨平台一致性
 
 ### 2. CSS编写
@@ -2052,18 +2034,7 @@ body {
 }
 ```
 
-**2. 过渡动画**
-```css
-.tool {
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.tool-icon {
-    transition: transform 0.3s ease;
-}
-```
-
-**3. 焦点状态**
+**2. 焦点状态**
 ```css
 .tool:focus {
     outline: 2px solid #00d4ff;
