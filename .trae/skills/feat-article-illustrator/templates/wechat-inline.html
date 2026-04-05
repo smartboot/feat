@@ -53,25 +53,26 @@
             position: relative;
             overflow: hidden;
             background: var(--neutral-50);
-            padding: 40px 50px;
+            padding: 32px 40px;
             display: flex;
             flex-direction: column;
         }
         
         .header {
-            margin-bottom: 30px;
+            margin-bottom: 20px;
+            flex-shrink: 0;
         }
         
         .title {
-            font-size: 28px;
+            font-size: 24px;
             font-weight: 700;
             color: var(--neutral-900);
             letter-spacing: -0.02em;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
         
         .subtitle {
-            font-size: 14px;
+            font-size: 13px;
             color: var(--neutral-500);
             font-weight: 400;
         }
@@ -80,16 +81,20 @@
             flex: 1;
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 24px;
+            grid-template-rows: repeat(2, 1fr);
+            gap: 16px;
+            min-height: 0;
         }
         
         .card {
             background: #ffffff;
             border: 2px solid var(--neutral-200);
             border-radius: 8px;
-            padding: 24px;
+            padding: 16px;
             display: flex;
             flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
         }
         
         .card.primary {
@@ -103,15 +108,16 @@
         }
         
         .card-icon {
-            width: 48px;
-            height: 48px;
+            width: 36px;
+            height: 36px;
             background: var(--neutral-100);
-            border-radius: 8px;
+            border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
-            margin-bottom: 16px;
+            font-size: 18px;
+            margin-bottom: 10px;
+            flex-shrink: 0;
         }
         
         .card.primary .card-icon {
@@ -119,29 +125,36 @@
         }
         
         .card-title {
-            font-size: 18px;
+            font-size: 15px;
             font-weight: 600;
             color: var(--neutral-800);
-            margin-bottom: 8px;
+            margin-bottom: 6px;
+            flex-shrink: 0;
         }
         
         .card-desc {
-            font-size: 14px;
+            font-size: 12px;
             color: var(--neutral-600);
-            line-height: 1.6;
+            line-height: 1.5;
             flex: 1;
+            min-height: 0;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
         }
         
         .card-tag {
             display: inline-block;
             background: var(--neutral-100);
             color: var(--neutral-600);
-            font-size: 12px;
+            font-size: 10px;
             font-weight: 500;
-            padding: 4px 10px;
-            border-radius: 4px;
-            margin-top: 12px;
+            padding: 3px 8px;
+            border-radius: 3px;
+            margin-top: 8px;
             align-self: flex-start;
+            flex-shrink: 0;
         }
         
         .card.primary .card-tag {
@@ -150,16 +163,17 @@
         }
         
         .footer {
-            margin-top: 30px;
-            padding-top: 20px;
+            margin-top: 20px;
+            padding-top: 12px;
             border-top: 1px solid var(--neutral-200);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-shrink: 0;
         }
         
         .footer-text {
-            font-size: 12px;
+            font-size: 11px;
             color: var(--neutral-500);
         }
         
@@ -170,20 +184,20 @@
         }
         
         .brand-logo {
-            width: 24px;
-            height: 24px;
+            width: 20px;
+            height: 20px;
             background: var(--feat-primary);
             border-radius: 4px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 12px;
+            font-size: 10px;
             font-weight: 700;
             color: #ffffff;
         }
         
         .brand-name {
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 600;
             color: var(--neutral-700);
         }
@@ -208,28 +222,28 @@
         
         <div class="header">
             <h2 class="title">Feat 核心特性</h2>
-            <p class="subtitle">三大核心能力，构建高性能现代应用</p>
+            <p class="subtitle">六大核心能力，构建高性能现代应用</p>
         </div>
         
         <div class="content">
             <div class="card primary">
                 <div class="card-icon">⚡</div>
                 <div class="card-title">极致性能</div>
-                <div class="card-desc">基于 Netty 的高性能网络框架，支持百万级并发连接，响应时间低至毫秒级</div>
+                <div class="card-desc">基于 smart-socket 高性能网络框架，支持百万级并发连接</div>
                 <span class="card-tag">核心能力</span>
             </div>
             
             <div class="card secondary">
                 <div class="card-icon">🔧</div>
                 <div class="card-title">简洁易用</div>
-                <div class="card-desc">直观的 API 设计，零配置快速启动，让开发者专注于业务逻辑实现</div>
+                <div class="card-desc">直观的 API 设计，零配置快速启动，专注业务逻辑</div>
                 <span class="card-tag">开发体验</span>
             </div>
             
             <div class="card">
                 <div class="card-icon">🛡️</div>
                 <div class="card-title">安全可靠</div>
-                <div class="card-desc">内置安全防护机制，完善的异常处理，保障应用稳定运行</div>
+                <div class="card-desc">内置安全防护机制，完善的异常处理，保障稳定运行</div>
                 <span class="card-tag">企业级</span>
             </div>
             
