@@ -18,6 +18,8 @@
             --art-highlight: #ff6f61;
             --art-line: #5d4e37;
             --art-line-light: #8b7355;
+            --art-left-bg: linear-gradient(135deg, #fce4ec 0%, #f3e5f5 50%, #e8f5e9 100%);
+            --art-right-bg: linear-gradient(135deg, #e8f5e9 0%, #e3f2fd 50%, #fff3e0 100%);
         }
         
         * {
@@ -45,171 +47,432 @@
             position: relative;
             overflow: hidden;
             background: var(--art-warm-cream);
-            padding: 40px;
         }
         
         .sketch-border {
             position: absolute;
-            top: 15px;
-            left: 15px;
-            right: 15px;
-            bottom: 15px;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            bottom: 10px;
             border: 3px solid var(--art-line);
-            border-radius: 20px;
+            border-radius: 24px;
+            transform: rotate(-0.2deg);
+        }
+        
+        .sketch-border::before {
+            content: '';
+            position: absolute;
+            top: -6px;
+            left: -6px;
+            right: -6px;
+            bottom: -6px;
+            border: 2px dashed var(--art-line-light);
+            border-radius: 28px;
+            opacity: 0.4;
+            transform: rotate(0.3deg);
+        }
+        
+        .sketch-border::after {
+            content: '';
+            position: absolute;
+            top: -12px;
+            left: -12px;
+            right: -12px;
+            bottom: -12px;
+            border: 1px dotted var(--art-line-light);
+            border-radius: 32px;
+            opacity: 0.25;
+            transform: rotate(-0.15deg);
         }
         
         .header {
             text-align: center;
-            margin-bottom: 30px;
+            padding-top: 28px;
             position: relative;
             z-index: 1;
         }
         
         .title {
-            font-size: 28px;
+            font-size: 36px;
             font-weight: 700;
             color: var(--art-line);
-            display: inline-block;
             position: relative;
+            display: inline-block;
+            padding: 0 20px 10px;
         }
         
         .title::before,
         .title::after {
-            content: '〰️';
+            content: '✿';
             position: absolute;
             top: 50%;
             transform: translateY(-50%);
             font-size: 20px;
+            color: var(--art-secondary);
         }
         
-        .title::before { left: -40px; }
-        .title::after { right: -40px; }
+        .title::before {
+            left: -10px;
+        }
+        
+        .title::after {
+            right: -10px;
+        }
+        
+        .title-underline {
+            position: absolute;
+            bottom: 0;
+            left: 10%;
+            right: 10%;
+            height: 4px;
+            background: linear-gradient(90deg, 
+                var(--art-primary) 0%, 
+                var(--art-secondary) 50%, 
+                var(--art-accent) 100%);
+            border-radius: 2px;
+            transform: skewX(-5deg);
+        }
         
         .content {
             display: flex;
-            gap: 30px;
             position: relative;
             z-index: 1;
-            height: calc(100% - 100px);
+            height: calc(100% - 90px);
+            padding: 15px 25px 20px;
         }
         
         .side {
             flex: 1;
             display: flex;
             flex-direction: column;
-            align-items: center;
             padding: 20px;
-            border-radius: 16px;
             position: relative;
+            border-radius: 16px;
         }
         
         .side.left {
-            background: var(--art-sky);
-            border: 3px dashed var(--art-line);
-            transform: rotate(-0.5deg);
+            background: linear-gradient(180deg, 
+                rgba(252, 228, 236, 0.6) 0%, 
+                rgba(243, 229, 245, 0.4) 50%,
+                rgba(255, 255, 255, 0.2) 100%);
+            margin-right: 35px;
         }
         
         .side.right {
-            background: var(--art-mint);
-            border: 3px dashed var(--art-line);
-            transform: rotate(0.5deg);
+            background: linear-gradient(180deg, 
+                rgba(232, 245, 233, 0.6) 0%, 
+                rgba(227, 242, 253, 0.4) 50%,
+                rgba(255, 255, 255, 0.2) 100%);
+            margin-left: 35px;
+        }
+        
+        .side-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 18px;
+            padding-bottom: 14px;
+            border-bottom: 2px dashed var(--art-line-light);
+            position: relative;
+        }
+        
+        .side-header::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: var(--art-line-light);
+            opacity: 0.3;
         }
         
         .side-icon {
-            font-size: 64px;
-            margin-bottom: 16px;
+            font-size: 48px;
+            filter: drop-shadow(2px 2px 0 rgba(0,0,0,0.1));
         }
         
         .side-title {
-            font-size: 22px;
+            font-size: 24px;
             font-weight: 700;
             color: var(--art-line);
-            margin-bottom: 12px;
         }
         
         .side-desc {
-            font-size: 14px;
+            font-size: 13px;
             color: var(--art-line-light);
-            text-align: center;
-            line-height: 1.6;
-            margin-bottom: 16px;
+            font-style: italic;
+            margin-top: 3px;
         }
         
         .feature-list {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 10px;
         }
         
         .feature-item {
             display: flex;
             align-items: center;
-            gap: 8px;
-            font-size: 13px;
+            gap: 12px;
+            font-size: 15px;
             color: var(--art-line);
-            background: rgba(255,255,255,0.6);
-            padding: 6px 12px;
-            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.75);
+            padding: 12px 16px;
+            border-radius: 14px;
+            border-left: 5px solid var(--art-primary);
+            position: relative;
+            box-shadow: 2px 2px 0 rgba(93, 78, 55, 0.1);
         }
         
-        .vs-badge {
+        .side.right .feature-item {
+            border-left-color: var(--art-accent);
+        }
+        
+        .feature-item::before {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            right: -2px;
+            bottom: -2px;
+            border: 1px solid var(--art-line-light);
+            border-radius: 14px;
+            opacity: 0.15;
+            z-index: -1;
+        }
+        
+        .feature-icon {
+            font-size: 20px;
+        }
+        
+        .feature-text {
+            flex: 1;
+            font-weight: 500;
+        }
+        
+        .vs-divider {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .vs-line-top,
+        .vs-line-bottom {
+            width: 4px;
+            height: 70px;
+            background: linear-gradient(180deg, 
+                var(--art-line) 0%, 
+                var(--art-primary) 50%,
+                var(--art-line) 100%);
+            border-radius: 2px;
+        }
+        
+        .vs-line-top {
+            background: linear-gradient(180deg, 
+                transparent 0%,
+                var(--art-line) 30%,
+                var(--art-primary) 100%);
+        }
+        
+        .vs-line-bottom {
+            background: linear-gradient(180deg, 
+                var(--art-primary) 0%,
+                var(--art-line) 70%,
+                transparent 100%);
+        }
+        
+        .vs-badge {
             width: 60px;
             height: 60px;
-            background: var(--art-secondary);
-            border: 3px solid var(--art-line);
+            background: var(--art-warm-cream);
+            border: 4px solid var(--art-line);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 18px;
-            font-weight: 700;
+            font-weight: 800;
             color: var(--art-line);
-            z-index: 2;
+            margin: -30px 0;
+            z-index: 1;
+            position: relative;
+            box-shadow: 
+                0 0 0 3px var(--art-warm-cream),
+                0 0 0 6px var(--art-line-light);
         }
         
-        .deco-elements {
+        .vs-badge::before {
+            content: '⚡';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            pointer-events: none;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 16px;
         }
         
-        .deco {
+        .vs-badge::after {
+            content: '⚡';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 16px;
+        }
+        
+        .corner-deco {
             position: absolute;
             font-size: 24px;
             opacity: 0.5;
+            z-index: 1;
+        }
+        
+        .corner-deco.top-left { 
+            top: 18px; 
+            left: 18px; 
+            transform: rotate(-15deg);
+        }
+        .corner-deco.top-right { 
+            top: 18px; 
+            right: 18px; 
+            transform: rotate(15deg);
+        }
+        .corner-deco.bottom-left { 
+            bottom: 18px; 
+            left: 18px; 
+            transform: rotate(15deg);
+        }
+        .corner-deco.bottom-right { 
+            bottom: 18px; 
+            right: 18px; 
+            transform: rotate(-15deg);
+        }
+        
+        .floating-deco {
+            position: absolute;
+            font-size: 16px;
+            opacity: 0.4;
+            z-index: 1;
+        }
+        
+        .doodle {
+            position: absolute;
+            opacity: 0.2;
+            z-index: 0;
+        }
+        
+        .doodle-1 {
+            top: 100px;
+            left: 50px;
+            width: 30px;
+            height: 30px;
+            border: 2px solid var(--art-line);
+            border-radius: 50%;
+        }
+        
+        .doodle-2 {
+            top: 120px;
+            right: 60px;
+            width: 25px;
+            height: 25px;
+            border: 2px dashed var(--art-line);
+            transform: rotate(45deg);
+        }
+        
+        .doodle-3 {
+            bottom: 90px;
+            left: 70px;
+            width: 20px;
+            height: 20px;
+            border: 2px dotted var(--art-line);
+            border-radius: 4px;
+        }
+        
+        .doodle-4 {
+            bottom: 100px;
+            right: 50px;
+            width: 28px;
+            height: 28px;
+            border: 2px solid var(--art-line);
+            border-radius: 6px;
+            transform: rotate(30deg);
+        }
+        
+        .squiggle {
+            position: absolute;
+            width: 40px;
+            height: 20px;
+            border: 2px solid var(--art-line);
+            border-top: none;
+            border-radius: 0 0 50% 50%;
+            opacity: 0.15;
+            z-index: 0;
+        }
+        
+        .squiggle-1 {
+            top: 85px;
+            left: 100px;
+            transform: rotate(-10deg);
+        }
+        
+        .squiggle-2 {
+            top: 95px;
+            right: 110px;
+            transform: rotate(10deg) scaleX(-1);
         }
         
         .brand {
             position: absolute;
-            bottom: 25px;
-            right: 30px;
+            bottom: 18px;
+            right: 22px;
             display: flex;
             align-items: center;
             gap: 8px;
-            font-size: 14px;
+            font-size: 13px;
             color: var(--art-line-light);
             z-index: 1;
         }
         
         .brand-icon {
-            width: 28px;
-            height: 28px;
-            background: var(--art-primary);
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, var(--art-primary) 0%, var(--art-secondary) 100%);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
             font-weight: 700;
-            font-size: 12px;
+            font-size: 11px;
             border: 2px solid var(--art-line);
+        }
+        
+        .hand-drawn-line {
+            position: absolute;
+            height: 2px;
+            background: var(--art-line-light);
+            opacity: 0.2;
+            z-index: 0;
+        }
+        
+        .line-1 {
+            top: 75px;
+            left: 80px;
+            width: 60px;
+            transform: rotate(-3deg);
+        }
+        
+        .line-2 {
+            top: 82px;
+            right: 90px;
+            width: 50px;
+            transform: rotate(2deg);
         }
     </style>
 </head>
@@ -217,41 +480,94 @@
     <div class="container">
         <div class="sketch-border"></div>
         
-        <div class="deco-elements">
-            <span class="deco" style="top: 60px; left: 50px;">☁️</span>
-            <span class="deco" style="top: 80px; right: 60px;">☁️</span>
-            <span class="deco" style="bottom: 60px; left: 80px;">🌱</span>
-            <span class="deco" style="bottom: 80px; right: 50px;">🌿</span>
-        </div>
+        <span class="corner-deco top-left">🌸</span>
+        <span class="corner-deco top-right">🌺</span>
+        <span class="corner-deco bottom-left">🌼</span>
+        <span class="corner-deco bottom-right">🌻</span>
+        
+        <span class="floating-deco" style="top: 75px; left: 55px;">✨</span>
+        <span class="floating-deco" style="top: 90px; right: 65px;">💫</span>
+        <span class="floating-deco" style="bottom: 75px; left: 75px;">⭐</span>
+        <span class="floating-deco" style="bottom: 85px; right: 55px;">🌟</span>
+        
+        <div class="doodle doodle-1"></div>
+        <div class="doodle doodle-2"></div>
+        <div class="doodle doodle-3"></div>
+        <div class="doodle doodle-4"></div>
+        
+        <div class="squiggle squiggle-1"></div>
+        <div class="squiggle squiggle-2"></div>
+        
+        <div class="hand-drawn-line line-1"></div>
+        <div class="hand-drawn-line line-2"></div>
         
         <div class="header">
-            <h1 class="title">传统 vs 现代</h1>
+            <h1 class="title">
+                传统 vs 现代
+                <span class="title-underline"></span>
+            </h1>
         </div>
         
         <div class="content">
             <div class="side left">
-                <span class="side-icon">🐢</span>
-                <h2 class="side-title">传统方式</h2>
-                <p class="side-desc">按部就班，稳步前行</p>
+                <div class="side-header">
+                    <span class="side-icon">🐢</span>
+                    <div>
+                        <div class="side-title">传统方式</div>
+                        <div class="side-desc">按部就班，稳步前行</div>
+                    </div>
+                </div>
                 <div class="feature-list">
-                    <div class="feature-item">📋 固定流程</div>
-                    <div class="feature-item">⏰ 周期较长</div>
-                    <div class="feature-item">👥 依赖人工</div>
-                    <div class="feature-item">📊 经验驱动</div>
+                    <div class="feature-item">
+                        <span class="feature-icon">📋</span>
+                        <span class="feature-text">固定流程</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">⏰</span>
+                        <span class="feature-text">周期较长</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">👥</span>
+                        <span class="feature-text">依赖人工</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">📊</span>
+                        <span class="feature-text">经验驱动</span>
+                    </div>
                 </div>
             </div>
             
-            <div class="vs-badge">VS</div>
+            <div class="vs-divider">
+                <div class="vs-line-top"></div>
+                <div class="vs-badge">VS</div>
+                <div class="vs-line-bottom"></div>
+            </div>
             
             <div class="side right">
-                <span class="side-icon">🐇</span>
-                <h2 class="side-title">现代方式</h2>
-                <p class="side-desc">敏捷高效，智能驱动</p>
+                <div class="side-header">
+                    <span class="side-icon">🐇</span>
+                    <div>
+                        <div class="side-title">现代方式</div>
+                        <div class="side-desc">敏捷高效，智能驱动</div>
+                    </div>
+                </div>
                 <div class="feature-list">
-                    <div class="feature-item">⚡ 灵活迭代</div>
-                    <div class="feature-item">🚀 快速交付</div>
-                    <div class="feature-item">🤖 AI 辅助</div>
-                    <div class="feature-item">📈 数据驱动</div>
+                    <div class="feature-item">
+                        <span class="feature-icon">⚡</span>
+                        <span class="feature-text">灵活迭代</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">🚀</span>
+                        <span class="feature-text">快速交付</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">🤖</span>
+                        <span class="feature-text">AI 辅助</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">📈</span>
+                        <span class="feature-text">数据驱动</span>
+                    </div>
                 </div>
             </div>
         </div>
