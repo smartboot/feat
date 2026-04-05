@@ -163,7 +163,7 @@ Feat 插图生成专家负责根据文章内容生成专业级静态插图，通
 }
 ```
 
-### 手绘艺术风格
+### 手绘艺术风格（优化版）
 
 ```css
 :root {
@@ -171,12 +171,27 @@ Feat 插图生成专家负责根据文章内容生成专业级静态插图，通
     --art-soft-pink: #fce4ec;
     --art-lavender: #f3e5f5;
     --art-mint: #e8f5e9;
-    --art-primary: #6b5b95;
-    --art-secondary: #f7cac9;
-    --art-accent: #88b04b;
+    --art-peach: #fff3e0;
+    --art-sky: #e3f2fd;
+    
+    --art-primary: #7c6ba0;
+    --art-primary-light: #9b8ab8;
+    --art-primary-dark: #5a4a7a;
+    
+    --art-secondary: #e8a4b8;
+    --art-accent: #e89b5a;
+    --art-highlight: #e85a5a;
+    
     --art-line: #5d4e37;
+    --art-line-light: #6b5b45;
 }
 ```
+
+**配色设计理念**：
+- 主色 `#7c6ba0`：优雅紫，提升视觉存在感
+- 辅助色 `#e8a4b8`：柔和粉，形成鲜明层次对比
+- 强调色 `#e89b5a`：暖橙，与暖色调背景和谐融合
+- 线条色 `#6b5b45`：深棕，确保 WCAG AA 对比度标准（≥4.5:1）
 
 详细配色方案见 [wechat-design-spec.md](wechat-design-spec.md)
 

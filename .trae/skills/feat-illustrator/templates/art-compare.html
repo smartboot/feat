@@ -15,14 +15,17 @@
             --art-mint: #e8f5e9;
             --art-peach: #fff3e0;
             --art-sky: #e3f2fd;
-            --art-primary: #6b5b95;
-            --art-secondary: #f7cac9;
-            --art-accent: #88b04b;
-            --art-highlight: #ff6f61;
+            
+            --art-primary: #7c6ba0;
+            --art-primary-light: #9b8ab8;
+            --art-primary-dark: #5a4a7a;
+            
+            --art-secondary: #e8a4b8;
+            --art-accent: #e89b5a;
+            --art-highlight: #e85a5a;
+            
             --art-line: #5d4e37;
-            --art-line-light: #8b7355;
-            --art-left-bg: linear-gradient(135deg, #fce4ec 0%, #f3e5f5 50%, #e8f5e9 100%);
-            --art-right-bg: linear-gradient(135deg, #e8f5e9 0%, #e3f2fd 50%, #fff3e0 100%);
+            --art-line-light: #6b5b45;
         }
         
         * {
@@ -269,68 +272,77 @@
             align-items: center;
         }
         
-        .vs-line-top,
-        .vs-line-bottom {
-            width: 4px;
-            height: 70px;
+        .vs-diagonal {
+            position: absolute;
+            width: 3px;
+            height: 180px;
             background: linear-gradient(180deg, 
-                var(--art-line) 0%, 
+                transparent 0%,
+                var(--art-line) 20%,
                 var(--art-primary) 50%,
-                var(--art-line) 100%);
+                var(--art-line) 80%,
+                transparent 100%);
             border-radius: 2px;
         }
         
-        .vs-line-top {
-            background: linear-gradient(180deg, 
-                transparent 0%,
-                var(--art-line) 30%,
-                var(--art-primary) 100%);
+        .vs-diagonal-left {
+            transform: rotate(-25deg);
+            left: -20px;
         }
         
-        .vs-line-bottom {
-            background: linear-gradient(180deg, 
-                var(--art-primary) 0%,
-                var(--art-line) 70%,
-                transparent 100%);
+        .vs-diagonal-right {
+            transform: rotate(25deg);
+            right: -20px;
         }
         
         .vs-badge {
-            width: 60px;
-            height: 60px;
-            background: var(--art-warm-cream);
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, var(--art-primary) 0%, var(--art-primary-dark) 100%);
             border: 4px solid var(--art-line);
-            border-radius: 50%;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
+            font-size: 20px;
             font-weight: 800;
-            color: var(--art-line);
-            margin: -30px 0;
+            color: #ffffff;
             z-index: 1;
             position: relative;
             box-shadow: 
-                0 0 0 3px var(--art-warm-cream),
-                0 0 0 6px var(--art-line-light);
+                4px 4px 0 rgba(93, 78, 55, 0.3),
+                0 0 0 3px var(--art-warm-cream);
+            transform: rotate(-3deg);
         }
         
         .vs-badge::before {
-            content: '⚡';
+            content: '⚔️';
             position: absolute;
-            top: -8px;
+            top: -12px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 16px;
+            font-size: 18px;
         }
         
         .vs-badge::after {
-            content: '⚡';
+            content: '⚔️';
             position: absolute;
-            bottom: -8px;
+            bottom: -12px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 16px;
+            font-size: 18px;
         }
+        
+        .vs-spark {
+            position: absolute;
+            font-size: 14px;
+            opacity: 0.7;
+        }
+        
+        .vs-spark:nth-child(1) { top: -25px; left: -15px; }
+        .vs-spark:nth-child(2) { top: -20px; right: -10px; }
+        .vs-spark:nth-child(3) { bottom: -25px; left: -10px; }
+        .vs-spark:nth-child(4) { bottom: -20px; right: -15px; }
         
         .corner-deco {
             position: absolute;
@@ -435,27 +447,27 @@
         
         .brand {
             position: absolute;
-            bottom: 18px;
-            right: 22px;
+            bottom: 24px;
+            right: 30px;
             display: flex;
             align-items: center;
             gap: 8px;
-            font-size: 13px;
+            font-size: 14px;
             color: var(--art-line-light);
             z-index: 1;
         }
         
         .brand-icon {
-            width: 24px;
-            height: 24px;
-            background: linear-gradient(135deg, var(--art-primary) 0%, var(--art-secondary) 100%);
-            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            background: var(--art-primary);
+            border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
             font-weight: 700;
-            font-size: 11px;
+            font-size: 12px;
             border: 2px solid var(--art-line);
         }
         
@@ -544,9 +556,13 @@
             </div>
             
             <div class="vs-divider">
-                <div class="vs-line-top"></div>
+                <div class="vs-diagonal vs-diagonal-left"></div>
+                <div class="vs-diagonal vs-diagonal-right"></div>
+                <span class="vs-spark">✨</span>
+                <span class="vs-spark">✨</span>
+                <span class="vs-spark">✨</span>
+                <span class="vs-spark">✨</span>
                 <div class="vs-badge">VS</div>
-                <div class="vs-line-bottom"></div>
             </div>
             
             <div class="side right">

@@ -15,12 +15,17 @@
             --art-mint: #e8f5e9;
             --art-peach: #fff3e0;
             --art-sky: #e3f2fd;
-            --art-primary: #6b5b95;
-            --art-secondary: #f7cac9;
-            --art-accent: #88b04b;
-            --art-highlight: #ff6f61;
+            
+            --art-primary: #7c6ba0;
+            --art-primary-light: #9b8ab8;
+            --art-primary-dark: #5a4a7a;
+            
+            --art-secondary: #e8a4b8;
+            --art-accent: #e89b5a;
+            --art-highlight: #e85a5a;
+            
             --art-line: #5d4e37;
-            --art-line-light: #8b7355;
+            --art-line-light: #6b5b45;
         }
         
         * {
@@ -88,18 +93,23 @@
             height: calc(100% - 80px);
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 6px;
             z-index: 1;
         }
         
         .layer {
-            flex: 1;
             display: flex;
             border: 3px solid var(--art-line);
             border-radius: 12px;
             position: relative;
             overflow: hidden;
         }
+        
+        .layer.presentation { flex: 0.8; }
+        .layer.business { flex: 1.3; }
+        .layer.integration { flex: 1; }
+        .layer.data { flex: 1; }
+        .layer.infrastructure { flex: 0.9; }
         
         .layer-label {
             width: 100px;
@@ -188,13 +198,36 @@
         .dependency-arrow {
             position: absolute;
             left: 50%;
-            font-size: 20px;
+            font-size: 16px;
             color: var(--art-primary);
-            opacity: 0.6;
+            opacity: 0.7;
             z-index: 2;
         }
         
-        .arrow-down { top: -12px; transform: translateX(-50%); }
+        .arrow-down { 
+            top: -10px; 
+            transform: translateX(-50%); 
+        }
+        
+        .layer-connector {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 6px;
+            background: repeating-linear-gradient(
+                180deg,
+                var(--art-primary) 0px,
+                var(--art-primary) 3px,
+                transparent 3px,
+                transparent 6px
+            );
+            opacity: 0.5;
+            z-index: 2;
+        }
+        
+        .layer-connector.top { top: 0; }
+        .layer-connector.bottom { bottom: 0; }
         
         .cross-cut {
             position: absolute;
@@ -232,27 +265,27 @@
         
         .brand {
             position: absolute;
-            bottom: 20px;
-            right: 25px;
+            bottom: 24px;
+            right: 30px;
             display: flex;
             align-items: center;
-            gap: 6px;
-            font-size: 12px;
+            gap: 8px;
+            font-size: 14px;
             color: var(--art-line-light);
             z-index: 1;
         }
         
         .brand-icon {
-            width: 24px;
-            height: 24px;
+            width: 28px;
+            height: 28px;
             background: var(--art-primary);
-            border-radius: 50%;
+            border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
             font-weight: 700;
-            font-size: 10px;
+            font-size: 12px;
             border: 2px solid var(--art-line);
         }
     </style>

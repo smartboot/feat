@@ -15,12 +15,17 @@
             --art-mint: #e8f5e9;
             --art-peach: #fff3e0;
             --art-sky: #e3f2fd;
-            --art-primary: #6b5b95;
-            --art-secondary: #f7cac9;
-            --art-accent: #88b04b;
-            --art-highlight: #ff6f61;
+            
+            --art-primary: #7c6ba0;
+            --art-primary-light: #9b8ab8;
+            --art-primary-dark: #5a4a7a;
+            
+            --art-secondary: #e8a4b8;
+            --art-accent: #e89b5a;
+            --art-highlight: #e85a5a;
+            
             --art-line: #5d4e37;
-            --art-line-light: #8b7355;
+            --art-line-light: #6b5b45;
         }
         
         * {
@@ -122,13 +127,30 @@
         .orbit-icon {
             position: absolute;
             font-size: 28px;
-            opacity: 0.7;
+            opacity: 0.8;
+            transition: transform 0.3s ease;
         }
         
-        .orbit-icon:nth-child(1) { top: 0; left: 50%; transform: translateX(-50%); }
-        .orbit-icon:nth-child(2) { top: 50%; right: 0; transform: translateY(-50%); }
-        .orbit-icon:nth-child(3) { bottom: 0; left: 50%; transform: translateX(-50%); }
-        .orbit-icon:nth-child(4) { top: 50%; left: 0; transform: translateY(-50%); }
+        .orbit-icon:nth-child(1) { 
+            top: 8%; 
+            left: 58%; 
+            transform: translateX(-50%) rotate(12deg); 
+        }
+        .orbit-icon:nth-child(2) { 
+            top: 42%; 
+            right: 2%; 
+            transform: translateY(-50%) rotate(-8deg); 
+        }
+        .orbit-icon:nth-child(3) { 
+            bottom: 5%; 
+            left: 42%; 
+            transform: translateX(-50%) rotate(-15deg); 
+        }
+        .orbit-icon:nth-child(4) { 
+            top: 48%; 
+            left: 0; 
+            transform: translateY(-50%) rotate(20deg); 
+        }
         
         .title {
             font-size: 36px;
@@ -206,8 +228,8 @@
         
         .brand {
             position: absolute;
-            bottom: 35px;
-            right: 40px;
+            bottom: 24px;
+            right: 30px;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -219,7 +241,7 @@
             width: 28px;
             height: 28px;
             background: var(--art-primary);
-            border-radius: 50%;
+            border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
