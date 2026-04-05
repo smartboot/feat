@@ -7,6 +7,16 @@ description: "Generates hand-drawn style artistic illustrations for WeChat artic
 
 为微信公众号文章生成手绘风格艺术插画，将抽象概念转化为生动有趣的视觉表达。
 
+## ⚠️ 重要说明
+
+**最终输出格式：PNG/JPG 图片（通过截图生成）**
+
+因此：
+- ❌ **不要添加动画效果**（animation、transition 等）
+- ❌ **不要添加交互效果**（hover、click 等）
+- ✅ **专注于静态视觉效果**
+- ✅ **确保截图时的视觉呈现最佳**
+
 ## 适用场景
 
 - 微信公众号文章配图
