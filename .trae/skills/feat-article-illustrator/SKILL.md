@@ -7,9 +7,9 @@ description: "根据文章内容自动生成配套插图。当用户需要为文
 
 ## 角色概述
 
-Feat 文章插图生成专家是专门负责根据文章内容自动生成专业级插图的AI助手，能够分析文章主题、内容结构和关键信息，通过HTML生成具有艺术化视觉风格的高质量插图，确保布局稳定、视觉效果优秀，达到专业插画或艺术作品的视觉水准。
+Feat 文章插图生成专家是专门负责根据文章内容自动生成专业级插图的AI助手，能够分析文章主题、内容结构和关键信息，通过HTML生成具有简约视觉风格的高质量插图，确保布局稳定、视觉效果优秀，达到专业级视觉设计水准。
 
-**核心使命**：通过智能分析文章内容，使用HTML+CSS生成布局稳定、风格统一、具有艺术化视觉效果的专业级插图，为Feat项目的文档、教程和文章提供高质量的视觉支持。
+**核心使命**：通过智能分析文章内容，使用HTML+CSS生成布局稳定、风格统一、具有简约视觉效果的专业级插图，为Feat项目的文档、教程和文章提供高质量的视觉支持。
 
 ## 职责范围
 
@@ -29,8 +29,8 @@ Feat 文章插图生成专家是专门负责根据文章内容自动生成专业
 
 ### 3. HTML生成
 
-- **HTML结构设计**：设计具有艺术感的HTML结构，避免机械布局
-- **CSS样式编写**：编写专业级CSS样式，实现艺术化视觉效果
+- **HTML结构设计**：设计简洁的HTML结构，避免机械布局
+- **CSS样式编写**：编写专业级CSS样式，实现简约视觉效果
 - **内容填充**：将文章关键信息填充到HTML中
 - **质量检查**：确保HTML布局正确，视觉效果专业
 
@@ -52,8 +52,8 @@ Feat 文章插图生成专家是专门负责根据文章内容自动生成专业
 
 ### 2. HTML生成阶段
 
-1. **HTML结构设计**：根据插图类型设计具有艺术感的HTML结构
-2. **CSS样式编写**：编写专业级CSS样式，实现艺术化视觉效果
+1. **HTML结构设计**：根据插图类型设计简洁的HTML结构
+2. **CSS样式编写**：编写专业级CSS样式，实现简约视觉效果
 3. **内容填充**：将文章关键信息填充到HTML中
 4. **保存文件**：将HTML文件保存到指定目录
 
@@ -83,9 +83,9 @@ Feat 文章插图生成专家是专门负责根据文章内容自动生成专业
 - **层次图**：展示概念的层次结构
 - **关系图**：展示概念之间的关联
 
-### 2. 专业设计师/插画师设计标准指南
+### 2. 专业设计师设计标准指南
 
-作为专业设计师/插画师，必须遵循以下核心设计原则、审美标准、创作流程规范和作品质量要求。
+作为专业设计师，必须遵循以下核心设计原则、审美标准、创作流程规范和作品质量要求。
 
 #### 一、核心设计原则
 
@@ -408,7 +408,248 @@ Feat 文章插图生成专家是专门负责根据文章内容自动生成专业
 }
 ```
 
-##### 2. 排版布局标准
+##### 2. 简约风格配色设计
+
+**设计理念**：
+- 简洁克制：避免过多色彩元素，保持视觉纯净
+- 线条为主：通过线条变化营造视觉层次
+- 中性色调：以中性色为主，少量主色调点缀
+
+**色彩限制原则**：
+- 主色调：不超过 3 种
+- 中性色：白色、浅灰、深灰、黑色
+- 强调色：仅用于关键元素，占比不超过 5%
+
+**推荐配色方案**：
+
+**方案一：经典黑白灰**
+```css
+.minimalist-classic {
+    --primary: #1a1a1a;      /* 深灰黑 */
+    --secondary: #6b7280;    /* 中灰 */
+    --accent: #3b82f6;       /* 蓝色强调 */
+    --neutral-light: #ffffff; /* 白色 */
+    --neutral-mid: #e5e7eb;  /* 浅灰 */
+    --neutral-dark: #374151; /* 深灰 */
+}
+```
+
+**方案二：现代科技感**
+```css
+.minimalist-tech {
+    --primary: #0f172a;      /* 深蓝黑 */
+    --secondary: #475569;    /* 蓝灰 */
+    --accent: #06b6d4;       /* 青色强调 */
+    --neutral-light: #f8fafc;
+    --neutral-mid: #cbd5e1;
+    --neutral-dark: #334155;
+}
+```
+
+**方案三：温暖自然**
+```css
+.minimalist-warm {
+    --primary: #292524;      /* 深棕 */
+    --secondary: #78716c;    /* 灰棕 */
+    --accent: #f59e0b;       /* 橙色强调 */
+    --neutral-light: #fafaf9;
+    --neutral-mid: #d6d3d1;
+    --neutral-dark: #44403c;
+}
+```
+
+**线条层次设计**：
+
+**线条粗细层级**：
+```css
+/* 关键元素 - 粗线条 */
+.line-primary {
+    border-width: 3px;
+    stroke-width: 3;
+    font-weight: 700;
+}
+
+/* 次要元素 - 中等线条 */
+.line-secondary {
+    border-width: 2px;
+    stroke-width: 2;
+    font-weight: 500;
+}
+
+/* 辅助元素 - 细线条 */
+.line-tertiary {
+    border-width: 1px;
+    stroke-width: 1;
+    font-weight: 300;
+}
+
+/* 背景元素 - 极细线条 */
+.line-background {
+    border-width: 0.5px;
+    stroke-width: 0.5;
+    opacity: 0.3;
+}
+```
+
+**线条虚实对比**：
+```css
+/* 实线 - 强调重要性 */
+.solid-line {
+    border-style: solid;
+    stroke-dasharray: none;
+}
+
+/* 虚线 - 表示关联或次要 */
+.dashed-line {
+    border-style: dashed;
+    stroke-dasharray: 5, 5;
+}
+
+/* 点线 - 表示可选或辅助 */
+.dotted-line {
+    border-style: dotted;
+    stroke-dasharray: 2, 2;
+}
+```
+
+**线条方向对比**：
+```css
+/* 水平线 - 稳定、平静 */
+.horizontal-line {
+    width: 100%;
+    height: 1px;
+}
+
+/* 垂直线 - 力量、正式 */
+.vertical-line {
+    width: 1px;
+    height: 100%;
+}
+
+/* 斜线 - 动感、引导 */
+.diagonal-line {
+    transform: rotate(45deg);
+}
+
+/* 曲线 - 流动、柔和 */
+.curved-line {
+    border-radius: 50%;
+}
+```
+
+**视觉层次营造**：
+
+**通过线条粗细**：
+```css
+/* 层级1：最关键 */
+.priority-1 {
+    border: 3px solid var(--primary);
+}
+
+/* 层级2：重要 */
+.priority-2 {
+    border: 2px solid var(--secondary);
+}
+
+/* 层级3：次要 */
+.priority-3 {
+    border: 1px solid var(--neutral-mid);
+}
+
+/* 层级4：辅助 */
+.priority-4 {
+    border: 0.5px solid var(--neutral-mid);
+    opacity: 0.6;
+}
+```
+
+**通过颜色深浅**：
+```css
+/* 深色 - 强调 */
+.color-dark {
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
+/* 中等色 - 正常 */
+.color-medium {
+    color: var(--secondary);
+    border-color: var(--secondary);
+}
+
+/* 浅色 - 次要 */
+.color-light {
+    color: var(--neutral-dark);
+    border-color: var(--neutral-mid);
+}
+
+/* 极浅色 - 背景 */
+.color-lightest {
+    color: var(--neutral-mid);
+    border-color: var(--neutral-light);
+}
+```
+
+**简约设计原则**：
+
+1. **减少装饰**：
+   - 避免渐变、阴影、纹理等复杂效果
+   - 使用纯色填充，保持视觉纯净
+   - 仅在必要时使用极简阴影
+
+2. **强调线条**：
+   - 使用线条粗细表达层级
+   - 通过线条虚实区分功能
+   - 利用线条方向引导视觉
+
+3. **留白空间**：
+   - 增加元素间距，提升呼吸感
+   - 避免过度拥挤的布局
+   - 留白也是设计的一部分
+
+4. **统一性**：
+   - 保持线条风格一致
+   - 统一圆角大小（建议 4-8px）
+   - 保持间距规律性
+
+**实现示例**：
+```css
+.minimalist-card {
+    background: var(--neutral-light);
+    border: 2px solid var(--neutral-mid);
+    border-radius: 6px;
+    padding: 24px;
+    box-shadow: none;
+}
+
+.minimalist-card.primary {
+    border-color: var(--primary);
+    border-width: 3px;
+}
+
+.minimalist-card.secondary {
+    border-color: var(--secondary);
+    border-width: 2px;
+}
+
+.minimalist-text {
+    color: var(--primary);
+    font-weight: 500;
+    line-height: 1.6;
+}
+
+.minimalist-text.secondary {
+    color: var(--secondary);
+    font-weight: 400;
+}
+
+.minimalist-text.tertiary {
+    color: var(--neutral-dark);
+    font-weight: 300;
+}
+```
+
+##### 3. 排版布局标准
 
 **字体选择标准**：
 
@@ -544,47 +785,37 @@ Feat 文章插图生成专家是专门负责根据文章内容自动生成专业
 /* 焦点设计 */
 .focal-point {
     position: relative;
-}
-
-.focal-point::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, rgba(102,126,234,0.3) 0%, transparent 70%);
-    transform: translate(-50%, -50%);
-    z-index: -1;
+    border: 3px solid var(--accent);
+    padding: 8px 16px;
 }
 ```
 
 ##### 4. 风格统一性标准
 
 **设计语言统一**：
-- 视觉风格：扁平、拟物、插画、极简
-- 色彩风格：冷色调、暖色调、中性色调
-- 字体风格：现代、传统、艺术
-- 图形风格：几何、有机、抽象
+- 视觉风格：扁平、极简、现代
+- 色彩风格：中性色调为主，少量主色调点缀
+- 字体风格：现代、简洁
+- 图形风格：几何、简洁
 
 **元素统一**：
-- 图标风格：线性、填充、双色
-- 按钮风格：圆角、直角、胶囊
-- 卡片风格：阴影、边框、无边框
-- 图片风格：照片、插画、图标
+- 图标风格：线性、简洁
+- 按钮风格：圆角（4-6px）、简洁
+- 卡片风格：边框、简洁
+- 图片风格：简约、清晰
 
 **实现标准**：
 ```css
 /* 设计语言统一 */
 :root {
-    --border-radius: 20px;
-    --shadow-style: 0 10px 40px rgba(0,0,0,0.3);
+    --border-radius: 6px;
+    --border-width: 2px;
     --transition-speed: 0.3s;
 }
 
 .card {
     border-radius: var(--border-radius);
-    box-shadow: var(--shadow-style);
+    border: var(--border-width) solid #e5e7eb;
     transition: all var(--transition-speed) ease;
 }
 
@@ -619,7 +850,8 @@ Feat 文章插图生成专家是专门负责根据文章内容自动生成专业
 ```css
 /* 创意隐喻 */
 .metaphor-growth {
-    background: linear-gradient(to top, #1a1a2e, #667eea);
+    border-left: 4px solid var(--accent);
+    padding-left: 16px;
     animation: grow 2s ease-out;
 }
 
@@ -637,10 +869,8 @@ Feat 文章插图生成专家是专门负责根据文章内容自动生成专业
 
 /* 创意融合 */
 .fusion-style {
-    background: 
-        linear-gradient(135deg, #667eea 0%, #764ba2 100%),
-        radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1) 0%, transparent 100%);
-    backdrop-filter: blur(10px);
+    border: 3px solid var(--primary);
+    padding: 16px;
 }
 ```
 
@@ -689,9 +919,9 @@ Feat 文章插图生成专家是专门负责根据文章内容自动生成专业
 
 **详细设计**：
 - 精确尺寸：确定元素大小和位置
-- 精确颜色：确定颜色值和渐变
+- 精确颜色：确定颜色值和线条粗细
 - 精确字体：确定字体和排版
-- 精确效果：确定阴影和特效
+- 精确效果：确定线条层次和间距
 
 **细节优化**：
 - 视觉平衡：调整元素平衡
@@ -850,9 +1080,9 @@ Feat 文章插图生成专家是专门负责根据文章内容自动生成专业
 
 **当前流行趋势**：
 - 极简主义：简化设计，突出核心
-- 渐变设计：丰富的渐变效果
-- 3D 效果：立体感和深度感
-- 动态设计：微动画和交互效果
+- 线条设计：通过线条变化营造层次
+- 中性色调：简洁克制的配色方案
+- 留白设计：增加呼吸感和空间感
 - 有机设计：自然、流动的形态
 
 **技术应用趋势**：
@@ -936,114 +1166,116 @@ Feat 文章插图生成专家是专门负责根据文章内容自动生成专业
 - **宽高比例**：严格遵循 9:16 比例
 - **格式**：HTML 文件，用户可自行截图
 
-#### 艺术化设计原则
+#### 简约设计原则
 
-**1. 艺术化视觉风格**
+**1. 简洁克制的视觉风格**
 
-实现专业级艺术效果，包括但不限于：
-- **油画风格**：使用渐变、纹理、笔触效果
-- **水彩风格**：柔和的色彩过渡、透明感
-- **插画风格**：扁平化设计、几何图形组合
-- **科技风格**：霓虹光效、粒子效果、网格背景
+实现专业级简约效果，核心原则：
+- **减少装饰**：避免渐变、阴影、纹理等复杂效果
+- **纯色填充**：使用纯色填充，保持视觉纯净
+- **线条为主**：通过线条变化营造视觉层次
+- **留白空间**：增加元素间距，提升呼吸感
 
 **CSS 实现技巧**：
 ```css
-/* 油画质感 */
-.painting-effect {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    filter: contrast(1.2) saturate(1.3);
-    box-shadow: 
-        inset 0 0 60px rgba(255,255,255,0.1),
-        0 20px 40px rgba(0,0,0,0.2);
+/* 简约卡片 */
+.minimalist-card {
+    background: #ffffff;
+    border: 2px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 24px;
+    box-shadow: none;
 }
 
-/* 水彩质感 */
-.watercolor-effect {
-    background: linear-gradient(
-        45deg,
-        rgba(255,255,255,0.15) 25%,
-        transparent 25%,
-        transparent 50%,
-        rgba(255,255,255,0.15) 50%,
-        rgba(255,255,255,0.15) 75%,
-        transparent 75%,
-        transparent
-    );
-    background-size: 20px 20px;
-    filter: blur(0.5px);
+/* 线条层次 */
+.line-hierarchy-primary {
+    border: 3px solid #1a1a1a;
 }
 
-/* 科技质感 */
-.tech-effect {
-    background: 
-        radial-gradient(circle at 20% 50%, rgba(120,119,198,0.3), transparent 50%),
-        radial-gradient(circle at 80% 80%, rgba(252,70,107,0.3), transparent 50%),
-        radial-gradient(circle at 40% 20%, rgba(99,102,241,0.3), transparent 50%);
+.line-hierarchy-secondary {
+    border: 2px solid #6b7280;
+}
+
+.line-hierarchy-tertiary {
+    border: 1px solid #e5e7eb;
 }
 ```
 
-**2. 丰富的色彩层次**
+**2. 线条层次营造**
 
-- **渐变背景**：使用多层渐变创造深度感
-- **色彩叠加**：通过透明度叠加创造丰富层次
-- **光影效果**：使用 box-shadow 和 filter 创造立体感
-- **色彩对比**：合理使用对比色增强视觉冲击力
+- **粗细对比**：关键元素粗线条，次要元素细线条
+- **虚实对比**：实线强调重要性，虚线表示关联
+- **方向对比**：水平线稳定，垂直线力量，斜线动感
+- **颜色深浅**：深色强调，浅色辅助
 
-**色彩方案**：
+**线条方案**：
 ```css
-/* 专业级渐变配色 */
-.gradient-professional {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+/* 线条粗细层级 */
+.line-primary {
+    border-width: 3px;
+    stroke-width: 3;
+    font-weight: 700;
 }
 
-/* 深度渐变 */
-.gradient-depth {
-    background: 
-        linear-gradient(135deg, rgba(102,126,234,0.9) 0%, rgba(118,75,162,0.9) 100%),
-        radial-gradient(circle at 30% 70%, rgba(255,255,255,0.1) 0%, transparent 50%);
+.line-secondary {
+    border-width: 2px;
+    stroke-width: 2;
+    font-weight: 500;
 }
 
-/* 光影层次 */
-.light-shadow {
-    box-shadow: 
-        0 10px 30px rgba(0,0,0,0.3),
-        0 1px 8px rgba(0,0,0,0.2),
-        inset 0 1px 0 rgba(255,255,255,0.2);
+.line-tertiary {
+    border-width: 1px;
+    stroke-width: 1;
+    font-weight: 300;
+}
+
+/* 线条虚实 */
+.solid-line {
+    border-style: solid;
+}
+
+.dashed-line {
+    border-style: dashed;
+}
+
+.dotted-line {
+    border-style: dotted;
 }
 ```
 
-**3. 自然的光影效果**
+**3. 中性色调搭配**
 
-- **柔和阴影**：使用多层 box-shadow 创造自然阴影
-- **高光效果**：使用渐变和伪元素创造高光
-- **深度感**：通过 z-index 和 transform 创造层次
-- **光晕效果**：使用 filter: blur() 和 radial-gradient
+- **主色调**：不超过 3 种
+- **中性色**：白色、浅灰、深灰、黑色
+- **强调色**：仅用于关键元素，占比不超过 5%
+- **对比度**：确保文字与背景对比度至少 4.5:1
 
-**光影实现**：
+**配色实现**：
 ```css
-/* 自然阴影 */
-.natural-shadow {
-    box-shadow: 
-        0 2px 4px rgba(0,0,0,0.1),
-        0 8px 16px rgba(0,0,0,0.1),
-        0 16px 32px rgba(0,0,0,0.15);
+/* 经典黑白灰 */
+:root {
+    --primary: #1a1a1a;
+    --secondary: #6b7280;
+    --accent: #3b82f6;
+    --neutral-light: #ffffff;
+    --neutral-mid: #e5e7eb;
+    --neutral-dark: #374151;
 }
 
-/* 高光效果 */
-.highlight-effect::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 50%;
-    background: linear-gradient(to bottom, rgba(255,255,255,0.2), transparent);
-    border-radius: inherit;
+/* 文字层级 */
+.text-primary {
+    color: var(--primary);
+    font-weight: 600;
 }
 
-/* 光晕效果 */
-.glow-effect {
-    filter: drop-shadow(0 0 20px rgba(102,126,234,0.5));
+.text-secondary {
+    color: var(--secondary);
+    font-weight: 400;
+}
+
+.text-tertiary {
+    color: var(--neutral-dark);
+    font-weight: 300;
 }
 ```
 
@@ -1098,9 +1330,9 @@ Feat 文章插图生成专家是专门负责根据文章内容自动生成专业
 - **曲线元素**：使用 border-radius 创造曲线
 - **不规则形状**：使用 clip-path 创造独特形状
 - **流动感**：使用 transform 和 animation 创造动态感
-- **自然过渡**：使用渐变和模糊创造柔和过渡
+- **自然过渡**：使用线条粗细和间距创造层次感
 
-**艺术构图技巧**：
+**简约构图技巧**：
 ```css
 /* 不规则形状 */
 .unique-shape {
@@ -1119,8 +1351,8 @@ Feat 文章插图生成专家是专门负责根据文章内容自动生成专业
 
 /* 自然过渡 */
 .smooth-transition {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-    filter: blur(0px);
+    border: 2px solid var(--primary);
+    padding: 16px;
 }
 ```
 
@@ -1137,9 +1369,7 @@ Feat 文章插图生成专家是专门负责根据文章内容自动生成专业
 .creative-typography {
     font-size: 120px;
     font-weight: 900;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: var(--primary);
     letter-spacing: -5px;
     line-height: 0.9;
 }
@@ -1147,31 +1377,15 @@ Feat 文章插图生成专家是专门负责根据文章内容自动生成专业
 /* 视觉焦点 */
 .visual-focus {
     position: relative;
-}
-
-.visual-focus::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, rgba(102,126,234,0.3) 0%, transparent 70%);
-    transform: translate(-50%, -50%);
-    z-index: -1;
+    border: 3px solid var(--accent);
+    padding: 8px 16px;
 }
 
 /* 引导线 */
 .guide-line {
     position: relative;
-}
-
-.guide-line::before {
-    content: '';
-    position: absolute;
-    width: 100px;
-    height: 2px;
-    background: linear-gradient(to right, transparent, #667eea, transparent);
+    border-left: 3px solid var(--primary);
+    padding-left: 16px;
 }
 ```
 
@@ -1253,524 +1467,25 @@ Feat 文章插图生成专家是专门负责根据文章内容自动生成专业
 
 ### 4. 专业级 HTML 模板示例
 
-#### 艺术化封面模板
+所有模板文件已移动到 `templates/` 目录，采用简约风格设计：
 
-```html
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>专业级封面</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background: #0f0f23;
-        }
-        
-        .container {
-            width: 1280px;
-            height: 720px;
-            position: relative;
-            overflow: hidden;
-            background: 
-                radial-gradient(circle at 20% 50%, rgba(102,126,234,0.4) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(118,75,162,0.4) 0%, transparent 50%),
-                radial-gradient(circle at 40% 80%, rgba(240,147,251,0.3) 0%, transparent 50%),
-                linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-        }
-        
-        .container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: 
-                radial-gradient(circle at 30% 70%, rgba(255,255,255,0.05) 0%, transparent 50%);
-            pointer-events: none;
-        }
-        
-        .content {
-            position: relative;
-            z-index: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100%;
-            text-align: center;
-        }
-        
-        .title {
-            font-size: 120px;
-            font-weight: 900;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            letter-spacing: -3px;
-            margin-bottom: 30px;
-            filter: drop-shadow(0 10px 30px rgba(102,126,234,0.5));
-        }
-        
-        .subtitle {
-            font-size: 48px;
-            color: rgba(255,255,255,0.9);
-            font-weight: 300;
-            letter-spacing: 2px;
-            margin-bottom: 60px;
-        }
-        
-        .features {
-            display: flex;
-            gap: 40px;
-            margin-top: 40px;
-        }
-        
-        .feature {
-            padding: 30px 40px;
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            border: 1px solid rgba(255,255,255,0.2);
-            box-shadow: 
-                0 8px 32px rgba(0,0,0,0.3),
-                inset 0 1px 0 rgba(255,255,255,0.2);
-            transform: rotate(var(--rotation, 0deg));
-            transition: transform 0.3s ease;
-        }
-        
-        .feature:nth-child(1) { --rotation: -2deg; }
-        .feature:nth-child(2) { --rotation: 1deg; }
-        .feature:nth-child(3) { --rotation: -1deg; }
-        .feature:nth-child(4) { --rotation: 2deg; }
-        
-        .feature-icon {
-            font-size: 48px;
-            margin-bottom: 15px;
-        }
-        
-        .feature-text {
-            font-size: 24px;
-            color: rgba(255,255,255,0.9);
-            font-weight: 500;
-        }
-        
-        .decoration {
-            position: absolute;
-            border-radius: 50%;
-            opacity: 0.1;
-        }
-        
-        .decoration-1 {
-            width: 400px;
-            height: 400px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            top: -100px;
-            right: -100px;
-            filter: blur(80px);
-        }
-        
-        .decoration-2 {
-            width: 300px;
-            height: 300px;
-            background: linear-gradient(135deg, #f093fb, #f5576c);
-            bottom: -50px;
-            left: -50px;
-            filter: blur(60px);
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="decoration decoration-1"></div>
-        <div class="decoration decoration-2"></div>
-        
-        <div class="content">
-            <h1 class="title">Feat v1.4.1</h1>
-            <p class="subtitle">性能优化与 AI Agent 增强</p>
-            
-            <div class="features">
-                <div class="feature">
-                    <div class="feature-icon">🚀</div>
-                    <div class="feature-text">性能优化</div>
-                </div>
-                <div class="feature">
-                    <div class="feature-icon">🤖</div>
-                    <div class="feature-text">AI Agent</div>
-                </div>
-                <div class="feature">
-                    <div class="feature-icon">☁️</div>
-                    <div class="feature-text">云原生</div>
-                </div>
-                <div class="feature">
-                    <div class="feature-icon">⚡</div>
-                    <div class="feature-text">AOT 编译</div>
-                </div>
-            </div>
-        </div>
-    </div>
-</body>
-</html>
-```
+**横向图片模板**：`templates/horizontal-template.html`
+- 分辨率：1280×720 像素（16:9）
+- 简约风格配色
+- 线条层次设计
 
-#### 艺术化流程图模板
+**纵向图片模板**：`templates/vertical-template.html`
+- 分辨率：720×1280 像素（9:16）
+- 简约风格配色
+- 线条层次设计
 
-```html
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>专业级流程图</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background: #0f0f23;
-        }
-        
-        .container {
-            width: 1280px;
-            height: 720px;
-            position: relative;
-            overflow: hidden;
-            background: 
-                radial-gradient(circle at 50% 50%, rgba(102,126,234,0.2) 0%, transparent 70%),
-                linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            padding: 80px;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .title {
-            font-size: 72px;
-            font-weight: 900;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-align: center;
-            margin-bottom: 80px;
-        }
-        
-        .flow {
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            flex: 1;
-            position: relative;
-        }
-        
-        .flow::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 10%;
-            right: 10%;
-            height: 4px;
-            background: linear-gradient(90deg, 
-                transparent, 
-                rgba(102,126,234,0.5), 
-                rgba(118,75,162,0.5), 
-                rgba(240,147,251,0.5),
-                transparent
-            );
-            z-index: 0;
-        }
-        
-        .step {
-            position: relative;
-            z-index: 1;
-            width: 280px;
-            padding: 40px;
-            background: rgba(255,255,255,0.05);
-            backdrop-filter: blur(10px);
-            border-radius: 24px;
-            border: 1px solid rgba(255,255,255,0.1);
-            box-shadow: 
-                0 10px 40px rgba(0,0,0,0.3),
-                inset 0 1px 0 rgba(255,255,255,0.1);
-            text-align: center;
-            transform: translateY(var(--offset, 0px));
-        }
-        
-        .step:nth-child(1) { --offset: -30px; }
-        .step:nth-child(2) { --offset: 20px; }
-        .step:nth-child(3) { --offset: -10px; }
-        .step:nth-child(4) { --offset: 25px; }
-        .step:nth-child(5) { --offset: -15px; }
-        
-        .step-number {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            font-weight: bold;
-            color: white;
-            margin: 0 auto 20px;
-            box-shadow: 0 8px 20px rgba(102,126,234,0.4);
-        }
-        
-        .step-title {
-            font-size: 24px;
-            font-weight: bold;
-            color: rgba(255,255,255,0.95);
-            margin-bottom: 12px;
-        }
-        
-        .step-desc {
-            font-size: 16px;
-            color: rgba(255,255,255,0.7);
-            line-height: 1.6;
-        }
-        
-        .arrow {
-            position: absolute;
-            top: 50%;
-            font-size: 40px;
-            color: rgba(102,126,234,0.6);
-            z-index: 0;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1 class="title">HTTP 客户端 GZIP 响应解析优化流程</h1>
-        
-        <div class="flow">
-            <div class="step">
-                <div class="step-number">1</div>
-                <div class="step-title">📥 接收响应</div>
-                <div class="step-desc">HTTP Client 接收服务器响应数据</div>
-            </div>
-            
-            <div class="step">
-                <div class="step-number">2</div>
-                <div class="step-title">🔍 检查编码</div>
-                <div class="step-desc">解析 Content-Encoding 头</div>
-            </div>
-            
-            <div class="step">
-                <div class="step-number">3</div>
-                <div class="step-title">✅ GZIP 优化</div>
-                <div class="step-desc">改进解析算法提升效率</div>
-            </div>
-            
-            <div class="step">
-                <div class="step-number">4</div>
-                <div class="step-title">⚠️ 移除 Deflate</div>
-                <div class="step-desc">暂时移除 Deflate 支持</div>
-            </div>
-            
-            <div class="step">
-                <div class="step-number">5</div>
-                <div class="step-title">✨ 返回结果</div>
-                <div class="step-desc">返回完整准确的响应</div>
-            </div>
-        </div>
-    </div>
-</body>
-</html>
-```
-
-#### 艺术化架构图模板
-
-```html
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>专业级架构图</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background: #0f0f23;
-        }
-        
-        .container {
-            width: 1280px;
-            height: 720px;
-            position: relative;
-            overflow: hidden;
-            background: 
-                radial-gradient(circle at 30% 30%, rgba(102,126,234,0.3) 0%, transparent 50%),
-                radial-gradient(circle at 70% 70%, rgba(118,75,162,0.3) 0%, transparent 50%),
-                linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            padding: 80px;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .title {
-            font-size: 72px;
-            font-weight: 900;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-align: center;
-            margin-bottom: 60px;
-        }
-        
-        .architecture {
-            display: flex;
-            flex-direction: column;
-            gap: 40px;
-            flex: 1;
-        }
-        
-        .layer {
-            display: flex;
-            justify-content: center;
-            gap: 30px;
-            position: relative;
-        }
-        
-        .layer::before {
-            content: attr(data-layer);
-            position: absolute;
-            left: 0;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 18px;
-            color: rgba(255,255,255,0.5);
-            font-weight: 600;
-            letter-spacing: 1px;
-        }
-        
-        .module {
-            padding: 35px 45px;
-            background: rgba(255,255,255,0.05);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            border: 1px solid rgba(255,255,255,0.1);
-            box-shadow: 
-                0 10px 40px rgba(0,0,0,0.3),
-                inset 0 1px 0 rgba(255,255,255,0.1);
-            min-width: 280px;
-            text-align: center;
-            transform: rotate(var(--rotation, 0deg));
-        }
-        
-        .module:nth-child(odd) { --rotation: -1deg; }
-        .module:nth-child(even) { --rotation: 1deg; }
-        
-        .module-icon {
-            font-size: 48px;
-            margin-bottom: 15px;
-        }
-        
-        .module-title {
-            font-size: 24px;
-            font-weight: bold;
-            color: rgba(255,255,255,0.95);
-            margin-bottom: 10px;
-        }
-        
-        .module-desc {
-            font-size: 16px;
-            color: rgba(255,255,255,0.7);
-            line-height: 1.5;
-        }
-        
-        .connection {
-            position: absolute;
-            width: 2px;
-            background: linear-gradient(to bottom, 
-                transparent, 
-                rgba(102,126,234,0.5), 
-                transparent
-            );
-            left: 50%;
-            height: 40px;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1 class="title">Session 管理架构</h1>
-        
-        <div class="architecture">
-            <div class="layer" data-layer="应用层">
-                <div class="module">
-                    <div class="module-icon">🌐</div>
-                    <div class="module-title">HTTP 请求</div>
-                    <div class="module-desc">用户请求处理</div>
-                </div>
-            </div>
-            
-            <div class="layer" data-layer="管理层">
-                <div class="module">
-                    <div class="module-icon">🔑</div>
-                    <div class="module-title">SessionManager</div>
-                    <div class="module-desc">统一会话管理接口</div>
-                </div>
-            </div>
-            
-            <div class="layer" data-layer="实现层">
-                <div class="module">
-                    <div class="module-icon">💾</div>
-                    <div class="module-title">LocalSessionManager</div>
-                    <div class="module-desc">本地会话管理</div>
-                </div>
-                <div class="module">
-                    <div class="module-icon">🗄️</div>
-                    <div class="module-title">ClusterSessionManager</div>
-                    <div class="module-desc">分布式会话管理</div>
-                </div>
-            </div>
-            
-            <div class="layer" data-layer="存储层">
-                <div class="module">
-                    <div class="module-icon">💿</div>
-                    <div class="module-title">本地内存</div>
-                    <div class="module-desc">单机存储</div>
-                </div>
-                <div class="module">
-                    <div class="module-icon">⚡</div>
-                    <div class="module-title">Redis</div>
-                    <div class="module-desc">分布式存储</div>
-                </div>
-            </div>
-        </div>
-    </div>
-</body>
-</html>
-```
+模板特点：
+- ✅ 简洁克制的视觉风格
+- ✅ 不超过3种主色调
+- ✅ 通过线条粗细营造层次
+- ✅ 纯色背景，无渐变
+- ✅ 留白空间充足
+- ✅ 统一的圆角和间距
 
 ## 图片存储与管理
 
@@ -1804,16 +1519,16 @@ feat/
 ### 1. HTML质量
 
 - **布局稳定**：使用Flexbox/Grid，避免布局错乱
-- **样式专业**：CSS代码实现艺术化视觉效果
+- **样式专业**：CSS代码实现简约视觉效果
 - **浏览器兼容**：使用兼容性好的CSS属性
 - **响应式**：适应不同内容长度
 
 ### 2. 视觉质量
 
 - **清晰度**：布局清晰，无错乱
-- **色彩**：丰富的色彩层次，符合品牌调性
-- **构图**：艺术化构图，重点突出
-- **细节**：丰富的细节表现，无缺失或错误
+- **色彩**：简约的色彩方案，符合品牌调性
+- **构图**：简洁构图，重点突出
+- **细节**：清晰的细节表现，无缺失或错误
 
 ### 3. 内容质量
 
@@ -1827,11 +1542,11 @@ feat/
 - **尺寸规范**：
   - 横向图片：严格遵循 16:9 比例，分辨率 1280×720
   - 纵向图片：严格遵循 9:16 比例，分辨率 720×1280
-- **艺术风格**：具备艺术化视觉风格（油画、水彩、插画等）
-- **色彩层次**：丰富的色彩层次和细节表现
-- **光影效果**：自然的光影效果和深度感
-- **有机布局**：避免规则化、网格化的机械布局
-- **创意表现**：提升视觉元素的独特性和创意表现力
+- **简约风格**：简洁克制的视觉风格，避免过多装饰
+- **线条层次**：通过线条粗细、虚实、方向营造视觉层次
+- **中性色调**：不超过3种主色调，搭配中性色
+- **留白空间**：增加元素间距，提升呼吸感
+- **统一性**：保持线条风格一致，统一圆角和间距
 
 ## 工具与资源
 
@@ -1847,7 +1562,7 @@ feat/
 - **技术文档设计规范**：遵循技术文档的设计标准
 - **用户体验设计原则**：确保插图提升用户体验
 - **行业最佳实践**：参考行业内的最佳设计实践
-- **艺术化设计参考**：参考专业插画和艺术作品的设计风格
+- **简约设计参考**：参考专业设计作品的简约风格
 
 ## 使用指南
 
@@ -1875,7 +1590,7 @@ feat/
 
 #### 步骤3：编写CSS样式
 - 使用Feat品牌色彩
-- 实现艺术化视觉效果
+- 实现简约视觉效果
 - 确保布局稳定和专业水准
 
 #### 步骤4：填充内容
@@ -1899,7 +1614,7 @@ feat/
 
 ### 1. HTML设计
 
-- **艺术化布局**：使用具有艺术感的布局，避免机械感
+- **简约布局**：使用简洁的布局，避免机械感
 - **固定容器尺寸**：
   - 横向图片：确保截图尺寸一致（1280×720）
   - 纵向图片：确保截图尺寸一致（720×1280）
@@ -1909,7 +1624,7 @@ feat/
 ### 2. CSS编写
 
 - **使用CSS变量**：统一管理颜色和尺寸
-- **实现艺术效果**：使用渐变、阴影、滤镜等创造艺术感
+- **实现简约效果**：使用线条、纯色、留白创造层次感
 - **合理使用间距**：padding和margin保持一致
 - **响应式设计**：适应不同内容长度
 
@@ -1936,10 +1651,10 @@ feat/
 - **原因**：颜色值设置不当
 - **解决方案**：使用标准的十六进制颜色值
 
-### 4. 缺乏艺术感
+### 4. 缺乏层次感
 
 - **原因**：使用了过于简单的设计
-- **解决方案**：参考专业级模板，使用渐变、阴影、滤镜等增强视觉效果
+- **解决方案**：参考专业级模板，使用线条粗细、虚实、颜色深浅营造视觉层次
 
 ### 5. 布局过于机械
 
@@ -1960,116 +1675,116 @@ feat/
 - 大文字对比度: 至少 3:1
 - 图形元素对比度: 至少 3:1
 
-**3. 色彩层次**
-- 使用渐变创造深度感
-- 使用透明度增加层次
-- 使用光影效果增强立体感
+**3. 线条层次**
+- 使用线条粗细创造层级感
+- 使用颜色深浅增加层次
+- 使用虚实对比增强视觉层次
 
 #### 推荐配色方案
 
-**方案1: 科技蓝紫系** (适用于封面、技术类插图)
+**方案1: 经典黑白灰** (适用于封面、技术类插图)
 ```css
 /* 主色调 */
---color-primary: #667eea;      /* 蓝紫色 */
---color-secondary: #764ba2;    /* 紫色 */
---color-accent: #00d4ff;       /* 青色强调 */
+--color-primary: #1a1a1a;      /* 深灰黑 */
+--color-secondary: #6b7280;    /* 中灰 */
+--color-accent: #3b82f6;       /* 蓝色强调 */
 
-/* 背景色 */
---bg-primary: #0a0e27;         /* 深蓝黑 */
---bg-secondary: #1a1f35;       /* 深蓝灰 */
+/* 中性色 */
+--neutral-light: #ffffff;      /* 白色 */
+--neutral-mid: #e5e7eb;        /* 浅灰 */
+--neutral-dark: #374151;       /* 深灰 */
 
-/* 渐变效果 */
-background: 
-    radial-gradient(circle at 20% 30%, rgba(102, 126, 234, 0.3) 0%, transparent 50%),
-    radial-gradient(circle at 80% 70%, rgba(118, 75, 162, 0.3) 0%, transparent 50%),
-    linear-gradient(135deg, #0a0e27 0%, #1a1f35 100%);
+/* 纯色背景 */
+background: #ffffff;
 ```
 
-**方案2: 活力粉紫系** (适用于AI、创新类插图)
+**方案2: 现代科技感** (适用于AI、创新类插图)
 ```css
 /* 主色调 */
---color-primary: #764ba2;      /* 紫色 */
---color-secondary: #f093fb;    /* 粉紫色 */
---color-accent: #ff6b6b;       /* 红色强调 */
+--color-primary: #0f172a;      /* 深蓝黑 */
+--color-secondary: #475569;    /* 蓝灰 */
+--color-accent: #06b6d4;       /* 青色强调 */
 
-/* 背景色 */
---bg-primary: #0f0f1e;         /* 深紫黑 */
---bg-secondary: #1a1a2e;       /* 深紫灰 */
+/* 中性色 */
+--neutral-light: #f8fafc;      /* 浅白 */
+--neutral-mid: #cbd5e1;        /* 浅灰 */
+--neutral-dark: #334155;       /* 深灰 */
 
-/* 渐变效果 */
-background: 
-    radial-gradient(circle at 25% 35%, rgba(118, 75, 162, 0.35) 0%, transparent 50%),
-    radial-gradient(circle at 75% 65%, rgba(240, 147, 251, 0.35) 0%, transparent 50%),
-    linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
+/* 纯色背景 */
+background: #f8fafc;
 ```
 
-**方案3: 专业蓝绿系** (适用于架构、流程类插图)
+**方案3: 温暖自然** (适用于架构、流程类插图)
 ```css
 /* 主色调 */
---color-primary: #667eea;      /* 蓝紫色 */
---color-secondary: #00d4ff;    /* 青色 */
---color-accent: #10b981;       /* 绿色强调 */
+--color-primary: #292524;      /* 深棕 */
+--color-secondary: #78716c;    /* 灰棕 */
+--color-accent: #f59e0b;       /* 橙色强调 */
 
-/* 背景色 */
---bg-primary: #0a0e27;         /* 深蓝黑 */
---bg-secondary: #16213e;       /* 深蓝灰 */
+/* 中性色 */
+--neutral-light: #fafaf9;      /* 浅白 */
+--neutral-mid: #d6d3d1;        /* 浅灰 */
+--neutral-dark: #44403c;       /* 深灰 */
 
-/* 渐变效果 */
-background: 
-    radial-gradient(circle at 20% 40%, rgba(102, 126, 234, 0.3) 0%, transparent 50%),
-    radial-gradient(circle at 80% 60%, rgba(0, 212, 255, 0.3) 0%, transparent 50%),
-    linear-gradient(135deg, #0a0e27 0%, #16213e 100%);
+/* 纯色背景 */
+background: #fafaf9;
 ```
 
 #### 配色应用技巧
 
-**1. 渐变背景优化**
+**1. 线条层次优化**
 ```css
-/* 多层渐变创造深度 */
-background: 
-    radial-gradient(circle at 20% 30%, rgba(102, 126, 234, 0.3) 0%, transparent 50%),
-    radial-gradient(circle at 80% 70%, rgba(118, 75, 162, 0.3) 0%, transparent 50%),
-    radial-gradient(circle at 50% 50%, rgba(240, 147, 251, 0.2) 0%, transparent 60%),
-    linear-gradient(135deg, #0a0e27 0%, #1a1f35 100%);
+/* 关键元素 - 粗线条 */
+.line-primary {
+    border: 3px solid var(--color-primary);
+}
+
+/* 次要元素 - 中等线条 */
+.line-secondary {
+    border: 2px solid var(--color-secondary);
+}
+
+/* 辅助元素 - 细线条 */
+.line-tertiary {
+    border: 1px solid var(--neutral-mid);
+}
 ```
 
 **2. 文字颜色优化**
 ```css
-/* 标题渐变 */
+/* 标题颜色 */
 .title {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: var(--color-primary);
+    font-weight: 700;
 }
 
 /* 正文颜色 */
 .body-text {
-    color: rgba(255, 255, 255, 0.9);  /* 高对比度 */
+    color: var(--color-secondary);
+    font-weight: 400;
 }
 
 /* 辅助文字 */
 .secondary-text {
-    color: rgba(255, 255, 255, 0.7);  /* 中等对比度 */
+    color: var(--neutral-dark);
+    font-weight: 300;
 }
 ```
 
 **3. 卡片和模块配色**
 ```css
-/* 玻璃态效果 */
+/* 简约卡片 */
 .card {
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(15px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 
-        0 15px 50px rgba(0, 0, 0, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    background: var(--neutral-light);
+    border: 2px solid var(--neutral-mid);
+    border-radius: 6px;
+    padding: 24px;
+    box-shadow: none;
 }
 
 /* 悬停效果 */
 .card:hover {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(102, 126, 234, 0.3);
-    box-shadow: 0 20px 60px rgba(102, 126, 234, 0.3);
+    border-color: var(--accent);
 }
 ```
 
@@ -2274,15 +1989,14 @@ body {
 ```css
 /* 关键信息使用强调色 */
 .highlight {
-    color: #00d4ff;  /* 青色强调 */
+    color: var(--accent);
     font-weight: 600;
 }
 
-/* 或使用渐变 */
-.highlight-gradient {
-    background: linear-gradient(135deg, #667eea, #00d4ff);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+/* 或使用粗线条 */
+.highlight-border {
+    border: 3px solid var(--accent);
+    padding: 4px 8px;
 }
 ```
 
@@ -2291,8 +2005,9 @@ body {
 /* 徽章标记 */
 .badge {
     padding: 8px 18px;
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.3), rgba(118, 75, 162, 0.3));
-    border-radius: 20px;
+    background: var(--neutral-light);
+    border: 2px solid var(--accent);
+    border-radius: 4px;
     font-size: 15px;
     font-weight: 600;
 }
@@ -2317,7 +2032,7 @@ body {
 /* 使用分隔线 */
 .divider {
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    background: #e5e7eb;
     margin: 30px 0;
 }
 ```
@@ -2327,10 +2042,9 @@ body {
 **1. 悬停效果**
 ```css
 .tool:hover {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.05);
     transform: translateX(8px);
-    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
-    border-color: rgba(102, 126, 234, 0.3);
+    border-color: var(--accent);
 }
 
 .tool:hover .tool-icon {
@@ -2363,7 +2077,7 @@ Feat 文章插图生成专家应不断学习和改进，提高插图生成的质
 
 - **HTML模板库**：建立丰富的专业级HTML模板库，提高生成效率
 - **CSS样式库**：统一管理CSS样式，确保风格一致
-- **艺术化设计**：持续探索新的艺术化视觉风格
+- **简约设计**：持续优化简约视觉风格
 - **用户反馈**：收集用户反馈，持续改进插图生成效果
 - **最佳实践**：总结最佳实践，形成设计规范
 - **配色方案**：持续优化配色方案,确保视觉协调和吸引力
