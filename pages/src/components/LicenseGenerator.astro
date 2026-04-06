@@ -48,34 +48,106 @@
             </div>
         </div>
 
-        <div class="result-block">
-            <h3>环境变量配置 <span class="badge">推荐</span></h3>
-            <div class="tabs">
-                <button class="tab active" data-tab="linux">Linux/macOS</button>
-                <button class="tab" data-tab="windows-cmd">Windows CMD</button>
-                <button class="tab" data-tab="windows-ps">PowerShell</button>
+        <div class="result-block env-config-block">
+            <div class="env-header">
+                <h3>环境变量配置</h3>
+                <span class="badge badge-recommended">编译时使用</span>
             </div>
-            <div class="tab-content">
-                <div class="tab-pane active" id="linux-pane">
-                    <div class="code-wrapper">
-                        <pre class="code-block">export FEAT_LICENSE="<span id="licenseEnvExample"></span>"</pre>
-                        <button class="copy-btn" data-env="linux">复制</button>
-                    </div>
-                    <p class="note">添加到 ~/.bashrc 或 ~/.zshrc 永久生效</p>
+            <p class="env-desc">配置环境变量后，在项目编译时自动验证 License</p>
+            
+            <div class="env-tabs-wrapper">
+                <div class="env-tabs">
+                    <button class="env-tab active" data-tab="linux">
+                        <span class="tab-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/><circle cx="8" cy="10" r="1.5" fill="currentColor"/><circle cx="16" cy="10" r="1.5" fill="currentColor"/><path d="M8.5 16a3.5 3.5 0 017 0"/></svg>
+                        </span>
+                        <span class="tab-label">Linux/macOS</span>
+                    </button>
+                    <button class="env-tab" data-tab="windows">
+                        <span class="tab-icon">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"/></svg>
+                        </span>
+                        <span class="tab-label">Windows</span>
+                    </button>
                 </div>
-                <div class="tab-pane" id="windows-cmd-pane">
-                    <div class="code-wrapper">
-                        <pre class="code-block">set FEAT_LICENSE=<span id="licenseEnvExample2"></span></pre>
-                        <button class="copy-btn" data-env="cmd">复制</button>
+            </div>
+            
+            <div class="env-content">
+                <div class="env-pane active" id="linux-pane">
+                    <div class="env-card">
+                        <div class="env-card-header">
+                            <span class="env-card-title">Shell 配置</span>
+                            <span class="env-card-badge">Bash / Zsh</span>
+                        </div>
+                        <div class="code-wrapper">
+                            <pre class="code-block"><code id="linuxExport">export FEAT_LICENSE="<span id="licenseEnvExample"></span>"</code></pre>
+                            <button class="copy-btn" data-env="linux">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                                <span>复制</span>
+                            </button>
+                        </div>
+                        <div class="env-tips">
+                            <div class="tip-item">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                                <span>添加到 <code>~/.bashrc</code> 或 <code>~/.zshrc</code> 永久生效</span>
+                            </div>
+                            <div class="tip-item">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                                <span>执行 <code>source ~/.bashrc</code> 立即生效</span>
+                            </div>
+                        </div>
                     </div>
-                    <p class="note">通过"系统属性" → "环境变量"设置永久生效</p>
                 </div>
-                <div class="tab-pane" id="windows-ps-pane">
-                    <div class="code-wrapper">
-                        <pre class="code-block">$env:FEAT_LICENSE="<span id="licenseEnvExample3"></span>"</pre>
-                        <button class="copy-btn" data-env="ps">复制</button>
+                
+                <div class="env-pane" id="windows-pane">
+                    <div class="env-sub-tabs">
+                        <button class="env-sub-tab active" data-subtab="cmd">CMD</button>
+                        <button class="env-sub-tab" data-subtab="ps">PowerShell</button>
                     </div>
-                    <p class="note">通过系统环境变量设置永久生效</p>
+                    <div class="env-sub-content">
+                        <div class="env-sub-pane active" id="cmd-subpane">
+                            <div class="env-card">
+                                <div class="env-card-header">
+                                    <span class="env-card-title">命令提示符</span>
+                                    <span class="env-card-badge">CMD</span>
+                                </div>
+                                <div class="code-wrapper">
+                                    <pre class="code-block"><code>set FEAT_LICENSE=<span id="licenseEnvExample2"></span></code></pre>
+                                    <button class="copy-btn" data-env="cmd">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                                        <span>复制</span>
+                                    </button>
+                                </div>
+                                <div class="env-tips">
+                                    <div class="tip-item">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                                        <span>通过"系统属性" → "高级" → "环境变量"设置永久生效</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="env-sub-pane" id="ps-subpane">
+                            <div class="env-card">
+                                <div class="env-card-header">
+                                    <span class="env-card-title">PowerShell</span>
+                                    <span class="env-card-badge">推荐</span>
+                                </div>
+                                <div class="code-wrapper">
+                                    <pre class="code-block"><code>$env:FEAT_LICENSE="<span id="licenseEnvExample3"></span>"</code></pre>
+                                    <button class="copy-btn" data-env="ps">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                                        <span>复制</span>
+                                    </button>
+                                </div>
+                                <div class="env-tips">
+                                    <div class="tip-item">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                                        <span>通过系统环境变量设置永久生效</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -109,8 +181,12 @@ class LicenseGenerator {
         document.getElementById('generateBtn')?.addEventListener('click', () => this.generateLicense());
         document.getElementById('autoGenerateBtn')?.addEventListener('click', () => this.generateLicenseNumber());
         
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', (e) => this.switchTab(e.target));
+        document.querySelectorAll('.env-tab').forEach(tab => {
+            tab.addEventListener('click', (e) => this.switchEnvTab(e.currentTarget));
+        });
+        
+        document.querySelectorAll('.env-sub-tab').forEach(tab => {
+            tab.addEventListener('click', (e) => this.switchEnvSubTab(e.currentTarget));
         });
         
         document.querySelectorAll('.copy-btn').forEach(btn => {
@@ -136,14 +212,24 @@ class LicenseGenerator {
         });
     }
 
-    switchTab(clickedTab) {
+    switchEnvTab(clickedTab) {
         const tabId = clickedTab.dataset.tab;
         
-        clickedTab.parentElement.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        clickedTab.parentElement.querySelectorAll('.env-tab').forEach(t => t.classList.remove('active'));
         clickedTab.classList.add('active');
         
-        clickedTab.closest('.tab-content').querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+        clickedTab.closest('.env-config-block').querySelectorAll('.env-pane').forEach(p => p.classList.remove('active'));
         document.getElementById(`${tabId}-pane`).classList.add('active');
+    }
+
+    switchEnvSubTab(clickedTab) {
+        const tabId = clickedTab.dataset.subtab;
+        
+        clickedTab.parentElement.querySelectorAll('.env-sub-tab').forEach(t => t.classList.remove('active'));
+        clickedTab.classList.add('active');
+        
+        clickedTab.closest('.env-sub-content').querySelectorAll('.env-sub-pane').forEach(p => p.classList.remove('active'));
+        document.getElementById(`${tabId}-subpane`).classList.add('active');
     }
 
     async copyToClipboard(btn) {
@@ -155,10 +241,16 @@ class LicenseGenerator {
             text = document.getElementById(targetId)?.textContent || '';
         } else if (envType) {
             const license = this.licenseNumber + '_' + this.publicKeyBase64;
-            if (envType === 'linux' || envType === 'ps') {
-                text = (envType === 'linux' ? 'export' : '$env:') + `FEAT_LICENSE="${license}"`;
-            } else {
-                text = `set FEAT_LICENSE=${license}`;
+            switch (envType) {
+                case 'linux':
+                    text = `export FEAT_LICENSE="${license}"`;
+                    break;
+                case 'cmd':
+                    text = `set FEAT_LICENSE=${license}`;
+                    break;
+                case 'ps':
+                    text = `$env:FEAT_LICENSE="${license}"`;
+                    break;
             }
         }
         
@@ -166,11 +258,15 @@ class LicenseGenerator {
         
         try {
             await navigator.clipboard.writeText(text);
-            const originalText = btn.textContent;
-            btn.textContent = '已复制';
+            const originalText = btn.querySelector('span')?.textContent || '复制';
+            if (btn.querySelector('span')) {
+                btn.querySelector('span').textContent = '已复制';
+            }
             btn.classList.add('copied');
             setTimeout(() => {
-                btn.textContent = originalText;
+                if (btn.querySelector('span')) {
+                    btn.querySelector('span').textContent = originalText;
+                }
                 btn.classList.remove('copied');
             }, 1500);
         } catch (err) {
@@ -278,13 +374,13 @@ class LicenseGenerator {
     license: ${signatureBase64}`;
 
         const featYmlConfig = `license: ${this.licenseNumber}_${this.publicKeyBase64}`;
-        const licenseEnvExample = `${this.licenseNumber}_${this.publicKeyBase64}`;
+        const licenseEnv = `${this.licenseNumber}_${this.publicKeyBase64}`;
 
         document.getElementById('featUsersConfig').textContent = featUsersConfig;
         document.getElementById('featYmlConfig').textContent = featYmlConfig;
         
         document.querySelectorAll('#licenseEnvExample, #licenseEnvExample2, #licenseEnvExample3').forEach(el => {
-            el.textContent = licenseEnvExample;
+            el.textContent = licenseEnv;
         });
         
         const resultsSection = document.getElementById('resultsSection');
@@ -462,12 +558,20 @@ document.addEventListener('DOMContentLoaded', () => {
 }
 
 .badge {
-    background: #dbeafe;
-    color: #1d4ed8;
     padding: 0.125rem 0.5rem;
     border-radius: 4px;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 500;
+}
+
+.badge-recommended {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.badge-warning {
+    background: #fef3c7;
+    color: #d97706;
 }
 
 .block-desc {
@@ -484,6 +588,7 @@ document.addEventListener('DOMContentLoaded', () => {
     background: #1e293b;
     color: #e2e8f0;
     padding: 0.875rem;
+    padding-right: 5rem;
     border-radius: 6px;
     font-family: monospace;
     font-size: 0.85rem;
@@ -496,13 +601,21 @@ document.addEventListener('DOMContentLoaded', () => {
     position: absolute;
     top: 0.5rem;
     right: 0.5rem;
-    padding: 0.25rem 0.625rem;
+    padding: 0.375rem 0.75rem;
     background: rgba(255, 255, 255, 0.1);
     color: #e2e8f0;
     border: none;
     border-radius: 4px;
     font-size: 0.75rem;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.copy-btn svg {
+    width: 14px;
+    height: 14px;
 }
 
 .copy-btn:hover {
@@ -514,54 +627,6 @@ document.addEventListener('DOMContentLoaded', () => {
     color: white;
 }
 
-.tabs {
-    display: flex;
-    gap: 0.25rem;
-    margin-bottom: 0.75rem;
-    background: #f3f4f6;
-    padding: 0.25rem;
-    border-radius: 6px;
-}
-
-.tab {
-    flex: 1;
-    padding: 0.5rem;
-    background: transparent;
-    border: none;
-    border-radius: 4px;
-    font-size: 0.8rem;
-    color: #6b7280;
-    cursor: pointer;
-}
-
-.tab:hover {
-    color: #374151;
-}
-
-.tab.active {
-    background: white;
-    color: #1e293b;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-}
-
-.tab-content {
-    position: relative;
-}
-
-.tab-pane {
-    display: none;
-}
-
-.tab-pane.active {
-    display: block;
-}
-
-.note {
-    margin-top: 0.5rem;
-    font-size: 0.8rem;
-    color: #6b7280;
-}
-
 .highlight {
     background: #fffbeb;
     border-color: #fcd34d;
@@ -569,6 +634,213 @@ document.addEventListener('DOMContentLoaded', () => {
 
 .highlight .code-block {
     border: 1px solid #f59e0b;
+}
+
+.env-config-block {
+    padding: 1.5rem;
+}
+
+.env-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.env-header h3 {
+    margin: 0;
+}
+
+.env-desc {
+    color: #64748b;
+    font-size: 0.875rem;
+    margin: 0 0 1.25rem;
+}
+
+.env-tabs-wrapper {
+    margin-bottom: 1rem;
+    overflow-x: auto;
+}
+
+.env-tabs {
+    display: flex;
+    gap: 0.5rem;
+    background: #f8fafc;
+    padding: 0.375rem;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+}
+
+.env-tab {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1rem;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.env-tab:hover {
+    color: #1e293b;
+    background: rgba(59, 130, 246, 0.05);
+}
+
+.env-tab.active {
+    background: white;
+    color: #3b82f6;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    font-weight: 500;
+}
+
+.tab-icon {
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tab-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+.tab-label {
+    font-weight: 500;
+}
+
+.env-content {
+    position: relative;
+}
+
+.env-pane {
+    display: none;
+    animation: fadeIn 0.2s ease;
+}
+
+.env-pane.active {
+    display: block;
+}
+
+.env-card {
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    border: 1px solid #e2e8f0;
+}
+
+.env-card:last-child {
+    margin-bottom: 0;
+}
+
+.env-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+}
+
+.env-card-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.env-card-badge {
+    font-size: 0.7rem;
+    padding: 0.125rem 0.5rem;
+    background: #e0f2fe;
+    color: #0369a1;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.env-tips {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+.tip-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    color: #64748b;
+    margin-bottom: 0.5rem;
+}
+
+.tip-item:last-child {
+    margin-bottom: 0;
+}
+
+.tip-item svg {
+    width: 16px;
+    height: 16px;
+    color: #3b82f6;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.tip-item code {
+    background: #e2e8f0;
+    padding: 0.125rem 0.375rem;
+    border-radius: 3px;
+    font-family: monospace;
+    font-size: 0.75rem;
+    color: #475569;
+}
+
+.env-sub-tabs {
+    display: flex;
+    gap: 0.25rem;
+    margin-bottom: 0.75rem;
+    background: #e2e8f0;
+    padding: 0.25rem;
+    border-radius: 6px;
+}
+
+.env-sub-tab {
+    flex: 1;
+    padding: 0.5rem;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.env-sub-tab:hover {
+    color: #1e293b;
+}
+
+.env-sub-tab.active {
+    background: white;
+    color: #1e293b;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    font-weight: 500;
+}
+
+.env-sub-content {
+    position: relative;
+}
+
+.env-sub-pane {
+    display: none;
+    animation: fadeIn 0.2s ease;
+}
+
+.env-sub-pane.active {
+    display: block;
 }
 
 @media (max-width: 640px) {
@@ -580,8 +852,28 @@ document.addEventListener('DOMContentLoaded', () => {
         width: 100%;
     }
     
-    .tabs {
+    .env-tabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .env-tab {
+        padding: 0.5rem 0.75rem;
+    }
+    
+    .tab-label {
+        display: none;
+    }
+    
+    .env-card {
+        padding: 0.875rem;
+    }
+    
+    .env-card-header {
         flex-direction: column;
+        align-items: flex-start;
+        gap: 0.375rem;
     }
 }
 </style>
