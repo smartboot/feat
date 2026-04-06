@@ -1,5 +1,5 @@
 ---
-const { buttonLabel = "永久授权" } = Astro.props;
+const { buttonLabel = "赞助支持" } = Astro.props;
 const modalId = 'payment-modal-' + Math.random().toString(36).substr(2, 9);
 ---
 
@@ -9,17 +9,26 @@ const modalId = 'payment-modal-' + Math.random().toString(36).substr(2, 9);
   </button>
 </div>
 
-<!-- 使用 Fragment 将弹框内容渲染到 body 级别 -->
 <template data-payment-modal-template={modalId}>
   <div class="modal-overlay" data-modal-overlay={modalId} style="display: none;">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>企业赞助支持</h3>
+        <h3>赞助支持 Feat</h3>
         <button type="button" class="close-btn" data-close-modal>×</button>
       </div>
       <div class="modal-body">
-        <p class="modal-subtitle">赞助 5000 元支持 Feat 开源项目，获取企业级服务与商业授权</p>
-        <p class="modal-note">企业若存在资金压力也可选择 <span class="highlight">499元/年</span> 的订阅制赞助</p>
+        <p class="modal-subtitle">赞助支持 Feat 开源项目，助力项目持续发展</p>
+        <div class="price-options">
+          <div class="price-item">
+            <span class="price-value">¥5000</span>
+            <span class="price-label">一次性赞助</span>
+          </div>
+          <div class="price-divider">或</div>
+          <div class="price-item">
+            <span class="price-value">¥499<span class="price-unit">/年</span></span>
+            <span class="price-label">订阅赞助</span>
+          </div>
+        </div>
         
         <div class="qr-container">
           <div class="qr-item-pay">
@@ -43,15 +52,14 @@ const modalId = 'payment-modal-' + Math.random().toString(36).substr(2, 9);
               <img src="https://smartboot.tech/img/qrcode/personal_wx.png" alt="加微信好友" loading="lazy" />
             </div>
             <div class="friend-info">
-              <span class="qr-tag friend">加好友获取服务</span>
-              <span class="note-text">备注：Feat企业赞助</span>
+              <span class="qr-tag friend">加好友联系我们</span>
+              <span class="note-text">备注：Feat赞助</span>
             </div>
           </div>
         </div>
         
         <div class="modal-footer">
-          <span class="price-tag">¥5000 企业赞助</span>
-          <span class="step-hint">① 扫码赞助 → ② 加微信好友 → ③ 获取商业授权与服务支持</span>
+          <span class="step-hint">① 扫码赞助 → ② 加微信好友 → ③ 记录到赞助者名单</span>
         </div>
       </div>
     </div>
@@ -171,22 +179,50 @@ const modalId = 'payment-modal-' + Math.random().toString(36).substr(2, 9);
     text-align: center;
     color: #64748b;
     font-size: 0.9375rem;
-    margin: 0 0 1.25rem;
+    margin: 0 0 1rem;
   }
 
-  :global(.modal-note) {
-    text-align: center;
-    color: #94a3b8;
-    font-size: 0.8125rem;
-    margin: -0.75rem 0 1.25rem;
+  :global(.price-options) {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 1.25rem;
+    padding: 1rem;
+    background: linear-gradient(135deg, rgba(234, 88, 12, 0.05) 0%, rgba(249, 115, 22, 0.08) 100%);
+    border-radius: 12px;
   }
 
-  :global(.modal-note .highlight) {
+  :global(.price-item) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  :global(.price-value) {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #ea580c;
+  }
+
+  :global(.price-unit) {
+    font-size: 0.875rem;
+    font-weight: 500;
     color: #f97316;
-    font-weight: 600;
   }
 
-  /* 紧凑二维码容器 */
+  :global(.price-label) {
+    font-size: 0.75rem;
+    color: #64748b;
+  }
+
+  :global(.price-divider) {
+    font-size: 0.875rem;
+    color: #94a3b8;
+    font-weight: 500;
+  }
+
   :global(.qr-container) {
     display: flex;
     align-items: flex-start;
@@ -288,12 +324,6 @@ const modalId = 'payment-modal-' + Math.random().toString(36).substr(2, 9);
     border-top: 1px solid #e2e8f0;
   }
 
-  :global(.price-tag) {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: #ea580c;
-  }
-
   :global(.step-hint) {
     font-size: 0.8125rem;
     color: #64748b;
@@ -308,6 +338,15 @@ const modalId = 'payment-modal-' + Math.random().toString(36).substr(2, 9);
 
     :global(.modal-body) {
       padding: 1rem;
+    }
+
+    :global(.price-options) {
+      gap: 1rem;
+      padding: 0.75rem;
+    }
+
+    :global(.price-value) {
+      font-size: 1.25rem;
     }
 
     :global(.qr-container) {
@@ -348,12 +387,20 @@ const modalId = 'payment-modal-' + Math.random().toString(36).substr(2, 9);
 
     :global(.modal-subtitle) {
       font-size: 0.875rem;
-      margin-bottom: 1rem;
+      margin-bottom: 0.75rem;
     }
 
-    :global(.modal-note) {
-      font-size: 0.75rem;
-      margin: -0.5rem 0 1rem;
+    :global(.price-options) {
+      gap: 0.75rem;
+      padding: 0.625rem;
+    }
+
+    :global(.price-value) {
+      font-size: 1.125rem;
+    }
+
+    :global(.price-label) {
+      font-size: 0.7rem;
     }
 
     :global(.qr-container) {
@@ -373,10 +420,6 @@ const modalId = 'payment-modal-' + Math.random().toString(36).substr(2, 9);
     :global(.qr-img-box.large) {
       width: 140px;
       height: 140px;
-    }
-
-    :global(.price-tag) {
-      font-size: 1.125rem;
     }
 
     :global(.step-hint) {

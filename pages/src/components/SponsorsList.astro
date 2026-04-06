@@ -1,0 +1,201 @@
+---
+import yaml from 'js-yaml';
+import { readFileSync } from 'fs';
+import PaymentQrCode from './PaymentQrCode.astro';
+
+interface Sponsor {
+  name: string;
+  date: string;
+  remark?: string;
+  license?: string;
+}
+
+interface SponsorsData {
+  users: {
+    [key: string]: Sponsor;
+  };
+}
+
+const yamlPath = new URL('../../../feat-cloud-aot/src/main/resources/feat_users.yaml', import.meta.url).pathname;
+const yamlContent = readFileSync(yamlPath, 'utf-8');
+const data = yaml.load(yamlContent) as SponsorsData;
+const users = data.users;
+
+const sortedSponsors = Object.entries(users)
+  .filter(([, info]) => info.date)
+  .sort(([, a], [, b]) => new Date(b.date).getTime() - new Date(a.date).getTime());
+---
+
+<div class="sponsors-list">
+  {sortedSponsors.length > 0 ? (
+    <div class="sponsors-grid">
+      {sortedSponsors.map(([id, info]) => (
+        <div class="sponsor-card">
+          <div class="sponsor-avatar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="sponsor-info">
+            <h3 class="sponsor-name">{info.name}</h3>
+            {info.remark && <p class="sponsor-remark">{info.remark}</p>}
+            <p class="sponsor-date">赞助于 {info.date}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  ) : (
+    <div class="empty-state">
+      <p>暂无赞助记录</p>
+    </div>
+  )}
+  
+  <div class="support-section">
+    <h3>成为赞助者</h3>
+    <p>如果 Feat 对您的项目有帮助，欢迎赞助支持项目的持续发展。您的支持将帮助我们：</p>
+    <ul class="support-benefits">
+      <li>持续优化框架性能</li>
+      <li>开发新功能特性</li>
+      <li>完善文档和示例</li>
+      <li>提供更好的社区支持</li>
+    </ul>
+    <div class="support-action">
+      <PaymentQrCode buttonLabel="赞助支持" />
+    </div>
+  </div>
+</div>
+
+<style>
+  .sponsors-list {
+    margin: 1.5rem 0;
+  }
+
+  .sponsors-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .sponsor-card {
+    background: var(--sl-color-bg);
+    border-radius: 12px;
+    padding: 1.25rem;
+    border: 1px solid var(--sl-color-border);
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    transition: all 0.3s ease;
+  }
+
+  .sponsor-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
+    border-color: #ea580c;
+  }
+
+  .sponsor-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(234, 88, 12, 0.1) 0%, rgba(249, 115, 22, 0.08) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .sponsor-avatar svg {
+    width: 20px;
+    height: 20px;
+    color: #ea580c;
+  }
+
+  .sponsor-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .sponsor-name {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--sl-color-text);
+    margin: 0 0 0.25rem;
+    word-break: break-all;
+  }
+
+  .sponsor-remark {
+    font-size: 0.75rem;
+    color: #ea580c;
+    margin: 0 0 0.25rem;
+    font-weight: 500;
+  }
+
+  .sponsor-date {
+    font-size: 0.7rem;
+    color: var(--sl-color-text-muted);
+    margin: 0;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: var(--sl-color-text-muted);
+  }
+
+  .support-section {
+    background: var(--sl-color-bg-secondary);
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid var(--sl-color-border);
+  }
+
+  .support-section h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--sl-color-text);
+    margin: 0 0 0.75rem;
+  }
+
+  .support-section p {
+    color: var(--sl-color-text-muted);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin: 0 0 1rem;
+  }
+
+  .support-benefits {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.25rem;
+  }
+
+  .support-benefits li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0;
+    color: var(--sl-color-text-muted);
+    font-size: 0.85rem;
+  }
+
+  .support-benefits li::before {
+    content: '✓';
+    color: #16a34a;
+    font-weight: 600;
+  }
+
+  .support-action {
+    margin-top: 0.5rem;
+  }
+
+  @media (max-width: 640px) {
+    .sponsors-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .sponsor-card {
+      padding: 1rem;
+    }
+  }
+</style>
