@@ -3,7 +3,7 @@
 
 
 # Feat - 高性能Java Web服务框架
-[![AGPL License](https://img.shields.io/badge/license-AGPL-blue.svg)](http://www.gnu.org/licenses/agpl-3.0)
+[![Apache License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/smartboot/feat)
 
 有点像 Vert.x，又有点像 SpringBoot 的 Java Web 服务开发框架
@@ -14,7 +14,7 @@
 
 | 优势              | 描述                              |
 |-----------------|---------------------------------|
-| 🆓 **F**ree     | 基于 AGPL 3.0 开源，获授权后可完全自由用于商业场景 |
+| 🆓 **F**ree     | 基于 Apache 2.0 开源，可自由用于商业场景 |
 | 🚀 **E**lastic  | 弹性伸缩，轻松应对业务峰值                   |
 | 🌟 **A**dvanced | 先进特性，支持云原生架构                    |
 | 💎 **T**iny     | 轻量级设计，极小的系统开销                   |
@@ -106,7 +106,7 @@ Feat 框架各模块的主要三方包依赖如下：
 
 ## 许可证
 
-Feat 使用 [AGPL 协议](LICENSE)开源。
+Feat 使用 [Apache License 2.0](LICENSE) 开源。
 
 ---
 

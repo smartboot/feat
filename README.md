@@ -1,7 +1,7 @@
 <img src="feat_rect_logo.svg" width="20%" height="20%"/>
 
 
-[![AGPL License](https://img.shields.io/badge/license-AGPL-blue.svg)](http://www.gnu.org/licenses/agpl-3.0)
+[![Apache License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/smartboot/feat)
 
 # Feat - High-Performance Java Web Service Framework
@@ -113,7 +113,7 @@ Please read our [Contribution Guide](CONTRIBUTING.md) before contributing.
 
 ## License
 
-Feat is open source under the [AGPL License](LICENSE).
+Feat is open source under the [Apache License 2.0](LICENSE).
 
 ---
 
