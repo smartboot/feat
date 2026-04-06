@@ -401,26 +401,8 @@ public final class CloudOptionsSerializer implements Serializer {
 
         printWriter.println("\tstatic {");
         if (license == null) {
-            if (FeatUtils.isBlank(modelName)) {
-                printWriter.println("\t\tSystem.out.println(\"\\u001B[31m温馨提示：存在未经商业授权的依赖模块, 请确保在 AGPL 3.0 的协议框架下合法合规使用 Feat.\\u001B[0m\");");
-            } else {
-                printWriter.println("\t\tSystem.out.println(\"\\u001B[31m温馨提示：当前服务所依赖的模块[\\033[4m" + modelName + "\\u001B[0m]\\u001B[31m尚未获得商业授权, 请确保在 AGPL 3.0 的协议框架下合法合规使用 Feat.\\u001B[0m\");");
-            }
-        } else {
-            if (FeatUtils.isBlank(modelName)) {
-                printWriter.println("\t\tSystem.out.println(\"\\u001B[32mFeat License verification passed! License No: \\033[4m" + license.getNum() + "\\u001B[0m\\u001B[32m Granted for:\\033[4m" + license.getName() + "\\u001B[0m\");");
-            } else {
-                printWriter.println("\t\tStringBuilder sb = new StringBuilder();");
-                printWriter.println("\t\tsb.append(\"\\u001B[32mThe dependent module [\");");
-                printWriter.println("\t\tsb.append(\"" + modelName + "\");");
-                printWriter.println("\t\tsb.append(\"] has passed Feat License verification! License No: \\033[4m\\u001B[1m\");");
-                printWriter.println("\t\tsb.append(\"" + license.getNum() + "\");");
-                printWriter.println("\t\tsb.append(\"\\u001B[0m\\u001B[32m Granted for: \\033[4m\\u001B[1m\");");
-                printWriter.println("\t\tsb.append(\"" + license.getName() + "\");");
-                printWriter.println("\t\tsb.append(\"\\u001B[0m\");");
-                printWriter.println("\t\tSystem.out.println(sb.toString());");
-            }
-
+            printWriter.println("\t\tSystem.out.println(\"\\u001B[33m感谢使用 Feat Cloud！本项目开源免费，持续发展离不开社区支持。\\u001B[0m\");");
+            printWriter.println("\t\tSystem.out.println(\"\\u001B[33m欢迎赞助助力项目成长：https://smartboot.tech/feat/cloud/sponsors/\\u001B[0m\");");
         }
         printWriter.println("\t}");
         printWriter.println();
@@ -506,13 +488,13 @@ public final class CloudOptionsSerializer implements Serializer {
         printWriter.println("\t\t\tservice.router(applicationContext, router);");
         printWriter.println("\t\t}");
 
-        // license 为 null 时，添加拦截器进行授权提醒
+        // license 为 null 时，添加拦截器打印请求日志
         if (license == null) {
             printWriter.println("\t\t");
             printWriter.println("\t\trouter.addInterceptor(\"/*\", new " + Interceptor.class.getSimpleName() + "() {");
             printWriter.println("\t\t\t@Override");
             printWriter.println("\t\t\tpublic void intercept(" + Context.class.getSimpleName() + " ctx, CompletableFuture<Void> completableFuture, " + Chain.class.getSimpleName() + " chain) throws Throwable {");
-            printWriter.println("\t\t\t\tSystem.err.println(\"温馨提示：当前服务所使用的 Feat 模块尚未获得商业授权，请确保在 AGPL 3.0 的协议框架下合法合规使用。Tips: The current Feat module used by the service has not obtained commercial authorization, please ensure that it is compliant with the AGPL 3.0 protocol framework.\");");
+            printWriter.println("\t\t\t\tSystem.out.println(\"[Feat Cloud] \" + ctx.Request.getMethod() + \" \" + ctx.Request.getRequestURI() + \" - https://smartboot.tech/feat/cloud/sponsors/\");");
             printWriter.println("\t\t\t\tchain.proceed(ctx, completableFuture);");
             printWriter.println("\t\t\t}");
             printWriter.println("\t\t});");
