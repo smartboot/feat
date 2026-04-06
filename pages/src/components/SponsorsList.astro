@@ -2,6 +2,7 @@
 import yaml from 'js-yaml';
 import { readFileSync } from 'fs';
 import PaymentQrCode from './PaymentQrCode.astro';
+import LicenseGenerator from './LicenseGenerator.astro';
 
 interface Sponsor {
   name: string;
@@ -26,32 +27,37 @@ const sortedSponsors = Object.entries(users)
   .sort(([, a], [, b]) => new Date(b.date).getTime() - new Date(a.date).getTime());
 ---
 
-<div class="sponsors-list">
-  {sortedSponsors.length > 0 ? (
-    <div class="sponsors-grid">
-      {sortedSponsors.map(([id, info]) => (
-        <div class="sponsor-card">
-          <div class="sponsor-avatar">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
+<div class="sponsors-page">
+  <section class="sponsors-section">
+    <h2>赞助者名单</h2>
+    <p class="section-desc">感谢所有赞助者的支持，排名按赞助时间倒序</p>
+    
+    {sortedSponsors.length > 0 ? (
+      <div class="sponsors-grid">
+        {sortedSponsors.map(([id, info]) => (
+          <div class="sponsor-card">
+            <div class="sponsor-avatar">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div class="sponsor-info">
+              <h3 class="sponsor-name">{info.name}</h3>
+              {info.remark && <p class="sponsor-remark">{info.remark}</p>}
+              <p class="sponsor-date">赞助于 {info.date}</p>
+            </div>
           </div>
-          <div class="sponsor-info">
-            <h3 class="sponsor-name">{info.name}</h3>
-            {info.remark && <p class="sponsor-remark">{info.remark}</p>}
-            <p class="sponsor-date">赞助于 {info.date}</p>
-          </div>
-        </div>
-      ))}
-    </div>
-  ) : (
-    <div class="empty-state">
-      <p>暂无赞助记录</p>
-    </div>
-  )}
-  
-  <div class="support-section">
-    <h3>成为赞助者</h3>
+        ))}
+      </div>
+    ) : (
+      <div class="empty-state">
+        <p>暂无赞助记录</p>
+      </div>
+    )}
+  </section>
+
+  <section class="support-section">
+    <h2>成为赞助者</h2>
     <p>如果 Feat 对您的项目有帮助，欢迎赞助支持项目的持续发展。您的支持将帮助我们：</p>
     <ul class="support-benefits">
       <li>持续优化框架性能</li>
@@ -62,19 +68,38 @@ const sortedSponsors = Object.entries(users)
     <div class="support-action">
       <PaymentQrCode buttonLabel="赞助支持" />
     </div>
-  </div>
+  </section>
+
+  <section class="license-section">
+    <LicenseGenerator />
+  </section>
 </div>
 
 <style>
-  .sponsors-list {
-    margin: 1.5rem 0;
+  .sponsors-page {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .sponsors-section h2,
+  .support-section h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--sl-color-text);
+    margin: 0 0 0.5rem;
+  }
+
+  .section-desc {
+    color: var(--sl-color-text-muted);
+    font-size: 0.9rem;
+    margin: 0 0 1rem;
   }
 
   .sponsors-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 1rem;
-    margin-bottom: 2rem;
   }
 
   .sponsor-card {
@@ -150,13 +175,6 @@ const sortedSponsors = Object.entries(users)
     border: 1px solid var(--sl-color-border);
   }
 
-  .support-section h3 {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--sl-color-text);
-    margin: 0 0 0.75rem;
-  }
-
   .support-section p {
     color: var(--sl-color-text-muted);
     font-size: 0.9rem;
@@ -187,6 +205,13 @@ const sortedSponsors = Object.entries(users)
 
   .support-action {
     margin-top: 0.5rem;
+  }
+
+  .license-section {
+    background: var(--sl-color-bg-secondary);
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid var(--sl-color-border);
   }
 
   @media (max-width: 640px) {
