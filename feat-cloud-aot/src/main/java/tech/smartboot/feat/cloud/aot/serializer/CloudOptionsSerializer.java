@@ -402,7 +402,7 @@ public final class CloudOptionsSerializer implements Serializer {
         if (license == null) {
             printWriter.println("\tstatic {");
             printWriter.println("\t\tSystem.out.println(\"\\u001B[33m感谢使用 Feat Cloud！本项目开源免费，持续发展离不开社区支持。\\u001B[0m\");");
-            printWriter.println("\t\tSystem.out.println(\"\\u001B[33m欢迎赞助助力项目成长：https://smartboot.tech/feat/cloud/sponsors/\\u001B[0m\");");
+            printWriter.println("\t\tSystem.out.println(\"\\u001B[33m欢迎赞助助力项目成长：https://smartboot.tech/feat/sponsors/\\u001B[0m\");");
             printWriter.println("\t}");
             printWriter.println();
         }
@@ -495,7 +495,7 @@ public final class CloudOptionsSerializer implements Serializer {
             printWriter.println("\t\trouter.addInterceptor(\"/*\", new " + Interceptor.class.getSimpleName() + "() {");
             printWriter.println("\t\t\t@Override");
             printWriter.println("\t\t\tpublic void intercept(" + Context.class.getSimpleName() + " ctx, CompletableFuture<Void> completableFuture, " + Chain.class.getSimpleName() + " chain) throws Throwable {");
-            printWriter.println("\t\t\t\tSystem.out.println(ctx.Request.getMethod() + \" \" + ctx.Request.getRequestURI() + \" - [成为赞助商解锁Feat Cloud：https://smartboot.tech/feat/cloud/sponsors/ ]\");");
+            printWriter.println("\t\t\t\tSystem.out.println(ctx.Request.getMethod() + \" \" + ctx.Request.getRequestURI() + \" - [成为赞助商解锁Feat Cloud：https://smartboot.tech/feat/sponsors/ ]\");");
             printWriter.println("\t\t\t\tchain.proceed(ctx, completableFuture);");
             printWriter.println("\t\t\t}");
             printWriter.println("\t\t});");
