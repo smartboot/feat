@@ -494,7 +494,7 @@ public final class CloudOptionsSerializer implements Serializer {
             printWriter.println("\t\trouter.addInterceptor(\"/*\", new " + Interceptor.class.getSimpleName() + "() {");
             printWriter.println("\t\t\t@Override");
             printWriter.println("\t\t\tpublic void intercept(" + Context.class.getSimpleName() + " ctx, CompletableFuture<Void> completableFuture, " + Chain.class.getSimpleName() + " chain) throws Throwable {");
-            printWriter.println("\t\t\t\tSystem.out.println(\"[Feat Cloud] \" + ctx.Request.getMethod() + \" \" + ctx.Request.getRequestURI() + \" - https://smartboot.tech/feat/cloud/sponsors/\");");
+            printWriter.println("\t\t\t\tSystem.out.println(ctx.Request.getMethod() + \" \" + ctx.Request.getRequestURI() + \" - [成为赞助商解锁Feat Cloud：https://smartboot.tech/feat/cloud/sponsors/ ]\");");
             printWriter.println("\t\t\t\tchain.proceed(ctx, completableFuture);");
             printWriter.println("\t\t\t}");
             printWriter.println("\t\t});");
