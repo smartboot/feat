@@ -6,7 +6,6 @@ import LicenseGenerator from './LicenseGenerator.astro';
 
 interface Sponsor {
   name: string;
-  date: string;
   remark?: string;
   license?: string;
 }
@@ -22,19 +21,17 @@ const yamlContent = readFileSync(yamlPath, 'utf-8');
 const data = yaml.load(yamlContent) as SponsorsData;
 const users = data.users;
 
-const sortedSponsors = Object.entries(users)
-  .filter(([, info]) => info.date)
-  .sort(([, a], [, b]) => new Date(b.date).getTime() - new Date(a.date).getTime());
+const sponsorsList = Object.entries(users);
 ---
 
 <div class="sponsors-page">
   <section class="sponsors-section">
     <h2>赞助者名单</h2>
-    <p class="section-desc">感谢所有赞助者的支持，排名按赞助时间倒序</p>
+    <p class="section-desc">感谢所有赞助者的支持</p>
     
-    {sortedSponsors.length > 0 ? (
+    {sponsorsList.length > 0 ? (
       <div class="sponsors-grid">
-        {sortedSponsors.map(([id, info]) => (
+        {sponsorsList.map(([id, info]) => (
           <div class="sponsor-card">
             <div class="sponsor-avatar">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -44,7 +41,6 @@ const sortedSponsors = Object.entries(users)
             <div class="sponsor-info">
               <h3 class="sponsor-name">{info.name}</h3>
               {info.remark && <p class="sponsor-remark">{info.remark}</p>}
-              <p class="sponsor-date">赞助于 {info.date}</p>
             </div>
           </div>
         ))}
@@ -152,14 +148,8 @@ const sortedSponsors = Object.entries(users)
   .sponsor-remark {
     font-size: 0.75rem;
     color: #ea580c;
-    margin: 0 0 0.25rem;
-    font-weight: 500;
-  }
-
-  .sponsor-date {
-    font-size: 0.7rem;
-    color: var(--sl-color-text-muted);
     margin: 0;
+    font-weight: 500;
   }
 
   .empty-state {
