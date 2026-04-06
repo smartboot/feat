@@ -399,13 +399,14 @@ public final class CloudOptionsSerializer implements Serializer {
 
         printWriter.println();
 
-        printWriter.println("\tstatic {");
         if (license == null) {
+            printWriter.println("\tstatic {");
             printWriter.println("\t\tSystem.out.println(\"\\u001B[33m感谢使用 Feat Cloud！本项目开源免费，持续发展离不开社区支持。\\u001B[0m\");");
             printWriter.println("\t\tSystem.out.println(\"\\u001B[33m欢迎赞助助力项目成长：https://smartboot.tech/feat/cloud/sponsors/\\u001B[0m\");");
+            printWriter.println("\t}");
+            printWriter.println();
         }
-        printWriter.println("\t}");
-        printWriter.println();
+
         printWriter.println("\tprivate List<" + CloudService.class.getSimpleName() + "> services = new " + ArrayList.class.getSimpleName() + "(" + services.size() + ");");
     }
 
