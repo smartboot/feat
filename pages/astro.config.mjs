@@ -39,19 +39,6 @@ export default defineConfig({
                     }
                 },
                 {
-                //     tag: 'script',
-                //     attrs: {
-                //         src: 'https://smartboot.tech/js/gitee.js'
-                //     }
-                // },{
-                    tag:'script',
-                    content: `if(!location.pathname.endsWith("feat/")&&!location.pathname.endsWith("/unstar/")&&!location.pathname.endsWith("/auth/")){
-                                checkStar("smartboot","feat",function(){
-                                    location.href="/feat/unstar/";
-                                });
-                            }`
-                },
-                {
                     tag: 'script',
                     content: `
                 var _hmt = _hmt || [];
@@ -99,33 +86,36 @@ export default defineConfig({
             },
             sidebar: [
                 {
-                    label: '关于',
+                    label: '快速开始',
+                    autogenerate: {directory: 'getting-started'},
+                },
+                {
+                    label: '项目说明',
                     autogenerate: {directory: 'guides'},
                 },
                 {
-                    label: 'Feat Cloud教程',
+                    label: 'Feat Core',
+                    autogenerate: {directory: 'server'},
+                },
+                {
+                    label: 'Feat Cloud',
                     autogenerate: {directory: 'cloud'},
                 },
                 {
-                    label: 'Feat AI教程',
+                    label: 'Feat AI',
                     autogenerate: {directory: 'ai'},
                 },
                 {
-                    label: '核心功能',
-                    items: [
-                        {
-                            label: 'HTTP 服务器',
-                            autogenerate: {directory: 'server'},
-                        },
-                        {
-                            label: 'HTTP 客户端',
-                            autogenerate: {directory: 'client'},
-                        }
-                    ]
+                    label: '客户端',
+                    autogenerate: {directory: 'client'},
                 },
                 {
                     label: '附录',
                     autogenerate: {directory: 'appendix'},
+                },
+                {
+                    label: '支持项目',
+                    items: ['sponsors'],
                 },
             ],
         }),

@@ -1,0 +1,68 @@
+---
+title: 选择学习路径
+description: 先按目标选择路线，再进入对应的最小可运行教程
+---
+
+import { Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+如果你第一次接触 Feat，不要从配置参考或附录开始。先完成一个最小可运行示例，再去查具体能力和配置。
+
+## 三条推荐路径
+
+<CardGrid>
+  <LinkCard
+    title="Feat Core"
+    href="/feat/server/getstart/"
+    description="适合想直接构建轻量 HTTP 服务、理解 Feat 核心能力和性能模型的开发者。"
+  />
+  <LinkCard
+    title="Feat Cloud"
+    href="/feat/cloud/"
+    description="适合希望获得接近 Spring Boot 开发体验、快速编写注解式 Web 应用的团队。"
+  />
+  <LinkCard
+    title="Feat AI"
+    href="/feat/ai/getstart/"
+    description="适合需要在 Java 应用中快速接入对话、流式输出、Embedding 或 Agent 能力的场景。"
+  />
+</CardGrid>
+
+## 如何选择
+
+- 如果你想直接掌握 HTTP 服务底层能力，选 **Feat Core**
+- 如果你希望用注解方式快速写 Web 应用，选 **Feat Cloud**
+- 如果你要把大模型接入 Java 应用，选 **Feat AI**
+
+<Aside type="tip">
+如果你还不确定从哪条路线开始，优先选 <a href="/feat/server/getstart/">Feat Core</a>。它路径最短，也最容易建立对 Feat 编程模型的直觉。
+</Aside>
+
+## 推荐顺序
+
+1. 先完成一篇 quickstart，确认依赖、代码和运行环境都正常。
+2. 再进入与你任务直接相关的教程，比如路由、控制器、数据库或 AI 对话。
+3. 只有在需要查参数、兼容性或排查问题时，再阅读配置参考、FAQ 和版本历史。
+
+## 路线说明
+
+### Feat Core
+
+- 先读 [5 分钟上手](/feat/server/getstart/)
+- 然后进入 [Router 路由组件](/feat/server/router/)
+- 需要调优或部署时再看 [ServerOptions 配置](/feat/server/serveroptions/)
+
+### Feat Cloud
+
+- 先读 [快速入门](/feat/cloud/)
+- 接着阅读 [Controller 开发实践](/feat/cloud/controller/)
+- 涉及工程配置时查 [CloudOptions 配置参考](/feat/cloud/options/)
+
+### Feat AI
+
+- 先读 [开始使用 Feat AI](/feat/ai/getstart/)
+- 再进入 [对话与流式](/feat/ai/chat/) 和 [使用 Agent](/feat/ai/agent/)
+- 做检索增强时补充 [Embedding 与向量](/feat/ai/embedding/)
+
+## 下一步
+
+如果你已经明确要做哪类应用，直接进入上面的对应路径即可。若你还在评估框架定位，可以先阅读 [Feat 介绍](/feat/guides/about/) 和 [系统要求](/feat/guides/system-requirements/)。

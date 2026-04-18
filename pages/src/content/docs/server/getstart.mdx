@@ -1,6 +1,6 @@
 ---
-title: 开始使用
-description: 一款企业级 Web 服务开发框架
+title: 5 分钟上手 Feat Core
+description: 从零创建一个最小 HTTP 服务，并理解 Feat Core 的基本编程模型
 sidebar:
     order: 1
 ---
@@ -8,22 +8,29 @@ import {Aside, TabItem, Tabs} from '@astrojs/starlight/components';
 import helloFeat from './img/1_2_hello_feat.png';
 import helloWorld from './img/1_2_hello_world.png';
 
-让我们一起踏上 Feat 框架的学习之旅吧！在这篇文档中，我们将从零开始，带你快速搭建第一个 Web 服务。不用担心，即使你是初学者也能轻松跟上。
+这篇教程只做一件事：让你在最短路径内跑起第一个 Feat HTTP 服务，并知道 Feat Core 的最小编程模型是什么。
 
-开始之前，请确保已完成以下几项前置准备工作：
+## 你会完成什么
+
+- 在 Maven 项目中引入 `feat-core`
+- 启动一个监听 `8080` 端口的最小 HTTP 服务
+- 返回默认响应和自定义响应
+- 知道接下来应该阅读哪几篇文档继续深入
+
+## 前置条件
 
 - JDK 1.8 或更高版本
 - Maven 3.0 或更高版本
-- IDE（本教程示例基于 IntelliJ IDEA）
-- [curl](https://curl.se/) 或者 **浏览器** 用于 HTTP 请求测试
+- 任意 Java IDE 或命令行环境
+- [curl](https://curl.se/) 或浏览器，用于验证服务输出
 
 :::note
-Feat Server 是一种原生编程模式，通常我们建议采用 [Feat Cloud](/feat/cloud/getstart/) 开展应用开发，以获得近似于 Spring Boot 的编程体验。
+如果你希望获得更接近 Spring Boot 的注解式开发体验，可以直接阅读 [Feat Cloud 快速入门](/feat/cloud/)。本页聚焦的是 Feat 最底层、最直接的 HTTP 服务编程方式。
 :::
 
-## 引入 Feat
+## 步骤 1：引入依赖
 
-万事开头难，但引入 Feat 却非常简单！只需在你的 Maven 工程 pom.xml 文件中添加以下配置，就可以开始使用 Feat 了：
+在 `pom.xml` 中添加 `feat-core`：
 
 ```xml title="pom.xml"
 <dependency>
@@ -34,14 +41,16 @@ Feat Server 是一种原生编程模式，通常我们建议采用 [Feat Cloud](
 ```
 
 <Aside>
-    `${feat.version}` 需根据实际情况设置，建议使用[最新版本](https://central.sonatype.com/artifact/tech.smartboot.feat/feat-core)。
+`${feat.version}` 请替换为实际版本，建议使用 Maven Central 上的[最新版本](https://central.sonatype.com/artifact/tech.smartboot.feat/feat-core)。
 </Aside>
 
-## 快速启动
+## 步骤 2：启动最小 HTTP 服务
 
-现在让我们动手实践，创建第一个简单的 Web 服务来验证 Feat 是否成功引入。
+创建 `HelloFeat.java`：
 
-```java title="HelloFeat.java" {3}
+```java title="HelloFeat.java"
+import tech.smartboot.feat.Feat;
+
 public class HelloFeat {
     public static void main(String[] args) {
         Feat.httpServer().listen();
@@ -49,44 +58,45 @@ public class HelloFeat {
 }
 ```
 
-这个例子虽然只有短短一行核心代码，但它已经创建了一个完整的 HTTP 服务器！默认情况下，服务器会监听 8080 端口。
+这段代码已经完成了一个可工作的 HTTP 服务启动过程：
 
-启动上面的程序后，让我们看看运行效果：
+- `Feat.httpServer()` 创建 HTTP 服务器
+- `listen()` 启动监听，默认端口是 `8080`
+- 如果你没有注册自定义处理器，Feat 会返回一个默认响应，便于你先验证链路
+
+## 步骤 3：验证服务是否启动成功
+
+程序启动后，打开浏览器访问 `http://localhost:8080`，或者直接用 `curl`：
+
 <Tabs>
     <TabItem value="浏览器" label="浏览器">
-        <img src={helloFeat.src} alt="hello world" width="60%" className="shadow"/>
+        <img src={helloFeat.src} alt="访问默认响应效果图" width="60%" className="shadow"/>
     </TabItem>
     <TabItem value="curl" label="curl">
-        如果您使用的是 **curl** 命令行工具，可以执行以下命令进行测试：
-        ```shell {1}
-        curl -v http://localhost:8080
-        *   Trying 127.0.0.1:8080...
-        * Connected to localhost (127.0.0.1) port 8080 (#0)
-        > GET / HTTP/1.1
-        > Host: localhost:8080
-        > User-Agent: curl/7.77.0
-        > Accept: */*
-        >
-        * Mark bundle as not supporting multiuse
-        < HTTP/1.1 200 OK
-        < Server:feat
-        < Date:Tue, 14 Jan 2025 00:00:00 GMT
-        < Content-Type:text/html; charset=utf-8
-        < Transfer-Encoding: chunked
-        <
-        * Connection #0 to host localhost left intact
-        Hello Feat%
+        ```shell
+        curl -i http://localhost:8080
+        HTTP/1.1 200 OK
+        Server: feat
+        Content-Type: text/html; charset=utf-8
+
+        Hello Feat
         ```
     </TabItem>
 </Tabs>
 
-🎉 **恭喜！我们的第一个 Web 服务就成功运行了。**
+到这里，你已经证明三件事都正常：
 
-## 编写自定义响应
+- 依赖已经成功引入
+- Feat 服务器已经真正启动
+- 本机 HTTP 请求链路工作正常
 
-刚才的例子使用了默认的响应，现在我们来试试自定义响应。这次我们显式指定一个处理函数，并让服务器监听 8081 端口：
+## 步骤 4：返回自定义响应
 
-```java title="HelloWorld.java" {3,4,5}
+默认响应只适合做连通性验证。接下来给服务器加一个明确的请求处理器，并改用 `8081` 端口，避免与上一步同时运行时冲突。
+
+```java title="HelloWorld.java"
+import tech.smartboot.feat.Feat;
+
 public class HelloWorld {
     public static void main(String[] args) {
         Feat.httpServer()
@@ -96,50 +106,61 @@ public class HelloWorld {
 }
 ```
 
-这个例子中，我们通过 [httpHandler](https://gitee.com/smartboot/feat/blob/master/feat-core/src/main/java/tech/smartboot/feat/core/server/HttpServer.java#L91) 方法设置了自定义的请求处理逻辑，将响应内容设置为 "Hello World"。
+这个例子里有两个最关键的 API：
 
-运行效果：
+- `httpHandler(...)`：注册请求处理逻辑
+- `listen(8081)`：指定监听端口
+
+也就是说，Feat Core 的最小编程模型就是：
+
+1. 创建服务器
+2. 注册处理器
+3. 启动监听
+
+再次验证：
+
 <Tabs>
     <TabItem value="浏览器" label="浏览器">
-        <img src={helloWorld.src} alt="hello world" width="60%" className="shadow"/>
+        <img src={helloWorld.src} alt="访问自定义响应效果图" width="60%" className="shadow"/>
     </TabItem>
     <TabItem value="curl" label="curl">
-        ```shell {1}
-        curl -v http://localhost:8081
-        *   Trying 127.0.0.1:8081...
-        * Connected to localhost (127.0.0.1) port 8081 (#0)
-        > GET / HTTP/1.1
-        > Host: localhost:8081
-        > User-Agent: curl/7.77.0
-        > Accept: */*
-        >
-        * Mark bundle as not supporting multiuse
-        < HTTP/1.1 200 OK
-        < Server:feat
-        < Date:Tue, 14 Jan 2025 00:00:00 GMT
-        < Content-Type:text/html; charset=utf-8
-        < Transfer-Encoding: chunked
-        <
-        * Connection #0 to host localhost left intact
-        Hello World%
+        ```shell
+        curl -i http://localhost:8081
+        HTTP/1.1 200 OK
+        Server: feat
+        Content-Type: text/html; charset=utf-8
+
+        Hello World
         ```
     </TabItem>
 </Tabs>
 
-是不是很简单？短短几行代码就实现了一个功能完整的 Web 服务！
+## 常见问题
+
+### 8080 或 8081 端口已被占用
+
+最直接的做法是换端口：
+
+```java
+Feat.httpServer().listen(9090);
+```
+
+### 程序能启动，但浏览器访问不到
+
+优先检查这三件事：
+
+1. 你访问的端口是否与 `listen(...)` 一致
+2. 本机防火墙或安全软件是否拦截了端口
+3. 程序是否在启动后马上退出或报错
+
+### 想进一步定制端口、线程数、调试模式
+
+不要继续在 quickstart 里堆配置，直接进入 [ServerOptions 配置](/feat/server/serveroptions/)。
 
 ## 下一步
 
-这只是 Feat 框架强大功能的冰山一角。接下来你可以：
+- [Router 路由组件](/feat/server/router/)：开始处理多路由、路径参数和拦截器
+- [ServerOptions 配置](/feat/server/serveroptions/)：定制端口、线程池、缓冲区和调试选项
+- [异步处理](/feat/server/async/)：处理耗时操作，避免阻塞请求线程
 
-1. 学习 [ServerOptions 配置](/feat/server/serveroptions/) 来定制服务器行为
-2. 掌握 [Router 路由组件](/feat/server/router/) 来处理不同的请求路径
-3. 了解 [异步处理](/feat/server/async/) 来提升服务器性能
-
-:::tip
-如果你想要更接近 Spring Boot 的开发体验，不妨试试 [Feat Cloud](/feat/cloud/getstart/)，它提供了更高级的编程模型和更多的开箱即用功能。
-:::
-
-## 建议&反馈
-
-希望这篇教程能够帮助你对 Feat 有一个初步的了解。在学习过程中遇到任何问题，都欢迎随时向我们提交 [Issue](https://gitee.com/smartboot/feat/issues/new/)，我们很乐意为你提供帮助。
+如果你已经确认自己更偏向注解式 Web 开发，可以直接切换到 [Feat Cloud 快速入门](/feat/cloud/)。
