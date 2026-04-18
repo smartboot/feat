@@ -1,112 +1,164 @@
 ---
-title: Https 安全服务
-description: Feat Https
+title: 为 Feat 服务启用 HTTPS
+description: 用最小成本在本地启用 HTTPS，并理解什么时候才需要进一步处理 SSLEngine
 sidebar:
     order: 5
 ---
+
 import https_1 from './img/https_1.png';
+import { Aside } from '@astrojs/starlight/components';
 
-在网络环境日益复杂的今天，安全性已经成为Web应用不可忽视的重要方面。出于安全服务需要，生产环境通常使用 Https 协议，Feat 也提供了相应的能力来保障你的应用安全。
+如果你的服务要进入真实网络环境，HTTPS 通常不是可选项。  
+这篇文档不讨论完整的 TLS 理论，而是回答更直接的问题：在 Feat 里，怎样把一个已经能工作的 HTTP 服务切到 HTTPS。
 
-下文演示所使用的证书是通过 [mkcert](https://github.com/FiloSottile/mkcert) 生成的自签名证书。
+## 最常见的使用场景
 
-## 生成 PEM 证书
+- 本地开发时模拟 HTTPS 环境
+- 内网环境里直接跑 HTTPS 服务
+- 对外暴露服务前，先把证书和启动方式跑通
 
-执行以下命令生成证书：
+## 第一步：准备证书
+
+本地开发最省事的方式是用 [mkcert](https://github.com/FiloSottile/mkcert) 生成一组本地可信证书。
+
 ```shell
 mkcert example.com "*.example.com" example.test localhost 127.0.0.1 ::1
 ```
 
-如果控制台出现以下提示信息，则表示证书生成成功。
-```shell
-Created a new certificate valid for the following names 📜
- - "example.com"
- - "*.example.com"
- - "example.test"
- - "localhost"
- - "127.0.0.1"
- - "::1"
+命令执行成功后，你会得到一对 PEM 文件，类似：
 
-Reminder: X.509 wildcards only go one level deep, so this won't match a.b.example.com ℹ️
+- `example.com+5.pem`
+- `example.com+5-key.pem`
 
-The certificate is at "./example.com+5.pem" and the key at "./example.com+5-key.pem" ✅
+把它们放进项目的 `src/main/resources` 目录，或者任何你能稳定读取到的资源路径里。
 
-It will expire on 30 April 2027
-```
+<Aside type="tip">
+本页示例使用的是 PEM 证书，因为它在本地验证最直接。生产环境里用什么证书格式，取决于你的运维和交付方式。
+</Aside>
 
-## 启动Https服务
+## 第二步：把 HTTP 服务切到 HTTPS
 
-将证书文件 `example.com+5.pem` 和 `example.com+5-key.pem` 拷贝到项目的 `src/main/resources` 目录下。
+Feat 本身不需要你重写一套服务逻辑。  
+你真正需要做的是：在原来的 HTTP 服务上加一个 `SslPlugin`。
 
-使用 smart-socket 提供的 SslPlugin 插件启动 Https 服务。
-```java title="HttpsPemDemo.java" "new SslPlugin(new PemServerSSLContextFactory(certPem, keyPem))"
+```java title="HttpsPemDemo.java"
+import org.smartboot.socket.extension.plugins.SslPlugin;
+import org.smartboot.socket.extension.ssl.factory.PemServerSSLContextFactory;
+import tech.smartboot.feat.Feat;
+
+import java.io.InputStream;
+
 public class HttpsPemDemo {
     public static void main(String[] args) throws Exception {
         InputStream certPem = HttpsPemDemo.class.getClassLoader().getResourceAsStream("example.org.pem");
         InputStream keyPem = HttpsPemDemo.class.getClassLoader().getResourceAsStream("example.org-key.pem");
+
         SslPlugin sslPlugin = new SslPlugin(new PemServerSSLContextFactory(certPem, keyPem));
-        Feat.httpServer(opt -> opt.addPlugin(sslPlugin)).httpHandler(req -> {
-            req.getResponse().write("Hello Feat Https");
-        }).listen();
+
+        Feat.httpServer(opt -> opt.addPlugin(sslPlugin))
+                .httpHandler(req -> req.getResponse().write("Hello Feat Https"))
+                .listen();
     }
 }
 ```
 
-打开浏览器，访问：https://localhost:8080 ，若页面展示如下，说明 Https 服务启动成功。
-<img src={https_1.src} alt="hello world" width="60%" className="shadow"/>
+这里真正发生的事情只有一件：
 
-有关完整示例，请参见 [HttpsPemDemo.java](https://gitee.com/smartboot/feat/blob/master/feat-test/src/main/java/tech/smartboot/feat/demo/HttpsPemDemo.java)
+- 你的 Feat 服务仍然是同一个服务
+- 只是监听链路前面多了一个 SSL/TLS 插件
 
-## SSLEngine 传递
+## 第三步：验证 HTTPS 是否真的生效
 
-HttpRequest 中提供了 `getSslEngine()` 方法，用于获取 SSLEngine。
+启动程序后，直接访问：
 
-但是，SSLEngine 是在底层的网络通信层创建的，应用层无法感知底层是否使用了 SSL 协议。
-所以，默认情况下调用 `getSslEngine()` 方法获取到的 SSLEngine 为 null。
+`https://localhost:8080`
 
-若需要获取 SSLEngine，必须在 SslPlugin 中配置： **Consumer\<SSLEngine\>**，
-将 `SSLEngine` 注入到 ThreadLocal 中以供应用层获取。
-```java title=HttpsSSLEngineDemo.java {6,7}
+如果浏览器能够正常打开，并看到类似页面，说明 HTTPS 已经真正工作起来了：
+
+<img src={https_1.src} alt="Feat HTTPS 访问效果图" width="60%" className="shadow"/>
+
+有关实际示例代码，可直接参考：
+
+- [HttpsPemDemo.java](https://gitee.com/smartboot/feat/blob/master/feat-test/src/main/java/tech/smartboot/feat/demo/HttpsPemDemo.java)
+
+## 什么时候需要关心 `SSLEngine`
+
+大多数业务代码根本不需要直接碰 `SSLEngine`。  
+只有在你确实需要读取底层 TLS 连接信息时，才值得继续处理。
+
+默认情况下，业务层直接调用 `req.getSslEngine()`，很可能拿到的是 `null`。  
+原因很简单：`SSLEngine` 是底层通信层创建的，应用层默认感知不到。
+
+如果你明确需要它，就要在 `SslPlugin` 初始化时把它传上来：
+
+```java title="HttpsSSLEngineDemo.java"
+import org.smartboot.socket.extension.plugins.SslPlugin;
+import org.smartboot.socket.extension.ssl.factory.AutoServerSSLContextFactory;
+import tech.smartboot.feat.Feat;
+import tech.smartboot.feat.core.server.HttpRequest;
+
+import javax.net.ssl.SSLEngine;
+import java.util.function.Consumer;
+
 public class HttpsSSLEngineDemo {
     public static void main(String[] args) throws Exception {
-        InputStream certPem = HttpsSSLEngineDemo.class.getClassLoader().getResourceAsStream("example.com+5.pem");
-        InputStream keyPem = HttpsSSLEngineDemo.class.getClassLoader().getResourceAsStream("example.com+5-key.pem");
-        SslPlugin sslPlugin = new SslPlugin(new PemServerSSLContextFactory(certPem, keyPem), (Consumer<SSLEngine>) sslEngine -> {
-            sslEngine.setUseClientMode(false);
+        SslPlugin sslPlugin = new SslPlugin(new AutoServerSSLContextFactory(), (Consumer<SSLEngine>) sslEngine -> {
             HttpRequest.SSL_ENGINE_THREAD_LOCAL.set(sslEngine);
         });
-        Feat.httpServer(opt -> opt.addPlugin(sslPlugin)).httpHandler(req -> {
-            SSLEngine engine = req.getSslEngine();
-            if (engine == null) {
-                req.getResponse().write("engine is null");
-            } else {
-                req.getResponse().write("engine=" + engine);
-            }
-        }).listen();
+
+        Feat.httpServer(opt -> opt.addPlugin(sslPlugin))
+                .httpHandler(req -> {
+                    SSLEngine engine = req.getSslEngine();
+                    if (engine == null) {
+                        req.getResponse().write("engine is null");
+                    } else {
+                        req.getResponse().write("engine=" + engine);
+                    }
+                }).listen();
     }
 }
 ```
 
-TCP 连接建立成功后，应用层`Endpoint.java`会在第一时间获取 `SSLEngine`。
-```java title=Endpoint.java {4-6}
-protected Endpoint(AioSession aioSession, ServerOptions options) {
-    this.aioSession = aioSession;
-    this.options = options;
-    this.sslEngine = HttpRequest.SSL_ENGINE_THREAD_LOCAL.get();
-    if (sslEngine != null) {
-        HttpRequest.SSL_ENGINE_THREAD_LOCAL.remove();
-    }
-}
-```
+这不是 HTTPS 启动的必备步骤，而是“你需要拿 TLS 上下文时”的扩展做法。
 
-## 安全建议
+## 生产环境应该怎么理解这件事
 
-在生产环境中使用 HTTPS 时，请注意以下几点：
+本地开发时，你的目标只是先把 HTTPS 跑通。  
+到了生产环境，真正需要关注的是：
 
-1. **使用受信任的证书颁发机构**：自签名证书适用于开发和测试环境，但在生产环境中应使用受信任的CA签发的证书
-2. **定期更新证书**：确保证书在有效期内，避免因证书过期导致服务中断
-3. **配置强加密算法**：选择安全强度高的加密算法和协议版本
-4. **启用HTTP Strict Transport Security (HSTS)**：强制浏览器使用HTTPS连接
-5. **重定向HTTP到HTTPS**：将所有HTTP请求自动重定向到HTTPS
+- 证书由谁签发、谁轮换
+- 证书文件如何注入容器或主机
+- 是否由反向代理统一终止 TLS
+- 服务本身是否真的需要直接持有证书
 
-通过合理配置HTTPS，可以大大提升Web应用的安全性，保护用户数据不被窃取或篡改。
+换句话说，这篇文档解决的是“Feat 这层怎么启 HTTPS”，不是替代完整的运维安全方案。
+
+## 常见问题
+
+### 浏览器提示证书不受信任
+
+如果你用的是自签名证书，这是正常现象。  
+在本地开发环境里，优先使用 `mkcert` 这类工具来减少这类问题。
+
+### 证书文件加载不到
+
+优先检查：
+
+1. 文件名是否和代码里完全一致
+2. 资源是否真的打进了 `resources`
+3. `getResourceAsStream(...)` 返回值是否为 `null`
+
+### 已经加了 `SslPlugin`，但还是按 HTTP 访问
+
+确认你访问的是 `https://`，而不是 `http://`。  
+TLS 已启用不代表服务会自动帮你把 HTTP 重定向到 HTTPS。
+
+### 我是不是应该一开始就研究 `SSLEngine`
+
+不用。  
+除非你已经明确要做更底层的 TLS 处理，否则先把 HTTPS 跑通就够了。
+
+## 下一步
+
+- [ServerOptions 配置指南](/feat/server/serveroptions/)：把 HTTPS 和端口、调试、代理协议放在一起理解
+- [打包与部署](/feat/cloud/deployment/)：如果你下一步准备把服务放进容器或交付到环境里

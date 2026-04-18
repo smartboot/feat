@@ -1,78 +1,36 @@
 ---
-title: 使用 Agent
-description: 如何用 Feat AI 的 ReAct Agent 与工具完成任务
+title: 让模型开始使用工具
+description: 用 Feat AI 的 Agent 机制组织模型与工具协作，而不是只做单次问答
 sidebar:
     order: 3
 ---
 
 import { Aside } from '@astrojs/starlight/components';
 
-Feat AI 的 Agent 基于 **ReAct**（Reasoning + Acting）范式：模型先推理任务，再调用工具执行，根据结果继续推理，直到给出最终答案。本文说明如何创建 Agent、注册工具并执行任务。
+如果说前面的对话模型是在回答“模型能不能说话”，那么 Agent 这页解决的是下一步问题：
 
-## 任务描述
+> 当模型需要去读网页、调工具、分步完成任务时，该怎么组织它？
 
-- 创建一个可执行自然语言任务的 Agent
-- 为 Agent 配置可用工具（如网页读取、搜索等）
-- 执行一次任务并获取最终文本结果与状态
+Feat AI 的 Agent 是建立在 ReAct 思路上的：  
+模型先做判断，再调用工具，再根据工具结果继续推进。
 
-## 解决方案
+## Agent 适合什么场景
 
-### 创建 Agent
+- 问题本身不是一句提示词就能回答
+- 模型需要读取外部信息
+- 模型需要调用一个或多个工具才能完成任务
 
-通过 `FeatAI.agent(opts -> ...)` 得到的是基于 ReAct 的 `FeatAgent` 实现（当前为 `ReActAgent`）。在 `opts` 中至少要配置对话模型；若需调用网页、搜索等能力，需在此处注册相应工具。若直接使用 `new ReActAgent()` 无参构造，则会使用内置的默认工具集（如网页读取、搜索、文件操作）和默认模型。
+如果你当前只是普通问答、摘要、翻译或单次生成，先停在 [配置对话模型并处理流式输出](/feat/ai/chat/) 即可。
 
-```java
-import tech.smartboot.feat.ai.FeatAI;
-import tech.smartboot.feat.ai.agent.FeatAgent;
+## 先看一个最小 Agent
 
-FeatAgent agent = FeatAI.agent(opts -> {
-    opts.chatOptions().model(ChatModelVendor.GiteeAI.Qwen2_5_72B_Instruct);
-    // 可选：opts.maxIterations(20);
-});
-```
-
-若使用 Ollama，可配置 `chatOptions().baseUrl(...).model(...)`，并确保本机已运行对应模型。
-
-### 配置工具（可选）
-
-Agent 通过 **工具** 与外界交互（读网页、搜资料、操作文件等）。在 `AgentOptions` 上注册实现 `AgentTool` 的工具即可：
-
-```java
-FeatAgent agent = FeatAI.agent(opts -> {
-    opts.chatOptions().model(...);
-    opts.tool(new SearchTool());           // 搜索
-    opts.tool(new WebPageReaderTool());    // 读取网页
-    opts.tool(new FileOperationTool());    // 文件操作
-});
-```
-
-Feat AI 内置部分工具（如 `SearchTool`、`WebPageReaderTool`），位于 `tech.smartboot.feat.ai.agent.tools` 包，可按需查阅源码与构造方式。自定义工具需实现 `AgentTool` 接口（名称、描述、参数、执行逻辑）。
-
-### 执行任务
-
-`FeatAgent#execute(String)` 接收一句自然语言任务，返回 `CompletableFuture<String>`，结果为 Agent 给出的**最终文本**。可同步等待：
-
-```java
-String result = agent.execute("从 https://smartboot.tech/smart-mqtt/ 中给我看看这款产品的定价是多少").get();
-System.out.println("最终结果:\n" + result);
-System.out.println("Agent 状态: " + agent.getState());
-```
-
-执行过程中 Agent 会多次调用模型与工具，直到满足结束条件或达到 `maxIterations`。
-
-### 完整示例（基于 feat-ai 测试）
-
-下面示例基于 `feat-ai` 模块的 `ReActAgentTest`，演示创建 Agent、执行任务并打印结果与状态（JDK 8 可运行）：
-
-```java
+```java title="AgentDemo.java"
 import tech.smartboot.feat.ai.FeatAI;
 import tech.smartboot.feat.ai.agent.FeatAgent;
 import tech.smartboot.feat.ai.chat.ChatModelVendor;
 
-import java.util.concurrent.ExecutionException;
-
 public class AgentDemo {
-    public static void main(String[] args) throws ExecutionException, InterruptedException {
+    public static void main(String[] args) throws Exception {
         FeatAgent agent = FeatAI.agent(opts -> {
             opts.chatOptions().model(ChatModelVendor.GiteeAI.Qwen2_5_72B_Instruct);
             opts.tool(new tech.smartboot.feat.ai.agent.tools.WebPageReaderTool());
@@ -82,36 +40,97 @@ public class AgentDemo {
                 "从 https://smartboot.tech/smart-mqtt/ 中给我看看这款产品的定价是多少"
         ).get();
 
-        System.out.println("\n最终结果:\n" + result);
-        System.out.println("\nAgent 最终状态: " + agent.getState());
+        System.out.println(result);
+        System.out.println(agent.getState());
     }
 }
 ```
 
-<Aside type="caution">
-使用 Gitee AI 时需设置环境变量 `FEAT_AI_API_KEY`。若使用 Ollama，将 `chatOptions()` 改为 `baseUrl("http://localhost:11434/v1").model("qwen2.5:7b")` 等即可。
-</Aside>
+这段代码的重点只有两件事：
 
-## 常用配置
+- 先给 Agent 一个对话模型
+- 再给它至少一个它能调用的工具
 
-| 配置 | 方法 | 说明 |
-|------|------|------|
-| 对话模型 | `chatOptions()` | 配置模型、baseUrl、API Key 等，与 [对话与流式](/feat/ai/chat/) 一致 |
-| 最大迭代 | `maxIterations(int)` | 限制推理+工具调用轮数，默认 20 |
-| 工具 | `tool(AgentTool)` | 注册一个工具，可多次调用注册多个 |
-| 提示词 | `prompt(String)` 或 `prompt(Prompt)` | 自定义 Agent 的系统提示/行为模板 |
-| 钩子 | `hook(Hook)` | 在执行过程的关键节点插入自定义逻辑 |
+没有工具时，Agent 只是“会多想一点”的模型；  
+有了工具之后，它才真正开始具备完成复杂任务的能力。
 
-## 注意事项
+## Agent 和普通 ChatModel 的区别
 
-- **API Key**：使用 Gitee AI 时必须设置 `FEAT_AI_API_KEY`。
-- **超时与异常**：`execute(...).get()` 会阻塞直到完成或异常；生产环境建议使用 `get(timeout, unit)` 或 `thenAccept` 等异步方式。
-- **工具依赖**：部分内置工具可能依赖外部服务（如搜索、网页抓取），需网络或额外配置；自定义工具需保证线程安全与异常处理。
-- **迭代上限**：复杂任务可能触及 `maxIterations`，可根据需要调大或优化提示词/工具设计。
+### `ChatModel`
 
-## 相关链接
+适合：
 
-- [Feat AI 简介](/feat/ai/)：ReAct 与能力概览
-- [开始使用 Feat AI](/feat/ai/getstart/)：依赖与对话模型配置
-- [对话与流式](/feat/ai/chat/)：`ChatOptions` 详细用法
-- 项目内：`feat-ai` 模块 `agent` 包下的 `ReActAgentTest`、`AgentTool`、内置 tools
+- 单次问答
+- 提示词生成
+- 普通对话
+
+### `FeatAgent`
+
+适合：
+
+- 需要外部信息的任务
+- 多步骤任务
+- 要把“推理”和“执行”串起来的场景
+
+所以不要把 Agent 理解成“更强的对话模型”，它更像是“对话模型 + 工具调度层”。
+
+## 什么时候该开始注册工具
+
+这是 Agent 是否真正有用的分界点。
+
+常见工具包括：
+
+- 网页读取
+- 搜索
+- 文件操作
+
+在 Feat AI 里，你可以把工具注册到 `AgentOptions` 上：
+
+```java
+opts.tool(new SearchTool());
+opts.tool(new WebPageReaderTool());
+opts.tool(new FileOperationTool());
+```
+
+仓库里的示例更偏向使用内置工具去完成实际任务，所以你完全可以先从现成工具开始，而不是立刻写自定义工具。
+
+## 一个实用建议
+
+做 Agent 时，不要一开始就追求“大而全工具箱”。  
+更稳的方式通常是：
+
+1. 先让一个 Agent 只接一两个工具
+2. 确认它真的能稳定完成任务
+3. 再继续加工具和更复杂的提示策略
+
+否则你最后很可能不知道到底是模型问题、工具问题，还是调度策略问题。
+
+## 常见问题
+
+### Agent 总是在空想，不调用工具
+
+优先检查：
+
+1. 你是否真的注册了工具
+2. 任务本身是否明确暗示需要外部信息
+3. 模型能力是否足以理解当前工具描述
+
+### Agent 能调用工具，但结果质量一般
+
+这通常不是一个单点问题。  
+可能涉及：
+
+- 模型本身
+- 工具描述是否清楚
+- 工具返回内容是否可消费
+- 提示策略是否过弱或过乱
+
+### 我是不是应该先学 Agent 再学 Chat
+
+不建议。  
+如果你还没把普通模型调用用熟，Agent 的排错成本会高很多。
+
+## 下一步
+
+- 如果你还没把对话模型用熟，先回到 [配置对话模型并处理流式输出](/feat/ai/chat/)
+- 如果你准备做检索增强，再去看 [Embedding 与向量](/feat/ai/embedding/)

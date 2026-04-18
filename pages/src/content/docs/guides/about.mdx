@@ -1,40 +1,116 @@
 ---
-title: Feat 介绍
-description: 一款企业级 Web 服务开发框架
+title: Feat 是什么
+description: 理解 Feat 的定位、能力边界，以及在什么场景下应该选它
 sidebar:
   order: 1
 ---
 
 import architecture from './img/architecture.svg';
+import { Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
 
-Feat 是一个高性能、低资源消耗的 Java Web 服务开发框架，类似 Vert.x 和 Spring Boot。
+Feat 是一个面向 Java 的 Web 服务开发框架。  
+如果用一句话概括它的定位，可以这么理解：
 
-核心特性：
-- 高性能异步通信，轻松应对高并发
-- 支持 HTTP/1.0、HTTP/1.1、HTTP/2、WebSocket、SSE
-- 内置静态资源服务器，支持 HTTPS
-- 灵活插件与配置，适合企业级复杂应用
+> Feat 想保留底层 HTTP 服务的直接性，同时把常见的云原生和 AI 接入需求收拢进同一套技术栈里。
 
-<img src={architecture.src} alt="Feat 框架架构图" width="800" height="400" />
+它不是 Servlet 容器包装层，也不是单纯的注解框架。  
+它的设计出发点更接近“从服务端网络能力出发，再逐层长出更高层开发模型”。
 
-## Feat 的开源故事
+<img src={architecture.src} alt="Feat 架构图" width="800" height="400" />
 
-Feat 诞生于 2024年12月21日，这是一个承载着六年开源经验的全新项目。它的前身是广受好评的开源框架 smart-http，在社区中积累了丰富的实践经验和技术沉淀。
+## 你可以把 Feat 理解成三层
 
-在 smart-http 达到相对稳定和成熟的阶段后，我们做出了一个战略性的决定：将项目交由社区维护，同时启动全新的 Feat 项目。这个决定让我们能够在保持 smart-http 稳定服务现有用户的同时，探索更多创新的可能性。
+### Feat Core
 
-选择创建 Feat 的核心原因，是希望在保持高性能的基础上，能够更自由地实践一些前瞻性的技术理念。这些想法在原有的框架中可能难以实现，但在 Feat 中将得到充分的施展空间。
+这是最底层的一层，直接提供 HTTP 服务能力。
 
-Feat 继承了 smart-http 的优秀基因，同时也带来了全新的技术视角和更多可能性。我们相信，Feat 不仅能够满足现代企业级应用的需求，还将在性能优化、资源利用等方面带来更多突破性的创新。
+适合你在这些情况下使用：
 
-## 为什么需要 Feat？
+- 你想直接控制请求处理流程
+- 你更关心性能、资源占用和服务模型本身
+- 你不需要先引入注解式开发体验
 
-我们希望基于 Feat 开发的 Web 服务可以：
+如果你想从最短路径理解 Feat 的编程模型，从 [构建第一个 Feat HTTP 服务](/feat/server/getstart/) 开始。
 
-- **高效性能**：在运行速度上更高效一些，改变大家对于 Java 服务性能差的观念
-- **资源节省**：在资源开销上更节省一些，改变大家对于 Java 服务内存高的观念
-- **开发友好**：在开发体验上更友好一些，改变大家对于 Java 服务设计臃肿的观念
+### Feat Cloud
 
-## 如何正确使用 Feat
+这是建立在 Feat Core 之上的高层开发模型。  
+它提供了更像现代 Java Web 框架的写法，比如 Controller、配置项、集成 MyBatis、部署路线等。
 
-Feat 采用 Apache 2.0 开源协议，您可以自由地使用、修改和分发本软件，包括商业用途，无需支付任何费用。
+适合你在这些情况下使用：
+
+- 你想要注解式开发体验
+- 你准备快速构建一个 Web 应用，而不是只写底层 HTTP 服务
+- 你希望把 Feat 用在更接近日常业务开发的模式里
+
+入口在 [Feat Cloud 导览](/feat/cloud/)。
+
+### Feat AI
+
+这是 Feat 生态里的 AI 能力层，用来接入对话、Embedding、Agent 等能力。
+
+适合你在这些情况下使用：
+
+- 你已经在写 Java 服务，需要把模型能力接入进来
+- 你希望统一管理 HTTP 服务和 AI 接口调用
+- 你准备在现有 Feat 项目中增加 AI 功能
+
+入口在 [Feat AI 简介](/feat/ai/)。
+
+## 它和 Spring Boot、Vert.x 的关系怎么理解
+
+最简单的理解方式不是“它是不是谁的替代品”，而是看你当前更在意什么：
+
+- 如果你更在意底层 HTTP 服务模型和资源效率，Feat 和 Vert.x 这类框架会更容易放在同一张比较表里
+- 如果你更在意注解式开发和业务开发体验，Feat Cloud 和 Spring Boot 这类框架会更容易放在同一层讨论
+
+但 Feat 并不试图一比一复刻任何现成框架。  
+它真正的方向是：用更轻的底座，把 Core、Cloud、AI 这三条线串起来。
+
+## 什么时候适合考虑 Feat
+
+Feat 更适合这些情况：
+
+- 你对 Java 服务的启动成本和资源占用比较敏感
+- 你希望既能从底层 HTTP 服务写起，也能逐步切到更高层开发模型
+- 你想把云原生服务和 AI 接入放在同一套生态里理解
+
+它不一定适合这些情况：
+
+- 你团队已经深度依赖成熟的 Spring 生态扩展能力，而且短期没有迁移意愿
+- 你当前只需要“一个最熟悉、生态最庞大的默认选项”
+- 你不关心底层服务模型，只希望直接套用现成企业框架栈
+
+## 如何进入 Feat 文档
+
+文档入口不应该从这一页继续一层层顺着读。  
+更高效的做法是根据目标选路径：
+
+<CardGrid>
+  <LinkCard
+    title="先理解底层服务模型"
+    href="/feat/server/"
+    description="如果你想先掌握 Feat Core。"
+  />
+  <LinkCard
+    title="先写注解式 Web 应用"
+    href="/feat/cloud/"
+    description="如果你更关心业务开发效率。"
+  />
+  <LinkCard
+    title="先接入 AI 能力"
+    href="/feat/ai/"
+    description="如果你主要目标是模型能力集成。"
+  />
+</CardGrid>
+
+<Aside type="tip">
+如果你只是第一次接触 Feat，而且还没有明确目标，通常从 [从哪里开始读 Feat 文档](/feat/getting-started/) 更合适。
+</Aside>
+
+## 一个简短的项目背景
+
+Feat 诞生于 2024 年 12 月 21 日。  
+它的前身是 smart-http，后者已经积累了多年的网络通信和服务开发经验。Feat 不是“从零发明一个完全陌生的东西”，而是在已有实践基础上重新组织出来的新项目。
+
+这也是为什么 Feat 的很多能力不是从“业务注解”开始，而是从更底层的服务能力长出来的。

@@ -1,62 +1,50 @@
 ---
-title: MCP 开发实践
-description: 在 Feat Cloud 中集成 Model Context Protocol 服务
+title: 在 Feat Cloud 中暴露 MCP 服务
+description: 用 Feat Cloud 的注解式方式暴露 Tool、Prompt 和 Resource，并决定是否需要自定义 MCP 端点
 sidebar:
     order: 6
 ---
-import { TabItem, Tabs } from "@astrojs/starlight/components";
 
-本教程将指导你在 Feat Cloud 中集成 MCP (Model Context Protocol)，为 AI 系统提供工具和上下文信息。
+MCP 这页最容易写成“大量注解参数说明”，但那样其实帮不了你真正落地。  
+更实际的问题是：如果你已经有一个 Feat Cloud 应用，现在想把它变成一个 MCP 服务，应该从哪种方式开始。
 
-## 你将学到
+## 先判断：你需要哪一种 MCP 暴露方式
 
-- 使用默认 MCP 服务器快速上手
-- 创建自定义 MCP 服务端点
-- 配置 Tools、Prompts 和 Resources
-- 理解 MCP 注解的使用方法
+在 Feat Cloud 里，MCP 大体有两种用法：
 
-## MCP 简介
+### 默认 MCP 服务器
 
-Model Context Protocol (MCP) 是一种开放协议，允许 AI 系统与应用程序安全地交换信息和工具。Feat Cloud 提供完整的 MCP 支持：
+当你的 Controller 里出现 `@Tool`、`@Prompt`、`@Resource` 这些注解时，Feat Cloud 可以在编译期帮你生成默认 MCP 服务。
 
-- **Tools**: 允许 AI 助手调用应用程序中的功能
-- **Prompts**: 提供预定义的提示词模板
-- **Resources**: 共享文本或二进制资源
+适合：
 
-## 方式一：默认 MCP 服务器（推荐）
+- 你只是想把少量工具或资源先暴露出去
+- 你不打算自定义一整套 MCP 路径
+- 你希望先用最少的配置打通能力
 
-当 Controller 类中出现 `@Tool`、`@Prompt` 或 `@Resource` 注解时，Feat Cloud 会在编译期自动生成默认 MCP 服务器实例，无需额外配置。
+### 自定义 MCP 端点
 
-### 快速上手示例
+如果你需要明确指定 MCP 服务名、SSE 端点、消息端点和流式端点，就用 `@McpEndpoint`。
 
-```java
+适合：
+
+- 你已经把 MCP 当成一个明确的服务能力来设计
+- 你希望自己控制端点路径和服务边界
+- 你不想完全依赖默认端点行为
+
+## 从默认方式开始
+
+如果你只是想先把一个工具暴露给 MCP 客户端，不一定需要自定义服务端点。
+
+下面这种 Controller 已经足够表达一个最小用例：
+
+```java title="DefaultMcpController.java"
+import tech.smartboot.feat.cloud.annotation.Controller;
+import tech.smartboot.feat.cloud.annotation.mcp.Tool;
+import tech.smartboot.feat.cloud.annotation.mcp.Param;
+
 @Controller
-public class DefaultMcpUsageController {
-    
-    @Autowired
-    private McpServer mcpServer;
-    
-    @PostConstruct
-    public void init() {
-        // 添加工具到默认 MCP 服务器
-        mcpServer.addTool(ServerTool.of("currentTime")
-            .description("获取当前时间")
-            .inputSchema(ServerTool.boolProperty("withMilliseconds", "是否包含毫秒"))
-            .doAction(ctx -> {
-                boolean withMs = ctx.getArguments().getBooleanValue("withMilliseconds");
-                long time = withMs ? System.currentTimeMillis() : System.currentTimeMillis() / 1000;
-                return ToolResult.ofText(String.valueOf(time));
-            }));
-            
-        // 添加提示词到默认 MCP 服务器
-        mcpServer.addPrompt(ServerPrompt.of("greeting")
-            .description("问候语提示词")
-            .arguments(tech.smartboot.feat.ai.mcp.model.Prompt.argument("name", "用户姓名"))
-            .doAction(ctx -> {
-                String name = ctx.getArguments().getString("name");
-                return PromptMessage.ofText(RoleEnum.Assistant, "你好，" + name + "！有什么我可以帮助你的吗？");
-            }));
-    }
+public class DefaultMcpController {
 
     @Tool(description = "简单的问候工具")
     public String greeting(@Param(required = true, description = "用户姓名") String name) {
@@ -65,29 +53,38 @@ public class DefaultMcpUsageController {
 }
 ```
 
-## 方式二：自定义 MCP 服务端点
+这类写法的重点不是“看起来像注解示例”，而是它已经足够让编译期生成 MCP 对应服务能力。
 
-对于更复杂的 MCP 服务需求，使用 `@McpEndpoint` 注解创建自定义 MCP 服务端点。
+## 什么时候切到自定义端点
 
-### 完整示例
+一旦你开始真正管理一个 MCP 服务，而不是单独抛几个工具，就应该考虑 `@McpEndpoint`。
 
-```java
+仓库里的真实示例是：
+
+```java title="McpDemoController.java"
+import tech.smartboot.feat.ai.mcp.enums.PromptType;
+import tech.smartboot.feat.ai.mcp.model.ToolResult;
+import tech.smartboot.feat.cloud.annotation.Controller;
+import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
+import tech.smartboot.feat.cloud.annotation.mcp.Prompt;
+import tech.smartboot.feat.cloud.annotation.mcp.Resource;
+import tech.smartboot.feat.cloud.annotation.mcp.Tool;
+import tech.smartboot.feat.cloud.annotation.mcp.Param;
+
 @Controller
 @McpEndpoint(
     name = "demo-mcp-service",
     title = "Demo MCP Service",
-    sseEndpoint = "/mcp/sse",
-    sseMessageEndpoint = "/mcp/sse/message",
-    streamableEndpoint = "/mcp/stream"
+    sseEndpoint = "/mcp/demo/sse",
+    sseMessageEndpoint = "/mcp/demo/sse/message",
+    streamableEndpoint = "/mcp/demo/stream"
 )
 public class McpDemoController {
 
-    /**
-     * 定义工具：获取用户信息
-     */
     @Tool(name = "getUserInfo", description = "根据用户ID获取用户信息")
     public UserInfo getUserInfo(
-        @Param(required = true, description = "用户ID") Long userId
+        @Param(required = true, description = "用户ID") Long userId,
+        @Param(required = false, description = "是否包含详细信息") Boolean detailed
     ) {
         UserInfo user = new UserInfo();
         user.setId(userId);
@@ -96,23 +93,18 @@ public class McpDemoController {
         return user;
     }
 
-    /**
-     * 定义文本提示词
-     */
     @Prompt(
         name = "codeReviewPrompt",
         description = "代码审查提示词",
         type = PromptType.TEXT
     )
     public String codeReviewPrompt(
+        @Param(required = true, description = "编程语言") String language,
         @Param(required = true, description = "代码片段") String codeSnippet
     ) {
-        return "请审查以下代码并提供改进建议：" + codeSnippet;
+        return String.format("请审查以下%s代码并提供改进建议：%s", language, codeSnippet);
     }
 
-    /**
-     * 定义文本资源
-     */
     @Resource(
         uri = "/resources/coding-standards.md",
         name = "编码规范",
@@ -121,145 +113,85 @@ public class McpDemoController {
         isText = true
     )
     public String codingStandards() {
-        return """
-            # 编码规范
+        return "# 编码规范";
+    }
 
-            ## 命名规范
-            1. 类名使用大驼峰命名法
-            2. 方法名使用小驼峰命名法
-            
-            ## 代码格式
-            1. 缩进使用4个空格
-            2. 行宽不超过120个字符
-            """;
+    @Tool(description = "获取文本信息")
+    public ToolResult.TextContent getTextInfo() {
+        return ToolResult.ofText("这是文本内容");
     }
 }
 ```
 
-```java
-public class UserInfo {
-    private Long id;
-    private String name;
-    private String email;
+这段示例已经很能说明问题了：
 
-    // Getters and setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+- `@Tool` 暴露可调用能力
+- `@Prompt` 暴露提示模板
+- `@Resource` 暴露文本或二进制资源
+- `@McpEndpoint` 负责把这整组能力挂到一组明确端点上
 
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+## 怎么理解这些注解
 
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
-}
-```
+### `@Tool`
 
-## 注解详解
+把一个方法暴露成 MCP 可调用工具。  
+如果你的目标是“让模型调用这段业务逻辑”，从这里开始最自然。
 
-### @McpEndpoint
+### `@Prompt`
 
-标记 Controller 类为 MCP 服务端点。
+把一段模板化提示词暴露出去。  
+更适合“把一套提示结构交给外部 MCP 客户端使用”，而不是普通 Controller 里直接返回文本。
 
-| 参数 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `name` | String | `"feat-mcp-server"` | MCP 服务名称 |
-| `title` | String | `"Feat MCP Server"` | MCP 服务标题 |
-| `version` | String | `Feat.VERSION` | MCP 服务版本 |
-| `sseEndpoint` | String | 必填 | SSE 端点地址 |
-| `sseMessageEndpoint` | String | 必填 | SSE 消息端点地址 |
-| `streamableEndpoint` | String | 必填 | 流式传输端点地址 |
-| `resourceEnable` | boolean | `true` | 是否启用资源功能 |
-| `toolEnable` | boolean | `true` | 是否启用工具功能 |
-| `promptsEnable` | boolean | `true` | 是否启用提示词功能 |
-| `loggingEnable` | boolean | `true` | 是否启用日志功能 |
+### `@Resource`
 
-### @Tool
+暴露一段文本资源或二进制资源。  
+适合团队规范、说明文档、静态内容、图片等可被外部读取的材料。
 
-标记方法为 MCP 工具。
+### `@Param`
 
-| 参数 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `name` | String | 方法名 | 工具名称 |
-| `description` | String | `""` | 工具描述 |
+描述 MCP 工具或提示词参数。  
+这里的 `@Param` 不是普通 Controller 查询参数的同一层概念，而是 MCP 参数元信息的一部分。
 
-**支持的返回类型：**
-- 基本类型：`String`, `int`, `long`, `float`, `double`, `boolean`, `byte`
-- 复合类型：自定义对象（自动序列化为 JSON）
-- 专用类型：`ToolResult.TextContent`, `ToolResult.ImageContent`
+## 一个更实用的建议
 
-```java
-// 返回文本
-@Tool(description = "获取文本信息")
-public ToolResult.TextContent getTextInfo() {
-    return ToolResult.ofText("这是文本内容");
-}
+如果你是第一次做 MCP，不要一上来就把 Tool、Prompt、Resource 全部堆在一个大 Controller 里。  
+更稳的做法通常是：
 
-// 返回图片
-@Tool(description = "获取图片信息")
-public ToolResult.ImageContent getImageInfo() {
-    return ToolResult.ofImage("base64-encoded-image-data", "image/png");
-}
-```
+1. 先暴露一个最小 Tool
+2. 再加一个 Prompt
+3. 最后再考虑是否需要 Resource
 
-### @Param
+也就是说，先确认“服务能被 MCP 客户端发现和调用”，再扩能力。
 
-定义 MCP 工具的参数信息。
+## 什么时候需要 `McpServer`
 
-| 参数 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `required` | boolean | 必填 | 参数是否必需 |
-| `description` | String | `""` | 参数描述 |
+仓库里也有直接注入 `McpServer` 的例子，例如 `McpToolMainController`。  
+这类写法更适合你在代码里动态管理工具，而不是完全依赖注解生成。
 
-### @Prompt
+如果你当前只是想把业务能力暴露出去，优先用注解方式。  
+当你开始需要更精细的控制时，再考虑直接操作 `McpServer`。
 
-定义 MCP 提示词资源。
+## 常见问题
 
-| 参数 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `name` | String | 必填 | 提示词名称 |
-| `description` | String | `""` | 提示词描述 |
-| `type` | PromptType | 必填 | 提示词类型 |
-| `role` | RoleEnum | `RoleEnum.User` | 提示词角色 |
-| `mimeType` | String | `""` | MIME 类型 |
+### 我已经加了注解，但外部看不到 MCP 能力
 
-**支持的提示词类型：**
-- `TEXT`: 纯文本提示词
-- `IMAGE`: 图片提示词
-- `AUDIO`: 音频提示词
-- `EMBEDDED_RESOURCE`: 嵌入式资源提示词
+优先检查：
 
-```java
-// 文本提示词
-@Prompt(name = "textPrompt", type = PromptType.TEXT)
-public String textPrompt() {
-    return "这是一个文本提示词";
-}
+1. 当前类是否真的被 Feat Cloud 扫描到
+2. 你是否走的是默认 MCP 服务，还是自定义端点
+3. 相关编译期生成代码是否真的已经产生
 
-// 图片提示词
-@Prompt(name = "imagePrompt", type = PromptType.IMAGE, mineType = "image/png")
-public String imagePrompt() {
-    return "base64-encoded-image-data";
-}
-```
+### `@Tool` 和普通 Controller 方法是什么关系
 
-### @Resource
+它们不是二选一的关系。  
+一个类可以既是普通 Controller，又暴露 MCP 能力，但这时你最好明确它的职责边界，不要把所有事情混在一个超大类里。
 
-定义 MCP 资源。
+### 我什么时候才应该用 MCP
 
-| 参数 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `uri` | String | 必填 | 资源 URI |
-| `name` | String | 必填 | 资源名称 |
-| `description` | String | `""` | 资源描述 |
-| `isText` | boolean | `true` | 是否为文本资源 |
-| `mimeType` | String | `""` | MIME 类型 |
+当你的目标不只是“做一个 HTTP 接口”，而是“让模型或 MCP 客户端以结构化方式理解并调用我的应用能力”时，MCP 才真正有意义。
 
-## 选择建议
+## 下一步
 
-| 场景 | 推荐方案 |
-|------|----------|
-| 快速集成、简单工具 | 默认 MCP 服务器 |
-| 多服务管理、精细控制 | 自定义 MCP 服务端点 |
-| 需要自定义端点路径 | 自定义 MCP 服务端点 |
-
-通过 Feat Cloud 的 MCP 支持，你可以轻松为 AI 助手提供上下文信息和工具能力。
+- 如果你还没把普通控制器写熟，先回去看 [Controller 开发实践](/feat/cloud/controller/)
+- 如果你准备把 AI 能力和服务端能力结合起来看，再去读 [Feat AI 简介](/feat/ai/)
+- 如果你只想先完成最小 Web 应用，而不是立刻做 MCP，回到 [构建第一个 Feat Cloud 应用](/feat/cloud/quickstart/)

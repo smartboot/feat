@@ -1,36 +1,43 @@
 ---
-title: 5 分钟上手 Feat Core
-description: 从零创建一个最小 HTTP 服务，并理解 Feat Core 的基本编程模型
+title: 构建第一个 Feat HTTP 服务
+description: 从零创建一个最小 Feat HTTP 服务，运行它，并返回你的第一段自定义响应
 sidebar:
     order: 1
 ---
-import {Aside, TabItem, Tabs} from '@astrojs/starlight/components';
+
+import { Aside, TabItem, Tabs } from '@astrojs/starlight/components';
 import helloFeat from './img/1_2_hello_feat.png';
 import helloWorld from './img/1_2_hello_world.png';
 
-这篇教程只做一件事：让你在最短路径内跑起第一个 Feat HTTP 服务，并知道 Feat Core 的最小编程模型是什么。
+这篇指南带你从零写出一个最小的 Feat HTTP 服务。目标很简单：先把服务跑起来，再把默认输出换成你自己的响应。
 
-## 你会完成什么
+## 你将构建什么
 
-- 在 Maven 项目中引入 `feat-core`
-- 启动一个监听 `8080` 端口的最小 HTTP 服务
-- 返回默认响应和自定义响应
-- 知道接下来应该阅读哪几篇文档继续深入
+你将构建一个监听本机端口的 HTTP 服务。
 
-## 前置条件
+- 第一个版本直接使用 Feat 的默认处理器
+- 第二个版本显式注册 `httpHandler(...)`
+- 最终你会得到一个返回 `Hello World` 的最小服务
 
-- JDK 1.8 或更高版本
+## 你需要什么
+
+- JDK 8 或更高版本
 - Maven 3.0 或更高版本
-- 任意 Java IDE 或命令行环境
-- [curl](https://curl.se/) 或浏览器，用于验证服务输出
+- 一个熟悉的编辑器或 IDE
+- `curl`、浏览器或 `HTTPie`，用于验证接口
 
-:::note
-如果你希望获得更接近 Spring Boot 的注解式开发体验，可以直接阅读 [Feat Cloud 快速入门](/feat/cloud/)。本页聚焦的是 Feat 最底层、最直接的 HTTP 服务编程方式。
-:::
+## 如何完成这篇指南
 
-## 步骤 1：引入依赖
+你可以从头新建一个 Maven 项目，也可以直接参考仓库里的示例代码：
 
-在 `pom.xml` 中添加 `feat-core`：
+- `feat-test/src/main/java/tech/smartboot/feat/demo/HelloFeat.java`
+- `feat-test/src/main/java/tech/smartboot/feat/demo/HelloWorld.java`
+
+如果你只是想快速感受 Feat 的编程模型，建议完整走一遍下面的步骤，不要一开始就跳进配置页。
+
+## 创建项目并添加依赖
+
+新建一个 Maven 项目，在 `pom.xml` 中加入 `feat-core`：
 
 ```xml title="pom.xml"
 <dependency>
@@ -41,12 +48,12 @@ import helloWorld from './img/1_2_hello_world.png';
 ```
 
 <Aside>
-`${feat.version}` 请替换为实际版本，建议使用 Maven Central 上的[最新版本](https://central.sonatype.com/artifact/tech.smartboot.feat/feat-core)。
+`${feat.version}` 请替换为实际版本。最新版本可以在 [Maven Central](https://central.sonatype.com/artifact/tech.smartboot.feat/feat-core) 查看。
 </Aside>
 
-## 步骤 2：启动最小 HTTP 服务
+## 编写第一个服务
 
-创建 `HelloFeat.java`：
+先写最小版本：
 
 ```java title="HelloFeat.java"
 import tech.smartboot.feat.Feat;
@@ -58,19 +65,19 @@ public class HelloFeat {
 }
 ```
 
-这段代码已经完成了一个可工作的 HTTP 服务启动过程：
+这段代码的含义非常直接：
 
-- `Feat.httpServer()` 创建 HTTP 服务器
-- `listen()` 启动监听，默认端口是 `8080`
-- 如果你没有注册自定义处理器，Feat 会返回一个默认响应，便于你先验证链路
+- `Feat.httpServer()` 创建 HTTP 服务
+- `listen()` 启动监听
+- 如果你没有注册任何处理器，Feat 会返回一段默认响应，方便你先确认链路是否正常
 
-## 步骤 3：验证服务是否启动成功
+## 运行并验证
 
-程序启动后，打开浏览器访问 `http://localhost:8080`，或者直接用 `curl`：
+运行 `HelloFeat.main()` 后，请访问 `http://localhost:8080`。
 
 <Tabs>
     <TabItem value="浏览器" label="浏览器">
-        <img src={helloFeat.src} alt="访问默认响应效果图" width="60%" className="shadow"/>
+        <img src={helloFeat.src} alt="Feat 默认响应效果图" width="60%" className="shadow"/>
     </TabItem>
     <TabItem value="curl" label="curl">
         ```shell
@@ -84,15 +91,15 @@ public class HelloFeat {
     </TabItem>
 </Tabs>
 
-到这里，你已经证明三件事都正常：
+如果你看到了 `Hello Feat`，说明三件事已经成立：
 
-- 依赖已经成功引入
-- Feat 服务器已经真正启动
-- 本机 HTTP 请求链路工作正常
+1. 依赖引入没有问题
+2. Feat 服务已经真正启动
+3. 你的本机 HTTP 访问链路是通的
 
-## 步骤 4：返回自定义响应
+## 返回自定义响应
 
-默认响应只适合做连通性验证。接下来给服务器加一个明确的请求处理器，并改用 `8081` 端口，避免与上一步同时运行时冲突。
+接下来，把默认响应换掉：
 
 ```java title="HelloWorld.java"
 import tech.smartboot.feat.Feat;
@@ -106,22 +113,16 @@ public class HelloWorld {
 }
 ```
 
-这个例子里有两个最关键的 API：
+这一次有两个变化：
 
-- `httpHandler(...)`：注册请求处理逻辑
-- `listen(8081)`：指定监听端口
+- 通过 `httpHandler(...)` 明确接管请求处理
+- 把端口改成 `8081`，避免和上一个示例冲突
 
-也就是说，Feat Core 的最小编程模型就是：
-
-1. 创建服务器
-2. 注册处理器
-3. 启动监听
-
-再次验证：
+再访问一次：
 
 <Tabs>
     <TabItem value="浏览器" label="浏览器">
-        <img src={helloWorld.src} alt="访问自定义响应效果图" width="60%" className="shadow"/>
+        <img src={helloWorld.src} alt="Feat 自定义响应效果图" width="60%" className="shadow"/>
     </TabItem>
     <TabItem value="curl" label="curl">
         ```shell
@@ -135,32 +136,39 @@ public class HelloWorld {
     </TabItem>
 </Tabs>
 
+到这里，Feat Core 的最小服务模型就已经很清楚了：
+
+1. 创建服务
+2. 注册处理器
+3. 启动监听
+
+## 接下来可以做什么
+
+如果你准备继续往下走，有三条很自然的路径：
+
+- 想把单个处理器扩展成多条路由：看 [Router 路由组件](/feat/server/router/)
+- 想调端口、线程数、调试模式和上传大小：看 [ServerOptions 配置指南](/feat/server/serveroptions/)
+- 想换成更接近 Spring Boot 的注解式开发体验：看 [Feat Cloud 快速入门](/feat/cloud/quickstart/)
+
 ## 常见问题
 
-### 8080 或 8081 端口已被占用
+### 端口已经被占用
 
-最直接的做法是换端口：
+直接换端口即可：
 
 ```java
 Feat.httpServer().listen(9090);
 ```
 
-### 程序能启动，但浏览器访问不到
+### 程序看起来启动了，但浏览器访问不到
 
-优先检查这三件事：
+先只检查三件事：
 
-1. 你访问的端口是否与 `listen(...)` 一致
-2. 本机防火墙或安全软件是否拦截了端口
-3. 程序是否在启动后马上退出或报错
+1. 访问的端口是否和代码里一致
+2. 程序是否立即退出或报错
+3. 本机防火墙是否拦截了该端口
 
-### 想进一步定制端口、线程数、调试模式
+### 我是不是应该一开始就去看配置项
 
-不要继续在 quickstart 里堆配置，直接进入 [ServerOptions 配置](/feat/server/serveroptions/)。
-
-## 下一步
-
-- [Router 路由组件](/feat/server/router/)：开始处理多路由、路径参数和拦截器
-- [ServerOptions 配置](/feat/server/serveroptions/)：定制端口、线程池、缓冲区和调试选项
-- [异步处理](/feat/server/async/)：处理耗时操作，避免阻塞请求线程
-
-如果你已经确认自己更偏向注解式 Web 开发，可以直接切换到 [Feat Cloud 快速入门](/feat/cloud/)。
+不用。  
+先把服务跑起来，再去看配置页，理解会更快。

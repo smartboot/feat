@@ -1,0 +1,156 @@
+---
+title: 构建第一个 Feat Cloud 应用
+description: 用 Feat Cloud 写出第一个注解式 Web 应用，并验证 Controller 映射已经生效
+sidebar:
+  order: 1
+---
+
+import idea_setting from './img/idea_setting.png';
+import demo from './img/demo.png';
+import { Aside, TabItem, Tabs } from "@astrojs/starlight/components";
+
+<Aside type="caution">
+Feat Cloud 面向 Feat 赞助企业开放。如需使用，请先[成为赞助者](/feat/sponsors/)获取授权。
+</Aside>
+
+这篇指南带你创建一个最小的 Feat Cloud 应用。写完之后，你会得到一个通过 `@Controller` 和 `@RequestMapping` 暴露出来的 HTTP 接口。
+
+## 你将构建什么
+
+你将构建一个最小的注解式 Web 应用：
+
+- 访问 `http://localhost:8080/hello`
+- 返回一段纯文本 `hello Feat Cloud`
+- 启动时在控制台看到路由映射已经注册成功
+
+## 你需要什么
+
+- JDK 8 或更高版本
+- Maven 3.0 或更高版本
+- 一个熟悉的 Java IDE
+
+## 创建项目并添加依赖
+
+新建一个 Maven 项目，在 `pom.xml` 中加入：
+
+```xml title="pom.xml"
+<dependency>
+    <groupId>tech.smartboot.feat</groupId>
+    <artifactId>feat-cloud-starter</artifactId>
+    <version>${feat.version}</version>
+</dependency>
+```
+
+<Aside>
+`${feat.version}` 请替换为实际版本。最新版本可以在 [Maven Central](https://central.sonatype.com/artifact/tech.smartboot.feat/feat-cloud-starter) 查看。
+</Aside>
+
+## 编写控制器
+
+创建 `Bootstrap.java`：
+
+```java title="Bootstrap.java"
+import tech.smartboot.feat.cloud.FeatCloud;
+import tech.smartboot.feat.cloud.annotation.Controller;
+import tech.smartboot.feat.cloud.annotation.RequestMapping;
+
+@Controller
+public class Bootstrap {
+
+    @RequestMapping("/hello")
+    public String helloWorld() {
+        return "hello Feat Cloud";
+    }
+
+    public static void main(String[] args) {
+        FeatCloud.cloudServer().listen();
+    }
+}
+```
+
+这个例子里最关键的三部分分别是：
+
+- `@Controller`：声明这是一个控制器
+- `@RequestMapping("/hello")`：声明访问路径
+- `FeatCloud.cloudServer().listen()`：启动 Feat Cloud 服务
+
+## 运行应用
+
+运行 `Bootstrap.main()`。如果控制台里出现了类似下面的内容，就说明注解扫描和路由注册都成功了：
+
+```text
+Feat Router:
+ |-> /hello ==> Bootstrap@helloWorld
+http://0.0.0.0:8080/
+```
+
+看到 `/hello ==> Bootstrap@helloWorld` 这一行，基本就可以确认当前控制器已经被框架正确识别了。
+
+## 验证结果
+
+访问 `http://localhost:8080/hello`：
+
+<Tabs>
+  <TabItem value="浏览器" label="浏览器">
+    <img src={demo.src} alt="Feat Cloud 浏览器访问效果图" width="60%" className="shadow"/>
+  </TabItem>
+  <TabItem value="curl" label="curl">
+    ```shell
+    curl -i http://localhost:8080/hello
+    HTTP/1.1 200 OK
+    Content-Type: text/plain; charset=utf-8
+
+    hello Feat Cloud
+    ```
+  </TabItem>
+</Tabs>
+
+如果你看到了这段响应，说明下面几件事都已经成立：
+
+- 依赖已经正确引入
+- 控制器已经被扫描到
+- `@RequestMapping` 已经生效
+- 服务端和访问链路都是通的
+
+## 如果控制器没有生效
+
+在 Feat Cloud 里，最常见的问题不是代码本身，而是注解处理或 IDE 编译行为。
+
+如果你修改控制器后发现路由没有更新，可以优先检查 IDEA 设置：
+
+1. 打开 `Preferences`
+2. 进入 `Build, Execution, Deployment -> Build Tools -> Maven -> Runner`
+3. 勾选 `Delegate IDE build/run actions to Maven`
+
+<img src={idea_setting.src} alt="IDEA 配置截图" width="60%" className="shadow"/>
+
+<Aside type="tip">
+不是每个环境都需要这一步。只有当你明确遇到 APT 生成代码不同步时，再去动这个设置。
+</Aside>
+
+## 接下来读什么
+
+这一步之后，最自然的阅读顺序通常是：
+
+- 想继续写接口：看 [Controller 开发实践](/feat/cloud/controller/)
+- 想控制扫描范围、外部 Bean 和静态资源：看 [CloudOptions 配置指南](/feat/cloud/options/)
+- 想接数据库：看 [MyBatis 集成](/feat/cloud/db/)
+
+## 常见问题
+
+### 启动成功了，但访问 `/hello` 返回 404
+
+优先检查：
+
+1. 控制器是否真的加了 `@Controller`
+2. 方法是否真的加了 `@RequestMapping("/hello")`
+3. 修改后是否重新触发了编译和注解处理
+
+### 控制器类不在启动类同一个包下
+
+这种情况下通常要显式设置扫描范围，见 [CloudOptions 配置指南](/feat/cloud/options/) 里的 `setPackages(...)`。
+
+### 我只是想理解 Feat 的底层 HTTP 编程方式
+
+那就先去看 [Feat Core 快速入门](/feat/server/getstart/)。  
+Feat Cloud 不是 Feat 的唯一入口，而是更高一层的开发模型。

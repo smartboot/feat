@@ -1,387 +1,151 @@
 ---
-title: 常见问题解答
-description: Feat 使用过程中的常见问题、排查思路与常用解法
+title: 常见问题排查
+description: 按现象而不是按模块组织的排错索引，帮助你更快定位 Feat 使用中的常见问题
+sidebar:
+  order: 1
 ---
 
-本文档汇总了 Feat 框架使用过程中常见的问题和解决方案，帮助开发者快速排查和解决遇到的问题。
+这页不是“把所有知识点重新讲一遍”。  
+它的目标更像一个排错索引：当你已经遇到某个现象时，先在这里判断应该去哪个方向查。
 
-## 通用问题
+## 先按现象找方向
 
-### Q: Feat 框架的最低 JDK 版本要求是什么？
+### 我连第一段响应都跑不出来
 
-**A:** Feat 框架要求 JDK 1.8 或更高版本。虽然可以在更高版本的 JDK 上运行，但目标编译版本保持为 JDK 8，确保最大的兼容性。
+先看：
 
-### Q: Feat 框架的核心模块有哪些？
+- [构建第一个 Feat HTTP 服务](/feat/server/getstart/)
+- [从哪里开始读 Feat 文档](/feat/getting-started/)
 
-**A:** Feat 框架的核心模块包括：
-- `feat-core`：核心 HTTP 服务器
-- `feat-cloud`：云原生模块
-- `feat-cloud-starter`：快速启动器
-- `feat-ai`：AI 集成模块
+常见原因：
 
-### Q: 如何获取 Feat 框架的最新版本？
+- 依赖没加对
+- 端口访问错了
+- 程序启动后立即退出
 
-**A:** 可以在 Maven Central 仓库查询 Feat 框架的最新版本，也可以在项目的 pom.xml 文件中使用版本属性 `${feat.version}` 来统一管理版本。
+### Feat Cloud 启动了，但控制器不生效
 
-### Q: Feat 框架是否支持 HTTPS？
+优先看：
 
-**A:** 是的，Feat 框架支持 HTTPS。可以通过 `SslPlugin` 插件来配置 HTTPS，详情请参考 [HTTPS 配置](/feat/server/https/) 文档。
+- [构建第一个 Feat Cloud 应用](/feat/cloud/quickstart/)
+- [Controller 开发实践](/feat/cloud/controller/)
+- [CloudOptions 配置指南](/feat/cloud/options/)
 
----
+最常见原因：
 
-## 服务器模块问题
+- 控制器没被扫描到
+- 注解处理没有正确触发
+- 路径理解错了，访问的不是最终映射 URL
 
-### Q: 如何配置服务器端口？
+### 能启动，但访问接口是 404
 
-**A:** 可以通过 `ServerOptions` 来配置服务器端口：
+优先检查：
 
-```java
-Feat.httpServer(options -> {
-    options.port(8080); // 设置端口为 8080
-}).listen();
-```
+1. 路由路径是否与你访问的 URL 完全一致
+2. 你用的是 `Controller` 路径还是 `Router` 路径
+3. 修改代码后是否真的重新编译了
 
-### Q: 如何处理高并发场景？
+如果是 Feat Core 路由问题，看 [Router 路由组件](/feat/server/router/)。  
+如果是 Feat Cloud 控制器问题，看 [Controller 开发实践](/feat/cloud/controller/)。
 
-**A:** 处理高并发场景的建议：
-1. 合理设置线程数：`options.threadNum(Runtime.getRuntime().availableProcessors() * 2)`
-2. 调整缓冲区大小：根据实际数据大小调整 `readBufferSize` 和 `writeBufferSize`
-3. 使用异步处理：对于耗时操作，使用异步处理避免阻塞主线程
-4. 启用连接池：对于频繁的 HTTP 请求，使用连接池管理连接
+### 请求很慢，或者一个慢请求会拖住其他请求
 
-### Q: 服务器启动失败，提示端口被占用怎么办？
+优先看：
 
-**A:** 可以尝试以下解决方案：
-1. 更换服务器端口：`options.port(8081)`
-2. 停止占用端口的进程：使用 `lsof -i :8080` 查找占用端口的进程，然后使用 `kill` 命令停止
-3. 检查是否有其他服务在使用相同端口
+- [异步处理请求](/feat/server/async/)
+- [ServerOptions 配置指南](/feat/server/serveroptions/)
 
-### Q: 如何启用调试模式？
+先不要一上来就怀疑框架本身。  
+很多时候只是你把耗时逻辑直接塞进了同步处理流程里。
 
-**A:** 可以通过 `ServerOptions` 启用调试模式：
+### 想改端口、线程数、上传大小，但不知道该从哪开始
 
-```java
-Feat.httpServer(options -> {
-    options.debug(true); // 启用调试模式
-}).listen();
-```
+直接看 [ServerOptions 配置指南](/feat/server/serveroptions/)。  
+这类问题不需要 FAQ 再重复展开。
 
----
+### MyBatis 接进去了，但查不到数据
 
-## 云模块问题
+优先看：
 
-### Q: Feat Cloud 与 Spring Boot 有什么区别？
+- [在 Feat Cloud 中接入 MyBatis](/feat/cloud/db/)
 
-**A:** Feat Cloud 与 Spring Boot 的主要区别：
-1. **性能**：Feat Cloud 基于 Feat 核心服务器，性能更高
-2. **启动速度**：Feat Cloud 启动速度更快，适合微服务场景
-3. **内存占用**：Feat Cloud 内存占用更小
-4. **编程模型**：Feat Cloud 提供类似 Spring Boot 的注解式编程模型，但更轻量
+重点排查：
 
-### Q: 如何在 Feat Cloud 中使用 MyBatis？
+1. `feat.yaml` 中的 `feat.mybatis.path` 是否写对
+2. `initial-sql` 是否真正执行
+3. mapper 包名是否与 `mybatis-config.xml` 一致
 
-**A:** 可以参考 [MyBatis 集成](/feat/cloud/db/) 文档，Feat Cloud 提供了与 MyBatis 的无缝集成。
+### AI 模型一直没有返回内容
 
-### Q: Feat Cloud 控制器方法的返回值会自动转换为什么格式？
+优先看：
 
-**A:** Feat Cloud 控制器方法的返回值会根据以下规则自动转换：
-1. 如果返回 `String` 类型，直接返回文本
-2. 如果返回其他对象类型，会自动转换为 JSON 格式
-3. 如果返回 `void`，返回空响应
+- [完成第一次 Feat AI 调用](/feat/ai/getstart/)
+- [对话与流式](/feat/ai/chat/)
 
-### Q: 如何处理 Feat Cloud 中的异常？
+典型原因：
 
-**A:** 可以通过以下方式处理异常：
-1. 在控制器方法中使用 try-catch 捕获异常
-2. 实现全局异常处理器
-3. 使用拦截器统一处理异常
+- 本地 Ollama 没起
+- 模型名写错
+- `FEAT_AI_API_KEY` 没进当前运行环境
 
----
+### SSE 连上了，但就是收不到事件
 
-## AI 模块问题
+优先看 [SSE 客户端教程](/feat/client/sse_client/)。
 
-### Q: Feat AI 支持哪些 AI 模型？
+重点确认：
 
-**A:** Feat AI 支持：
-1. 本地模型：通过 Ollama 支持的各种模型（如 Qwen、Llama 等）
-2. 云端模型：Gitee AI 提供的模型
-3. 其他兼容 OpenAI API 格式的模型服务
+1. 响应头里的 `Content-Type` 是否真的是 `text/event-stream`
+2. 你注册的是 `onData(...)` 还是命名事件 `onEvent(...)`
+3. 服务端有没有真正持续输出事件
 
-### Q: 使用 Gitee AI 时提示 API Key 错误怎么办？
+### WebSocket 连不上，或者连上后发消息报错
 
-**A:** 解决方案：
-1. 确保在环境变量中设置了 `FEAT_AI_API_KEY`
-2. 检查 API Key 是否正确
-3. 确保网络连接正常，能够访问 Gitee AI API
+优先看 [连接第一个 WebSocket 服务](/feat/client/ws_client/)。
 
-### Q: 如何调整 AI 模型的生成参数？
+重点确认：
 
-**A:** 可以通过 `ChatModel` 的配置来调整生成参数：
+1. URL 是否用 `ws://` 或 `wss://`
+2. 服务端是否真的支持 WebSocket 升级
+3. 是否在 `onOpen(...)` 之前就发消息了
 
-```java
-ChatModel model = FeatAI.chatModel(opts -> opts
-        .baseUrl("http://localhost:11434/v1")
-        .model("qwen2.5:7b")
-        .temperature(0.7) // 调整生成随机性
-        .maxTokens(1000) // 调整最大生成令牌数
-);
-```
+### HTTPS 跑不起来
 
-### Q: 如何实现多轮对话？
+优先看 [为 Feat 服务启用 HTTPS](/feat/server/https/)。
 
-**A:** 可以通过维护消息列表来实现多轮对话：
+最常见原因：
 
-```java
-List<Message> messages = new ArrayList<>();
-messages.add(new Message(MessageRole.SYSTEM, "你是一个专业的助手"));
-messages.add(new Message(MessageRole.USER, "什么是 Feat 框架？"));
+- 证书路径不对
+- PEM 文件没有打进资源目录
+- 实际访问时仍然用的是 `http://`
 
-model.chat(messages, response -> {
-    String content = response.getContent();
-    messages.add(new Message(MessageRole.ASSISTANT, content));
-    // 继续下一轮对话
-});
-```
+### 应用能本地运行，但一进容器就挂
 
----
+优先看 [交付一个 Feat Cloud 应用](/feat/cloud/deployment/)。
 
-## 客户端模块问题
+先查最朴素的问题：
 
-### Q: HttpClient 如何处理异步请求？
+1. Jar 是否真的打出来了
+2. Dockerfile 的 `COPY` 路径是否正确
+3. 启动主类是否写错
 
-**A:** HttpClient 使用回调机制处理异步请求：
+## 几个经常被问到的基础事实
 
-```java
-httpClient.get("/api/users")
-        .onSuccess(response -> {
-            System.out.println("请求成功: " + response.body());
-        })
-        .onFailure(e -> {
-            System.err.println("请求失败: " + e.getMessage());
-        })
-        .submit();
-```
+### Feat 最低支持什么 JDK
 
-### Q: WebSocket 连接频繁断开怎么办？
+JDK 8 或更高版本。
 
-**A:** 解决方案：
-1. 实现重连机制，在 `onClose` 和 `onError` 回调中触发重连
-2. 使用指数退避策略，避免频繁重试
-3. 检查网络稳定性
-4. 确保服务器端设置了合理的心跳机制
+### Feat 的几个主要模块分别是什么
 
-### Q: SSE 客户端如何处理连接断开？
+- `feat-core`：底层 HTTP 服务能力
+- `feat-cloud` / `feat-cloud-starter`：更高层的注解式开发模型
+- `feat-ai`：AI 能力接入
 
-**A:** 可以通过以下方式处理 SSE 连接断开：
-1. 实现重连机制
-2. 使用 `Last-Event-ID` 头来恢复中断的数据流
-3. 监控连接状态，及时处理异常
+### 返回值什么时候会自动转 JSON
 
-### Q: 如何在客户端设置代理？
+在 Feat Cloud 控制器里，`String` 会按文本返回；对象和集合通常会自动序列化为 JSON。  
+具体表现可以直接看 [Controller 开发实践](/feat/cloud/controller/)。
 
-**A:** 可以通过配置选项设置代理：
+## 如果你还是不确定该看哪一页
 
-```java
-// HttpClient 代理设置
-HttpClient client = new HttpClient("https://api.example.com");
-client.options().proxy("proxy.example.com", 8080, "username", "password");
-
-// WebSocket 代理设置
-WebSocketClient wsClient = new WebSocketClient("wss://example.com/ws");
-wsClient.options().proxy("proxy.example.com", 8080, "username", "password");
-```
-
----
-
-## 部署问题
-
-### Q: 如何将 Feat 应用部署到生产环境？
-
-**A:** 部署 Feat 应用的步骤：
-1. 构建应用：`mvn clean package -DskipTests`
-2. 运行应用：`java -jar your-app.jar`
-3. 配置环境变量：如数据库连接、API Key 等
-4. 配置反向代理：如 Nginx，处理 HTTPS 和负载均衡
-
-### Q: 如何在 Docker 中运行 Feat 应用？
-
-**A:** 可以创建以下 Dockerfile：
-
-```dockerfile
-FROM openjdk:8-jre-alpine
-COPY target/your-app.jar /app/app.jar
-EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
-```
-
-然后构建并运行容器：
-```bash
-docker build -t your-app .
-docker run -p 8080:8080 your-app
-```
-
-### Q: 如何监控 Feat 应用的运行状态？
-
-**A:** 可以通过以下方式监控 Feat 应用：
-1. 使用 JVM 监控工具：如 JConsole、VisualVM
-2. 实现健康检查端点
-3. 使用监控系统：如 Prometheus + Grafana
-4. 配置日志系统：如 ELK 堆栈
-
----
-
-## 性能问题
-
-### Q: 如何优化 Feat 应用的性能？
-
-**A:** 性能优化建议：
-1. 合理设置线程数：根据 CPU 核数和应用类型调整
-2. 调整缓冲区大小：根据实际数据大小调整
-3. 使用连接池：对于数据库和 HTTP 连接
-4. 启用响应压缩：对于大响应
-5. 优化代码：减少不必要的计算和 I/O 操作
-6. 使用缓存：对于频繁访问的数据
-
-### Q: 如何进行性能测试？
-
-**A:** 可以使用以下工具进行性能测试：
-1. JMeter：功能强大的负载测试工具
-2. Gatling：基于 Scala 的高性能负载测试工具
-3. ab (Apache Benchmark)：简单的 HTTP 基准测试工具
-4. wrk：现代 HTTP 基准测试工具
-
-### Q: Feat 框架的性能如何？
-
-**A:** Feat 框架具有以下性能特点：
-1. 基于 Java NIO 实现，非阻塞 I/O
-2. 轻量级设计，启动速度快
-3. 内存占用小
-4. 支持高并发
-5. 适合构建高性能的 Web 应用和微服务
-
----
-
-## 安全问题
-
-### Q: 如何保护 Feat 应用的安全？
-
-**A:** 安全建议：
-1. 使用 HTTPS：保护数据传输
-2. 实现认证和授权：如 JWT
-3. 输入验证：防止注入攻击
-4. 输出编码：防止 XSS 攻击
-5. 限制请求大小：防止 DoS 攻击
-6. 定期更新依赖：修复安全漏洞
-
-### Q: 如何处理 CORS 跨域请求？
-
-**A:** 可以通过拦截器实现 CORS 支持：
-
-```java
-@Controller
-public class CorsInterceptor {
-    @InterceptorMapping("/*")
-    public Interceptor corsInterceptor() {
-        return new Interceptor() {
-            @Override
-            public void intercept(Context context, CompletableFuture<Void> completableFuture, Chain chain) throws Throwable {
-                context.Response.setHeader("Access-Control-Allow-Origin", "*");
-                context.Response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
-                context.Response.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-                
-                if ("OPTIONS".equals(context.Request.getMethod())) {
-                    context.Response.setHttpStatus(HttpStatus.OK);
-                    completableFuture.complete(null);
-                    return;
-                }
-                
-                chain.proceed(context, completableFuture);
-            }
-        };
-    }
-}
-```
-
-### Q: 如何防止 CSRF 攻击？
-
-**A:** 防止 CSRF 攻击的建议：
-1. 使用 CSRF Token
-2. 验证 Referer 头
-3. 使用 SameSite Cookie 属性
-4. 实现正确的 CORS 策略
-
----
-
-## 其他问题
-
-### Q: 如何获取 Feat 框架的技术支持？
-
-**A:** 可以通过以下方式获取技术支持：
-1. 在 Gitee 仓库提交 Issue
-2. 参与 Feat 社区讨论
-3. 查阅官方文档
-4. 参考示例代码
-
-### Q: Feat 框架的未来规划是什么？
-
-**A:** Feat 框架的未来规划包括：
-1. 增强 AI 集成能力
-2. 提供更多云原生功能
-3. 支持更多数据库和中间件集成
-4. 持续优化性能和稳定性
-5. 丰富生态系统
-
-### Q: 如何贡献代码到 Feat 框架？
-
-**A:** 贡献代码的步骤：
-1. Fork Gitee 仓库
-2. 克隆到本地
-3. 创建分支并进行修改
-4. 提交 Pull Request
-5. 等待审核和合并
-
-### Q: Feat 框架的开源协议是什么？
-
-**A:** Feat 框架采用 Apache 2.0 开源协议，您可以免费商用、自由修改和分发，无需申请授权。
-
----
-
-## 故障排除指南
-
-### 常见错误及解决方案
-
-| 错误信息 | 可能原因 | 解决方案 |
-|---------|---------|----------|
-| `Port already in use` | 端口被占用 | 更换端口或停止占用端口的进程 |
-| `Connection refused` | 服务器未启动或地址错误 | 检查服务器是否运行，确认地址正确 |
-| `404 Not Found` | 路径错误 | 检查请求路径是否正确 |
-| `401 Unauthorized` | 认证失败 | 检查认证信息是否正确 |
-| `500 Internal Server Error` | 服务器内部错误 | 检查服务器日志，排查代码问题 |
-| `NoClassDefFoundError` | 依赖缺失 | 检查依赖配置，确保所有依赖都已添加 |
-| `OutOfMemoryError` | 内存不足 | 增加 JVM 内存，优化代码减少内存使用 |
-| `SSLHandshakeException` | SSL 证书问题 | 检查证书是否有效，是否添加到信任库 |
-
-### 调试技巧
-
-1. **启用调试模式**：在开发环境中启用调试模式，查看详细日志
-2. **检查日志**：查看应用日志和服务器日志，了解错误详情
-3. **使用工具**：使用 Postman、curl 等工具测试 API
-4. **分步排查**：从简单场景开始，逐步复杂，定位问题所在
-5. **查阅文档**：参考官方文档和示例代码
-6. **搜索问题**：在社区和论坛中搜索类似问题的解决方案
-
-### 性能排查
-
-1. **监控资源使用**：监控 CPU、内存、网络等资源使用情况
-2. **分析瓶颈**：使用性能分析工具找出性能瓶颈
-3. **优化代码**：针对瓶颈进行代码优化
-4. **调整配置**：根据实际情况调整服务器配置
-5. **压测验证**：使用压测工具验证优化效果
-
----
-
-## 总结
-
-本文档涵盖了 Feat 框架使用过程中的常见问题和解决方案，希望能帮助开发者快速排查和解决遇到的问题。如果遇到文档中未涵盖的问题，建议查阅官方文档、示例代码或在社区中寻求帮助。
-
-Feat 框架团队致力于提供高质量的文档和支持，不断完善框架功能和性能，为开发者提供更好的开发体验。
+回到 [从哪里开始读 Feat 文档](/feat/getting-started/)。  
+很多“排错”其实是因为一开始就走错了文档路径。

@@ -1,798 +1,234 @@
 ---
-title: Controller 开发实践
-description: 如何使用 Feat Cloud Controller 注解构建 Web 应用程序
+title: 编写 Feat Cloud 控制器
+description: 用 Feat Cloud 的注解式控制器构建接口，并掌握参数绑定、路径参数与请求方法映射
 sidebar:
-    order: 4
+    order: 2
 ---
+
 import { Aside } from '@astrojs/starlight/components'
 
-本章介绍 Feat Cloud 中基于注解的 Controller 编程模型，包括路由映射、参数绑定、拦截器等核心功能。
+这篇教程假设你已经完成 [Feat Cloud 快速入门](/feat/cloud/quickstart/)，并且已经能跑起一个最小控制器。现在我们进一步把它写成更像真实项目的接口层。
 
-<Aside type="tip">
-本章假设你已熟悉 Java 注解和 HTTP 协议基础。如需了解 Feat Cloud 基础概念，请先阅读 [Feat Cloud 入门](/feat/cloud/)。
-</Aside>
+## 你会完成什么
 
----
+- 使用 `@Controller` 定义控制器和基础路径
+- 使用 `@RequestMapping` 映射不同的 URL 和 HTTP 方法
+- 使用 `@Param` 读取查询参数
+- 使用 `@PathParam` 读取路径参数
+- 了解 `Session`、`Context`、`AsyncResponse` 这几类常见注入参数
 
-## API 接口说明
+## 步骤 1：写一个可工作的控制器
 
-### 核心注解
+下面是一个最小但足够真实的控制器示例：
 
-| 注解 | 作用 | 适用场景 |
-|------|------|----------|
-| `@Controller` | 标识 HTTP 请求处理器 | 定义控制器类 |
-| `@RequestMapping` | 映射 HTTP 请求到处理方法 | 定义 API 接口路径和方法 |
-| `@Param` | 绑定 URL 查询参数 | 获取 URL 中的查询参数 |
-| `@PathParam` | 绑定 URL 路径变量 | 获取 URL 路径中的变量 |
-| `@InterceptorMapping` | 配置请求拦截器 | 实现权限验证、日志记录等 |
-| `@PostConstruct` | 控制器初始化方法 | 执行初始化逻辑 |
-| `@PreDestroy` | 控制器销毁方法 | 执行清理逻辑 |
+```java title="UserController.java"
+import tech.smartboot.feat.cloud.annotation.Controller;
+import tech.smartboot.feat.cloud.annotation.Param;
+import tech.smartboot.feat.cloud.annotation.PathParam;
+import tech.smartboot.feat.cloud.annotation.RequestMapping;
+import tech.smartboot.feat.cloud.annotation.RequestMethod;
 
----
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
-## @Controller
+@Controller("users")
+public class UserController {
 
-`@Controller` 注解用于标识一个类作为 HTTP 请求处理器。被标记的类中的方法可以通过 `@RequestMapping` 注解映射到特定的 URL 路径。
-
-### 基础用法
-
-最简单的用法是不带任何参数：
-
-```java
-@Controller
-public class HelloController {
-
-    @RequestMapping("/hello")
+    @RequestMapping(value = "/hello", method = RequestMethod.GET)
     public String hello() {
-        return "Hello, Feat Cloud!";
-    }
-}
-```
-
-上述代码定义了一个 `HelloController`，其 `hello()` 方法处理所有发送到 `/hello` 的 HTTP 请求。
-
-### 指定基础路径
-
-通过 `value` 参数为控制器指定基础路径：
-
-```java
-@Controller("/api")
-public class ApiController {
-
-    @RequestMapping("/users")
-    public List<User> getUsers() {
-        return userService.getAllUsers();
-    }
-}
-```
-
-此时 `getUsers()` 方法处理的是 `/api/users` 请求。
-
-### 启用响应压缩
-
-通过 `gzip` 参数启用 Gzip 压缩，并可通过 `gzipThreshold` 设置压缩阈值：
-
-```java
-@Controller(value = "/api", gzip = true, gzipThreshold = 512)
-public class CompressedController {
-
-    @RequestMapping("/large-data")
-    public String getLargeData() {
-        // 当响应内容超过 512 字节时自动启用 Gzip 压缩
-        return generateLargeContent();
-    }
-}
-```
-
-**参数说明：**
-
-| 参数 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `value` | `String` | `""` | 控制器基础路径前缀 |
-| `gzip` | `boolean` | `false` | 是否启用 Gzip 压缩 |
-| `gzipThreshold` | `int` | `256` | 压缩阈值（字节），仅当响应超过此值时启用压缩 |
-
-<Aside type="caution">
-`gzipThreshold` 仅在 `gzip = true` 时生效。建议根据实际响应大小调整阈值，避免对小响应进行无意义的压缩。
-</Aside>
-
----
-
-## @RequestMapping
-
-`@RequestMapping` 注解用于将 HTTP 请求映射到处理方法。它可以配置请求路径和 HTTP 方法。
-
-### 映射路径
-
-`value` 属性指定请求路径：
-
-```java
-@Controller("/api")
-public class UserController {
-
-    // 处理 GET /api/users
-    @RequestMapping("/users")
-    public List<User> getAllUsers() {
-        return userService.getAllUsers();
+        return "hello controller";
     }
 
-    // 处理 GET /api/users/{id}
-    @RequestMapping("/users/{id}")
-    public User getUser(@PathParam("id") String id) {
-        return userService.getUserById(id);
-    }
-}
-```
-
-### 限定 HTTP 方法
-
-`method` 属性指定处理的 HTTP 方法：
-
-```java
-@Controller("/api/users")
-public class UserController {
-
-    // GET /api/users
-    @RequestMapping(method = RequestMethod.GET)
-    public List<User> getAllUsers() {
-        return userService.getAllUsers();
-    }
-
-    // POST /api/users
-    @RequestMapping(method = RequestMethod.POST)
-    public User createUser(User user) {
-        return userService.createUser(user);
-    }
-
-    // PUT /api/users/{id}
-    @RequestMapping(value = "/{id}", method = RequestMethod.PUT)
-    public User updateUser(@PathParam("id") String id, User user) {
-        return userService.updateUser(id, user);
-    }
-
-    // DELETE /api/users/{id}
-    @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
-    public void deleteUser(@PathParam("id") String id) {
-        userService.deleteUser(id);
-    }
-}
-```
-
-**支持的 HTTP 方法：** `GET`, `HEAD`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS`, `TRACE`
-
-<Aside type="tip">
-建议显式指定 `method` 参数，明确接口支持的 HTTP 方法，使 API 设计更清晰。
-</Aside>
-
-### 路径匹配规则
-
-| 模式 | 说明 | 示例 |
-|------|------|------|
-| `/path` | 精确匹配 | 只匹配 `/path` |
-| `/path/{id}` | 路径变量 | 匹配 `/path/123`, `/path/abc` |
-| `/path/*` | 通配符 | 匹配 `/path/foo`, `/path/bar` |
-
----
-
-## @Param
-
-`@Param` 注解用于将 URL 查询参数绑定到方法参数。
-
-### 单个参数
-
-```java
-@Controller("/api")
-public class UserController {
-
-    // GET /api/search?keyword=feat
     @RequestMapping(value = "/search", method = RequestMethod.GET)
-    public List<User> searchUsers(@Param("keyword") String keyword) {
-        return userService.searchByKeyword(keyword);
+    public String search(@Param("keyword") String keyword) {
+        return "search: " + keyword;
+    }
+
+    @RequestMapping(value = "/:username", method = RequestMethod.GET)
+    public Map<String, Object> profile(@PathParam("username") String username) {
+        Map<String, Object> data = new HashMap<>();
+        data.put("username", username);
+        data.put("roles", Collections.singletonList("user"));
+        return data;
     }
 }
 ```
 
-### 多个参数
+如果你的启动类和控制器不在同一个根包下，启动时要显式指定扫描范围：
 
-```java
-@Controller("/api")
-public class UserController {
+```java title="Bootstrap.java"
+import tech.smartboot.feat.cloud.FeatCloud;
 
-    // GET /api/filter?minAge=20&maxAge=30
-    @RequestMapping(value = "/filter", method = RequestMethod.GET)
-    public List<User> filterByAge(@Param("minAge") Integer minAge,
-                                  @Param("maxAge") Integer maxAge) {
-        return userService.filterByAgeRange(minAge, maxAge);
+public class Bootstrap {
+    public static void main(String[] args) {
+        FeatCloud.cloudServer(opts -> opts.setPackages("com.example")).listen();
     }
 }
 ```
 
-### 可选参数处理
+## 步骤 2：理解三种最常见的映射方式
 
-查询参数可能为空，建议进行空值检查：
+### 1. 基础路径
+
+`@Controller("users")` 表示这个控制器下的方法都会挂在 `/users` 之下。
+
+例如：
+
+- `@Controller("users") + @RequestMapping("/hello")`
+- 最终路径就是 `/users/hello`
+
+### 2. 查询参数
+
+`@Param("keyword")` 用于读取 URL 查询参数：
 
 ```java
 @RequestMapping(value = "/search", method = RequestMethod.GET)
-public List<User> searchUsers(@Param("keyword") String keyword) {
-    if (keyword == null || keyword.trim().isEmpty()) {
-        return Collections.emptyList();
-    }
-    return userService.searchByKeyword(keyword);
+public String search(@Param("keyword") String keyword) {
+    return "search: " + keyword;
 }
 ```
 
-### 默认值处理
+调用方式：
 
-对于可选参数，可以提供默认值：
+```shell
+curl "http://localhost:8080/users/search?keyword=feat"
+```
+
+### 3. 路径参数
+
+`@PathParam("username")` 用于读取 URL 路径中的变量：
 
 ```java
-@RequestMapping(value = "/paginate", method = RequestMethod.GET)
-public List<User> paginateUsers(@Param("page") Integer page, @Param("size") Integer size) {
-    int pageNum = page != null ? page : 1;
-    int pageSize = size != null ? size : 10;
-    return userService.paginate(pageNum, pageSize);
+@RequestMapping(value = "/:username", method = RequestMethod.GET)
+public String profile(@PathParam("username") String username) {
+    return "hello " + username;
 }
 ```
 
----
+调用方式：
 
-## @PathParam
-
-`@PathParam` 注解用于将 URL 路径变量绑定到方法参数。
-
-### 单个路径变量
-
-```java
-@Controller("/api")
-public class UserController {
-
-    // GET /api/users/123
-    @RequestMapping(value = "/users/{id}", method = RequestMethod.GET)
-    public User getUserById(@PathParam("id") Integer id) {
-        return userService.getUserById(id);
-    }
-}
-```
-
-### 多个路径变量
-
-```java
-@Controller("/api")
-public class OrderController {
-
-    // GET /api/users/123/orders/456
-    @RequestMapping(value = "/users/{userId}/orders/{orderId}", method = RequestMethod.GET)
-    public Order getOrder(@PathParam("userId") Integer userId,
-                          @PathParam("orderId") String orderId) {
-        return orderService.getOrder(userId, orderId);
-    }
-}
+```shell
+curl http://localhost:8080/users/smartboot
 ```
 
 <Aside type="tip">
-`@Param` 用于查询参数（`?key=value`），`@PathParam` 用于路径变量（`/{id}`）。两者可以在同一个方法中组合使用。
-
-```java
-// GET /api/users/123/orders?status=paid
-@RequestMapping(value = "/users/{userId}/orders", method = RequestMethod.GET)
-public List<Order> getUserOrders(@PathParam("userId") Integer userId,
-                                  @Param("status") String status) {
-    return orderService.getOrders(userId, status);
-}
-```
+在当前仓库的真实示例里，路径参数普遍使用 `:param` 形式，例如 `/:loggerName`、`/session/:abc`。教程也优先采用这套写法。
 </Aside>
 
----
+## 步骤 3：验证控制器行为
 
-## 请求体绑定
+如果你按上面的例子运行控制器，可以依次验证：
 
-Feat Cloud 支持将 HTTP 请求体自动绑定到方法参数对象，无需额外注解。
-
-### 基本用法
-
-首先定义一个 POJO：
-
-```java
-public class User {
-    private Integer id;
-    private String name;
-    private Integer age;
-    private String email;
-
-    // 必须有公共的无参构造方法
-    public User() {}
-
-    // Getters and Setters
-    public Integer getId() { return id; }
-    public void setId(Integer id) { this.id = id; }
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-    public Integer getAge() { return age; }
-    public void setAge(Integer age) { this.age = age; }
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
-}
+```shell
+curl http://localhost:8080/users/hello
+curl "http://localhost:8080/users/search?keyword=feat"
+curl http://localhost:8080/users/smartboot
 ```
 
-然后在控制器方法中使用该类型作为参数：
+预期结果大致如下：
+
+```text
+hello controller
+search: feat
+{"username":"smartboot","roles":["user"]}
+```
+
+这里顺便能看到 Feat Cloud 的一个重要特征：
+
+- 返回 `String` 时，直接输出文本
+- 返回对象或集合时，会自动序列化为 JSON
+
+## 请求方法该怎么写
+
+如果同一路径要区分 `GET` 和 `POST`，显式指定 `RequestMethod`：
 
 ```java
-@Controller("/api/users")
-public class UserController {
+import tech.smartboot.feat.cloud.annotation.RequestMethod;
 
-    // POST /api/users
-    // Content-Type: application/json
-    // Body: {"name": "张三", "age": 25, "email": "zhangsan@example.com"}
-    @RequestMapping(method = RequestMethod.POST)
-    public User createUser(User user) {
-        return userService.createUser(user);
+@Controller("articles")
+public class ArticleController {
+
+    @RequestMapping(value = "/", method = RequestMethod.GET)
+    public String list() {
+        return "list articles";
     }
 
-    // PUT /api/users/{id}
-    @RequestMapping(value = "/{id}", method = RequestMethod.PUT)
-    public User updateUser(@PathParam("id") Integer id, User user) {
-        return userService.updateUser(id, user);
+    @RequestMapping(value = "/", method = RequestMethod.POST)
+    public String create() {
+        return "create article";
     }
 }
 ```
 
-### 绑定要求
+这比只写一个宽泛映射更清晰，也更适合真实 API 设计。
 
-<Aside type="tip">
-自动绑定要求：
-1. JSON 字段名与 Java 属性名一致（支持驼峰命名转换）
-2. 类必须有公共的无参构造方法
-3. 属性必须有公共的 setter 方法
-</Aside>
+## 常见注入参数
 
-### 复杂对象绑定
+除了 `@Param` 和 `@PathParam`，控制器方法里还有几类常见参数可直接注入。
 
-支持嵌套对象的自动绑定：
+### Session
 
 ```java
-public class Order {
-    private Integer id;
-    private String orderNo;
-    private User user;
-    private List<OrderItem> items;
-    
-    // 无参构造方法和 setter/getter
-}
+import tech.smartboot.feat.core.server.Session;
 
-public class OrderItem {
-    private Integer id;
-    private String productName;
-    private Integer quantity;
-    
-    // 无参构造方法和 setter/getter
-}
-
-@Controller("/api/orders")
-public class OrderController {
-    @RequestMapping(method = RequestMethod.POST)
-    public Order createOrder(Order order) {
-        return orderService.createOrder(order);
-    }
+@RequestMapping("/session")
+public String session(Session session) {
+    return session.getSessionId();
 }
 ```
 
----
+适合读取或写入会话信息。
 
-## @InterceptorMapping
-
-`@InterceptorMapping` 注解用于配置请求拦截器，可以在请求处理前后执行自定义逻辑，如权限验证、日志记录、跨域处理等。
-
-### 基本用法
-
-拦截器方法必须返回 [`Interceptor`](https://gitee.com/smartboot/feat/blob/master/feat-core/src/main/java/tech/smartboot/feat/router/Interceptor.java) 类型：
+### Context
 
 ```java
-@Controller
-public class AuthInterceptor {
+import tech.smartboot.feat.router.Context;
 
-    @InterceptorMapping("/api/admin/*")
-    public Interceptor authInterceptor() {
-        return new Interceptor() {
-            @Override
-            public void intercept(Context context, CompletableFuture<Void> completableFuture,
-                                  Chain chain) throws Throwable {
-                // 前置处理：验证权限
-                String token = context.Request.getHeader("Authorization");
-                if (token == null || !isValidToken(token)) {
-                    context.Response.setHttpStatus(HttpStatus.UNAUTHORIZED);
-                    context.Response.write("Unauthorized".getBytes());
-                    completableFuture.complete(null);
-                    return;
-                }
-
-                // 继续执行后续拦截器和目标处理器
-                chain.proceed(context, completableFuture);
-
-                // 后置处理：记录日志
-                System.out.println("访问完成: " + context.Request.getRequestURI());
-            }
-        };
-    }
-
-    private boolean isValidToken(String token) {
-        return token.startsWith("Bearer ") && token.length() > 10;
-    }
+@RequestMapping("/context")
+public String context(Context context) {
+    return context.Request.getRequestURI();
 }
 ```
 
-### 多个拦截路径
+适合拿到底层请求上下文，做更细的控制。
+
+### AsyncResponse
 
 ```java
-@InterceptorMapping({"/api/admin/*", "/api/secure/*"})
-public Interceptor authInterceptor() {
-    // ...
+import tech.smartboot.feat.cloud.AsyncResponse;
+
+@RequestMapping("/async")
+public AsyncResponse async() {
+    return new AsyncResponse();
 }
 ```
 
-### 跨域处理示例
+适合后续做异步返回或延迟完成响应。真正的异步处理细节建议放到专门的异步教程里学。
 
-```java
-@Controller
-public class CorsInterceptor {
+## 常见问题
 
-    @InterceptorMapping("/*")
-    public Interceptor corsInterceptor() {
-        return new Interceptor() {
-            @Override
-            public void intercept(Context context, CompletableFuture<Void> completableFuture,
-                                  Chain chain) throws Throwable {
-                // 添加跨域响应头
-                context.Response.setHeader("Access-Control-Allow-Origin", "*");
-                context.Response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
-                context.Response.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+### 控制器写好了，但访问还是 404
 
-                // 处理预检请求
-                if ("OPTIONS".equals(context.Request.getMethod())) {
-                    context.Response.setHttpStatus(HttpStatus.OK);
-                    completableFuture.complete(null);
-                    return;
-                }
+优先检查：
 
-                chain.proceed(context, completableFuture);
-            }
-        };
-    }
-}
-```
+1. 控制器类是否在 Feat Cloud 的扫描范围内
+2. `@Controller` 和 `@RequestMapping` 是否都已加上
+3. 实际访问路径是否等于“控制器路径 + 方法路径”
 
-### 日志记录示例
+### 查询参数取不到值
 
-```java
-@Controller
-public class LoggingInterceptor {
+优先检查 URL 里参数名是否与 `@Param("...")` 完全一致。
 
-    @InterceptorMapping("/api/*")
-    public Interceptor loggingInterceptor() {
-        return new Interceptor() {
-            @Override
-            public void intercept(Context context, CompletableFuture<Void> completableFuture,
-                                  Chain chain) throws Throwable {
-                long startTime = System.currentTimeMillis();
-                
-                // 继续执行
-                chain.proceed(context, completableFuture);
-                
-                // 记录请求处理时间
-                long endTime = System.currentTimeMillis();
-                System.out.println(context.Request.getMethod() + " " + context.Request.getRequestURI() + " - " + (endTime - startTime) + "ms");
-            }
-        };
-    }
-}
-```
+### 路径参数没有绑定成功
 
-**路径匹配规则：**
+优先检查：
 
-| 模式 | 说明 | 示例 |
-|------|------|------|
-| `/path` | 精确匹配 | 只匹配 `/path` |
-| `/path/*` | 匹配子路径 | 匹配 `/path/foo`, `/path/bar` |
-| `/*` | 匹配所有 | 匹配所有请求 |
+1. 路由模板是否写成 `/:username`
+2. `@PathParam("username")` 的名字是否和模板保持一致
 
-<Aside type="caution">
-拦截器按定义顺序执行。如果拦截器未调用 `chain.proceed()`，请求处理链将中断，后续拦截器和目标处理器不会执行。
-</Aside>
+## 下一步
 
----
-
-## 生命周期管理
-
-`@PostConstruct` 和 `@PreDestroy` 注解用于管理控制器的生命周期，分别在实例创建后和销毁前执行。
-
-### 基本用法
-
-```java
-@Controller("/api/users")
-public class UserController {
-
-    private Map<Integer, User> userStore;
-
-    @PostConstruct
-    public void init() {
-        System.out.println("Controller 初始化完成");
-        userStore = new ConcurrentHashMap<>();
-        // 加载初始数据、建立数据库连接等
-    }
-
-    @RequestMapping(method = RequestMethod.GET)
-    public List<User> getAllUsers() {
-        return new ArrayList<>(userStore.values());
-    }
-
-    @PreDestroy
-    public void destroy() {
-        System.out.println("Controller 正在销毁");
-        // 关闭连接、释放资源、保存数据等
-        userStore.clear();
-    }
-}
-```
-
-**执行时机：**
-
-| 注解 | 执行时机 | 常见用途 |
-|------|----------|----------|
-| `@PostConstruct` | Controller 实例创建后，首次处理请求前 | 加载配置、初始化缓存、建立连接 |
-| `@PreDestroy` | 应用关闭，Controller 实例销毁前 | 关闭连接、释放资源、保存数据 |
-
----
-
-## 访问请求上下文
-
-通过方法参数注入 [`Context`](https://gitee.com/smartboot/feat/blob/master/feat-core/src/main/java/tech/smartboot/feat/router/Context.java) 对象，可以获取完整的请求信息：
-
-### 基本用法
-
-```java
-@Controller("/api")
-public class ApiController {
-
-    @RequestMapping("/request-info")
-    public Map<String, Object> getRequestInfo(Context context) {
-        Map<String, Object> info = new HashMap<>();
-
-        // 获取请求头
-        info.put("contentType", context.Request.getHeader("Content-Type"));
-        info.put("userAgent", context.Request.getHeader("User-Agent"));
-
-        // 获取请求信息
-        info.put("method", context.Request.getMethod());
-        info.put("uri", context.Request.getRequestURI());
-        info.put("remoteAddr", context.Request.getRemoteAddr());
-
-        // 获取请求体（字节数组）
-        byte[] body = context.Request.getBody();
-
-        return info;
-    }
-}
-```
-
-### 响应控制
-
-通过 Context 对象可以直接控制响应：
-
-```java
-@Controller("/api")
-public class ResponseController {
-
-    @RequestMapping("/custom-response")
-    public void customResponse(Context context) {
-        // 设置响应状态码
-        context.Response.setHttpStatus(HttpStatus.CREATED);
-        
-        // 设置响应头
-        context.Response.setHeader("X-Custom-Header", "value");
-        
-        // 写入响应体
-        context.Response.write("Custom response".getBytes());
-    }
-}
-```
-
----
-
-## 最佳实践
-
-### 控制器设计
-
-1. **单一职责**：每个控制器只负责一个业务领域
-2. **合理命名**：控制器类名使用 `Controller` 后缀，方法名使用动词开头
-3. **路径设计**：使用 RESTful 风格的路径设计
-4. **参数验证**：对所有输入参数进行验证
-5. **异常处理**：统一处理业务异常，返回标准错误格式
-
-### 性能优化
-
-1. **缓存使用**：对于频繁访问的数据，使用 `@PostConstruct` 初始化缓存
-2. **响应压缩**：对大响应启用 Gzip 压缩
-3. **异步处理**：对于耗时操作，考虑使用异步处理
-4. **避免重复代码**：抽取公共逻辑到拦截器或服务层
-
-### 安全实践
-
-1. **权限控制**：使用拦截器实现统一的权限验证
-2. **输入验证**：对所有用户输入进行严格验证
-3. **防止注入**：使用参数绑定而非字符串拼接
-4. **敏感信息保护**：避免在响应中包含敏感信息
-
----
-
-## 常见问题与解决方案
-
-### 1. 请求体绑定失败
-
-**问题**：JSON 请求体无法绑定到对象
-
-**可能原因**：
-- 缺少无参构造方法
-- 缺少 setter 方法
-- JSON 字段名与 Java 属性名不匹配
-- Content-Type 不是 application/json
-
-**解决方案**：
-- 添加公共的无参构造方法
-- 为所有属性添加 setter 方法
-- 确保 JSON 字段名与 Java 属性名一致
-- 确保请求头 Content-Type: application/json
-
-### 2. 路径变量绑定失败
-
-**问题**：`@PathParam` 无法绑定路径变量
-
-**可能原因**：
-- 路径变量名与注解参数不匹配
-- 类型转换失败
-
-**解决方案**：
-- 确保路径变量名与 `@PathParam` 参数一致
-- 使用合适的类型，或在方法内进行类型转换
-
-### 3. 拦截器不生效
-
-**问题**：定义的拦截器没有执行
-
-**可能原因**：
-- 路径匹配规则不正确
-- 拦截器方法返回 null
-- 拦截器未调用 `chain.proceed()`
-
-**解决方案**：
-- 检查路径匹配规则
-- 确保拦截器方法返回有效的 Interceptor 对象
-- 确保调用 `chain.proceed()` 继续执行
-
-### 4. 响应压缩不生效
-
-**问题**：启用了 gzip 但响应未压缩
-
-**可能原因**：
-- 响应内容小于 gzipThreshold
-- 客户端不支持压缩
-- 配置顺序错误
-
-**解决方案**：
-- 调整 gzipThreshold 值
-- 检查客户端 Accept-Encoding 头
-- 确保 gzip 配置正确
-
----
-
-## 完整示例
-
-以下是一个完整的 RESTful API 控制器，综合展示了本章的所有功能：
-
-```java
-@Controller("/api/users")
-public class UserController {
-
-    private static final Map<Integer, User> userStore = new ConcurrentHashMap<>();
-    private static final AtomicInteger idGenerator = new AtomicInteger(1);
-
-    @PostConstruct
-    public void init() {
-        // 初始化测试数据
-        User user = new User();
-        user.setId(idGenerator.getAndIncrement());
-        user.setName("张三");
-        user.setAge(25);
-        userStore.put(user.getId(), user);
-    }
-
-    // 查询所有用户
-    @RequestMapping(method = RequestMethod.GET)
-    public List<User> getAllUsers() {
-        return new ArrayList<>(userStore.values());
-    }
-
-    // 根据 ID 查询用户
-    @RequestMapping(value = "/{id}", method = RequestMethod.GET)
-    public User getUserById(@PathParam("id") Integer id) {
-        return userStore.get(id);
-    }
-
-    // 创建用户（请求体自动绑定）
-    @RequestMapping(method = RequestMethod.POST)
-    public User createUser(User user) {
-        user.setId(idGenerator.getAndIncrement());
-        userStore.put(user.getId(), user);
-        return user;
-    }
-
-    // 更新用户
-    @RequestMapping(value = "/{id}", method = RequestMethod.PUT)
-    public User updateUser(@PathParam("id") Integer id, User user) {
-        User existing = userStore.get(id);
-        if (existing != null) {
-            existing.setName(user.getName());
-            existing.setAge(user.getAge());
-        }
-        return existing;
-    }
-
-    // 删除用户
-    @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
-    public Map<String, Object> deleteUser(@PathParam("id") Integer id) {
-        Map<String, Object> result = new HashMap<>();
-        User removed = userStore.remove(id);
-        result.put("success", removed != null);
-        return result;
-    }
-
-    // 按关键字搜索（查询参数）
-    @RequestMapping(value = "/search", method = RequestMethod.GET)
-    public List<User> searchUsers(@Param("keyword") String keyword) {
-        if (keyword == null || keyword.trim().isEmpty()) {
-            return Collections.emptyList();
-        }
-        List<User> result = new ArrayList<>();
-        for (User user : userStore.values()) {
-            if (user.getName().contains(keyword)) {
-                result.add(user);
-            }
-        }
-        return result;
-    }
-
-    // 分页查询
-    @RequestMapping(value = "/paginate", method = RequestMethod.GET)
-    public Map<String, Object> paginateUsers(@Param("page") Integer page, @Param("size") Integer size) {
-        int pageNum = page != null ? page : 1;
-        int pageSize = size != null ? size : 10;
-        
-        List<User> users = new ArrayList<>(userStore.values());
-        int total = users.size();
-        int start = (pageNum - 1) * pageSize;
-        int end = Math.min(start + pageSize, total);
-        
-        List<User> pageUsers = users.subList(start, end);
-        
-        Map<String, Object> result = new HashMap<>();
-        result.put("total", total);
-        result.put("page", pageNum);
-        result.put("size", pageSize);
-        result.put("data", pageUsers);
-        
-        return result;
-    }
-
-    @PreDestroy
-    public void destroy() {
-        userStore.clear();
-    }
-}
-```
-
----
-
-## 相关链接
-
-- [Feat Cloud 入门](/feat/cloud/)：快速搭建第一个 Feat Cloud 应用
-- [CloudOptions 配置参考](/feat/cloud/options/)：了解服务配置选项
-- [MyBatis 集成](/feat/cloud/db/)：学习数据库操作
-- [部署指南](/feat/cloud/deployment/)：了解如何部署 Feat Cloud 应用
+- [CloudOptions 配置指南](/feat/cloud/options/)：查看包扫描、静态资源和 Bean 注册配置
+- [在 Feat Cloud 中接入 MyBatis](/feat/cloud/db/)：把控制器接到数据库查询
+- [用 Router 组织服务端路由](/feat/server/router/)：如果你想回到底层路由模型

@@ -86,11 +86,11 @@ export default defineConfig({
             },
             sidebar: [
                 {
-                    label: '快速开始',
+                    label: '开始这里',
                     autogenerate: {directory: 'getting-started'},
                 },
                 {
-                    label: '项目说明',
+                    label: '理解 Feat',
                     autogenerate: {directory: 'guides'},
                 },
                 {

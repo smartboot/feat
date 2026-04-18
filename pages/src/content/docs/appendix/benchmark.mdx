@@ -1,6 +1,8 @@
 ---
-title: 性能评测报告
-description: Feat框架与Spring Boot、Vert.x的性能对比测试
+title: 性能测试说明
+description: 记录当前一组 Feat、Spring Boot、Vert.x 的简单基准测试结果，并说明应如何解读这些数据
+sidebar:
+  order: 3
 ---
 
 import bench_hello_world_rps from './img/bench_hello_world_rps.png'
@@ -8,35 +10,93 @@ import bench_hello_world_avg from './img/bench_hello_world_avg.png'
 import bench_json_rps from './img/bench_json_rps.png'
 import bench_json_avg from './img/bench_json_avg.png'
 import performance_comparison from './img/performance_comparison.svg'
+import { Aside } from '@astrojs/starlight/components'
 
-本报告比较了三个Java Web框架的性能：Feat、Vert.x和Spring Boot。测试使用Apache Benchmark (ab)工具，针对每个框架的Hello World和JSON响应接口进行了性能测试。
+这一页记录的是一组基准测试结果，而不是“永远正确的性能结论”。  
+如果你要引用这些数据，最重要的不是只看数字，而是先理解测试对象、边界条件和它不包含什么。
 
-测试参数：1,000,000个请求，并发数100，启用HTTP Keep-Alive。
+## 这组测试在测什么
 
-## 测试结论
+这里比较的是三类 Java Web 框架在两个简单接口下的表现：
+
+- Hello World
+- JSON 响应
+
+参与对比的对象：
+
+- Feat
+- Vert.x
+- Spring Boot
+
+测试工具是 Apache Benchmark（`ab`），测试参数为：
+
+- 总请求数：`1,000,000`
+- 并发数：`100`
+- 启用 HTTP Keep-Alive
+
+## 先看结果
+
 <img src={performance_comparison.src} alt="性能对比图表" width="80%"/>
-根据测试结果，可以得出以下结论：
-- 在Hello World接口测试中，Feat框架表现最佳，每秒处理请求数最多。
-- 在JSON响应接口测试中，Feat框架表现最佳，每秒处理请求数最多。
 
-## 性能对比图表
-### Hello World接口测试
-<img src={bench_hello_world_rps.src} alt="Hello World接口测试" width="80%"/>
-<img src={bench_hello_world_avg.src} alt="Hello World接口测试" width="80%"/>
+从这组测试里可以看到一个非常明确的趋势：  
+在当前测试条件下，Feat 在这两个简单接口上的吞吐和平均响应时间都表现得比较强。
 
+## 详细图表
 
-### JSON响应接口测试
-<img src={bench_json_rps.src} alt="JSON响应接口测试" width="80%"/>
-<img src={bench_json_avg.src} alt="JSON响应接口测试" width="80%"/>
+### Hello World
 
-## 详细测试数据
+<img src={bench_hello_world_rps.src} alt="Hello World 每秒请求数" width="80%"/>
+<img src={bench_hello_world_avg.src} alt="Hello World 平均响应时间" width="80%"/>
 
+### JSON 响应
+
+<img src={bench_json_rps.src} alt="JSON 响应每秒请求数" width="80%"/>
+<img src={bench_json_avg.src} alt="JSON 响应平均响应时间" width="80%"/>
+
+## 结果表
 
 | 测试类型 | 框架 | 每秒请求数 | 平均响应时间 (ms) | 错误率 (%) |
 |----------|------|------------|------------------|------------|
 | Hello World | Feat | 88241.10 | 0.01 | 0.00 |
 | Hello World | Spring Boot | 34406.30 | 0.03 | 0.00 |
 | Hello World | Vert.x | 87304.32 | 0.01 | 0.00 |
-| JSON响应 | Feat | 89489.21 | 0.01 | 0.00 |
-| JSON响应 | Spring Boot | 10645.22 | 0.09 | 0.00 |
-| JSON响应 | Vert.x | 84135.96 | 0.01 | 0.00 |
+| JSON 响应 | Feat | 89489.21 | 0.01 | 0.00 |
+| JSON 响应 | Spring Boot | 10645.22 | 0.09 | 0.00 |
+| JSON 响应 | Vert.x | 84135.96 | 0.01 | 0.00 |
+
+## 这组数据应该怎么解读
+
+这组基准测试最适合支持下面这种判断：
+
+- 在“非常轻的 HTTP 接口”场景下，Feat 的底座性能没有成为瓶颈
+- Feat 在简单请求路径上的吞吐能力是它的重要卖点之一
+
+它不适合直接支持下面这些过度推断：
+
+- “所有真实业务场景里 Feat 都一定更快”
+- “换成 Feat 就一定能立刻省掉同等比例的机器成本”
+- “复杂业务系统的整体延迟一定会按同样比例下降”
+
+<Aside type="caution">
+真实项目里，数据库、缓存、序列化、线程模型、网络拓扑和业务逻辑复杂度，往往比这个基准测试本身更能决定最终表现。
+</Aside>
+
+## 什么时候这页有价值
+
+这页最有价值的使用方式通常有三种：
+
+1. 你在做技术选型，需要知道 Feat 的底层性能大致处在什么级别
+2. 你已经确定要用 Feat，希望知道它适不适合高吞吐、低延迟场景
+3. 你在给团队解释为什么 Feat 的设计会从服务底座出发
+
+## 如果你要做自己的性能测试
+
+不要照搬这页里的结论，直接套到自己系统上。  
+更合理的做法是：
+
+1. 保持业务逻辑尽量等价
+2. 固定硬件、JDK、并发和网络环境
+3. 区分“框架基准”和“业务基准”
+4. 先看吞吐，再看尾延迟和资源占用
+
+如果你真正关心的是你的系统，而不是框架宣传页，那么自己的压测结果一定比这页更重要。

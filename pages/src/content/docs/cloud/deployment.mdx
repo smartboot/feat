@@ -1,73 +1,105 @@
 ---
-title: 打包与部署
-description: 如何将 Feat 应用打包并部署到生产环境
+title: 交付一个 Feat Cloud 应用
+description: 以 demo/helloworld_docker 为例，说明 Feat 应用从打包到容器交付的最短路径
 sidebar:
-    order: 99
+    order: 8
 ---
 
-import {Aside} from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
 
-本指南介绍如何将 Feat 应用打包为可执行文件，并使用 Docker 进行部署。
+到了这一页，默认你已经能把应用跑起来了。  
+现在要解决的问题不再是“怎么写 Controller”，而是“怎么把它交给别的环境去跑”。
 
-## 打包为 Fat Jar
+本文不追求覆盖所有部署形态，而是基于仓库里的 `demo/helloworld_docker` 给出一条最短交付路径。
 
-使用 Maven 的 `maven-shade-plugin` 插件打包成包含所有依赖的可执行 jar 包。
-
-### 配置 pom.xml
-
-```xml title="pom.xml"
-<build>
-    <plugins>
-        <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-shade-plugin</artifactId>
-            <version>3.5.0</version>
-            <executions>
-                <execution>
-                    <phase>package</phase>
-                    <goals>
-                        <goal>shade</goal>
-                    </goals>
-                    <configuration>
-                        <transformers>
-                            <!-- 追加方式合并服务文件 -->
-                            <transformer
-                                    implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-                                <resource>META-INF/services/tech.smartboot.feat.cloud.CloudService</resource>
-                            </transformer>
-                            <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                <mainClass>your.package.MainClass</mainClass>
-                            </transformer>
-                        </transformers>
-                    </configuration>
-                </execution>
-            </executions>
-        </plugin>
-    </plugins>
-</build>
+```mermaid
+flowchart LR
+    A["代码可运行"] --> B["mvn clean package"]
+    B --> C["得到可执行 Jar"]
+    C --> D{"交付目标是什么？"}
+    D --> E["先走 JRE 容器"]
+    D --> F["评估 Native"]
+    E --> G["调试简单、链路稳定"]
+    F --> H["启动更快、构建更复杂"]
 ```
 
-<Aside>
-    请将 `your.package.MainClass` 替换为你的主类完整类名。
-</Aside>
+## 参考示例
 
-### 执行打包
+直接对应这几个文件：
+
+- `demo/helloworld_docker/pom.xml`
+- `demo/helloworld_docker/Dockerfile_jre`
+- `demo/helloworld_docker/Dockerfile_native`
+- `demo/helloworld_docker/Makefile`
+
+如果你在看文档时想对照真实工程，这一组文件就是最好的入口。
+
+## 先回答一个问题：你要交付什么
+
+对于 Feat Cloud 应用，最常见的两种交付物是：
+
+1. 一个可执行 Fat Jar
+2. 一个容器镜像
+
+而容器镜像又常见地分成两种：
+
+- 基于 JRE 运行 Jar
+- 基于 GraalVM Native Image 运行本地可执行文件
+
+## 第一步：先把 Jar 打出来
+
+`demo/helloworld_docker/pom.xml` 里已经给出了典型的 `maven-shade-plugin` 配置：
+
+```xml title="pom.xml"
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-shade-plugin</artifactId>
+    <version>3.5.0</version>
+    <executions>
+        <execution>
+            <phase>package</phase>
+            <goals>
+                <goal>shade</goal>
+            </goals>
+            <configuration>
+                <transformers>
+                    <transformer
+                            implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                        <resource>META-INF/services/tech.smartboot.feat.cloud.CloudService</resource>
+                    </transformer>
+                    <transformer
+                            implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                        <mainClass>tech.smartboot.feat.demo.Bootstrap</mainClass>
+                    </transformer>
+                </transformers>
+            </configuration>
+        </execution>
+    </executions>
+</plugin>
+```
+
+这里最关键的不是 Shade 本身，而是两件事：
+
+- 合并 `CloudService` 的服务发现文件
+- 把启动主类写进 manifest
+
+打包命令：
 
 ```bash
 mvn clean package
 ```
 
-打包完成后，在 `target` 目录下会生成包含所有依赖的 jar 文件。
+完成后，`target/` 目录下就会出现可执行 Jar。
 
-## Docker 部署
+## 第二步：决定你是走 JRE 还是 Native
 
-### 基于 JRE 的部署
+### 方案一：JRE 容器
 
-适用于传统部署场景，使用 JRE 镜像运行 jar 文件。
+如果你想要更简单、调试更直接的交付方式，先用 JRE 镜像。
 
-#### 创建 Dockerfile
+`demo/helloworld_docker/Dockerfile_jre`：
 
-```dockerfile title="Dockerfile"
+```dockerfile title="Dockerfile_jre"
 FROM eclipse-temurin:21.0.7_6-jre-alpine
 WORKDIR /feat
 COPY target/helloworld_docker*.jar helloworld.jar
@@ -77,33 +109,25 @@ EXPOSE 8080
 CMD ["java", "-jar", "helloworld.jar"]
 ```
 
-#### 构建并运行
+这是最容易理解的一种交付方式：
 
-```bash
-# 构建镜像
-docker build -t feat-docker:jre .
+- 你交付的是 Jar
+- 容器里只负责提供 JRE
+- 启动命令仍然是 `java -jar`
 
-# 运行容器
-docker run -p 8080:8080 feat-docker:jre
-```
+### 方案二：Native 容器
 
-测试：`http://localhost:8080/hello`
+如果你的目标是更快启动、更小运行时依赖，可以考虑 Native Image。
 
-### 构建 Native 镜像
+`demo/helloworld_docker/Dockerfile_native`：
 
-使用 GraalVM 将应用编译为本地可执行文件，获得更快的启动速度和更低的资源消耗。
-
-#### 创建 Dockerfile
-
-```dockerfile title="Dockerfile"
+```dockerfile title="Dockerfile_native"
 FROM container-registry.oracle.com/graalvm/native-image:21-ol8 AS builder
 
 COPY target/helloworld_docker*.jar helloworld.jar
 
-# 编译为本地可执行文件
 RUN native-image --no-fallback -jar helloworld.jar
 
-# 运行阶段：使用轻量级基础镜像
 FROM ubuntu:18.04
 EXPOSE 8080
 
@@ -111,32 +135,98 @@ COPY --from=builder /app/helloworld helloworld
 ENTRYPOINT ["/helloworld"]
 ```
 
-#### 构建并运行
+这条路径的核心区别是：
 
-```bash
-# 打包应用
-mvn clean package
+- 前半段用 GraalVM 生成本地可执行文件
+- 后半段运行时不再需要完整 JRE
 
-# 构建 Native 镜像
-docker build -t feat-docker:native .
+## 第三步：构建并运行
 
-# 运行容器
-docker run -p 8080:8080 feat-docker:native
+示例工程里给了一个简单的 `Makefile`：
+
+```makefile
+native:
+	mvn clean package
+	podman build -t feat-docker:native -f Dockerfile_native
+	podman build -t feat-docker:jre -f Dockerfile_jre
 ```
 
-测试：`http://localhost:8080/hello`
+如果你使用 `docker`，把 `podman` 替换掉即可。
 
-<Aside>
-    如使用 podman，只需将命令中的 `docker` 替换为 `podman` 即可。
-</Aside>
+手动执行也很直接：
 
-## 部署方式对比
+```bash
+mvn clean package
+docker build -t feat-docker:jre -f Dockerfile_jre demo/helloworld_docker
+docker run -p 8080:8080 feat-docker:jre
+```
 
-| 部署方式 | 启动速度 | 内存占用 | 适用场景 |
-|----------|----------|----------|----------|
-| Fat Jar + JRE | 中等 | 中等 | 传统部署、开发测试 |
-| Native 镜像 | 极快（毫秒级） | 极低 | 云原生、Serverless、微服务 |
+然后访问：
 
-## 完整示例
+```text
+http://localhost:8080/hello
+```
 
-有关完整示例，请参见 [helloworld_docker 示例项目](https://gitee.com/smartboot/feat/tree/master/demo/helloworld_docker)
+## 怎么选
+
+### 先选 JRE 容器，如果：
+
+- 你更在乎交付简单
+- 你还在频繁调试
+- 你希望运行环境和本地 Java 行为更接近
+
+### 再考虑 Native，如果：
+
+- 你很在意启动时间
+- 你部署在资源敏感环境
+- 你已经能稳定构建并运行普通 Jar 版本
+
+不要一开始就把 Native 当默认路径。  
+先把 JRE 交付链路跑通，再上 Native，通常更稳。
+
+## 实际交付时最容易漏掉什么
+
+### 1. 忘了配置 Shade 插件
+
+结果通常是：
+
+- Jar 打出来了
+- 但运行时找不到 Feat Cloud 生成的服务信息
+
+### 2. `mainClass` 写错
+
+结果是 Jar 可以打包，但不能直接启动。
+
+### 3. Dockerfile 的 `COPY` 路径对不上
+
+尤其是模块项目里，经常会因为构建目录和 Docker build 上下文不一致导致文件根本没复制进去。
+
+## 常见问题
+
+### Jar 能跑，本地正常，但容器里启动失败
+
+优先检查：
+
+1. Jar 是否真的被复制进容器
+2. `mainClass` 是否正确
+3. 容器日志里有没有类路径或资源加载失败
+
+### Native 构建失败
+
+先不要马上怀疑业务代码。  
+优先检查：
+
+1. 当前环境是否具备 GraalVM Native Image 构建能力
+2. 你是不是已经先验证过普通 JRE 容器版本
+3. 依赖和构建镜像是否匹配
+
+### 为什么这页不详细展开 Kubernetes、systemd、Helm
+
+因为这页的目标是先交付出“第一个可部署产物”。  
+更复杂的运维编排属于后续工程体系，而不是 Feat 文档主线的第一步。
+
+## 下一步
+
+- [为 Feat 服务启用 HTTPS](/feat/server/https/)：如果你准备把服务接到真实网络环境
+- [Native Image 支持](/feat/cloud/native-image/)：如果你要继续深入原生镜像这条路径
+- [常见问题解答](/feat/appendix/faq/)：部署阶段遇到现象时先从这里排查

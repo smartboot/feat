@@ -1,152 +1,57 @@
 ---
-title: 5 分钟上手 Feat Cloud
-description: 用最短路径创建一个注解式 Web 应用，并验证 Feat Cloud 的启动与路由映射
+title: Feat Cloud 导览
+description: 理解 Feat Cloud 这一组文档的阅读顺序，以及每一页负责解决什么问题
 sidebar:
-  order: 1
+  order: 0
 ---
 
-import idea_setting from './img/idea_setting.png';
-import demo from './img/demo.png';
-import {Aside, TabItem, Tabs} from "@astrojs/starlight/components";
+import { Aside, CardGrid, LinkCard } from "@astrojs/starlight/components";
 
 <Aside type="caution">
 Feat Cloud 面向 Feat 赞助企业开放。如需使用，请先[成为赞助者](/feat/sponsors/)获取授权。
 </Aside>
 
-这篇教程的目标不是覆盖全部注解能力，而是让你在最短路径内确认三件事：
+Feat Cloud 适合已经接受 Feat 技术路线，但又希望用更接近 Spring Boot 的注解式开发体验来构建应用的团队。
 
-- `feat-cloud-starter` 依赖已经引入成功
-- `@Controller` 和 `@RequestMapping` 已经生效
-- Feat Cloud 能够扫描代码并启动一个可访问的 HTTP 服务
-
-## 你会完成什么
-
-- 创建一个最小的 Feat Cloud Maven 项目
-- 编写一个返回字符串的控制器
-- 启动服务并访问 `/hello`
-- 了解遇到注解处理问题时应该怎么排查
-
-## 前置条件
-
-- JDK 1.8 或更高版本
-- Maven 3.0 或更高版本
-- IntelliJ IDEA 或任意支持 Maven 的 Java IDE
-
-## 步骤 1：引入依赖
-
-创建一个 Maven 项目，然后在 `pom.xml` 中添加 `feat-cloud-starter`：
-
-```xml title="pom.xml"
-<dependency>
-    <groupId>tech.smartboot.feat</groupId>
-    <artifactId>feat-cloud-starter</artifactId>
-    <version>${feat.version}</version>
-</dependency>
+```mermaid
+flowchart LR
+    A["Cloud quickstart"] --> B["写第一个 Controller"]
+    B --> C["理解扫描、Bean、静态资源"]
+    C --> D["接入数据库"]
+    D --> E["按需进入 Session / MCP"]
+    E --> F["最后看部署与交付"]
 ```
 
-<Aside title="关于版本号">
-`${feat.version}` 请替换为实际版本，建议使用 Maven Central 上的[最新版本](https://central.sonatype.com/artifact/tech.smartboot.feat/feat-cloud-starter)。
-</Aside>
+<CardGrid>
+  <LinkCard
+    title="快速开始"
+    href="/feat/cloud/quickstart/"
+    description="写出第一个 Controller 并验证路由映射成功。"
+  />
+  <LinkCard
+    title="Controller"
+    href="/feat/cloud/controller/"
+    description="继续完善参数绑定、路径参数和请求方法映射。"
+  />
+  <LinkCard
+    title="CloudOptions"
+    href="/feat/cloud/options/"
+    description="控制扫描范围、外部 Bean 和静态资源。"
+  />
+  <LinkCard
+    title="MyBatis"
+    href="/feat/cloud/db/"
+    description="当你开始接数据库时，从这里继续。"
+  />
+</CardGrid>
 
-## 步骤 2：编写最小控制器
+## 建议顺序
 
-在 `src/main/java` 下创建 `Bootstrap.java`：
+如果你是第一次接触 Feat Cloud，建议这样读：
 
-```java title="Bootstrap.java"
-import tech.smartboot.feat.cloud.FeatCloud;
-import tech.smartboot.feat.cloud.annotation.Controller;
-import tech.smartboot.feat.cloud.annotation.RequestMapping;
+1. [构建第一个 Feat Cloud 应用](/feat/cloud/quickstart/)
+2. [Controller 开发实践](/feat/cloud/controller/)
+3. [CloudOptions 配置指南](/feat/cloud/options/)
+4. [MyBatis 集成](/feat/cloud/db/)
 
-@Controller
-public class Bootstrap {
-
-    @RequestMapping("/hello")
-    public String helloWorld() {
-        return "hello Feat Cloud";
-    }
-
-    public static void main(String[] args) {
-        FeatCloud.cloudServer().listen();
-    }
-}
-```
-
-这个例子已经覆盖了 Feat Cloud 的核心启动链路：
-
-- `@Controller`：声明控制器
-- `@RequestMapping("/hello")`：声明路由映射
-- `FeatCloud.cloudServer().listen()`：启动 Feat Cloud 并监听请求
-
-## 步骤 3：启动应用
-
-直接运行 `Bootstrap.main()`。当控制台里出现路由注册和监听地址时，就说明应用已经成功启动。
-
-一个典型的启动输出会包含类似内容：
-
-```text
-Feat Router:
- |-> /hello ==> Bootstrap@helloWorld
-http://0.0.0.0:8080/
-```
-
-如果你能看到 `/hello ==> Bootstrap@helloWorld` 这一类映射信息，说明控制器扫描和注解处理都已生效。
-
-## 步骤 4：验证路由是否真正可访问
-
-启动成功后，访问 `http://localhost:8080/hello`：
-
-<Tabs>
-  <TabItem value="浏览器" label="浏览器">
-    <img src={demo.src} alt="Feat Cloud 浏览器访问效果图" width="60%" className="shadow"/>
-  </TabItem>
-  <TabItem value="curl" label="curl">
-    ```shell
-    curl -i http://localhost:8080/hello
-    HTTP/1.1 200 OK
-    Content-Type: text/plain; charset=utf-8
-
-    hello Feat Cloud
-    ```
-  </TabItem>
-</Tabs>
-
-到这里，整个最小闭环已经完成：
-
-- 依赖可用
-- 注解可用
-- 路由可用
-- HTTP 输出可用
-
-## 常见问题
-
-### 控制台启动了，但访问 `/hello` 返回 404
-
-优先检查：
-
-1. 你的类是否真的加了 `@Controller`
-2. 方法是否加了 `@RequestMapping("/hello")`
-3. IDE 是否正确触发了注解处理和增量编译
-
-### IntelliJ IDEA 下修改代码后，路由没有更新
-
-旧版本 IDEA 或某些增量编译场景下，APT 生成文件可能不会及时刷新。此时建议：
-
-1. 打开 `Preferences`
-2. 进入 `Build, Execution, Deployment -> Build Tools -> Maven -> Runner`
-3. 勾选 `Delegate IDE build/run actions to Maven`
-
-<img src={idea_setting.src} alt="IDEA 配置截图" width="60%" className="shadow"/>
-
-<Aside type="tip">
-如果你确认本地环境会频繁遇到 APT 失效，再考虑在 `pom.xml` 中加入 `maven-clean-plugin`。否则不要在 quickstart 阶段先引入额外复杂度。
-</Aside>
-
-### 我还没有 Feat Cloud 的使用权限
-
-如果你当前只是想先理解 Feat 的 HTTP 编程模型，可以先从 [Feat Core 教程](/feat/server/getstart/) 开始。
-
-## 下一步
-
-- [Controller 开发实践](/feat/cloud/controller/)：系统掌握参数绑定、拦截器和控制器能力
-- [CloudOptions 配置参考](/feat/cloud/options/)：查看 Cloud 服务的核心配置项
-- [MyBatis 集成](/feat/cloud/db/)：在 Feat Cloud 中接入数据库访问
+`Session`、`MCP`、`Native Image`、`打包与部署` 更适合在你已经有实际项目时按需进入。

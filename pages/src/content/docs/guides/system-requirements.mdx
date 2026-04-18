@@ -1,39 +1,83 @@
 ---
 title: 系统要求
-description: 系统要求
+description: 在开始使用 Feat 之前，先确认你的 JDK、构建工具和运行环境是否匹配
 sidebar:
     order: 2
 ---
+
 import { Aside } from '@astrojs/starlight/components';
 
-# 系统要求
+这页不是兼容性宣传页，而是一张使用前检查表。  
+如果下面这些条件都满足，你就可以放心进入后面的教程。
 
-Feat 要求至少 **Java 8**，并且兼容更新的 Java 版本，包括 Java 17 及以上版本。
-对于第三方库没有特定的版本要求，但建议使用最新的稳定版本。
+## 最低要求
 
-为以下构建工具提供了明确的构建支持：
-
-| 构建工具 | 版本 |
+| 项目 | 要求 |
 | --- | --- |
-| Maven | 3.6.3 或更高版本 |
-| Gradle | Gradle 8.x 或 9.x |
+| JDK | 8 或更高版本 |
+| Maven | 可正常构建 Java 8 项目 |
+| 操作系统 | 任何能稳定运行标准 Java 运行时的环境 |
 
-## Servlet 容器
+从仓库当前构建配置来看，Feat 的主线模块仍以 Java 8 为编译目标。  
+这意味着：
 
-Feat 不依赖传统的 servlet 容器，因为它拥有基于 <a href="https://smartboot.tech/smart-socket" target="_blank">smart-socket</a> 构建的高性能 HTTP 服务器。
+- 你可以在更高版本的 JDK 上运行
+- 但如果你要自己扩展或构建相关模块，仍应理解它的 Java 8 兼容边界
 
-不过，Feat 应用程序可以部署在提供标准 Java 运行时的环境中。
+## Maven 说明
 
-## 原生镜像
-
-Feat 应用程序可以使用 <a href="https://www.graalvm.org/jdk21/reference-manual/native-image/" target="_blank">GraalVM native-image</a> 工具编译为原生可执行文件，从而提供更快的启动时间和更低的内存占用。
-支持以下版本：
-
-| 名称 | 版本 |
-| --- | --- |
-| GraalVM Community | 21.0.x |
-| Native Build Tools | <a href="https://github.com/graalvm/native-build-tools" target="_blank">0.11.3</a> |
+当前仓库和示例工程都是以 Maven 为主线。  
+如果你只是想跑官方示例或跟着文档操作，优先准备 Maven 环境就够了。
 
 <Aside type="tip">
-现阶段 Java 生态组件存在大量反射的应用，这为 Java Native 造成了较大的阻碍。综合来看，JRE 部署模式更成熟、稳定，我们建议用户无需过度追求 native。
+文档里的 quickstart 和 demo 都默认你已经有一套可工作的 Maven Java 工具链，而不是从 Gradle 起步。
 </Aside>
+
+## 运行环境说明
+
+Feat 不依赖传统 Servlet 容器。  
+换句话说，你不需要先准备 Tomcat、Jetty 或 Undertow 这类外部容器，直接有 Java 运行时即可。
+
+更具体地说，你至少要满足：
+
+- 能运行普通 Java 应用
+- 能打开本机监听端口
+- 有能力加载项目依赖和资源文件
+
+这也是为什么大多数示例都能直接用 `main()` 方式启动。
+
+## 本地开发时通常还需要什么
+
+不同模块对额外环境的需求不一样：
+
+- 如果你看 Feat Core，大多数时候只需要 JDK + Maven + 浏览器或 `curl`
+- 如果你看 Feat Cloud，通常还需要一个支持 Maven/注解处理的 IDE
+- 如果你看 Feat AI，还要额外准备 Ollama 或云端 API Key
+
+所以真正的系统要求最好按路径理解，而不是把所有东西塞成一张大表。
+
+## Native Image 相关要求
+
+如果你只是想使用 Feat，本页可以先跳过这一部分。  
+只有在你明确准备构建原生镜像时，再回来看这里。
+
+当前文档和示例主要围绕 GraalVM 21 系列展开。  
+但从实际落地角度看，建议先做这两个判断：
+
+1. 你的应用是否真的需要原生镜像
+2. 你是否已经先把普通 JRE 部署跑通
+
+<Aside type="tip">
+对大多数项目来说，先用 JRE 交付是更稳的路径。Native Image 更适合在你已经确认收益之后再投入。
+</Aside>
+
+## 开始之前快速自检
+
+如果你满足下面这些条件，就足够开始读后续教程：
+
+- 你能运行 Java 8+ 程序
+- 你能执行 `mvn clean package`
+- 你能在本机打开一个 HTTP 端口
+- 你有浏览器、`curl` 或其他 HTTP 调试工具
+
+满足这些之后，直接回到 [从哪里开始读 Feat 文档](/feat/getting-started/) 选路径即可。

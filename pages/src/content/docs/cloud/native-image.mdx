@@ -1,179 +1,70 @@
 ---
-title: Native Image 支持
-description: 使用 GraalVM Native Image 构建高性能 Feat 应用
+title: 什么时候考虑 Native Image
+description: 理解 Feat 应用构建原生镜像的价值、成本和适用边界，而不是一开始就默认走 Native 路线
 sidebar:
     order: 7
 ---
 
-import {Aside, TabItem, Tabs} from "@astrojs/starlight/components";
+import { Aside } from "@astrojs/starlight/components";
 
-本指南介绍如何使用 GraalVM Native Image 将 Feat 应用编译为本地可执行文件。
+Native Image 往往很吸引人，因为它意味着更快启动、更低内存和更轻的运行时。  
+但对大多数项目来说，真正的问题不是“能不能构建”，而是“现在值不值得上”。
 
-## GraalVM Native Image 简介
+## 先回答：你真的需要 Native 吗
 
-GraalVM Native Image 是一种将 Java 应用程序编译为本地可执行文件的技术，相比传统 JVM 运行方式具有显著优势：
+如果你当前只是：
 
-- **极速启动**：从秒级缩短到毫秒级
-- **低内存占用**：减少 5-10 倍内存使用
-- **独立部署**：不依赖 JVM，单文件可执行
-- **容器优化**：更适合云原生和 Serverless 环境
+- 还在本地开发
+- 刚把 JRE 容器版本跑通
+- 还没形成稳定交付链路
 
-## 前置要求
+那通常不建议马上切到 Native。  
+先把 [交付一个 Feat Cloud 应用](/feat/cloud/deployment/) 里的 JRE 路线跑通，成本更低。
 
-- GraalVM 21（推荐）或更高版本
-- Maven 3.6+
-- 原生镜像构建工具（`native-image`）
+## Native 更适合这些情况
 
-<Aside type="caution">
-  当前 fastjson2 还不兼容 GraalVM 25，请使用 GraalVM 21 版本来构建原生镜像。
-</Aside>
+- 你非常在意启动速度
+- 你运行在资源受限环境
+- 你部署在 Serverless 或弹性伸缩场景
 
-## 方式一：使用 Maven 插件构建（推荐）
+如果这些都不是当前优先级，那 Native 往往不是第一步。
 
-适用于 JDK 21+ 项目。
+## 为什么 Feat 对 Native 更友好
 
-### 配置 pom.xml
+Feat 的一个重要优势在于：它很多运行逻辑并不是高度依赖运行期反射。  
+这也是为什么它和 AOT 机制天然关联更紧。
 
-```xml
-<plugin>
-    <groupId>org.graalvm.buildtools</groupId>
-    <artifactId>native-maven-plugin</artifactId>
-    <version>0.11.3</version>
-    <extensions>true</extensions>
-    <configuration>
-        <mainClass>tech.smartboot.feat.Bootstrap</mainClass>
-        <buildArgs>
-            <argument>--no-fallback</argument>
-        </buildArgs>
-    </configuration>
-</plugin>
-```
+如果你已经看过 [AOT 是怎么工作的](/feat/appendix/aot/)，这里会更容易理解。  
+如果还没看过，也没关系，你只需要知道：
 
-### 执行构建
+- Feat Cloud 的编译期生成机制，使它比很多传统框架更容易进入 Native 路线
 
-```bash
-mvn clean native:compile -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
-```
+## 最实用的建议
 
-## 方式二：使用 native-image 命令构建
+不要把 Native 当成“默认部署形态”，而应该把它当成“在 JRE 已经稳定之后再评估的优化路径”。
 
-适用于 JDK 8 项目。
+更合理的顺序通常是：
 
-### 第一步：打包为 Fat Jar
+1. 先把普通 JRE 版本交付稳定
+2. 再验证 Native 版本是否有明确收益
+3. 最后决定是否把 Native 纳入主交付链路
 
-```bash
-mvn clean package
-```
+## 你真正需要关心的不是命令，而是代价
 
-### 第二步：执行 native-image 命令
+Native 的收益很直观：
 
-```bash
-native-image \
-  --no-fallback \
-  --enable-url-protocols=http,https \
-  -H:Name=helloworld_native \
-  -jar target/helloworld_native.jar
-```
+- 启动更快
+- 运行时更轻
 
-## 完整示例
+但成本也很真实：
 
-以下是一个简单的 Feat 应用示例，完整代码可在 [Gitee 示例项目](https://gitee.com/smartboot/feat/tree/master/demo/helloworld_native) 中找到：
+- 构建更复杂
+- 调试更麻烦
+- 兼容性和工具链约束更多
 
-```java
-@Controller
-public class Bootstrap {
+所以这一页真正想表达的不是“怎么一条命令构建出来”，而是“你应该什么时候认真对待它”。
 
-    @RequestMapping("/hello")
-    public String helloWorld() {
-        return "hello Feat Cloud";
-    }
+## 下一步
 
-    public static void main(String[] args) {
-        FeatCloud.cloudServer().listen();
-    }
-}
-```
-
-## 测试原生镜像
-
-构建完成后，测试原生镜像的运行效果：
-
-```bash
-# 启动原生镜像
-./helloworld_native
-
-# 测试基本功能
-curl http://localhost:8080/hello
-```
-
-## 构建流程
-
-```mermaid
-graph TD
-    A[准备源代码] --> B[选择构建方式]
-    B --> C1[Maven 插件<br/>JDK21+]
-    B --> C2[native-image 命令<br/>JDK8]
-    C1 --> D[执行 mvn native:compile]
-    C2 --> E[打包成 fat jar]
-    E --> F[执行 native-image]
-    D --> G[生成原生可执行文件]
-    F --> G
-    G --> H[测试运行]
-```
-
-## 最佳实践
-
-### 避免运行时动态特性
-
-尽量避免使用运行时动态特性：
-
-```java
-// 不推荐
-Class<?> clazz = Class.forName(className);
-Method method = clazz.getMethod("methodName");
-
-// 推荐
-// 使用 Feat AOT 编译替代运行时反射
-```
-
-### 使用 Feat AOT 优势
-
-Feat 框架通过 [AOT 编译机制](/feat/appendix/aot/)，天然适合 GraalVM Native Image 构建。相比其他框架需要大量配置才能构建原生镜像，Feat 几乎无需额外工作即可获得高性能原生应用。
-
-## 故障排除
-
-### 常见问题
-
-| 问题 | 原因 | 解决方案 |
-|------|------|----------|
-| ClassNotFoundException | 缺少类路径配置 | 检查依赖完整性 |
-| NoSuchMethodException | 反射配置缺失 | 添加反射配置 |
-| Resource not found | 资源文件未包含 | 配置资源包含规则 |
-
-### 调试技巧
-
-启用 GraalVM 诊断输出以定位问题：
-
-```bash
-native-image \
-  --no-fallback \
-  -H:+PrintAnalysisCallTree \
-  -H:AnalysisLogLevel=INFO \
-  -jar target/helloworld_native.jar
-```
-
-## 性能对比
-
-| 指标 | JVM 模式 | Native Image |
-|------|----------|--------------|
-| 启动时间 | 秒级 | 毫秒级 |
-| 内存占用 | 较高 | 降低 5-10 倍 |
-| 包体积 | 较小（需 JVM） | 较大（独立运行） |
-| 峰值性能 | JIT 优化后高 | 略低于 JIT |
-
-## 适用场景
-
-- **云原生应用**：容器化部署、Kubernetes
-- **Serverless**：函数计算、Lambda
-- **微服务**：快速启动、弹性伸缩
-- **边缘计算**：资源受限环境
+- 如果你还没完成基础交付，先去看 [交付一个 Feat Cloud 应用](/feat/cloud/deployment/)
+- 如果你想理解它为什么对 Native 更友好，去看 [AOT 是怎么工作的](/feat/appendix/aot/)

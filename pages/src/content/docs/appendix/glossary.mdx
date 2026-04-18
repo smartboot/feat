@@ -1,194 +1,139 @@
 ---
 title: 术语表
-description: Feat 文档中的核心术语、配置名词和 AI 相关概念说明
+description: 解释 Feat 文档里最常出现的核心术语，帮助你在不同章节之间建立统一理解
+sidebar:
+  order: 2
 ---
 
-本文档定义了 Feat 框架中使用的关键术语，确保在整个文档中使用一致的术语，避免歧义。
+这页不打算收录所有通用软件名词。  
+它只解释 Feat 文档里反复出现、而且容易让人读着读着就混掉的那一批术语。
 
-## 核心术语
+## 核心概念
 
 ### Feat
 
-Feat 是一个轻量级、高性能的 Java HTTP 服务器框架，提供了从核心 HTTP 服务器到云原生应用框架的完整解决方案。
+整套项目的总称。  
+当文档里说 “Feat” 时，可能指整套生态，也可能泛指它的服务端开发路线，具体要看上下文。
 
 ### Feat Core
 
-Feat 框架的核心模块，提供了高性能的 HTTP 服务器实现，支持异步非阻塞 I/O、WebSocket、SSE 等功能。
+Feat 的底层 HTTP 服务能力。  
+如果你直接通过 `Feat.httpServer()` 写服务，通常就是在使用 Feat Core。
 
 ### Feat Cloud
 
-Feat 框架的云原生模块，提供了类似 Spring Boot 的注解式编程模型，简化 Web 应用开发。
+建立在 Feat Core 之上的高层开发模型。  
+如果你使用 `@Controller`、`@RequestMapping` 这类注解式写法，通常就是在使用 Feat Cloud。
 
 ### Feat AI
 
-Feat 框架的 AI 集成模块，提供了与各种 AI 模型的集成能力，支持本地模型和云端模型。
+Feat 生态里的 AI 能力层。  
+主要覆盖对话模型、Agent、Embedding 等能力。
 
-### HTTP 服务器
+## 服务端相关
 
-处理 HTTP 请求和响应的服务器软件，Feat Core 提供了高性能的 HTTP 服务器实现。
+### Router
 
-### WebSocket
-
-一种在单个 TCP 连接上进行全双工通信的协议，Feat 框架支持 WebSocket 客户端和服务器。
-
-### SSE (Server-Sent Events)
-
-一种服务器向客户端推送实时更新的技术，基于 HTTP 协议，Feat 框架支持 SSE 客户端和服务器。
+Feat Core 里的路由分发组件。  
+适合在你不使用 Controller 模型时，直接按路径和方法组织服务端逻辑。
 
 ### Controller
 
-在 Feat Cloud 中，用于处理 HTTP 请求的类，通过 `@Controller` 注解标识。
+Feat Cloud 中的控制器类。  
+通过 `@Controller` 标记，用于接收 HTTP 请求并返回结果。
 
 ### RequestMapping
 
-在 Feat Cloud 中，用于映射 HTTP 请求到处理方法的注解，指定请求路径和 HTTP 方法。
+Feat Cloud 中的请求映射注解。  
+用来把一个方法绑定到具体路径和 HTTP 方法上。
 
-### Interceptor
+### Session
 
-在 Feat 框架中，用于在请求处理前后执行自定义逻辑的组件，如权限验证、日志记录等。
+跨多次请求保存状态的一种机制。  
+在 Feat 文档里出现 `Session` 时，通常是在讨论会话状态，而不是数据库持久化。
 
 ### Context
 
-在 Feat 框架中，包含 HTTP 请求和响应信息的上下文对象，用于在请求处理过程中传递信息。
+Feat Router / Cloud 里承载请求和响应上下文的对象。  
+当你需要更底层地拿请求信息时，会看到它。
 
-## 配置术语
+### AsyncResponse
+
+Feat Cloud 里用于延迟完成响应的对象。  
+出现它通常意味着你已经从同步处理切到了异步处理。
+
+## 配置与运行时相关
 
 ### ServerOptions
 
-Feat Core 中用于配置 HTTP 服务器的类，包含端口、线程数、缓冲区大小等配置选项。
+Feat Core 服务端的运行时配置入口。  
+你会在改端口、线程数、缓冲区、HTTPS、调试模式时遇到它。
 
 ### CloudOptions
 
-Feat Cloud 中用于配置应用的类，包含服务器配置、数据库配置等。
+Feat Cloud 的启动期配置入口。  
+主要和包扫描、外部 Bean、静态资源路径相关。
 
-### HttpClientOptions
+### CloudService
 
-Feat 客户端中用于配置 HTTP 客户端的类，包含连接超时、缓冲区大小等配置选项。
+Feat Cloud 运行期加载的服务单元。  
+在 AOT 机制里，你会频繁看到这个词，它是编译期生成与运行期装配之间的重要桥梁。
 
-### WebSocketClientOptions
-
-Feat 客户端中用于配置 WebSocket 客户端的类，包含连接超时、缓冲区大小等配置选项。
-
-## AI 术语
+## AI 相关
 
 ### ChatModel
 
-Feat AI 中用于与 AI 模型进行对话的核心类，支持同步和流式对话。
+Feat AI 中的对话模型入口。  
+普通问答、流式输出、多轮对话，大多都从这里开始。
 
-### ChatModelVendor
+### Agent
 
-Feat AI 中预定义的 AI 模型厂商枚举，如 Gitee AI。
+建立在对话模型之上的工具协作层。  
+当模型不只是“回答”，而是要“调用工具完成任务”时，你会进入 Agent 这条线。
 
-### Message
+### Embedding
 
-Feat AI 中表示对话消息的类，包含角色和内容。
+把文本转换成向量的能力。  
+通常和检索、RAG、相似度搜索一起出现，而不是单纯的聊天生成。
 
-### MessageRole
+### MCP
 
-Feat AI 中消息角色的枚举，如 SYSTEM、USER、ASSISTANT。
+Model Context Protocol。  
+在 Feat 文档里，这个词通常意味着“把工具、提示词、资源以结构化方式暴露出去”。
 
-### StreamResponseCallback
-
-Feat AI 中用于处理流式响应的回调接口。
-
-## 客户端术语
+## 协议与客户端相关
 
 ### HttpClient
 
-Feat 框架中用于发送 HTTP 请求的客户端类，支持同步和异步请求。
+Feat 的 HTTP 客户端能力。  
+用于主动向外部服务发请求。
 
-### WebSocketClient
+### SSE
 
-Feat 框架中用于建立 WebSocket 连接的客户端类，支持消息收发。
+Server-Sent Events，服务端单向推送事件流。  
+在 Feat 文档里，它通常和“流式输出”“事件监听”一起出现。
 
-### SseClient
+### WebSocket
 
-Feat 框架中用于接收 SSE 事件的客户端类，支持实时数据推送。
+双向实时通信协议。  
+如果你需要客户端和服务端持续收发消息，这个词就会反复出现。
 
-### HttpRest
+## 构建与交付相关
 
-Feat 客户端中表示 HTTP 请求的类，支持设置请求头、请求体等。
+### AOT
 
-### HttpResponse
+Ahead-of-Time。  
+在 Feat Cloud 文档里，它通常意味着把一部分运行期工作提前到编译期完成。
 
-Feat 客户端中表示 HTTP 响应的类，包含状态码、响应头、响应体等信息。
+### AOT VM
 
-## 部署术语
-
-### AOT (Ahead-of-Time Compilation)
-
-提前编译技术，Feat 框架支持 AOT 编译，提高应用启动速度和运行性能。
+更偏向开发期体验的一种运行模式。  
+它和最终编译期 AOT 并不是同一个概念，但两者的设计目标相关。
 
 ### Native Image
 
-通过 GraalVM 编译生成的原生可执行文件，Feat 框架支持生成 Native Image。
+通过 GraalVM 构建出的原生可执行产物。  
+在文档里，它通常和启动速度、内存占用、交付复杂度一起讨论。
 
-### Docker
-
-容器化平台，Feat 应用可以打包为 Docker 镜像进行部署。
-
-### 反向代理
-
-位于客户端和服务器之间的服务器，用于转发请求，如 Nginx。
-
-## 性能术语
-
-### 线程数
-
-Feat 服务器中处理请求的线程数量，影响并发处理能力。
-
-### 缓冲区大小
-
-Feat 框架中用于存储请求和响应数据的缓冲区大小，影响 I/O 性能。
-
-### 连接池
-
-管理 HTTP 连接的池化技术，减少连接建立和关闭的开销。
-
-### 响应压缩
-
-对 HTTP 响应进行压缩，减少网络传输数据量，提高传输速度。
-
-## 安全术语
-
-### HTTPS
-
-基于 TLS/SSL 的安全 HTTP 协议，Feat 框架支持 HTTPS。
-
-### CORS (Cross-Origin Resource Sharing)
-
-跨域资源共享机制，Feat 框架支持 CORS 配置。
-
-### CSRF (Cross-Site Request Forgery)
-
-跨站请求伪造攻击，Feat 框架提供防护措施。
-
-### JWT (JSON Web Token)
-
-一种基于 JSON 的令牌，用于身份验证和授权，Feat 框架支持 JWT。
-
-## 其他术语
-
-### Maven
-
-Java 项目管理工具，Feat 框架使用 Maven 进行构建和依赖管理。
-
-### JDK (Java Development Kit)
-
-Java 开发工具包，Feat 框架要求 JDK 1.8 或更高版本。
-
-### API (Application Programming Interface)
-
-应用程序编程接口，Feat 框架提供了丰富的 API 用于开发 Web 应用。
-
-### REST (Representational State Transfer)
-
-一种软件架构风格，Feat 框架支持 RESTful API 开发。
-
-### 微服务
-
-一种软件架构风格，将应用拆分为多个独立的服务，Feat 框架适合构建微服务。
-
-### 中间件
-
-位于应用和底层系统之间的软件层，如数据库、消息队列等，Feat 框架支持与各种中间件集成。
+如果你在阅读过程中看到某个词还是不确定具体含义，优先回到它所在章节的上下文去看，而不是只靠术语表单独理解。  
+术语表负责建立稳定词义，但真正的用法仍然要看具体章节。 

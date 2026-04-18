@@ -1,124 +1,123 @@
 ---
-title: Embedding 与向量
-description: 如何使用 Feat AI 做文本向量化与典型用法
+title: 把文本变成向量
+description: 用 Feat AI 的 Embedding 能力为检索、RAG 和语义搜索准备向量数据
 sidebar:
     order: 4
 ---
 
 import { Aside } from '@astrojs/starlight/components';
 
-Feat AI 的 **Embedding** 能力将文本转换为固定维度的向量，常用于检索、去重、聚类或作为 RAG（检索增强生成）的向量来源。本文说明如何创建嵌入模型、对单条或批量文本做向量化。
+Embedding 不是“另一种聊天模型”，它解决的是另一类问题：  
+如何把文本变成可计算相似度的向量表示。
 
-## 任务描述
+如果你没有要做检索、RAG、去重、聚类或语义搜索，就不用急着看这一页。
 
-- 创建 Embedding 模型并指定厂商/模型
-- 对单条文本或一批文本进行向量化（embed）
-- 将得到的向量用于检索、RAG 等场景（与向量库配合时需自行对接）
+## 什么时候你才需要 Embedding
 
-## 解决方案
+- 你要做 RAG
+- 你要做语义检索
+- 你要做文本去重或聚类
 
-### 创建 Embedding 模型
+如果你现在只是想调模型输出文本，先停在 [配置对话模型并处理流式输出](/feat/ai/chat/)。
 
-通过 `FeatAI.embedding(opts -> ...)` 创建，常用配置为指定模型（厂商枚举或模型名）：
+## 最小用法：单条文本向量化
 
-```java
-import tech.smartboot.feat.ai.FeatAI;
-import tech.smartboot.feat.ai.embedding.EmbeddingModel;
-import tech.smartboot.feat.ai.embedding.EmbeddingModelVendor;
-
-EmbeddingModel model = FeatAI.embedding(opt -> opt
-        .model(EmbeddingModelVendor.GiteeAI.bce_embedding_base_v1)
-);
-```
-
-使用 **Ollama** 时，可选用 Ollama 的 Embedding 模型，例如：
-
-```java
-EmbeddingModel model = FeatAI.embedding(opt -> opt
-        .model(EmbeddingModelVendor.Ollama.nomic_embed_text)
-);
-```
-
-<Aside type="tip">
-Gitee AI 的 Embedding 通常需要配置 `FEAT_AI_API_KEY`；Ollama 则只需本地服务可用，无需 API Key。
-</Aside>
-
-### 单条文本向量化
-
-`embed(String)` 返回一个 `float[]`，即该文本的向量表示：
-
-```java
-float[] vector = model.embed("你好！");
-System.out.println(Arrays.toString(vector));
-```
-
-### 批量文本向量化
-
-`embed(List<String>)` 一次请求多句，返回 `List<float[]>`，顺序与输入一致：
-
-```java
-List<String> texts = Arrays.asList("Hello World", "你好");
-List<float[]> vectors = model.embed(texts);
-for (float[] v : vectors) {
-    System.out.println(Arrays.toString(v));
-}
-```
-
-批量调用有利于减少请求次数，建议在可能时使用。
-
-### 完整示例（基于 feat-ai 测试）
-
-下面示例基于 `feat-ai` 模块的 `EmbeddingTest`，演示 Gitee AI 与 Ollama 两种用法（JDK 8 可运行）：
-
-```java
+```java title="EmbeddingDemo.java"
 import tech.smartboot.feat.ai.FeatAI;
 import tech.smartboot.feat.ai.embedding.EmbeddingModel;
 import tech.smartboot.feat.ai.embedding.EmbeddingModelVendor;
 
 import java.util.Arrays;
-import java.util.List;
 
 public class EmbeddingDemo {
     public static void main(String[] args) {
-        // Gitee AI
-        EmbeddingModel giteeModel = FeatAI.embedding(opt ->
+        EmbeddingModel model = FeatAI.embedding(opt ->
                 opt.model(EmbeddingModelVendor.GiteeAI.bce_embedding_base_v1)
         );
-        float[] single = giteeModel.embed("你好！");
-        System.out.println("单条: " + Arrays.toString(single));
 
-        List<float[]> batch = giteeModel.embed(Arrays.asList("Hello World", "你好"));
-        for (float[] v : batch) {
-            System.out.println(Arrays.toString(v));
-        }
-
-        // Ollama
-        EmbeddingModel ollamaModel = FeatAI.embedding(opt ->
-                opt.model(EmbeddingModelVendor.Ollama.nomic_embed_text)
-        );
-        List<float[]> ollamaVectors = ollamaModel.embed(Arrays.asList("Hello World", "你好"));
-        ollamaVectors.forEach(v -> System.out.println(Arrays.toString(v)));
+        float[] vector = model.embed("你好！");
+        System.out.println(Arrays.toString(vector));
     }
 }
 ```
 
-## 典型用法
+这里最重要的不是打印出来的向量长什么样，而是你开始接受这件事：
 
-- **检索 / RAG**：将文档块或问题转为向量，写入向量库（如 Chroma、Milvus）；查询时用问题向量做相似度检索，再将检索结果交给对话模型生成答案。Feat AI 提供 `ChromaVectorStore`、`MilvusVectorStore` 等，可与 Embedding 配合使用。
-- **去重 / 聚类**：对文本做 embed 后，用余弦相似度等度量做相似度计算，用于去重或聚类。
-- **语义搜索**：用查询向量在已有向量集合中做最近邻搜索。
+- 一段文本会被映射成一组数值
+- 后续检索和相似度计算都基于这组数值
 
-向量维度与数值范围由具体模型决定，不同模型之间向量不可混用（维度可能不同）。
+## 批量向量化
 
-## 注意事项
+实际项目里更常见的是一次处理一批文本：
 
-- 使用 Gitee AI 时需设置环境变量 **`FEAT_AI_API_KEY`**。
-- Ollama 需先拉取并运行对应 Embedding 模型，例如：`ollama run nomic-embed-text`。
-- 批量请求时注意厂商对单次请求条数或 token 数的限制，必要时自行分批。
-- 向量库的写入、索引与查询需参考各自文档；Feat AI 的向量库集成见项目内 `vector` 包。
+```java
+List<String> texts = Arrays.asList("Hello World", "你好");
+List<float[]> vectors = model.embed(texts);
+```
 
-## 相关链接
+这通常比一条一条请求更实用，也更接近真实索引构建场景。
 
-- [开始使用 Feat AI](/feat/ai/getstart/)：依赖与基础配置
-- [Feat AI 简介](/feat/ai/)：能力概览
-- 项目内：`feat-ai` 模块 `EmbeddingTest`、`EmbeddingModelVendor`、`vector` 包（Chroma、Milvus 等）
+## 模型来源怎么选
+
+和对话模型一样，这里通常也有两类来源：
+
+- 云端模型
+- 本地模型（例如 Ollama）
+
+示例里可以直接用：
+
+```java
+EmbeddingModelVendor.GiteeAI.bce_embedding_base_v1
+EmbeddingModelVendor.Ollama.nomic_embed_text
+```
+
+如果你只是先验证能力有没有打通，选任何一个你当前最容易连上的来源即可。
+
+## 你应该怎样理解这些向量
+
+这一页不要求你马上写出完整向量检索系统。  
+你只需要先接受两件事：
+
+1. 不同文本会变成不同向量
+2. 相近语义通常会对应更接近的向量空间位置
+
+这也是为什么 Embedding 能用来做：
+
+- 语义搜索
+- 相似问题召回
+- 文档块检索
+
+## Embedding 和 RAG 的关系
+
+很多人第一次看 Embedding，就是因为想做 RAG。  
+可以把它们的关系理解成：
+
+- Embedding 负责把问题和文档都变成向量
+- 向量检索负责找出最相关的文档块
+- ChatModel 再基于这些文档块生成最终答案
+
+所以 Embedding 不是 RAG 的全部，但它通常是入口之一。
+
+## 常见问题
+
+### 我已经有 ChatModel，为什么还要 Embedding
+
+因为这两者解决的问题不同。
+
+- ChatModel：生成文本
+- Embedding：表示文本
+
+### 向量维度和数值范围为什么不一样
+
+因为不同模型的向量空间不同。  
+所以不同 Embedding 模型生成的向量一般不要混用。
+
+### 我是不是应该一开始就接向量库
+
+不一定。  
+如果你只是验证 Embedding 能力，先完成单条和批量向量化就够了。等你真正开始做检索链路时，再引入向量库。
+
+## 下一步
+
+- 如果你还没学对话模型，先回到 [配置对话模型并处理流式输出](/feat/ai/chat/)
+- 如果你准备让模型调用工具，去看 [让模型开始使用工具](/feat/ai/agent/)

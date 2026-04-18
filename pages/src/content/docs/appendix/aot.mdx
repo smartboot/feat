@@ -1,290 +1,187 @@
 ---
-title: AOT 编译原理与实践
-description: 深度解析Feat框架AOT编译机制的核心原理与实践教程
+title: AOT 是怎么工作的
+description: 从编译期代码生成、CloudService 加载到 AOT VM 模式，理解 Feat Cloud 的 AOT 机制到底在做什么
 sidebar:
-    order: 2
+    order: 4
 ---
 
-import { TabItem, Tabs, Aside } from "@astrojs/starlight/components";
+import { Aside } from "@astrojs/starlight/components";
 
-你是否想过，为什么有些应用启动速度飞快，而有些却需要漫长的等待？
-
-在现代应用开发中，性能优化是一个永恒的话题。今天，让我们一起来探索 Feat 框架中的 AOT（Ahead-of-Time）编译技术，看看它是如何帮助我们构建高性能应用的。
-
-Feat框架通过AOT（Ahead-of-Time）编译技术实现零反射的运行时环境，在编译期完成所有代码生成和优化工作。这意味着什么呢？简单来说，就是把原本在应用运行时才需要做的工作提前到编译阶段完成，从而大大提升了应用的启动速度和运行效率。
-
-### 核心原理
-
-AOT编译的核心是`FeatAnnotationProcessor`，基于Java APT技术在编译期扫描和处理注解：
+Feat Cloud 里所谓的 AOT，不是一个抽象口号。  
+它的含义很具体：在编译期把一部分原本可能在运行期做的事情提前做掉，生成可直接加载的服务代码。
 
 ```mermaid
-sequenceDiagram
-    participant Compiler as Java编译器
-    participant Processor as FeatAnnotationProcessor
-    participant Generator as 代码生成器
-    participant File as 目标文件
-    
-    Compiler->>Processor: 调用process方法
-    Processor->>Processor: 扫描@Controller、@Bean等注解
-    
-    loop 处理每个注解元素
-        Processor->>Generator: 创建对应Serializer
-        Generator->>File: 生成Java代码
-    end
-    
-    Processor->>File: 生成SPI配置文件
+flowchart LR
+    A["源码里的 @Controller / @Bean / @Mapper"] --> B["FeatAnnotationProcessor"]
+    B --> C["生成 CloudService 实现"]
+    C --> D["写入 META-INF/services/CloudService"]
+    D --> E["运行期 ApplicationContext"]
+    E --> F["ServiceLoader 加载 CloudService"]
+    F --> G["加载 Bean / 注入依赖 / 注册路由"]
 ```
 
-实际的注解处理器支持以下注解：
+如果你只是正常使用 Feat Cloud，其实不需要先理解这一页。  
+但如果你想知道它为什么能以这种方式组织 Bean、Controller、Mapper 和运行时加载流程，这一页会有帮助。
+
+## 先把问题说清楚
+
+在很多常见 Java Web 框架里，运行时通常要做这些事：
+
+- 扫描类和注解
+- 解析 Controller
+- 建立路由映射
+- 注入依赖
+- 生成或缓存一些元数据
+
+Feat Cloud 选择把其中很大一部分提前到编译期完成。  
+这也是它 AOT 设计的起点。
+
+## 编译期到底生成了什么
+
+从仓库结构可以直接看出这套机制的几个关键模块：
+
+- `feat-cloud-aot`
+- `feat-cloud-aot-vm`
+- `feat-cloud`
+
+其中：
+
+- `feat-cloud-aot` 负责编译期生成代码
+- `feat-cloud` 负责运行期加载和执行这些服务
+- `feat-cloud-aot-vm` 提供一种更适合开发期的 AOT VM 运行模式
+
+编译期最关键的入口是：
+
+- `tech.smartboot.feat.cloud.aot.FeatAnnotationProcessor`
+
+它会处理 Feat Cloud 关心的注解，并生成对应的服务类和服务描述文件。
+
+## 它生成的不是“元数据”，而是“可执行服务类”
+
+在 Feat Cloud 的运行模型里，最终被加载的是 `CloudService` 实现。  
+运行时的 `ApplicationContext` 会通过 `ServiceLoader.load(CloudService.class)` 去加载这些服务。
+
+这意味着 AOT 做的核心事情不是只存一份配置，而是生成一批真正可以被运行期直接执行的类。
+
+这也是为什么在你查看 `target/generated-sources/annotations` 时，会看到诸如：
+
+- `UserControllerCloudService`
+- `UserMapperCloudService`
+- `FeatApplication`
+
+这类名字的类。
+
+## 为什么这件事重要
+
+如果编译期已经生成好了这些服务类，运行期就不需要再去做同样级别的动态分析。  
+它可以更直接地进入下面这些动作：
+
+- 加载服务
+- 初始化 Bean
+- 注入依赖
+- 注册路由
+
+这会带来几个实际效果：
+
+- 运行期逻辑更直接
+- 启动过程的工作量更可控
+- 对 Native Image 这类场景更友好
+
+## 以 Controller 为例理解 AOT
+
+当你写下一个普通控制器：
 
 ```java
-@Override
-public Set<String> getSupportedAnnotationTypes() {
-    Set<String> types = new HashSet<>();
-    types.add(Bean.class.getCanonicalName());        // Bean管理
-    types.add(Autowired.class.getCanonicalName());   // 依赖注入
-    types.add(Controller.class.getCanonicalName());  // Web控制器
-    types.add(Mapper.class.getCanonicalName());      // 数据访问层
-    types.add(McpEndpoint.class.getCanonicalName()); // MCP协议端点
-    return types;
+@Controller("users")
+public class UserController {
+    @RequestMapping("/hello")
+    public String hello() {
+        return "hello";
+    }
 }
 ```
 
-是不是感觉很神奇？在传统的开发模式中，框架需要在运行时通过反射来分析类结构、处理注解，这不仅消耗时间，还占用内存。而 Feat 的 AOT 技术将这些工作提前到编译期完成，让我们的应用在启动时就能直接运行优化后的代码。
+在 Feat Cloud 的 AOT 体系里，编译期不会只记住“这里有个 Controller”。  
+它会生成对应的 CloudService 类，并在其中明确写出：
 
-### 代码生成体系
+- 如何实例化这个 Controller
+- 如何把它注册进应用上下文
+- 如何把 `/users/hello` 这条路由挂到 Router 上
 
-Feat采用模板方法模式设计了序列化器体系：
+所以从运行期视角看，它接手到的已经不是“一个待解析的 Controller 类”，而是“一个已经具备执行逻辑的 CloudService”。
 
-```mermaid
-classDiagram
-    class Serializer {
-        +serializeLoadBean()
-        +serializeAutowired()
-        +serializeRouter()
-        +order() int
-    }
-    
-    class ControllerSerializer {
-        +serializeRouter()
-        +order() 100
-    }
-    
-    class BeanSerializer {
-        +serializeLoadBean()
-        +serializeAutowired()
-        +order() 200
-    }
-    
-    class MapperSerializer {
-        +serializeLoadBean()
-        +order() 300
-    }
-    
-    Serializer <|-- ControllerSerializer
-    Serializer <|-- BeanSerializer
-    Serializer <|-- MapperSerializer
-```
+## Bean、Mapper、CloudOptions 也在做同样的事
 
-优化策略包括：
-1. **死代码消除**：分析依赖关系，只生成实际使用的代码
-2. **内联优化**：将简单的方法调用直接内联到生成代码中
-3. **类型特化**：针对具体类型生成优化的序列化代码
+从 `feat-cloud-aot` 里的实现可以看到，AOT 处理并不只针对 Controller。
 
-在实际开发中，这些优化策略帮助我们构建出更加高效的代码。比如，当你写一个简单的控制器时：
+它还会围绕这些方向生成代码：
+
+- Bean
+- Mapper
+- CloudOptions 相关扩展
+
+这也是为什么 `MyBatis`、`CloudOptions`、`Controller` 这几块内容在 Feat Cloud 里能一起被纳入同一套编译期体系里理解。
+
+## 运行期是怎么把这些东西串起来的
+
+真正串联这套机制的是 `ApplicationContext`。
+
+它的大致运行路径可以理解成：
+
+1. 用 `ServiceLoader` 找到所有 `CloudService`
+2. 按顺序加载这些服务
+3. 让服务完成 Bean 加载、注入、路由注册等动作
+4. 最终把应用挂到运行时的 Router 和上下文里
+
+所以从外部看你只是调用了：
 
 ```java
-@Controller("demo2")
-public class Demo2Controller {
-    
-    @RequestMapping("/param1")
-    public String test2(@Param("param") String param) {
-        return "hello " + param;
-    }
-}
+FeatCloud.cloudServer().listen();
 ```
 
-AOT 编译器会将其转换为优化后的代码，完全避免了运行时反射的开销。
+但内部真正工作的，是一套已经在编译期准备好的服务装配流程。
 
-### 代码转换示例
+## AOT VM 是什么
 
-通过真实示例展示AOT编译的代码转换过程：
+如果说 AOT 模式更偏向“编译期把事情做完”，那 AOT VM 更像是：
 
-<Tabs>
-    <TabItem label="源代码">
-        ```java title="Demo2Controller.java"
-        @Controller("demo2")
-        public class Demo2Controller {
-            
-            @RequestMapping("/param1")
-            public String test2(@Param("param") String param) {
-                return "hello " + param;
-            }
-            
-            @RequestMapping("/param3")
-            public String test4(TestParam param) {
-                return "hello " + param.getParam1() + " " + param.getParam2();
-            }
-        }
-        ```
-    </TabItem>
-    
-    <TabItem label="生成代码">
-        ```java title="Demo2ControllerCloudService.java"
-        /**
-         * Copyright (c) 2022-2025 smartboot.tech All Rights Reserved.
-         * @Author: 三刀 zhengjunweimail@163.com
-         */
-        public class Demo2ControllerCloudService extends AbstractCloudService {
-            private Demo2Controller bean;
-            
-            public void loadBean(ApplicationContext applicationContext) throws Throwable {
-                bean = new Demo2Controller(); // 直接实例化，无反射
-            }
-            
-            public void router(ApplicationContext applicationContext, Router router) {
-                // 生成路由映射代码
-                router.route("/demo2/param1", ctx -> {
-                    JSONObject jsonObject = getParams(ctx.Request);
-                    String param0 = jsonObject.getObject("param", String.class);
-                    String rst = bean.test2(param0);
-                    byte[] bytes = rst.getBytes("UTF-8");
-                    ctx.Response.setContentLength(bytes.length);
-                    ctx.Response.write(bytes);
-                });
-                
-                router.route("/demo2/param3", ctx -> {
-                    JSONObject jsonObject = getParams(ctx.Request);
-                    TestParam param0 = jsonObject.to(TestParam.class);
-                    String rst = bean.test4(param0);
-                    byte[] bytes = rst.getBytes("UTF-8");
-                    ctx.Response.setContentLength(bytes.length);
-                    ctx.Response.write(bytes);
-                });
-            }
-        }
-        ```
-    </TabItem>
-</Tabs>
+> 在开发期尽量保留 AOT 的使用体验，同时让调试和变更成本更低。
 
-关键优化点：
-1. **零反射Bean实例化**：直接生成`new Demo2Controller()`调用
-2. **零反射依赖注入**：直接生成Bean获取和设置代码
-3. **预编译路由**：编译期生成完整的路由处理逻辑
-4. **类型安全**：编译期确定参数类型，避免运行时类型转换
-5. **性能优化**：生成专用的序列化和反序列化代码
+仓库里对应的模块是：
 
-通过上面的示例，我们可以看到 AOT 编译的强大之处。原本需要在运行时通过反射创建对象、解析注解的操作，现在都被直接编译成了高效的 Java 代码。
+- `feat-cloud-aot-vm`
 
-### SPI服务发现
+从源码可以看到它提供了 `AotVMCloudService` 和对应的处理器实现。  
+它的价值不在于和 AOT 完全一样，而在于让你在开发阶段不用一直围绕最终部署形态去思考。
 
-生成的服务类通过Java SPI机制进行加载：
+## 什么时候应该关心 AOT VM
 
-```mermaid
-graph LR
-    A[编译期] --> B[生成CloudService实现]
-    B --> C[创建SPI配置文件]
-    C --> D[META-INF/services/CloudService]
-    
-    E[运行期] --> F[ServiceLoader.load]
-    F --> G[加载所有CloudService]
-    G --> H[按order排序]
-    H --> I[依次执行生命周期]
-```
+你通常在下面这些情况下才需要认真看它：
 
-### 核心优势
+- 你已经在使用 Feat Cloud
+- 你开始关注开发期与部署期的差异
+- 你希望在调试体验和最终性能之间做平衡
 
-| 特性 | 传统框架 | AOT模式 |
-|------|---------|----------|
-| **编译期优化** | 运行时反射解析 | 编译期静态生成代码 |
-| **启动性能** | 需要类扫描和注解解析 | 直接加载预生成代码 |
-| **内存效率** | 运行时元数据缓存 | 编译期优化，减少运行时开销 |
-| **GraalVM支持** | 需要复杂配置 | 原生兼容 |
+如果你还在 quickstart 阶段，这一层完全可以先跳过。
 
-:::tip
-AOT 模式让我们的应用在启动时就达到最佳性能状态，尤其适合对启动时间有严格要求的场景，如云原生应用、微服务等。
-:::
+## 这套机制对你意味着什么
 
-## AOT虚拟机
+从使用者角度，AOT 最重要的意义不是“编译期很高级”，而是它会影响你怎么理解下面这些事：
 
-**AOT VM模式**专为开发阶段设计，通过运行时反射模拟AOT编译行为，提供与AOT模式一致的API体验。
+- 为什么 Feat Cloud 的启动过程长这样
+- 为什么某些能力更适合编译期决定，而不是运行期反射
+- 为什么它和传统运行期扫描框架的运行模型不一样
 
-| 特性 | AOT模式 | AOT VM模式 |
-|------|---------|------------|
-| **编译期优化** | ✅ 静态生成 | ❌ 运行时处理 |
-| **启动性能** | 🚀 毫秒级 | ⚡ 快速 |
-| **开发体验** | 🔧 需重编译 | 🔄 热重载 |
-| **适用场景** | 🏭 生产环境 | 🧪 开发测试 |
+换句话说，这页的价值不在于教你“怎么手写 AOT”，而在于帮你理解 Feat Cloud 这套架构为什么是现在这个样子。
 
-两种模式都遵循相同的Bean生命周期管理规范：
+## 什么时候需要回来看这页
 
-```mermaid
-stateDiagram-v2
-    [*] --> 创建实例: loadBean()
-    创建实例 --> 属性注入: autowired()
-    属性注入 --> 初始化: postConstruct()
-    初始化 --> 路由注册: router()
-    路由注册 --> 运行中: 服务就绪
-    运行中 --> 销毁: destroy()
-    销毁 --> [*]: 应用关闭
-    
-    note right of 创建实例
-        AOT: 静态new实例
-        VM: 反射创建实例
-    end note
-    
-    note right of 属性注入
-        AOT: 直接setter调用
-        VM: 反射字段注入
-    end note
-    
-    note right of 路由注册
-        AOT: 预生成路由代码
-        VM: 反射解析@RequestMapping
-    end note
-```
+这页最适合在下面这些时机阅读：
 
-### 启用AOT VM模式
-
-要启用AOT VM模式，需要对Maven项目进行以下配置：
-
-1. 添加profiles配置：
-
-    ```xml
-    <profiles>
-        <profile>
-            <id>feat-aot-vm</id>
-            <properties>
-                <!-- 必须为true,以便 AOT VM 运行时识别方法参数名 -->
-                <maven.compiler.parameters>true</maven.compiler.parameters>
-            </properties>
-            <dependencies>
-                <dependency>
-                    <groupId>tech.smartboot.feat</groupId>
-                    <artifactId>feat-cloud-starter</artifactId>
-                    <version>${feat.version}</version>
-                    <exclusions>
-                        <!-- 禁用 AOT 组件 -->
-                        <exclusion>
-                            <groupId>tech.smartboot.feat</groupId>
-                            <artifactId>feat-cloud-aot</artifactId>
-                        </exclusion>
-                    </exclusions>
-                </dependency>
-                <!-- 启用 AOT VM 组件 -->
-                <dependency>
-                    <groupId>tech.smartboot.feat</groupId>
-                    <artifactId>feat-cloud-aot-vm</artifactId>
-                    <version>${feat.version}</version>
-                </dependency>
-            </dependencies>
-        </profile>
-    </profiles>
-    ```
-
-2. 在IDEA中勾选相应的profile以激活AOT VM模式
-    ![](./img/idea_aot_vm.png)
+- 你已经用过 Feat Cloud，但想理解它的底层机制
+- 你在看 `target/generated-sources/annotations`，想知道这些类为什么存在
+- 你准备继续研究 Native Image 或 AOT VM 相关内容
 
 <Aside type="tip">
-    **实战建议**：开发时使用AOT VM模式提高调试效率，部署时切换到AOT模式获得最佳性能。两种模式的API完全兼容，切换成本极低。
+如果你现在还在学习主线教程，这页可以先略过。等你已经完成 [Feat Cloud 导览](/feat/cloud/)、[构建第一个 Feat Cloud 应用](/feat/cloud/quickstart/) 和 [CloudOptions 配置指南](/feat/cloud/options/) 之后，再回来读它会更顺。
 </Aside>

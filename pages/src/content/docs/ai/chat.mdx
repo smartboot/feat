@@ -1,418 +1,199 @@
 ---
-title: 对话与流式
-description: 如何配置对话模型、流式输出与系统提示
+title: 配置对话模型并处理流式输出
+description: 在第一次模型调用成功之后，继续掌握同步调用、流式输出和基础对话配置
 sidebar:
     order: 2
 ---
 
 import { Aside } from '@astrojs/starlight/components';
 
-# Feat AI 对话功能
+如果说 [完成第一次 Feat AI 调用](/feat/ai/getstart/) 解决的是“模型有没有真的返回内容”，那么这一页要解决的是下一层问题：
 
-Feat AI 提供了简洁易用的对话功能，支持与大语言模型进行交互，包括同步和流式输出。本文档将带你从零开始使用 Feat AI 对话功能，从依赖引入到高级配置，全面覆盖实际应用场景。
+- 我该怎么配模型
+- 什么时候用 `chat(...)`
+- 什么时候用 `chatStream(...)`
+- 调整 `system`、`temperature`、`noThink` 这类参数到底意味着什么
 
-## 学习目标
+## 先从最小配置继续往前走
 
-- 在 Maven 项目中引入 `feat-ai` 依赖
-- 使用 `FeatAI.chatModel(...)` 创建对话模型
-- 掌握 `chat()` 和 `chatStream()` 两种交互方式
-- 区分云端 API（如 Gitee AI）与本地模型（如 Ollama）的配置
-- 实现多轮对话和流式输出
-- 了解不同场景的最佳实践
+一个最常见的下一步写法，是在模型上显式补系统提示词和输出行为：
 
-## 前置条件
-
-- **JDK 1.8** 或更高版本
-- **Maven 3.0** 或更高版本
-- 模型服务（任选其一）：
-  - **Gitee AI**：需配置 API Key（环境变量 `FEAT_AI_API_KEY`）
-  - **Ollama**：本地已安装并运行 [Ollama](https://ollama.ai/)，默认地址 `http://localhost:11434`
-
-<Aside type="caution">
-使用 Gitee AI 时，必须在环境变量中设置 `FEAT_AI_API_KEY`，否则会抛出 `IllegalArgumentException`。
-</Aside>
-
-## 快速开始
-
-### 步骤 1：引入依赖
-
-在项目的 `pom.xml` 中添加 `feat-ai` 依赖（Feat 父 POM 或版本属性中需包含 `feat.version`）：
-
-```xml title="pom.xml"
-<dependency>
-    <groupId>tech.smartboot.feat</groupId>
-    <artifactId>feat-ai</artifactId>
-    <version>${feat.version}</version>
-</dependency>
-```
-
-<Aside type="tip">
-`feat-ai` 已传递依赖 `feat-core`，无需单独引入。
-</Aside>
-
-### 步骤 2：创建对话模型
-
-#### 本地 Ollama 配置
-
-指定 baseUrl 和模型名即可创建本地模型实例：
-
-```java
-import tech.smartboot.feat.ai.FeatAI;
-import tech.smartboot.feat.ai.chat.ChatModel;
-
-public class HelloFeatAI {
-    public static void main(String[] args) {
-        ChatModel model = FeatAI.chatModel(opts -> opts
-                .baseUrl("http://localhost:11434/v1")
-                .model("qwen2.5:7b")
-        );
-        // 后续使用 model 发送消息
-    }
-}
-```
-
-#### Gitee AI 配置
-
-使用内置的 `ChatModelVendor` 枚举，无需手动指定 baseUrl：
-
-```java
+```java title="OllamaDemo.java"
 import tech.smartboot.feat.ai.FeatAI;
 import tech.smartboot.feat.ai.chat.ChatModel;
 import tech.smartboot.feat.ai.chat.ChatModelVendor;
 
-ChatModel model = FeatAI.chatModel(opts -> opts
-        .model(ChatModelVendor.GiteeAI.Qwen2_5_72B_Instruct)
-);
+public class OllamaDemo {
+    public static void main(String[] args) {
+        ChatModel chatModel = FeatAI.chatModel(opts -> {
+            opts.model(ChatModelVendor.Ollama.Qwen3_06B)
+                    .system("你是一个擅长生成藏头诗的诗人。")
+                    .noThink(true)
+                    .debug(false);
+        });
+
+        chatModel.chat("写一句和 Feat 有关的短句", rsp -> {
+            System.out.println(rsp.getContent());
+        });
+    }
+}
 ```
 
-### 步骤 3：发送消息并处理回复
+这段代码里最值得关心的是三项配置：
 
-#### 同步对话
+- `system(...)`：定义角色或输出风格
+- `noThink(true)`：在支持的模型上关闭“思考过程”输出
+- `debug(...)`：本地排查请求时打开，平时不必默认开启
 
-使用 `chat()` 方法获取完整回复和用量信息：
+## `chat(...)` 和 `chatStream(...)` 到底怎么选
+
+这两个方法不是谁更高级，而是两种不同的交付方式。
+
+### 用 `chat(...)`，如果你要的是完整结果
 
 ```java
-model.chat("解释什么是 RAG", response -> {
-    System.out.println("回复: " + response.getContent());
-    System.out.println("用量: " + response.getUsage());
+chatModel.chat("你好，请自我介绍一下。", rsp -> {
+    System.out.println("content: " + rsp.getContent());
+    System.out.println("usage: " + rsp.getUsage());
 });
 ```
 
-#### 流式对话
+适合：
 
-使用 `chatStream()` 方法逐段获取回复，适合长回答或实时展示：
+- 后端任务处理
+- 一次性生成结果
+- 你需要在最后统一读取 `usage`
+
+### 用 `chatStream(...)`，如果你要边生成边消费
 
 ```java
-model.chatStream("解释什么是 RAG", content -> {
+chatModel.chatStream("根据以下关键词生成一首藏头诗：情,人,节,快,乐", content -> {
     System.out.print(content);
 });
 ```
 
-### 步骤 4：完整可运行示例
+适合：
 
-以下是基于 **Ollama** 的完整示例（JDK 8 可运行）：
+- 终端逐步输出
+- 前端打字机效果
+- 较长内容的实时展示
 
-```java title="HelloFeatAI.java"
-import tech.smartboot.feat.ai.FeatAI;
-import tech.smartboot.feat.ai.chat.ChatModel;
-
-public class HelloFeatAI {
-    public static void main(String[] args) {
-        ChatModel model = FeatAI.chatModel(opts -> opts
-                .baseUrl("http://localhost:11434/v1")
-                .model("qwen2.5:7b")
-        );
-
-        model.chatStream("用一句话解释什么是 RAG", content -> {
-            System.out.print(content);
-        });
-    }
-}
-```
-
-### 验证结果
-
-- **Ollama**：先在本机执行 `ollama run qwen2.5:7b`（或你配置的模型），再运行上述程序，控制台应逐字输出模型回复。
-- **Gitee AI**：设置好 `FEAT_AI_API_KEY` 后运行，应得到云端模型的回复；若未设置，会报错提示设置环境变量。
-
-<Aside type="tip">
-项目内更多可运行示例见 `feat-ai` 模块下的 `demo` 包，如 `LocalAI`、`ChatDemo`、`OllamaDemo`。
-</Aside>
-
-## API 参考
-
-### ChatModel 核心方法
-
-| 方法 | 参数 | 返回值 | 说明 |
-|------|------|--------|------|
-| `chat(String prompt, Consumer<ResponseMessage> callback)` | prompt: 提示词<br/>callback: 响应回调 | void | 同步对话，一次性获取完整回复 |
-| `chat(List<Message> messages, Consumer<ResponseMessage> callback)` | messages: 消息列表<br/>callback: 响应回调 | void | 多轮对话，支持上下文 |
-| `chatStream(String prompt, StreamResponseCallback callback)` | prompt: 提示词<br/>callback: 流式响应回调 | void | 流式对话，逐段获取回复 |
-| `chatStream(List<Message> messages, StreamResponseCallback callback)` | messages: 消息列表<br/>callback: 流式响应回调 | void | 流式多轮对话 |
-| `chatStream(String prompt, Consumer<String> callback)` | prompt: 提示词<br/>callback: 内容回调 | void | 简化版流式对话，只处理内容 |
-
-### ResponseMessage 结构
-
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `getContent()` | String | 模型回复内容 |
-| `getUsage()` | Usage | 令牌使用情况 |
-| `getId()` | String | 响应唯一标识 |
-| `getCreated()` | long | 创建时间戳 |
-| `getModel()` | String | 使用的模型 |
-
-### Usage 结构
-
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `getPromptTokens()` | int | 提示词令牌数 |
-| `getCompletionTokens()` | int | 回复令牌数 |
-| `getTotalTokens()` | int | 总令牌数 |
-
-## 高级配置
-
-通过 `FeatAI.chatModel(opts -> ...)` 创建对话模型时，可配置以下参数：
-
-| 配置项 | 方法 | 说明 | 类型 | 默认值 |
-|--------|------|------|------|--------|
-| 服务地址 | `baseUrl(String)` | 兼容 OpenAI 的 API 根地址，如 Ollama 的 `http://localhost:11434/v1` | String | - |
-| 模型 | `model(String)` 或 `model(ChatModelVendor)` | 模型名或内置厂商枚举 | String/Enum | - |
-| API Key | `apiKey(String)` 或环境变量 `FEAT_AI_API_KEY` | 云端 API 必填 | String | 环境变量值 |
-| 系统提示 | `system(String)` | 设定角色或风格，如「你是一个诗人」 | String | - |
-| 调试模式 | `debug(boolean)` | 为 true 时打印请求/响应便于排查 | boolean | false |
-| 关闭思考 | `noThink(true)` | 部分模型会输出“思考”内容，设为 true 可关闭 | boolean | false |
-| 温度 | `temperature(double)` | 生成随机性，0-2，值越高越随机 | double | 0.7 |
-| 最大令牌 | `maxTokens(int)` | 最大生成令牌数 | int | - |
-
-### 配置示例
-
-#### 本地 Ollama 配置
+如果你需要在流式结束后再做收尾动作，可以用完整回调版本：
 
 ```java
-ChatModel model = FeatAI.chatModel(opts -> opts
-        .baseUrl("http://localhost:11434/v1")
-        .model("qwen2.5:7b")
-        .system("你是一个擅长生成藏头诗的诗人。")
-        .noThink(true)
-        .temperature(0.8)
-        .maxTokens(1000)
-);
-```
-
-#### Gitee AI 配置
-
-```java
-ChatModel model = FeatAI.chatModel(opts -> opts
-        .model(ChatModelVendor.GiteeAI.Qwen2_5_72B_Instruct)
-        .system("你是一个专业的 Java 工程师")
-        .debug(true)
-);
-```
-
-## 高级用法
-
-### 同步对话详解
-
-使用 `chat()` 方法获取完整回复和用量信息，适合需要一次性处理完整结果的场景：
-
-```java
-model.chat("根据关键词「情」「人」「节」生成一句藏头诗", response -> {
-    System.out.println("回复内容：" + response.getContent());
-    System.out.println("提示词令牌：" + response.getUsage().getPromptTokens());
-    System.out.println("回复令牌：" + response.getUsage().getCompletionTokens());
-    System.out.println("总令牌：" + response.getUsage().getTotalTokens());
-});
-```
-
-### 流式对话详解
-
-使用 `chatStream()` 方法逐段获取回复，适合需要实时展示或处理长回复的场景：
-
-```java
-model.chatStream("用三句话介绍 Feat 框架", new StreamResponseCallback() {
+chatModel.chatStream("介绍一下 Feat", new StreamResponseCallback() {
     @Override
     public void onStreamResponse(String content) {
-        System.out.print(content); // 逐字输出
+        System.out.print(content);
     }
 
     @Override
     public void onCompletion(ResponseMessage responseMessage) {
-        System.out.println("\n生成完成，总令牌数：" + responseMessage.getUsage().getTotalTokens());
+        System.out.println("\n完成，总令牌数：" + responseMessage.getUsage().getTotalTokens());
     }
 });
 ```
 
-<Aside type="tip">
-流式接口提供简化写法，只处理内容片段：
-```java
-model.chatStream("你的提示词", content -> System.out.print(content));
-```
-</Aside>
+## 多轮对话怎么理解
 
-### 多轮对话实现
+多轮对话不是一个额外模式，本质上只是“你把历史消息也一起发给模型”。
 
-通过维护消息列表实现多轮对话，保持上下文连续性：
+最简单的做法是维护一组消息：
 
 ```java
 import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.MessageRole;
-import java.util.ArrayList;
-import java.util.List;
 
-// 初始化消息列表
 List<Message> messages = new ArrayList<>();
-
-// 系统消息
 messages.add(new Message(MessageRole.SYSTEM, "你是一个专业的 Java 工程师"));
+messages.add(new Message(MessageRole.USER, "什么是 Feat？"));
 
-// 第一轮对话
-messages.add(new Message(MessageRole.USER, "什么是 Feat 框架？"));
-model.chat(messages, response -> {
-    String content = response.getContent();
-    System.out.println("AI: " + content);
-    // 添加 AI 回复到消息列表
-    messages.add(new Message(MessageRole.ASSISTANT, content));
-});
-
-// 第二轮对话（基于上下文）
-messages.add(new Message(MessageRole.USER, "它和 Spring Boot 有什么区别？"));
-model.chat(messages, response -> {
-    System.out.println("AI: " + response.getContent());
+chatModel.chat(messages, rsp -> {
+    System.out.println(rsp.getContent());
 });
 ```
 
-### 综合示例
+如果你准备做真正的聊天产品，这一步很重要。  
+如果你当前只是做单次问答，先别急着把对话状态管理复杂化。
 
-以下示例演示了创建模型、设置系统提示、以及流式与同步两种调用方式（JDK 8 可运行）：
+## 这些配置项什么时候才值得改
 
-```java
+### `system(...)`
+
+最值得最早用。  
+它往往比你反复修改用户提示词更有效，因为它定义的是整体角色和输出边界。
+
+### `temperature(...)`
+
+当你明确要控制“稳定性 vs 创造性”时再动它。
+
+- 较低：回答更收敛
+- 较高：回答更发散
+
+如果你还不知道自己想要什么风格，先保持默认值通常更稳。
+
+### `maxTokens(...)`
+
+当你需要控制回复长度时再用。  
+比如做固定格式输出、成本控制或者避免模型生成过长内容。
+
+### `noThink(...)`
+
+只有当你已经确认某些模型会输出不希望暴露的“思考过程”时，再显式使用它。
+
+## 一个更接近真实使用的例子
+
+仓库里的 `ChatDemo` 展示了一个很典型的多轮问题：
+
+```java title="ChatDemo.java"
 import tech.smartboot.feat.ai.FeatAI;
 import tech.smartboot.feat.ai.chat.ChatModel;
-import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
-import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
+import tech.smartboot.feat.ai.chat.ChatModelVendor;
 
-public class ChatDemoExample {
+public class ChatDemo {
     public static void main(String[] args) {
-        ChatModel model = FeatAI.chatModel(opts -> opts
-                .baseUrl("http://localhost:11434/v1")
-                .model("qwen2.5:7b")
-                .system("你是一个擅长生成藏头诗的诗人。")
-                .noThink(true)
+        ChatModel chatModel = FeatAI.chatModel(opts ->
+                opts.model(ChatModelVendor.GiteeAI.Qwen2_5_72B_Instruct)
         );
 
-        String prompt = "根据以下关键词生成一句藏头诗：情,人,节,快,乐";
-
-        // 流式调用
-        model.chatStream(prompt, new StreamResponseCallback() {
-            @Override
-            public void onStreamResponse(String content) {
-                System.out.print(content);
-            }
-            @Override
-            public void onCompletion(ResponseMessage responseMessage) {
-                System.out.println("\n生成完成！");
-            }
-        });
-
-        // 同步调用
-        model.chat(prompt, response -> {
-            System.out.println(response.getContent());
-            System.out.println("生成完成！");
+        chatModel.chat("你好，请自我介绍一下。", rsp -> {
+            System.out.println("rsp: " + rsp.getContent());
+            System.out.println("usage: " + rsp.getUsage());
+            chatModel.chat("我对你说的上一句话是什么？", rsp2 -> {
+                System.out.println("rsp2: " + rsp2.getContent());
+            });
         });
     }
 }
 ```
 
-## 使用场景与最佳实践
+这个例子至少能帮助你理解两件事：
 
-### 场景 1：客服机器人
+- `chat(...)` 可以直接拿到响应对象，不只是拿到文本
+- 你完全可以在一个回调里继续发下一轮请求
 
-**适用条件**：需要 24/7 在线客服，处理常见问题
+## 常见问题
 
-**配置建议**：
-- 系统提示：明确角色定位和回答范围
-- 温度：0.3-0.5（更确定性回答）
-- 最大令牌：500-1000（控制回答长度）
+### 第一次调用能成功，为什么一加配置就不对了
 
-**示例**：
-```java
-ChatModel supportBot = FeatAI.chatModel(opts -> opts
-        .baseUrl("http://localhost:11434/v1")
-        .model("qwen2.5:7b")
-        .system("你是 Feat 框架的客服机器人，只回答与 Feat 相关的问题，对于不相关问题请礼貌拒绝。")
-        .temperature(0.3)
-        .maxTokens(800)
-);
-```
+优先检查：
 
-### 场景 2：内容生成
+1. 模型本身是否支持你设置的能力
+2. `system(...)` 是否把角色限制得过死
+3. 你是不是同时改了太多参数，导致很难判断是哪一项生效
 
-**适用条件**：需要生成文章、代码、创意内容
+### `chatStream(...)` 没有等到完整句子就一直打印碎片
 
-**配置建议**：
-- 系统提示：详细描述内容风格和要求
-- 温度：0.7-1.0（更有创意）
-- 最大令牌：2000-4000（支持长内容）
+这是正常的。  
+流式输出本来就是按片段到达，不保证是完整语义单元。
 
-**示例**：
-```java
-ChatModel contentGenerator = FeatAI.chatModel(opts -> opts
-        .baseUrl("http://localhost:11434/v1")
-        .model("qwen2.5:7b")
-        .system("你是一个专业的技术文档 writer，擅长用清晰、简洁的语言解释复杂概念。")
-        .temperature(0.8)
-        .maxTokens(3000)
-);
-```
+### `noThink(true)` 为什么似乎没效果
 
-### 场景 3：代码辅助
+因为这取决于模型和厂商支持情况。  
+它不是所有后端都一定有效的通用开关。
 
-**适用条件**：需要生成、解释或优化代码
+## 下一步
 
-**配置建议**：
-- 系统提示：指定编程语言和代码风格
-- 温度：0.4-0.6（平衡创意和正确性）
-- 最大令牌：1500-2500（支持完整函数/类）
-
-**示例**：
-```java
-ChatModel codeAssistant = FeatAI.chatModel(opts -> opts
-        .baseUrl("http://localhost:11434/v1")
-        .model("qwen2.5:7b")
-        .system("你是一个专业的 Java 工程师，擅长编写清晰、高效、符合最佳实践的代码。")
-        .temperature(0.5)
-        .maxTokens(2000)
-);
-```
-
-## 支持的模型服务
-
-- **Gitee AI**：使用 `opts.model(ChatModelVendor.GiteeAI.Qwen2_5_72B_Instruct)` 等枚举值，并设置 `FEAT_AI_API_KEY` 环境变量。
-- **Ollama**：本地运行的模型服务，通过 `baseUrl("http://localhost:11434/v1")` 配置。
-- **自定义服务**：任意兼容 OpenAI 格式的接口均可通过 `baseUrl(...)` + `model(...)` 对接。
-- **Azure OpenAI**：设置 `baseUrl` 为 Azure 端点，`apiKey` 为 Azure API Key。
-
-## 注意事项
-
-- 使用 Gitee AI 时 **必须** 设置环境变量 `FEAT_AI_API_KEY`，否则会抛出 `IllegalArgumentException`。
-- Ollama 的 baseUrl 通常为 `http://localhost:11434/v1`，且不要以 `/` 结尾；Feat AI 会自动处理末尾斜杠。
-- 部分模型会先输出“思考”再输出答案，若不需要可设置 `noThink(true)`。
-- 流式回调可能在非主线程执行，若在 UI 或其它线程敏感场景使用，需自行做线程切换。
-- 多轮对话时，消息列表会占用内存，需根据实际情况控制列表大小。
-- 生产环境建议设置合理的超时时间，避免长时间阻塞。
-
-## 故障排除
-
-| 问题 | 可能原因 | 解决方案 |
-|------|----------|----------|
-| 连接超时 | 网络问题或服务不可用 | 检查网络连接，确认服务是否运行 |
-| API Key 错误 | 密钥无效或未设置 | 确认环境变量 `FEAT_AI_API_KEY` 是否已正确设置 |
-| 模型不存在 | 模型名错误或未安装 | 确认模型名正确，Ollama 需先 `pull` 模型 |
-| 令牌超限 | 输入或输出过长 | 减少输入长度，设置合理的 `maxTokens` |
-| 响应为空 | 模型未返回内容 | 检查提示词是否清晰，尝试调整 `temperature` |
-
-## 相关资源
-
-- [Feat AI 简介](/feat/ai/)：模块能力概览
-- [Agent 开发](/feat/ai/agent/)：基于 Feat AI 构建智能代理
-- 项目内可运行示例：`feat-ai` 模块 `demo` 包下的 `ChatDemo`、`OllamaDemo`、`LocalAI`
+- 如果你准备开始让模型调用工具：去 [使用 Agent](/feat/ai/agent/)
+- 如果你准备做检索增强：去 [Embedding 与向量](/feat/ai/embedding/)
+- 如果你还没完成最小调用：先回到 [完成第一次 Feat AI 调用](/feat/ai/getstart/)

@@ -1,36 +1,33 @@
 ---
-title: 5 分钟上手 Feat AI
-description: 完成第一次对话调用，验证模型接入、同步输出和流式输出链路
+title: 完成第一次 Feat AI 调用
+description: 连接一个可用模型，让 Feat AI 真正返回第一段文本
 sidebar:
     order: 1
 ---
 
 import { Aside, TabItem, Tabs } from '@astrojs/starlight/components';
 
-这篇教程只关注最小闭环：让模型真正返回结果。先把链路打通，再进入对话配置、Agent 和 Embedding。
+这篇指南不追求覆盖所有 AI 能力。它只做一件事：让模型真正返回结果。先把链路打通，再去学对话配置、Embedding 和 Agent。
 
-## 你将完成什么
+## 你将构建什么
 
-- 在 Maven 项目中引入 `feat-ai`
-- 连接一个可用模型服务
-- 运行第一次同步或流式对话
-- 知道接下来应该去哪一页继续深入
+你将写出一个最小的 Feat AI 调用程序：
 
-## 前置条件
+- 连接本地 Ollama，或者连接云端模型
+- 发出一条提示词
+- 在控制台看到模型返回的文本
 
-- JDK 1.8 或更高版本
+## 你需要什么
+
+- JDK 8 或更高版本
 - Maven 3.0 或更高版本
-- 任选一种模型来源
+- 二选一：
   - 本地模型：已安装并运行 [Ollama](https://ollama.ai/)
-  - 云端模型：已准备好 `FEAT_AI_API_KEY`
+  - 云端模型：已准备好环境变量 `FEAT_AI_API_KEY`
 
-<Aside type="tip">
-如果你只是想先验证链路是否打通，优先使用 Ollama。本地依赖更少，排查路径也更短。
-</Aside>
+## 添加依赖
 
-## 步骤 1：引入依赖
-
-在 `pom.xml` 中添加 `feat-ai`：
+在 `pom.xml` 中加入 `feat-ai`：
 
 ```xml title="pom.xml"
 <dependency>
@@ -41,114 +38,111 @@ import { Aside, TabItem, Tabs } from '@astrojs/starlight/components';
 ```
 
 <Aside>
-`feat-ai` 已传递依赖 `feat-core`，通常无需再单独引入。
+`feat-ai` 已经传递依赖了 `feat-core`，通常不需要额外再引入。
 </Aside>
 
-## 步骤 2：选择你的第一个模型来源
+## 选择模型来源
 
-<Tabs>
-    <TabItem value="Ollama" label="Ollama">
-        ```java title="HelloFeatAI.java"
-        import tech.smartboot.feat.ai.FeatAI;
-        import tech.smartboot.feat.ai.chat.ChatModel;
+### 方案一：本地 Ollama
 
-        public class HelloFeatAI {
-            public static void main(String[] args) {
-                ChatModel model = FeatAI.chatModel(opts -> opts
-                        .baseUrl("http://localhost:11434/v1")
-                        .model("qwen2.5:7b")
-                );
+如果你只想最快验证链路，优先用本地 Ollama。
 
-                model.chatStream("用一句话介绍 Feat 框架", System.out::print);
-            }
-        }
-        ```
+先确认模型已经可用，例如：
 
-        运行前先确保本地模型已准备好，例如先执行：
+```shell
+ollama run qwen2.5:7b
+```
 
-        ```shell
-        ollama run qwen2.5:7b
-        ```
-    </TabItem>
-    <TabItem value="Gitee AI" label="Gitee AI">
-        ```java title="HelloFeatAI.java"
-        import tech.smartboot.feat.ai.FeatAI;
-        import tech.smartboot.feat.ai.chat.ChatModel;
-        import tech.smartboot.feat.ai.chat.ChatModelVendor;
+然后写一个最小程序：
 
-        public class HelloFeatAI {
-            public static void main(String[] args) {
-                ChatModel model = FeatAI.chatModel(opts -> opts
-                        .model(ChatModelVendor.GiteeAI.Qwen2_5_72B_Instruct)
-                );
+```java title="HelloFeatAI.java"
+import tech.smartboot.feat.ai.FeatAI;
+import tech.smartboot.feat.ai.chat.ChatModel;
 
-                model.chat("用一句话介绍 Feat 框架", response -> {
-                    System.out.println(response.getContent());
-                });
-            }
-        }
-        ```
+public class HelloFeatAI {
+    public static void main(String[] args) {
+        ChatModel model = FeatAI.chatModel(opts -> opts
+                .baseUrl("http://localhost:11434/v1")
+                .model("qwen2.5:7b")
+        );
 
-        运行前请先设置环境变量 `FEAT_AI_API_KEY`，否则模型初始化会失败。
-    </TabItem>
-</Tabs>
+        model.chatStream("用一句话介绍 Feat 框架", System.out::print);
+    }
+}
+```
 
-## 步骤 3：验证模型确实返回了结果
+### 方案二：云端模型
 
-程序运行成功后，你应该能看到模型返回的文本内容。内容不必与示例完全一致，但至少应该满足以下预期：
+如果你已经拿到云端 API Key，也可以直接走云端：
 
-- 程序没有抛异常
-- 控制台有真实文本输出，而不是空内容
-- 你能区分“同步一次性输出”和“流式逐段输出”
+```java title="HelloFeatAI.java"
+import tech.smartboot.feat.ai.FeatAI;
+import tech.smartboot.feat.ai.chat.ChatModel;
+import tech.smartboot.feat.ai.chat.ChatModelVendor;
 
-一个典型的输出可能类似：
+public class HelloFeatAI {
+    public static void main(String[] args) {
+        ChatModel model = FeatAI.chatModel(opts -> opts
+                .model(ChatModelVendor.GiteeAI.Qwen2_5_72B_Instruct)
+        );
+
+        model.chat("用一句话介绍 Feat 框架", response -> {
+            System.out.println(response.getContent());
+        });
+    }
+}
+```
+
+<Aside type="caution">
+如果你使用云端模型但没有正确设置 `FEAT_AI_API_KEY`，程序通常会在初始化阶段直接失败，而不是返回空内容。
+</Aside>
+
+## 运行并确认结果
+
+程序运行成功后，你应该看到模型返回一段文本。内容不必完全固定，但至少应该满足：
+
+- 没有抛异常
+- 控制台有真实输出
+- 不是空字符串
+
+一个典型结果可能类似：
 
 ```text
 Feat 是一个轻量级、高性能的 Java Web 服务开发框架。
 ```
 
-<Aside type="caution">
-使用云端模型时，环境变量未设置通常会直接导致初始化失败，而不是返回空内容。
-</Aside>
+## `chat` 和 `chatStream` 有什么区别
 
-## 步骤 4：理解同步调用和流式调用的区别
+这两个方法看起来很像，但使用场景不同：
 
-在 quickstart 阶段，你只需要记住下面这个区别：
+- `chat(...)`：等整段回复生成完成后再给你
+- `chatStream(...)`：一边生成一边回调，适合终端输出和前端流式展示
 
-- `chat(...)`：拿到完整回复后再处理，适合后台任务或一次性返回
-- `chatStream(...)`：边生成边消费，适合 CLI 输出、前端打字机效果、长文本生成
+在 quickstart 阶段，能记住这个区别就够了。参数调优、多轮对话和系统提示词放到下一篇再学。
 
-当最小示例跑通后，你通常会继续做这三件事：
+## 接下来读什么
 
-1. 给模型增加 `system(...)`、`temperature(...)`、`maxTokens(...)` 等配置。
-2. 从一次性输出切换到 `chatStream(...)`，把内容实时返回给前端。
-3. 维护消息列表，构建多轮对话上下文。
+如果第一次调用已经成功，接下来通常会沿着这条路径继续：
 
-这些能力在 [对话与流式](/feat/ai/chat/) 中有完整示例。
+- 想学同步调用、流式输出和多轮对话：看 [对话与流式](/feat/ai/chat/)
+- 想让模型调用工具：看 [使用 Agent](/feat/ai/agent/)
+- 想做检索增强：看 [Embedding 与向量](/feat/ai/embedding/)
 
 ## 常见问题
 
-### Ollama 模式下没有任何输出
+### 本地 Ollama 一直没有输出
 
 优先检查：
 
-1. `ollama` 服务是否已经运行
-2. 本地是否真的有你指定的模型，比如 `qwen2.5:7b`
-3. `baseUrl` 是否与你本机环境一致，默认一般是 `http://localhost:11434/v1`
+1. Ollama 服务是否在运行
+2. 本地是否真的有对应模型
+3. `baseUrl` 是否与本机环境一致
 
-### Gitee AI 模式下程序直接报错
+### 云端模型直接报错
 
-优先检查 `FEAT_AI_API_KEY` 是否已设置到当前运行环境中，而不是只设置在某个终端会话里。
+优先检查 `FEAT_AI_API_KEY` 是否真的在当前运行环境中可见，而不是只在另一个终端窗口里设置过。
 
-### 我想继续做多轮对话或 Agent
+### 我想直接做 Agent，不想再学一轮对话
 
-不要继续在 quickstart 里堆功能，直接转到后续教程：
-
-- 多轮和流式输出：看 [对话与流式](/feat/ai/chat/)
-- 工具调用与任务执行：看 [使用 Agent](/feat/ai/agent/)
-
-## 下一步
-
-- [对话与流式](/feat/ai/chat/)：继续完善模型配置、同步调用和流式输出
-- [使用 Agent](/feat/ai/agent/)：在模型之上接入工具调用与任务执行
-- [Embedding 与向量](/feat/ai/embedding/)：为检索增强和 RAG 做准备
+不建议。  
+先把最基本的模型调用理解清楚，再去做 Agent，排错成本会低很多。

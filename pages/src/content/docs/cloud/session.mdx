@@ -1,230 +1,117 @@
 ---
-title: Session 会话管理
-description: 如何在 Feat Cloud 中使用 Session 管理用户状态
+title: 什么时候需要 Session
+description: 在 Feat Cloud 里使用 Session 保存状态，并判断什么时候应该继续留在 Session 模型，什么时候该换方式
 sidebar:
-    order: 5
+  order: 5
 ---
 
-import {Aside} from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
 
-本指南介绍如何在 Feat Cloud 中使用 Session 管理用户状态，包括本地 Session 和 Redis Session 两种模式。
+Session 的核心价值很简单：让多次请求之间共享一点状态。  
+在 Feat Cloud 里，它的 API 不复杂，真正需要思考的是“我是不是该在这里使用 Session”。
 
-## 使用本地 Session
+## 最常见的用法
 
-本地 Session 是默认模式，适用于单机部署场景。
-
-### 基本用法
-
-在 Controller 方法中注入 `Session` 参数即可使用：
+最简单的方式，是在 Controller 方法里直接注入 `Session`：
 
 ```java
 @Controller
 public class UserController {
-    
+
     @RequestMapping("/visit")
     public String visitCount(Session session) {
-        // 获取访问计数
         String count = session.get("visitCount");
         int visits = (count == null ? 0 : Integer.parseInt(count)) + 1;
-        
-        // 存储访问计数
         session.put("visitCount", String.valueOf(visits));
-        
         return "Visit count: " + visits;
     }
 }
 ```
 
-### 常用操作
+这种写法很适合：
+
+- 演示访问计数
+- 保存简单登录状态
+- 做轻量级用户上下文
+
+## 它适合保存什么
+
+适合保存：
+
+- 用户 ID
+- 用户名
+- 简单角色信息
+- 访问计数或短期状态
+
+不适合保存：
+
+- 大对象
+- 敏感明文数据
+- 需要长期可靠持久化的业务信息
+
+## 本地 Session 和 Redis Session 怎么理解
+
+### 本地 Session
+
+适合：
+
+- 单机部署
+- 开发环境
+- 简单应用
+
+### Redis Session
+
+适合：
+
+- 多实例部署
+- 需要跨节点共享会话
+- 明确依赖集中式 Session 存储
+
+换句话说，选择哪种模式，决定因素通常不是业务代码，而是你的部署形态。
+
+## 常用操作
 
 ```java
-// 存储数据
 session.put("username", "john");
-session.put("role", "admin");
-
-// 获取数据
 String username = session.get("username");
-
-// 设置超时时间（秒）
-session.setTimeout(1800);  // 30分钟
-
-// 获取 Session ID
+session.setTimeout(1800);
 String sessionId = session.getSessionId();
-
-// 销毁 Session
 session.invalidate();
 ```
 
----
+这组 API 本身并不复杂，复杂的是你如何管理状态边界。
 
-## 使用 Redis Session
+## 一个更重要的问题：你真的需要 Session 吗
 
-Redis Session 适用于集群部署场景，支持 Session 在多个服务实例间共享。
+如果你的应用已经开始走向下面这些方向：
 
-### 添加依赖
+- 前后端分离
+- Token 认证
+- 多端登录
+- 更复杂的权限和身份体系
 
-在 `pom.xml` 中添加 Redis 依赖：
+那你通常应该更谨慎地使用 Session，而不是默认把所有状态都塞进去。
 
-```xml
-<dependency>
-    <groupId>tech.smartboot.feat</groupId>
-    <artifactId>feat-cloud-starter</artifactId>
-    <version>${feat.version}</version>
-</dependency>
-<dependency>
-    <groupId>tech.smartboot</groupId>
-    <artifactId>redisun</artifactId>
-    <version>1.2.0</version>
-</dependency>
-```
+所以这页真正的建议不是“Session 很强大”，而是：
 
-### 配置 Redis
-
-在 `feat.yml` 中配置 Redis 连接：
-
-```yaml
-server:
-  session:
-    timeout: 1800        # Session 超时时间（秒）
-    store-type: redis    # 启用 Redis 存储
-
-feat:
-  redis:
-    address: redis://127.0.0.1:6379
-    password:            # Redis 密码（可选）
-    database: 0          # Redis 数据库索引
-```
-
-### 使用方式
-
-Redis Session 的使用方式与本地 Session 完全一致：
-
-```java
-@Controller
-public class UserController {
-    
-    @RequestMapping("/login")
-    public String login(Session session) {
-        // 存储用户信息
-        session.put("username", "John");
-        session.put("role", "admin");
-        return "Logged in";
-    }
-
-    @RequestMapping("/profile")
-    public String profile(Session session) {
-        // 获取用户信息
-        String username = session.get("username");
-        return "Hello " + username;
-    }
-
-    @RequestMapping("/logout")
-    public String logout(Session session) {
-        // 清除 Session
-        session.invalidate();
-        return "Logged out";
-    }
-}
-```
-
----
-
-## Session API 参考
-
-| 方法 | 说明 |
-|------|------|
-| `put(String key, String value)` | 存储键值对到 Session |
-| `get(String key)` | 从 Session 获取值 |
-| `invalidate()` | 销毁当前 Session |
-| `setTimeout(int seconds)` | 设置 Session 超时时间 |
-| `getTimeout()` | 获取 Session 超时时间 |
-| `getSessionId()` | 获取 Session ID |
-
----
-
-## 选择 Session 模式
-
-| 模式 | 适用场景 | 特点 |
-|------|----------|------|
-| 本地 Session | 单机部署 | 简单快速，无需外部依赖 |
-| Redis Session | 集群部署 | 支持分布式，数据持久化 |
-
-<Aside type="tip">
-  两种模式的 API 完全一致，切换存储方式不需要修改业务代码。
-</Aside>
-
----
-
-## 最佳实践
-
-### 1. 只存储必要信息
-
-```java
-// 推荐：只存储关键标识
-session.put("userId", "12345");
-session.put("username", "john");
-
-// 不推荐：避免存储大对象
-session.put("userProfile", largeUserProfileObject);
-```
-
-### 2. 及时清理 Session
-
-```java
-@RequestMapping("/logout")
-public String logout(Session session) {
-    session.invalidate(); // 登出时清除 Session
-    return "Logged out";
-}
-```
-
-### 3. 设置合理的超时时间
-
-```yaml
-# 敏感应用（如银行系统）：较短时间
-server:
-  session:
-    timeout: 900   # 15分钟
-
-# 普通应用：适中时间
-server:
-  session:
-    timeout: 1800  # 30分钟
-
-# 低敏感应用：较长时间
-server:
-  session:
-    timeout: 86400 # 24小时
-```
-
-### 4. 避免存储敏感信息
-
-```java
-// 不推荐：存储密码等敏感信息
-session.put("password", userPassword);
-
-// 推荐：只存储用户标识
-session.put("userId", userId);
-```
-
----
+> 在它足够简单时用它，一旦应用边界复杂起来，就重新审视它是否还是最合适的状态模型。
 
 ## 常见问题
 
-### Session 丢失
+### Session 为什么会丢
 
-**原因**：使用本地 Session 但部署了多个实例。
+最常见的原因是：
 
-**解决方案**：切换到 Redis Session 模式。
+- 你以为自己还是单机，实际上已经多实例部署
+- 客户端没有正确带回 Cookie
+- Session 超时设置太短
 
-### Session 超时过快
+### 为什么不建议往 Session 里塞大对象
 
-**原因**：默认超时时间设置较短。
+因为它会直接扩大状态体积，也会让问题更难追踪。  
+Session 更适合保存“索引型信息”，而不是完整业务对象。
 
-**解决方案**：在配置中增加 `timeout` 值。
+## 下一步
 
-### Redis 连接失败
-
-**原因**：Redis 配置错误或 Redis 服务未启动。
-
-**解决方案**：检查 `feat.yml` 中的 Redis 配置，确保 Redis 服务正常运行。
+- 如果你还在写控制器，先回到 [Controller 开发实践](/feat/cloud/controller/)
+- 如果你开始考虑部署形态，再去看 [交付一个 Feat Cloud 应用](/feat/cloud/deployment/)

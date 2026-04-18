@@ -1,0 +1,35 @@
+---
+title: 客户端能力导览
+description: 了解 Feat 客户端侧能力，并决定应该从 HTTP、SSE 还是 WebSocket 开始
+sidebar:
+  order: 0
+---
+
+import { CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+这一组文档讲的是“如何从 Java 程序主动连接外部服务”。  
+它和 Feat Core/Cloud 的区别在于：前者讲你如何暴露服务，这里讲你如何消费服务。
+
+<CardGrid>
+  <LinkCard
+    title="HttpClient"
+    href="/feat/client/http_client/"
+    description="普通 HTTP 请求，从这里开始。"
+  />
+  <LinkCard
+    title="SSE 客户端"
+    href="/feat/client/sse_client/"
+    description="当服务端持续推送事件时使用。"
+  />
+  <LinkCard
+    title="WebSocket 客户端"
+    href="/feat/client/ws_client/"
+    description="当你需要双向实时通信时使用。"
+  />
+</CardGrid>
+
+## 如何选择
+
+- 大多数项目先看 [HttpClient 实战教程](/feat/client/http_client/)
+- 如果服务端持续推送事件流，再看 [SSE 客户端教程](/feat/client/sse_client/)
+- 如果要双向实时通信，再看 [WebSocket 客户端](/feat/client/ws_client/)

@@ -1,6 +1,6 @@
 ---
-title: 使用 Jina AI 作为 Agent 工具
-description: 将 Jina AI 的网页内容提取能力封装为 Feat Agent 的工具
+title: 让 Agent 读取网页内容
+description: 用 Jina AI 把网页转换成结构化文本，再作为 Feat Agent 的一个工具来使用
 toc: true
 sidebar:
     order: 5
@@ -8,25 +8,32 @@ sidebar:
 
 import { Aside } from '@astrojs/starlight/components';
 
-## 为什么结合 Jina AI？
+这一页讲的是一个非常具体的场景：  
+当 Agent 需要读网页，而模型本身又拿不到实时网页内容时，如何补一个“网页读取工具”。
 
-大语言模型虽然强大，但存在知识时效性和信息获取的限制。Jina AI 提供了免费的网页内容提取服务，可以**将任意 URL 转换为结构化的 Markdown 文本**。将 Jina AI 封装为 Feat Agent 的工具后，Agent 就能实时访问互联网，突破知识边界。
+Jina AI 提供了一个很直接的能力：把网页 URL 转成结构化文本。  
+对于 Agent 来说，这种能力刚好适合被包装成工具。
 
-**核心价值：**
+## 什么时候值得这么做
 
-| 能力 | 说明 |
-|------|------|
-| **实时信息获取** | 访问最新网页内容，弥补模型训练数据的时效性限制 |
-| **精准内容提取** | Jina AI 自动过滤广告和导航，返回干净的正文内容 |
-| **自动化工作流** | Agent 自主决策何时读取网页、如何分析内容 |
+- 问题依赖网页上的实时信息
+- 你不想自己维护复杂的网页抓取逻辑
+- 你只需要“读网页正文”，而不是完整浏览器渲染能力
 
-## 快速开始
+如果你的任务根本不需要联网，或者只依赖本地知识库，就没必要把这页的方案接进来。
 
-### 实现工具
+## 核心思路
 
-创建一个实现 `AgentTool` 接口的类，调用 Jina AI 的 API：
+思路其实很简单：
 
-```java
+1. 实现一个 `AgentTool`
+2. 工具里接收 URL 参数
+3. 调用 Jina AI 的网页读取接口
+4. 把返回文本交回 Agent
+
+## 最小工具实现
+
+```java title="JinaReaderTool.java"
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.ai.agent.AgentTool;
@@ -36,29 +43,19 @@ import java.util.concurrent.CompletableFuture;
 
 public class JinaReaderTool implements AgentTool {
 
-    private static final String NAME = "jina_web_reader";
-    private static final String DESCRIPTION = 
-        "使用 Jina AI 读取任意网页的内容并返回结构化文本";
-
     @Override
     public CompletableFuture<String> execute(JSONObject parameters) {
         String url = parameters.getString("url");
-
         if (FeatUtils.isBlank(url)) {
-            return CompletableFuture.completedFuture("错误：必须提供 'url' 参数");
+            return CompletableFuture.completedFuture("错误：必须提供 url 参数");
         }
 
         String jinaUrl = buildJinaUrl(url);
 
         return Feat.httpClient(jinaUrl, opts -> opts.debug(false))
-                .get().submit()
-                .thenApply(response -> {
-                    String content = response.body();
-                    if (FeatUtils.isBlank(content)) {
-                        return "错误：无法获取网页内容";
-                    }
-                    return formatResult(url, content);
-                })
+                .get()
+                .submit()
+                .thenApply(response -> response.body())
                 .exceptionally(e -> "执行失败: " + e.getMessage());
     }
 
@@ -71,18 +68,15 @@ public class JinaReaderTool implements AgentTool {
         return "https://r.jina.ai/https://" + targetUrl;
     }
 
-    private String formatResult(String url, String content) {
-        return "网页 URL: " + url + "\n" +
-               "----------------------------------------\n" +
-               content + "\n" +
-               "----------------------------------------";
+    @Override
+    public String getName() {
+        return "jina_web_reader";
     }
 
     @Override
-    public String getName() { return NAME; }
-
-    @Override
-    public String getDescription() { return DESCRIPTION; }
+    public String getDescription() {
+        return "读取任意网页内容并返回结构化文本";
+    }
 
     @Override
     public String getParametersSchema() {
@@ -100,16 +94,11 @@ public class JinaReaderTool implements AgentTool {
 }
 ```
 
-### 注册到 Agent
+## 挂到 Agent 上
 
 ```java
-import tech.smartboot.feat.ai.FeatAI;
-import tech.smartboot.feat.ai.agent.FeatAgent;
-import tech.smartboot.feat.ai.chat.ChatModelVendor;
-
 FeatAgent agent = FeatAI.agent(opts -> {
-    opts.chatOptions()
-        .model(ChatModelVendor.GiteeAI.Qwen2_5_72B_Instruct);
+    opts.chatOptions().model(ChatModelVendor.GiteeAI.Qwen2_5_72B_Instruct);
     opts.tool(new JinaReaderTool());
     opts.maxIterations(10);
 });
@@ -119,80 +108,34 @@ String result = agent.execute(
 ).get();
 ```
 
+这就够了。  
+Agent 现在已经拥有了一个“读取网页正文”的工具能力。
+
 <Aside type="caution">
-运行前请确保已设置 `FEAT_AI_API_KEY` 环境变量。
+运行前请确保已设置 `FEAT_AI_API_KEY`，并且当前网络环境能够访问 Jina AI 服务。
 </Aside>
 
-## 工作原理
+## 什么时候它有价值
 
-```
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│  用户提问   │────▶│  Feat Agent │────▶│  LLM 分析   │
-└─────────────┘     └─────────────┘     └──────┬──────┘
-                                                │
-                                                ▼
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│  回答问题   │◀────│  LLM 总结   │◀────│ Jina AI 提取 │
-└─────────────┘     └─────────────┘     └─────────────┘
-```
+这个工具最适合拿来做：
 
-1. **任务分析**：Agent 分析用户提问，识别需要访问网页
-2. **工具调用**：自动调用 `jina_web_reader` 工具获取网页内容
-3. **内容处理**：Jina AI 将网页转换为干净的 Markdown 文本
-4. **智能分析**：LLM 基于获取的内容回答用户问题
+- 新闻摘要
+- 产品调研
+- 文档检索
+- 实时网页内容分析
 
-## 应用场景
+它不适合解决：
 
-| 场景 | 示例任务 |
-|------|----------|
-| **新闻摘要** | "读取这篇新闻并总结要点: https://example.com/news" |
-| **产品调研** | "分析竞品的定价策略: https://competitor.com/pricing" |
-| **技术文档** | "从这个文档找出安装步骤: https://docs.example.com" |
-| **实时监控** | 定期抓取网页，监控价格或内容变化 |
+- 需要完整浏览器执行 JavaScript 的场景
+- 需要登录态或复杂反爬处理的页面
+- 高频、大规模抓取任务
 
-## 完整示例
+## 一个实践建议
 
-完整可运行代码位于：`feat-test/src/main/java/tech/smartboot/feat/demo/agent/JinaAgentToolDemo.java`
+第一次接这类工具时，不要一口气加太多外部工具。  
+先只给 Agent 一个网页读取工具，看它能不能稳定完成任务，再决定要不要继续加搜索、文件读写等能力。
 
-```java
-import com.alibaba.fastjson2.JSONObject;
-import tech.smartboot.feat.Feat;
-import tech.smartboot.feat.ai.FeatAI;
-import tech.smartboot.feat.ai.agent.AgentTool;
-import tech.smartboot.feat.ai.agent.FeatAgent;
-import tech.smartboot.feat.ai.chat.ChatModelVendor;
-import tech.smartboot.feat.core.common.FeatUtils;
+## 下一步
 
-import java.util.concurrent.CompletableFuture;
-
-public class JinaAgentToolDemo {
-
-    public static void main(String[] args) throws Exception {
-        // 创建 Agent 并注册 Jina AI 工具
-        FeatAgent agent = FeatAI.agent(opts -> {
-            opts.chatOptions()
-                .model(ChatModelVendor.GiteeAI.Qwen2_5_72B_Instruct);
-            opts.tool(new JinaReaderTool());
-            opts.maxIterations(10);
-        });
-
-        // Agent 会自动识别 URL 并调用 Jina 工具
-        String result = agent.execute(
-            "访问 https://smartboot.tech 并总结主要内容"
-        ).get();
-
-        System.out.println("Agent 回复:\n" + result);
-        System.out.println("Agent 状态: " + agent.getState());
-    }
-
-    public static class JinaReaderTool implements AgentTool {
-        // 完整实现见上文「实现工具」部分
-    }
-}
-```
-
-## 注意事项
-
-- Jina AI 是免费服务，有请求频率限制
-- 部分网站可能禁止被抓取
-- JavaScript 动态渲染的页面可能获取不完整
+- 如果你还没真正用过 Agent，先回到 [让模型开始使用工具](/feat/ai/agent/)
+- 如果你只是想先把模型本身跑熟，回到 [配置对话模型并处理流式输出](/feat/ai/chat/)

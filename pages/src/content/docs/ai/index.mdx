@@ -1,46 +1,66 @@
 ---
-title: Feat AI 简介
-description: Feat AI 模块的设计理念与能力概览
+title: Feat AI 导览
+description: 理解 Feat AI 这一组文档在讲什么，以及应该从哪一页开始进入
 sidebar:
     order: 0
 ---
 
-import { Aside } from '@astrojs/starlight/components';
+import { Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
 
-Feat AI 是 Feat 生态中的 AI 能力模块，为 Java 应用提供对话、嵌入、重排序、Agent 等能力，并与 Feat 的轻量、高性能风格保持一致。
+Feat AI 这一组文档不是为了教你“什么是大模型”，而是为了回答更具体的问题：
 
-## 背景介绍
+- 我怎么把模型接进 Java 服务
+- 我什么时候该用对话、Embedding 或 Agent
+- 这些能力之间应该按什么顺序学习
 
-在 Java 生态中集成大语言模型（LLM）时，开发者往往需要自行对接多种厂商 API、处理流式响应与工具调用。Feat AI 将常用能力抽象为统一 API，支持 Gitee AI、Ollama 等后端，便于在 Feat 项目内快速接入 AI 功能。
+```mermaid
+flowchart LR
+    A["第一次模型调用"] --> B["同步 / 流式输出"]
+    B --> C{"下一步是什么？"}
+    C --> D["需要调用工具"]
+    C --> E["需要做检索或 RAG"]
+    D --> F["Agent"]
+    E --> G["Embedding"]
+```
 
-## 设计理念
+<CardGrid>
+  <LinkCard
+    title="第一次调用"
+    href="/feat/ai/getstart/"
+    description="先把模型真正调通，再谈更高层能力。"
+  />
+  <LinkCard
+    title="对话与流式"
+    href="/feat/ai/chat/"
+    description="学会配置模型、同步调用和流式输出。"
+  />
+  <LinkCard
+    title="Agent"
+    href="/feat/ai/agent/"
+    description="当模型开始需要调用工具时，从这里继续。"
+  />
+  <LinkCard
+    title="Embedding"
+    href="/feat/ai/embedding/"
+    description="当你开始做检索增强、RAG 或语义搜索时，再进入这一页。"
+  />
+</CardGrid>
 
-- **统一入口**：通过 `FeatAI` 静态工厂创建各类模型（对话、嵌入、重排序、Agent），配置方式一致。
-- **厂商无关**：通过 `ChatModelVendor`、`EmbeddingModelVendor` 等枚举或自定义 `baseUrl` 切换后端，代码侧无需大改。
-- **与 Feat 一致**：基于 Feat 的 HTTP 客户端与异步风格，无额外重量级依赖，适合嵌入现有 Feat 服务。
+## 这组文档适合谁
 
-## 能力概览
+- 你已经会写 Java 服务，现在想把模型能力接进来
+- 你不想从 Python 或单独 AI 框架起步
+- 你希望对话、Agent 和向量能力能和 Feat 的服务端模型放在一起理解
 
-| 能力 | 入口方法 | 典型用途 |
-|------|----------|----------|
-| **对话** | `FeatAI.chatModel(...)` | 单轮/多轮对话、流式输出、函数调用 |
-| **嵌入** | `FeatAI.embedding(...)` | 文本向量化，用于检索、RAG |
-| **重排序** | `FeatAI.reranker(...)` | 对检索结果重排序，提升相关性 |
-| **Agent** | `FeatAI.agent(...)` | ReAct 范式 Agent，结合推理与工具调用 |
+## 推荐阅读顺序
+
+通常最自然的顺序是：
+
+1. [完成第一次 Feat AI 调用](/feat/ai/getstart/)
+2. [配置对话模型并处理流式输出](/feat/ai/chat/)
+3. [使用 Agent](/feat/ai/agent/)
+4. [Embedding 与向量](/feat/ai/embedding/)
 
 <Aside type="tip">
-**术语说明**：**ReAct**（Reasoning + Acting）是一种 Agent 范式：模型先推理任务，再调用工具执行，根据结果继续推理，直到完成任务。Feat AI 的 Agent 基于该范式实现。
+如果你只是想验证 API Key、本地 Ollama 或模型连通性，停在 quickstart 和 chat 这两页通常就够了，不需要一开始就跳进 Agent。
 </Aside>
-
-## 架构要点
-
-- **配置即代码**：`ChatOptions`、`EmbeddingOptions`、`AgentOptions` 等均采用链式配置，API Key 等支持环境变量（如 `FEAT_AI_API_KEY`）。
-- **流式与同步并存**：对话支持 `chat()` 与 `chatStream()`，按场景选择。
-- **可扩展**：Agent 通过 `AgentTool` 注册工具，Embedding 可与向量库（如 Chroma、Milvus）配合做 RAG。
-
-## 扩展阅读
-
-- [开始使用 Feat AI](/feat/ai/getstart/)：从零完成第一次对话。
-- [对话与流式](/feat/ai/chat/)：配置对话模型与流式输出。
-- [使用 Agent](/feat/ai/agent/)：使用 ReAct Agent 与工具。
-- [Embedding 与向量](/feat/ai/embedding/)：文本向量化与典型用法。

@@ -1,122 +1,205 @@
 ---
-title: CloudOptions 配置参考
-description: Feat Cloud 服务核心配置参数详细说明
+title: CloudOptions 配置指南
+description: 理解 Feat Cloud 启动阶段最重要的三个配置项：包扫描、外部 Bean 和静态资源
 sidebar:
     order: 3
 ---
 
-import {Aside, TabItem, Tabs} from "@astrojs/starlight/components";
+import { Aside } from '@astrojs/starlight/components';
 
-`CloudOptions` 是 Feat Cloud 服务的核心配置类，继承自 [`ServerOptions`](/feat/server/serveroptions/)，除本文档列出的特有配置外，还支持端口、线程池、SSL 等基础配置。
+`CloudOptions` 继承自 [`ServerOptions`](/feat/server/serveroptions/)，所以端口、线程数、调试模式、HTTPS 这类基础能力仍然在 `ServerOptions` 里配置。  
+这页只讲 Feat Cloud 启动阶段最关键的三项额外能力。
 
-## 配置参数
+## 什么时候需要看这页
 
-### packages
+- 控制器明明写了，但没有被扫描到
+- 你要在容器启动前手动注册某个 Bean
+- 你想让 Feat Cloud 顺手托管静态资源
 
-指定启动时扫描的包路径，用于限制组件扫描范围。
+## 你最常用的 3 个配置项
 
-| 属性 | 值 |
-|------|-----|
-| **类型** | `String[]` |
-| **默认值** | `null`（扫描所有包） |
+| 配置项 | 方法 | 默认值 | 典型用途 |
+|------|------|------|------|
+| 包扫描 | `setPackages(String...)` | `null` | 控制 Controller / Bean 的扫描范围 |
+| 外部 Bean | `registerBean(String, Object)` | 空 | 把启动前已有对象注册进容器 |
+| 静态资源 | `setStaticLocations(String)` | `classpath:static` | 托管类路径或本地目录里的静态文件 |
 
-```java
-FeatCloud.cloudServer(options -> {
-    options.setPackages("com.example.controller", "com.example.service");
-}).listen();
-```
+## 场景 1：控制扫描范围
 
----
+如果你的启动类和控制器不在同一个合理的根包下，或者你只想限制扫描范围，可以显式设置包路径。
 
-### registerBean
+```java title="Bootstrap.java"
+import tech.smartboot.feat.cloud.FeatCloud;
 
-向容器注册外部 Bean 实例，注册后可通过 `@Autowired` 注入使用。
-
-| 属性 | 值 |
-|------|-----|
-| **方法签名** | `CloudOptions registerBean(String key, Object value)` |
-| **返回值** | `CloudOptions`（支持链式调用） |
-
-```java
-FeatCloud.cloudServer(options -> {
-    options.registerBean("dataSource", createDataSource());
-    options.registerBean("redisTemplate", createRedisTemplate());
-}).listen();
-```
-
-<Aside type="caution">
-  Bean 名称冲突时抛出 `FeatException`，建议使用业务前缀如 `appDataSource`。
-</Aside>
-
----
-
-### staticLocations
-
-指定静态资源文件的存放位置。
-
-| 属性 | 值 |
-|------|-----|
-| **类型** | `String` |
-| **默认值** | `"classpath:static"` |
-
-**路径格式说明：**
-
-- **`classpath:xxx`** - 类路径资源，从应用的类加载器中加载（推荐用于打包后的资源）
-- **直接路径** - 文件系统路径，指向服务器本地目录
-
-**使用示例：**
-
-```java
-// 类路径（默认，从 resources/static 目录加载）
-options.setStaticLocations("classpath:static");
-
-// 文件系统绝对路径
-options.setStaticLocations("/var/www/static");
-
-// 文件系统相对路径
-options.setStaticLocations("./public");
-```
-
-**功能特性：**
-
-| 特性 | 说明 |
-|------|------|
-| **自动首页** | 访问目录时自动返回 `index.html` |
-| **缓存支持** | 支持 HTTP 304 缓存（基于 `Last-Modified` 头） |
-| **GZIP 压缩** | 类路径资源自动启用 GZIP 压缩传输 |
-| **MIME 类型** | 自动识别常见文件类型的 `Content-Type` |
-| **404 处理** | 找不到资源时返回 `feat-404.html`（如果存在）或 404 状态码 |
-
-<Aside type="tip">
-  类路径资源使用 `Thread.currentThread().getContextClassLoader()` 加载，支持开发模式和打包后的 JAR 运行模式。
-</Aside>
-
-<Aside type="caution">
-  当路径以 `classpath:` 开头时，资源从类加载器加载；其他情况视为文件系统路径，必须是有效的目录。
-</Aside>
-
----
-
-## 完整示例
-
-```java
-public class Application {
+public class Bootstrap {
     public static void main(String[] args) {
         FeatCloud.cloudServer(options -> {
-            // 限制扫描范围
-            options.setPackages("com.example");
-            
-            // 注册外部 Bean
-            options.registerBean("dataSource", DataSourceBuilder.create()
-                .url("jdbc:mysql://localhost:3306/test")
-                .username("root")
-                .password("password")
-                .build());
-            
-            // 静态资源路径
+            options.setPackages(
+                    "com.example.controller",
+                    "com.example.service"
+            );
+        }).listen();
+    }
+}
+```
+
+什么时候应该用它：
+
+- 多模块项目里，控制器不在启动类同包或子包
+- 你只想扫描少量包，提高启动阶段的可控性
+- 你要避免把不相关 demo 或测试类扫进来
+
+<Aside type="tip">
+如果你的启动类本身已经位于合理的根包下，很多情况下并不需要写 `setPackages(...)`。只有在扫描行为不符合预期时，再显式收窄范围。
+</Aside>
+
+## 场景 2：注册外部 Bean
+
+有些对象不是通过 Feat Cloud 自己创建的，比如数据源、第三方客户端、配置对象。这时可以在启动时手动注册。
+
+```java title="ExternalBeanDemo.java"
+import tech.smartboot.feat.cloud.FeatCloud;
+
+public class ExternalBeanDemo {
+    public static void main(String[] args) {
+        FeatCloud.cloudServer(options -> {
+            options.registerBean("dataSource", createDataSource());
+            options.registerBean("buildVersion", "1.0.0");
+        }).listen();
+    }
+
+    private static Object createDataSource() {
+        return new Object();
+    }
+}
+```
+
+这类用法通常出现在：
+
+- 你已经有一套外部初始化逻辑
+- 某个对象必须在容器启动前构造好
+- 你希望让 `@Autowired` 能直接拿到该对象
+
+### 一个容易踩的坑
+
+`registerBean(...)` 的 key 不能重复。源码里如果发现同名 key，直接抛 `FeatException`。
+
+```java
+options.registerBean("dataSource", ds1);
+options.registerBean("dataSource", ds2); // 会失败
+```
+
+所以命名上建议用稳定且业务明确的名字。
+
+## 场景 3：托管静态资源
+
+Feat Cloud 默认静态资源目录是 `classpath:static`。如果你项目里有前端页面、上传后的公开文件或静态文档，可以直接改位置。
+
+```java title="StaticLocationDemo.java"
+import tech.smartboot.feat.cloud.FeatCloud;
+
+public class StaticLocationDemo {
+    public static void main(String[] args) {
+        FeatCloud.cloudServer(options -> {
             options.setStaticLocations("classpath:public");
         }).listen();
     }
 }
 ```
 
+你可以使用两种路径形式：
+
+```java
+// 类路径资源
+options.setStaticLocations("classpath:static");
+options.setStaticLocations("classpath:public");
+
+// 文件系统目录
+options.setStaticLocations("/var/www/static");
+options.setStaticLocations("./public");
+```
+
+### 默认行为
+
+当你配置静态资源目录后，Feat Cloud 会使用静态资源处理器来提供这些能力：
+
+- 访问目录时自动返回 `index.html`
+- 自动识别常见文件类型
+- 基于 `Last-Modified` 支持缓存
+- 找不到资源时返回 404
+
+<Aside type="caution">
+`setStaticLocations(...)` 不只是记住一个路径，它会顺手创建一个新的 `Router` 来挂载静态资源处理器。所以如果你还要自定义底层路由，请明确知道谁是最终生效的 Router。
+</Aside>
+
+## 组合使用示例
+
+实际项目里，这三个配置项经常一起出现：
+
+```java title="CloudOptionsDemo.java"
+import tech.smartboot.feat.cloud.FeatCloud;
+
+public class CloudOptionsDemo {
+    public static void main(String[] args) {
+        FeatCloud.cloudServer(options -> {
+            options.port(8080);
+            options.debug(true);
+
+            options.setPackages("com.example.controller", "com.example.service");
+            options.registerBean("dataSource", createDataSource());
+            options.setStaticLocations("classpath:public");
+        }).listen();
+    }
+
+    private static Object createDataSource() {
+        return new Object();
+    }
+}
+```
+
+这段代码表达的启动策略是：
+
+- 用 `ServerOptions` 部分配置基础服务行为
+- 用 `CloudOptions` 部分控制扫描、注入和静态资源
+
+## 进阶：替换默认 Router
+
+如果你需要完全自定义路由入口，而不是只靠 `setStaticLocations(...)` 生成的静态资源 Router，可以直接替换：
+
+```java
+options.setRouter(customRouter);
+```
+
+这个能力属于高级扩展场景，通常只有在你明确需要接管更底层的路由行为时才会用到。
+
+## 常见问题
+
+### 控制器不生效，但程序能启动
+
+优先检查：
+
+1. 控制器所在包是否在 `setPackages(...)` 范围内
+2. 启动类是否位于合理的根包下
+3. 是否因为扫描范围过窄，把实际控制器排除掉了
+
+### Bean 注入失败
+
+优先检查：
+
+1. 注册时使用的 key 是否与注入预期一致
+2. 是否重复注册了同名 Bean
+3. Bean 是否在容器真正启动前完成注册
+
+### 静态资源一直 404
+
+优先检查：
+
+1. 路径是否真的存在
+2. 类路径资源是否放在 `resources` 下并已打包进去
+3. `classpath:` 前缀是否写对
+
+## 下一步
+
+- [Controller 开发实践](/feat/cloud/controller/)：把控制器、参数绑定和路径映射写完整
+- [ServerOptions 配置指南](/feat/server/serveroptions/)：回到基础服务层继续调端口、线程、HTTPS
+- [MyBatis 集成](/feat/cloud/db/)：进入真实数据访问场景

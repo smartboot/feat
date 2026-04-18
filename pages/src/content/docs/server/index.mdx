@@ -1,0 +1,54 @@
+---
+title: Feat Core 导览
+description: 了解 Feat Core 这一组文档分别解决什么问题，以及应该按什么顺序阅读
+sidebar:
+  order: 0
+---
+
+import { CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+Feat Core 这一组文档围绕的是最底层的 HTTP 服务能力。  
+如果你想直接掌握 Feat 的服务端模型，从这里进入最合适。
+
+```mermaid
+flowchart LR
+    A["构建第一个 HTTP 服务"] --> B["理解请求处理模型"]
+    B --> C["用 Router 组织路由"]
+    C --> D["把耗时逻辑移到异步处理"]
+    D --> E["再回来看 ServerOptions"]
+    E --> F["按需进入 HTTPS / 协议升级"]
+```
+
+<CardGrid>
+  <LinkCard
+    title="快速开始"
+    href="/feat/server/getstart/"
+    description="先把一个最小 HTTP 服务跑起来。"
+  />
+  <LinkCard
+    title="Router"
+    href="/feat/server/router/"
+    description="把单个处理器扩展成多路由服务。"
+  />
+  <LinkCard
+    title="异步处理"
+    href="/feat/server/async/"
+    description="处理耗时逻辑，避免阻塞请求线程。"
+  />
+  <LinkCard
+    title="配置"
+    href="/feat/server/serveroptions/"
+    description="在你真的需要改端口、线程数、缓冲区时再看。"
+  />
+</CardGrid>
+
+## 建议顺序
+
+如果你是第一次接触 Feat Core，建议这样读：
+
+1. [构建第一个 Feat HTTP 服务](/feat/server/getstart/)
+2. [Router 路由组件](/feat/server/router/)
+3. [异步响应](/feat/server/async/)
+4. [ServerOptions 配置指南](/feat/server/serveroptions/)
+
+`HTTPS` 和 `协议升级` 更适合在你已经有实际需求时按需查阅。
