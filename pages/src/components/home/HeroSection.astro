@@ -3,27 +3,21 @@ import TerminalEditor from './TerminalEditor.astro';
 
 const javaCode = `<span class="keyword">package</span> <span class="class">com.example</span>;
 
-<span class="keyword">import</span> <span class="class">tech.smartboot.feat.cloud.annotation.Controller</span>;
-<span class="keyword">import</span> <span class="class">tech.smartboot.feat.cloud.annotation.RequestMapping</span>;
-<span class="keyword">import</span> <span class="class">tech.smartboot.feat.cloud.FeatCloud</span>;
+<span class="keyword">import</span> <span class="class">tech.smartboot.feat.Feat</span>;
 
-<span class="comment">// 一个简单的 Feat Cloud 应用示例</span>
-<span class="annotation">@Controller</span>
-<span class="keyword">public</span> <span class="keyword">class</span> <span class="class">Application</span> {
-
-    <span class="annotation">@RequestMapping</span>(<span class="string">"/"</span>)
-    <span class="keyword">public</span> <span class="type">String</span> <span class="function">helloWorld</span>() {
-        <span class="keyword">return</span> <span class="string">"hello Feat Cloud"</span>;
-    }
+<span class="comment">// 一个最小的 Feat Core 服务示例</span>
+<span class="keyword">public</span> <span class="keyword">class</span> <span class="class">HelloWorld</span> {
 
     <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="function">main</span>(<span class="type">String</span>[] args) {
-        <span class="class">FeatCloud</span>.<span class="function">cloudServer</span>().<span class="function">listen</span>();
+        <span class="class">Feat</span>.<span class="function">httpServer</span>()
+                .<span class="function">httpHandler</span>(request -> request.<span class="function">getResponse</span>().<span class="function">write</span>(<span class="string">"Hello Feat"</span>))
+                .<span class="function">listen</span>(<span class="number">8080</span>);
     }
 }`;
 
 const codeFiles = [
   {
-    name: 'Application.java',
+    name: 'HelloWorld.java',
     icon: 'java' as const,
     content: javaCode,
     lineCount: javaCode.split('\n').length,
@@ -53,6 +47,18 @@ const codeFiles = [
         <span class="tagline-secondary">AI 原生 · 云原生 双引擎驱动</span>
       </p>
 
+      <div class="availability-pills" aria-label="模块使用方式">
+        <span class="availability-pill availability-open">Feat Core · Apache 2.0</span>
+        <span class="availability-pill availability-open">Feat AI · Apache 2.0</span>
+        <span class="availability-pill availability-sponsored">Feat Cloud · 赞助支持</span>
+      </div>
+
+      <p class="hero-note">
+        首页默认展示可直接运行的 Feat Core 示例。Feat Core 与 Feat AI 可直接使用；Feat Cloud 需先
+        <a href="/feat/sponsors/" class="hero-note-link">成为赞助者</a>
+        获取授权。
+      </p>
+
       <div class="hero-actions">
         <a href="./getting-started/" class="btn btn-primary">
           <span>选择学习路径</span>
@@ -77,7 +83,7 @@ const codeFiles = [
             <span></span>
             <span></span>
           </div>
-          <span class="code-filename">Application.java</span>
+          <span class="code-filename">HelloWorld.java</span>
         </div>
         <div class="code-content">
           <TerminalEditor files={codeFiles} defaultFile={0} />
@@ -243,6 +249,53 @@ const codeFiles = [
   .tagline-secondary {
     color: #64748b;
     font-size: 1rem;
+  }
+
+  .availability-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .availability-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.45rem 0.8rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border: 1px solid transparent;
+  }
+
+  .availability-open {
+    color: #166534;
+    background: rgba(34, 197, 94, 0.1);
+    border-color: rgba(22, 163, 74, 0.2);
+  }
+
+  .availability-sponsored {
+    color: #9a3412;
+    background: rgba(249, 115, 22, 0.1);
+    border-color: rgba(234, 88, 12, 0.2);
+  }
+
+  .hero-note {
+    color: #64748b;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    margin-bottom: 1.75rem;
+    max-width: 34rem;
+  }
+
+  .hero-note-link {
+    color: #1e293b;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .hero-note-link:hover {
+    text-decoration: underline;
   }
 
   .hero-actions {
@@ -413,6 +466,16 @@ const codeFiles = [
     
     .hero-actions {
       justify-content: center;
+    }
+
+    .availability-pills {
+      justify-content: center;
+    }
+
+    .hero-note {
+      max-width: 100%;
+      margin-left: auto;
+      margin-right: auto;
     }
     
     .title-highlight {

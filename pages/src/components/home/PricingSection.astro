@@ -7,10 +7,10 @@ import PaymentQrCode from '../PaymentQrCode.astro';
     <div class="section-header">
       <div class="title-group">
         <span class="section-label">License</span>
-        <h2 class="section-title">开源协议</h2>
+        <h2 class="section-title">许可与支持</h2>
       </div>
       <p class="section-desc">
-        Apache 2.0 协议，<span class="desc-highlight">自由商用</span>
+        Apache 2.0 开源主线，<span class="desc-highlight">Cloud 走赞助支持模式</span>
       </p>
     </div>
     
@@ -21,9 +21,9 @@ import PaymentQrCode from '../PaymentQrCode.astro';
             <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </div>
-        <h3>Apache License 2.0</h3>
+        <h3>开源主线</h3>
         <p class="license-desc">
-          Feat 采用 Apache 2.0 开源协议，您可以自由地使用、修改和分发本软件，包括商业用途，无需支付任何费用。
+          Feat 主线仓库采用 Apache 2.0 开源协议。Feat Core 与 Feat AI 可以直接用于学习、商用和二次开发。
         </p>
         <ul class="license-features">
           <li>
@@ -32,7 +32,7 @@ import PaymentQrCode from '../PaymentQrCode.astro';
                 <polyline points="20 6 9 17 4 12"></polyline>
               </svg>
             </span>
-            <span>免费商用，无需授权</span>
+            <span>Feat Core 可直接使用</span>
           </li>
           <li>
             <span class="check">
@@ -40,7 +40,7 @@ import PaymentQrCode from '../PaymentQrCode.astro';
                 <polyline points="20 6 9 17 4 12"></polyline>
               </svg>
             </span>
-            <span>源码完全开放</span>
+            <span>Feat AI 可直接使用</span>
           </li>
           <li>
             <span class="check">
@@ -48,7 +48,7 @@ import PaymentQrCode from '../PaymentQrCode.astro';
                 <polyline points="20 6 9 17 4 12"></polyline>
               </svg>
             </span>
-            <span>支持修改和二次开发</span>
+            <span>允许商用与二次开发</span>
           </li>
           <li>
             <span class="check">
@@ -56,7 +56,7 @@ import PaymentQrCode from '../PaymentQrCode.astro';
                 <polyline points="20 6 9 17 4 12"></polyline>
               </svg>
             </span>
-            <span>社区技术支持</span>
+            <span>文档与示例同步开放</span>
           </li>
         </ul>
       </div>
@@ -67,10 +67,36 @@ import PaymentQrCode from '../PaymentQrCode.astro';
             <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </div>
-        <h3>企业赞助</h3>
+        <h3>赞助支持能力</h3>
         <p class="sponsor-desc">
-          如果 Feat 对您的项目有帮助，欢迎赞助支持项目的持续发展。赞助企业将被记录在项目贡献者名单中。
+          Feat Cloud 等能力通过赞助支持模式持续演进。如果你要使用注解式 Feat Cloud 开发模型，请先成为赞助者获取授权。
         </p>
+        <ul class="license-features sponsor-features">
+          <li>
+            <span class="check">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </span>
+            <span>Feat Cloud 需先获得授权</span>
+          </li>
+          <li>
+            <span class="check">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </span>
+            <span>赞助者名单公开展示</span>
+          </li>
+          <li>
+            <span class="check">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </span>
+            <span>帮助项目持续演进</span>
+          </li>
+        </ul>
         <div class="sponsor-links">
           <a href="/feat/sponsors/" class="sponsor-link">查看赞助者名单</a>
         </div>
@@ -215,6 +241,14 @@ import PaymentQrCode from '../PaymentQrCode.astro';
     padding: 0.5rem 0;
     color: #475569;
     font-size: 0.875rem;
+  }
+
+  .sponsor-features {
+    margin-bottom: 1.25rem;
+  }
+
+  .sponsor-features .check {
+    color: #ea580c;
   }
 
   .check {

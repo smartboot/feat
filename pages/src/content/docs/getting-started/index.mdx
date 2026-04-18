@@ -7,6 +7,10 @@ import { Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
 
 Feat 的文档不适合从配置参考或附录开始看。更高效的方式是先选一条路径，跑通一个最小示例，再沿着那条路径继续往下读。
 
+<Aside type="caution">
+Feat 主线仓库采用 Apache 2.0。Feat Core 与 Feat AI 可直接使用；Feat Cloud 通过赞助支持模式开放，如需使用请先[成为赞助者](/feat/sponsors/)获取授权。
+</Aside>
+
 ```mermaid
 flowchart LR
     A["进入 Feat 文档"] --> B{"你的目标是什么？"}
@@ -32,7 +36,7 @@ flowchart LR
   <LinkCard
     title="Feat Cloud"
     href="/feat/cloud/quickstart/"
-    description="如果你更习惯注解式开发，希望快速写出一个 Web 应用，从这里开始。"
+    description="如果你更习惯注解式开发，并且已经获得 Feat Cloud 授权，从这里开始。"
   />
   <LinkCard
     title="Feat AI"
@@ -48,6 +52,10 @@ flowchart LR
 
 <Aside type="tip">
 如果你在评估框架，而不是立刻写代码，先看 [Feat 介绍](/feat/guides/about/) 和 [系统要求](/feat/guides/system-requirements/) 会更合适。
+</Aside>
+
+<Aside type="tip">
+如果你还没有决定是否使用赞助能力，优先从 [Feat Core 快速入门](/feat/server/getstart/) 或 [Feat AI 第一次调用](/feat/ai/getstart/) 开始，会更容易建立对 Feat 的第一印象。
 </Aside>
 
 ## 一个简单的阅读顺序

@@ -410,8 +410,9 @@ public class ServerOptions {
      *
      * @param maxRequestSize 最大请求报文大小（字节）
      */
-    public void setMaxRequestSize(long maxRequestSize) {
+    public ServerOptions setMaxRequestSize(long maxRequestSize) {
         this.maxRequestSize = maxRequestSize;
+        return this;
     }
 
     /**

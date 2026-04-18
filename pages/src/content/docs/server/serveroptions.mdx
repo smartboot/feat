@@ -114,9 +114,6 @@ public class UploadServer {
 - `setIdleTimeout(...)`：给慢上传或长处理链路更多时间
 - `setMaxRequestSize(...)`：显式限制最大请求体，避免“无限放大”
 
-<Aside type="caution">
-`setMaxRequestSize(long)` 是 `void`，不是链式返回。写示例时不要把它当作 fluent API 拼到一串链式调用里。
-</Aside>
 
 ## 场景 4：资源受限环境
 
