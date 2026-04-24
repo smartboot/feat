@@ -19,31 +19,11 @@ import tech.smartboot.feat.ai.mcp.model.Implementation;
  */
 public class McpOptions {
     private String mcpEndpoint = "/mcp";
-    private String sseEndpoint = "/sse";
-    private String sseMessageEndpoint = "/message";
     private final Implementation implementation = Implementation.of("feat-mcp-server", "Feat MCP Server", Feat.VERSION);
     private boolean loggingEnable;
     private boolean promptsEnable;
     private boolean resourceEnable;
     private boolean toolEnable;
-
-    public String getSseEndpoint() {
-        return sseEndpoint;
-    }
-
-    public McpOptions setSseEndpoint(String sseEndpoint) {
-        this.sseEndpoint = sseEndpoint;
-        return this;
-    }
-
-    public String getSseMessageEndpoint() {
-        return sseMessageEndpoint;
-    }
-
-    public McpOptions setSseMessageEndpoint(String sseMessageEndpoint) {
-        this.sseMessageEndpoint = sseMessageEndpoint;
-        return this;
-    }
 
     public String getMcpEndpoint() {
         return mcpEndpoint;

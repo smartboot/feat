@@ -301,53 +301,6 @@ public class McpServer {
         session.rootsList();
     }
 
-    private RouterHandler sseHandler() {
-        return ctx -> {
-            String sessionId = ctx.Request.getHeader(Request.HEADER_SESSION_ID);
-            StreamSession session;
-            if (sessionId == null) {
-                session = new StreamSession();
-                sseEmitters.put(session.getSessionId(), session);
-            } else {
-                session = sseEmitters.get(sessionId);
-            }
-            if (session == null) {
-                ctx.Response.setHttpStatus(HttpStatus.UNAUTHORIZED);
-                ctx.Response.close();
-                return;
-            }
-            ctx.Request.upgrade(new SSEUpgrade() {
-                @Override
-                public void onOpen(SseEmitter sseEmitter) throws IOException {
-                    System.out.println("onOpen");
-                    if (session.getSseEmitter() != null) {
-                        session.getSseEmitter().complete();
-                    }
-                    session.setSseEmitter(sseEmitter);
-                    sseEmitter.send(SseEmitter.event().name("endpoint").data(options.getSseMessageEndpoint() + "?session_id=" + session.getSessionId()));
-                }
-            });
-        };
-    }
-
-    private RouterHandler sseMessageHandler() {
-        return ctx -> {
-            StreamSession session = sseEmitters.get(ctx.Request.getParameter("session_id"));
-            ctx.Response.setHttpStatus(HttpStatus.ACCEPTED);
-            int preStatus = session.getState();
-            CompletableFuture<Response> response = jsonRpcHandle(session, ctx.Request);
-            if (response != null) {
-                response.thenAccept(rsp -> {
-                    session.getSseEmitter().send(JSONObject.toJSONString(rsp), (Throwable throwable) -> {
-                        logger.error("send error", throwable);
-                    });
-                });
-            } else if (preStatus == StreamSession.STATE_INITIALIZED && session.getState() == StreamSession.STATE_READY) {
-                initialized(session);
-            }
-        };
-    }
-
     private RouterHandler mcpHandler() {
         return new RouterHandler() {
             @Override

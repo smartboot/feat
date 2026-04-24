@@ -637,8 +637,6 @@ public abstract class AbstractCloudService implements CloudService {
         // 打印端点信息
         System.out.println("\033[1;34mEndpoints:\033[0m");
         System.out.println("  MCP Endpoint          : " + options.getMcpEndpoint());
-        System.out.println("  SSE Endpoint          : " + options.getSseEndpoint());
-        System.out.println("  SSE Message Endpoint  : " + options.getSseMessageEndpoint());
         System.out.println();
 
         // 打印功能启用状态
