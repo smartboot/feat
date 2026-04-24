@@ -92,7 +92,6 @@ public class McpTest {
 
         Router router = new Router();
         mcp.enableStreamable(router);
-        mcp.enableSSE(router);
         mcpServer = Feat.httpServer(opt -> opt.debug(true)).httpHandler(router).listen(3002);
 
         streamClient = McpClient.streamable(opt -> opt.url("http://localhost:3002/mcp").rootsEnable());

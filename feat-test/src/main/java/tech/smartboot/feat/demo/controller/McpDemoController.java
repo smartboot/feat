@@ -23,8 +23,6 @@ import tech.smartboot.feat.cloud.annotation.mcp.Param;
 @McpEndpoint(
     name = "demo-mcp-service",
     title = "Demo MCP Service",
-    sseEndpoint = "/mcp/demo/sse",
-    sseMessageEndpoint = "/mcp/demo/sse/message",
     streamableEndpoint = "/mcp/demo/stream"
 )
 public class McpDemoController {

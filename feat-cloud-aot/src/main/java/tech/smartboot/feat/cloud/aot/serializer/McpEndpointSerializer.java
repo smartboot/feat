@@ -152,12 +152,6 @@ public final class McpEndpointSerializer implements Serializer {
             if (FeatUtils.isNotBlank(this.mcpEndpoint.streamableEndpoint)) {
                 printWriter.append("\t\t\t\t.setMcpEndpoint(\"").append(this.mcpEndpoint.streamableEndpoint).println("\")");
             }
-            if (FeatUtils.isNotBlank(this.mcpEndpoint.sseEndpoint)) {
-                printWriter.append("\t\t\t\t.setSseEndpoint(\"").append(this.mcpEndpoint.sseEndpoint).println("\")");
-            }
-            if (FeatUtils.isNotBlank(this.mcpEndpoint.sseMessageEndpoint)) {
-                printWriter.append("\t\t\t\t.setSseMessageEndpoint(\"").append(this.mcpEndpoint.sseMessageEndpoint).println("\")");
-            }
             if (this.mcpEndpoint.toolEnable) {
                 printWriter.println("\t\t\t\t.toolEnable()");
             }
@@ -265,9 +259,6 @@ public final class McpEndpointSerializer implements Serializer {
         //注册Router
         if (FeatUtils.isNotBlank(mcpEndpoint.streamableEndpoint)) {
             printWriter.println("\t\tmcpServer.enableStreamable(router);");
-        }
-        if (FeatUtils.isNotBlank(mcpEndpoint.sseEndpoint) || FeatUtils.isNotBlank(mcpEndpoint.sseMessageEndpoint)) {
-            printWriter.println("\t\tmcpServer.enableSSE(router);");
         }
     }
 
@@ -464,20 +455,6 @@ public final class McpEndpointSerializer implements Serializer {
          */
         String version;
 
-        /**
-         * SSE端点地址
-         * 用于建立SSE连接的端点URL路径
-         * 对应MCP协议中的SSE通信机制
-         */
-        String sseEndpoint;
-
-        /**
-         * SSE消息端点地址
-         * 用于发送SSE消息的端点URL路径
-         * 对应MCP协议中的SSE消息传递机制
-         */
-        String sseMessageEndpoint;
-
 
         /**
          * 流式传输端点地址
@@ -529,8 +506,6 @@ public final class McpEndpointSerializer implements Serializer {
             this.name = mcpEndpoint.name();
             this.title = mcpEndpoint.title();
             this.version = mcpEndpoint.version();
-            this.sseEndpoint = mcpEndpoint.sseEndpoint();
-            this.sseMessageEndpoint = mcpEndpoint.sseMessageEndpoint();
             this.resourceEnable = mcpEndpoint.resourceEnable();
             this.toolEnable = mcpEndpoint.toolEnable();
             this.promptsEnable = mcpEndpoint.promptsEnable();

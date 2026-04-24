@@ -31,9 +31,7 @@ import java.util.Base64;
  * @version v1.0.0
  */
 @Controller
-@McpEndpoint(sseEndpoint = "/main/sse"
-        , sseMessageEndpoint = "/main/sse/message"
-        , streamableEndpoint = "/main/mcp", loggingEnable = false)
+@McpEndpoint(streamableEndpoint = "/main/mcp", loggingEnable = false)
 public class McpToolMainController {
 
     @Autowired

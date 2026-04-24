@@ -97,7 +97,6 @@ public class Demo {
 
 
         Router router = new Router();
-        mcp.enableSSE(router);
         mcp.enableStreamable(router);
         Feat.httpServer(opt -> opt.debug(true)).httpHandler(router).listen(3002);
     }

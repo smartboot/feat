@@ -70,7 +70,6 @@ public class DefaultMcpServerSerializer implements Serializer {
     @Override
     public void serializeRouter() throws IOException {
         printWriter.println("\t\tbean.enableStreamable(router);");
-        printWriter.println("\t\tbean.enableSSE(router);");
         printWriter.println("\t\tprintlnMcp(bean);");
     }
 

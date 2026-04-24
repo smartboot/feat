@@ -56,26 +56,6 @@ public @interface McpEndpoint {
      */
     String version() default Feat.VERSION;
 
-    /**
-     * SSE端点地址
-     * 用于建立SSE连接的端点URL路径
-     * 对应MCP协议中的SSE通信机制
-     *
-     * @deprecated MCP 官方不推荐使用
-     */
-    @Deprecated
-    String sseEndpoint();
-
-    /**
-     * SSE消息端点地址
-     * 用于发送SSE消息的端点URL路径
-     * 对应MCP协议中的SSE消息传递机制
-     *
-     * @deprecated MCP 官方不推荐使用
-     */
-    @Deprecated
-    String sseMessageEndpoint();
-
 
     /**
      * 流式传输端点地址
