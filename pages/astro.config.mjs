@@ -55,7 +55,45 @@ export default defineConfig({
                 {icon: 'github', label: 'GitHub', href: 'https://github.com/smartboot/feat'},
                 {icon: 'seti:git', label: 'Gitee', href: 'https://gitee.com/smartboot/feat'}
             ],
-            plugins: [starlightLlmsTxt(),starlightImageZoomPlugin(),starlightScrollToTop({
+            plugins: [starlightLlmsTxt({
+                customSets: [
+                    {
+                        label: '开始这里',
+                        description: 'Feat 入门指南和快速开始文档',
+                        paths: ['getting-started/**'],
+                    },
+                    {
+                        label: '理解 Feat',
+                        description: 'Feat 核心概念和设计原理文档',
+                        paths: ['guides/**'],
+                    },
+                    {
+                        label: 'Feat Core',
+                        description: 'Feat 核心服务器模块文档',
+                        paths: ['server/**'],
+                    },
+                    {
+                        label: 'Feat Cloud',
+                        description: 'Feat 云原生模块文档',
+                        paths: ['cloud/**'],
+                    },
+                    {
+                        label: 'Feat AI',
+                        description: 'Feat AI 集成模块文档',
+                        paths: ['ai/**'],
+                    },
+                    {
+                        label: '客户端',
+                        description: 'Feat 客户端相关文档',
+                        paths: ['client/**'],
+                    },
+                    {
+                        label: '附录',
+                        description: 'Feat 附录和参考文档',
+                        paths: ['appendix/**'],
+                    },
+                ],
+            }),starlightImageZoomPlugin(),starlightScrollToTop({
                 // Button position
                 // Tooltip text
                 tooltipText: 'Back to top',
