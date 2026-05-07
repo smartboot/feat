@@ -242,8 +242,4 @@ public class ChatOptions extends Options {
     public Double getTemperature() {
         return temperature;
     }
-
-    public ChatOptions enableThinking(boolean enableThinking) {
-        return extraBody(jsonObject -> jsonObject.put("enable_thinking", enableThinking));
-    }
 }

@@ -14,6 +14,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import tech.smartboot.feat.ai.FeatAI;
 import tech.smartboot.feat.ai.chat.ChatModel;
+import tech.smartboot.feat.ai.chat.ThinkOption;
 import tech.smartboot.feat.ai.chat.entity.Function;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
@@ -60,7 +61,7 @@ public class GiteeTest {
                         Function.of("get_weather")
                                 .description("获取天气信息")
                                 .addParam("city", "城市名称", "string", true))
-                .enableThinking(false)
+                .extraBody(ThinkOption.DeepSeek.ENABLE)
                 .debug(false));
 
         chatModel.chatStream("你好", new StreamResponseCallback() {
