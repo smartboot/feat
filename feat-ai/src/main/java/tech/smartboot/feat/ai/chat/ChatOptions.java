@@ -13,7 +13,6 @@ package tech.smartboot.feat.ai.chat;
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.ai.Options;
 import tech.smartboot.feat.ai.chat.entity.Function;
-import tech.smartboot.feat.ai.chat.entity.ResponseFormat;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -35,11 +34,6 @@ public class ChatOptions extends Options {
      * 功能函数映射，用于存储可用的AI功能函数
      */
     private final Map<String, Function> functions = new HashMap<>();
-
-    /**
-     * 响应格式配置
-     */
-    private ResponseFormat responseFormat;
 
     /**
      * extra body parameters for model-specific options
@@ -153,25 +147,14 @@ public class ChatOptions extends Options {
     }
 
     /**
-     * 设置响应格式
+     * 设置JSON响应格式
+     * 需在提示词中明确指示模型输出JSON，如：“请按照json格式输出”，否则会报错。
      *
-     * @param responseFormat 响应格式
      * @return 当前ChatOptions实例，用于链式调用
      */
-    public ChatOptions responseFormat(ResponseFormat responseFormat) {
-        this.responseFormat = responseFormat;
-        return this;
+    public ChatOptions responseJsonFormat() {
+        return extraBody(builder -> builder.put("response_format", JSONObject.of("type", "json_object")));
     }
-
-    /**
-     * 获取响应格式
-     *
-     * @return 响应格式
-     */
-    public ResponseFormat responseFormat() {
-        return responseFormat;
-    }
-
 
     public ChatOptions extraBody(Consumer<JSONObject> consumer) {
         if (extraBody == null) {
@@ -186,32 +169,8 @@ public class ChatOptions extends Options {
      *
      * @return 参数映射
      */
-    public JSONObject getExtraBody() {
+    JSONObject getExtraBody() {
         return extraBody;
-    }
-
-    /**
-     * 为 DeepSeek 系列模型禁用思考
-     *
-     * @return 当前ChatOptions实例
-     */
-    public ChatOptions disableDeepSeekThinking() {
-        // DeepSeek 使用 enable_thinking 参数控制思考
-        this.extraBody.put("enable_thinking", false);
-        return this;
-    }
-
-    /**
-     * 为 Qwen 系列模型禁用思考
-     *
-     * @return 当前ChatOptions实例
-     */
-    public ChatOptions disableQwenThinking() {
-        // Qwen 通过 chat_template_kwargs.enable_thinking 控制思考
-        Map<String, Object> qwenKwargs = new HashMap<>();
-        qwenKwargs.put("enable_thinking", false);
-        this.extraBody.put("chat_template_kwargs", qwenKwargs);
-        return this;
     }
 
     /**

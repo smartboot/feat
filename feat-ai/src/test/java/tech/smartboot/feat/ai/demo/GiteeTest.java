@@ -61,10 +61,11 @@ public class GiteeTest {
                         Function.of("get_weather")
                                 .description("获取天气信息")
                                 .addParam("city", "城市名称", "string", true))
-                .extraBody(ThinkOption.DeepSeek.ENABLE)
+                .extraBody(ThinkOption.DeepSeek.DISABLE)
+                .responseJsonFormat()
                 .debug(false));
 
-        chatModel.chatStream("你好", new StreamResponseCallback() {
+        chatModel.chatStream("你好,请按照json格式输出", new StreamResponseCallback() {
             @Override
             public void onReasoning(String content) {
                 System.err.print(content);

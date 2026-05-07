@@ -288,9 +288,7 @@ public class ChatModel {
         jsonObject.put("model", options.getModel());
         jsonObject.put("stream", stream);
         jsonObject.put("messages", messages);
-        if (options.responseFormat() != null) {
-            jsonObject.put("response_format", JSONObject.of("type", options.responseFormat().getType()));
-        }
+       
         if (options.getTemperature() != null) {
             jsonObject.put("temperature", options.getTemperature());
         }
