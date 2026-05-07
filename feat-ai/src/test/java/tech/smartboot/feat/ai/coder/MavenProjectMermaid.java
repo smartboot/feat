@@ -11,7 +11,6 @@
 package tech.smartboot.feat.ai.coder;
 
 import tech.smartboot.feat.ai.FeatAI;
-import tech.smartboot.feat.ai.chat.ChatModelVendor;
 import tech.smartboot.feat.ai.chat.ChatModel;
 import tech.smartboot.feat.ai.chat.prompt.PromptTemplate;
 import tech.smartboot.feat.ai.demo.BaseChat;
@@ -35,7 +34,7 @@ public class MavenProjectMermaid extends BaseChat {
             opts
 //                    .model("qwen2.5:3b")
 //                    .baseUrl("http://localhost:11434/v1") // Ollama本地服务地址
-                    .model(ChatModelVendor.GiteeAI.Qwen2_5_32B_Instruct)
+                    .model("Qwen2_5_32B-Instruct")
                     .debug(true)
             ;
         });

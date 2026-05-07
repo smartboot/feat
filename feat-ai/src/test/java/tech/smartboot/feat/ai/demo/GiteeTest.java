@@ -14,7 +14,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import tech.smartboot.feat.ai.FeatAI;
 import tech.smartboot.feat.ai.chat.ChatModel;
-import tech.smartboot.feat.ai.chat.ChatModelVendor;
+import tech.smartboot.feat.ai.chat.ChatOptions;
 import tech.smartboot.feat.ai.chat.entity.Function;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
@@ -33,9 +33,9 @@ public class GiteeTest {
     @Test
     public void test1() throws InterruptedException, ExecutionException {
         CompletableFuture<List<ToolCall>> countDownLatch = new CompletableFuture<>();
-        ChatModel chatModel = FeatAI.chatModel(opts -> opts.model(ChatModelVendor.GiteeAI.Qwen3_235B_A22B_Instruct_2507)
+        ChatModel chatModel = FeatAI.chatModel(opts -> opts.model("Qwen3-235B-A22B-Instruct-2507")
                 .addFunction(Function.of("get_weather").description("获取天气信息").addParam("city", "城市名称", "string", true))
-                .noThink(false).debug(true));
+                .debug(true));
 
         chatModel.chatStream("今天杭州天气如何", Arrays.asList("get_weather"), new StreamResponseCallback() {
             @Override
@@ -56,14 +56,20 @@ public class GiteeTest {
     @Test
     public void test2() throws InterruptedException, ExecutionException {
         CompletableFuture<List<ToolCall>> future = new CompletableFuture<>();
-        ChatModel chatModel = FeatAI.chatModel(opts -> opts.model(ChatModelVendor.GiteeAI.Kimi_K2_Instruct)
+        ChatModel chatModel = FeatAI.chatModel(opts -> opts.model("DeepSeek-V4-Flash")
                 .addFunction(
                         Function.of("get_weather")
                                 .description("获取天气信息")
                                 .addParam("city", "城市名称", "string", true))
-                .noThink(false).debug(false));
+                .extraBody(ChatOptions.DEEPSEEK_THINKING_DISABLE)
+                .debug(false));
 
-        chatModel.chatStream("今天杭州天气如何", Arrays.asList("get_weather"), new StreamResponseCallback() {
+        chatModel.chatStream("你好",  new StreamResponseCallback() {
+            @Override
+            public void onReasoning(String content) {
+                System.err.print( content);
+            }
+
             @Override
             public void onStreamResponse(String content) {
                 System.out.printf(content);
@@ -82,8 +88,8 @@ public class GiteeTest {
     @Test
     public void test3() throws InterruptedException, ExecutionException {
         CompletableFuture<List<ToolCall>> future = new CompletableFuture<>();
-        ChatModel chatModel = FeatAI.chatModel(opts -> opts.model(ChatModelVendor.GiteeAI.DeepSeek_R1)
-                .noThink(true).debug(true));
+        ChatModel chatModel = FeatAI.chatModel(opts -> opts.model("DeepSeek-R1")
+                .debug(true));
 
         chatModel.chat("你是谁", rsp -> {
             System.out.println(rsp.getReasoningContent());

@@ -15,7 +15,6 @@ import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.ai.FeatAI;
 import tech.smartboot.feat.ai.agent.AgentTool;
 import tech.smartboot.feat.ai.agent.FeatAgent;
-import tech.smartboot.feat.ai.chat.ChatModelVendor;
 import tech.smartboot.feat.core.common.FeatUtils;
 
 import java.util.concurrent.CompletableFuture;
@@ -103,7 +102,7 @@ public class JinaAgentToolDemo {
         // 创建 Agent 并注册 Jina AI 工具
         FeatAgent agent = FeatAI.agent(opts -> {
             // 配置对话模型
-            opts.chatOptions().model(ChatModelVendor.GiteeAI.Qwen2_5_72B_Instruct);
+            opts.chatOptions().model("Qwen2.5-72B-Instruct");
 
             // 注册 Jina AI 网页读取工具
             opts.tool(new JinaReaderTool());

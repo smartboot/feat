@@ -13,8 +13,6 @@ package tech.smartboot.feat.ai.agent.memory;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 
-import java.util.function.Consumer;
-
 /**
  * 内存记忆配置选项 - 配置InMemoryMemory的行为参数
  * <p>

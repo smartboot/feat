@@ -11,7 +11,6 @@
 package tech.smartboot.feat.ai.coder;
 
 import tech.smartboot.feat.ai.FeatAI;
-import tech.smartboot.feat.ai.chat.ChatModelVendor;
 import tech.smartboot.feat.ai.chat.ChatModel;
 import tech.smartboot.feat.ai.chat.prompt.PromptTemplate;
 import tech.smartboot.feat.ai.demo.BaseChat;
@@ -54,7 +53,7 @@ public class ProjectDocumentDemo extends BaseChat {
 
 
         ChatModel chatModel = FeatAI.chatModel(opts -> {
-            opts.model(ChatModelVendor.GiteeAI.DeepSeek_R1_Distill_Qwen_32B)
+            opts.model("DeepSeek-R1-Distill-Qwen-32B")
                     .debug(false)
             ;
         });

@@ -17,7 +17,6 @@ import tech.smartboot.feat.ai.agent.tools.FileOperationTool;
 import tech.smartboot.feat.ai.agent.tools.SearchTool;
 import tech.smartboot.feat.ai.agent.tools.WebPageReaderTool;
 import tech.smartboot.feat.ai.chat.ChatModel;
-import tech.smartboot.feat.ai.chat.ChatModelVendor;
 import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
@@ -70,12 +69,12 @@ public class ReActAgent extends FeatAgent {
      * </p>
      */
     public ReActAgent() {
-        this(opts -> opts.tool(new FileOperationTool()).tool(new SearchTool()).tool(new WebPageReaderTool()).chatOptions().model(ChatModelVendor.GiteeAI.DeepSeek_V32));
+        this(opts -> opts.tool(new FileOperationTool()).tool(new SearchTool()).tool(new WebPageReaderTool()).chatOptions().model("DeepSeek-V3.2"));
 
     }
 
     public ReActAgent(Consumer<AgentOptions> opts) {
-        options.prompt(new Prompt(PromptTemplate.loadPrompt("feat_react_agent.tpl"))).chatOptions().model(ChatModelVendor.GiteeAI.DeepSeek_V32);
+        options.prompt(new Prompt(PromptTemplate.loadPrompt("feat_react_agent.tpl"))).chatOptions().model("DeepSeek-V3.2");
         opts.accept(options);
     }
 

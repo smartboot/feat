@@ -13,7 +13,6 @@ package tech.smartboot.feat.ai.demo;
 import tech.smartboot.feat.ai.agent.FeatAgent;
 import tech.smartboot.feat.ai.agent.ReActAgent;
 import tech.smartboot.feat.ai.agent.tools.McpTool;
-import tech.smartboot.feat.ai.chat.ChatModelVendor;
 import tech.smartboot.feat.ai.mcp.client.McpClient;
 
 /**
@@ -48,7 +47,7 @@ public class McpToolDemo {
 //                opt.tool(mcpTool);
                 McpTool.register(opt, mcpClient);
                 // 配置模型（示例使用 GiteeAI）
-                opt.chatOptions().model(ChatModelVendor.GiteeAI.Kimi_K25_Instruct);
+                opt.chatOptions().model("Kimi-K2.5-Instruct");
             });
 
 

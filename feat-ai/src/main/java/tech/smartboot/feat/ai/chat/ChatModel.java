@@ -285,7 +285,7 @@ public class ChatModel {
      */
     private HttpPost chat0(List<Message> messages, List<String> tools, boolean stream) {
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put("model", options.getModel().model());
+        jsonObject.put("model", options.getModel());
         jsonObject.put("stream", stream);
         jsonObject.put("messages", messages);
         if (options.responseFormat() != null) {
@@ -306,15 +306,14 @@ public class ChatModel {
             toolList.add(t);
         }
         if (!toolList.isEmpty()) {
-            if (options.getModel().hasCapability(ChatModelVendor.CAPABILITY_FUNCTION_CALL)) {
-                jsonObject.put("tools", toolList);
-                jsonObject.put("tool_choice", "auto");
-            } else {
-                LOGGER.warn("current model:{} unSupport function call.", options.getModel().model());
-            }
+            jsonObject.put("tools", toolList);
+            jsonObject.put("tool_choice", "auto");
         }
-        if (options.getModel().getPreRequest() != null) {
-            options.getModel().getPreRequest().preRequest(this, options.getModel(), jsonObject);
+
+        // 合并 extraBody 参数到请求 JSON
+        JSONObject extraBody = options.getExtraBody();
+        if (extraBody != null && !extraBody.isEmpty()) {
+            jsonObject.putAll(extraBody);
         }
 
         HttpPost post = Feat.postJson(options.baseUrl() + "/chat/completions", opts -> {

@@ -10,12 +10,14 @@
 
 package tech.smartboot.feat.ai.chat;
 
+import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.ai.Options;
 import tech.smartboot.feat.ai.chat.entity.Function;
 import tech.smartboot.feat.ai.chat.entity.ResponseFormat;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * 聊天选项类，继承自Options，用于配置聊天模型的各种参数
@@ -24,7 +26,21 @@ import java.util.Map;
  * @version v1.0.0
  */
 public class ChatOptions extends Options {
+    public static final Consumer<JSONObject> QWEN_THINKING_ENABLE = (jsonObject) -> {
+        jsonObject.put("enable_thinking", true);
+    };
+    public static final Consumer<JSONObject> QWEN_THINKING_DISABLE = (jsonObject) -> {
+        jsonObject.put("enable_thinking", false);
+    };
 
+    public static final Consumer<JSONObject> DEEPSEEK_THINKING_ENABLE = (jsonObject) -> {
+        jsonObject.put("thinking", JSONObject.of("type", "enabled"));
+    };
+
+
+    public static final Consumer<JSONObject> DEEPSEEK_THINKING_DISABLE = (jsonObject) -> {
+        jsonObject.put("thinking", JSONObject.of("type", "disabled"));
+    };
     /**
      * 系统提示信息
      */
@@ -41,14 +57,14 @@ public class ChatOptions extends Options {
     private ResponseFormat responseFormat;
 
     /**
-     * 是否不进行思考（直接输出结果）
+     * extra body parameters for model-specific options
      */
-    private boolean noThink;
+    private JSONObject extraBody;
 
     /**
-     * 模型供应商
+     * 模型名称
      */
-    private ChatModelVendor model;
+    private String model;
 
     /**
      * 温度参数，控制生成文本的随机性，范围通常为 0.0 到 2.0
@@ -72,13 +88,8 @@ public class ChatOptions extends Options {
      * @param model 模型供应商
      * @return 当前ChatOptions实例，用于链式调用
      */
-    public ChatOptions model(ChatModelVendor model) {
-        this.model = model;
-        return baseUrl(model.baseUrl());
-    }
-
     public ChatOptions model(String model) {
-        this.model = new ChatModelVendor(model);
+        this.model = model;
         return this;
     }
 
@@ -176,24 +187,46 @@ public class ChatOptions extends Options {
         return responseFormat;
     }
 
-    /**
-     * 设置是否不进行思考（直接输出结果）
-     *
-     * @param noThink 是否不进行思考
-     * @return 当前ChatOptions实例，用于链式调用
-     */
-    public ChatOptions noThink(boolean noThink) {
-        this.noThink = noThink;
+
+    public ChatOptions extraBody(Consumer<JSONObject> consumer) {
+        if (extraBody == null) {
+            this.extraBody = new JSONObject();
+        }
+        consumer.accept(this.extraBody);
         return this;
     }
 
     /**
-     * 判断是否不进行思考（直接输出结果）
+     * 获取 extra body 参数映射
      *
-     * @return 如果不进行思考返回true，否则返回false
+     * @return 参数映射
      */
-    public boolean isNoThink() {
-        return noThink;
+    public JSONObject getExtraBody() {
+        return extraBody;
+    }
+
+    /**
+     * 为 DeepSeek 系列模型禁用思考
+     *
+     * @return 当前ChatOptions实例
+     */
+    public ChatOptions disableDeepSeekThinking() {
+        // DeepSeek 使用 enable_thinking 参数控制思考
+        this.extraBody.put("enable_thinking", false);
+        return this;
+    }
+
+    /**
+     * 为 Qwen 系列模型禁用思考
+     *
+     * @return 当前ChatOptions实例
+     */
+    public ChatOptions disableQwenThinking() {
+        // Qwen 通过 chat_template_kwargs.enable_thinking 控制思考
+        Map<String, Object> qwenKwargs = new HashMap<>();
+        qwenKwargs.put("enable_thinking", false);
+        this.extraBody.put("chat_template_kwargs", qwenKwargs);
+        return this;
     }
 
     /**
@@ -201,7 +234,7 @@ public class ChatOptions extends Options {
      *
      * @return 模型供应商
      */
-    public ChatModelVendor getModel() {
+    public String getModel() {
         return model;
     }
 

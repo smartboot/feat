@@ -10,8 +10,6 @@
 
 package tech.smartboot.feat.ai;
 
-import tech.smartboot.feat.ai.vendor.GiteeAI;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -22,9 +20,9 @@ import java.util.Map;
 public abstract class Options {
     public static final String ENV_API_KEY = "FEAT_AI_API_KEY";
     /**
-     * AI服务的基础URL，优先从环境变量FEATAI_BASE_URL获取，默认使用Gitee AI服务
+     * AI服务的基础URL，优先从环境变量FEAT_AI_BASE_URL获取，默认使用Gitee AI服务
      */
-    private String baseUrl = System.getenv("FEAT_AI_BASE_URL") != null ? System.getenv("FEAT_AI_BASE_URL") : GiteeAI.BASE_URL;
+    private String baseUrl = System.getenv("FEAT_AI_BASE_URL") != null ? System.getenv("FEAT_AI_BASE_URL") : "https://ai.gitee.com/v1/";
 
 
     /**

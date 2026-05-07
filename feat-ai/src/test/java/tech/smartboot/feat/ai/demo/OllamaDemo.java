@@ -12,7 +12,6 @@ package tech.smartboot.feat.ai.demo;
 
 import tech.smartboot.feat.ai.FeatAI;
 import tech.smartboot.feat.ai.chat.ChatModel;
-import tech.smartboot.feat.ai.chat.ChatModelVendor;
 import tech.smartboot.feat.ai.chat.entity.Function;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
@@ -25,11 +24,10 @@ public class OllamaDemo {
     public static void main(String[] args) {
         // 初始化Feat AI
         ChatModel chatModel = FeatAI.chatModel(opts -> {
-            opts.model(ChatModelVendor.Ollama.Qwen3_06B)
+            opts.model("Qwen3-06B")
                     .system("你是一个擅长生成藏头诗的诗人。")
                     .addFunction(Function.of("aa"))
 //                    .responseFormat(ResponseFormat.JSON)
-                    .noThink(true)
                     .debug(false);
         });
 
