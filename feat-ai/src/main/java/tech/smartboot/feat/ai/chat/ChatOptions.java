@@ -26,21 +26,6 @@ import java.util.function.Consumer;
  * @version v1.0.0
  */
 public class ChatOptions extends Options {
-    public static final Consumer<JSONObject> QWEN_THINKING_ENABLE = (jsonObject) -> {
-        jsonObject.put("enable_thinking", true);
-    };
-    public static final Consumer<JSONObject> QWEN_THINKING_DISABLE = (jsonObject) -> {
-        jsonObject.put("enable_thinking", false);
-    };
-
-    public static final Consumer<JSONObject> DEEPSEEK_THINKING_ENABLE = (jsonObject) -> {
-        jsonObject.put("thinking", JSONObject.of("type", "enabled"));
-    };
-
-
-    public static final Consumer<JSONObject> DEEPSEEK_THINKING_DISABLE = (jsonObject) -> {
-        jsonObject.put("thinking", JSONObject.of("type", "disabled"));
-    };
     /**
      * 系统提示信息
      */
@@ -256,5 +241,9 @@ public class ChatOptions extends Options {
      */
     public Double getTemperature() {
         return temperature;
+    }
+
+    public ChatOptions enableThinking(boolean enableThinking) {
+        return extraBody(jsonObject -> jsonObject.put("enable_thinking", enableThinking));
     }
 }
