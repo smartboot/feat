@@ -31,4 +31,12 @@ public abstract class Provider {
      * 处理非流式响应
      */
     public abstract void chat(List<Message> messages, Consumer<ResponseMessage> callback);
+
+    public static ResponseMessage error(String error) {
+        ResponseMessage responseMessage = new ResponseMessage();
+        responseMessage.setRole(Message.ROLE_ASSISTANT);
+        responseMessage.setError(error);
+        responseMessage.setSuccess(false);
+        return responseMessage;
+    }
 }

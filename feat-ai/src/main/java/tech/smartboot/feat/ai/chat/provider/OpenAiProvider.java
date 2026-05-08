@@ -176,11 +176,7 @@ public class OpenAiProvider extends Provider {
         HttpPost post = buildRequest(messages, false);
         post.onSuccess(response -> {
                     if (response.statusCode() != 200) {
-                        ResponseMessage responseMessage = new ResponseMessage();
-                        responseMessage.setRole(Message.ROLE_ASSISTANT);
-                        responseMessage.setError(response.body());
-                        responseMessage.setSuccess(false);
-                        callback.accept(responseMessage);
+                        callback.accept(Provider.error(response.body()));
                         return;
                     }
                     ChatWholeResponse chatResponse = JSON.parseObject(response.body(), ChatWholeResponse.class);
