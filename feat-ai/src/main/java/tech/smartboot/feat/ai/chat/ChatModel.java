@@ -90,7 +90,7 @@ public class ChatModel {
         HttpPost post;
         Map<Integer, ToolCall> toolCallMap = new HashMap<>();
         AtomicInteger status = new AtomicInteger(STREAM_STATUS_INIT);
-        if (options.getVendor()) {
+        if (options.getApiSpec() == ApiSpec.ANTHROPIC) {
             post = buildAnthropicRequest(messages, true);
             anthropicStream(post, consumer, status);
         } else {
@@ -298,7 +298,7 @@ public class ChatModel {
      */
     public void chat(List<Message> messages, Consumer<ResponseMessage> callback) {
         HttpPost post;
-        if (options.getVendor()) {
+        if (options.getApiSpec() == ApiSpec.ANTHROPIC) {
             post = buildAnthropicRequest(messages, false);
             post.onSuccess(response -> {
                 if (response.statusCode() != 200) {

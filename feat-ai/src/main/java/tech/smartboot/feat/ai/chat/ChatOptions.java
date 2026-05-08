@@ -51,9 +51,9 @@ public class ChatOptions extends Options {
     private Double temperature;
 
     /**
-     * 模型供应商规范类型，默认为 OPENAI
+     * API 规范类型，默认为 OPENAI
      */
-    private boolean anthropicVendor;
+    private ApiSpec apiSpec = ApiSpec.OPENAI;
 
     /**
      * 设置基础URL
@@ -188,21 +188,22 @@ public class ChatOptions extends Options {
     }
 
     /**
-     * 获取模型供应商规范类型
+     * 获取 API 规范类型
      *
-     * @return 模型供应商规范类型
+     * @return API 规范类型
      */
-    public boolean getVendor() {
-        return anthropicVendor;
+    public ApiSpec getApiSpec() {
+        return apiSpec;
     }
 
     /**
-     * 设置模型供应商规范类型
+     * 设置 API 规范类型
      *
+     * @param apiSpec API 规范类型
      * @return 当前ChatOptions实例，用于链式调用
      */
-    public ChatOptions enableAnthropicVendor() {
-        this.anthropicVendor = true;
+    public ChatOptions apiSpec(ApiSpec apiSpec) {
+        this.apiSpec = apiSpec;
         return this;
     }
 
