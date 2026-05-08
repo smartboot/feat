@@ -1,4 +1,4 @@
-package tech.smartboot.feat.ai.chat.spec;
+package tech.smartboot.feat.ai.chat.provider;
 
 import tech.smartboot.feat.ai.chat.ChatOptions;
 import tech.smartboot.feat.ai.chat.entity.Message;
@@ -11,14 +11,14 @@ import java.util.function.Consumer;
 /**
  * Chat API 处理器接口，用于定义不同 API 规范的处理逻辑
  */
-public abstract class SpecHandler {
+public abstract class Provider {
     protected final ChatOptions options;
     public static final int STREAM_STATUS_INIT = 0;
     public static final int STREAM_STATUS_UPGRADE = 1;
     public static final int STREAM_STATUS_COMPLETE = 2;
     public static final int STREAM_STATUS_ERROR = 3;
 
-    public SpecHandler(ChatOptions options) {
+    public Provider(ChatOptions options) {
         this.options = options;
     }
 

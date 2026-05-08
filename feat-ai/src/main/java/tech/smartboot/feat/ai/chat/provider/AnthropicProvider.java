@@ -1,4 +1,4 @@
-package tech.smartboot.feat.ai.chat.spec;
+package tech.smartboot.feat.ai.chat.provider;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
@@ -23,11 +23,11 @@ import java.util.function.Consumer;
 /**
  * Anthropic API 处理器实现
  */
-public class AnthropicSpecHandler extends SpecHandler {
-    private static final Logger LOGGER = LoggerFactory.getLogger(AnthropicSpecHandler.class);
+public class AnthropicProvider extends Provider {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AnthropicProvider.class);
     private static final String ANTHROPIC_VERSION = "2023-06-01";
 
-    public AnthropicSpecHandler(ChatOptions options) {
+    public AnthropicProvider(ChatOptions options) {
         super(options);
     }
 
@@ -146,12 +146,12 @@ public class AnthropicSpecHandler extends SpecHandler {
                 LOGGER.error("Error parsing Anthropic stream response", e);
             }
         })).onSuccess(response -> {
-            if (status.get() == SpecHandler.STREAM_STATUS_INIT) {
-                status.set(SpecHandler.STREAM_STATUS_ERROR);
+            if (status.get() == Provider.STREAM_STATUS_INIT) {
+                status.set(Provider.STREAM_STATUS_ERROR);
                 consumer.onError(new FeatException(response.body()));
             }
         }).onFailure(throwable -> {
-            status.set(SpecHandler.STREAM_STATUS_ERROR);
+            status.set(Provider.STREAM_STATUS_ERROR);
             consumer.onError(throwable);
         }).submit();
     }

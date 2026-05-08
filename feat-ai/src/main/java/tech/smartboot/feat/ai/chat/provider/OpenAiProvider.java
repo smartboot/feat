@@ -1,4 +1,4 @@
-package tech.smartboot.feat.ai.chat.spec;
+package tech.smartboot.feat.ai.chat.provider;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
@@ -29,10 +29,10 @@ import java.util.function.Consumer;
 /**
  * OpenAI API 处理器实现
  */
-public class OpenAiSpecHandler extends SpecHandler {
-    private static final Logger LOGGER = LoggerFactory.getLogger(OpenAiSpecHandler.class);
+public class OpenAiProvider extends Provider {
+    private static final Logger LOGGER = LoggerFactory.getLogger(OpenAiProvider.class);
 
-    public OpenAiSpecHandler(ChatOptions options) {
+    public OpenAiProvider(ChatOptions options) {
         super(options);
     }
 
@@ -161,12 +161,12 @@ public class OpenAiSpecHandler extends SpecHandler {
                 }
             }
         })).onSuccess(response -> {
-            if (status.get() == SpecHandler.STREAM_STATUS_INIT) {
-                status.set(SpecHandler.STREAM_STATUS_ERROR);
+            if (status.get() == Provider.STREAM_STATUS_INIT) {
+                status.set(Provider.STREAM_STATUS_ERROR);
                 consumer.onError(new FeatException(response.body()));
             }
         }).onFailure(throwable -> {
-            status.set(SpecHandler.STREAM_STATUS_ERROR);
+            status.set(Provider.STREAM_STATUS_ERROR);
             consumer.onError(throwable);
         }).submit();
     }
