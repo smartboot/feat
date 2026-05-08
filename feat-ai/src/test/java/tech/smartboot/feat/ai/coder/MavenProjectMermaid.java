@@ -53,9 +53,9 @@ public class MavenProjectMermaid extends BaseChat {
             }
         });
 
-        chatModel.chat(PromptTemplate.MAVEN_PROJECT_MERMAID, data -> {
+        chatModel.chat(PromptTemplate.MAVEN_PROJECT_MERMAID.prompt(data -> {
             data.put("file_list", sourceBuilder.toString());
-        }).whenComplete((responseMessage, throwable) -> {
+        })).whenComplete((responseMessage, throwable) -> {
             System.out.println(responseMessage.getContent());
         });
 

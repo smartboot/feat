@@ -45,9 +45,9 @@ public class ProjectCoder extends BaseChat {
             }
         });
 
-        chatModel.chatStream(PromptTemplate.PROJECT_CODER, data -> {
+        chatModel.chatStream(PromptTemplate.PROJECT_CODER.prompt(data -> {
             data.put("reference", sources.toString());
             data.put("input", "分析下关于拦截器的路由匹配算法是否存在问题，然后给出优化方案");
-        }, System.out::print);
+        }), System.out::print);
     }
 }

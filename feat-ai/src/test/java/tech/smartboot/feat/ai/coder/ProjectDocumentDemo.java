@@ -59,10 +59,10 @@ public class ProjectDocumentDemo extends BaseChat {
         });
 
 
-        chatModel.chatStream(PromptTemplate.PROJECT_DOCUMENT_EDITOR, data -> {
+        chatModel.chatStream(PromptTemplate.PROJECT_DOCUMENT_EDITOR.prompt(data -> {
             data.put("input", "用Mermaid画一张介绍fileserver的架构图或者流程图，各环节要尽量细致、准确");
             data.put("ref_source", source.toString());
             data.put("ref_doc", docs.toString());
-        }, System.out::print);
+        }), System.out::print);
     }
 }

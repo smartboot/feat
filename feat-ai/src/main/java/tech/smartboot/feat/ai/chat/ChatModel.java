@@ -21,7 +21,7 @@ import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
 import tech.smartboot.feat.ai.chat.entity.Tool;
 import tech.smartboot.feat.ai.chat.entity.ToolCall;
-import tech.smartboot.feat.ai.chat.prompt.Prompt;
+import tech.smartboot.feat.ai.chat.entity.Usage;
 import tech.smartboot.feat.core.client.HttpPost;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
@@ -40,6 +40,7 @@ import java.util.function.Consumer;
 
 /**
  * 聊天模型类，用于与AI模型进行交互，支持流式和非流式响应
+ * 支持 OpenAI 和 Anthropic 两种API规范
  *
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
@@ -51,6 +52,11 @@ public class ChatModel {
     private static final int STREAM_STATUS_UPGRADE = 1;
     private static final int STREAM_STATUS_COMPLETE = 2;
     private static final int STREAM_STATUS_ERROR = 3;
+
+    /**
+     * Anthropic API 版本头
+     */
+    private static final String ANTHROPIC_VERSION = "2023-06-01";
 
     /**
      * 构造函数
@@ -71,34 +77,27 @@ public class ChatModel {
      * @param consumer 流式响应回调
      */
     public void chatStream(String content, StreamResponseCallback consumer) {
-        chatStream(Collections.singletonList(Message.ofUser(content)), Collections.emptyList(), consumer);
-    }
-
-    /**
-     * 发送流式聊天请求（消息列表版本）
-     *
-     * @param messages 消息列表
-     * @param consumer 流式响应回调
-     */
-    public void chatStream(List<Message> messages, StreamResponseCallback consumer) {
-        chatStream(messages, Collections.emptyList(), consumer);
+        chatStream(Collections.singletonList(Message.ofUser(content)), consumer);
     }
 
     /**
      * 发送流式聊天请求（完整版本）
      *
      * @param messages 消息列表
-     * @param tools    工具列表
      * @param consumer 流式响应回调
      */
-    public void chatStream(List<Message> messages, List<String> tools, StreamResponseCallback consumer) {
-        HttpPost post = chat0(messages, tools, true);
-        StringBuilder contentBuilder = new StringBuilder();
-        StringBuilder reasoningBuilder = new StringBuilder();
+    public void chatStream(List<Message> messages, StreamResponseCallback consumer) {
+        HttpPost post;
         Map<Integer, ToolCall> toolCallMap = new HashMap<>();
         AtomicInteger status = new AtomicInteger(STREAM_STATUS_INIT);
+        if (options.getVendor()) {
+            post = buildAnthropicRequest(messages, true);
+            anthropicStream(post, consumer, status);
+        } else {
+            post = buildOpenAIRequest(messages, true);
+            openAIStream(post, consumer, toolCallMap, status);
+        }
         post.onSuccess(response -> {
-            //若sse升级成功，则忽略onSuccess逻辑
             if (status.get() == STREAM_STATUS_INIT) {
                 status.set(STREAM_STATUS_ERROR);
                 consumer.onError(new FeatException(response.body()));
@@ -106,7 +105,16 @@ public class ChatModel {
         }).onFailure(throwable -> {
             status.set(STREAM_STATUS_ERROR);
             consumer.onError(throwable);
-        }).onSSE(sse -> sse.onData(event -> {
+        }).submit();
+    }
+
+    /**
+     * 处理 OpenAI 格式的流式响应
+     */
+    private void openAIStream(HttpPost post, StreamResponseCallback consumer, Map<Integer, ToolCall> toolCallMap, AtomicInteger status) {
+        StringBuilder contentBuilder = new StringBuilder();
+        StringBuilder reasoningBuilder = new StringBuilder();
+        post.onSSE(sse -> sse.onData(event -> {
             if (status.get() == STREAM_STATUS_INIT) {
                 status.set(STREAM_STATUS_UPGRADE);
             }
@@ -187,28 +195,75 @@ public class ChatModel {
                     }
                 }
             }
-        })).submit();
+        }));
     }
 
     /**
-     * 发送流式聊天请求（工具版本）
-     *
-     * @param chat     用户输入内容
-     * @param tools    工具列表
-     * @param consumer 流式响应回调
+     * 处理 Anthropic 格式的流式响应
      */
-    public void chatStream(String chat, List<String> tools, StreamResponseCallback consumer) {
-        chatStream(Collections.singletonList(Message.ofUser(chat)), tools, consumer);
-    }
+    private void anthropicStream(HttpPost post, StreamResponseCallback consumer, AtomicInteger status) {
+        StringBuilder contentBuilder = new StringBuilder();
+        StringBuilder reasoningBuilder = new StringBuilder();
+        post.onSSE(sse -> sse.onData(event -> {
+            if (status.get() == STREAM_STATUS_INIT) {
+                status.set(STREAM_STATUS_UPGRADE);
+            }
 
-    /**
-     * 发送非流式聊天请求（简单版本）
-     *
-     * @param content 用户输入内容
-     * @return 包含响应消息的CompletableFuture
-     */
-    public CompletableFuture<ResponseMessage> chat(String content) {
-        return chat(content, Collections.emptyList());
+            String eventType = event.getType();
+            String data = event.getData();
+
+            if (FeatUtils.isBlank(data)) {
+                return;
+            }
+
+            try {
+                JSONObject object = JSON.parseObject(data);
+
+                switch (eventType) {
+                    case "message_start":
+                        // 消息开始，无需处理
+                        break;
+                    case "content_block_start":
+                        // 内容块开始
+                        break;
+                    case "content_block_delta":
+                        JSONObject delta = object.getJSONObject("delta");
+                        if (delta != null) {
+                            String text = delta.getString("text");
+                            if (text != null) {
+                                consumer.onStreamResponse(text);
+                                contentBuilder.append(text);
+                            }
+                            String thinking = delta.getString("thinking");
+                            if (thinking != null) {
+                                consumer.onReasoning(thinking);
+                                reasoningBuilder.append(thinking);
+                            }
+                        }
+                        break;
+                    case "content_block_stop":
+                        // 内容块结束
+                        break;
+                    case "message_delta":
+                        // 消息更新（如停止原因）
+                        break;
+                    case "message_stop":
+                        // 消息结束，构建完整响应
+                        ResponseMessage responseMessage = new ResponseMessage();
+                        responseMessage.setRole(Message.ROLE_ASSISTANT);
+                        responseMessage.setContent(contentBuilder.toString());
+                        responseMessage.setReasoningContent(reasoningBuilder.toString());
+                        responseMessage.setSuccess(true);
+                        status.set(STREAM_STATUS_COMPLETE);
+                        consumer.onCompletion(responseMessage);
+                        break;
+                    default:
+                        LOGGER.debug("Unknown Anthropic event type: " + eventType);
+                }
+            } catch (Exception e) {
+                LOGGER.error("Error parsing Anthropic stream response", e);
+            }
+        }));
     }
 
     /**
@@ -219,7 +274,7 @@ public class ChatModel {
      */
     public CompletableFuture<ResponseMessage> chat(List<Message> messages) {
         CompletableFuture<ResponseMessage> future = new CompletableFuture<>();
-        chat(messages, Collections.emptyList(), future::complete);
+        chat(messages, future::complete);
         return future;
     }
 
@@ -227,12 +282,11 @@ public class ChatModel {
      * 发送非流式聊天请求（工具版本）
      *
      * @param content 用户输入内容
-     * @param tools   工具列表
      * @return 包含响应消息的CompletableFuture
      */
-    public CompletableFuture<ResponseMessage> chat(String content, List<String> tools) {
+    public CompletableFuture<ResponseMessage> chat(String content) {
         CompletableFuture<ResponseMessage> future = new CompletableFuture<>();
-        chat(content, tools, future::complete);
+        chat(Collections.singletonList(Message.ofUser(content)), future::complete);
         return future;
     }
 
@@ -240,69 +294,93 @@ public class ChatModel {
      * 发送非流式聊天请求（回调版本）
      *
      * @param messages 消息列表
-     * @param tools    工具列表
      * @param callback 响应回调
      */
-    public void chat(List<Message> messages, List<String> tools, Consumer<ResponseMessage> callback) {
-        HttpPost post = chat0(messages, tools, false);
-
-        post.onSuccess(response -> {
-            if (response.statusCode() != 200) {
+    public void chat(List<Message> messages, Consumer<ResponseMessage> callback) {
+        HttpPost post;
+        if (options.getVendor()) {
+            post = buildAnthropicRequest(messages, false);
+            post.onSuccess(response -> {
+                if (response.statusCode() != 200) {
+                    ResponseMessage responseMessage = new ResponseMessage();
+                    responseMessage.setRole(Message.ROLE_ASSISTANT);
+                    responseMessage.setError(response.body());
+                    responseMessage.setSuccess(false);
+                    callback.accept(responseMessage);
+                    return;
+                }
+                JSONObject object = JSON.parseObject(response.body());
                 ResponseMessage responseMessage = new ResponseMessage();
                 responseMessage.setRole(Message.ROLE_ASSISTANT);
-                responseMessage.setError(response.body());
-                responseMessage.setSuccess(false);
+                responseMessage.setSuccess(true);
+
+                // 提取内容
+                JSONArray contentArray = object.getJSONArray("content");
+                if (contentArray != null && !contentArray.isEmpty()) {
+                    StringBuilder contentBuilder = new StringBuilder();
+                    for (int i = 0; i < contentArray.size(); i++) {
+                        JSONObject contentItem = contentArray.getJSONObject(i);
+                        String type = contentItem.getString("type");
+                        if ("text".equals(type)) {
+                            contentBuilder.append(contentItem.getString("text"));
+                        }
+                    }
+                    responseMessage.setContent(contentBuilder.toString());
+                }
+
+                // 提取使用统计
+                JSONObject usage = object.getJSONObject("usage");
+                if (usage != null) {
+                    Usage usageObj = new Usage();
+                    usageObj.setPromptTokens(usage.getInteger("input_tokens") != null ? usage.getInteger("input_tokens") : 0);
+                    usageObj.setCompletionTokens(usage.getInteger("output_tokens") != null ? usage.getInteger("output_tokens") : 0);
+                    responseMessage.setUsage(usageObj);
+                }
+
                 callback.accept(responseMessage);
-                return;
-            }
-            ChatWholeResponse chatResponse = JSON.parseObject(response.body(), ChatWholeResponse.class);
-            ResponseMessage responseMessage = chatResponse.getChoice().getMessage();
-            responseMessage.setUsage(chatResponse.getUsage());
-            responseMessage.setPromptLogprobs(chatResponse.getPromptLogprobs());
-            responseMessage.setSuccess(true);
-            callback.accept(responseMessage);
-        }).onFailure(Throwable::printStackTrace).submit();
+            });
+        } else {
+            post = buildOpenAIRequest(messages, false);
+            post.onSuccess(response -> {
+                if (response.statusCode() != 200) {
+                    ResponseMessage responseMessage = new ResponseMessage();
+                    responseMessage.setRole(Message.ROLE_ASSISTANT);
+                    responseMessage.setError(response.body());
+                    responseMessage.setSuccess(false);
+                    callback.accept(responseMessage);
+                    return;
+                }
+                ChatWholeResponse chatResponse = JSON.parseObject(response.body(), ChatWholeResponse.class);
+                ResponseMessage responseMessage = chatResponse.getChoice().getMessage();
+                responseMessage.setUsage(chatResponse.getUsage());
+                responseMessage.setPromptLogprobs(chatResponse.getPromptLogprobs());
+                responseMessage.setSuccess(true);
+                callback.accept(responseMessage);
+            });
+        }
+        post.onFailure(Throwable::printStackTrace).submit();
     }
 
     /**
-     * 发送非流式聊天请求（工具+回调版本）
-     *
-     * @param content  用户输入内容
-     * @param tools    工具列表
-     * @param callback 响应回调
+     * 构建 OpenAI 格式的请求
      */
-    public void chat(String content, List<String> tools, Consumer<ResponseMessage> callback) {
-        chat(Collections.singletonList(Message.ofUser(content)), tools, callback);
-    }
-
-    /**
-     * 构建并发送聊天请求的核心方法
-     *
-     * @param messages 消息列表
-     * @param tools    工具列表
-     * @param stream   是否使用流式响应
-     * @return HttpPost请求对象
-     */
-    private HttpPost chat0(List<Message> messages, List<String> tools, boolean stream) {
+    private HttpPost buildOpenAIRequest(List<Message> messages, boolean stream) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("model", options.getModel());
         jsonObject.put("stream", stream);
         jsonObject.put("messages", messages);
-       
+
         if (options.getTemperature() != null) {
             jsonObject.put("temperature", options.getTemperature());
         }
 
         List<Tool> toolList = new ArrayList<>();
-        for (String tool : tools) {
-            if (!options.functions().containsKey(tool)) {
-                throw new RuntimeException("工具 " + tool + " 不存在");
-            }
+        options.functions().forEach((tool, function) -> {
             Tool t = new Tool();
             t.setType("function");
-            t.setFunction(options.functions().get(tool));
+            t.setFunction(function);
             toolList.add(t);
-        }
+        });
         if (!toolList.isEmpty()) {
             jsonObject.put("tools", toolList);
             jsonObject.put("tool_choice", "auto");
@@ -327,15 +405,68 @@ public class ChatModel {
     }
 
     /**
-     * 发送非流式聊天请求（单工具版本）
-     *
-     * @param content  用户输入内容
-     * @param tool     工具名称
-     * @param callback 响应回调
+     * 构建 Anthropic 格式的请求
      */
-    public void chat(String content, String tool, Consumer<ResponseMessage> callback) {
-        chat(content, Collections.singletonList(tool), callback);
+    private HttpPost buildAnthropicRequest(List<Message> messages, boolean stream) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("model", options.getModel());
+        jsonObject.put("stream", stream);
+
+        // Anthropic 使用 max_tokens 而不是 temperature 来控制
+        // 设置默认的 max_tokens
+        jsonObject.put("max_tokens", 4096);
+
+        // 处理系统消息（Anthropic 将 system 作为顶级字段）
+        String systemContent = options.getSystem();
+        List<Message> userMessages = new ArrayList<>();
+        for (Message message : messages) {
+            if (Message.ROLE_SYSTEM.equals(message.getRole())) {
+                if (systemContent == null) {
+                    systemContent = message.getContent();
+                }
+            } else {
+                userMessages.add(message);
+            }
+        }
+
+        if (systemContent != null) {
+            jsonObject.put("system", systemContent);
+        }
+
+        // 设置消息（Anthropic 不支持 system 角色在 messages 中）
+        if (!userMessages.isEmpty()) {
+            jsonObject.put("messages", userMessages);
+        }
+
+        // 处理工具
+        if (!options.functions().isEmpty()) {
+            JSONArray toolsArray = new JSONArray();
+            options.functions().forEach((toolName, tool) -> {
+                JSONObject toolJson = new JSONObject();
+                toolJson.put("name", tool);
+                toolJson.put("description", options.functions().get(tool).getDescription());
+                toolJson.put("input_schema", options.functions().get(tool).getParameters());
+                toolsArray.add(toolJson);
+            });
+            jsonObject.put("tools", toolsArray);
+        }
+
+        // Anthropic API 端点
+        String url = options.baseUrl() + "/v1/messages";
+
+        HttpPost post = Feat.postJson(url, opts -> {
+            opts.debug(options.isDebug());
+        }, header -> {
+            if (FeatUtils.isNotBlank(options.apiKey())) {
+                header.add("x-api-key", options.apiKey());
+            }
+            header.add("anthropic-version", ANTHROPIC_VERSION);
+            options.getHeaders().forEach(header::add);
+        }, jsonObject);
+        post.onFailure(throwable -> throwable.printStackTrace());
+        return post;
     }
+
 
     /**
      * 发送非流式聊天请求（无工具版本）
@@ -344,46 +475,7 @@ public class ChatModel {
      * @param callback 响应回调
      */
     public void chat(String content, Consumer<ResponseMessage> callback) {
-        chat(content, Collections.emptyList(), callback);
-    }
-
-    /**
-     * 发送非流式聊天请求（提示词模板版本）
-     *
-     * @param prompt 提示词模板
-     * @param data   模板数据
-     * @return 包含响应消息的CompletableFuture
-     */
-    public CompletableFuture<ResponseMessage> chat(Prompt prompt, Consumer<Map<String, String>> data) {
-        CompletableFuture<ResponseMessage> future = new CompletableFuture<>();
-        chat(prompt, data, future::complete);
-        return future;
-    }
-
-    /**
-     * 发送非流式聊天请求（提示词模板+回调版本）
-     *
-     * @param prompt   提示词模板
-     * @param data     模板数据
-     * @param callback 响应回调
-     */
-    public void chat(Prompt prompt, Consumer<Map<String, String>> data, Consumer<ResponseMessage> callback) {
-        Map<String, String> params = new HashMap<>();
-        data.accept(params);
-        chat(prompt.prompt(params), callback);
-    }
-
-    /**
-     * 发送流式聊天请求（提示词模板版本）
-     *
-     * @param prompt   提示词模板
-     * @param data     模板数据
-     * @param callback 流式响应回调
-     */
-    public void chatStream(Prompt prompt, Consumer<Map<String, String>> data, StreamResponseCallback callback) {
-        Map<String, String> params = new HashMap<>();
-        data.accept(params);
-        chatStream(prompt.prompt(params), callback);
+        chat(Collections.singletonList(Message.ofUser(content)), callback);
     }
 
     /**

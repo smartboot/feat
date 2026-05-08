@@ -33,7 +33,7 @@ public class OllamaTest {
                 .addFunction(Function.of("get_weather").description("获取天气信息").addParam("city", "城市名称", "string", true))
                 .debug(true));
 
-        chatModel.chat("写一首诗，提供思考过程", Arrays.asList("get_weather"), new Consumer<ResponseMessage>() {
+        chatModel.chat("写一首诗，提供思考过程", new Consumer<ResponseMessage>() {
             @Override
             public void accept(ResponseMessage responseMessage) {
                 System.out.println(responseMessage.getContent());

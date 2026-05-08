@@ -51,6 +51,11 @@ public class ChatOptions extends Options {
     private Double temperature;
 
     /**
+     * 模型供应商规范类型，默认为 OPENAI
+     */
+    private boolean anthropicVendor;
+
+    /**
      * 设置基础URL
      *
      * @param baseUrl 基础URL
@@ -180,6 +185,25 @@ public class ChatOptions extends Options {
      */
     public String getModel() {
         return model;
+    }
+
+    /**
+     * 获取模型供应商规范类型
+     *
+     * @return 模型供应商规范类型
+     */
+    public boolean getVendor() {
+        return anthropicVendor;
+    }
+
+    /**
+     * 设置模型供应商规范类型
+     *
+     * @return 当前ChatOptions实例，用于链式调用
+     */
+    public ChatOptions enableAnthropicVendor() {
+        this.anthropicVendor = true;
+        return this;
     }
 
     /**

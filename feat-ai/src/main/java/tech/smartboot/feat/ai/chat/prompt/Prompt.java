@@ -13,8 +13,10 @@ package tech.smartboot.feat.ai.chat.prompt;
 import tech.smartboot.feat.core.common.exception.FeatException;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -103,5 +105,11 @@ public class Prompt {
             prompt.append(function.apply(params));
         }
         return prompt.toString();
+    }
+
+    public final String prompt(Consumer<Map<String, String>> consumer) {
+        Map<String, String> params = new HashMap<>();
+        consumer.accept(params);
+        return prompt(params);
     }
 }

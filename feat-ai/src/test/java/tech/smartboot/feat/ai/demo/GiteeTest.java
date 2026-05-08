@@ -37,7 +37,7 @@ public class GiteeTest {
                 .addFunction(Function.of("get_weather").description("获取天气信息").addParam("city", "城市名称", "string", true))
                 .debug(true));
 
-        chatModel.chatStream("今天杭州天气如何", Arrays.asList("get_weather"), new StreamResponseCallback() {
+        chatModel.chatStream("今天杭州天气如何", new StreamResponseCallback() {
             @Override
             public void onStreamResponse(String content) {
                 System.out.printf(content);

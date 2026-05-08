@@ -85,10 +85,10 @@ public class WeChatEditor extends BaseChat {
         });
         sourceBuilder.append("---demo end---\n");
 
-        chatModel.chatStream(PromptTemplate.WECHAT_EDITOR, data -> {
+        chatModel.chatStream(PromptTemplate.WECHAT_EDITOR.prompt(data -> {
             data.put("topic", "写一篇介绍Feat AI 关于提示词功能设计的文章。可以结合适当的代码和配置文件，介绍Feat AI 提示词的设计原理和使用方法。");
             data.put("reference", sourceBuilder.toString());
-        }, new StreamResponseCallback() {
+        }), new StreamResponseCallback() {
             @Override
             public void onStreamResponse(String content) {
                 System.out.print(content);
