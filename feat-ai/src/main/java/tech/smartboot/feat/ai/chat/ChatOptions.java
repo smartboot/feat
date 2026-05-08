@@ -174,7 +174,7 @@ public class ChatOptions extends Options {
      *
      * @return 参数映射
      */
-    JSONObject getExtraBody() {
+    public JSONObject getExtraBody() {
         return extraBody;
     }
 

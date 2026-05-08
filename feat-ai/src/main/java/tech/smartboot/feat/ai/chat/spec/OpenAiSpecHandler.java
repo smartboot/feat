@@ -1,10 +1,11 @@
-package tech.smartboot.feat.ai.chat;
+package tech.smartboot.feat.ai.chat.spec;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.TypeReference;
 import tech.smartboot.feat.Feat;
+import tech.smartboot.feat.ai.chat.ChatOptions;
 import tech.smartboot.feat.ai.chat.entity.ChatWholeResponse;
 import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;

@@ -13,6 +13,9 @@ package tech.smartboot.feat.ai.chat;
 import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
+import tech.smartboot.feat.ai.chat.spec.AnthropicSpecHandler;
+import tech.smartboot.feat.ai.chat.spec.OpenAiSpecHandler;
+import tech.smartboot.feat.ai.chat.spec.SpecHandler;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 

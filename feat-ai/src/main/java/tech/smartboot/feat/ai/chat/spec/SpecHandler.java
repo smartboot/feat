@@ -1,5 +1,6 @@
-package tech.smartboot.feat.ai.chat;
+package tech.smartboot.feat.ai.chat.spec;
 
+import tech.smartboot.feat.ai.chat.ChatOptions;
 import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
@@ -12,10 +13,10 @@ import java.util.function.Consumer;
  */
 public abstract class SpecHandler {
     protected final ChatOptions options;
-    static final int STREAM_STATUS_INIT = 0;
-    static final int STREAM_STATUS_UPGRADE = 1;
-    static final int STREAM_STATUS_COMPLETE = 2;
-    static final int STREAM_STATUS_ERROR = 3;
+    public static final int STREAM_STATUS_INIT = 0;
+    public static final int STREAM_STATUS_UPGRADE = 1;
+    public static final int STREAM_STATUS_COMPLETE = 2;
+    public static final int STREAM_STATUS_ERROR = 3;
 
     public SpecHandler(ChatOptions options) {
         this.options = options;
