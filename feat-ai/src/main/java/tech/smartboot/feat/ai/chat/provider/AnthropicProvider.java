@@ -142,6 +142,9 @@ public class AnthropicProvider extends Provider {
 
         return Feat.postJson(url, opts -> {
             opts.debug(options.isDebug());
+            if (options.getHttpOptions() != null) {
+                options.getHttpOptions().accept(opts);
+            }
         }, header -> {
             // 添加 API Key（Anthropic 使用 x-api-key 而非 Authorization）
             if (FeatUtils.isNotBlank(options.apiKey())) {

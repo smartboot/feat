@@ -15,6 +15,7 @@ import tech.smartboot.feat.ai.Options;
 import tech.smartboot.feat.ai.chat.entity.Function;
 import tech.smartboot.feat.ai.chat.provider.OpenAiProvider;
 import tech.smartboot.feat.ai.chat.provider.Provider;
+import tech.smartboot.feat.core.client.HttpOptions;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -51,6 +52,8 @@ public class ChatOptions extends Options {
      * API 规范类型，默认为 OPENAI
      */
     private java.util.function.Function<ChatOptions, Provider> provider = OpenAiProvider::new;
+
+    private Consumer<HttpOptions> httpOptions;
 
     /**
      * 设置基础URL
@@ -196,5 +199,14 @@ public class ChatOptions extends Options {
     public ChatOptions specProvider(java.util.function.Function<ChatOptions, Provider> provider) {
         this.provider = provider;
         return this;
+    }
+
+    public ChatOptions httpOptions(Consumer<HttpOptions> httpOptions) {
+        this.httpOptions = httpOptions;
+        return this;
+    }
+
+    public Consumer<HttpOptions> getHttpOptions() {
+        return httpOptions;
     }
 }

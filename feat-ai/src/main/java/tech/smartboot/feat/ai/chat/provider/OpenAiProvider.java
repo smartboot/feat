@@ -129,6 +129,9 @@ public class OpenAiProvider extends Provider {
         // 构建 HTTP 请求
         return Feat.postJson(options.baseUrl() + "/chat/completions", opts -> {
             opts.debug(options.isDebug());
+            if (options.getHttpOptions() != null) {
+                options.getHttpOptions().accept(opts);
+            }
         }, header -> {
             // 添加认证头（Bearer Token）
             if (FeatUtils.isNotBlank(options.apiKey())) {
