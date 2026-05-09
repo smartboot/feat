@@ -13,19 +13,17 @@ package tech.smartboot.feat.ai.demo;
 import tech.smartboot.feat.ai.FeatAI;
 import tech.smartboot.feat.ai.chat.ChatModel;
 
-import java.io.IOException;
-
 /**
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
 public class ChatDemo {
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         ChatModel chatModel = FeatAI.chatModel(opts -> opts.model("Qwen2.5-72B-Instruct"));
-        chatModel.chat("你好，请自我介绍一下。", rsp -> {
+        chatModel.chat("你好，请自我介绍一下。").thenAccept(rsp -> {
             System.out.println("rsp: " + rsp.getContent());
             System.out.println("usage: " + rsp.getUsage());
-            chatModel.chat("我对你说的上一句话是什么？", rsp2 -> {
+            chatModel.chat("我对你说的上一句话是什么？").thenAccept(rsp2 -> {
                 System.out.println("rsp2: " + rsp2.getContent());
             });
         });
