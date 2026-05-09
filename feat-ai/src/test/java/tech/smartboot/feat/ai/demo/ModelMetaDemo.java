@@ -22,10 +22,10 @@ import java.io.IOException;
 public class ModelMetaDemo {
     public static void main(String[] args) throws IOException {
         ChatModel chatModel = FeatAI.chatModel(opts -> opts.model("DeepSeek-R1-Distill-Qwen-32B"));
-        chatModel.chat("你好，请自我介绍一下。", rsp -> {
+        chatModel.chat("你好，请自我介绍一下。").thenAccept(rsp -> {
             System.out.println("rsp: " + rsp.getContent());
             System.out.println("usage: " + rsp.getUsage());
-            chatModel.chat("我对你说的上一句话是什么？", rsp2 -> {
+            chatModel.chat("我对你说的上一句话是什么？").thenAccept(rsp2 -> {
                 System.out.println("rsp2: " + rsp2.getContent());
             });
         });

@@ -5,7 +5,6 @@ import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.ai.chat.ChatOptions;
-import tech.smartboot.feat.ai.chat.CompletionHandler;
 import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
@@ -17,6 +16,7 @@ import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -348,16 +348,18 @@ public class AnthropicProvider extends Provider {
      * </ul>
      *
      * @param messages 消息列表，包含用户、系统、助手的对话历史
-     * @param callback 响应回调，接收完整的响应消息对象
      */
     @Override
-    public void chat(List<Message> messages, CompletionHandler callback) {
+    public CompletableFuture<ResponseMessage> chat(List<Message> messages) {
         HttpPost post = buildRequest(messages, false);
-        post.onSuccess(response -> {
+        return post
+                // 网络异常处理（生产环境建议记录日志）
+//                .onFailure(callback::failed)
+                // 提交请求
+                .submit().thenApply(response -> {
                     // 检查 HTTP 状态码
                     if (response.statusCode() != 200) {
-                        callback.completed(Provider.error(response.body()));
-                        return;
+                        return Provider.error(response.body());
                     }
 
                     // 解析响应 JSON
@@ -392,12 +394,8 @@ public class AnthropicProvider extends Provider {
                     }
 
                     // 触发回调
-                    callback.completed(responseMessage);
-                })
-                // 网络异常处理（生产环境建议记录日志）
-                .onFailure(callback::failed)
-                // 提交请求
-                .submit();
+                    return responseMessage;
+                });
     }
 
     public AnthropicProvider maxTokens(int maxTokens) {

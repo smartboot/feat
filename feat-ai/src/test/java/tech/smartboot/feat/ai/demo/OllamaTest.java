@@ -14,12 +14,9 @@ import org.junit.Test;
 import tech.smartboot.feat.ai.FeatAI;
 import tech.smartboot.feat.ai.chat.ChatModel;
 import tech.smartboot.feat.ai.chat.entity.Function;
-import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 
-import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.function.Consumer;
 
 /**
  * @author 三刀
@@ -33,14 +30,7 @@ public class OllamaTest {
                 .addFunction(Function.of("get_weather").description("获取天气信息").addParam("city", "城市名称", "string", true))
                 .debug(true));
 
-        chatModel.chat("写一首诗，提供思考过程", new Consumer<ResponseMessage>() {
-            @Override
-            public void accept(ResponseMessage responseMessage) {
-                System.out.println(responseMessage.getContent());
-                countDownLatch.complete(responseMessage.getContent());
-            }
-        });
-        String content = countDownLatch.get();
+        String content = chatModel.chat("写一首诗，提供思考过程").get().getContent();
 //        Assert.assertEquals(1, tools.size());
 //        Assert.assertEquals("get_weather", tools.get(0).getFunction().get("name"));
     }

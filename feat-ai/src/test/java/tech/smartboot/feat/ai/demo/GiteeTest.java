@@ -21,7 +21,6 @@ import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
 import tech.smartboot.feat.ai.chat.entity.ToolCall;
 import tech.smartboot.feat.ai.chat.provider.OpenAiProvider;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -62,7 +61,7 @@ public class GiteeTest {
                         Function.of("get_weather")
                                 .description("获取天气信息")
                                 .addParam("city", "城市名称", "string", true))
-                .extraBody(ThinkOption.DeepSeek.DISABLE,OpenAiProvider.responseJsonFormat)
+                .extraBody(ThinkOption.DeepSeek.DISABLE, OpenAiProvider.responseJsonFormat)
                 .debug(false));
 
         chatModel.chatStream("你好,请按照json格式输出", new StreamResponseCallback() {
@@ -88,15 +87,12 @@ public class GiteeTest {
 
     @Test
     public void test3() throws InterruptedException, ExecutionException {
-        CompletableFuture<List<ToolCall>> future = new CompletableFuture<>();
         ChatModel chatModel = FeatAI.chatModel(opts -> opts.model("DeepSeek-R1")
                 .debug(true));
 
-        chatModel.chat("你是谁", rsp -> {
+        chatModel.chat("你是谁").thenAccept(rsp -> {
             System.out.println(rsp.getReasoningContent());
             System.out.println(rsp.getContent());
-            future.complete(rsp.getToolCalls());
-        });
-        future.get();
+        }).get();
     }
 }

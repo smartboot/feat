@@ -6,7 +6,6 @@ import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.TypeReference;
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.ai.chat.ChatOptions;
-import tech.smartboot.feat.ai.chat.CompletionHandler;
 import tech.smartboot.feat.ai.chat.entity.ChatWholeResponse;
 import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
@@ -24,6 +23,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
@@ -354,16 +354,19 @@ public class OpenAiProvider extends Provider {
      * </table>
      *
      * @param messages 消息列表，包含用户、系统、助手的对话历史
-     * @param callback 响应回调，接收完整的响应消息对象
      */
     @Override
-    public void chat(List<Message> messages, CompletionHandler callback) {
+    public CompletableFuture<ResponseMessage> chat(List<Message> messages) {
         HttpPost post = buildRequest(messages, false);
-        post.onSuccess(response -> {
+        return post.onSuccess(response -> {
+
+                })
+//                .onFailure(callback::failed)
+                // 提交请求
+                .submit().thenApply(response -> {
                     // 检查 HTTP 状态码
                     if (response.statusCode() != 200) {
-                        callback.completed(Provider.error(response.body()));
-                        return;
+                        return Provider.error(response.body());
                     }
 
                     // 解析完整响应（使用强类型对象）
@@ -377,12 +380,8 @@ public class OpenAiProvider extends Provider {
                     responseMessage.setPromptLogprobs(chatResponse.getPromptLogprobs());
                     responseMessage.setSuccess(true);
 
-                    // 触发回调
-                    callback.completed(responseMessage);
-                })
-                .onFailure(callback::failed)
-                // 提交请求
-                .submit();
+                    return responseMessage;
+                });
     }
 
     /**

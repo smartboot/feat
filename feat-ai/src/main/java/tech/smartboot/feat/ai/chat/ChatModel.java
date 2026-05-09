@@ -62,59 +62,24 @@ public class ChatModel {
     }
 
     /**
-     * 发送非流式聊天请求（消息列表版本）
-     *
-     * @param messages 消息列表
-     * @return 包含响应消息的CompletableFuture
-     */
-    public CompletableFuture<ResponseMessage> chat(List<Message> messages) {
-        CompletableFuture<ResponseMessage> future = new CompletableFuture<>();
-        chat(messages, future::complete);
-        return future;
-    }
-
-    /**
      * 发送非流式聊天请求（工具版本）
      *
      * @param content 用户输入内容
      * @return 包含响应消息的CompletableFuture
      */
     public CompletableFuture<ResponseMessage> chat(String content) {
-        CompletableFuture<ResponseMessage> future = new CompletableFuture<>();
-        chat(Collections.singletonList(Message.ofUser(content)), new CompletionHandler() {
-
-            @Override
-            public void completed(ResponseMessage message) {
-                future.complete(message);
-            }
-
-            @Override
-            public void failed(Throwable exc) {
-                future.completeExceptionally(exc);
-            }
-        });
-        return future;
+        return chat(Collections.singletonList(Message.ofUser(content)));
     }
 
     /**
      * 发送非流式聊天请求（回调版本）
      *
      * @param messages 消息列表
-     * @param callback 响应回调
      */
-    public void chat(List<Message> messages, CompletionHandler callback) {
-        options.getProvider().apply(options).chat(messages, callback);
+    public CompletableFuture<ResponseMessage> chat(List<Message> messages) {
+        return options.getProvider().apply(options).chat(messages);
     }
 
-    /**
-     * 发送非流式聊天请求（无工具版本）
-     *
-     * @param content  用户输入内容
-     * @param callback 响应回调
-     */
-    public void chat(String content, CompletionHandler callback) {
-        chat(Collections.singletonList(Message.ofUser(content)), callback);
-    }
 
     /**
      * 获取聊天选项配置

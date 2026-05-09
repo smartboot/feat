@@ -1,12 +1,12 @@
 package tech.smartboot.feat.ai.chat.provider;
 
 import tech.smartboot.feat.ai.chat.ChatOptions;
-import tech.smartboot.feat.ai.chat.CompletionHandler;
 import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 /**
@@ -142,10 +142,9 @@ public abstract class Provider {
      * </ul>
      *
      * @param messages 消息列表，包含用户、系统、助手的对话历史
-     * @param callback 响应回调，接收完整的响应消息对象
      * @see ResponseMessage 响应消息结构
      */
-    public abstract void chat(List<Message> messages, CompletionHandler callback);
+    public abstract CompletableFuture<ResponseMessage> chat(List<Message> messages);
 
     /**
      * 创建错误响应消息
