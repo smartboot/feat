@@ -13,8 +13,6 @@ package tech.smartboot.feat.ai.chat;
 import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
-import tech.smartboot.feat.core.common.logging.Logger;
-import tech.smartboot.feat.core.common.logging.LoggerFactory;
 
 import java.util.Collections;
 import java.util.List;
@@ -29,7 +27,6 @@ import java.util.function.Consumer;
  * @version v1.0.0
  */
 public class ChatModel {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ChatModel.class);
     private final ChatOptions options;
 
 
