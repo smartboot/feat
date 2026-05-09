@@ -17,7 +17,6 @@ import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
 
 /**
  * 聊天模型类，用于与AI模型进行交互，支持流式和非流式响应
@@ -82,7 +81,18 @@ public class ChatModel {
      */
     public CompletableFuture<ResponseMessage> chat(String content) {
         CompletableFuture<ResponseMessage> future = new CompletableFuture<>();
-        chat(Collections.singletonList(Message.ofUser(content)), future::complete);
+        chat(Collections.singletonList(Message.ofUser(content)), new CompletionHandler() {
+
+            @Override
+            public void completed(ResponseMessage message) {
+                future.complete(message);
+            }
+
+            @Override
+            public void failed(Throwable exc) {
+                future.completeExceptionally(exc);
+            }
+        });
         return future;
     }
 
@@ -92,7 +102,7 @@ public class ChatModel {
      * @param messages 消息列表
      * @param callback 响应回调
      */
-    public void chat(List<Message> messages, Consumer<ResponseMessage> callback) {
+    public void chat(List<Message> messages, CompletionHandler callback) {
         options.getProvider().apply(options).chat(messages, callback);
     }
 
@@ -102,7 +112,7 @@ public class ChatModel {
      * @param content  用户输入内容
      * @param callback 响应回调
      */
-    public void chat(String content, Consumer<ResponseMessage> callback) {
+    public void chat(String content, CompletionHandler callback) {
         chat(Collections.singletonList(Message.ofUser(content)), callback);
     }
 

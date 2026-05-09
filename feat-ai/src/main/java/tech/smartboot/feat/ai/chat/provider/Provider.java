@@ -1,6 +1,7 @@
 package tech.smartboot.feat.ai.chat.provider;
 
 import tech.smartboot.feat.ai.chat.ChatOptions;
+import tech.smartboot.feat.ai.chat.CompletionHandler;
 import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
@@ -144,7 +145,7 @@ public abstract class Provider {
      * @param callback 响应回调，接收完整的响应消息对象
      * @see ResponseMessage 响应消息结构
      */
-    public abstract void chat(List<Message> messages, Consumer<ResponseMessage> callback);
+    public abstract void chat(List<Message> messages, CompletionHandler callback);
 
     /**
      * 创建错误响应消息

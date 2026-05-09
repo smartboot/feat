@@ -5,6 +5,7 @@ import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.ai.chat.ChatOptions;
+import tech.smartboot.feat.ai.chat.CompletionHandler;
 import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
@@ -17,7 +18,6 @@ import tech.smartboot.feat.core.common.logging.LoggerFactory;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
 
 /**
  * Anthropic API 规范处理器实现
@@ -351,12 +351,12 @@ public class AnthropicProvider extends Provider {
      * @param callback 响应回调，接收完整的响应消息对象
      */
     @Override
-    public void chat(List<Message> messages, Consumer<ResponseMessage> callback) {
+    public void chat(List<Message> messages, CompletionHandler callback) {
         HttpPost post = buildRequest(messages, false);
         post.onSuccess(response -> {
                     // 检查 HTTP 状态码
                     if (response.statusCode() != 200) {
-                        callback.accept(Provider.error(response.body()));
+                        callback.completed(Provider.error(response.body()));
                         return;
                     }
 
@@ -392,10 +392,10 @@ public class AnthropicProvider extends Provider {
                     }
 
                     // 触发回调
-                    callback.accept(responseMessage);
+                    callback.completed(responseMessage);
                 })
                 // 网络异常处理（生产环境建议记录日志）
-                .onFailure(Throwable::printStackTrace)
+                .onFailure(callback::failed)
                 // 提交请求
                 .submit();
     }
