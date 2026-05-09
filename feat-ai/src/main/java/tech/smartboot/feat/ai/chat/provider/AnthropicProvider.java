@@ -104,7 +104,10 @@ public class AnthropicProvider extends Provider {
         jsonObject.put("model", options.getModel());
         jsonObject.put("stream", stream);
         // Anthropic 要求必须设置 max_tokens
-        jsonObject.put("max_tokens", 4096);
+        if (!jsonObject.containsKey("max_tokens")) {
+            jsonObject.put("max_tokens", 4096);
+        }
+
 
         // 注入额外参数
         JSONObject extraBody = options.getExtraBody();
@@ -395,5 +398,10 @@ public class AnthropicProvider extends Provider {
                 .onFailure(Throwable::printStackTrace)
                 // 提交请求
                 .submit();
+    }
+
+    public AnthropicProvider maxTokens(int maxTokens) {
+        options.extraBody(json -> json.put("max_tokens", maxTokens));
+        return this;
     }
 }
