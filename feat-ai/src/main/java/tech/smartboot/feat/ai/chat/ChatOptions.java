@@ -13,6 +13,8 @@ package tech.smartboot.feat.ai.chat;
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.ai.Options;
 import tech.smartboot.feat.ai.chat.entity.Function;
+import tech.smartboot.feat.ai.chat.provider.OpenAiProvider;
+import tech.smartboot.feat.ai.chat.provider.Provider;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -53,7 +55,7 @@ public class ChatOptions extends Options {
     /**
      * API 规范类型，默认为 OPENAI
      */
-    private ApiSpec apiSpec = ApiSpec.OPENAI;
+    private java.util.function.Function<ChatOptions, Provider> provider = OpenAiProvider::new;
 
     /**
      * 设置基础URL
@@ -192,18 +194,18 @@ public class ChatOptions extends Options {
      *
      * @return API 规范类型
      */
-    public ApiSpec getApiSpec() {
-        return apiSpec;
+    public java.util.function.Function<ChatOptions, Provider> getProvider() {
+        return provider;
     }
 
     /**
      * 设置 API 规范类型
      *
-     * @param apiSpec API 规范类型
+     * @param provider API 规范类型
      * @return 当前ChatOptions实例，用于链式调用
      */
-    public ChatOptions apiSpec(ApiSpec apiSpec) {
-        this.apiSpec = apiSpec;
+    public ChatOptions specProvider(java.util.function.Function<ChatOptions, Provider> provider) {
+        this.provider = provider;
         return this;
     }
 

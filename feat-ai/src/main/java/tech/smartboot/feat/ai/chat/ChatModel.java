@@ -13,9 +13,6 @@ package tech.smartboot.feat.ai.chat;
 import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
-import tech.smartboot.feat.ai.chat.provider.AnthropicProvider;
-import tech.smartboot.feat.ai.chat.provider.OpenAiProvider;
-import tech.smartboot.feat.ai.chat.provider.Provider;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 
@@ -49,17 +46,6 @@ public class ChatModel {
     }
 
     /**
-     * 根据 API 规范创建对应的处理器
-     */
-    private Provider createApiHandler() {
-        if (options.getApiSpec() == ApiSpec.ANTHROPIC) {
-            return new AnthropicProvider(options);
-        } else {
-            return new OpenAiProvider(options);
-        }
-    }
-
-    /**
      * 发送流式聊天请求（简单版本）
      *
      * @param content  用户输入内容
@@ -76,7 +62,7 @@ public class ChatModel {
      * @param consumer 流式响应回调
      */
     public void chatStream(List<Message> messages, StreamResponseCallback consumer) {
-        createApiHandler().chatStream(messages, consumer);
+        options.getProvider().apply(options).chatStream(messages, consumer);
     }
 
     /**
@@ -110,7 +96,7 @@ public class ChatModel {
      * @param callback 响应回调
      */
     public void chat(List<Message> messages, Consumer<ResponseMessage> callback) {
-        createApiHandler().chat(messages, callback);
+        options.getProvider().apply(options).chat(messages, callback);
     }
 
     /**
