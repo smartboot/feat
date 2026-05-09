@@ -48,11 +48,6 @@ public class ChatOptions extends Options {
     private String model;
 
     /**
-     * 温度参数，控制生成文本的随机性，范围通常为 0.0 到 2.0
-     */
-    private Double temperature;
-
-    /**
      * API 规范类型，默认为 OPENAI
      */
     private java.util.function.Function<ChatOptions, Provider> provider = OpenAiProvider::new;
@@ -153,21 +148,15 @@ public class ChatOptions extends Options {
         return this;
     }
 
-    /**
-     * 设置JSON响应格式
-     * 需在提示词中明确指示模型输出JSON，如：“请按照json格式输出”，否则会报错。
-     *
-     * @return 当前ChatOptions实例，用于链式调用
-     */
-    public ChatOptions responseJsonFormat() {
-        return extraBody(builder -> builder.put("response_format", JSONObject.of("type", "json_object")));
-    }
 
-    public ChatOptions extraBody(Consumer<JSONObject> consumer) {
+    @SafeVarargs
+    public final ChatOptions extraBody(Consumer<JSONObject>... consumer) {
         if (extraBody == null) {
             this.extraBody = new JSONObject();
         }
-        consumer.accept(this.extraBody);
+        for (Consumer<JSONObject> c : consumer) {
+            c.accept(this.extraBody);
+        }
         return this;
     }
 
@@ -207,25 +196,5 @@ public class ChatOptions extends Options {
     public ChatOptions specProvider(java.util.function.Function<ChatOptions, Provider> provider) {
         this.provider = provider;
         return this;
-    }
-
-    /**
-     * 设置温度参数
-     *
-     * @param temperature 温度参数，控制生成文本的随机性，范围通常为 0.0 到 2.0
-     * @return 当前ChatOptions实例，用于链式调用
-     */
-    public ChatOptions temperature(double temperature) {
-        this.temperature = temperature;
-        return this;
-    }
-
-    /**
-     * 获取温度参数
-     *
-     * @return 温度参数
-     */
-    public Double getTemperature() {
-        return temperature;
     }
 }
