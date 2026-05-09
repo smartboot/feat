@@ -14,7 +14,7 @@ import java.util.function.Consumer;
  * 该类采用策略模式，定义了不同 AI 服务提供商（如 OpenAI、Anthropic 等）的统一接口。
  * 通过继承此类并实现抽象方法，可以支持多种不同的 AI API 规范。
  * </p>
- * 
+ *
  * <h3>设计要点：</h3>
  * <ul>
  *   <li><b>策略模式</b>：每个具体的 Provider 实现代表一种 API 规范策略</li>
@@ -22,7 +22,7 @@ import java.util.function.Consumer;
  *   <li><b>流式状态管理</b>：定义了流式响应的生命周期状态常量</li>
  *   <li><b>配置封装</b>：通过 ChatOptions 统一管理 API 配置信息</li>
  * </ul>
- * 
+ *
  * <h3>使用示例：</h3>
  * <pre>{@code
  * // 创建 OpenAI Provider
@@ -31,12 +31,12 @@ import java.util.function.Consumer;
  *     .apiKey("your-api-key")
  *     .model("gpt-4");
  * Provider provider = new OpenAiProvider(options);
- * 
+ *
  * // 非流式调用
  * provider.chat(messages, response -> {
  *     System.out.println(response.getContent());
  * });
- * 
+ *
  * // 流式调用
  * provider.chatStream(messages, new StreamResponseCallback() {
  *     public void onStreamResponse(String content) {
@@ -47,7 +47,7 @@ import java.util.function.Consumer;
  *     }
  * });
  * }</pre>
- * 
+ *
  * @see OpenAiProvider OpenAI API 实现
  * @see AnthropicProvider Anthropic API 实现
  * @see ChatOptions 聊天配置选项
@@ -58,25 +58,25 @@ public abstract class Provider {
      * 聊天配置选项，包含 API 地址、密钥、模型等配置信息
      */
     protected final ChatOptions options;
-    
+
     /**
      * 流式响应状态：初始化状态
      * <p>表示流式请求刚开始，尚未收到任何数据</p>
      */
     public static final int STREAM_STATUS_INIT = 0;
-    
+
     /**
      * 流式响应状态：升级状态
      * <p>表示已成功建立流式连接，开始接收数据片段</p>
      */
     public static final int STREAM_STATUS_UPGRADE = 1;
-    
+
     /**
      * 流式响应状态：完成状态
      * <p>表示流式响应已正常结束，收到终止标记</p>
      */
     public static final int STREAM_STATUS_COMPLETE = 2;
-    
+
     /**
      * 流式响应状态：错误状态
      * <p>表示流式响应过程中发生错误</p>
@@ -105,7 +105,7 @@ public abstract class Provider {
      *   <li>在流结束时调用 {@link StreamResponseCallback#onCompletion(ResponseMessage)} 传递完整响应</li>
      *   <li>在出错时调用 {@link StreamResponseCallback#onError(Throwable)} 报告异常</li>
      * </ul>
-     * 
+     *
      * <h3>流式响应生命周期：</h3>
      * <ol>
      *   <li>INIT → 发起请求</li>
@@ -133,7 +133,7 @@ public abstract class Provider {
      *   <li>解析响应 JSON，提取消息内容、工具调用等信息</li>
      *   <li>通过回调的 {@link Consumer#accept(Object)} 一次性返回完整结果</li>
      * </ul>
-     * 
+     *
      * <h3>与非流式的区别：</h3>
      * <ul>
      *   <li>非流式：等待全部生成完成后一次性返回，适合短文本</li>
@@ -158,7 +158,7 @@ public abstract class Provider {
      *   <li>网络异常或超时</li>
      *   <li>参数验证失败</li>
      * </ul>
-     * 
+     *
      * <h3>错误响应特征：</h3>
      * <ul>
      *   <li>角色固定为 {@link Message#ROLE_ASSISTANT}</li>

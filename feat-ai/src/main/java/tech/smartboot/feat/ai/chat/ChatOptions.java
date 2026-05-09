@@ -183,7 +183,7 @@ public class ChatOptions extends Options {
      *
      * @return API 规范类型
      */
-    public java.util.function.Function<ChatOptions, Provider> getProvider() {
+    java.util.function.Function<ChatOptions, Provider> getProvider() {
         return provider;
     }
 

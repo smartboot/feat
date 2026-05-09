@@ -104,7 +104,7 @@ public class OpenAiProvider extends Provider {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("model", options.getModel());
         jsonObject.put("stream", stream);
-        jsonObject.put("messages", messages);
+        jsonObject.put("messages", addSystemMessageIfNeeded(messages));
 
         // 构建工具列表（Function Calling）
         List<Tool> toolList = new ArrayList<>();
@@ -409,5 +409,18 @@ public class OpenAiProvider extends Provider {
         return this;
     }
 
-
+    protected List<Message> addSystemMessageIfNeeded(List<Message> messages) {
+        if (FeatUtils.isBlank(options.getSystem())) {
+            return messages;
+        }
+        if (FeatUtils.isNotEmpty(messages) && FeatUtils.equals(messages.get(0).getRole(), Message.ROLE_SYSTEM)) {
+            return messages;
+        }
+        List<Message> result = new ArrayList<>();
+        if (options.getSystem() != null) {
+            result.add(Message.ofSystem(options.getSystem()));
+        }
+        result.addAll(messages);
+        return result;
+    }
 }
