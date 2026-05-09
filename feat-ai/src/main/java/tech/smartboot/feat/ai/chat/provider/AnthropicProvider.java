@@ -107,6 +107,12 @@ public class AnthropicProvider extends Provider {
         // Anthropic 要求必须设置 max_tokens
         jsonObject.put("max_tokens", 4096);
 
+        // 注入额外参数
+        JSONObject extraBody = options.getExtraBody();
+        if (extraBody != null && !extraBody.isEmpty()) {
+            jsonObject.putAll(extraBody);
+        }
+
         // 处理系统消息：从 messages 中提取或直接使用 options.getSystem()
         String systemContent = options.getSystem();
         List<Message> userMessages = new ArrayList<>();

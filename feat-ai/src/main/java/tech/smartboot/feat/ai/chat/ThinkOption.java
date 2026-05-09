@@ -25,4 +25,8 @@ public interface ThinkOption {
             jsonObject.put("thinking", JSONObject.of("type", "disabled"));
         };
     }
+
+    interface Anthropic extends DeepSeek{
+
+    }
 }
