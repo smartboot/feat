@@ -26,7 +26,6 @@ public class OllamaDemo {
         ChatModel chatModel = FeatAI.chatModel(opts -> {
             opts.model("Qwen3-06B")
                     .system("你是一个擅长生成藏头诗的诗人。")
-                    .addFunction(Function.of("aa"))
 //                    .responseFormat(ResponseFormat.JSON)
                     .debug(false);
         });

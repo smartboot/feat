@@ -5,11 +5,12 @@
  *
  *   Enterprise users are required to use this project reasonably
  *   and legally in accordance with the Apache-2.0 open source agreement
- *  without special permission from the smartboot organization.
+ *   without special permission from the smartboot organization.
  */
 
 package tech.smartboot.feat.ai.chat;
 
+import tech.smartboot.feat.ai.chat.entity.Function;
 import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
@@ -27,7 +28,6 @@ import java.util.concurrent.CompletableFuture;
  */
 public class ChatModel {
     private final ChatOptions options;
-
 
     /**
      * 构造函数
@@ -48,7 +48,15 @@ public class ChatModel {
      * @param consumer 流式响应回调
      */
     public void chatStream(String content, StreamResponseCallback consumer) {
-        chatStream(Collections.singletonList(Message.ofUser(content)), consumer);
+        chatStream(Collections.singletonList(Message.ofUser(content)), null, consumer);
+    }
+
+    public void chatStream(String content, Function function, StreamResponseCallback consumer) {
+        chatStream(Collections.singletonList(Message.ofUser(content)), Collections.singletonList(function), consumer);
+    }
+
+    public void chatStream(String content, List<Function> functions, StreamResponseCallback consumer) {
+        chatStream(Collections.singletonList(Message.ofUser(content)), functions, consumer);
     }
 
     /**
@@ -57,18 +65,33 @@ public class ChatModel {
      * @param messages 消息列表
      * @param consumer 流式响应回调
      */
-    public void chatStream(List<Message> messages, StreamResponseCallback consumer) {
-        options.getProvider().apply(options).chatStream(messages, consumer);
+    public void chatStream(List<Message> messages, List<Function> functions, StreamResponseCallback consumer) {
+        options.getProvider().apply(options).chatStream(messages, functions, consumer);
     }
 
     /**
      * 发送非流式聊天请求（工具版本）
      *
      * @param content 用户输入内容
-     * @return 包含响应消息的CompletableFuture
+     * @return 包含响应消息的 CompletableFuture
      */
     public CompletableFuture<ResponseMessage> chat(String content) {
-        return chat(Collections.singletonList(Message.ofUser(content)));
+        return chat(Collections.singletonList(Message.ofUser(content)), null);
+    }
+
+    /**
+     * 发送非流式聊天请求（工具版本），在调用前将工具函数注入到选项中，无需在 options 中预先定义。
+     *
+     * @param content   用户输入内容
+     * @param functions 工具函数列表
+     * @return 包含响应消息的 CompletableFuture
+     */
+    public CompletableFuture<ResponseMessage> chat(String content, List<Function> functions) {
+        return chat(Collections.singletonList(Message.ofUser(content)), functions);
+    }
+
+    public CompletableFuture<ResponseMessage> chat(String content, Function function) {
+        return chat(Collections.singletonList(Message.ofUser(content)), Collections.singletonList(function));
     }
 
     /**
@@ -76,10 +99,9 @@ public class ChatModel {
      *
      * @param messages 消息列表
      */
-    public CompletableFuture<ResponseMessage> chat(List<Message> messages) {
-        return options.getProvider().apply(options).chat(messages);
+    public CompletableFuture<ResponseMessage> chat(List<Message> messages, List<Function> functions) {
+        return options.getProvider().apply(options).chat(messages, functions);
     }
-
 
     /**
      * 获取聊天选项配置

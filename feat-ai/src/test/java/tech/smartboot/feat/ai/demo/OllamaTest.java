@@ -27,10 +27,9 @@ public class OllamaTest {
     public void test1() throws InterruptedException, ExecutionException {
         CompletableFuture<String> countDownLatch = new CompletableFuture<>();
         ChatModel chatModel = FeatAI.chatModel(opts -> opts.model("Deepseek-r1-7B")
-                .addFunction(Function.of("get_weather").description("获取天气信息").addParam("city", "城市名称", "string", true))
                 .debug(true));
 
-        String content = chatModel.chat("写一首诗，提供思考过程").get().getContent();
+        String content = chatModel.chat("写一首诗，提供思考过程", Function.of("get_weather").description("获取天气信息").addParam("city", "城市名称", "string", true)).get().getContent();
 //        Assert.assertEquals(1, tools.size());
 //        Assert.assertEquals("get_weather", tools.get(0).getFunction().get("name"));
     }

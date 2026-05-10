@@ -12,13 +12,10 @@ package tech.smartboot.feat.ai.chat;
 
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.ai.Options;
-import tech.smartboot.feat.ai.chat.entity.Function;
 import tech.smartboot.feat.ai.chat.provider.OpenAiProvider;
 import tech.smartboot.feat.ai.chat.provider.Provider;
 import tech.smartboot.feat.core.client.HttpOptions;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Consumer;
 
 /**
@@ -33,10 +30,6 @@ public class ChatOptions extends Options {
      */
     private String system;
 
-    /**
-     * 功能函数映射，用于存储可用的AI功能函数
-     */
-    private final Map<String, Function> functions = new HashMap<>();
 
     /**
      * extra body parameters for model-specific options
@@ -84,26 +77,6 @@ public class ChatOptions extends Options {
      */
     public ChatOptions apiKey(String apiKey) {
         super.apiKey(apiKey);
-        return this;
-    }
-
-    /**
-     * 获取功能函数映射
-     *
-     * @return 功能函数映射
-     */
-    public Map<String, Function> functions() {
-        return functions;
-    }
-
-    /**
-     * 添加功能函数
-     *
-     * @param function 功能函数
-     * @return 当前ChatOptions实例，用于链式调用
-     */
-    public ChatOptions addFunction(Function function) {
-        this.functions.put(function.getName(), function);
         return this;
     }
 

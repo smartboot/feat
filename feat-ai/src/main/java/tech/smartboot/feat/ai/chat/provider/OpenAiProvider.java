@@ -7,6 +7,7 @@ import com.alibaba.fastjson2.TypeReference;
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.ai.chat.ChatOptions;
 import tech.smartboot.feat.ai.chat.entity.ChatWholeResponse;
+import tech.smartboot.feat.ai.chat.entity.Function;
 import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
@@ -101,24 +102,25 @@ public class OpenAiProvider extends Provider {
      * @param stream   是否启用流式响应（true=SSE，false=普通 JSON）
      * @return 配置好的 HttpPost 请求对象
      */
-    private HttpPost buildRequest(List<Message> messages, boolean stream) {
+    private HttpPost buildRequest(List<Message> messages, boolean stream, List<Function> functions) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("model", options.getModel());
         jsonObject.put("stream", stream);
         jsonObject.put("messages", addSystemMessageIfNeeded(messages));
 
         // 构建工具列表（Function Calling）
-        List<Tool> toolList = new ArrayList<>();
-        options.functions().forEach((tool, function) -> {
-            Tool t = new Tool();
-            t.setType("function");
-            t.setFunction(function);
-            toolList.add(t);
-        });
-        if (!toolList.isEmpty()) {
+        if (FeatUtils.isNotEmpty(functions)) {
+            List<Tool> toolList = new ArrayList<>();
+            functions.forEach(function -> {
+                Tool t = new Tool();
+                t.setType("function");
+                t.setFunction(function);
+                toolList.add(t);
+            });
             jsonObject.put("tools", toolList);
             jsonObject.put("tool_choice", "auto"); // 自动决定是否调用工具
         }
+
 
         // 注入额外参数（如 response_format、top_p、max_tokens 等）
         JSONObject extraBody = options.getExtraBody();
@@ -181,8 +183,8 @@ public class OpenAiProvider extends Provider {
      * @param consumer 流式响应回调，接收实时内容和最终结果
      */
     @Override
-    public void chatStream(List<Message> messages, StreamResponseCallback consumer) {
-        HttpPost post = buildRequest(messages, true);
+    public void chatStream(List<Message> messages, List<Function> functions, StreamResponseCallback consumer) {
+        HttpPost post = buildRequest(messages, true, functions);
         // 工具调用累积器：key=index, value=ToolCall
         Map<Integer, ToolCall> toolCallMap = new HashMap<>();
         // 文本内容累积器
@@ -357,8 +359,8 @@ public class OpenAiProvider extends Provider {
      * @param messages 消息列表，包含用户、系统、助手的对话历史
      */
     @Override
-    public CompletableFuture<ResponseMessage> chat(List<Message> messages) {
-        HttpPost post = buildRequest(messages, false);
+    public CompletableFuture<ResponseMessage> chat(List<Message> messages, List<Function> functions) {
+        HttpPost post = buildRequest(messages, false, functions);
         return post.submit().thenApply(response -> {
             // 检查 HTTP 状态码
             if (response.statusCode() != 200) {

@@ -21,6 +21,7 @@ import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
 import tech.smartboot.feat.ai.chat.entity.ToolCall;
 import tech.smartboot.feat.ai.chat.provider.OpenAiProvider;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -34,10 +35,9 @@ public class GiteeTest {
     public void test1() throws InterruptedException, ExecutionException {
         CompletableFuture<List<ToolCall>> countDownLatch = new CompletableFuture<>();
         ChatModel chatModel = FeatAI.chatModel(opts -> opts.model("Qwen3-235B-A22B-Instruct-2507")
-                .addFunction(Function.of("get_weather").description("获取天气信息").addParam("city", "城市名称", "string", true))
                 .debug(true));
 
-        chatModel.chatStream("今天杭州天气如何", new StreamResponseCallback() {
+        chatModel.chatStream("今天杭州天气如何", Collections.singletonList(Function.of("get_weather").description("获取天气信息").addParam("city", "城市名称", "string", true)), new StreamResponseCallback() {
             @Override
             public void onStreamResponse(String content) {
                 System.out.printf(content);
@@ -57,29 +57,29 @@ public class GiteeTest {
     public void test2() throws InterruptedException, ExecutionException {
         CompletableFuture<List<ToolCall>> future = new CompletableFuture<>();
         ChatModel chatModel = FeatAI.chatModel(opts -> opts.model("DeepSeek-V4-Flash")
-                .addFunction(
-                        Function.of("get_weather")
-                                .description("获取天气信息")
-                                .addParam("city", "城市名称", "string", true))
                 .extraBody(ThinkOption.DeepSeek.DISABLE, OpenAiProvider.responseJsonFormat)
                 .debug(false));
 
-        chatModel.chatStream("你好,请按照json格式输出", new StreamResponseCallback() {
-            @Override
-            public void onReasoning(String content) {
-                System.err.print(content);
-            }
+        chatModel.chatStream("你好,请按照json格式输出",
+                Function.of("get_weather")
+                        .description("获取天气信息")
+                        .addParam("city", "城市名称", "string", true),
+                new StreamResponseCallback() {
+                    @Override
+                    public void onReasoning(String content) {
+                        System.err.print(content);
+                    }
 
-            @Override
-            public void onStreamResponse(String content) {
-                System.out.printf(content);
-            }
+                    @Override
+                    public void onStreamResponse(String content) {
+                        System.out.printf(content);
+                    }
 
-            @Override
-            public void onCompletion(ResponseMessage responseMessage) {
-                future.complete(responseMessage.getToolCalls());
-            }
-        });
+                    @Override
+                    public void onCompletion(ResponseMessage responseMessage) {
+                        future.complete(responseMessage.getToolCalls());
+                    }
+                });
         List<ToolCall> tools = future.get();
         Assert.assertEquals(1, tools.size());
         Assert.assertEquals("get_weather", tools.get(0).getFunction().get("name"));

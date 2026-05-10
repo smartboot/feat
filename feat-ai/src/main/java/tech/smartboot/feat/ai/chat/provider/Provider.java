@@ -1,6 +1,7 @@
 package tech.smartboot.feat.ai.chat.provider;
 
 import tech.smartboot.feat.ai.chat.ChatOptions;
+import tech.smartboot.feat.ai.chat.entity.Function;
 import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
@@ -120,7 +121,7 @@ public abstract class Provider {
      * @param consumer 流式响应回调处理器，用于接收实时数据和最终结果
      * @see StreamResponseCallback 流式回调接口定义
      */
-    public abstract void chatStream(List<Message> messages, StreamResponseCallback consumer);
+    public abstract void chatStream(List<Message> messages, List<Function> functions, StreamResponseCallback consumer);
 
     /**
      * 处理非流式聊天响应
@@ -144,7 +145,7 @@ public abstract class Provider {
      * @param messages 消息列表，包含用户、系统、助手的对话历史
      * @see ResponseMessage 响应消息结构
      */
-    public abstract CompletableFuture<ResponseMessage> chat(List<Message> messages);
+    public abstract CompletableFuture<ResponseMessage> chat(List<Message> messages, List<Function> functions);
 
     /**
      * 创建错误响应消息

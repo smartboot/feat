@@ -5,6 +5,7 @@ import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.ai.chat.ChatOptions;
+import tech.smartboot.feat.ai.chat.entity.Function;
 import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
@@ -99,7 +100,7 @@ public class AnthropicProvider extends Provider {
      * @param stream   是否启用流式响应（true=SSE，false=普通 JSON）
      * @return 配置好的 HttpPost 请求对象
      */
-    private HttpPost buildRequest(List<Message> messages, boolean stream) {
+    private HttpPost buildRequest(List<Message> messages, boolean stream, List<Function> functions) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("model", options.getModel());
         jsonObject.put("stream", stream);
@@ -124,14 +125,14 @@ public class AnthropicProvider extends Provider {
         jsonObject.put("messages", messages);
 
         // 处理工具定义（Function Calling）
-        if (!options.functions().isEmpty()) {
+        if (FeatUtils.isNotEmpty(functions)) {
             JSONArray toolsArray = new JSONArray();
-            options.functions().forEach((toolName, tool) -> {
+            functions.forEach(tool -> {
                 JSONObject toolJson = new JSONObject();
-                toolJson.put("name", tool);
-                toolJson.put("description", options.functions().get(tool).getDescription());
+                toolJson.put("name", tool.getName());
+                toolJson.put("description", tool.getDescription());
                 // Anthropic 使用 input_schema 而非 parameters
-                toolJson.put("input_schema", options.functions().get(tool).getParameters());
+                toolJson.put("input_schema", tool.getParameters());
                 toolsArray.add(toolJson);
             });
             jsonObject.put("tools", toolsArray);
@@ -208,8 +209,8 @@ public class AnthropicProvider extends Provider {
      * @param consumer 流式响应回调，接收实时内容和最终结果
      */
     @Override
-    public void chatStream(List<Message> messages, StreamResponseCallback consumer) {
-        HttpPost post = buildRequest(messages, true);
+    public void chatStream(List<Message> messages, List<Function> functions, StreamResponseCallback consumer) {
+        HttpPost post = buildRequest(messages, true, functions);
         // 文本内容累积器
         StringBuilder contentBuilder = new StringBuilder();
         // 推理内容累积器（Claude Thinking 模式）
@@ -351,8 +352,8 @@ public class AnthropicProvider extends Provider {
      * @param messages 消息列表，包含用户、系统、助手的对话历史
      */
     @Override
-    public CompletableFuture<ResponseMessage> chat(List<Message> messages) {
-        HttpPost post = buildRequest(messages, false);
+    public CompletableFuture<ResponseMessage> chat(List<Message> messages, List<Function> functions) {
+        HttpPost post = buildRequest(messages, false, functions);
         return post.submit().thenApply(response -> {
             // 检查 HTTP 状态码
             if (response.statusCode() != 200) {
