@@ -27,7 +27,6 @@ import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -91,7 +90,7 @@ public class ReActAgent extends FeatAgent {
         setState(AgentState.RUNNING);
         // 创建ChatModel实例
         ChatModel model = new ChatModel(options.chatOptions());
-        model.chatStream(Collections.singletonList(Message.ofUser(options.getPrompt().prompt(templateData))), new StreamResponseCallback() {
+        model.chatStream(options.getPrompt().prompt(templateData), new StreamResponseCallback() {
 
             @Override
             public void onCompletion(ResponseMessage responseMessage) {
@@ -209,10 +208,10 @@ public class ReActAgent extends FeatAgent {
         for (Message message : input) {
             sb.append(message.getRole()).append(" : ").append(message.getContent().replace("\n", "\\n")).append("\n");
         }
-        
+
         // 将输入消息存入记忆系统
         storeMessagesToMemory(input);
-        
+
         CompletableFuture<String> completableFuture = new CompletableFuture<>();
         // 准备模板数据
         Map<String, String> templateData = new HashMap<>();
@@ -220,19 +219,19 @@ public class ReActAgent extends FeatAgent {
         templateData.put("input", sb.toString());
         templateData.put("tool_descriptions", getToolDescriptions());
         templateData.put("tool_names", getToolNames());
-        
+
         // 检索相关记忆
         String relevantMemories = retrieveRelevantMemories(input);
         templateData.put("relevant_memories", relevantMemories);
-        
+
         templateData.put("agent_scratchpad", "无");
         templateData.put("system_prompt", options.chatOptions().getSystem());
-        
+
         internalExecute(templateData, 0, completableFuture);
         completableFuture.thenApply(result -> {
             // 将结果存入记忆系统
             storeResultToMemory(result);
-            
+
             Message output = Message.ofAssistant(result);
             options.hook().postCall(output);
             return output.getContent();
@@ -249,10 +248,10 @@ public class ReActAgent extends FeatAgent {
         if (!options.isMemoryEnabled() || options.getMemory() == null) {
             return;
         }
-        
+
         List<MemoryMessage> memoryMessages = new ArrayList<>();
         String sessionId = options.getSessionId();
-        
+
         for (Message message : messages) {
             MemoryRole role = convertToMemoryRole(message.getRole());
             MemoryMessage memoryMessage = new MemoryMessage();
@@ -262,7 +261,7 @@ public class ReActAgent extends FeatAgent {
             memoryMessage.setTimestamp(System.currentTimeMillis());
             memoryMessages.add(memoryMessage);
         }
-        
+
         if (!memoryMessages.isEmpty()) {
             options.getMemory().add(memoryMessages);
             logger.debug("存储 {} 条用户输入消息到记忆系统", memoryMessages.size());
@@ -278,12 +277,12 @@ public class ReActAgent extends FeatAgent {
         if (!options.isMemoryEnabled() || options.getMemory() == null) {
             return;
         }
-        
+
         MemoryMessage memoryMessage = MemoryMessage.ofAssistant(result);
         memoryMessage.setSessionId(options.getSessionId());
         memoryMessage.setTimestamp(System.currentTimeMillis());
         memoryMessage.setImportance(1.2); // AI回复通常比较重要
-        
+
         options.getMemory().add(memoryMessage);
         logger.debug("存储AI回复到记忆系统");
     }
@@ -298,7 +297,7 @@ public class ReActAgent extends FeatAgent {
         if (!options.isMemoryEnabled() || options.getMemory() == null) {
             return "无";
         }
-        
+
         // 提取查询内容
         StringBuilder queryBuilder = new StringBuilder();
         for (Message message : input) {
@@ -307,22 +306,22 @@ public class ReActAgent extends FeatAgent {
             }
         }
         String query = queryBuilder.toString().trim();
-        
+
         if (query.isEmpty()) {
             return "无";
         }
-        
+
         try {
             List<MemoryMessage> relevantMemories = options.getMemory().search(query, options.getMemoryTopK());
-            
+
             if (relevantMemories.isEmpty()) {
                 return "无";
             }
-            
+
             // 格式化记忆为字符串
             StringBuilder memoriesBuilder = new StringBuilder();
             memoriesBuilder.append("以下是相关的历史对话记忆，请参考：\n\n");
-            
+
             for (MemoryMessage memory : relevantMemories) {
                 memoriesBuilder.append("[").append(memory.getRole().getDisplayName()).append("]: ");
                 // 限制单条记忆长度
@@ -332,10 +331,10 @@ public class ReActAgent extends FeatAgent {
                 }
                 memoriesBuilder.append(content).append("\n\n");
             }
-            
+
             logger.debug("检索到 {} 条相关记忆", relevantMemories.size());
             return memoriesBuilder.toString();
-            
+
         } catch (Exception e) {
             logger.warn("检索记忆时发生错误: {}", e.getMessage());
             return "无";
