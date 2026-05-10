@@ -137,8 +137,6 @@ public class OpenAiProvider extends Provider {
             if (FeatUtils.isNotBlank(options.apiKey())) {
                 header.add(HeaderName.AUTHORIZATION, "Bearer " + options.apiKey());
             }
-            // 添加自定义请求头
-            options.getHeaders().forEach(header::add);
         }, jsonObject);
     }
 

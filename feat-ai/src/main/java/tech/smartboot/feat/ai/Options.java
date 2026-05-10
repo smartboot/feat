@@ -10,8 +10,9 @@
 
 package tech.smartboot.feat.ai;
 
-import java.util.HashMap;
-import java.util.Map;
+import tech.smartboot.feat.core.client.HttpOptions;
+
+import java.util.function.Consumer;
 
 /**
  * @author 三刀
@@ -35,10 +36,7 @@ public abstract class Options {
      */
     private boolean debug;
 
-    /**
-     * 请求头信息映射
-     */
-    private final Map<String, String> headers = new HashMap<>();
+    private Consumer<HttpOptions> httpOptions;
 
     public final String baseUrl() {
         return baseUrl;
@@ -67,14 +65,12 @@ public abstract class Options {
         return this;
     }
 
-    public final Map<String, String> getHeaders() {
-        return headers;
-    }
-
-
-    public Options addHeader(String key, String value) {
-        this.headers.put(key, value);
+    protected Options httpOptions(Consumer<HttpOptions> httpOptions) {
+        this.httpOptions = httpOptions;
         return this;
     }
 
+    public Consumer<HttpOptions> getHttpOptions() {
+        return httpOptions;
+    }
 }

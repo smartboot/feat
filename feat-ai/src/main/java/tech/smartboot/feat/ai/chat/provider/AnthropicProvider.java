@@ -152,8 +152,6 @@ public class AnthropicProvider extends Provider {
             }
             // 添加版本号（必需）
             header.add("anthropic-version", ANTHROPIC_VERSION);
-            // 添加自定义请求头
-            options.getHeaders().forEach(header::add);
         }, jsonObject);
     }
 

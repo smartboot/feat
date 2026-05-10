@@ -53,7 +53,6 @@ public class ChatOptions extends Options {
      */
     private java.util.function.Function<ChatOptions, Provider> provider = OpenAiProvider::new;
 
-    private Consumer<HttpOptions> httpOptions;
 
     /**
      * 设置基础URL
@@ -139,19 +138,6 @@ public class ChatOptions extends Options {
         return this;
     }
 
-    /**
-     * 添加请求头
-     *
-     * @param key   请求头键
-     * @param value 请求头值
-     * @return 当前ChatOptions实例，用于链式调用
-     */
-    public ChatOptions addHeader(String key, String value) {
-        super.addHeader(key, value);
-        return this;
-    }
-
-
     @SafeVarargs
     public final ChatOptions extraBody(Consumer<JSONObject>... consumer) {
         if (extraBody == null) {
@@ -202,11 +188,7 @@ public class ChatOptions extends Options {
     }
 
     public ChatOptions httpOptions(Consumer<HttpOptions> httpOptions) {
-        this.httpOptions = httpOptions;
+        super.httpOptions(httpOptions);
         return this;
-    }
-
-    public Consumer<HttpOptions> getHttpOptions() {
-        return httpOptions;
     }
 }
