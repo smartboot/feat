@@ -57,10 +57,9 @@ public class GiteeTest {
     public void test2() throws InterruptedException, ExecutionException {
         CompletableFuture<List<ToolCall>> future = new CompletableFuture<>();
         ChatModel chatModel = FeatAI.chatModel(opts -> opts.model("DeepSeek-V4-Flash")
-                .extraBody(ThinkOption.DeepSeek.DISABLE, OpenAiProvider.responseJsonFormat)
-                .debug(false));
+                .debug(true));
 
-        chatModel.chatStream("你好,请按照json格式输出",
+        chatModel.chatStream("杭州天气如何",
                 Function.of("get_weather")
                         .description("获取天气信息")
                         .addParam("city", "城市名称", "string", true),
