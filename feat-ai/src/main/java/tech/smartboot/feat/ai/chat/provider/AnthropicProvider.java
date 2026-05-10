@@ -355,50 +355,46 @@ public class AnthropicProvider extends Provider {
     @Override
     public CompletableFuture<ResponseMessage> chat(List<Message> messages) {
         HttpPost post = buildRequest(messages, false);
-        return post
-                // 网络异常处理（生产环境建议记录日志）
-//                .onFailure(callback::failed)
-                // 提交请求
-                .submit().thenApply(response -> {
-                    // 检查 HTTP 状态码
-                    if (response.statusCode() != 200) {
-                        return Provider.error(response.body());
+        return post.submit().thenApply(response -> {
+            // 检查 HTTP 状态码
+            if (response.statusCode() != 200) {
+                return Provider.error(response.body());
+            }
+
+            // 解析响应 JSON
+            JSONObject object = JSON.parseObject(response.body());
+            ResponseMessage responseMessage = new ResponseMessage();
+            responseMessage.setRole(Message.ROLE_ASSISTANT);
+            responseMessage.setSuccess(true);
+
+            // 提取内容：Anthropic 的 content 是数组，需遍历拼接
+            JSONArray contentArray = object.getJSONArray("content");
+            if (contentArray != null && !contentArray.isEmpty()) {
+                StringBuilder contentBuilder = new StringBuilder();
+                for (int i = 0; i < contentArray.size(); i++) {
+                    JSONObject contentItem = contentArray.getJSONObject(i);
+                    String type = contentItem.getString("type");
+                    // 仅提取文本类型的内容（忽略 tool_use、image 等）
+                    if ("text".equals(type)) {
+                        contentBuilder.append(contentItem.getString("text"));
                     }
+                }
+                responseMessage.setContent(contentBuilder.toString());
+            }
 
-                    // 解析响应 JSON
-                    JSONObject object = JSON.parseObject(response.body());
-                    ResponseMessage responseMessage = new ResponseMessage();
-                    responseMessage.setRole(Message.ROLE_ASSISTANT);
-                    responseMessage.setSuccess(true);
+            // 提取使用统计：映射 Anthropic 的字段名到统一的 Usage 对象
+            JSONObject usage = object.getJSONObject("usage");
+            if (usage != null) {
+                Usage usageObj = new Usage();
+                // Anthropic 使用 input_tokens/output_tokens
+                usageObj.setPromptTokens(usage.getInteger("input_tokens") != null ? usage.getInteger("input_tokens") : 0);
+                usageObj.setCompletionTokens(usage.getInteger("output_tokens") != null ? usage.getInteger("output_tokens") : 0);
+                responseMessage.setUsage(usageObj);
+            }
 
-                    // 提取内容：Anthropic 的 content 是数组，需遍历拼接
-                    JSONArray contentArray = object.getJSONArray("content");
-                    if (contentArray != null && !contentArray.isEmpty()) {
-                        StringBuilder contentBuilder = new StringBuilder();
-                        for (int i = 0; i < contentArray.size(); i++) {
-                            JSONObject contentItem = contentArray.getJSONObject(i);
-                            String type = contentItem.getString("type");
-                            // 仅提取文本类型的内容（忽略 tool_use、image 等）
-                            if ("text".equals(type)) {
-                                contentBuilder.append(contentItem.getString("text"));
-                            }
-                        }
-                        responseMessage.setContent(contentBuilder.toString());
-                    }
-
-                    // 提取使用统计：映射 Anthropic 的字段名到统一的 Usage 对象
-                    JSONObject usage = object.getJSONObject("usage");
-                    if (usage != null) {
-                        Usage usageObj = new Usage();
-                        // Anthropic 使用 input_tokens/output_tokens
-                        usageObj.setPromptTokens(usage.getInteger("input_tokens") != null ? usage.getInteger("input_tokens") : 0);
-                        usageObj.setCompletionTokens(usage.getInteger("output_tokens") != null ? usage.getInteger("output_tokens") : 0);
-                        responseMessage.setUsage(usageObj);
-                    }
-
-                    // 触发回调
-                    return responseMessage;
-                });
+            // 触发回调
+            return responseMessage;
+        });
     }
 
     public AnthropicProvider maxTokens(int maxTokens) {

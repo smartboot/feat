@@ -361,30 +361,25 @@ public class OpenAiProvider extends Provider {
     @Override
     public CompletableFuture<ResponseMessage> chat(List<Message> messages) {
         HttpPost post = buildRequest(messages, false);
-        return post.onSuccess(response -> {
+        return post.submit().thenApply(response -> {
+            // 检查 HTTP 状态码
+            if (response.statusCode() != 200) {
+                return Provider.error(response.body());
+            }
 
-                })
-//                .onFailure(callback::failed)
-                // 提交请求
-                .submit().thenApply(response -> {
-                    // 检查 HTTP 状态码
-                    if (response.statusCode() != 200) {
-                        return Provider.error(response.body());
-                    }
+            // 解析完整响应（使用强类型对象）
+            ChatWholeResponse chatResponse = JSON.parseObject(response.body(), ChatWholeResponse.class);
 
-                    // 解析完整响应（使用强类型对象）
-                    ChatWholeResponse chatResponse = JSON.parseObject(response.body(), ChatWholeResponse.class);
+            // 提取响应消息
+            ResponseMessage responseMessage = chatResponse.getChoice().getMessage();
 
-                    // 提取响应消息
-                    ResponseMessage responseMessage = chatResponse.getChoice().getMessage();
+            // 附加元数据（Usage、Logprobs）
+            responseMessage.setUsage(chatResponse.getUsage());
+            responseMessage.setPromptLogprobs(chatResponse.getPromptLogprobs());
+            responseMessage.setSuccess(true);
 
-                    // 附加元数据（Usage、Logprobs）
-                    responseMessage.setUsage(chatResponse.getUsage());
-                    responseMessage.setPromptLogprobs(chatResponse.getPromptLogprobs());
-                    responseMessage.setSuccess(true);
-
-                    return responseMessage;
-                });
+            return responseMessage;
+        });
     }
 
     /**
