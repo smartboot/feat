@@ -11,7 +11,6 @@ import tech.smartboot.feat.ai.chat.entity.Function;
 import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
-import tech.smartboot.feat.ai.chat.entity.Tool;
 import tech.smartboot.feat.ai.chat.entity.ToolCall;
 import tech.smartboot.feat.core.client.HttpPost;
 import tech.smartboot.feat.core.common.FeatUtils;
@@ -110,14 +109,14 @@ public class OpenAiProvider extends Provider {
 
         // 构建工具列表（Function Calling）
         if (FeatUtils.isNotEmpty(functions)) {
-            List<Tool> toolList = new ArrayList<>();
+            JSONArray toolsArray = new JSONArray();
             functions.forEach(function -> {
-                Tool t = new Tool();
-                t.setType("function");
-                t.setFunction(function);
-                toolList.add(t);
+                JSONObject toolJson = new JSONObject();
+                toolJson.put("type", "function");
+                toolJson.put("function", function);
+                toolsArray.add(toolJson);
             });
-            jsonObject.put("tools", toolList);
+            jsonObject.put("tools", toolsArray);
             jsonObject.put("tool_choice", "auto"); // 自动决定是否调用工具
         }
 
