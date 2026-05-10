@@ -17,6 +17,7 @@ import tech.smartboot.feat.ai.chat.provider.Provider;
 import tech.smartboot.feat.core.client.HttpOptions;
 
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * 聊天选项类，继承自Options，用于配置聊天模型的各种参数
@@ -44,7 +45,7 @@ public class ChatOptions extends Options {
     /**
      * API 规范类型，默认为 OPENAI
      */
-    private java.util.function.Function<ChatOptions, Provider> provider = OpenAiProvider::new;
+    private Function<ChatOptions, Provider> provider = OpenAiProvider::new;
 
 
     /**
@@ -145,7 +146,9 @@ public class ChatOptions extends Options {
      *
      * @return API 规范类型
      */
-    java.util.function.Function<ChatOptions, Provider> getProvider() {
+
+
+    Function<ChatOptions, Provider> getProvider() {
         return provider;
     }
 
@@ -155,7 +158,7 @@ public class ChatOptions extends Options {
      * @param provider API 规范类型
      * @return 当前ChatOptions实例，用于链式调用
      */
-    public ChatOptions specProvider(java.util.function.Function<ChatOptions, Provider> provider) {
+    public ChatOptions specProvider(Function<ChatOptions, Provider> provider) {
         this.provider = provider;
         return this;
     }
