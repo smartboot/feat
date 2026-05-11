@@ -1,9 +1,5 @@
 package tech.smartboot.feat.ai.chat;
 
-import tech.smartboot.feat.ai.chat.entity.ToolCall;
-
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -37,11 +33,6 @@ public class StreamContext {
      * <p>表示流式响应过程中发生错误</p>
      */
     public static final int STREAM_STATUS_ERROR = 3;
-
-    /**
-     * 工具调用累积器：key=index, value=ToolCall
-     */
-    public final Map<Integer, ToolCall> toolCallMap = new HashMap<>();
 
     /**
      * 文本内容累积器

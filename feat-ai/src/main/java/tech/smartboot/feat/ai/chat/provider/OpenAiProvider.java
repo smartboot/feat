@@ -24,6 +24,7 @@ import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 /**
@@ -53,6 +54,10 @@ import java.util.function.Consumer;
 public class OpenAiProvider extends Provider {
     private static final Logger LOGGER = LoggerFactory.getLogger(OpenAiProvider.class);
     public static final Consumer<JSONObject> responseJsonFormat = (jsonObject) -> jsonObject.put("response_format", JSONObject.of("type", "json_object"));
+    /**
+     * 工具调用累积器：key=index, value=ToolCall
+     */
+    private final Map<Integer, ToolCall> toolCallMap = new HashMap<>();
 
     public OpenAiProvider(ChatOptions options) {
         super(options);
@@ -138,7 +143,7 @@ public class OpenAiProvider extends Provider {
             responseMessage.setRole(Message.ROLE_ASSISTANT);
             responseMessage.setContent(content);
             responseMessage.setReasoningContent(context.getReasoning());
-            responseMessage.setToolCalls(new ArrayList<>(context.toolCallMap.values()));
+            responseMessage.setToolCalls(new ArrayList<>(toolCallMap.values()));
             responseMessage.setSuccess(true);
             context.setStatus(StreamContext.STREAM_STATUS_COMPLETE);
             consumer.onCompletion(responseMessage);
@@ -191,7 +196,7 @@ public class OpenAiProvider extends Provider {
         if (FeatUtils.isNotEmpty(toolCalls)) {
             for (ToolCall toolCall : toolCalls) {
                 // 根据 index 获取或创建 ToolCall 对象
-                ToolCall tool = context.toolCallMap.computeIfAbsent(toolCall.getIndex(), k -> {
+                ToolCall tool = toolCallMap.computeIfAbsent(toolCall.getIndex(), k -> {
                     ToolCall t = new ToolCall();
                     t.setFunction(new HashMap<>());
                     return t;

@@ -205,7 +205,6 @@ public class AnthropicProvider extends Provider {
                     responseMessage.setRole(Message.ROLE_ASSISTANT);
                     responseMessage.setContent(context.getContent());
                     responseMessage.setReasoningContent(context.getReasoning());
-                    responseMessage.setToolCalls(new ArrayList<>(context.toolCallMap.values()));
                     responseMessage.setSuccess(true);
                     context.setStatus(StreamContext.STREAM_STATUS_COMPLETE);
                     consumer.onCompletion(responseMessage);
