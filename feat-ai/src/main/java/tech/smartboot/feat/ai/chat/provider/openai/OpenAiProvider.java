@@ -5,7 +5,7 @@ import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.ai.chat.ChatOptions;
-import tech.smartboot.feat.ai.chat.StreamContext;
+import tech.smartboot.feat.ai.chat.provider.StreamContext;
 import tech.smartboot.feat.ai.chat.entity.Tool;
 import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;

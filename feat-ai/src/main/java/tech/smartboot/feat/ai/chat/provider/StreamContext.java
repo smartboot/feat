@@ -1,4 +1,4 @@
-package tech.smartboot.feat.ai.chat;
+package tech.smartboot.feat.ai.chat.provider;
 
 import java.util.concurrent.atomic.AtomicInteger;
 

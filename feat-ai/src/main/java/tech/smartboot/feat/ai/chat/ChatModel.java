@@ -14,6 +14,7 @@ import tech.smartboot.feat.ai.chat.entity.Tool;
 import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 import tech.smartboot.feat.ai.chat.provider.Provider;
+import tech.smartboot.feat.ai.chat.provider.StreamContext;
 import tech.smartboot.feat.core.client.HttpRest;
 import tech.smartboot.feat.core.common.exception.FeatException;
 
