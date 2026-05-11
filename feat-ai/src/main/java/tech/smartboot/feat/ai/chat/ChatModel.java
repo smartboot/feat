@@ -118,14 +118,14 @@ public class ChatModel {
      */
     public void chatStream(List<Message> messages, List<Function> functions, StreamResponseCallback consumer) {
         Provider provider = options.getProvider().apply(options);
-        HttpRest rest = provider.buildRequest(messages, true, functions);
+        HttpRest rest = provider.createRequest(messages, true, functions);
         StreamContext context = new StreamContext();
         rest.onSSE(sse -> sse.onData(event -> {
                     // 首次收到数据，标记为 UPGRADE 状态
                     if (context.getStatus() == StreamContext.STREAM_STATUS_INIT) {
                         context.setStatus(StreamContext.STREAM_STATUS_UPGRADE);
                     }
-                    provider.chatStream(context, event, consumer);
+                    provider.parseStreamResponse(context, event, consumer);
                 }))
                 // HTTP 成功但流式未启动：说明请求失败（如 401、429）
                 .onSuccess(response -> {
@@ -191,13 +191,13 @@ public class ChatModel {
      */
     public CompletableFuture<ResponseMessage> chat(List<Message> messages, List<Function> functions) {
         Provider provider = options.getProvider().apply(options);
-        HttpRest rest = provider.buildRequest(messages, false, functions);
+        HttpRest rest = provider.createRequest(messages, false, functions);
         return rest.submit().thenApply(response -> {
             // 检查 HTTP 状态码
             if (response.statusCode() != 200) {
                 return Provider.error(response.body());
             }
-            return provider.chat(response);
+            return provider.parseResponse(response);
         });
     }
 

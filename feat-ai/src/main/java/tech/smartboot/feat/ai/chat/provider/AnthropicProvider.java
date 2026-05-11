@@ -104,7 +104,7 @@ public class AnthropicProvider extends Provider {
      * @param stream   是否启用流式响应（true=SSE，false=普通 JSON）
      * @return 配置好的 HttpPost 请求对象
      */
-    public HttpPost buildRequest(List<Message> messages, boolean stream, List<Function> functions) {
+    public HttpPost createRequest(List<Message> messages, boolean stream, List<Function> functions) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("model", options.getModel());
         jsonObject.put("stream", stream);
@@ -214,7 +214,7 @@ public class AnthropicProvider extends Provider {
      * @param consumer 流式响应回调，接收实时内容和最终结果
      */
     @Override
-    public void chatStream(StreamContext context, SseEvent event, StreamResponseCallback consumer) {
+    public void parseStreamResponse(StreamContext context, SseEvent event, StreamResponseCallback consumer) {
         // 获取事件类型和数据
         String eventType = event.getType();
         String data = event.getData();
@@ -327,7 +327,7 @@ public class AnthropicProvider extends Provider {
      * @param response
      */
     @Override
-    public ResponseMessage chat(HttpResponse response) {
+    public ResponseMessage parseResponse(HttpResponse response) {
         // 解析响应 JSON
         JSONObject object = JSON.parseObject(response.body());
         ResponseMessage responseMessage = new ResponseMessage();

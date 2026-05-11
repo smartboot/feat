@@ -38,12 +38,12 @@ import java.util.function.Consumer;
  * Provider provider = new OpenAiProvider(options);
  *
  * // 非流式调用
- * provider.chat(messages, response -> {
+ * provider.parseResponse(messages, response -> {
  *     System.out.println(response.getContent());
  * });
  *
  * // 流式调用
- * provider.chatStream(messages, new StreamResponseCallback() {
+ * provider.parseStreamResponse(messages, new StreamResponseCallback() {
  *     public void onStreamResponse(String content) {
  *         System.out.print(content); // 实时输出
  *     }
@@ -74,10 +74,33 @@ public abstract class Provider {
         this.options = options;
     }
 
-    public abstract HttpRest buildRequest(List<Message> messages, boolean stream, List<Function> functions);
+    /**
+     * 创建聊天请求
+     * <p>
+     * 该方法用于构建符合特定 AI 服务商规范的 HTTP 请求。
+     * 实现类需要根据目标 API 的要求构造请求体、请求头和参数。
+     * </p>
+     *
+     * <h3>请求构建要点：</h3>
+     * <ul>
+     *   <li>设置模型名称（model 字段）</li>
+     *   <li>处理消息列表，添加系统消息（如果需要）</li>
+     *   <li>配置流式/非流式参数（stream 字段）</li>
+     *   <li>构建工具列表（Function Calling）</li>
+     *   <li>设置认证头（API Key）</li>
+     *   <li>注入额外参数（extraBody）</li>
+     * </ul>
+     *
+     * @param messages  消息列表，包含对话历史
+     * @param stream   是否启用流式响应（true=SSE，false=普通 JSON）
+     * @param functions 工具函数列表，可为 null
+     * @return 配置好的 HttpRest 请求对象
+     * @see HttpRest Feat HTTP 请求接口
+     */
+    public abstract HttpRest createRequest(List<Message> messages, boolean stream, List<Function> functions);
 
     /**
-     * 处理流式聊天响应
+     * 解析流式聊天响应
      * <p>
      * 该方法用于实现 Server-Sent Events (SSE) 或类似的流式传输协议。
      * 实现类需要：
@@ -104,10 +127,37 @@ public abstract class Provider {
      * @param consumer 流式响应回调处理器，用于接收实时数据和最终结果
      * @see StreamResponseCallback 流式回调接口定义
      */
-    public abstract void chatStream(StreamContext context, SseEvent event, StreamResponseCallback consumer);
+    /**
+     * 解析流式聊天响应
+     * <p>
+     * 该方法用于实现 Server-Sent Events (SSE) 或类似的流式传输协议。
+     * 实现类需要：
+     * </p>
+     * <ul>
+     *   <li>解析 SSE 数据流，提取文本片段</li>
+     *   <li>通过回调的 {@link StreamResponseCallback#onStreamResponse(String)} 实时推送内容</li>
+     *   <li>在流结束时调用 {@link StreamResponseCallback#onCompletion(ResponseMessage)} 传递完整响应</li>
+     *   <li>在出错时调用 {@link StreamResponseCallback#onError(Throwable)} 报告异常</li>
+     * </ul>
+     *
+     * <h3>流式响应生命周期：</h3>
+     * <ol>
+     *   <li>INIT → 发起请求</li>
+     *   <li>UPGRADE → 收到第一个数据片段</li>
+     *   <li>持续调用 onStreamResponse → 逐块推送内容</li>
+     *   <li>COMPLETE → 收到 [DONE] 或结束标记，调用 onCompletion</li>
+     *   <li>ERROR → 发生异常时调用 onError</li>
+     * </ol>
+     *
+     * @param context  流式上下文，用于累积状态和数据
+     * @param event    SSE 事件，包含数据内容
+     * @param consumer 流式响应回调处理器，用于接收实时数据和最终结果
+     * @see StreamResponseCallback 流式回调接口定义
+     */
+    public abstract void parseStreamResponse(StreamContext context, SseEvent event, StreamResponseCallback consumer);
 
     /**
-     * 处理非流式聊天响应
+     * 解析非流式聊天响应
      * <p>
      * 该方法用于实现传统的同步请求-响应模式。
      * 实现类需要：
@@ -128,7 +178,29 @@ public abstract class Provider {
      * @param response
      * @see ResponseMessage 响应消息结构
      */
-    public abstract ResponseMessage chat(HttpResponse response);
+    /**
+     * 解析非流式聊天响应
+     * <p>
+     * 该方法用于实现传统的同步请求-响应模式。
+     * 实现类需要：
+     * </p>
+     * <ul>
+     *   <li>解析响应 JSON，提取消息内容、工具调用等信息</li>
+     *   <li>附加元数据（Usage、Logprobs 等）</li>
+     *   <li>返回完整的响应消息对象</li>
+     * </ul>
+     *
+     * <h3>与非流式的区别：</h3>
+     * <ul>
+     *   <li>非流式：等待全部生成完成后一次性返回，包含完整 Usage 统计</li>
+     *   <li>流式：边生成边返回，提供更好的用户体验，适合长文本</li>
+     * </ul>
+     *
+     * @param response HTTP 响应对象，包含原始响应数据
+     * @return 解析后的响应消息对象
+     * @see ResponseMessage 响应消息结构
+     */
+    public abstract ResponseMessage parseResponse(HttpResponse response);
 
     /**
      * 创建错误响应消息

@@ -100,7 +100,7 @@ public class OpenAiProvider extends Provider {
      * @param stream   是否启用流式响应（true=SSE，false=普通 JSON）
      * @return 配置好的 HttpPost 请求对象
      */
-    public HttpPost buildRequest(List<Message> messages, boolean stream, List<Function> functions) {
+    public HttpPost createRequest(List<Message> messages, boolean stream, List<Function> functions) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("model", options.getModel());
         jsonObject.put("stream", stream);
@@ -182,7 +182,7 @@ public class OpenAiProvider extends Provider {
      * @param consumer 流式响应回调，接收实时内容和最终结果
      */
     @Override
-    public void chatStream(StreamContext context, SseEvent event, StreamResponseCallback consumer) {
+    public void parseStreamResponse(StreamContext context, SseEvent event, StreamResponseCallback consumer) {
         String data = event.getData();
         // 终止标记或空数据：触发完成回调
         if ("[DONE]".equals(data) || FeatUtils.isBlank(data)) {
@@ -326,7 +326,7 @@ public class OpenAiProvider extends Provider {
      * @param response
      */
     @Override
-    public ResponseMessage chat(HttpResponse response) {
+    public ResponseMessage parseResponse(HttpResponse response) {
         // 解析完整响应（使用强类型对象）
         ChatWholeResponse chatResponse = JSON.parseObject(response.body(), ChatWholeResponse.class);
 
