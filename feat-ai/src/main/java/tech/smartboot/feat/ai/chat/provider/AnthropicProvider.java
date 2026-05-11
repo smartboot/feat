@@ -9,6 +9,7 @@ import tech.smartboot.feat.ai.chat.entity.Function;
 import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
+import tech.smartboot.feat.ai.chat.entity.ToolCall;
 import tech.smartboot.feat.ai.chat.entity.Usage;
 import tech.smartboot.feat.core.client.HttpPost;
 import tech.smartboot.feat.core.common.FeatUtils;
@@ -16,7 +17,10 @@ import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -215,6 +219,10 @@ public class AnthropicProvider extends Provider {
         StringBuilder contentBuilder = new StringBuilder();
         // 推理内容累积器（Claude Thinking 模式）
         StringBuilder reasoningBuilder = new StringBuilder();
+        // 工具调用累积器
+        Map<Integer, ToolCall> toolCallMap = new HashMap<>();
+        // 当前内容块索引
+        int[] currentBlockIndex = {0};
         // 流式状态跟踪器
         AtomicInteger status = new AtomicInteger(STREAM_STATUS_INIT);
 
@@ -245,9 +253,10 @@ public class AnthropicProvider extends Provider {
                                 break;
                             case "content_block_start":
                                 // 内容块开始事件，标识新内容块的起始
+                                currentBlockIndex[0] = object.getIntValue("index");
                                 break;
                             case "content_block_delta":
-                                // 内容增量事件（核心事件，包含实际文本）
+                                // 内容增量事件（核心事件，包含实际文本或工具调用）
                                 JSONObject delta = object.getJSONObject("delta");
                                 if (delta != null) {
                                     // 提取文本片段
@@ -261,6 +270,37 @@ public class AnthropicProvider extends Provider {
                                     if (thinking != null) {
                                         consumer.onReasoning(thinking); // 实时推送
                                         reasoningBuilder.append(thinking); // 累积保存
+                                    }
+                                    // 提取工具调用信息
+                                    JSONObject input = delta.getJSONObject("input");
+                                    if (input != null) {
+                                        ToolCall toolCall = toolCallMap.computeIfAbsent(currentBlockIndex[0], k -> {
+                                            ToolCall t = new ToolCall();
+                                            t.setIndex(currentBlockIndex[0]);
+                                            t.setType("function");
+                                            t.setFunction(new HashMap<>());
+                                            return t;
+                                        });
+                                        // 累积 input JSON 字符串
+                                        String inputStr = input.toJSONString();
+                                        String existingInput = toolCall.getFunction().get("arguments");
+                                        if (existingInput != null) {
+                                            toolCall.getFunction().put("arguments", existingInput + inputStr);
+                                        } else {
+                                            toolCall.getFunction().put("arguments", inputStr);
+                                        }
+                                    }
+                                    // 提取工具名称
+                                    String name = delta.getString("name");
+                                    if (name != null) {
+                                        ToolCall toolCall = toolCallMap.computeIfAbsent(currentBlockIndex[0], k -> {
+                                            ToolCall t = new ToolCall();
+                                            t.setIndex(currentBlockIndex[0]);
+                                            t.setType("function");
+                                            t.setFunction(new HashMap<>());
+                                            return t;
+                                        });
+                                        toolCall.getFunction().put("name", name);
                                     }
                                 }
                                 break;
@@ -276,6 +316,7 @@ public class AnthropicProvider extends Provider {
                                 responseMessage.setRole(Message.ROLE_ASSISTANT);
                                 responseMessage.setContent(contentBuilder.toString());
                                 responseMessage.setReasoningContent(reasoningBuilder.toString());
+                                responseMessage.setToolCalls(new ArrayList<>(toolCallMap.values()));
                                 responseMessage.setSuccess(true);
                                 status.set(STREAM_STATUS_COMPLETE);
                                 consumer.onCompletion(responseMessage);
@@ -368,17 +409,35 @@ public class AnthropicProvider extends Provider {
 
             // 提取内容：Anthropic 的 content 是数组，需遍历拼接
             JSONArray contentArray = object.getJSONArray("content");
+            List<ToolCall> toolCalls = new ArrayList<>();
             if (contentArray != null && !contentArray.isEmpty()) {
                 StringBuilder contentBuilder = new StringBuilder();
                 for (int i = 0; i < contentArray.size(); i++) {
                     JSONObject contentItem = contentArray.getJSONObject(i);
                     String type = contentItem.getString("type");
-                    // 仅提取文本类型的内容（忽略 tool_use、image 等）
+                    // 提取文本类型的内容
                     if ("text".equals(type)) {
                         contentBuilder.append(contentItem.getString("text"));
                     }
+                    // 提取工具调用信息
+                    if ("tool_use".equals(type)) {
+                        ToolCall toolCall = new ToolCall();
+                        toolCall.setIndex(i);
+                        toolCall.setId(contentItem.getString("id"));
+                        toolCall.setType("function");
+                        Map<String, String> functionMap = new HashMap<>();
+                        functionMap.put("name", contentItem.getString("name"));
+                        functionMap.put("arguments", contentItem.getJSONObject("input") != null
+                            ? contentItem.getJSONObject("input").toJSONString() : "{}");
+                        toolCall.setFunction(functionMap);
+                        toolCalls.add(toolCall);
+                    }
                 }
                 responseMessage.setContent(contentBuilder.toString());
+            }
+            // 设置工具调用
+            if (!toolCalls.isEmpty()) {
+                responseMessage.setToolCalls(toolCalls);
             }
 
             // 提取使用统计：映射 Anthropic 的字段名到统一的 Usage 对象

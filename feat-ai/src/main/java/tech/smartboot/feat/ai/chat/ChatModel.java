@@ -20,19 +20,41 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * 聊天模型类，用于与AI模型进行交互，支持流式和非流式响应
- * 支持 OpenAI 和 Anthropic 两种API规范
+ * ChatModel - 聊天模型客户端
  *
- * @author 三刀 zhengjunweimail@163.com
- * @version v1.0.0
+ * <p>用于与AI模型进行交互，支持流式和非流式响应。
+ * 支持多种API规范，包括 OpenAI、Anthropic 等主流AI服务提供商。</p>
+ *
+ * <p>使用示例：</p>
+ * <pre>{@code
+ * ChatOptions options = ChatOptions.builder()
+ *     .baseUrl("https://api.openai.com/v1")
+ *     .apiKey("your-api-key")
+ *     .model("gpt-4")
+ *     .build();
+ *
+ * ChatModel chatModel = new ChatModel(options);
+ *
+ * // 非流式调用
+ * CompletableFuture<ResponseMessage> future = chatModel.chat("Hello");
+ * future.thenAccept(response -> System.out.println(response.getContent()));
+ *
+ * // 流式调用
+ * chatModel.chatStream("Hello", response -> System.out.println(response.getContent()));
+ * }</pre>
+ *
+ * @author 三刀
  */
 public class ChatModel {
     private final ChatOptions options;
 
     /**
-     * 构造函数
+     * 构造 ChatModel 实例
      *
-     * @param options 聊天选项配置
+     * <p>创建聊天模型客户端，自动处理URL末尾的斜杠。</p>
+     *
+     * @param options 聊天选项配置，包含API地址、密钥、模型等参数
+     * @see ChatOptions
      */
     public ChatModel(ChatOptions options) {
         if (options.baseUrl().endsWith("/")) {
@@ -44,17 +66,40 @@ public class ChatModel {
     /**
      * 发送流式聊天请求（简单版本）
      *
+     * <p>使用单条用户消息发起流式请求，适用于简单对话场景。</p>
+     *
      * @param content  用户输入内容
-     * @param consumer 流式响应回调
+     * @param consumer 流式响应回调，每收到一个响应块时触发
+     * @see #chatStream(String, List, StreamResponseCallback)
      */
     public void chatStream(String content, StreamResponseCallback consumer) {
         chatStream(Collections.singletonList(Message.ofUser(content)), null, consumer);
     }
 
+    /**
+     * 发送流式聊天请求（带单个工具函数）
+     *
+     * <p>使用单条用户消息和一个工具函数发起流式请求。</p>
+     *
+     * @param content   用户输入内容
+     * @param function  工具函数定义
+     * @param consumer  流式响应回调
+     * @see #chatStream(String, List, StreamResponseCallback)
+     */
     public void chatStream(String content, Function function, StreamResponseCallback consumer) {
         chatStream(Collections.singletonList(Message.ofUser(content)), Collections.singletonList(function), consumer);
     }
 
+    /**
+     * 发送流式聊天请求（带多个工具函数）
+     *
+     * <p>使用单条用户消息和多个工具函数发起流式请求。</p>
+     *
+     * @param content   用户输入内容
+     * @param functions 工具函数列表
+     * @param consumer  流式响应回调
+     * @see #chatStream(List, List, StreamResponseCallback)
+     */
     public void chatStream(String content, List<Function> functions, StreamResponseCallback consumer) {
         chatStream(Collections.singletonList(Message.ofUser(content)), functions, consumer);
     }
@@ -62,15 +107,20 @@ public class ChatModel {
     /**
      * 发送流式聊天请求（完整版本）
      *
-     * @param messages 消息列表
-     * @param consumer 流式响应回调
+     * <p>支持完整的消息列表和工具函数配置，通过回调函数实时获取AI响应。</p>
+     *
+     * @param messages  消息列表，包含对话历史
+     * @param functions 工具函数列表，可为 null
+     * @param consumer  流式响应回调，AI每生成一个响应块时调用
      */
     public void chatStream(List<Message> messages, List<Function> functions, StreamResponseCallback consumer) {
         options.getProvider().apply(options).chatStream(messages, functions, consumer);
     }
 
     /**
-     * 发送非流式聊天请求（工具版本）
+     * 发送非流式聊天请求（简单版本）
+     *
+     * <p>使用单条用户消息发起请求，等待完整响应返回。</p>
      *
      * @param content 用户输入内容
      * @return 包含响应消息的 CompletableFuture
@@ -80,7 +130,10 @@ public class ChatModel {
     }
 
     /**
-     * 发送非流式聊天请求（工具版本），在调用前将工具函数注入到选项中，无需在 options 中预先定义。
+     * 发送非流式聊天请求（带工具函数）
+     *
+     * <p>使用单条用户消息和工具函数列表发起请求。
+     * 工具函数会在请求时动态注入，无需在选项中预先配置。</p>
      *
      * @param content   用户输入内容
      * @param functions 工具函数列表
@@ -90,14 +143,25 @@ public class ChatModel {
         return chat(Collections.singletonList(Message.ofUser(content)), functions);
     }
 
+    /**
+     * 发送非流式聊天请求（带单个工具函数）
+     *
+     * @param content  用户输入内容
+     * @param function 工具函数定义
+     * @return 包含响应消息的 CompletableFuture
+     */
     public CompletableFuture<ResponseMessage> chat(String content, Function function) {
         return chat(Collections.singletonList(Message.ofUser(content)), Collections.singletonList(function));
     }
 
     /**
-     * 发送非流式聊天请求（回调版本）
+     * 发送非流式聊天请求（完整版本）
      *
-     * @param messages 消息列表
+     * <p>支持完整的消息列表和工具函数配置，返回完整的AI响应。</p>
+     *
+     * @param messages  消息列表，包含对话历史
+     * @param functions 工具函数列表，可为 null
+     * @return 包含响应消息的 CompletableFuture
      */
     public CompletableFuture<ResponseMessage> chat(List<Message> messages, List<Function> functions) {
         return options.getProvider().apply(options).chat(messages, functions);
@@ -106,7 +170,8 @@ public class ChatModel {
     /**
      * 获取聊天选项配置
      *
-     * @return 聊天选项配置
+     * @return 聊天选项配置，包含API地址、密钥、模型等参数
+     * @see ChatOptions
      */
     public ChatOptions getOptions() {
         return options;
