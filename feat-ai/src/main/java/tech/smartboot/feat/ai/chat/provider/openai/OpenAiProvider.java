@@ -5,14 +5,14 @@ import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.ai.chat.ChatOptions;
-import tech.smartboot.feat.ai.chat.provider.StreamContext;
-import tech.smartboot.feat.ai.chat.entity.Tool;
+import tech.smartboot.feat.ai.chat.StreamResponseCallback;
 import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
-import tech.smartboot.feat.ai.chat.StreamResponseCallback;
+import tech.smartboot.feat.ai.chat.entity.Tool;
 import tech.smartboot.feat.ai.chat.entity.ToolCall;
-import tech.smartboot.feat.ai.chat.provider.anthropic.AnthropicProvider;
 import tech.smartboot.feat.ai.chat.provider.Provider;
+import tech.smartboot.feat.ai.chat.provider.StreamContext;
+import tech.smartboot.feat.ai.chat.provider.anthropic.AnthropicProvider;
 import tech.smartboot.feat.core.client.HttpPost;
 import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.client.SseEvent;
@@ -103,30 +103,29 @@ public class OpenAiProvider extends Provider {
         }
 
         /**
-         * 更新基础字段
+         * 解析 toolCallObj 并更新内部状态
          *
-         * @param id   工具调用ID
-         * @param type 调用类型
+         * @param toolCallObj OpenAI 格式的 tool_call JSON 对象
          */
-        void updateBase(String id, String type) {
-            if (FeatUtils.isNotBlank(id)) {
-                this.id = id;
+        void parse(JSONObject toolCallObj) {
+            // 更新基础字段
+            if (FeatUtils.isBlank(id)) {
+                this.id = toolCallObj.getString("id");
             }
-            if (FeatUtils.isNotBlank(type)) {
-                this.type = type;
+            if (FeatUtils.isBlank(type)) {
+                this.type = toolCallObj.getString("type");
             }
-        }
 
-        /**
-         * 更新函数信息
-         *
-         * @param functionName   函数名称
-         * @param functionArgs   函数参数字符串
-         */
-        void updateFunction(String functionName, String functionArgs) {
+            // 更新函数信息
+            if (!toolCallObj.containsKey("function")) {
+                return;
+            }
+            JSONObject functionObj = toolCallObj.getJSONObject("function");
+            String functionName = functionObj.getString("name");
             if (FeatUtils.isNotBlank(functionName)) {
                 this.name = functionName;
             }
+            String functionArgs = functionObj.getString("arguments");
             if (FeatUtils.isNotBlank(functionArgs)) {
                 argumentsBuilder.append(functionArgs);
             }
@@ -155,9 +154,9 @@ public class OpenAiProvider extends Provider {
     /**
      * 构建 HTTP POST 请求
      *
-     * @param messages  消息列表
-     * @param stream    是否启用流式响应
-     * @param tools 工具函数列表
+     * @param messages 消息列表
+     * @param stream   是否启用流式响应
+     * @param tools    工具函数列表
      * @return HttpPost 请求对象
      */
     public HttpPost createRequest(List<Message> messages, boolean stream, List<Tool> tools) {
@@ -292,18 +291,8 @@ public class OpenAiProvider extends Provider {
                 int index = toolCallObj.getIntValue("index");
                 // 根据 index 获取或创建 ToolCallParser
                 ToolCallParser parser = toolCallMap.computeIfAbsent(index, ToolCallParser::new);
-
-                // 更新基础字段
-                parser.updateBase(toolCallObj.getString("id"), toolCallObj.getString("type"));
-
-                // 更新函数信息
-                JSONObject functionObj = toolCallObj.getJSONObject("function");
-                if (functionObj != null) {
-                    parser.updateFunction(
-                            functionObj.getString("name"),
-                            functionObj.getString("arguments")
-                    );
-                }
+                // 解析 toolCallObj
+                parser.parse(toolCallObj);
             }
         }
     }
