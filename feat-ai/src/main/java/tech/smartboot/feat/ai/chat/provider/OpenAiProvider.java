@@ -61,8 +61,8 @@ public class OpenAiProvider extends Provider {
     /**
      * 构建 HTTP POST 请求
      *
-     * @param messages 消息列表
-     * @param stream   是否启用流式响应
+     * @param messages  消息列表
+     * @param stream    是否启用流式响应
      * @param functions 工具函数列表
      * @return HttpPost 请求对象
      */
@@ -129,14 +129,15 @@ public class OpenAiProvider extends Provider {
         // 终止标记或空数据：触发完成回调
         if ("[DONE]".equals(data) || FeatUtils.isBlank(data)) {
             // 防止重复触发（已完成且无新内容）
-            if (context.getStatus() == StreamContext.STREAM_STATUS_COMPLETE && context.contentBuilder.length() == 0) {
+            String content = context.getContent();
+            if (context.getStatus() == StreamContext.STREAM_STATUS_COMPLETE && FeatUtils.isBlank(content)) {
                 return;
             }
             // 构建完整响应消息
             ResponseMessage responseMessage = new ResponseMessage();
             responseMessage.setRole(Message.ROLE_ASSISTANT);
-            responseMessage.setContent(context.contentBuilder.toString());
-            responseMessage.setReasoningContent(context.reasoningBuilder.toString());
+            responseMessage.setContent(content);
+            responseMessage.setReasoningContent(context.getReasoning());
             responseMessage.setToolCalls(new ArrayList<>(context.toolCallMap.values()));
             responseMessage.setSuccess(true);
             context.setStatus(StreamContext.STREAM_STATUS_COMPLETE);
@@ -174,14 +175,14 @@ public class OpenAiProvider extends Provider {
         String content = delta.getString("content");
         if (content != null) {
             consumer.onStreamResponse(content); // 实时推送
-            context.contentBuilder.append(content);      // 累积保存
+            context.appendContent(content);      // 累积保存
         }
 
         // 提取推理内容片段
         String reasoningContent = delta.getString("reasoning_content");
         if (reasoningContent != null) {
             consumer.onReasoning(reasoningContent); // 实时推送
-            context.reasoningBuilder.append(reasoningContent); // 累积保存
+            context.appendReasoning(reasoningContent); // 累积保存
         }
 
         // 提取工具调用信息（可能为空或分片）

@@ -74,8 +74,8 @@ public class AnthropicProvider extends Provider {
      * 根据 Anthropic API 规范构造请求体和请求头。
      * </p>
      *
-     * @param messages 消息列表
-     * @param stream   是否启用流式响应
+     * @param messages  消息列表
+     * @param stream    是否启用流式响应
      * @param functions 工具函数列表
      * @return HttpPost 请求对象
      */
@@ -183,13 +183,13 @@ public class AnthropicProvider extends Provider {
                         String text = delta.getString("text");
                         if (text != null) {
                             consumer.onStreamResponse(text); // 实时推送
-                            context.contentBuilder.append(text);      // 累积保存
+                            context.appendContent(text);      // 累积保存
                         }
                         // 提取推理内容（Claude Thinking 模式）
                         String thinking = delta.getString("thinking");
                         if (thinking != null) {
                             consumer.onReasoning(thinking); // 实时推送
-                            context.reasoningBuilder.append(thinking); // 累积保存
+                            context.appendReasoning(thinking); // 累积保存
                         }
                     }
                     break;
@@ -203,8 +203,8 @@ public class AnthropicProvider extends Provider {
                     // 消息完全结束，触发完成回调
                     ResponseMessage responseMessage = new ResponseMessage();
                     responseMessage.setRole(Message.ROLE_ASSISTANT);
-                    responseMessage.setContent(context.contentBuilder.toString());
-                    responseMessage.setReasoningContent(context.reasoningBuilder.toString());
+                    responseMessage.setContent(context.getContent());
+                    responseMessage.setReasoningContent(context.getReasoning());
                     responseMessage.setToolCalls(new ArrayList<>(context.toolCallMap.values()));
                     responseMessage.setSuccess(true);
                     context.setStatus(StreamContext.STREAM_STATUS_COMPLETE);
