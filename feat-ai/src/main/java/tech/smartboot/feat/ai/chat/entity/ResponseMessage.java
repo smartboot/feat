@@ -44,10 +44,10 @@ public class ResponseMessage extends Message {
     private Usage usage;
 
     /**
-     * 提示词对数概率信息，不会参与序列化和反序列化
+     * 推理内容，某些模型可能会输出推理过程
      */
-    @JSONField(deserialize = false, serialize = false)
-    private String promptLogprobs;
+    @JSONField(name = "reasoning_content")
+    private String reasoningContent;
 
     /**
      * 获取工具调用列表
@@ -122,20 +122,20 @@ public class ResponseMessage extends Message {
     }
 
     /**
-     * 获取提示词对数概率信息
+     * 获取推理内容
      *
-     * @return 提示词对数概率信息
+     * @return 推理内容
      */
-    public String getPromptLogprobs() {
-        return promptLogprobs;
+    public String getReasoningContent() {
+        return reasoningContent;
     }
 
     /**
-     * 设置提示词对数概率信息
+     * 设置推理内容
      *
-     * @param promptLogprobs 提示词对数概率信息
+     * @param reasoningContent 推理内容
      */
-    public void setPromptLogprobs(String promptLogprobs) {
-        this.promptLogprobs = promptLogprobs;
+    public void setReasoningContent(String reasoningContent) {
+        this.reasoningContent = reasoningContent;
     }
 }

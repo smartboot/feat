@@ -8,7 +8,9 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.ai.chat.entity;
+package tech.smartboot.feat.ai.chat;
+
+import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 
 /**
  * 流式响应回调接口，用于处理流式数据的响应

@@ -6,10 +6,10 @@ import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.ai.chat.ChatOptions;
 import tech.smartboot.feat.ai.chat.StreamContext;
-import tech.smartboot.feat.ai.chat.entity.Function;
+import tech.smartboot.feat.ai.chat.entity.Tool;
 import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
-import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
+import tech.smartboot.feat.ai.chat.StreamResponseCallback;
 import tech.smartboot.feat.ai.chat.entity.ToolCall;
 import tech.smartboot.feat.ai.chat.entity.Usage;
 import tech.smartboot.feat.ai.chat.provider.Provider;
@@ -159,10 +159,10 @@ public class AnthropicProvider extends Provider {
      *
      * @param messages  消息列表
      * @param stream    是否启用流式响应
-     * @param functions 工具函数列表
+     * @param tools 工具函数列表
      * @return HttpPost 请求对象
      */
-    public HttpPost createRequest(List<Message> messages, boolean stream, List<Function> functions) {
+    public HttpPost createRequest(List<Message> messages, boolean stream, List<Tool> tools) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("model", options.getModel());
         jsonObject.put("stream", stream);
@@ -187,9 +187,9 @@ public class AnthropicProvider extends Provider {
         jsonObject.put("messages", messages);
 
         // 处理工具定义（Function Calling）
-        if (FeatUtils.isNotEmpty(functions)) {
+        if (FeatUtils.isNotEmpty(tools)) {
             JSONArray toolsArray = new JSONArray();
-            functions.forEach(tool -> {
+            tools.forEach(tool -> {
                 JSONObject toolJson = new JSONObject();
                 toolJson.put("name", tool.getName());
                 toolJson.put("description", tool.getDescription());

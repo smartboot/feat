@@ -2,10 +2,10 @@ package tech.smartboot.feat.ai.chat.provider;
 
 import tech.smartboot.feat.ai.chat.ChatOptions;
 import tech.smartboot.feat.ai.chat.StreamContext;
-import tech.smartboot.feat.ai.chat.entity.Function;
+import tech.smartboot.feat.ai.chat.entity.Tool;
 import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
-import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
+import tech.smartboot.feat.ai.chat.StreamResponseCallback;
 import tech.smartboot.feat.ai.chat.provider.anthropic.AnthropicProvider;
 import tech.smartboot.feat.ai.chat.provider.openai.OpenAiProvider;
 import tech.smartboot.feat.core.client.HttpResponse;
@@ -66,11 +66,11 @@ public abstract class Provider {
      *
      * @param messages  消息列表，包含对话历史
      * @param stream   是否启用流式响应
-     * @param functions 工具函数列表
+     * @param tools 工具函数列表
      * @return HttpRest 请求对象
      * @see HttpRest Feat HTTP 请求接口
      */
-    public abstract HttpRest createRequest(List<Message> messages, boolean stream, List<Function> functions);
+    public abstract HttpRest createRequest(List<Message> messages, boolean stream, List<Tool> tools);
 
     /**
      * 解析流式聊天响应（SSE 模式）

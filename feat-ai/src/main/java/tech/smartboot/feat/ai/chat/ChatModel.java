@@ -10,10 +10,9 @@
 
 package tech.smartboot.feat.ai.chat;
 
-import tech.smartboot.feat.ai.chat.entity.Function;
+import tech.smartboot.feat.ai.chat.entity.Tool;
 import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
-import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
 import tech.smartboot.feat.ai.chat.provider.Provider;
 import tech.smartboot.feat.core.client.HttpRest;
 import tech.smartboot.feat.core.common.exception.FeatException;
@@ -85,12 +84,12 @@ public class ChatModel {
      * <p>使用单条用户消息和一个工具函数发起流式请求。</p>
      *
      * @param content  用户输入内容
-     * @param function 工具函数定义
+     * @param tool 工具函数定义
      * @param consumer 流式响应回调
      * @see #chatStream(String, List, StreamResponseCallback)
      */
-    public void chatStream(String content, Function function, StreamResponseCallback consumer) {
-        chatStream(Collections.singletonList(Message.ofUser(content)), Collections.singletonList(function), consumer);
+    public void chatStream(String content, Tool tool, StreamResponseCallback consumer) {
+        chatStream(Collections.singletonList(Message.ofUser(content)), Collections.singletonList(tool), consumer);
     }
 
     /**
@@ -99,12 +98,12 @@ public class ChatModel {
      * <p>使用单条用户消息和多个工具函数发起流式请求。</p>
      *
      * @param content   用户输入内容
-     * @param functions 工具函数列表
+     * @param tools 工具函数列表
      * @param consumer  流式响应回调
      * @see #chatStream(List, List, StreamResponseCallback)
      */
-    public void chatStream(String content, List<Function> functions, StreamResponseCallback consumer) {
-        chatStream(Collections.singletonList(Message.ofUser(content)), functions, consumer);
+    public void chatStream(String content, List<Tool> tools, StreamResponseCallback consumer) {
+        chatStream(Collections.singletonList(Message.ofUser(content)), tools, consumer);
     }
 
     /**
@@ -113,12 +112,12 @@ public class ChatModel {
      * <p>支持完整的消息列表和工具函数配置，通过回调函数实时获取AI响应。</p>
      *
      * @param messages  消息列表，包含对话历史
-     * @param functions 工具函数列表，可为 null
+     * @param tools 工具函数列表，可为 null
      * @param consumer  流式响应回调，AI每生成一个响应块时调用
      */
-    public void chatStream(List<Message> messages, List<Function> functions, StreamResponseCallback consumer) {
+    public void chatStream(List<Message> messages, List<Tool> tools, StreamResponseCallback consumer) {
         Provider provider = options.getProvider().apply(options);
-        HttpRest rest = provider.createRequest(messages, true, functions);
+        HttpRest rest = provider.createRequest(messages, true, tools);
         StreamContext context = new StreamContext();
         rest.onSSE(sse -> sse.onData(event -> {
                     // 首次收到数据，标记为 UPGRADE 状态
@@ -162,22 +161,22 @@ public class ChatModel {
      * 工具函数会在请求时动态注入，无需在选项中预先配置。</p>
      *
      * @param content   用户输入内容
-     * @param functions 工具函数列表
+     * @param tools 工具函数列表
      * @return 包含响应消息的 CompletableFuture
      */
-    public CompletableFuture<ResponseMessage> chat(String content, List<Function> functions) {
-        return chat(Collections.singletonList(Message.ofUser(content)), functions);
+    public CompletableFuture<ResponseMessage> chat(String content, List<Tool> tools) {
+        return chat(Collections.singletonList(Message.ofUser(content)), tools);
     }
 
     /**
      * 发送非流式聊天请求（带单个工具函数）
      *
      * @param content  用户输入内容
-     * @param function 工具函数定义
+     * @param tool 工具函数定义
      * @return 包含响应消息的 CompletableFuture
      */
-    public CompletableFuture<ResponseMessage> chat(String content, Function function) {
-        return chat(Collections.singletonList(Message.ofUser(content)), Collections.singletonList(function));
+    public CompletableFuture<ResponseMessage> chat(String content, Tool tool) {
+        return chat(Collections.singletonList(Message.ofUser(content)), Collections.singletonList(tool));
     }
 
     /**
@@ -186,12 +185,12 @@ public class ChatModel {
      * <p>支持完整的消息列表和工具函数配置，返回完整的AI响应。</p>
      *
      * @param messages  消息列表，包含对话历史
-     * @param functions 工具函数列表，可为 null
+     * @param tools 工具函数列表，可为 null
      * @return 包含响应消息的 CompletableFuture
      */
-    public CompletableFuture<ResponseMessage> chat(List<Message> messages, List<Function> functions) {
+    public CompletableFuture<ResponseMessage> chat(List<Message> messages, List<Tool> tools) {
         Provider provider = options.getProvider().apply(options);
-        HttpRest rest = provider.createRequest(messages, false, functions);
+        HttpRest rest = provider.createRequest(messages, false, tools);
         return rest.submit().thenApply(response -> {
             // 检查 HTTP 状态码
             if (response.statusCode() != 200) {

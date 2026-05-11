@@ -12,9 +12,8 @@ package tech.smartboot.feat.ai.demo;
 
 import tech.smartboot.feat.ai.FeatAI;
 import tech.smartboot.feat.ai.chat.ChatModel;
-import tech.smartboot.feat.ai.chat.entity.Function;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
-import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
+import tech.smartboot.feat.ai.chat.StreamResponseCallback;
 
 /**
  * @author 三刀 zhengjunweimail@163.com

@@ -14,9 +14,9 @@ import org.junit.Assert;
 import org.junit.Test;
 import tech.smartboot.feat.ai.FeatAI;
 import tech.smartboot.feat.ai.chat.ChatModel;
-import tech.smartboot.feat.ai.chat.entity.Function;
+import tech.smartboot.feat.ai.chat.entity.Tool;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
-import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
+import tech.smartboot.feat.ai.chat.StreamResponseCallback;
 import tech.smartboot.feat.ai.chat.entity.ToolCall;
 
 import java.util.Collections;
@@ -35,7 +35,7 @@ public class GiteeTest {
         ChatModel chatModel = FeatAI.chatModel(opts -> opts.model("Qwen3-235B-A22B-Instruct-2507")
                 .debug(true));
 
-        chatModel.chatStream("今天杭州天气如何", Collections.singletonList(Function.of("get_weather").description("获取天气信息").addParam("city", "城市名称", "string", true)), new StreamResponseCallback() {
+        chatModel.chatStream("今天杭州天气如何", Collections.singletonList(Tool.of("get_weather").description("获取天气信息").addParam("city", "城市名称", "string", true)), new StreamResponseCallback() {
             @Override
             public void onStreamResponse(String content) {
                 System.out.printf(content);
@@ -58,7 +58,7 @@ public class GiteeTest {
                 .debug(true));
 
         chatModel.chatStream("杭州天气如何",
-                Function.of("get_weather")
+                Tool.of("get_weather")
                         .description("获取天气信息")
                         .addParam("city", "城市名称", "string", true),
                 new StreamResponseCallback() {

@@ -10,8 +10,6 @@
 
 package tech.smartboot.feat.ai.chat.entity;
 
-import com.alibaba.fastjson2.annotation.JSONField;
-
 /**
  * 消息类，表示聊天过程中的一条消息
  *
@@ -42,11 +40,6 @@ public class Message {
      */
     private String content;
 
-    /**
-     * 推理内容，某些模型可能会输出推理过程
-     */
-    @JSONField(name = "reasoning_content")
-    private String reasoningContent;
 
     /**
      * 创建一条用户消息
@@ -121,23 +114,5 @@ public class Message {
      */
     public void setContent(String content) {
         this.content = content;
-    }
-
-    /**
-     * 获取推理内容
-     *
-     * @return 推理内容
-     */
-    public String getReasoningContent() {
-        return reasoningContent;
-    }
-
-    /**
-     * 设置推理内容
-     *
-     * @param reasoningContent 推理内容
-     */
-    public void setReasoningContent(String reasoningContent) {
-        this.reasoningContent = reasoningContent;
     }
 }

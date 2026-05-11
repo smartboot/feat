@@ -13,7 +13,7 @@ package tech.smartboot.feat.ai.demo;
 import org.junit.Test;
 import tech.smartboot.feat.ai.FeatAI;
 import tech.smartboot.feat.ai.chat.ChatModel;
-import tech.smartboot.feat.ai.chat.entity.Function;
+import tech.smartboot.feat.ai.chat.entity.Tool;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -29,7 +29,7 @@ public class OllamaTest {
         ChatModel chatModel = FeatAI.chatModel(opts -> opts.model("Deepseek-r1-7B")
                 .debug(true));
 
-        String content = chatModel.chat("写一首诗，提供思考过程", Function.of("get_weather").description("获取天气信息").addParam("city", "城市名称", "string", true)).get().getContent();
+        String content = chatModel.chat("写一首诗，提供思考过程", Tool.of("get_weather").description("获取天气信息").addParam("city", "城市名称", "string", true)).get().getContent();
 //        Assert.assertEquals(1, tools.size());
 //        Assert.assertEquals("get_weather", tools.get(0).getName());
     }
