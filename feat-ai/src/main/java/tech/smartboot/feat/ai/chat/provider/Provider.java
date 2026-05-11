@@ -1,13 +1,16 @@
 package tech.smartboot.feat.ai.chat.provider;
 
 import tech.smartboot.feat.ai.chat.ChatOptions;
+import tech.smartboot.feat.ai.chat.StreamContext;
 import tech.smartboot.feat.ai.chat.entity.Function;
 import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
+import tech.smartboot.feat.core.client.HttpResponse;
+import tech.smartboot.feat.core.client.HttpRest;
+import tech.smartboot.feat.core.client.SseEvent;
 
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 /**
@@ -61,29 +64,6 @@ public abstract class Provider {
      */
     protected final ChatOptions options;
 
-    /**
-     * 流式响应状态：初始化状态
-     * <p>表示流式请求刚开始，尚未收到任何数据</p>
-     */
-    public static final int STREAM_STATUS_INIT = 0;
-
-    /**
-     * 流式响应状态：升级状态
-     * <p>表示已成功建立流式连接，开始接收数据片段</p>
-     */
-    public static final int STREAM_STATUS_UPGRADE = 1;
-
-    /**
-     * 流式响应状态：完成状态
-     * <p>表示流式响应已正常结束，收到终止标记</p>
-     */
-    public static final int STREAM_STATUS_COMPLETE = 2;
-
-    /**
-     * 流式响应状态：错误状态
-     * <p>表示流式响应过程中发生错误</p>
-     */
-    public static final int STREAM_STATUS_ERROR = 3;
 
     /**
      * 构造 Provider 实例
@@ -93,6 +73,8 @@ public abstract class Provider {
     public Provider(ChatOptions options) {
         this.options = options;
     }
+
+    public abstract HttpRest buildRequest(List<Message> messages, boolean stream, List<Function> functions);
 
     /**
      * 处理流式聊天响应
@@ -117,11 +99,12 @@ public abstract class Provider {
      *   <li>ERROR → 发生异常时调用 onError</li>
      * </ol>
      *
-     * @param messages 消息列表，包含用户、系统、助手的对话历史
+     * @param context
+     * @param event
      * @param consumer 流式响应回调处理器，用于接收实时数据和最终结果
      * @see StreamResponseCallback 流式回调接口定义
      */
-    public abstract void chatStream(List<Message> messages, List<Function> functions, StreamResponseCallback consumer);
+    public abstract void chatStream(StreamContext context, SseEvent event, StreamResponseCallback consumer);
 
     /**
      * 处理非流式聊天响应
@@ -142,10 +125,10 @@ public abstract class Provider {
      *   <li>流式：边生成边返回，提供更好的用户体验，适合长文本</li>
      * </ul>
      *
-     * @param messages 消息列表，包含用户、系统、助手的对话历史
+     * @param response
      * @see ResponseMessage 响应消息结构
      */
-    public abstract CompletableFuture<ResponseMessage> chat(List<Message> messages, List<Function> functions);
+    public abstract ResponseMessage chat(HttpResponse response);
 
     /**
      * 创建错误响应消息

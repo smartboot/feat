@@ -6,6 +6,7 @@ import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.TypeReference;
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.ai.chat.ChatOptions;
+import tech.smartboot.feat.ai.chat.StreamContext;
 import tech.smartboot.feat.ai.chat.entity.ChatWholeResponse;
 import tech.smartboot.feat.ai.chat.entity.Function;
 import tech.smartboot.feat.ai.chat.entity.Message;
@@ -13,18 +14,16 @@ import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
 import tech.smartboot.feat.ai.chat.entity.ToolCall;
 import tech.smartboot.feat.core.client.HttpPost;
+import tech.smartboot.feat.core.client.HttpResponse;
+import tech.smartboot.feat.core.client.SseEvent;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
-import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 /**
@@ -101,7 +100,7 @@ public class OpenAiProvider extends Provider {
      * @param stream   是否启用流式响应（true=SSE，false=普通 JSON）
      * @return 配置好的 HttpPost 请求对象
      */
-    private HttpPost buildRequest(List<Message> messages, boolean stream, List<Function> functions) {
+    public HttpPost buildRequest(List<Message> messages, boolean stream, List<Function> functions) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("model", options.getModel());
         jsonObject.put("stream", stream);
@@ -178,140 +177,109 @@ public class OpenAiProvider extends Provider {
      * </ol>
      * <p>最终累积为：{"name": "search", "arguments": "{\"query\": \"AI\"}"}</p>
      *
-     * @param messages 消息列表，包含用户、系统、助手的对话历史
+     * @param context
+     * @param event
      * @param consumer 流式响应回调，接收实时内容和最终结果
      */
     @Override
-    public void chatStream(List<Message> messages, List<Function> functions, StreamResponseCallback consumer) {
-        HttpPost post = buildRequest(messages, true, functions);
-        // 工具调用累积器：key=index, value=ToolCall
-        Map<Integer, ToolCall> toolCallMap = new HashMap<>();
-        // 文本内容累积器
-        StringBuilder contentBuilder = new StringBuilder();
-        // 推理内容累积器
-        StringBuilder reasoningBuilder = new StringBuilder();
-        // 流式状态跟踪器
-        AtomicInteger status = new AtomicInteger(STREAM_STATUS_INIT);
+    public void chatStream(StreamContext context, SseEvent event, StreamResponseCallback consumer) {
+        String data = event.getData();
+        // 终止标记或空数据：触发完成回调
+        if ("[DONE]".equals(data) || FeatUtils.isBlank(data)) {
+            // 防止重复触发（已完成且无新内容）
+            if (context.getStatus() == StreamContext.STREAM_STATUS_COMPLETE && context.contentBuilder.length() == 0) {
+                return;
+            }
+            // 构建完整响应消息
+            ResponseMessage responseMessage = new ResponseMessage();
+            responseMessage.setRole(Message.ROLE_ASSISTANT);
+            responseMessage.setContent(context.contentBuilder.toString());
+            responseMessage.setReasoningContent(context.reasoningBuilder.toString());
+            responseMessage.setToolCalls(new ArrayList<>(context.toolCallMap.values()));
+            responseMessage.setSuccess(true);
+            context.setStatus(StreamContext.STREAM_STATUS_COMPLETE);
+            consumer.onCompletion(responseMessage);
+            return;
+        }
 
-        // 注册 SSE 事件处理器
-        post.onSSE(sse -> sse.onData(event -> {
-                    // 首次收到数据，标记为 UPGRADE 状态
-                    if (status.get() == STREAM_STATUS_INIT) {
-                        status.set(STREAM_STATUS_UPGRADE);
-                    }
+        // 解析 SSE 数据为 JSON
+        JSONObject object = JSON.parseObject(data);
+        // 检查是否有错误信息
+        JSONObject error = object.getJSONObject("error");
+        if (error != null) {
+            ResponseMessage responseMessage = new ResponseMessage();
+            responseMessage.setRole(Message.ROLE_ASSISTANT);
+            responseMessage.setError(error.getString("message"));
+            responseMessage.setSuccess(false);
+            context.setStatus(StreamContext.STREAM_STATUS_COMPLETE);
+            consumer.onCompletion(responseMessage);
+            return;
+        }
 
-                    String data = event.getData();
-                    // 终止标记或空数据：触发完成回调
-                    if ("[DONE]".equals(data) || FeatUtils.isBlank(data)) {
-                        // 防止重复触发（已完成且无新内容）
-                        if (status.get() == STREAM_STATUS_COMPLETE && contentBuilder.length() == 0) {
+        // 提取第一个选择项的 delta
+        JSONArray choices = object.getJSONArray("choices");
+        if (choices == null || choices.isEmpty()) {
+            return;
+        }
+        JSONObject choice = choices.getJSONObject(0);
+        JSONObject delta = choice.getJSONObject("delta");
+        if (delta == null) {
+            LOGGER.error("delta is null");
+            return;
+        }
+
+        // 提取文本内容片段
+        String content = delta.getString("content");
+        if (content != null) {
+            consumer.onStreamResponse(content); // 实时推送
+            context.contentBuilder.append(content);      // 累积保存
+        }
+
+        // 提取推理内容片段
+        String reasoningContent = delta.getString("reasoning_content");
+        if (reasoningContent != null) {
+            consumer.onReasoning(reasoningContent); // 实时推送
+            context.reasoningBuilder.append(reasoningContent); // 累积保存
+        }
+
+        // 提取工具调用信息（可能为空或分片）
+        List<ToolCall> toolCalls = delta.getObject("tool_calls", new TypeReference<List<ToolCall>>() {
+        });
+        if (FeatUtils.isNotEmpty(toolCalls)) {
+            for (ToolCall toolCall : toolCalls) {
+                // 根据 index 获取或创建 ToolCall 对象
+                ToolCall tool = context.toolCallMap.computeIfAbsent(toolCall.getIndex(), k -> {
+                    ToolCall t = new ToolCall();
+                    t.setFunction(new HashMap<>());
+                    return t;
+                });
+
+                // 更新基础字段（仅首次有值）
+                if (FeatUtils.isNotBlank(toolCall.getId())) {
+                    tool.setId(toolCall.getId());
+                }
+                if (FeatUtils.isNotBlank(toolCall.getType())) {
+                    tool.setType(toolCall.getType());
+                }
+
+                // 累积函数参数字段（字符串拼接）
+                if (toolCall.getFunction() != null) {
+                    toolCall.getFunction().forEach((k, v) -> {
+                        if (v == null) {
                             return;
                         }
-                        // 构建完整响应消息
-                        ResponseMessage responseMessage = new ResponseMessage();
-                        responseMessage.setRole(Message.ROLE_ASSISTANT);
-                        responseMessage.setContent(contentBuilder.toString());
-                        responseMessage.setReasoningContent(reasoningBuilder.toString());
-                        responseMessage.setToolCalls(new ArrayList<>(toolCallMap.values()));
-                        responseMessage.setSuccess(true);
-                        status.set(STREAM_STATUS_COMPLETE);
-                        consumer.onCompletion(responseMessage);
-                        return;
-                    }
-
-                    // 解析 SSE 数据为 JSON
-                    JSONObject object = JSON.parseObject(data);
-                    // 检查是否有错误信息
-                    JSONObject error = object.getJSONObject("error");
-                    if (error != null) {
-                        ResponseMessage responseMessage = new ResponseMessage();
-                        responseMessage.setRole(Message.ROLE_ASSISTANT);
-                        responseMessage.setError(error.getString("message"));
-                        responseMessage.setSuccess(false);
-                        status.set(STREAM_STATUS_COMPLETE);
-                        consumer.onCompletion(responseMessage);
-                        return;
-                    }
-
-                    // 提取第一个选择项的 delta
-                    JSONArray choices = object.getJSONArray("choices");
-                    if (choices == null || choices.isEmpty()) {
-                        return;
-                    }
-                    JSONObject choice = choices.getJSONObject(0);
-                    JSONObject delta = choice.getJSONObject("delta");
-                    if (delta == null) {
-                        LOGGER.error("delta is null");
-                        return;
-                    }
-
-                    // 提取文本内容片段
-                    String content = delta.getString("content");
-                    if (content != null) {
-                        consumer.onStreamResponse(content); // 实时推送
-                        contentBuilder.append(content);      // 累积保存
-                    }
-
-                    // 提取推理内容片段
-                    String reasoningContent = delta.getString("reasoning_content");
-                    if (reasoningContent != null) {
-                        consumer.onReasoning(reasoningContent); // 实时推送
-                        reasoningBuilder.append(reasoningContent); // 累积保存
-                    }
-
-                    // 提取工具调用信息（可能为空或分片）
-                    List<ToolCall> toolCalls = delta.getObject("tool_calls", new TypeReference<List<ToolCall>>() {
-                    });
-                    if (FeatUtils.isNotEmpty(toolCalls)) {
-                        for (ToolCall toolCall : toolCalls) {
-                            // 根据 index 获取或创建 ToolCall 对象
-                            ToolCall tool = toolCallMap.computeIfAbsent(toolCall.getIndex(), k -> {
-                                ToolCall t = new ToolCall();
-                                t.setFunction(new HashMap<>());
-                                return t;
-                            });
-
-                            // 更新基础字段（仅首次有值）
-                            if (FeatUtils.isNotBlank(toolCall.getId())) {
-                                tool.setId(toolCall.getId());
-                            }
-                            if (FeatUtils.isNotBlank(toolCall.getType())) {
-                                tool.setType(toolCall.getType());
-                            }
-
-                            // 累积函数参数字段（字符串拼接）
-                            if (toolCall.getFunction() != null) {
-                                toolCall.getFunction().forEach((k, v) -> {
-                                    if (v == null) {
-                                        return;
-                                    }
-                                    String preV = tool.getFunction().get(k);
-                                    if (FeatUtils.isNotBlank(preV)) {
-                                        // 追加到已有值后面
-                                        tool.getFunction().put(k, preV + v);
-                                    } else {
-                                        // 首次设置
-                                        tool.getFunction().put(k, v);
-                                    }
-                                });
-                            }
+                        String preV = tool.getFunction().get(k);
+                        if (FeatUtils.isNotBlank(preV)) {
+                            // 追加到已有值后面
+                            tool.getFunction().put(k, preV + v);
+                        } else {
+                            // 首次设置
+                            tool.getFunction().put(k, v);
                         }
-                    }
-                }))
-                // HTTP 成功但流式未启动：说明请求失败（如 401、429）
-                .onSuccess(response -> {
-                    if (status.get() == Provider.STREAM_STATUS_INIT) {
-                        status.set(Provider.STREAM_STATUS_ERROR);
-                        consumer.onError(new FeatException(response.body()));
-                    }
-                })
-                // 网络异常或连接失败
-                .onFailure(throwable -> {
-                    status.set(Provider.STREAM_STATUS_ERROR);
-                    consumer.onError(throwable);
-                })
-                // 提交请求
-                .submit();
+                    });
+                }
+            }
+        }
     }
 
     /**
@@ -355,30 +323,22 @@ public class OpenAiProvider extends Provider {
      *   <tr><td>网络稳定性</td><td>更稳定</td><td>长连接易中断</td></tr>
      * </table>
      *
-     * @param messages 消息列表，包含用户、系统、助手的对话历史
+     * @param response
      */
     @Override
-    public CompletableFuture<ResponseMessage> chat(List<Message> messages, List<Function> functions) {
-        HttpPost post = buildRequest(messages, false, functions);
-        return post.submit().thenApply(response -> {
-            // 检查 HTTP 状态码
-            if (response.statusCode() != 200) {
-                return Provider.error(response.body());
-            }
+    public ResponseMessage chat(HttpResponse response) {
+        // 解析完整响应（使用强类型对象）
+        ChatWholeResponse chatResponse = JSON.parseObject(response.body(), ChatWholeResponse.class);
 
-            // 解析完整响应（使用强类型对象）
-            ChatWholeResponse chatResponse = JSON.parseObject(response.body(), ChatWholeResponse.class);
+        // 提取响应消息
+        ResponseMessage responseMessage = chatResponse.getChoice().getMessage();
 
-            // 提取响应消息
-            ResponseMessage responseMessage = chatResponse.getChoice().getMessage();
+        // 附加元数据（Usage、Logprobs）
+        responseMessage.setUsage(chatResponse.getUsage());
+        responseMessage.setPromptLogprobs(chatResponse.getPromptLogprobs());
+        responseMessage.setSuccess(true);
 
-            // 附加元数据（Usage、Logprobs）
-            responseMessage.setUsage(chatResponse.getUsage());
-            responseMessage.setPromptLogprobs(chatResponse.getPromptLogprobs());
-            responseMessage.setSuccess(true);
-
-            return responseMessage;
-        });
+        return responseMessage;
     }
 
     /**

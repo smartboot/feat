@@ -14,6 +14,9 @@ import tech.smartboot.feat.ai.chat.entity.Function;
 import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
+import tech.smartboot.feat.ai.chat.provider.Provider;
+import tech.smartboot.feat.core.client.HttpRest;
+import tech.smartboot.feat.core.common.exception.FeatException;
 
 import java.util.Collections;
 import java.util.List;
@@ -81,9 +84,9 @@ public class ChatModel {
      *
      * <p>使用单条用户消息和一个工具函数发起流式请求。</p>
      *
-     * @param content   用户输入内容
-     * @param function  工具函数定义
-     * @param consumer  流式响应回调
+     * @param content  用户输入内容
+     * @param function 工具函数定义
+     * @param consumer 流式响应回调
      * @see #chatStream(String, List, StreamResponseCallback)
      */
     public void chatStream(String content, Function function, StreamResponseCallback consumer) {
@@ -114,7 +117,30 @@ public class ChatModel {
      * @param consumer  流式响应回调，AI每生成一个响应块时调用
      */
     public void chatStream(List<Message> messages, List<Function> functions, StreamResponseCallback consumer) {
-        options.getProvider().apply(options).chatStream(messages, functions, consumer);
+        Provider provider = options.getProvider().apply(options);
+        HttpRest rest = provider.buildRequest(messages, true, functions);
+        StreamContext context = new StreamContext();
+        rest.onSSE(sse -> sse.onData(event -> {
+                    // 首次收到数据，标记为 UPGRADE 状态
+                    if (context.getStatus() == StreamContext.STREAM_STATUS_INIT) {
+                        context.setStatus(StreamContext.STREAM_STATUS_UPGRADE);
+                    }
+                    provider.chatStream(context, event, consumer);
+                }))
+                // HTTP 成功但流式未启动：说明请求失败（如 401、429）
+                .onSuccess(response -> {
+                    if (context.getStatus() == StreamContext.STREAM_STATUS_INIT) {
+                        context.setStatus(StreamContext.STREAM_STATUS_ERROR);
+                        consumer.onError(new FeatException(response.body()));
+                    }
+                })
+                // 网络异常或连接失败
+                .onFailure(throwable -> {
+                    context.setStatus(StreamContext.STREAM_STATUS_ERROR);
+                    consumer.onError(throwable);
+                })
+                // 提交请求
+                .submit();
     }
 
     /**
@@ -164,7 +190,15 @@ public class ChatModel {
      * @return 包含响应消息的 CompletableFuture
      */
     public CompletableFuture<ResponseMessage> chat(List<Message> messages, List<Function> functions) {
-        return options.getProvider().apply(options).chat(messages, functions);
+        Provider provider = options.getProvider().apply(options);
+        HttpRest rest = provider.buildRequest(messages, false, functions);
+        return rest.submit().thenApply(response -> {
+            // 检查 HTTP 状态码
+            if (response.statusCode() != 200) {
+                return Provider.error(response.body());
+            }
+            return provider.chat(response);
+        });
     }
 
     /**

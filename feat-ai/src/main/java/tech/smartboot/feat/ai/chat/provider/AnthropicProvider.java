@@ -5,6 +5,7 @@ import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.ai.chat.ChatOptions;
+import tech.smartboot.feat.ai.chat.StreamContext;
 import tech.smartboot.feat.ai.chat.entity.Function;
 import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
@@ -12,8 +13,9 @@ import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
 import tech.smartboot.feat.ai.chat.entity.ToolCall;
 import tech.smartboot.feat.ai.chat.entity.Usage;
 import tech.smartboot.feat.core.client.HttpPost;
+import tech.smartboot.feat.core.client.HttpResponse;
+import tech.smartboot.feat.core.client.SseEvent;
 import tech.smartboot.feat.core.common.FeatUtils;
-import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 
@@ -21,8 +23,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Anthropic API 规范处理器实现
@@ -104,7 +104,7 @@ public class AnthropicProvider extends Provider {
      * @param stream   是否启用流式响应（true=SSE，false=普通 JSON）
      * @return 配置好的 HttpPost 请求对象
      */
-    private HttpPost buildRequest(List<Message> messages, boolean stream, List<Function> functions) {
+    public HttpPost buildRequest(List<Message> messages, boolean stream, List<Function> functions) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("model", options.getModel());
         jsonObject.put("stream", stream);
@@ -209,141 +209,75 @@ public class AnthropicProvider extends Provider {
      *   <li>Anthropic：用 message_stop 事件标记结束</li>
      * </ul>
      *
-     * @param messages 消息列表，包含用户、系统、助手的对话历史
+     * @param context
+     * @param event
      * @param consumer 流式响应回调，接收实时内容和最终结果
      */
     @Override
-    public void chatStream(List<Message> messages, List<Function> functions, StreamResponseCallback consumer) {
-        HttpPost post = buildRequest(messages, true, functions);
-        // 文本内容累积器
-        StringBuilder contentBuilder = new StringBuilder();
-        // 推理内容累积器（Claude Thinking 模式）
-        StringBuilder reasoningBuilder = new StringBuilder();
-        // 工具调用累积器
-        Map<Integer, ToolCall> toolCallMap = new HashMap<>();
-        // 当前内容块索引
-        int[] currentBlockIndex = {0};
-        // 流式状态跟踪器
-        AtomicInteger status = new AtomicInteger(STREAM_STATUS_INIT);
+    public void chatStream(StreamContext context, SseEvent event, StreamResponseCallback consumer) {
+        // 获取事件类型和数据
+        String eventType = event.getType();
+        String data = event.getData();
 
-        // 注册 SSE 事件处理器
-        post.onSSE(sse -> sse.onData(event -> {
-                    // 首次收到数据，标记为 UPGRADE 状态
-                    if (status.get() == STREAM_STATUS_INIT) {
-                        status.set(STREAM_STATUS_UPGRADE);
-                    }
+        // 跳过空数据
+        if (FeatUtils.isBlank(data)) {
+            return;
+        }
 
-                    // 获取事件类型和数据
-                    String eventType = event.getType();
-                    String data = event.getData();
+        try {
+            // 解析事件数据为 JSON
+            JSONObject object = JSON.parseObject(data);
 
-                    // 跳过空数据
-                    if (FeatUtils.isBlank(data)) {
-                        return;
-                    }
-
-                    try {
-                        // 解析事件数据为 JSON
-                        JSONObject object = JSON.parseObject(data);
-
-                        // 根据事件类型分发处理
-                        switch (eventType) {
-                            case "message_start":
-                                // 消息开始事件，通常包含元数据，此处无需处理
-                                break;
-                            case "content_block_start":
-                                // 内容块开始事件，标识新内容块的起始
-                                currentBlockIndex[0] = object.getIntValue("index");
-                                break;
-                            case "content_block_delta":
-                                // 内容增量事件（核心事件，包含实际文本或工具调用）
-                                JSONObject delta = object.getJSONObject("delta");
-                                if (delta != null) {
-                                    // 提取文本片段
-                                    String text = delta.getString("text");
-                                    if (text != null) {
-                                        consumer.onStreamResponse(text); // 实时推送
-                                        contentBuilder.append(text);      // 累积保存
-                                    }
-                                    // 提取推理内容（Claude Thinking 模式）
-                                    String thinking = delta.getString("thinking");
-                                    if (thinking != null) {
-                                        consumer.onReasoning(thinking); // 实时推送
-                                        reasoningBuilder.append(thinking); // 累积保存
-                                    }
-                                    // 提取工具调用信息
-                                    JSONObject input = delta.getJSONObject("input");
-                                    if (input != null) {
-                                        ToolCall toolCall = toolCallMap.computeIfAbsent(currentBlockIndex[0], k -> {
-                                            ToolCall t = new ToolCall();
-                                            t.setIndex(currentBlockIndex[0]);
-                                            t.setType("function");
-                                            t.setFunction(new HashMap<>());
-                                            return t;
-                                        });
-                                        // 累积 input JSON 字符串
-                                        String inputStr = input.toJSONString();
-                                        String existingInput = toolCall.getFunction().get("arguments");
-                                        if (existingInput != null) {
-                                            toolCall.getFunction().put("arguments", existingInput + inputStr);
-                                        } else {
-                                            toolCall.getFunction().put("arguments", inputStr);
-                                        }
-                                    }
-                                    // 提取工具名称
-                                    String name = delta.getString("name");
-                                    if (name != null) {
-                                        ToolCall toolCall = toolCallMap.computeIfAbsent(currentBlockIndex[0], k -> {
-                                            ToolCall t = new ToolCall();
-                                            t.setIndex(currentBlockIndex[0]);
-                                            t.setType("function");
-                                            t.setFunction(new HashMap<>());
-                                            return t;
-                                        });
-                                        toolCall.getFunction().put("name", name);
-                                    }
-                                }
-                                break;
-                            case "content_block_stop":
-                                // 内容块结束事件
-                                break;
-                            case "message_delta":
-                                // 消息级别变化事件（如 stop_reason）
-                                break;
-                            case "message_stop":
-                                // 消息完全结束，触发完成回调
-                                ResponseMessage responseMessage = new ResponseMessage();
-                                responseMessage.setRole(Message.ROLE_ASSISTANT);
-                                responseMessage.setContent(contentBuilder.toString());
-                                responseMessage.setReasoningContent(reasoningBuilder.toString());
-                                responseMessage.setToolCalls(new ArrayList<>(toolCallMap.values()));
-                                responseMessage.setSuccess(true);
-                                status.set(STREAM_STATUS_COMPLETE);
-                                consumer.onCompletion(responseMessage);
-                                break;
-                            default:
-                                // 未知事件类型，记录调试日志
-                                LOGGER.debug("Unknown Anthropic event type: " + eventType);
+            // 根据事件类型分发处理
+            switch (eventType) {
+                case "message_start":
+                    // 消息开始事件，通常包含元数据，此处无需处理
+                    break;
+                case "content_block_start":
+                    break;
+                case "content_block_delta":
+                    // 内容增量事件（核心事件，包含实际文本或工具调用）
+                    JSONObject delta = object.getJSONObject("delta");
+                    if (delta != null) {
+                        // 提取文本片段
+                        String text = delta.getString("text");
+                        if (text != null) {
+                            consumer.onStreamResponse(text); // 实时推送
+                            context.contentBuilder.append(text);      // 累积保存
                         }
-                    } catch (Exception e) {
-                        // 解析异常处理（避免单个事件失败导致整个流中断）
-                        LOGGER.error("Error parsing Anthropic stream response", e);
+                        // 提取推理内容（Claude Thinking 模式）
+                        String thinking = delta.getString("thinking");
+                        if (thinking != null) {
+                            consumer.onReasoning(thinking); // 实时推送
+                            context.reasoningBuilder.append(thinking); // 累积保存
+                        }
                     }
-                }))
-                // HTTP 成功但流式未启动：说明请求失败（如 401、429）
-                .onSuccess(response -> {
-                    if (status.get() == Provider.STREAM_STATUS_INIT) {
-                        status.set(Provider.STREAM_STATUS_ERROR);
-                        consumer.onError(new FeatException(response.body()));
-                    }
-                })
-                // 网络异常或连接失败
-                .onFailure(throwable -> {
-                    status.set(Provider.STREAM_STATUS_ERROR);
-                    consumer.onError(throwable);
-                })
-                // 提交请求
-                .submit();
+                    break;
+                case "content_block_stop":
+                    // 内容块结束事件
+                    break;
+                case "message_delta":
+                    // 消息级别变化事件（如 stop_reason）
+                    break;
+                case "message_stop":
+                    // 消息完全结束，触发完成回调
+                    ResponseMessage responseMessage = new ResponseMessage();
+                    responseMessage.setRole(Message.ROLE_ASSISTANT);
+                    responseMessage.setContent(context.contentBuilder.toString());
+                    responseMessage.setReasoningContent(context.reasoningBuilder.toString());
+                    responseMessage.setToolCalls(new ArrayList<>(context.toolCallMap.values()));
+                    responseMessage.setSuccess(true);
+                    context.setStatus(StreamContext.STREAM_STATUS_COMPLETE);
+                    consumer.onCompletion(responseMessage);
+                    break;
+                default:
+                    // 未知事件类型，记录调试日志
+                    LOGGER.debug("Unknown Anthropic event type: " + eventType);
+            }
+        } catch (Exception e) {
+            // 解析异常处理（避免单个事件失败导致整个流中断）
+            LOGGER.error("Error parsing Anthropic stream response", e);
+        }
     }
 
     /**
@@ -390,69 +324,61 @@ public class AnthropicProvider extends Provider {
      *   <li>✅ 已正确提取 Usage 统计（映射到统一的 Usage 对象）</li>
      * </ul>
      *
-     * @param messages 消息列表，包含用户、系统、助手的对话历史
+     * @param response
      */
     @Override
-    public CompletableFuture<ResponseMessage> chat(List<Message> messages, List<Function> functions) {
-        HttpPost post = buildRequest(messages, false, functions);
-        return post.submit().thenApply(response -> {
-            // 检查 HTTP 状态码
-            if (response.statusCode() != 200) {
-                return Provider.error(response.body());
-            }
+    public ResponseMessage chat(HttpResponse response) {
+        // 解析响应 JSON
+        JSONObject object = JSON.parseObject(response.body());
+        ResponseMessage responseMessage = new ResponseMessage();
+        responseMessage.setRole(Message.ROLE_ASSISTANT);
+        responseMessage.setSuccess(true);
 
-            // 解析响应 JSON
-            JSONObject object = JSON.parseObject(response.body());
-            ResponseMessage responseMessage = new ResponseMessage();
-            responseMessage.setRole(Message.ROLE_ASSISTANT);
-            responseMessage.setSuccess(true);
-
-            // 提取内容：Anthropic 的 content 是数组，需遍历拼接
-            JSONArray contentArray = object.getJSONArray("content");
-            List<ToolCall> toolCalls = new ArrayList<>();
-            if (contentArray != null && !contentArray.isEmpty()) {
-                StringBuilder contentBuilder = new StringBuilder();
-                for (int i = 0; i < contentArray.size(); i++) {
-                    JSONObject contentItem = contentArray.getJSONObject(i);
-                    String type = contentItem.getString("type");
-                    // 提取文本类型的内容
-                    if ("text".equals(type)) {
-                        contentBuilder.append(contentItem.getString("text"));
-                    }
-                    // 提取工具调用信息
-                    if ("tool_use".equals(type)) {
-                        ToolCall toolCall = new ToolCall();
-                        toolCall.setIndex(i);
-                        toolCall.setId(contentItem.getString("id"));
-                        toolCall.setType("function");
-                        Map<String, String> functionMap = new HashMap<>();
-                        functionMap.put("name", contentItem.getString("name"));
-                        functionMap.put("arguments", contentItem.getJSONObject("input") != null
-                            ? contentItem.getJSONObject("input").toJSONString() : "{}");
-                        toolCall.setFunction(functionMap);
-                        toolCalls.add(toolCall);
-                    }
+        // 提取内容：Anthropic 的 content 是数组，需遍历拼接
+        JSONArray contentArray = object.getJSONArray("content");
+        List<ToolCall> toolCalls = new ArrayList<>();
+        if (contentArray != null && !contentArray.isEmpty()) {
+            StringBuilder contentBuilder = new StringBuilder();
+            for (int i = 0; i < contentArray.size(); i++) {
+                JSONObject contentItem = contentArray.getJSONObject(i);
+                String type = contentItem.getString("type");
+                // 提取文本类型的内容
+                if ("text".equals(type)) {
+                    contentBuilder.append(contentItem.getString("text"));
                 }
-                responseMessage.setContent(contentBuilder.toString());
+                // 提取工具调用信息
+                if ("tool_use".equals(type)) {
+                    ToolCall toolCall = new ToolCall();
+                    toolCall.setIndex(i);
+                    toolCall.setId(contentItem.getString("id"));
+                    toolCall.setType("function");
+                    Map<String, String> functionMap = new HashMap<>();
+                    functionMap.put("name", contentItem.getString("name"));
+                    functionMap.put("arguments", contentItem.getJSONObject("input") != null
+                            ? contentItem.getJSONObject("input").toJSONString() : "{}");
+                    toolCall.setFunction(functionMap);
+                    toolCalls.add(toolCall);
+                }
             }
-            // 设置工具调用
-            if (!toolCalls.isEmpty()) {
-                responseMessage.setToolCalls(toolCalls);
-            }
+            responseMessage.setContent(contentBuilder.toString());
+        }
+        // 设置工具调用
+        if (!toolCalls.isEmpty()) {
+            responseMessage.setToolCalls(toolCalls);
+        }
 
-            // 提取使用统计：映射 Anthropic 的字段名到统一的 Usage 对象
-            JSONObject usage = object.getJSONObject("usage");
-            if (usage != null) {
-                Usage usageObj = new Usage();
-                // Anthropic 使用 input_tokens/output_tokens
-                usageObj.setPromptTokens(usage.getInteger("input_tokens") != null ? usage.getInteger("input_tokens") : 0);
-                usageObj.setCompletionTokens(usage.getInteger("output_tokens") != null ? usage.getInteger("output_tokens") : 0);
-                responseMessage.setUsage(usageObj);
-            }
+        // 提取使用统计：映射 Anthropic 的字段名到统一的 Usage 对象
+        JSONObject usage = object.getJSONObject("usage");
+        if (usage != null) {
+            Usage usageObj = new Usage();
+            // Anthropic 使用 input_tokens/output_tokens
+            usageObj.setPromptTokens(usage.getInteger("input_tokens") != null ? usage.getInteger("input_tokens") : 0);
+            usageObj.setCompletionTokens(usage.getInteger("output_tokens") != null ? usage.getInteger("output_tokens") : 0);
+            responseMessage.setUsage(usageObj);
+        }
 
-            // 触发回调
-            return responseMessage;
-        });
+        // 触发回调
+        return responseMessage;
     }
 
     public AnthropicProvider maxTokens(int maxTokens) {
