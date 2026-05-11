@@ -27,50 +27,31 @@ import java.util.Map;
 /**
  * Anthropic API 规范处理器实现
  * <p>
- * 该类实现了 Anthropic Messages API 的通信逻辑，支持 Claude 系列模型。
- * Anthropic API 与 OpenAI API 在协议上有显著差异：
+ * 实现 Anthropic Messages API 通信逻辑，支持 Claude 系列模型。
  * </p>
  *
- * <h3>核心差异：</h3>
+ * <h3>与 OpenAI 的主要差异：</h3>
  * <table border="1">
  *   <tr><th>特性</th><th>OpenAI</th><th>Anthropic</th></tr>
- *   <tr><td>系统提示</td><td>放在 messages 数组中</td><td>独立的 system 字段</td></tr>
- *   <tr><td>最大 token</td><td>可选参数</td><td>必填参数（max_tokens）</td></tr>
+ *   <tr><td>系统提示</td><td>messages 数组中</td><td>独立 system 字段</td></tr>
+ *   <tr><td>max_tokens</td><td>可选</td><td>必填（默认 4096）</td></tr>
  *   <tr><td>认证头</td><td>Authorization: Bearer</td><td>x-api-key</td></tr>
- *   <tr><td>版本控制</td><td>URL 路径或查询参数</td><td>anthropic-version 请求头</td></tr>
- *   <tr><td>流式事件</td><td>统一 data 格式</td><td>多种 event type</td></tr>
- *   <tr><td>内容结构</td><td>简单字符串</td><td>content 数组（支持多模态）</td></tr>
+ *   <tr><td>版本控制</td><td>URL 路径</td><td>anthropic-version 头</td></tr>
+ *   <tr><td>内容结构</td><td>字符串</td><td>content 数组（多模态）</td></tr>
  * </table>
  *
  * <h3>API 端点：</h3>
- * <ul>
- *   <li>流式/非流式：POST {baseUrl}/v1/messages</li>
- *   <li>认证方式：x-api-key: {apiKey}</li>
- *   <li>版本控制：anthropic-version: 2023-06-01</li>
- * </ul>
- *
- * <h3>支持的模型：</h3>
- * <ul>
- *   <li>Claude 3.5 Sonnet（最新、最强）</li>
- *   <li>Claude 3.5 Haiku（快速、经济）</li>
- *   <li>Claude 3 Opus（复杂任务）</li>
- *   <li>Claude 3 Sonnet（平衡性能）</li>
- *   <li>Claude 3 Haiku（高速响应）</li>
- * </ul>
+ * POST {baseUrl}/v1/messages
  *
  * <h3>流式事件类型：</h3>
- * <ol>
- *   <li><b>message_start</b>：消息开始，包含初始元数据</li>
+ * <ul>
+ *   <li><b>message_start</b>：消息开始</li>
  *   <li><b>content_block_start</b>：内容块开始</li>
- *   <li><b>content_block_delta</b>：内容增量（实际文本在此事件中传输）</li>
+ *   <li><b>content_block_delta</b>：内容增量（实际文本）</li>
  *   <li><b>content_block_stop</b>：内容块结束</li>
- *   <li><b>message_delta</b>：消息级别的变化（如停止原因）</li>
- *   <li><b>message_stop</b>：消息完全结束</li>
- * </ol>
- *
- * <h3>Thinking 模式：</h3>
- * <p>Claude 支持 "thinking" 字段，用于输出模型的推理过程（类似思维链）。</p>
- * <p>通过 {@link StreamResponseCallback#onReasoning(String)} 实时推送思考内容。</p>
+ *   <li><b>message_delta</b>：消息级变化（如 stop_reason）</li>
+ *   <li><b>message_stop</b>：消息结束</li>
+ * </ul>
  *
  * @see Provider 抽象基类
  * @see OpenAiProvider OpenAI API 实现
@@ -91,18 +72,12 @@ public class AnthropicProvider extends Provider {
      * 构建 HTTP POST 请求
      * <p>
      * 根据 Anthropic API 规范构造请求体和请求头。
-     * 与 OpenAI 的主要区别：
      * </p>
-     * <ul>
-     *   <li>系统提示作为独立字段（system），而非 messages 的一部分</li>
-     *   <li>必须指定 max_tokens（默认 4096）</li>
-     *   <li>工具定义格式不同（使用 input_schema 而非 parameters）</li>
-     *   <li>认证头使用 x-api-key 而非 Authorization</li>
-     * </ul>
      *
-     * @param messages 消息列表，包含对话历史
-     * @param stream   是否启用流式响应（true=SSE，false=普通 JSON）
-     * @return 配置好的 HttpPost 请求对象
+     * @param messages 消息列表
+     * @param stream   是否启用流式响应
+     * @param functions 工具函数列表
+     * @return HttpPost 请求对象
      */
     public HttpPost createRequest(List<Message> messages, boolean stream, List<Function> functions) {
         JSONObject jsonObject = new JSONObject();
@@ -163,55 +138,20 @@ public class AnthropicProvider extends Provider {
     /**
      * 处理流式聊天响应（SSE 模式）
      * <p>
-     * 该方法实现 Anthropic 标准的 Server-Sent Events 流式传输协议。
-     * 与 OpenAI 不同，Anthropic 使用多种事件类型来区分不同的流式阶段。
+     * 实现 Anthropic SSE 流式传输协议，使用多种事件类型区分流式阶段。
      * </p>
      *
-     * <h3>SSE 事件流程示例：</h3>
-     * <pre>{@code
-     * event: message_start
-     * data: {"type": "message_start", "message": {...}}
-     *
-     * event: content_block_start
-     * data: {"type": "content_block_start", "index": 0, "content_block": {"type": "text"}}
-     *
-     * event: content_block_delta
-     * data: {"type": "content_block_delta", "index": 0, "delta": {"type": "text_delta", "text": "Hello"}}
-     *
-     * event: content_block_delta
-     * data: {"type": "content_block_delta", "index": 0, "delta": {"type": "text_delta", "text": " World"}}
-     *
-     * event: content_block_stop
-     * data: {"type": "content_block_stop", "index": 0}
-     *
-     * event: message_delta
-     * data: {"type": "message_delta", "delta": {"stop_reason": "end_turn"}}
-     *
-     * event: message_stop
-     * data: {"type": "message_stop"}
-     * }</pre>
-     *
-     * <h3>关键处理逻辑：</h3>
+     * <h3>处理逻辑：</h3>
      * <ol>
-     *   <li><b>状态管理</b>：使用 AtomicInteger 跟踪流式生命周期</li>
-     *   <li><b>事件分发</b>：根据 eventType 路由到不同的处理分支</li>
-     *   <li><b>内容提取</b>：从 content_block_delta 事件的 delta.text 提取文本片段</li>
-     *   <li><b>推理内容</b>：从 delta.thinking 提取思维链内容（Claude Thinking 模式）</li>
-     *   <li><b>完成触发</b>：收到 message_stop 事件时，组装完整响应并调用 onCompletion</li>
-     *   <li><b>错误处理</b>：捕获解析异常，记录日志但不中断流</li>
+     *   <li>根据 eventType 分发处理</li>
+     *   <li>从 content_block_delta 提取文本（delta.text）</li>
+     *   <li>提取推理内容（delta.thinking）</li>
+     *   <li>收到 message_stop 时组装完整响应并调用 onCompletion</li>
      * </ol>
      *
-     * <h3>与 OpenAI 的差异：</h3>
-     * <ul>
-     *   <li>OpenAI：所有数据都在 data 字段的 JSON 中，通过 choices[0].delta 提取</li>
-     *   <li>Anthropic：使用 event 字段区分事件类型，数据结构更扁平</li>
-     *   <li>OpenAI：用 "[DONE]" 标记结束</li>
-     *   <li>Anthropic：用 message_stop 事件标记结束</li>
-     * </ul>
-     *
-     * @param context
-     * @param event
-     * @param consumer 流式响应回调，接收实时内容和最终结果
+     * @param context  流式上下文
+     * @param event    SSE 事件
+     * @param consumer 流式回调
      */
     @Override
     public void parseStreamResponse(StreamContext context, SseEvent event, StreamResponseCallback consumer) {
@@ -283,48 +223,18 @@ public class AnthropicProvider extends Provider {
     /**
      * 处理非流式聊天响应
      * <p>
-     * 该方法实现传统的同步请求-响应模式。
-     * Anthropic 的响应结构与 OpenAI 有显著差异：
+     * 实现同步请求-响应模式，解析完整响应 JSON。
      * </p>
      *
-     * <h3>响应结构示例：</h3>
-     * <pre>{@code
-     * {
-     *   "id": "msg_01ABC123",
-     *   "type": "message",
-     *   "role": "assistant",
-     *   "content": [
-     *     {
-     *       "type": "text",
-     *       "text": "完整回复内容"
-     *     }
-     *   ],
-     *   "model": "claude-3-5-sonnet-20241022",
-     *   "stop_reason": "end_turn",
-     *   "stop_sequence": null,
-     *   "usage": {
-     *     "input_tokens": 10,
-     *     "output_tokens": 50
-     *   }
-     * }
-     * }</pre>
-     *
-     * <h3>关键差异：</h3>
+     * <h3>响应结构差异：</h3>
      * <ul>
-     *   <li><b>content 是数组</b>：支持多模态（文本、图像等），需遍历提取</li>
-     *   <li><b>Usage 字段名不同</b>：input_tokens/output_tokens 而非 prompt_tokens/completion_tokens</li>
-     *   <li><b>无 tool_calls 字段</b>：工具调用通过 content 数组中的 tool_use 类型表示</li>
-     *   <li><b>stop_reason</b>：明确标识停止原因（end_turn、max_tokens、stop_sequence 等）</li>
+     *   <li>content 是数组，需遍历提取文本</li>
+     *   <li>Usage 字段：input_tokens/output_tokens</li>
+     *   <li>工具调用通过 content 中的 tool_use 类型表示</li>
      * </ul>
      *
-     * <h3>当前实现的局限性：</h3>
-     * <ul>
-     *   <li>❌ 未提取工具调用信息（需要额外处理 content 数组中的 tool_use 类型）</li>
-     *   <li>✅ 已正确提取文本内容（遍历 content 数组）</li>
-     *   <li>✅ 已正确提取 Usage 统计（映射到统一的 Usage 对象）</li>
-     * </ul>
-     *
-     * @param response
+     * @param response HTTP 响应
+     * @return 响应消息
      */
     @Override
     public ResponseMessage parseResponse(HttpResponse response) {

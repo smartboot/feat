@@ -29,55 +29,23 @@ import java.util.function.Consumer;
 /**
  * OpenAI API 规范处理器实现
  * <p>
- * 该类实现了 OpenAI Chat Completions API 的通信逻辑，支持：
+ * 实现 OpenAI Chat Completions API 通信逻辑。
  * </p>
+ *
+ * <h3>支持特性：</h3>
  * <ul>
- *   <li><b>流式响应</b>：基于 Server-Sent Events (SSE) 协议，实时接收生成内容</li>
- *   <li><b>非流式响应</b>：传统 HTTP POST 请求，一次性返回完整结果</li>
- *   <li><b>工具调用</b>：支持 Function Calling，允许模型调用外部函数</li>
- *   <li><b>推理内容</b>：支持 reasoning_content 字段，获取模型的思考过程</li>
- *   <li><b>额外参数</b>：通过 extraBody 支持模型特定的高级配置</li>
+ *   <li>流式响应（SSE 协议）</li>
+ *   <li>非流式响应</li>
+ *   <li>工具调用（Function Calling）</li>
+ *   <li>推理内容（reasoning_content）</li>
+ *   <li>额外参数（extraBody）</li>
  * </ul>
+ *
+ * <h3>兼容服务商：</h3>
+ * Azure OpenAI、阿里云通义千问、百度文心一言、智谱 GLM、DeepSeek 等
  *
  * <h3>API 端点：</h3>
- * <ul>
- *   <li>流式/非流式：POST {baseUrl}/chat/completions</li>
- *   <li>认证方式：Bearer Token（Authorization: Bearer {apiKey}）</li>
- * </ul>
- *
- * <h3>兼容的服务商：</h3>
- * <p>由于采用 OpenAI 标准协议，以下服务商也可直接使用此 Provider：</p>
- * <ul>
- *   <li>Azure OpenAI Service</li>
- *   <li>阿里云通义千问（DashScope）</li>
- *   <li>百度文心一言</li>
- *   <li>智谱 GLM</li>
- *   <li>DeepSeek</li>
- *   <li>以及其他兼容 OpenAI 格式的 API 服务</li>
- * </ul>
- *
- * <h3>流式响应处理流程：</h3>
- * <ol>
- *   <li>发起 SSE 请求，设置 stream=true</li>
- *   <li>解析每个 SSE 事件的 data 字段（JSON 格式）</li>
- *   <li>从 choices[0].delta 提取增量内容：</li>
- *   <ul>
- *     <li>content：文本内容片段</li>
- *     <li>reasoning_content：推理过程片段</li>
- *     <li>tool_calls：工具调用信息（需累积拼接）</li>
- *   </ul>
- *   <li>收到 "[DONE]" 标记时，组装完整响应并调用 onCompletion</li>
- *   <li>发生错误时，调用 onError 报告异常</li>
- * </ol>
- *
- * <h3>工具调用累积策略：</h3>
- * <p>由于流式响应中 tool_calls 是分片传输的，需要使用 Map&lt;Integer, ToolCall&gt; 进行累积：</p>
- * <ul>
- *   <li>使用 index 作为 key，区分多个并行工具调用</li>
- *   <li>首次收到时创建 ToolCall 对象，初始化 function 为 HashMap</li>
- *   <li>后续收到同 index 的分片时，将参数字符串拼接到现有值</li>
- *   <li>最终在 onCompletion 时传递完整的 toolCalls 列表</li>
- * </ul>
+ * POST {baseUrl}/chat/completions
  *
  * @see Provider 抽象基类
  * @see AnthropicProvider Anthropic API 实现
@@ -92,13 +60,11 @@ public class OpenAiProvider extends Provider {
 
     /**
      * 构建 HTTP POST 请求
-     * <p>
-     * 根据 OpenAI API 规范构造请求体和请求头。
-     * </p>
      *
-     * @param messages 消息列表，包含对话历史
-     * @param stream   是否启用流式响应（true=SSE，false=普通 JSON）
-     * @return 配置好的 HttpPost 请求对象
+     * @param messages 消息列表
+     * @param stream   是否启用流式响应
+     * @param functions 工具函数列表
+     * @return HttpPost 请求对象
      */
     public HttpPost createRequest(List<Message> messages, boolean stream, List<Function> functions) {
         JSONObject jsonObject = new JSONObject();
@@ -143,43 +109,19 @@ public class OpenAiProvider extends Provider {
     /**
      * 处理流式聊天响应（SSE 模式）
      * <p>
-     * 该方法实现 OpenAI 标准的 Server-Sent Events 流式传输协议。
-     * 每个 SSE 事件的 data 字段包含一个 JSON 对象，结构如下：
+     * 实现 OpenAI SSE 流式传输协议。
      * </p>
-     * <pre>{@code
-     * {
-     *   "choices": [{
-     *     "delta": {
-     *       "content": "文本片段",
-     *       "reasoning_content": "推理片段",
-     *       "tool_calls": [{ "index": 0, "id": "...", "function": {...} }]
-     *     }
-     *   }]
-     * }
-     * }</pre>
      *
-     * <h3>关键处理逻辑：</h3>
+     * <h3>处理流程：</h3>
      * <ol>
-     *   <li><b>状态管理</b>：使用 AtomicInteger 跟踪流式生命周期（INIT → UPGRADE → COMPLETE/ERROR）</li>
-     *   <li><b>内容累积</b>：使用 StringBuilder 拼接所有文本片段</li>
-     *   <li><b>推理内容</b>：单独累积 reasoning_content，供需要思维链的场景使用</li>
-     *   <li><b>工具调用</b>：使用 Map&lt;Integer, ToolCall&gt; 按索引累积分片的工具调用信息</li>
-     *   <li><b>错误处理</b>：检测 error 字段，提前终止并返回错误响应</li>
-     *   <li><b>终止条件</b>：收到 "[DONE]" 标记或空数据时，触发 onCompletion</li>
+     *   <li>解析 SSE data 字段（JSON 格式）</li>
+     *   <li>从 choices[0].delta 提取 content、reasoning_content、tool_calls</li>
+     *   <li>收到 "[DONE]" 时组装完整响应并调用 onCompletion</li>
      * </ol>
      *
-     * <h3>工具调用累积示例：</h3>
-     * <p>假设模型调用 search_web(query="AI")，流式数据可能分三次到达：</p>
-     * <ol>
-     *   <li>第1次：{"index": 0, "function": {"name": "search"}}</li>
-     *   <li>第2次：{"index": 0, "function": {"arguments": "{\"query\": \"A"}}</li>
-     *   <li>第3次：{"index": 0, "function": {"arguments": "I\"}"}}</li>
-     * </ol>
-     * <p>最终累积为：{"name": "search", "arguments": "{\"query\": \"AI\"}"}</p>
-     *
-     * @param context
-     * @param event
-     * @param consumer 流式响应回调，接收实时内容和最终结果
+     * @param context  流式上下文
+     * @param event    SSE 事件
+     * @param consumer 流式回调
      */
     @Override
     public void parseStreamResponse(StreamContext context, SseEvent event, StreamResponseCallback consumer) {
@@ -285,45 +227,11 @@ public class OpenAiProvider extends Provider {
     /**
      * 处理非流式聊天响应
      * <p>
-     * 该方法实现传统的同步请求-响应模式，适用于以下场景：
+     * 实现同步请求-响应模式，一次性返回完整结果。
      * </p>
-     * <ul>
-     *   <li>短文本生成（无需实时显示进度）</li>
-     *   <li>批量处理任务（追求吞吐量而非延迟）</li>
-     *   <li>需要完整 Usage 统计信息</li>
-     *   <li>服务端内部调用（用户体验不是首要考虑）</li>
-     * </ul>
      *
-     * <h3>响应结构：</h3>
-     * <pre>{@code
-     * {
-     *   "choices": [{
-     *     "message": {
-     *       "role": "assistant",
-     *       "content": "完整回复内容",
-     *       "tool_calls": [...]
-     *     }
-     *   }],
-     *   "usage": {
-     *     "prompt_tokens": 10,
-     *     "completion_tokens": 50,
-     *     "total_tokens": 60
-     *   },
-     *   "prompt_logprobs": "..."
-     * }
-     * }</pre>
-     *
-     * <h3>与流式的对比：</h3>
-     * <table border="1">
-     *   <tr><th>特性</th><th>非流式</th><th>流式</th></tr>
-     *   <tr><td>首字延迟</td><td>高（等待全部生成）</td><td>低（立即返回首个 token）</td></tr>
-     *   <tr><td>总耗时</td><td>相同</td><td>相同</td></tr>
-     *   <tr><td>Usage 统计</td><td>✅ 包含</td><td>❌ 通常不包含</td></tr>
-     *   <tr><td>用户体验</td><td>较差（白屏等待）</td><td>优秀（逐字显示）</td></tr>
-     *   <tr><td>网络稳定性</td><td>更稳定</td><td>长连接易中断</td></tr>
-     * </table>
-     *
-     * @param response
+     * @param response HTTP 响应
+     * @return 响应消息
      */
     @Override
     public ResponseMessage parseResponse(HttpResponse response) {
@@ -356,7 +264,7 @@ public class OpenAiProvider extends Provider {
 
     /**
      * 设置JSON响应格式
-     * 需在提示词中明确指示模型输出JSON，如：“请按照json格式输出”，否则会报错。
+     * 需在提示词中明确指示模型输出JSON，如："请按照json格式输出"，否则会报错。
      *
      * @return 当前ChatOptions实例，用于链式调用
      */
