@@ -67,9 +67,9 @@ public class AnthropicProvider extends Provider {
     private static final String ANTHROPIC_VERSION = "2023-06-01";
 
     /**
-     * 工具调用累积器：key=index, value=ToolCall
+     * 工具调用解析器累积器：key=index, value=ToolCallParser
      */
-    private final Map<Integer, ToolCall> toolCallMap = new HashMap<>();
+    private final Map<Integer, ToolCallParser> toolCallParserMap = new HashMap<>();
 
     public AnthropicProvider(ChatOptions options) {
         super(options);
@@ -83,8 +83,8 @@ public class AnthropicProvider extends Provider {
      *
      * <h3>解析逻辑：</h3>
      * <ol>
-     *   <li>content_block_start 事件中提取 id 和 name</li>
-     *   <li>content_block_delta 事件中累积 partial_json 参数</li>
+     *   <li>content_block_start 事件：从 content_block 字段提取 id 和 name</li>
+     *   <li>content_block_delta 事件：从 delta.partial_json 累积参数</li>
      *   <li>最终转换为通用 ToolCall 格式</li>
      * </ol>
      */
@@ -108,27 +108,6 @@ public class AnthropicProvider extends Provider {
 
         ToolCallParser(int index) {
             this.index = index;
-        }
-
-        /**
-         * 从 content_block_start 事件中解析工具调用基本信息
-         *
-         * @param object content_block_start 事件的 JSON 对象
-         */
-        void parseStart(JSONObject object) {
-            this.id = object.getString("id");
-            this.name = object.getString("name");
-        }
-
-        /**
-         * 追加参数内容（从 content_block_delta 事件）
-         *
-         * @param partialJson partial_json 片段
-         */
-        void appendArguments(String partialJson) {
-            if (partialJson != null) {
-                argumentsBuilder.append(partialJson);
-            }
         }
 
         /**
@@ -218,16 +197,6 @@ public class AnthropicProvider extends Provider {
         }, jsonObject);
     }
 
-    /**
-     * 当前内容块索引
-     */
-    private int currentBlockIndex = -1;
-
-    /**
-     * 当前工具调用解析器
-     */
-    private ToolCallParser currentToolParser;
-
     @Override
     public void parseStreamResponse(StreamContext context, SseEvent event, StreamResponseCallback consumer) {
         // 获取事件类型和数据
@@ -247,26 +216,25 @@ public class AnthropicProvider extends Provider {
             switch (eventType) {
                 case "message_start":
                     // 消息开始事件，重置工具调用状态
-                    toolCallMap.clear();
-                    currentBlockIndex = -1;
-                    currentToolParser = null;
+                    toolCallParserMap.clear();
                     break;
                 case "content_block_start":
                     // 内容块开始事件，检查是否为工具调用类型
-                    // Anthropic 格式: {"index": 0, "type": "tool_use", "id": "toolu_xxx", "name": "function_name"}
-                    currentBlockIndex = object.getIntValue("index", currentBlockIndex + 1);
-                    String blockType = object.getString("type");
-                    if ("tool_use".equals(blockType)) {
-                        currentToolParser = new ToolCallParser(currentBlockIndex);
-                        currentToolParser.parseStart(object);
-                        toolCallMap.put(currentBlockIndex, currentToolParser.toToolCall());
+                    // Anthropic 格式: {"index": 0, "content_block": {"type": "tool_use", "id": "toolu_xxx", "name": "function_name"}}
+                    int blockIndex = object.getIntValue("index");
+                    JSONObject contentBlock = object.getJSONObject("content_block");
+                    if (contentBlock != null && "tool_use".equals(contentBlock.getString("type"))) {
+                        ToolCallParser parser = new ToolCallParser(blockIndex);
+                        parser.id = contentBlock.getString("id");
+                        parser.name = contentBlock.getString("name");
+                        toolCallParserMap.put(blockIndex, parser);
                     }
                     break;
                 case "content_block_delta":
                     // 内容增量事件（核心事件，包含实际文本或工具调用）
                     // Anthropic 格式: {"index": 0, "delta": {"type": "text_delta", "text": "..."}}
                     // 或 {"index": 0, "delta": {"type": "input_json_delta", "partial_json": "..."}}
-                    int deltaIndex = object.getIntValue("index", currentBlockIndex);
+                    int deltaIndex = object.getIntValue("index");
                     JSONObject delta = object.getJSONObject("delta");
                     if (delta != null) {
                         String deltaType = delta.getString("type");
@@ -288,22 +256,18 @@ public class AnthropicProvider extends Provider {
                         }
                         // 处理工具调用参数增量
                         else if ("input_json_delta".equals(deltaType)) {
-                            String inputJson = delta.getString("partial_json");
-                            if (inputJson != null) {
-                                // 尝试获取当前块对应的解析器
-                                ToolCallParser parser = getOrCreateParser(deltaIndex);
-                                if (parser != null) {
-                                    parser.appendArguments(inputJson);
-                                    // 更新累积后的结果
-                                    toolCallMap.put(deltaIndex, parser.toToolCall());
+                            ToolCallParser parser = toolCallParserMap.get(deltaIndex);
+                            if (parser != null) {
+                                String partialJson = delta.getString("partial_json");
+                                if (FeatUtils.isNotBlank(partialJson)) {
+                                    parser.argumentsBuilder.append(partialJson);
                                 }
                             }
                         }
                     }
                     break;
                 case "content_block_stop":
-                    // 内容块结束事件，重置当前工具调用
-                    currentToolParser = null;
+                    // 内容块结束事件，无需处理
                     break;
                 case "message_delta":
                     // 消息级别变化事件（如 stop_reason）
@@ -314,7 +278,12 @@ public class AnthropicProvider extends Provider {
                     responseMessage.setRole(Message.ROLE_ASSISTANT);
                     responseMessage.setContent(context.getContent());
                     responseMessage.setReasoningContent(context.getReasoning());
-                    responseMessage.setToolCalls(new ArrayList<>(toolCallMap.values()));
+                    // 转换 ToolCallParser 为 ToolCall
+                    List<ToolCall> toolCalls = new ArrayList<>();
+                    for (ToolCallParser parser : toolCallParserMap.values()) {
+                        toolCalls.add(parser.toToolCall());
+                    }
+                    responseMessage.setToolCalls(toolCalls);
                     responseMessage.setSuccess(true);
                     context.setStatus(StreamContext.STREAM_STATUS_COMPLETE);
                     consumer.onCompletion(responseMessage);
@@ -327,32 +296,6 @@ public class AnthropicProvider extends Provider {
             // 解析异常处理（避免单个事件失败导致整个流中断）
             LOGGER.error("Error parsing Anthropic stream response", e);
         }
-    }
-
-    /**
-     * 获取或创建指定索引的 ToolCallParser
-     *
-     * @param index 内容块索引
-     * @return ToolCallParser 实例，如果不存在则创建
-     */
-    private ToolCallParser getOrCreateParser(int index) {
-        // 如果 currentToolParser 正好匹配当前索引，直接使用
-        if (currentToolParser != null && currentToolParser.index == index) {
-            return currentToolParser;
-        }
-        // 从 toolCallMap 中恢复（流式响应中可能分片到达）
-        ToolCall existing = toolCallMap.get(index);
-        if (existing != null) {
-            ToolCallParser parser = new ToolCallParser(index);
-            parser.id = existing.getId();
-            parser.name = existing.getName();
-            if (existing.getArguments() != null) {
-                parser.argumentsBuilder.append(existing.getArguments());
-            }
-            currentToolParser = parser;
-            return parser;
-        }
-        return null;
     }
 
     /**
