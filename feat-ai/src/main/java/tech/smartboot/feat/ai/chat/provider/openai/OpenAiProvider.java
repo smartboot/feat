@@ -6,7 +6,6 @@ import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.ai.chat.ChatOptions;
 import tech.smartboot.feat.ai.chat.StreamContext;
-import tech.smartboot.feat.ai.chat.entity.ChatWholeResponse;
 import tech.smartboot.feat.ai.chat.entity.Function;
 import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
@@ -313,6 +312,7 @@ public class OpenAiProvider extends Provider {
      * 处理非流式聊天响应
      * <p>
      * 实现同步请求-响应模式，一次性返回完整结果。
+     * 直接从 JSONObject 中提取所需信息，无需定义额外的模型类。
      * </p>
      *
      * @param response HTTP 响应
@@ -320,16 +320,45 @@ public class OpenAiProvider extends Provider {
      */
     @Override
     public ResponseMessage parseResponse(HttpResponse response) {
-        // 解析完整响应（使用强类型对象）
-        ChatWholeResponse chatResponse = JSON.parseObject(response.body(), ChatWholeResponse.class);
-
-        // 提取响应消息
-        ResponseMessage responseMessage = chatResponse.getChoice().getMessage();
-
-        // 附加元数据（Usage、Logprobs）
-        responseMessage.setUsage(chatResponse.getUsage());
-        responseMessage.setPromptLogprobs(chatResponse.getPromptLogprobs());
+        // 解析响应 JSON
+        JSONObject object = JSON.parseObject(response.body());
+        ResponseMessage responseMessage = new ResponseMessage();
+        responseMessage.setRole(Message.ROLE_ASSISTANT);
         responseMessage.setSuccess(true);
+
+        // 提取 choices 数组
+        JSONArray choices = object.getJSONArray("choices");
+        if (choices != null && !choices.isEmpty()) {
+            JSONObject choice = choices.getJSONObject(0);
+            JSONObject message = choice.getJSONObject("message");
+            if (message != null) {
+                // 提取内容
+                responseMessage.setContent(message.getString("content"));
+                // 提取推理内容
+                responseMessage.setReasoningContent(message.getString("reasoning_content"));
+
+                // 提取工具调用
+                JSONArray toolCalls = message.getJSONArray("tool_calls");
+                if (toolCalls != null && !toolCalls.isEmpty()) {
+                    List<ToolCall> toolCallList = new ArrayList<>();
+                    for (int i = 0; i < toolCalls.size(); i++) {
+                        JSONObject toolCallObj = toolCalls.getJSONObject(i);
+                        ToolCall toolCall = new ToolCall();
+                        toolCall.setIndex(i);
+                        toolCall.setId(toolCallObj.getString("id"));
+                        toolCall.setType(toolCallObj.getString("type"));
+
+                        JSONObject function = toolCallObj.getJSONObject("function");
+                        if (function != null) {
+                            toolCall.setName(function.getString("name"));
+                            toolCall.setArguments(function.getString("arguments"));
+                        }
+                        toolCallList.add(toolCall);
+                    }
+                    responseMessage.setToolCalls(toolCallList);
+                }
+            }
+        }
 
         return responseMessage;
     }
