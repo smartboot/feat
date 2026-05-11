@@ -14,12 +14,10 @@ import org.junit.Assert;
 import org.junit.Test;
 import tech.smartboot.feat.ai.FeatAI;
 import tech.smartboot.feat.ai.chat.ChatModel;
-import tech.smartboot.feat.ai.chat.ThinkOption;
 import tech.smartboot.feat.ai.chat.entity.Function;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
 import tech.smartboot.feat.ai.chat.entity.ToolCall;
-import tech.smartboot.feat.ai.chat.provider.OpenAiProvider;
 
 import java.util.Collections;
 import java.util.List;

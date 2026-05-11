@@ -1,9 +1,8 @@
-package tech.smartboot.feat.ai.chat.provider;
+package tech.smartboot.feat.ai.chat.provider.openai;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
-import com.alibaba.fastjson2.TypeReference;
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.ai.chat.ChatOptions;
 import tech.smartboot.feat.ai.chat.StreamContext;
@@ -13,6 +12,8 @@ import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
 import tech.smartboot.feat.ai.chat.entity.ToolCall;
+import tech.smartboot.feat.ai.chat.provider.anthropic.AnthropicProvider;
+import tech.smartboot.feat.ai.chat.provider.Provider;
 import tech.smartboot.feat.core.client.HttpPost;
 import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.client.SseEvent;

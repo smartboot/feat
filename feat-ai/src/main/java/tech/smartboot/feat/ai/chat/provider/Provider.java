@@ -6,12 +6,13 @@ import tech.smartboot.feat.ai.chat.entity.Function;
 import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 import tech.smartboot.feat.ai.chat.entity.StreamResponseCallback;
+import tech.smartboot.feat.ai.chat.provider.anthropic.AnthropicProvider;
+import tech.smartboot.feat.ai.chat.provider.openai.OpenAiProvider;
 import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.client.HttpRest;
 import tech.smartboot.feat.core.client.SseEvent;
 
 import java.util.List;
-import java.util.function.Consumer;
 
 /**
  * AI 聊天 API 提供商抽象基类

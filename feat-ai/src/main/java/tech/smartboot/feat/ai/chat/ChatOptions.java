@@ -12,7 +12,7 @@ package tech.smartboot.feat.ai.chat;
 
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.ai.Options;
-import tech.smartboot.feat.ai.chat.provider.OpenAiProvider;
+import tech.smartboot.feat.ai.chat.provider.openai.OpenAiProvider;
 import tech.smartboot.feat.ai.chat.provider.Provider;
 import tech.smartboot.feat.core.client.HttpOptions;
 
