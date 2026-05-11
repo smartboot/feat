@@ -81,10 +81,9 @@ public class ChatWholeResponse extends ChatResponse {
     public <T> boolean ifMatchTool(String functionName, Class<T> clazz, Consumer<T> consumer) {
         List<T> result = new ArrayList<>();
         choices.forEach(choice -> choice.getMessage().getToolCalls().stream()
-                .filter(functionCall -> functionCall.getFunction().get("name").equals(functionName))
+                .filter(toolCall -> toolCall.getName().equals(functionName))
                 .forEach(toolCall -> {
-                    String args = toolCall.getFunction().get("arguments");
-                    T t = JSON.parseObject(args, clazz);
+                    T t = JSON.parseObject(toolCall.getArguments(), clazz);
                     result.add(t);
                 }));
         result.forEach(consumer);

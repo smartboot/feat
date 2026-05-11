@@ -31,7 +31,7 @@ public class OllamaTest {
 
         String content = chatModel.chat("写一首诗，提供思考过程", Function.of("get_weather").description("获取天气信息").addParam("city", "城市名称", "string", true)).get().getContent();
 //        Assert.assertEquals(1, tools.size());
-//        Assert.assertEquals("get_weather", tools.get(0).getFunction().get("name"));
+//        Assert.assertEquals("get_weather", tools.get(0).getName());
     }
 
 }

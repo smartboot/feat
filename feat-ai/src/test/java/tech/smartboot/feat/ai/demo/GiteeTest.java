@@ -50,7 +50,7 @@ public class GiteeTest {
         });
         List<ToolCall> tools = countDownLatch.get();
         Assert.assertEquals(1, tools.size());
-        Assert.assertEquals("get_weather", tools.get(0).getFunction().get("name"));
+        Assert.assertEquals("get_weather", tools.get(0).getName());
     }
 
     @Test
@@ -81,7 +81,7 @@ public class GiteeTest {
                 });
         List<ToolCall> tools = future.get();
         Assert.assertEquals(1, tools.size());
-        Assert.assertEquals("get_weather", tools.get(0).getFunction().get("name"));
+        Assert.assertEquals("get_weather", tools.get(0).getName());
     }
 
     @Test
