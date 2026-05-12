@@ -13,7 +13,7 @@ package tech.smartboot.feat.ai.demo;
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.ai.FeatAI;
 import tech.smartboot.feat.ai.chat.ChatModel;
-import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
+import tech.smartboot.feat.ai.chat.entity.ChatResponse;
 import tech.smartboot.feat.ai.chat.ChatStreamListener;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.upgrade.sse.SSEUpgrade;
@@ -76,11 +76,11 @@ public class WeChatDemo extends BaseChat {
                     chatModel.chatStream(ctx.Request.getParameter("content"), new ChatStreamListener() {
 
                         @Override
-                        public void onCompletion(ResponseMessage responseMessage) {
-                            if (!responseMessage.isSuccess()) {
+                        public void onCompletion(ChatResponse chatResponse) {
+                            if (!chatResponse.isSuccess()) {
                                 return;
                             }
-                            String content = responseMessage.getContent();
+                            String content = chatResponse.getContent();
                             if (true) {
                                 return;
                             }
@@ -94,7 +94,7 @@ public class WeChatDemo extends BaseChat {
                             }).chatStream("站在读者角度，优化大模型生成的微信公众号文章：\n" + content, new ChatStreamListener() {
 
                                 @Override
-                                public void onCompletion(ResponseMessage responseMessage) {
+                                public void onCompletion(ChatResponse chatResponse) {
                                     sseEmitter.complete();
                                 }
 

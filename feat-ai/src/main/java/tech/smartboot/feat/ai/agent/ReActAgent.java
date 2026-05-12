@@ -18,7 +18,7 @@ import tech.smartboot.feat.ai.agent.tools.SearchTool;
 import tech.smartboot.feat.ai.agent.tools.WebPageReaderTool;
 import tech.smartboot.feat.ai.chat.ChatModel;
 import tech.smartboot.feat.ai.chat.entity.Message;
-import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
+import tech.smartboot.feat.ai.chat.entity.ChatResponse;
 import tech.smartboot.feat.ai.chat.ChatStreamListener;
 import tech.smartboot.feat.ai.chat.prompt.Prompt;
 import tech.smartboot.feat.ai.chat.prompt.PromptTemplate;
@@ -93,12 +93,12 @@ public class ReActAgent extends FeatAgent {
         model.chatStream(options.getPrompt().prompt(templateData), new ChatStreamListener() {
 
             @Override
-            public void onCompletion(ResponseMessage responseMessage) {
-                if (!responseMessage.isSuccess()) {
-                    future.completeExceptionally(new FeatException(responseMessage.getError()));
+            public void onCompletion(ChatResponse chatResponse) {
+                if (!chatResponse.isSuccess()) {
+                    future.completeExceptionally(new FeatException(chatResponse.getError()));
                     return;
                 }
-                String response = responseMessage.getContent() + '\n';
+                String response = chatResponse.getContent() + '\n';
                 // 解析响应并决定下一步行动
                 ToolCaller action = options.actionParse().parse(response);
                 if (action == null) {

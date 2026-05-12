@@ -20,7 +20,7 @@ import java.util.List;
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
-public class ResponseMessage extends Message {
+public class ChatResponse extends Message {
     /**
      * 请求是否成功
      */

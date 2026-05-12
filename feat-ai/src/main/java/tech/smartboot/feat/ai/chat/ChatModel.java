@@ -11,7 +11,7 @@
 package tech.smartboot.feat.ai.chat;
 
 import tech.smartboot.feat.ai.chat.entity.Message;
-import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
+import tech.smartboot.feat.ai.chat.entity.ChatResponse;
 import tech.smartboot.feat.ai.chat.entity.Tool;
 import tech.smartboot.feat.ai.chat.provider.Provider;
 import tech.smartboot.feat.ai.chat.provider.StreamContext;
@@ -151,7 +151,7 @@ public class ChatModel {
      * @param content 用户输入内容
      * @return 包含响应消息的 CompletableFuture
      */
-    public CompletableFuture<ResponseMessage> chat(String content) {
+    public CompletableFuture<ChatResponse> chat(String content) {
         return chat(Collections.singletonList(Message.ofUser(content)), null);
     }
 
@@ -165,7 +165,7 @@ public class ChatModel {
      * @param tools   工具函数列表
      * @return 包含响应消息的 CompletableFuture
      */
-    public CompletableFuture<ResponseMessage> chat(String content, List<Tool> tools) {
+    public CompletableFuture<ChatResponse> chat(String content, List<Tool> tools) {
         return chat(Collections.singletonList(Message.ofUser(content)), tools);
     }
 
@@ -176,7 +176,7 @@ public class ChatModel {
      * @param tool    工具函数定义
      * @return 包含响应消息的 CompletableFuture
      */
-    public CompletableFuture<ResponseMessage> chat(String content, Tool tool) {
+    public CompletableFuture<ChatResponse> chat(String content, Tool tool) {
         return chat(Collections.singletonList(Message.ofUser(content)), Collections.singletonList(tool));
     }
 
@@ -189,7 +189,7 @@ public class ChatModel {
      * @param tools    工具函数列表，可为 null
      * @return 包含响应消息的 CompletableFuture
      */
-    public CompletableFuture<ResponseMessage> chat(List<Message> messages, List<Tool> tools) {
+    public CompletableFuture<ChatResponse> chat(List<Message> messages, List<Tool> tools) {
         Provider provider = options.getProvider().apply(options);
         HttpRest rest = provider.createRequest(messages, false, tools);
         return rest.submit().thenApply(response -> {

@@ -7,7 +7,7 @@ import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.ai.chat.ChatOptions;
 import tech.smartboot.feat.ai.chat.ChatStreamListener;
 import tech.smartboot.feat.ai.chat.entity.Message;
-import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
+import tech.smartboot.feat.ai.chat.entity.ChatResponse;
 import tech.smartboot.feat.ai.chat.entity.Tool;
 import tech.smartboot.feat.ai.chat.entity.ToolCall;
 import tech.smartboot.feat.ai.chat.provider.Provider;
@@ -168,19 +168,19 @@ public class OpenAiProvider extends Provider {
                 return;
             }
             // 构建完整响应消息
-            ResponseMessage responseMessage = new ResponseMessage();
-            responseMessage.setRole(Message.ROLE_ASSISTANT);
-            responseMessage.setContent(content);
-            responseMessage.setReasoningContent(context.getReasoning());
+            ChatResponse chatResponse = new ChatResponse();
+            chatResponse.setRole(Message.ROLE_ASSISTANT);
+            chatResponse.setContent(content);
+            chatResponse.setReasoningContent(context.getReasoning());
             // 将 ToolCallBuilder 转换为通用 ToolCall
             List<ToolCall> toolCalls = new ArrayList<>();
             for (ToolCallBuilder builder : toolCallMap.values()) {
                 toolCalls.add(builder.toToolCall());
             }
-            responseMessage.setToolCalls(toolCalls);
-            responseMessage.setSuccess(true);
+            chatResponse.setToolCalls(toolCalls);
+            chatResponse.setSuccess(true);
             context.setStatus(StreamContext.STREAM_STATUS_COMPLETE);
-            consumer.onCompletion(responseMessage);
+            consumer.onCompletion(chatResponse);
             return;
         }
 
@@ -189,12 +189,12 @@ public class OpenAiProvider extends Provider {
         // 检查是否有错误信息
         JSONObject error = object.getJSONObject("error");
         if (error != null) {
-            ResponseMessage responseMessage = new ResponseMessage();
-            responseMessage.setRole(Message.ROLE_ASSISTANT);
-            responseMessage.setError(error.getString("message"));
-            responseMessage.setSuccess(false);
+            ChatResponse chatResponse = new ChatResponse();
+            chatResponse.setRole(Message.ROLE_ASSISTANT);
+            chatResponse.setError(error.getString("message"));
+            chatResponse.setSuccess(false);
             context.setStatus(StreamContext.STREAM_STATUS_COMPLETE);
-            consumer.onCompletion(responseMessage);
+            consumer.onCompletion(chatResponse);
             return;
         }
 
@@ -246,12 +246,12 @@ public class OpenAiProvider extends Provider {
      * @return 响应消息
      */
     @Override
-    public ResponseMessage parseResponse(HttpResponse response) {
+    public ChatResponse parseResponse(HttpResponse response) {
         // 解析响应 JSON
         JSONObject object = JSON.parseObject(response.body());
-        ResponseMessage responseMessage = new ResponseMessage();
-        responseMessage.setRole(Message.ROLE_ASSISTANT);
-        responseMessage.setSuccess(true);
+        ChatResponse chatResponse = new ChatResponse();
+        chatResponse.setRole(Message.ROLE_ASSISTANT);
+        chatResponse.setSuccess(true);
 
         // 提取 choices 数组
         JSONArray choices = object.getJSONArray("choices");
@@ -260,9 +260,9 @@ public class OpenAiProvider extends Provider {
             JSONObject message = choice.getJSONObject("message");
             if (message != null) {
                 // 提取内容
-                responseMessage.setContent(message.getString("content"));
+                chatResponse.setContent(message.getString("content"));
                 // 提取推理内容
-                responseMessage.setReasoningContent(message.getString("reasoning_content"));
+                chatResponse.setReasoningContent(message.getString("reasoning_content"));
 
                 // 提取工具调用
                 JSONArray toolCalls = message.getJSONArray("tool_calls");
@@ -281,12 +281,12 @@ public class OpenAiProvider extends Provider {
                         }
                         toolCallList.add(toolCall);
                     }
-                    responseMessage.setToolCalls(toolCallList);
+                    chatResponse.setToolCalls(toolCallList);
                 }
             }
         }
 
-        return responseMessage;
+        return chatResponse;
     }
 
     /**

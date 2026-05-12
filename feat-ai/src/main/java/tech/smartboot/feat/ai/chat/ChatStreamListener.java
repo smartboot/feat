@@ -10,7 +10,7 @@
 
 package tech.smartboot.feat.ai.chat;
 
-import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
+import tech.smartboot.feat.ai.chat.entity.ChatResponse;
 
 /**
  * 流式响应回调接口，用于处理AI模型的流式输出数据
@@ -47,7 +47,7 @@ import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
  *
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
- * @see ResponseMessage 完整的响应消息对象
+ * @see ChatResponse 完整的响应消息对象
  */
 public interface ChatStreamListener {
     /**
@@ -57,9 +57,9 @@ public interface ChatStreamListener {
      * 可以在此处进行最终的清理工作或处理完整的响应结果。
      * </p>
      *
-     * @param responseMessage 包含完整响应信息的消息对象，包括最终生成的文本、使用情况统计等
+     * @param chatResponse 包含完整响应信息的消息对象，包括最终生成的文本、使用情况统计等
      */
-    default void onCompletion(ResponseMessage responseMessage) {
+    default void onCompletion(ChatResponse chatResponse) {
     }
 
     /**

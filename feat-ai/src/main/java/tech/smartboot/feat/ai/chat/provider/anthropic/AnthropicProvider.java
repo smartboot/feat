@@ -7,7 +7,7 @@ import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.ai.chat.ChatOptions;
 import tech.smartboot.feat.ai.chat.ChatStreamListener;
 import tech.smartboot.feat.ai.chat.entity.Message;
-import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
+import tech.smartboot.feat.ai.chat.entity.ChatResponse;
 import tech.smartboot.feat.ai.chat.entity.Tool;
 import tech.smartboot.feat.ai.chat.entity.ToolCall;
 import tech.smartboot.feat.ai.chat.entity.Usage;
@@ -221,19 +221,19 @@ public class AnthropicProvider extends Provider {
                     break;
                 case "message_stop":
                     // 消息完全结束，触发完成回调
-                    ResponseMessage responseMessage = new ResponseMessage();
-                    responseMessage.setRole(Message.ROLE_ASSISTANT);
-                    responseMessage.setContent(context.getContent());
-                    responseMessage.setReasoningContent(context.getReasoning());
+                    ChatResponse chatResponse = new ChatResponse();
+                    chatResponse.setRole(Message.ROLE_ASSISTANT);
+                    chatResponse.setContent(context.getContent());
+                    chatResponse.setReasoningContent(context.getReasoning());
                     // 转换 ToolCallBuilder 为 ToolCall
                     List<ToolCall> toolCalls = new ArrayList<>();
                     for (ToolCallBuilder builder : toolCallBuilderMap.values()) {
                         toolCalls.add(builder.toToolCall());
                     }
-                    responseMessage.setToolCalls(toolCalls);
-                    responseMessage.setSuccess(true);
+                    chatResponse.setToolCalls(toolCalls);
+                    chatResponse.setSuccess(true);
                     context.setStatus(StreamContext.STREAM_STATUS_COMPLETE);
-                    consumer.onCompletion(responseMessage);
+                    consumer.onCompletion(chatResponse);
                     break;
                 default:
                     // 未知事件类型，记录调试日志
@@ -262,12 +262,12 @@ public class AnthropicProvider extends Provider {
      * @return 响应消息
      */
     @Override
-    public ResponseMessage parseResponse(HttpResponse response) {
+    public ChatResponse parseResponse(HttpResponse response) {
         // 解析响应 JSON
         JSONObject object = JSON.parseObject(response.body());
-        ResponseMessage responseMessage = new ResponseMessage();
-        responseMessage.setRole(Message.ROLE_ASSISTANT);
-        responseMessage.setSuccess(true);
+        ChatResponse chatResponse = new ChatResponse();
+        chatResponse.setRole(Message.ROLE_ASSISTANT);
+        chatResponse.setSuccess(true);
 
         // 提取内容：Anthropic 的 content 是数组，需遍历拼接
         JSONArray contentArray = object.getJSONArray("content");
@@ -292,11 +292,11 @@ public class AnthropicProvider extends Provider {
                     toolCalls.add(toolCall);
                 }
             }
-            responseMessage.setContent(contentBuilder.toString());
+            chatResponse.setContent(contentBuilder.toString());
         }
         // 设置工具调用
         if (!toolCalls.isEmpty()) {
-            responseMessage.setToolCalls(toolCalls);
+            chatResponse.setToolCalls(toolCalls);
         }
 
         // 提取使用统计：映射 Anthropic 的字段名到统一的 Usage 对象
@@ -306,11 +306,11 @@ public class AnthropicProvider extends Provider {
             // Anthropic 使用 input_tokens/output_tokens
             usageObj.setPromptTokens(usage.getInteger("input_tokens") != null ? usage.getInteger("input_tokens") : 0);
             usageObj.setCompletionTokens(usage.getInteger("output_tokens") != null ? usage.getInteger("output_tokens") : 0);
-            responseMessage.setUsage(usageObj);
+            chatResponse.setUsage(usageObj);
         }
 
         // 触发回调
-        return responseMessage;
+        return chatResponse;
     }
 
     public AnthropicProvider maxTokens(int maxTokens) {

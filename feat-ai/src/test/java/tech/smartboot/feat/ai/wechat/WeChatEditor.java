@@ -12,7 +12,7 @@ package tech.smartboot.feat.ai.wechat;
 
 import tech.smartboot.feat.ai.FeatAI;
 import tech.smartboot.feat.ai.chat.ChatModel;
-import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
+import tech.smartboot.feat.ai.chat.entity.ChatResponse;
 import tech.smartboot.feat.ai.chat.ChatStreamListener;
 import tech.smartboot.feat.ai.chat.prompt.PromptTemplate;
 import tech.smartboot.feat.ai.demo.BaseChat;
@@ -95,16 +95,16 @@ public class WeChatEditor extends BaseChat {
             }
 
             @Override
-            public void onCompletion(ResponseMessage responseMessage) {
-                System.out.println(responseMessage.getContent());
-                chatModel.chatStream("优化这篇文章:\n" + responseMessage.getContent(), new ChatStreamListener() {
+            public void onCompletion(ChatResponse chatResponse) {
+                System.out.println(chatResponse.getContent());
+                chatModel.chatStream("优化这篇文章:\n" + chatResponse.getContent(), new ChatStreamListener() {
                     @Override
                     public void onStreamResponse(String content) {
                         System.out.print(content);
                     }
 
                     @Override
-                    public void onCompletion(ResponseMessage responseMessage) {
+                    public void onCompletion(ChatResponse chatResponse) {
 
                     }
                 });

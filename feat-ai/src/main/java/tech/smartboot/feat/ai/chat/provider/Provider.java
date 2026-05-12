@@ -3,7 +3,7 @@ package tech.smartboot.feat.ai.chat.provider;
 import tech.smartboot.feat.ai.chat.ChatOptions;
 import tech.smartboot.feat.ai.chat.entity.Tool;
 import tech.smartboot.feat.ai.chat.entity.Message;
-import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
+import tech.smartboot.feat.ai.chat.entity.ChatResponse;
 import tech.smartboot.feat.ai.chat.ChatStreamListener;
 import tech.smartboot.feat.ai.chat.provider.anthropic.AnthropicProvider;
 import tech.smartboot.feat.ai.chat.provider.openai.OpenAiProvider;
@@ -81,7 +81,7 @@ public abstract class Provider {
      * <ol>
      *   <li>解析 SSE 数据流，提取文本片段</li>
      *   <li>通过 {@link ChatStreamListener#onStreamResponse(String)} 实时推送</li>
-     *   <li>流结束时调用 {@link ChatStreamListener#onCompletion(ResponseMessage)}</li>
+     *   <li>流结束时调用 {@link ChatStreamListener#onCompletion(ChatResponse)}</li>
      * </ol>
      *
      * @param context  流式上下文，累积状态和数据
@@ -105,9 +105,9 @@ public abstract class Provider {
      *
      * @param response HTTP 响应对象
      * @return 解析后的响应消息
-     * @see ResponseMessage 响应消息结构
+     * @see ChatResponse 响应消息结构
      */
-    public abstract ResponseMessage parseResponse(HttpResponse response);
+    public abstract ChatResponse parseResponse(HttpResponse response);
 
     /**
      * 创建错误响应消息
@@ -132,14 +132,14 @@ public abstract class Provider {
      *
      * @param error 错误描述信息，可以是错误消息、异常堆栈或 HTTP 响应体
      * @return 标准化的错误响应消息对象
-     * @see ResponseMessage#getError() 获取错误信息
-     * @see ResponseMessage#isSuccess() 检查是否成功
+     * @see ChatResponse#getError() 获取错误信息
+     * @see ChatResponse#isSuccess() 检查是否成功
      */
-    public static ResponseMessage error(String error) {
-        ResponseMessage responseMessage = new ResponseMessage();
-        responseMessage.setRole(Message.ROLE_ASSISTANT);
-        responseMessage.setError(error);
-        responseMessage.setSuccess(false);
-        return responseMessage;
+    public static ChatResponse error(String error) {
+        ChatResponse chatResponse = new ChatResponse();
+        chatResponse.setRole(Message.ROLE_ASSISTANT);
+        chatResponse.setError(error);
+        chatResponse.setSuccess(false);
+        return chatResponse;
     }
 }

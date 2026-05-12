@@ -15,7 +15,7 @@ import org.junit.Test;
 import tech.smartboot.feat.ai.FeatAI;
 import tech.smartboot.feat.ai.chat.ChatModel;
 import tech.smartboot.feat.ai.chat.entity.Tool;
-import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
+import tech.smartboot.feat.ai.chat.entity.ChatResponse;
 import tech.smartboot.feat.ai.chat.ChatStreamListener;
 import tech.smartboot.feat.ai.chat.entity.ToolCall;
 
@@ -42,8 +42,8 @@ public class GiteeTest {
             }
 
             @Override
-            public void onCompletion(ResponseMessage responseMessage) {
-                countDownLatch.complete(responseMessage.getToolCalls());
+            public void onCompletion(ChatResponse chatResponse) {
+                countDownLatch.complete(chatResponse.getToolCalls());
             }
         });
         List<ToolCall> tools = countDownLatch.get();
@@ -73,8 +73,8 @@ public class GiteeTest {
                     }
 
                     @Override
-                    public void onCompletion(ResponseMessage responseMessage) {
-                        future.complete(responseMessage.getToolCalls());
+                    public void onCompletion(ChatResponse chatResponse) {
+                        future.complete(chatResponse.getToolCalls());
                     }
                 });
         List<ToolCall> tools = future.get();

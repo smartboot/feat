@@ -12,7 +12,7 @@ package tech.smartboot.feat.ai.demo;
 
 import tech.smartboot.feat.ai.FeatAI;
 import tech.smartboot.feat.ai.chat.ChatModel;
-import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
+import tech.smartboot.feat.ai.chat.entity.ChatResponse;
 import tech.smartboot.feat.ai.chat.ChatStreamListener;
 
 /**
@@ -42,7 +42,7 @@ public class OllamaDemo {
                     }
 
                     @Override
-                    public void onCompletion(ResponseMessage responseMessage) {
+                    public void onCompletion(ChatResponse chatResponse) {
 //                        System.out.println(responseMessage.getContent());
                         System.out.println("\n生成完成！");
                     }
