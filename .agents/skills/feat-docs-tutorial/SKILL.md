@@ -45,17 +45,25 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A[开始写作] --> B[理解写作哲学]
-    B --> C[设计学习路径]
-    C --> D[编写场景引入]
-    D --> E[编写核心内容]
-    E --> F[建立文档连接]
-    F --> G[质量检查]
+    A[开始写作] --> B{检查目录缓存}
+    B -->|_meta.json 不存在| C[执行 09-toc-manager<br/>生成目录缓存]
+    B -->|缓存存在| D[理解写作哲学]
+    C --> D
+    D --> E[设计学习路径]
+    E --> F[编写场景引入]
+    F --> G[编写核心内容]
+    G --> H[建立文档连接]
+    H --> I[质量检查]
     
-    B -.->|查阅| B1[00-writing-philosophy.md]
-    E -.->|查阅| E1[03-code-standards.md]
-    G -.->|查阅| G1[06-quality-checklist.md]
+    D -.->|查阅| D1[00-writing-philosophy.md]
+    G -.->|查阅| G1[03-code-standards.md]
+    I -.->|查阅| I1[06-quality-checklist.md]
 ```
+
+**缓存检查说明**：
+- 目录缓存文件位置：`.agents/skills/feat-docs-tutorial/_meta.json`
+- 若缓存不存在，必须先执行 [09-toc-manager.md](09-toc-manager.md) 生成缓存
+- 缓存用于了解现有文档结构，确保新文档与已有内容形成连贯的知识网络
 
 ### 第 4 步：判断是否需要图表
 
