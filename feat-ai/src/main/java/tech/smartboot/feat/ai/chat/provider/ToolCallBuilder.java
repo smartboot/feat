@@ -10,12 +10,12 @@
 
 package tech.smartboot.feat.ai.chat.provider;
 
-import tech.smartboot.feat.ai.chat.entity.ToolCall;
+import tech.smartboot.feat.ai.chat.entity.ToolRequest;
 
 /**
  * 工具调用构建器
  * <p>
- * 用于逐步构建 {@link ToolCall} 对象，特别适用于流式响应场景。
+ * 用于逐步构建 {@link ToolRequest} 对象，特别适用于流式响应场景。
  * 各 Provider 使用此类累积工具调用的各个字段，最终构建成完整的 ToolCall 对象。
  * </p>
  *
@@ -41,7 +41,7 @@ import tech.smartboot.feat.ai.chat.entity.ToolCall;
  * }</pre>
  *
  * @author Feat Team
- * @see ToolCall 通用工具调用结构
+ * @see ToolRequest 通用工具调用结构
  * @see Provider AI Provider 基类
  */
 public class ToolCallBuilder {
@@ -151,8 +151,8 @@ public class ToolCallBuilder {
      *
      * @return 通用 ToolCall 对象
      */
-    public ToolCall toToolCall() {
-        ToolCall toolCall = new ToolCall();
+    public ToolRequest toToolCall() {
+        ToolRequest toolCall = new ToolRequest();
         toolCall.setIndex(index);
         toolCall.setId(id);
         toolCall.setName(name);

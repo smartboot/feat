@@ -31,7 +31,7 @@ package tech.smartboot.feat.ai.chat.entity;
  * @author 三刀 zhengjunweimail@163.com
  * @version v2.0.0
  */
-public class ToolCall {
+public class ToolRequest {
     /**
      * 调用索引
      */
