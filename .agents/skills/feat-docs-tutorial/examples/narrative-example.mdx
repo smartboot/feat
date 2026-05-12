@@ -1,0 +1,404 @@
+# 叙事驱动写作示例
+
+## 示例1：路由配置（PES 结构）
+
+```mdx
+---
+title: 路由配置详解
+description: 学习 Feat 的路由配置，从场景出发理解路由的价值
+prerequisites:
+  - 已完成 [快速入门](/feat/getstart/)
+  - 了解 HTTP 基本概念
+related:
+  next: [拦截器使用](/feat/interceptor/)
+  prev: [快速入门](/feat/getstart/)
+---
+
+# 路由配置详解
+
+> **学习路径位置**：第 2 篇，共 8 篇
+> 
+> 上一篇：[快速入门](/feat/getstart/) | 下一篇：[拦截器使用](/feat/interceptor/)
+
+## 场景：从"Hello World"到 REST API
+
+还记得在[快速入门](/feat/getstart/)中，我们创建了一个只能响应 `"Hello Feat!"` 的服务吗？
+
+现在，假设你正在开发一个**用户管理系统**，需要支持以下功能：
+- 获取用户列表：`GET /users`
+- 创建用户：`POST /users`
+- 获取单个用户：`GET /users/{id}`
+- 更新用户：`PUT /users/{id}`
+- 删除用户：`DELETE /users/{id}`
+
+如果没有路由，所有请求都走同一个入口，你的代码会变成什么样？
+
+```java
+// ❌ 没有路由的"面条代码"
+server.handleRequest((ctx) -> {
+    String path = ctx.getRequest().getRequestURI();
+    if (path.equals("/users") && ctx.getRequest().getMethod().equals("GET")) {
+        // 获取用户列表
+    } else if (path.equals("/users") && ctx.getRequest().getMethod().equals("POST")) {
+        // 创建用户
+    } else if (path.startsWith("/users/") && ctx.getRequest().getMethod().equals("GET")) {
+        // 获取单个用户
+    }
+    // ... 更多 if-else
+});
+```
+
+这种代码被称为"面条代码"——逻辑纠缠在一起，难以维护。
+
+## 挑战：如何优雅地分发请求
+
+我们需要一种机制，能够：
+1. 根据请求路径和方法自动分发到对应的处理器
+2. 支持路径参数（如 `/users/{id}`）
+3. 代码清晰、易于扩展
+
+## 解决：Feat 的路由方案
+
+Feat 的 [`Router`](../../feat-core/src/main/java/tech/smartboot/feat/router/Router.java:1) 组件正是为了解决这个问题而生。
+
+它的核心思想很简单：**声明式路由**——你只需声明"什么路径对应什么处理逻辑"，剩下的交给 Feat。
+
+## 实现：配置你的第一个路由
+
+### 基础路由
+
+```java title="UserService.java"
+import tech.smartboot.feat.cloud.FeatCloud;
+import tech.smartboot.feat.cloud.CloudService;
+
+public class UserService {
+    public static void main(String[] args) {
+        CloudService server = FeatCloud.cloudServer();
+        
+        // 获取用户列表
+        server.get("/users", ctx -> {
+            ctx.write("[用户1, 用户2, 用户3]");
+        });
+        
+        // 创建用户
+        server.post("/users", ctx -> {
+            ctx.write("用户创建成功");
+        });
+        
+        server.listen();
+    }
+}
+```
+
+运行后测试：
+
+```bash
+# 获取用户列表
+curl http://localhost:8080/users
+# 输出：[用户1, 用户2, 用户3]
+
+# 创建用户
+curl -X POST http://localhost:8080/users
+# 输出：用户创建成功
+```
+
+### 路径参数
+
+实际开发中，我们经常需要获取 URL 中的参数，比如获取 ID 为 123 的用户：
+
+```java title="UserServiceWithParam.java"
+// 获取单个用户：/users/123
+server.get("/users/:id", ctx -> {
+    String userId = ctx.pathParam("id");
+    ctx.write("用户详情：ID=" + userId);
+});
+
+// 更新用户：/users/123
+server.put("/users/:id", ctx -> {
+    String userId = ctx.pathParam("id");
+    ctx.write("更新用户：ID=" + userId);
+});
+
+// 删除用户：/users/123
+server.delete("/users/:id", ctx -> {
+    String userId = ctx.pathParam("id");
+    ctx.write("删除用户：ID=" + userId);
+});
+```
+
+测试：
+
+```bash
+curl http://localhost:8080/users/123
+# 输出：用户详情：ID=123
+
+curl -X PUT http://localhost:8080/users/123
+# 输出：更新用户：ID=123
+
+curl -X DELETE http://localhost:8080/users/123
+# 输出：删除用户：ID=123
+```
+
+## 延伸：路由还能做什么
+
+### 路由分组
+
+当你的 API 越来越多时，可以使用路由分组：
+
+```java
+// 用户相关路由
+server.group("/users", userRouter -> {
+    userRouter.get("", ctx -> ctx.write("用户列表"));
+    userRouter.post("", ctx -> ctx.write("创建用户"));
+    userRouter.get("/:id", ctx -> ctx.write("用户详情"));
+});
+
+// 订单相关路由
+server.group("/orders", orderRouter -> {
+    orderRouter.get("", ctx -> ctx.write("订单列表"));
+    orderRouter.post("", ctx -> ctx.write("创建订单"));
+});
+```
+
+### 链式配置
+
+Feat 支持优雅的链式配置：
+
+```java
+server
+    .get("/users", ctx -> ctx.write("用户列表"))
+    .post("/users", ctx -> ctx.write("创建用户"))
+    .get("/users/:id", ctx -> ctx.write("用户详情：" + ctx.pathParam("id")))
+    .listen();
+```
+
+## 下一步
+
+现在你已经掌握了路由配置的基础，接下来可以：
+
+- 学习[拦截器](/feat/interceptor/)，实现权限控制和日志记录
+- 了解[参数验证](/feat/validation/)，确保请求数据的正确性
+- 探索[路由高级特性](/feat/router-advanced/)，如通配符、正则匹配等
+
+---
+
+**回顾**：本文从"面条代码"的问题出发，介绍了 Feat 路由的价值，并通过用户管理系统的实例展示了基本用法。
+
+**预告**：在[下一篇：拦截器](/feat/interceptor/)中，我们将学习如何在请求到达路由处理器之前进行拦截处理。
+```
+
+---
+
+## 示例2：依赖注入（CEP 结构）
+
+```mdx
+---
+title: 依赖注入实战
+description: 从传统开发到依赖注入，理解 DI 的价值和 Feat 的实现
+prerequisites:
+  - 已完成 [快速入门](/feat/getstart/)
+  - 了解面向对象编程基础
+related:
+  next: [数据库集成](/feat/database/)
+---
+
+# 依赖注入实战
+
+## 场景：服务层开发的困境
+
+假设你正在开发一个电商系统，需要实现订单服务。
+订单服务需要依赖用户服务和库存服务：
+
+```java
+// ❌ 传统方式：自己创建依赖
+public class OrderService {
+    private UserService userService = new UserService();
+    private InventoryService inventoryService = new InventoryService();
+    
+    public void createOrder(Order order) {
+        // 检查用户
+        userService.checkUser(order.getUserId());
+        // 检查库存
+        inventoryService.checkStock(order.getProductId());
+        // 创建订单...
+    }
+}
+```
+
+这种方式有什么问题？
+
+1. **紧耦合**：`OrderService` 直接依赖具体的实现类
+2. **难测试**：无法轻松替换为 Mock 对象进行单元测试
+3. **难扩展**：如果 `UserService` 需要数据库连接，你需要修改所有使用它的地方
+
+## 演进：从手动管理到自动注入
+
+### 阶段1：构造函数注入（手动）
+
+```java
+// 稍好一点：通过构造函数传入依赖
+public class OrderService {
+    private UserService userService;
+    private InventoryService inventoryService;
+    
+    public OrderService(UserService userService, InventoryService inventoryService) {
+        this.userService = userService;
+        this.inventoryService = inventoryService;
+    }
+}
+```
+
+但这样每个使用 `OrderService` 的地方都需要手动组装依赖：
+
+```java
+// 组装依赖很痛苦
+UserService userService = new UserService(new DatabaseConnection());
+InventoryService inventoryService = new InventoryService(new RedisClient());
+OrderService orderService = new OrderService(userService, inventoryService);
+```
+
+### 阶段2：依赖注入容器（自动）
+
+依赖注入（DI）的核心思想：**不需要自己 `new` 对象，框架自动帮你创建并注入**。
+
+Feat 的 DI 容器会：
+1. 扫描并识别所有需要管理的类
+2. 自动创建实例
+3. 自动解决依赖关系
+4. 在需要的地方注入
+
+## 实现：Feat 的依赖注入
+
+### 定义服务
+
+使用 `@Bean` 注解标记需要被管理的类：
+
+```java title="UserService.java"
+import tech.smartboot.feat.cloud.annotation.Bean;
+
+@Bean
+public class UserService {
+    public void checkUser(String userId) {
+        System.out.println("检查用户：" + userId);
+    }
+}
+```
+
+```java title="InventoryService.java"
+import tech.smartboot.feat.cloud.annotation.Bean;
+
+@Bean
+public class InventoryService {
+    public void checkStock(String productId) {
+        System.out.println("检查库存：" + productId);
+    }
+}
+```
+
+### 注入依赖
+
+在 `OrderService` 中，使用 `@Autowired` 自动注入：
+
+```java title="OrderService.java"
+import tech.smartboot.feat.cloud.annotation.Bean;
+import tech.smartboot.feat.cloud.annotation.Autowired;
+
+@Bean
+public class OrderService {
+    @Autowired
+    private UserService userService;
+    
+    @Autowired
+    private InventoryService inventoryService;
+    
+    public void createOrder(Order order) {
+        userService.checkUser(order.getUserId());
+        inventoryService.checkStock(order.getProductId());
+        System.out.println("订单创建成功");
+    }
+}
+```
+
+### 启动服务
+
+```java title="Application.java"
+import tech.smartboot.feat.cloud.FeatCloud;
+
+public class Application {
+    public static void main(String[] args) {
+        FeatCloud.cloudServer()
+            .scan("com.example")  // 扫描包路径
+            .listen();
+    }
+}
+```
+
+Feat 会自动：
+1. 扫描 `com.example` 包下的所有 `@Bean` 类
+2. 创建 `UserService` 和 `InventoryService` 实例
+3. 创建 `OrderService` 实例，并自动注入依赖
+
+## 对比：传统 vs DI
+
+| 维度 | 传统方式 | 依赖注入 |
+|------|----------|----------|
+| 耦合度 | 高（直接 new） | 低（面向接口） |
+| 可测试性 | 难（难以 Mock） | 易（轻松替换） |
+| 可维护性 | 差（修改影响大） | 好（集中管理） |
+| 代码量 | 多（手动组装） | 少（自动注入） |
+
+## 常见误区
+
+### 误区1：循环依赖
+
+```java
+// ❌ 错误：A 依赖 B，B 又依赖 A
+@Bean
+public class A {
+    @Autowired
+    private B b;
+}
+
+@Bean
+public class B {
+    @Autowired
+    private A a;
+}
+```
+
+**解决**：重新设计，消除循环依赖，或使用 Setter 注入延迟加载。
+
+### 误区2：过度使用 DI
+
+不是所有类都需要 DI。简单的工具类、值对象等不需要标记为 `@Bean`。
+
+```java
+// ✅ 正确：工具类不需要 DI
+public class DateUtils {
+    public static String now() {
+        return LocalDateTime.now().toString();
+    }
+}
+```
+
+## 下一步
+
+依赖注入是 Feat Cloud 的核心特性之一。掌握 DI 后，你可以：
+
+- 学习[数据库集成](/feat/database/)，了解如何注入数据源
+- 探索[配置管理](/feat/config/)，学习如何注入配置项
+- 了解[拦截器](/feat/interceptor/)，学习如何在 DI 基础上实现 AOP
+```
+
+---
+
+## 关键对比：传统模板 vs 叙事驱动
+
+| 维度 | 传统模板 | 叙事驱动 |
+|------|----------|----------|
+| **开头** | "本文介绍 xxx 功能" | "假设你正在开发..." |
+| **结构** | 功能概述 → 基础用法 → 进阶用法 | 场景 → 挑战 → 解决 → 实现 |
+| **语气** | 说明文档 | 对话交流 |
+| **代码** | 孤立示例 | 场景化代码 |
+| **连贯性** | 独立文档 | 知识网络 |
+| **记忆点** | 功能列表 | 故事线 |
