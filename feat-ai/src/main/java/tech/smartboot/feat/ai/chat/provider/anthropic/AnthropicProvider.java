@@ -6,6 +6,7 @@ import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.ai.chat.ChatOptions;
 import tech.smartboot.feat.ai.chat.provider.StreamContext;
+import tech.smartboot.feat.ai.chat.provider.ToolCallBuilder;
 import tech.smartboot.feat.ai.chat.entity.Tool;
 import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
@@ -67,9 +68,9 @@ public class AnthropicProvider extends Provider {
     private static final String ANTHROPIC_VERSION = "2023-06-01";
 
     /**
-     * 工具调用解析器累积器：key=index, value=AnthropicToolCallParser
+     * 工具调用构建器累积器：key=index, value=ToolCallBuilder
      */
-    private final Map<Integer, ToolCallParser> toolCallParserMap = new HashMap<>();
+    private final Map<Integer, ToolCallBuilder> toolCallBuilderMap = new HashMap<>();
 
     public AnthropicProvider(ChatOptions options) {
         super(options);
@@ -161,7 +162,7 @@ public class AnthropicProvider extends Provider {
             switch (eventType) {
                 case "message_start":
                     // 消息开始事件，重置工具调用状态
-                    toolCallParserMap.clear();
+                    toolCallBuilderMap.clear();
                     break;
                 case "content_block_start":
                     // 内容块开始事件，检查是否为工具调用类型
@@ -169,10 +170,10 @@ public class AnthropicProvider extends Provider {
                     int blockIndex = object.getIntValue("index");
                     JSONObject contentBlock = object.getJSONObject("content_block");
                     if (contentBlock != null && "tool_use".equals(contentBlock.getString("type"))) {
-                        ToolCallParser parser = new ToolCallParser(blockIndex);
-                        parser.setId(contentBlock.getString("id"));
-                        parser.setName(contentBlock.getString("name"));
-                        toolCallParserMap.put(blockIndex, parser);
+                        ToolCallBuilder builder = new ToolCallBuilder(blockIndex);
+                        builder.setId(contentBlock.getString("id"));
+                        builder.setName(contentBlock.getString("name"));
+                        toolCallBuilderMap.put(blockIndex, builder);
                     }
                     break;
                 case "content_block_delta":
@@ -201,11 +202,11 @@ public class AnthropicProvider extends Provider {
                         }
                         // 处理工具调用参数增量
                         else if ("input_json_delta".equals(deltaType)) {
-                            ToolCallParser parser = toolCallParserMap.get(deltaIndex);
-                            if (parser != null) {
+                            ToolCallBuilder builder = toolCallBuilderMap.get(deltaIndex);
+                            if (builder != null) {
                                 String partialJson = delta.getString("partial_json");
                                 if (FeatUtils.isNotBlank(partialJson)) {
-                                    parser.appendArguments(partialJson);
+                                    builder.appendArguments(partialJson);
                                 }
                             }
                         }
@@ -223,10 +224,10 @@ public class AnthropicProvider extends Provider {
                     responseMessage.setRole(Message.ROLE_ASSISTANT);
                     responseMessage.setContent(context.getContent());
                     responseMessage.setReasoningContent(context.getReasoning());
-                    // 转换 AnthropicToolCallParser 为 ToolCall
+                    // 转换 ToolCallBuilder 为 ToolCall
                     List<ToolCall> toolCalls = new ArrayList<>();
-                    for (ToolCallParser parser : toolCallParserMap.values()) {
-                        toolCalls.add(parser.toToolCall());
+                    for (ToolCallBuilder builder : toolCallBuilderMap.values()) {
+                        toolCalls.add(builder.toToolCall());
                     }
                     responseMessage.setToolCalls(toolCalls);
                     responseMessage.setSuccess(true);

@@ -12,6 +12,7 @@ import tech.smartboot.feat.ai.chat.entity.Tool;
 import tech.smartboot.feat.ai.chat.entity.ToolCall;
 import tech.smartboot.feat.ai.chat.provider.Provider;
 import tech.smartboot.feat.ai.chat.provider.StreamContext;
+import tech.smartboot.feat.ai.chat.provider.ToolCallBuilder;
 import tech.smartboot.feat.ai.chat.provider.anthropic.AnthropicProvider;
 import tech.smartboot.feat.core.client.HttpPost;
 import tech.smartboot.feat.core.client.HttpResponse;
@@ -55,12 +56,39 @@ public class OpenAiProvider extends Provider {
     private static final Logger LOGGER = LoggerFactory.getLogger(OpenAiProvider.class);
     public static final Consumer<JSONObject> responseJsonFormat = (jsonObject) -> jsonObject.put("response_format", JSONObject.of("type", "json_object"));
     /**
-     * 工具调用累积器：key=index, value=OpenAiToolCallParser
+     * 工具调用构建器累积器：key=index, value=ToolCallBuilder
      */
-    private final Map<Integer, ToolCallParser> toolCallMap = new HashMap<>();
+    private final Map<Integer, ToolCallBuilder> toolCallMap = new HashMap<>();
 
     public OpenAiProvider(ChatOptions options) {
         super(options);
+    }
+
+    /**
+     * 解析 OpenAI 格式的 tool_call JSON 对象并更新构建器状态
+     *
+     * @param builder     工具调用构建器
+     * @param toolCallObj OpenAI 格式的 tool_call JSON 对象
+     */
+    private void parseToolCall(ToolCallBuilder builder, JSONObject toolCallObj) {
+        // 更新基础字段
+        if (FeatUtils.isBlank(builder.getId())) {
+            builder.setId(toolCallObj.getString("id"));
+        }
+
+        // 更新函数信息
+        if (!toolCallObj.containsKey("function")) {
+            return;
+        }
+        JSONObject functionObj = toolCallObj.getJSONObject("function");
+        String functionName = functionObj.getString("name");
+        if (FeatUtils.isNotBlank(functionName)) {
+            builder.setName(functionName);
+        }
+        String functionArgs = functionObj.getString("arguments");
+        if (FeatUtils.isNotBlank(functionArgs)) {
+            builder.appendArguments(functionArgs);
+        }
     }
 
     /**
@@ -143,10 +171,10 @@ public class OpenAiProvider extends Provider {
             responseMessage.setRole(Message.ROLE_ASSISTANT);
             responseMessage.setContent(content);
             responseMessage.setReasoningContent(context.getReasoning());
-            // 将 OpenAiToolCallParser 转换为通用 ToolCall
+            // 将 ToolCallBuilder 转换为通用 ToolCall
             List<ToolCall> toolCalls = new ArrayList<>();
-            for (ToolCallParser parser : toolCallMap.values()) {
-                toolCalls.add(parser.toToolCall());
+            for (ToolCallBuilder builder : toolCallMap.values()) {
+                toolCalls.add(builder.toToolCall());
             }
             responseMessage.setToolCalls(toolCalls);
             responseMessage.setSuccess(true);
@@ -201,10 +229,10 @@ public class OpenAiProvider extends Provider {
             for (int i = 0; i < toolCallsArray.size(); i++) {
                 JSONObject toolCallObj = toolCallsArray.getJSONObject(i);
                 int index = toolCallObj.getIntValue("index");
-                // 根据 index 获取或创建 OpenAiToolCallParser
-                ToolCallParser parser = toolCallMap.computeIfAbsent(index, ToolCallParser::new);
+                // 根据 index 获取或创建 ToolCallBuilder
+                ToolCallBuilder builder = toolCallMap.computeIfAbsent(index, ToolCallBuilder::new);
                 // 解析 toolCallObj
-                parser.parse(toolCallObj);
+                parseToolCall(builder, toolCallObj);
             }
         }
     }
