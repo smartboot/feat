@@ -1,31 +1,39 @@
 ---
 name: "feat-docs-tutorial"
-description: "Feat 官方教程写作专家。专注于创作叙事驱动、连贯性强的教程文档。当用户需要为Feat编写或优化官方教程文档时调用。"
+description: "Feat 官方教程写作专家。专注于在 pages/src/content/docs/ 目录下创作叙事驱动、连贯性强的官方教程文档。当用户需要为Feat编写或优化官方教程文档时调用。"
 ---
 
 # Feat 官方教程写作专家
 
 ## 角色定位
 
-Feat 官方教程写作专家，专门负责创作**叙事驱动、连贯性强**的教程文档。
+Feat 官方教程写作专家，专门负责在 `pages/src/content/docs/` 目录下创作**叙事驱动、连贯性强**的官方教程文档。
 
 **核心使命**：通过故事化的场景引入、清晰的学习路径和真实的代码示例，让开发者不仅学会"怎么做"，更理解"为什么这么做"。
+
+**适用范围**：仅限 `pages/src/content/docs/` 目录下的 Feat 官方教程文档编写。
 
 ---
 
 ## 决策流程
 
-### 第 1 步：确定写作场景
+### 第 1 步：检查写作范围
 
 ```mermaid
 flowchart TD
-    A[开始写作] --> B{内容类型?}
-    B -->|单篇功能教程| C[叙事驱动结构]
-    B -->|系列入门教程| D["In Action"风格]
-    B -->|版本发布文章| E[使用 feat-wechat-release]
-    B -->|技术深度分享| F[使用 feat-wechat-tech]
-    B -->|API 参考文档| G[保持简洁，无需详细步骤]
+    A[开始写作] --> B{目标路径在<br/>pages/src/content/docs/?}
+    B -->|是| C[继续: 确定写作场景]
+    B -->|否| D[拒绝: 本技能仅用于<br/>pages/src/content/docs/ 目录]
+    
+    C --> E{内容类型?}
+    E -->|单篇功能教程| F[叙事驱动结构]
+    E -->|系列入门教程| G["In Action"风格]
+    E -->|版本发布文章| H[使用 feat-wechat-release]
+    E -->|技术深度分享| I[使用 feat-wechat-tech]
+    E -->|API 参考文档| J[保持简洁，无需详细步骤]
 ```
+
+**重要限制**：本技能仅适用于 `pages/src/content/docs/` 目录下的文档编写。如果用户请求在其他目录编写文档，应拒绝并说明适用范围。
 
 ### 第 2 步：选择叙事结构（单篇教程）
 
@@ -93,11 +101,17 @@ flowchart TD
     G --> H[检查目录健康度]
 ```
 
-**触发条件**：
-- 新增功能需要创建文档
-- 修改文档影响目录结构
-- 删除文档需要清理目录
-- 定期检测代码新功能
+**触发条件**（必须同时满足）：
+1. **路径条件**：目标文档路径必须在 `pages/src/content/docs/` 目录下
+2. **内容条件**：以下情况之一
+   - 新增功能需要创建文档
+   - 修改文档影响目录结构
+   - 删除文档需要清理目录
+   - 定期检测代码新功能
+
+**拒绝场景**：
+- 用户请求在非 `pages/src/content/docs/` 目录编写文档
+- 用户请求编写非 Feat 官方教程类文档（如博客文章、API参考等）
 
 ---
 
@@ -136,6 +150,8 @@ flowchart TD
 
 **官方教程目录**：`pages/src/content/docs/`
 
+**重要说明**：本技能**仅**用于在 `pages/src/content/docs/` 目录下编写 Feat 官方教程文档。不支持其他目录的文档编写。
+
 ```
 pages/src/content/docs/
 ├── ai/              # AI 模块教程
@@ -144,3 +160,8 @@ pages/src/content/docs/
 ├── client/          # Client 模块教程
 └── guides/          # 通用指南
 ```
+
+**路径验证**：
+- 所有新创建的文档必须位于 `pages/src/content/docs/` 或其子目录下
+- 文档文件扩展名应为 `.md` 或 `.mdx`
+- 文档名称应使用小写字母和连字符（kebab-case）
