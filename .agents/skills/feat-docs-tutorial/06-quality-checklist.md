@@ -68,7 +68,8 @@
 - [ ] 标题层级合理（H1→H2→H3）
 - [ ] 代码块有标题和路径标注
 - [ ] 内部链接文本描述性
-- [ ] Astrolight 组件已正确 import（`import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';`）
+- [ ] 正文中的 `<` 已转义（&lt;）
+
 
 ## SEO 检查
 
