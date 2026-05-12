@@ -5,7 +5,7 @@ import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.ai.chat.ChatOptions;
-import tech.smartboot.feat.ai.chat.StreamResponseCallback;
+import tech.smartboot.feat.ai.chat.ChatStreamListener;
 import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 import tech.smartboot.feat.ai.chat.entity.Tool;
@@ -144,7 +144,7 @@ public class AnthropicProvider extends Provider {
     }
 
     @Override
-    public void parseStreamResponse(StreamContext context, SseEvent event, StreamResponseCallback consumer) {
+    public void parseStreamResponse(StreamContext context, SseEvent event, ChatStreamListener consumer) {
         // 获取事件类型和数据
         String eventType = event.getType();
         String data = event.getData();

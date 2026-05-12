@@ -19,7 +19,7 @@ import tech.smartboot.feat.ai.agent.tools.WebPageReaderTool;
 import tech.smartboot.feat.ai.chat.ChatModel;
 import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
-import tech.smartboot.feat.ai.chat.StreamResponseCallback;
+import tech.smartboot.feat.ai.chat.ChatStreamListener;
 import tech.smartboot.feat.ai.chat.prompt.Prompt;
 import tech.smartboot.feat.ai.chat.prompt.PromptTemplate;
 import tech.smartboot.feat.core.common.exception.FeatException;
@@ -90,7 +90,7 @@ public class ReActAgent extends FeatAgent {
         setState(AgentState.RUNNING);
         // 创建ChatModel实例
         ChatModel model = new ChatModel(options.chatOptions());
-        model.chatStream(options.getPrompt().prompt(templateData), new StreamResponseCallback() {
+        model.chatStream(options.getPrompt().prompt(templateData), new ChatStreamListener() {
 
             @Override
             public void onCompletion(ResponseMessage responseMessage) {

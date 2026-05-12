@@ -4,7 +4,7 @@ import tech.smartboot.feat.ai.chat.ChatOptions;
 import tech.smartboot.feat.ai.chat.entity.Tool;
 import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
-import tech.smartboot.feat.ai.chat.StreamResponseCallback;
+import tech.smartboot.feat.ai.chat.ChatStreamListener;
 import tech.smartboot.feat.ai.chat.provider.anthropic.AnthropicProvider;
 import tech.smartboot.feat.ai.chat.provider.openai.OpenAiProvider;
 import tech.smartboot.feat.core.client.HttpResponse;
@@ -39,7 +39,7 @@ import java.util.List;
  * @see OpenAiProvider OpenAI API 实现
  * @see AnthropicProvider Anthropic API 实现
  * @see ChatOptions 聊天配置选项
- * @see StreamResponseCallback 流式响应回调接口
+ * @see ChatStreamListener 流式响应回调接口
  */
 public abstract class Provider {
     /**
@@ -80,16 +80,16 @@ public abstract class Provider {
      * <h3>处理流程：</h3>
      * <ol>
      *   <li>解析 SSE 数据流，提取文本片段</li>
-     *   <li>通过 {@link StreamResponseCallback#onStreamResponse(String)} 实时推送</li>
-     *   <li>流结束时调用 {@link StreamResponseCallback#onCompletion(ResponseMessage)}</li>
+     *   <li>通过 {@link ChatStreamListener#onStreamResponse(String)} 实时推送</li>
+     *   <li>流结束时调用 {@link ChatStreamListener#onCompletion(ResponseMessage)}</li>
      * </ol>
      *
      * @param context  流式上下文，累积状态和数据
      * @param event    SSE 事件
      * @param consumer 流式回调处理器
-     * @see StreamResponseCallback 流式回调接口
+     * @see ChatStreamListener 流式回调接口
      */
-    public abstract void parseStreamResponse(StreamContext context, SseEvent event, StreamResponseCallback consumer);
+    public abstract void parseStreamResponse(StreamContext context, SseEvent event, ChatStreamListener consumer);
 
     /**
      * 解析非流式聊天响应

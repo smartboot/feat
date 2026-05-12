@@ -14,7 +14,7 @@ import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.ai.FeatAI;
 import tech.smartboot.feat.ai.chat.ChatModel;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
-import tech.smartboot.feat.ai.chat.StreamResponseCallback;
+import tech.smartboot.feat.ai.chat.ChatStreamListener;
 import tech.smartboot.feat.core.server.HttpResponse;
 import tech.smartboot.feat.core.server.upgrade.sse.SSEUpgrade;
 import tech.smartboot.feat.core.server.upgrade.sse.SseEmitter;
@@ -73,7 +73,7 @@ public class WeChatDemo extends BaseChat {
         router.route("/chat", ctx -> {
             ctx.Request.upgrade(new SSEUpgrade() {
                 public void onOpen(SseEmitter sseEmitter) {
-                    chatModel.chatStream(ctx.Request.getParameter("content"), new StreamResponseCallback() {
+                    chatModel.chatStream(ctx.Request.getParameter("content"), new ChatStreamListener() {
 
                         @Override
                         public void onCompletion(ResponseMessage responseMessage) {
@@ -91,7 +91,7 @@ public class WeChatDemo extends BaseChat {
                             }
                             FeatAI.chatModel(opts -> {
                                 opts.model("DeepSeek-R1-Distill-Qwen-32B").system("你是一个负责Feat微信公众号的编辑人员，你的任务是根据用户要求编写微信公众号文章。").debug(true);
-                            }).chatStream("站在读者角度，优化大模型生成的微信公众号文章：\n" + content, new StreamResponseCallback() {
+                            }).chatStream("站在读者角度，优化大模型生成的微信公众号文章：\n" + content, new ChatStreamListener() {
 
                                 @Override
                                 public void onCompletion(ResponseMessage responseMessage) {

@@ -13,7 +13,7 @@ package tech.smartboot.feat.ai.demo;
 import tech.smartboot.feat.ai.FeatAI;
 import tech.smartboot.feat.ai.chat.ChatModel;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
-import tech.smartboot.feat.ai.chat.StreamResponseCallback;
+import tech.smartboot.feat.ai.chat.ChatStreamListener;
 
 /**
  * @author 三刀 zhengjunweimail@163.com
@@ -35,7 +35,7 @@ public class OllamaDemo {
         // 向AI发送请求
         chatModel.chatStream(
                 "根据以下关键词生成一首藏头诗：" + String.join(",", keywords),
-                new StreamResponseCallback() {
+                new ChatStreamListener() {
                     @Override
                     public void onStreamResponse(String content) {
                         System.out.print(content);

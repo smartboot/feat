@@ -10,9 +10,9 @@
 
 package tech.smartboot.feat.ai.chat;
 
-import tech.smartboot.feat.ai.chat.entity.Tool;
 import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
+import tech.smartboot.feat.ai.chat.entity.Tool;
 import tech.smartboot.feat.ai.chat.provider.Provider;
 import tech.smartboot.feat.ai.chat.provider.StreamContext;
 import tech.smartboot.feat.core.client.HttpRest;
@@ -73,9 +73,9 @@ public class ChatModel {
      *
      * @param content  用户输入内容
      * @param consumer 流式响应回调，每收到一个响应块时触发
-     * @see #chatStream(String, List, StreamResponseCallback)
+     * @see #chatStream(String, List, ChatStreamListener)
      */
-    public void chatStream(String content, StreamResponseCallback consumer) {
+    public void chatStream(String content, ChatStreamListener consumer) {
         chatStream(Collections.singletonList(Message.ofUser(content)), null, consumer);
     }
 
@@ -85,11 +85,11 @@ public class ChatModel {
      * <p>使用单条用户消息和一个工具函数发起流式请求。</p>
      *
      * @param content  用户输入内容
-     * @param tool 工具函数定义
+     * @param tool     工具函数定义
      * @param consumer 流式响应回调
-     * @see #chatStream(String, List, StreamResponseCallback)
+     * @see #chatStream(String, List, ChatStreamListener)
      */
-    public void chatStream(String content, Tool tool, StreamResponseCallback consumer) {
+    public void chatStream(String content, Tool tool, ChatStreamListener consumer) {
         chatStream(Collections.singletonList(Message.ofUser(content)), Collections.singletonList(tool), consumer);
     }
 
@@ -98,12 +98,12 @@ public class ChatModel {
      *
      * <p>使用单条用户消息和多个工具函数发起流式请求。</p>
      *
-     * @param content   用户输入内容
-     * @param tools 工具函数列表
-     * @param consumer  流式响应回调
-     * @see #chatStream(List, List, StreamResponseCallback)
+     * @param content  用户输入内容
+     * @param tools    工具函数列表
+     * @param consumer 流式响应回调
+     * @see #chatStream(List, List, ChatStreamListener)
      */
-    public void chatStream(String content, List<Tool> tools, StreamResponseCallback consumer) {
+    public void chatStream(String content, List<Tool> tools, ChatStreamListener consumer) {
         chatStream(Collections.singletonList(Message.ofUser(content)), tools, consumer);
     }
 
@@ -112,11 +112,11 @@ public class ChatModel {
      *
      * <p>支持完整的消息列表和工具函数配置，通过回调函数实时获取AI响应。</p>
      *
-     * @param messages  消息列表，包含对话历史
-     * @param tools 工具函数列表，可为 null
-     * @param consumer  流式响应回调，AI每生成一个响应块时调用
+     * @param messages 消息列表，包含对话历史
+     * @param tools    工具函数列表，可为 null
+     * @param consumer 流式响应回调，AI每生成一个响应块时调用
      */
-    public void chatStream(List<Message> messages, List<Tool> tools, StreamResponseCallback consumer) {
+    public void chatStream(List<Message> messages, List<Tool> tools, ChatStreamListener consumer) {
         Provider provider = options.getProvider().apply(options);
         HttpRest rest = provider.createRequest(messages, true, tools);
         StreamContext context = new StreamContext();
@@ -161,8 +161,8 @@ public class ChatModel {
      * <p>使用单条用户消息和工具函数列表发起请求。
      * 工具函数会在请求时动态注入，无需在选项中预先配置。</p>
      *
-     * @param content   用户输入内容
-     * @param tools 工具函数列表
+     * @param content 用户输入内容
+     * @param tools   工具函数列表
      * @return 包含响应消息的 CompletableFuture
      */
     public CompletableFuture<ResponseMessage> chat(String content, List<Tool> tools) {
@@ -172,8 +172,8 @@ public class ChatModel {
     /**
      * 发送非流式聊天请求（带单个工具函数）
      *
-     * @param content  用户输入内容
-     * @param tool 工具函数定义
+     * @param content 用户输入内容
+     * @param tool    工具函数定义
      * @return 包含响应消息的 CompletableFuture
      */
     public CompletableFuture<ResponseMessage> chat(String content, Tool tool) {
@@ -185,8 +185,8 @@ public class ChatModel {
      *
      * <p>支持完整的消息列表和工具函数配置，返回完整的AI响应。</p>
      *
-     * @param messages  消息列表，包含对话历史
-     * @param tools 工具函数列表，可为 null
+     * @param messages 消息列表，包含对话历史
+     * @param tools    工具函数列表，可为 null
      * @return 包含响应消息的 CompletableFuture
      */
     public CompletableFuture<ResponseMessage> chat(List<Message> messages, List<Tool> tools) {
@@ -201,13 +201,4 @@ public class ChatModel {
         });
     }
 
-    /**
-     * 获取聊天选项配置
-     *
-     * @return 聊天选项配置，包含API地址、密钥、模型等参数
-     * @see ChatOptions
-     */
-    public ChatOptions getOptions() {
-        return options;
-    }
 }

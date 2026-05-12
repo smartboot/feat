@@ -11,7 +11,7 @@
 package tech.smartboot.feat.ai.agent.hook;
 
 import tech.smartboot.feat.ai.agent.ToolCaller;
-import tech.smartboot.feat.ai.chat.StreamResponseCallback;
+import tech.smartboot.feat.ai.chat.ChatStreamListener;
 import tech.smartboot.feat.ai.chat.entity.Message;
 
 import java.util.List;
@@ -219,7 +219,7 @@ public interface Hook {
      * @param content 当前接收到的答案内容片段，通常是文本字符串
      *                多次调用的内容拼接起来构成完整的最终答案
      * @see tech.smartboot.feat.ai.chat.ChatModel#chatStream 流式聊天方法
-     * @see StreamResponseCallback 流式响应回调接口
+     * @see ChatStreamListener 流式响应回调接口
      */
     default void onFinalAnswer(String content) {
     }
