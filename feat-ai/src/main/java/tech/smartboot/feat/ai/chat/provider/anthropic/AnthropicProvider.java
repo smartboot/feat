@@ -9,7 +9,7 @@ import tech.smartboot.feat.ai.chat.ChatStreamListener;
 import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 import tech.smartboot.feat.ai.chat.entity.Tool;
-import tech.smartboot.feat.ai.chat.entity.ToolRequest;
+import tech.smartboot.feat.ai.chat.entity.ToolCall;
 import tech.smartboot.feat.ai.chat.entity.Usage;
 import tech.smartboot.feat.ai.chat.provider.Provider;
 import tech.smartboot.feat.ai.chat.provider.StreamContext;
@@ -226,7 +226,7 @@ public class AnthropicProvider extends Provider {
                     responseMessage.setContent(context.getContent());
                     responseMessage.setReasoningContent(context.getReasoning());
                     // 转换 ToolCallBuilder 为 ToolCall
-                    List<ToolRequest> toolCalls = new ArrayList<>();
+                    List<ToolCall> toolCalls = new ArrayList<>();
                     for (ToolCallBuilder builder : toolCallBuilderMap.values()) {
                         toolCalls.add(builder.toToolCall());
                     }
@@ -271,7 +271,7 @@ public class AnthropicProvider extends Provider {
 
         // 提取内容：Anthropic 的 content 是数组，需遍历拼接
         JSONArray contentArray = object.getJSONArray("content");
-        List<ToolRequest> toolCalls = new ArrayList<>();
+        List<ToolCall> toolCalls = new ArrayList<>();
         if (contentArray != null && !contentArray.isEmpty()) {
             StringBuilder contentBuilder = new StringBuilder();
             for (int i = 0; i < contentArray.size(); i++) {
@@ -283,7 +283,7 @@ public class AnthropicProvider extends Provider {
                 }
                 // 提取工具调用信息
                 if ("tool_use".equals(type)) {
-                    ToolRequest toolCall = new ToolRequest();
+                    ToolCall toolCall = new ToolCall();
                     toolCall.setIndex(i);
                     toolCall.setId(contentItem.getString("id"));
                     toolCall.setName(contentItem.getString("name"));

@@ -9,7 +9,7 @@ import tech.smartboot.feat.ai.chat.ChatStreamListener;
 import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 import tech.smartboot.feat.ai.chat.entity.Tool;
-import tech.smartboot.feat.ai.chat.entity.ToolRequest;
+import tech.smartboot.feat.ai.chat.entity.ToolCall;
 import tech.smartboot.feat.ai.chat.provider.Provider;
 import tech.smartboot.feat.ai.chat.provider.StreamContext;
 import tech.smartboot.feat.ai.chat.provider.ToolCallBuilder;
@@ -173,7 +173,7 @@ public class OpenAiProvider extends Provider {
             responseMessage.setContent(content);
             responseMessage.setReasoningContent(context.getReasoning());
             // 将 ToolCallBuilder 转换为通用 ToolCall
-            List<ToolRequest> toolCalls = new ArrayList<>();
+            List<ToolCall> toolCalls = new ArrayList<>();
             for (ToolCallBuilder builder : toolCallMap.values()) {
                 toolCalls.add(builder.toToolCall());
             }
@@ -267,10 +267,10 @@ public class OpenAiProvider extends Provider {
                 // 提取工具调用
                 JSONArray toolCalls = message.getJSONArray("tool_calls");
                 if (toolCalls != null && !toolCalls.isEmpty()) {
-                    List<ToolRequest> toolCallList = new ArrayList<>();
+                    List<ToolCall> toolCallList = new ArrayList<>();
                     for (int i = 0; i < toolCalls.size(); i++) {
                         JSONObject toolCallObj = toolCalls.getJSONObject(i);
-                        ToolRequest toolCall = new ToolRequest();
+                        ToolCall toolCall = new ToolCall();
                         toolCall.setIndex(i);
                         toolCall.setId(toolCallObj.getString("id"));
 

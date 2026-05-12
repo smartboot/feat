@@ -17,7 +17,7 @@ import tech.smartboot.feat.ai.chat.ChatModel;
 import tech.smartboot.feat.ai.chat.entity.Tool;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
 import tech.smartboot.feat.ai.chat.ChatStreamListener;
-import tech.smartboot.feat.ai.chat.entity.ToolRequest;
+import tech.smartboot.feat.ai.chat.entity.ToolCall;
 
 import java.util.Collections;
 import java.util.List;
@@ -31,7 +31,7 @@ import java.util.concurrent.ExecutionException;
 public class GiteeTest {
     @Test
     public void test1() throws InterruptedException, ExecutionException {
-        CompletableFuture<List<ToolRequest>> countDownLatch = new CompletableFuture<>();
+        CompletableFuture<List<ToolCall>> countDownLatch = new CompletableFuture<>();
         ChatModel chatModel = FeatAI.chatModel(opts -> opts.model("Qwen3-235B-A22B-Instruct-2507")
                 .debug(true));
 
@@ -46,14 +46,14 @@ public class GiteeTest {
                 countDownLatch.complete(responseMessage.getToolCalls());
             }
         });
-        List<ToolRequest> tools = countDownLatch.get();
+        List<ToolCall> tools = countDownLatch.get();
         Assert.assertEquals(1, tools.size());
         Assert.assertEquals("get_weather", tools.get(0).getName());
     }
 
     @Test
     public void test2() throws InterruptedException, ExecutionException {
-        CompletableFuture<List<ToolRequest>> future = new CompletableFuture<>();
+        CompletableFuture<List<ToolCall>> future = new CompletableFuture<>();
         ChatModel chatModel = FeatAI.chatModel(opts -> opts.model("DeepSeek-V4-Flash")
                 .debug(true));
 
@@ -77,7 +77,7 @@ public class GiteeTest {
                         future.complete(responseMessage.getToolCalls());
                     }
                 });
-        List<ToolRequest> tools = future.get();
+        List<ToolCall> tools = future.get();
         Assert.assertEquals(1, tools.size());
         Assert.assertEquals("get_weather", tools.get(0).getName());
     }

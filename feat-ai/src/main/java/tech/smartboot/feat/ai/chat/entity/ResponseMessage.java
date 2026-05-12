@@ -35,7 +35,7 @@ public class ResponseMessage extends Message {
      * 工具调用列表，当模型决定调用工具时包含相关信息
      */
     @JSONField(name = "tool_calls")
-    private List<ToolRequest> toolCalls;
+    private List<ToolCall> toolCalls;
 
     /**
      * 使用情况统计信息，不会参与序列化和反序列化
@@ -54,7 +54,7 @@ public class ResponseMessage extends Message {
      *
      * @return 工具调用列表
      */
-    public List<ToolRequest> getToolCalls() {
+    public List<ToolCall> getToolCalls() {
         return toolCalls;
     }
 
@@ -63,7 +63,7 @@ public class ResponseMessage extends Message {
      *
      * @param toolCalls 工具调用列表
      */
-    public void setToolCalls(List<ToolRequest> toolCalls) {
+    public void setToolCalls(List<ToolCall> toolCalls) {
         this.toolCalls = toolCalls;
     }
 
