@@ -125,31 +125,31 @@ export default defineConfig({
             sidebar: [
                 {
                     label: '开始这里',
-                    autogenerate: {directory: 'getting-started'},
+                    items: [{autogenerate: {directory: 'getting-started'}}],
                 },
                 {
                     label: '理解 Feat',
-                    autogenerate: {directory: 'guides'},
+                    items: [{ autogenerate: {directory: 'guides'}}],
                 },
                 {
                     label: 'Feat Core',
-                    autogenerate: {directory: 'server'},
+                    items: [{ autogenerate: {directory: 'server'}}],
                 },
                 {
                     label: 'Feat Cloud',
-                    autogenerate: {directory: 'cloud'},
+                    items: [{  autogenerate: {directory: 'cloud'}}],
                 },
                 {
                     label: 'Feat AI',
-                    autogenerate: {directory: 'ai'},
+                    items: [{  autogenerate: {directory: 'ai'}}],
                 },
                 {
                     label: '客户端',
-                    autogenerate: {directory: 'client'},
+                    items: [{autogenerate: {directory: 'client'}}],
                 },
                 {
                     label: '附录',
-                    autogenerate: {directory: 'appendix'},
+                    items: [{ autogenerate: {directory: 'appendix'}}],
                 },
                 {
                     label: '支持项目',
