@@ -47,7 +47,7 @@ flowchart TD
 
 ### 目录文件
 
-生成的 `_meta.json`：
+生成的 `_meta.json` 位于 `.agents/skills/feat-docs-tutorial/_meta.json`：
 
 ```json
 {
@@ -161,7 +161,7 @@ flowchart TD
 扫描 pages/src/content/docs/ 目录
 读取所有 mdx 文件的 frontmatter
 生成目录结构
-输出到 _meta.json
+输出到 .agents/skills/feat-docs-tutorial/_meta.json
 ```
 
 ### 检测缺失文档
@@ -222,3 +222,4 @@ flowchart TD
 2. **缓存更新**：目录信息用于更新缓存，供导航、搜索等功能使用
 3. **元数据标准**：文档的 frontmatter 标准由写作规范定义，本模块只负责读取
 4. **description 来源**：目录中显示的 description 直接来自 mdx 文件的 frontmatter
+5. **输出位置**：生成的 `_meta.json` 位于 `.agents/skills/feat-docs-tutorial/_meta.json`，供 Skill 内部使用
