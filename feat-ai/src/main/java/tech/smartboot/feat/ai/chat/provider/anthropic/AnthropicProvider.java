@@ -167,9 +167,9 @@ public class AnthropicProvider extends Provider {
                 case "content_block_start":
                     // 内容块开始事件，检查是否为工具调用类型
                     // Anthropic 格式: {"index": 0, "content_block": {"type": "tool_use", "id": "toolu_xxx", "name": "function_name"}}
-                    int blockIndex = object.getIntValue("index");
                     JSONObject contentBlock = object.getJSONObject("content_block");
                     if (contentBlock != null && "tool_use".equals(contentBlock.getString("type"))) {
+                        int blockIndex = object.getIntValue("index");
                         ToolCallBuilder builder = new ToolCallBuilder(blockIndex);
                         builder.setId(contentBlock.getString("id"));
                         builder.setName(contentBlock.getString("name"));

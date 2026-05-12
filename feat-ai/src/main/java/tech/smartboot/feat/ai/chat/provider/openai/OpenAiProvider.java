@@ -67,10 +67,11 @@ public class OpenAiProvider extends Provider {
     /**
      * 解析 OpenAI 格式的 tool_call JSON 对象并更新构建器状态
      *
-     * @param builder     工具调用构建器
      * @param toolCallObj OpenAI 格式的 tool_call JSON 对象
      */
-    private void parseToolCall(ToolCallBuilder builder, JSONObject toolCallObj) {
+    private void parseToolCall(JSONObject toolCallObj) {
+        // 根据 index 获取或创建 ToolCallBuilder
+        ToolCallBuilder builder = toolCallMap.computeIfAbsent(toolCallObj.getIntValue("index"), ToolCallBuilder::new);
         // 更新基础字段
         if (FeatUtils.isBlank(builder.getId())) {
             builder.setId(toolCallObj.getString("id"));
@@ -228,11 +229,8 @@ public class OpenAiProvider extends Provider {
         if (FeatUtils.isNotEmpty(toolCallsArray)) {
             for (int i = 0; i < toolCallsArray.size(); i++) {
                 JSONObject toolCallObj = toolCallsArray.getJSONObject(i);
-                int index = toolCallObj.getIntValue("index");
-                // 根据 index 获取或创建 ToolCallBuilder
-                ToolCallBuilder builder = toolCallMap.computeIfAbsent(index, ToolCallBuilder::new);
                 // 解析 toolCallObj
-                parseToolCall(builder, toolCallObj);
+                parseToolCall(toolCallObj);
             }
         }
     }
