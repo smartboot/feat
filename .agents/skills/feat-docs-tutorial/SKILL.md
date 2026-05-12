@@ -69,6 +69,28 @@ flowchart TD
     B -->|复杂架构| G[调用 feat-illustrator]
 ```
 
+### 第 5 步：更新教程目录
+
+```mermaid
+flowchart TD
+    A[完成文档编写] --> B{文档类型?}
+    B -->|新文档| C[查阅 09-toc-manager<br/>添加目录项]
+    B -->|修改文档| D[查阅 09-toc-manager<br/>更新目录项]
+    B -->|删除文档| E[查阅 09-toc-manager<br/>移除目录项]
+    
+    C --> F[更新 _meta.json]
+    D --> F
+    E --> F
+    F --> G[同步 description]
+    G --> H[检查目录健康度]
+```
+
+**触发条件**：
+- 新增功能需要创建文档
+- 修改文档影响目录结构
+- 删除文档需要清理目录
+- 定期检测代码新功能
+
 ---
 
 ## 规范文档索引
@@ -86,6 +108,7 @@ flowchart TD
 | **质量检查** | [06-quality-checklist.md](06-quality-checklist.md) - 检查清单 |
 | **系列教程** | [07-in-action-style.md](07-in-action-style.md) - "In Action"风格 |
 | **添加图表** | [08-diagram-standards.md](08-diagram-standards.md) - 图表标准 |
+| **目录管理** | [09-toc-manager.md](09-toc-manager.md) - 教程目录管理 |
 
 ---
 
