@@ -5,29 +5,21 @@ sidebar:
     order: 1
 ---
 
-import { Aside, TabItem, Tabs } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
 
-这篇指南不追求覆盖所有 AI 能力。它只做一件事：让模型真正返回结果。先把链路打通，再去学对话配置、Embedding 和 Agent。
+这篇指南的目标只有一个：让你在最短时间内看到模型返回的文本。不会涉及任何进阶配置，先把链路跑通。
 
-## 你将构建什么
+## 前置条件
 
-你将写出一个最小的 Feat AI 调用程序：
-
-- 连接本地 Ollama，或者连接云端模型
-- 发出一条提示词
-- 在控制台看到模型返回的文本
-
-## 你需要什么
-
-- JDK 8 或更高版本
-- Maven 3.0 或更高版本
-- 二选一：
-  - 本地模型：已安装并运行 [Ollama](https://ollama.ai/)
-  - 云端模型：已准备好环境变量 `FEAT_AI_API_KEY`
+- JDK 8+
+- Maven 3.0+
+- 以下二选一：
+  - **本地 Ollama**：已安装并运行，且本地拉取了可用模型
+  - **云端模型**：已准备好环境变量 `FEAT_AI_API_KEY`
 
 ## 添加依赖
 
-在 `pom.xml` 中加入 `feat-ai`：
+在 `pom.xml` 中加入：
 
 ```xml title="pom.xml"
 <dependency>
@@ -38,26 +30,25 @@ import { Aside, TabItem, Tabs } from '@astrojs/starlight/components';
 ```
 
 <Aside>
-`feat-ai` 已经传递依赖了 `feat-core`，通常不需要额外再引入。
+`feat-ai` 已传递依赖 `feat-core`，通常无需额外引入。
 </Aside>
 
-## 选择模型来源
+## 写出第一个程序
 
-### 方案一：本地 Ollama
+### 方案一：本地 Ollama（最快验证）
 
-如果你只想最快验证链路，优先用本地 Ollama。
-
-先确认模型已经可用，例如：
+先确认本地模型可用：
 
 ```shell
 ollama run qwen2.5:7b
 ```
 
-然后写一个最小程序：
+然后写一段 Java：
 
 ```java title="HelloFeatAI.java"
 import tech.smartboot.feat.ai.FeatAI;
 import tech.smartboot.feat.ai.chat.ChatModel;
+import tech.smartboot.feat.ai.chat.ChatStreamListener;
 
 public class HelloFeatAI {
     public static void main(String[] args) {
@@ -66,27 +57,31 @@ public class HelloFeatAI {
                 .model("qwen2.5:7b")
         );
 
-        model.chatStream("用一句话介绍 Feat 框架", System.out::print);
+        model.chatStream("用一句话介绍 Feat 框架", new ChatStreamListener() {
+            @Override
+            public void onStreamResponse(String content) {
+                System.out.print(content);
+            }
+        });
     }
 }
 ```
 
 ### 方案二：云端模型
 
-如果你已经拿到云端 API Key，也可以直接走云端：
+如果你已有云端 API Key：
 
 ```java title="HelloFeatAI.java"
 import tech.smartboot.feat.ai.FeatAI;
 import tech.smartboot.feat.ai.chat.ChatModel;
-import tech.smartboot.feat.ai.chat.ChatModelVendor;
 
 public class HelloFeatAI {
     public static void main(String[] args) {
         ChatModel model = FeatAI.chatModel(opts -> opts
-                .model(ChatModelVendor.GiteeAI.Qwen2_5_72B_Instruct)
+                .model("Qwen2.5-72B-Instruct")
         );
 
-        model.chat("用一句话介绍 Feat 框架", response -> {
+        model.chat("用一句话介绍 Feat 框架").thenAccept(response -> {
             System.out.println(response.getContent());
         });
     }
@@ -94,55 +89,52 @@ public class HelloFeatAI {
 ```
 
 <Aside type="caution">
-如果你使用云端模型但没有正确设置 `FEAT_AI_API_KEY`，程序通常会在初始化阶段直接失败，而不是返回空内容。
+云端模型默认读取环境变量 `FEAT_AI_API_KEY`。如果未设置，请求阶段会直接失败。
 </Aside>
 
-## 运行并确认结果
+## 运行并确认
 
-程序运行成功后，你应该看到模型返回一段文本。内容不必完全固定，但至少应该满足：
-
-- 没有抛异常
-- 控制台有真实输出
-- 不是空字符串
-
-一个典型结果可能类似：
+程序运行后，控制台应该出现一段真实文本，类似：
 
 ```text
 Feat 是一个轻量级、高性能的 Java Web 服务开发框架。
 ```
 
-## `chat` 和 `chatStream` 有什么区别
+只要满足以下三点，就算成功：
 
-这两个方法看起来很像，但使用场景不同：
+- 没有抛异常
+- 控制台有输出
+- 不是空字符串
 
-- `chat(...)`：等整段回复生成完成后再给你
-- `chatStream(...)`：一边生成一边回调，适合终端输出和前端流式展示
+## 两种调用方式的区别（先记结论）
 
-在 quickstart 阶段，能记住这个区别就够了。参数调优、多轮对话和系统提示词放到下一篇再学。
+Feat AI 提供两种与模型交互的方式，选择取决于你的场景：
 
-## 接下来读什么
+| 方法 | 返回值 | 适用场景 |
+|------|--------|----------|
+| `chat(...)` | `CompletableFuture<ChatResponse>`| 需要完整结果后再处理，如后端任务、数据提取 |
+| `chatStream(...)` | `void`（通过 `ChatStreamListener` 回调） | 需要实时消费片段，如终端输出、前端打字机效果 |
 
-如果第一次调用已经成功，接下来通常会沿着这条路径继续：
-
-- 想学同步调用、流式输出和多轮对话：看 [对话与流式](/feat/ai/chat/)
-- 想让模型调用工具：看 [使用 Agent](/feat/ai/agent/)
-- 想做检索增强：看 [Embedding 与向量](/feat/ai/embedding/)
+在 quickstart 阶段记住这个区别即可。具体怎么配置、怎么调优，下一篇细讲。
 
 ## 常见问题
 
-### 本地 Ollama 一直没有输出
+### 本地 Ollama 没有输出
 
-优先检查：
+1. 确认 Ollama 服务正在运行
+2. 确认本地已拉取对应模型（`ollama list`）
+3. 确认 `baseUrl` 与本机环境一致（默认端口 11434）
 
-1. Ollama 服务是否在运行
-2. 本地是否真的有对应模型
-3. `baseUrl` 是否与本机环境一致
+### 云端模型报错
 
-### 云端模型直接报错
+优先检查 `FEAT_AI_API_KEY` 是否在当前运行环境中可见，而不是只在另一个终端窗口 `export` 过。
 
-优先检查 `FEAT_AI_API_KEY` 是否真的在当前运行环境中可见，而不是只在另一个终端窗口里设置过。
+### 程序运行完立刻退出，没看到输出
 
-### 我想直接做 Agent，不想再学一轮对话
+`chatStream` 是异步的，如果 `main` 方法直接结束，程序可能在回调触发前就退出了。在 quickstart 阶段可以简单加一行 `Thread.sleep(30000)` 观察效果，生产代码应使用更成熟的异步等待机制。
 
-不建议。  
-先把最基本的模型调用理解清楚，再去做 Agent，排错成本会低很多。
+## 下一步
+
+- 学习配置模型、多轮对话和流式回调细节：[对话与流式](/feat/ai/chat/)
+- 让模型调用外部工具：[使用 Agent](/feat/ai/agent/)
+- 文本向量化与检索增强：[Embedding 与向量](/feat/ai/embedding/)
