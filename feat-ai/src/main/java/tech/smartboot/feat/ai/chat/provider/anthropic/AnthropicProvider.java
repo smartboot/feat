@@ -5,15 +5,15 @@ import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.ai.chat.ChatOptions;
-import tech.smartboot.feat.ai.chat.provider.StreamContext;
-import tech.smartboot.feat.ai.chat.provider.ToolCallBuilder;
-import tech.smartboot.feat.ai.chat.entity.Tool;
+import tech.smartboot.feat.ai.chat.StreamResponseCallback;
 import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ResponseMessage;
-import tech.smartboot.feat.ai.chat.StreamResponseCallback;
+import tech.smartboot.feat.ai.chat.entity.Tool;
 import tech.smartboot.feat.ai.chat.entity.ToolCall;
 import tech.smartboot.feat.ai.chat.entity.Usage;
 import tech.smartboot.feat.ai.chat.provider.Provider;
+import tech.smartboot.feat.ai.chat.provider.StreamContext;
+import tech.smartboot.feat.ai.chat.provider.ToolCallBuilder;
 import tech.smartboot.feat.ai.chat.provider.openai.OpenAiProvider;
 import tech.smartboot.feat.core.client.HttpPost;
 import tech.smartboot.feat.core.client.HttpResponse;
@@ -82,9 +82,9 @@ public class AnthropicProvider extends Provider {
      * 根据 Anthropic API 规范构造请求体和请求头。
      * </p>
      *
-     * @param messages  消息列表
-     * @param stream    是否启用流式响应
-     * @param tools 工具函数列表
+     * @param messages 消息列表
+     * @param stream   是否启用流式响应
+     * @param tools    工具函数列表
      * @return HttpPost 请求对象
      */
     public HttpPost createRequest(List<Message> messages, boolean stream, List<Tool> tools) {
@@ -180,34 +180,35 @@ public class AnthropicProvider extends Provider {
                     // 内容增量事件（核心事件，包含实际文本或工具调用）
                     // Anthropic 格式: {"index": 0, "delta": {"type": "text_delta", "text": "..."}}
                     // 或 {"index": 0, "delta": {"type": "input_json_delta", "partial_json": "..."}}
-                    int deltaIndex = object.getIntValue("index");
                     JSONObject delta = object.getJSONObject("delta");
-                    if (delta != null) {
-                        String deltaType = delta.getString("type");
-                        // 提取文本片段
-                        if ("text_delta".equals(deltaType)) {
-                            String text = delta.getString("text");
-                            if (text != null) {
-                                consumer.onStreamResponse(text); // 实时推送
-                                context.appendContent(text);      // 累积保存
-                            }
+                    if (delta == null) {
+                        break;
+                    }
+                    String deltaType = delta.getString("type");
+                    // 提取文本片段
+                    if ("text_delta".equals(deltaType)) {
+                        String text = delta.getString("text");
+                        if (text != null) {
+                            consumer.onStreamResponse(text); // 实时推送
+                            context.appendContent(text);      // 累积保存
                         }
-                        // 提取推理内容（Claude Thinking 模式）
-                        else if ("thinking_delta".equals(deltaType)) {
-                            String thinking = delta.getString("thinking");
-                            if (thinking != null) {
-                                consumer.onReasoning(thinking); // 实时推送
-                                context.appendReasoning(thinking); // 累积保存
-                            }
+                    }
+                    // 提取推理内容（Claude Thinking 模式）
+                    else if ("thinking_delta".equals(deltaType)) {
+                        String thinking = delta.getString("thinking");
+                        if (thinking != null) {
+                            consumer.onReasoning(thinking); // 实时推送
+                            context.appendReasoning(thinking); // 累积保存
                         }
-                        // 处理工具调用参数增量
-                        else if ("input_json_delta".equals(deltaType)) {
-                            ToolCallBuilder builder = toolCallBuilderMap.get(deltaIndex);
-                            if (builder != null) {
-                                String partialJson = delta.getString("partial_json");
-                                if (FeatUtils.isNotBlank(partialJson)) {
-                                    builder.appendArguments(partialJson);
-                                }
+                    }
+                    // 处理工具调用参数增量
+                    else if ("input_json_delta".equals(deltaType)) {
+                        int deltaIndex = object.getIntValue("index");
+                        ToolCallBuilder builder = toolCallBuilderMap.get(deltaIndex);
+                        if (builder != null) {
+                            String partialJson = delta.getString("partial_json");
+                            if (FeatUtils.isNotBlank(partialJson)) {
+                                builder.appendArguments(partialJson);
                             }
                         }
                     }
