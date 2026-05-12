@@ -164,4 +164,4 @@ pages/src/content/docs/
 **路径验证**：
 - 所有新创建的文档必须位于 `pages/src/content/docs/` 或其子目录下
 - 文档文件扩展名应为 `.md` 或 `.mdx`
-- 文档名称应使用小写字母和连字符（kebab-case）
+- 文档名称应使用小写字母和连字符（kebab_case）
