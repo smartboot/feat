@@ -86,12 +86,6 @@
 ---
 title: 路由配置详解
 description: 学习 Feat 的路由配置，包括路径匹配、参数提取和中间件
-prerequisites:
-  - 已完成 [快速入门](/feat/getstart/)
-  - 了解 HTTP 基本概念
-related:
-  next: [拦截器使用](/feat/interceptor/)
-  prev: [快速入门](/feat/getstart/)
 ---
 
 # 路由配置详解

@@ -258,12 +258,6 @@ public void process() {
 ## 下一步
 - [路由配置详解](/feat/router/) - 为你的服务添加路由
 
-// 文档 B：路由配置
----
-prerequisites:
-  - [快速入门](/feat/getstart/)
-related:
-  next: [拦截器使用](/feat/interceptor/)
 ---
 
 # 路由配置详解

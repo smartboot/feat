@@ -42,8 +42,6 @@ flowchart TD
 | `description` | 目录描述 | 是 | 30-50 字，用于目录展示和搜索摘要 |
 | `category` | 分类归属 | 否 | 用于分组展示，如"核心功能"、"高级特性" |
 | `order` | 排序序号 | 否 | 数字越小排序越靠前，默认按文件名排序 |
-| `prerequisites` | 前置知识 | 否 | 学习本文档前建议阅读的其他文档 |
-| `related` | 相关文档 | 否 | 与本文档相关的其他文档，用于推荐 |
 
 ### 输出：_meta.json
 
@@ -78,8 +76,6 @@ flowchart TD
 `_meta.json` 被以下功能使用：
 
 - **文档导航**：生成侧边栏导航结构
-- **相关推荐**：根据 `related` 字段推荐相关文档
-- **学习路径**：根据 `prerequisites` 构建学习路径
 - **搜索索引**：提供文档标题和描述用于搜索
 
 ---
@@ -172,7 +168,6 @@ flowchart TD
 
 **操作步骤**：
 1. 从目录中定位并移除对应项
-2. 检查是否有其他文档通过 `prerequisites` 或 `related` 引用
 3. 如有引用，提醒更新相关链接
 4. 保存更新后的 `_meta.json`
 
@@ -220,7 +215,6 @@ flowchart TD
 
 - [ ] 所有文档都有 `title` 和 `description`
 - [ ] `description` 长度符合规范（30-50 字）
-- [ ] 无孤立文档（至少有一个 `related` 或 `prerequisites` 链接）
 - [ ] 目录层级不超过 3 层
 - [ ] 排序逻辑清晰（`order` 无重复）
 
@@ -248,7 +242,6 @@ flowchart TD
 |---------|---------|
 | 缺少必填字段 | 提醒补充 frontmatter |
 | description 过长/过短 | 提醒修改至 30-50 字 |
-| 孤立文档 | 建议添加 `related` 或 `prerequisites` |
 | 排序冲突 | 自动重新分配 `order` 或提醒手动调整 |
 
 ---
