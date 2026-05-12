@@ -62,6 +62,10 @@ flowchart TD
     F --> G[编写核心内容]
     G --> H[建立文档连接]
     H --> I[质量检查]
+    I --> J{检查通过?}
+    J -->|否| K[修复问题]
+    K --> I
+    J -->|是| L[完成]
     
     D -.->|查阅| D1[00-writing-philosophy.md]
     G -.->|查阅| G1[03-code-standards.md]
