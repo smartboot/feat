@@ -55,100 +55,12 @@ public class OpenAiProvider extends Provider {
     private static final Logger LOGGER = LoggerFactory.getLogger(OpenAiProvider.class);
     public static final Consumer<JSONObject> responseJsonFormat = (jsonObject) -> jsonObject.put("response_format", JSONObject.of("type", "json_object"));
     /**
-     * 工具调用累积器：key=index, value=ToolCallParser
+     * 工具调用累积器：key=index, value=OpenAiToolCallParser
      */
     private final Map<Integer, ToolCallParser> toolCallMap = new HashMap<>();
 
     public OpenAiProvider(ChatOptions options) {
         super(options);
-    }
-
-    /**
-     * OpenAI 工具调用解析器
-     * <p>
-     * 处理 OpenAI 特定的 tool_calls 格式，转换为通用 ToolCall 结构。
-     * </p>
-     *
-     * <h3>解析逻辑：</h3>
-     * <ol>
-     *   <li>首次收到 tool_calls 分片时初始化</li>
-     *   <li>累积 function.arguments 字符串</li>
-     *   <li>最终转换为通用 ToolCall 格式</li>
-     * </ol>
-     */
-    private static class ToolCallParser {
-        /**
-         * 工具调用唯一标识
-         */
-        private String id;
-        /**
-         * 调用类型
-         */
-        private String type;
-        /**
-         * 函数名称
-         */
-        private String name;
-        /**
-         * 参数累积器
-         */
-        private final StringBuilder argumentsBuilder = new StringBuilder();
-        /**
-         * 调用索引
-         */
-        private final int index;
-
-        ToolCallParser(int index) {
-            this.index = index;
-        }
-
-        /**
-         * 解析 toolCallObj 并更新内部状态
-         *
-         * @param toolCallObj OpenAI 格式的 tool_call JSON 对象
-         */
-        void parse(JSONObject toolCallObj) {
-            // 更新基础字段
-            if (FeatUtils.isBlank(id)) {
-                this.id = toolCallObj.getString("id");
-            }
-            if (FeatUtils.isBlank(type)) {
-                this.type = toolCallObj.getString("type");
-            }
-
-            // 更新函数信息
-            if (!toolCallObj.containsKey("function")) {
-                return;
-            }
-            JSONObject functionObj = toolCallObj.getJSONObject("function");
-            String functionName = functionObj.getString("name");
-            if (FeatUtils.isNotBlank(functionName)) {
-                this.name = functionName;
-            }
-            String functionArgs = functionObj.getString("arguments");
-            if (FeatUtils.isNotBlank(functionArgs)) {
-                argumentsBuilder.append(functionArgs);
-            }
-        }
-
-        /**
-         * 转换为通用 ToolCall 结构
-         *
-         * @return 通用 ToolCall 对象
-         */
-        ToolCall toToolCall() {
-            ToolCall toolCall = new ToolCall();
-            toolCall.setIndex(index);
-            toolCall.setId(id);
-            toolCall.setType(type);
-            toolCall.setName(name);
-            if (argumentsBuilder.length() > 0) {
-                toolCall.setArguments(argumentsBuilder.toString());
-            } else {
-                toolCall.setArguments("{}");
-            }
-            return toolCall;
-        }
     }
 
     /**
@@ -231,7 +143,7 @@ public class OpenAiProvider extends Provider {
             responseMessage.setRole(Message.ROLE_ASSISTANT);
             responseMessage.setContent(content);
             responseMessage.setReasoningContent(context.getReasoning());
-            // 将 ToolCallParser 转换为通用 ToolCall
+            // 将 OpenAiToolCallParser 转换为通用 ToolCall
             List<ToolCall> toolCalls = new ArrayList<>();
             for (ToolCallParser parser : toolCallMap.values()) {
                 toolCalls.add(parser.toToolCall());
@@ -289,7 +201,7 @@ public class OpenAiProvider extends Provider {
             for (int i = 0; i < toolCallsArray.size(); i++) {
                 JSONObject toolCallObj = toolCallsArray.getJSONObject(i);
                 int index = toolCallObj.getIntValue("index");
-                // 根据 index 获取或创建 ToolCallParser
+                // 根据 index 获取或创建 OpenAiToolCallParser
                 ToolCallParser parser = toolCallMap.computeIfAbsent(index, ToolCallParser::new);
                 // 解析 toolCallObj
                 parser.parse(toolCallObj);
@@ -335,7 +247,6 @@ public class OpenAiProvider extends Provider {
                         ToolCall toolCall = new ToolCall();
                         toolCall.setIndex(i);
                         toolCall.setId(toolCallObj.getString("id"));
-                        toolCall.setType(toolCallObj.getString("type"));
 
                         JSONObject function = toolCallObj.getJSONObject("function");
                         if (function != null) {

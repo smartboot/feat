@@ -67,67 +67,12 @@ public class AnthropicProvider extends Provider {
     private static final String ANTHROPIC_VERSION = "2023-06-01";
 
     /**
-     * 工具调用解析器累积器：key=index, value=ToolCallParser
+     * 工具调用解析器累积器：key=index, value=AnthropicToolCallParser
      */
     private final Map<Integer, ToolCallParser> toolCallParserMap = new HashMap<>();
 
     public AnthropicProvider(ChatOptions options) {
         super(options);
-    }
-
-    /**
-     * Anthropic 工具调用解析器
-     * <p>
-     * 处理 Anthropic 特定的 tool_use 格式，转换为通用 ToolCall 结构。
-     * </p>
-     *
-     * <h3>解析逻辑：</h3>
-     * <ol>
-     *   <li>content_block_start 事件：从 content_block 字段提取 id 和 name</li>
-     *   <li>content_block_delta 事件：从 delta.partial_json 累积参数</li>
-     *   <li>最终转换为通用 ToolCall 格式</li>
-     * </ol>
-     */
-    private static class ToolCallParser {
-        /**
-         * 工具调用唯一标识
-         */
-        private String id;
-        /**
-         * 函数名称
-         */
-        private String name;
-        /**
-         * 参数累积器
-         */
-        private final StringBuilder argumentsBuilder = new StringBuilder();
-        /**
-         * 调用索引
-         */
-        private final int index;
-
-        ToolCallParser(int index) {
-            this.index = index;
-        }
-
-        /**
-         * 转换为通用 ToolCall 结构
-         *
-         * @return 通用 ToolCall 对象
-         */
-        ToolCall toToolCall() {
-            ToolCall toolCall = new ToolCall();
-            toolCall.setIndex(index);
-            toolCall.setId(id);
-            toolCall.setType("function");
-            toolCall.setName(name);
-            if (argumentsBuilder.length() > 0) {
-                toolCall.setArguments(argumentsBuilder.toString());
-            } else {
-                toolCall.setArguments("{}");
-            }
-            return toolCall;
-        }
     }
 
     /**
@@ -225,8 +170,8 @@ public class AnthropicProvider extends Provider {
                     JSONObject contentBlock = object.getJSONObject("content_block");
                     if (contentBlock != null && "tool_use".equals(contentBlock.getString("type"))) {
                         ToolCallParser parser = new ToolCallParser(blockIndex);
-                        parser.id = contentBlock.getString("id");
-                        parser.name = contentBlock.getString("name");
+                        parser.setId(contentBlock.getString("id"));
+                        parser.setName(contentBlock.getString("name"));
                         toolCallParserMap.put(blockIndex, parser);
                     }
                     break;
@@ -260,7 +205,7 @@ public class AnthropicProvider extends Provider {
                             if (parser != null) {
                                 String partialJson = delta.getString("partial_json");
                                 if (FeatUtils.isNotBlank(partialJson)) {
-                                    parser.argumentsBuilder.append(partialJson);
+                                    parser.appendArguments(partialJson);
                                 }
                             }
                         }
@@ -278,7 +223,7 @@ public class AnthropicProvider extends Provider {
                     responseMessage.setRole(Message.ROLE_ASSISTANT);
                     responseMessage.setContent(context.getContent());
                     responseMessage.setReasoningContent(context.getReasoning());
-                    // 转换 ToolCallParser 为 ToolCall
+                    // 转换 AnthropicToolCallParser 为 ToolCall
                     List<ToolCall> toolCalls = new ArrayList<>();
                     for (ToolCallParser parser : toolCallParserMap.values()) {
                         toolCalls.add(parser.toToolCall());
@@ -339,7 +284,6 @@ public class AnthropicProvider extends Provider {
                     ToolCall toolCall = new ToolCall();
                     toolCall.setIndex(i);
                     toolCall.setId(contentItem.getString("id"));
-                    toolCall.setType("function");
                     toolCall.setName(contentItem.getString("name"));
                     JSONObject input = contentItem.getJSONObject("input");
                     toolCall.setArguments(input != null ? input.toJSONString() : "{}");

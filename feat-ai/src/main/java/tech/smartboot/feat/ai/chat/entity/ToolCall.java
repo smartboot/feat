@@ -43,11 +43,6 @@ public class ToolCall {
     private String id;
 
     /**
-     * 调用类型
-     */
-    private String type;
-
-    /**
      * 函数/工具名称
      */
     private String name;
@@ -94,24 +89,6 @@ public class ToolCall {
     }
 
     /**
-     * 获取调用类型
-     *
-     * @return 调用类型
-     */
-    public String getType() {
-        return type;
-    }
-
-    /**
-     * 设置调用类型
-     *
-     * @param type 调用类型
-     */
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    /**
      * 获取函数/工具名称
      *
      * @return 函数名称
@@ -145,21 +122,5 @@ public class ToolCall {
      */
     public void setArguments(String arguments) {
         this.arguments = arguments;
-    }
-
-    /**
-     * 返回对象的字符串表示
-     *
-     * @return 对象的字符串表示
-     */
-    @Override
-    public String toString() {
-        return "ToolCall{" +
-                "index=" + index +
-                ", id='" + id + '\'' +
-                ", type='" + type + '\'' +
-                ", name='" + name + '\'' +
-                ", arguments=" + arguments +
-                '}';
     }
 }
