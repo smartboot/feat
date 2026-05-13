@@ -11,19 +11,30 @@ Feat 的文档不适合从配置参考或附录开始看。更高效的方式是
 Feat 主线仓库采用 Apache 2.0。Feat Core 与 Feat AI 可直接使用；Feat Cloud 通过赞助支持模式开放，如需使用请先[成为赞助者](/feat/sponsors/)获取授权。
 </Aside>
 
+以下是 Feat 文档的推荐学习路径：
+
 ```mermaid
-flowchart LR
-    A["进入 Feat 文档"] --> B{"你的目标是什么？"}
-    B --> C["理解底层 HTTP 服务"]
-    B --> D["快速写 Web 应用"]
-    B --> E["接入模型能力"]
-    C --> F["Feat Core"]
-    D --> G["Feat Cloud"]
-    E --> H["Feat AI"]
-    F --> I["先跑 quickstart<br/>再进专题页"]
-    G --> J["先跑 quickstart<br/>再看 Controller / Options / DB"]
-    H --> K["先完成第一次调用<br/>再看 Chat / Agent / Embedding"]
+flowchart TD
+    A[开始] --> B{你的目标?}
+    B -->|理解 HTTP 底层| C[Feat Core]
+    B -->|快速开发 Web 应用| D[Feat Cloud]
+    B -->|接入 AI 能力| E[Feat AI]
+    B -->|不确定| F[推荐]
+    C --> G[阅读 quickstart]
+    D --> H[阅读 quickstart]
+    E --> I[完成首次调用]
+    F --> C
+    
+    style C fill:#e3f2fd
+    style D fill:#fff3e0
+    style E fill:#e8f5e9
+    style F fill:#ffebee
+    style G fill:#e3f2fd
+    style H fill:#fff3e0
+    style I fill:#e8f5e9
 ```
+
+**图 1**：Feat 文档学习路径选择指南
 
 ## 选择一条路径
 
