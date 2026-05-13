@@ -26,7 +26,6 @@ export default new Map([
 ["src/content/docs/cloud/quickstart.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fcloud%2Fquickstart.mdx&astroContentModuleFlag=true")],
 ["src/content/docs/cloud/session.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fcloud%2Fsession.mdx&astroContentModuleFlag=true")],
 ["src/content/docs/getting-started/index.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fgetting-started%2Findex.mdx&astroContentModuleFlag=true")],
-["src/content/docs/guides/about.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fguides%2Fabout.mdx&astroContentModuleFlag=true")],
 ["src/content/docs/guides/index.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fguides%2Findex.mdx&astroContentModuleFlag=true")],
 ["src/content/docs/guides/system-requirements.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fguides%2Fsystem-requirements.mdx&astroContentModuleFlag=true")],
 ["src/content/docs/guides/version_history.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fguides%2Fversion_history.mdx&astroContentModuleFlag=true")],

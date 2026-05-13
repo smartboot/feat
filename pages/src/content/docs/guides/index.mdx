@@ -1,24 +1,118 @@
 ---
-title: 理解 Feat
-description: 在写代码之前，先了解 Feat 的定位、设计思路和文档使用方式
+title: Feat 是什么
+description: 理解 Feat 的定位、三层架构设计，以及如何与 Spring Boot、Vert.x 区分
 sidebar:
   order: 0
 ---
 
-import { CardGrid, LinkCard } from '@astrojs/starlight/components';
+import architecture from './img/architecture.svg';
+import { Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
 
-> **这篇文档回答一个问题**：Feat 是什么，它适合解决什么问题，以及你应该怎么开始？
+> **一句话概括**：Feat 是一个从底层网络服务能力生长出来的 Java Web 框架，试图把 Core、Cloud、AI 三条线收拢到同一套技术栈里。
 
-如果你正在评估技术选型，或者刚接触 Feat 想快速建立整体认知，从这里开始。
+它不是 Servlet 容器的包装层，也不是单纯的注解框架。理解这一点，能帮助你判断它是否适合你的项目。
 
-## 三个核心问题
+<img src={architecture.src} alt="Feat 架构图" width="800" height="400" />
+
+## Feat 的三层架构
+
+Feat 被设计成三个层级，每个层级解决不同场景的问题：
+
+### Feat Core：底层 HTTP 服务能力
+
+这是 Feat 的底座，直接提供 HTTP 服务、路由、WebSocket、SSE 等底层能力。
+
+**适合场景**：
+- 你想直接控制请求处理流程，而不是被框架隐藏细节
+- 你更关心性能、资源占用和启动速度
+- 你需要一个轻量级的 HTTP 服务底座，自己搭建上层逻辑
+
+**代码风格**：
+
+```java
+Feat.createServer()
+    .get("/", ctx -> ctx.write("Hello, World!"))
+    .listen(8080);
+```
+
+> 💡 **入门路径**：[构建第一个 Feat HTTP 服务](/feat/server/getstart/)
+
+### Feat Cloud：注解式开发模型
+
+建立在 Core 之上，提供类似 Spring Boot 的开发体验：Controller、依赖注入、配置管理、数据库集成等。
+
+**适合场景**：
+- 你想要注解式开发，快速构建业务应用
+- 你希望有完整的开发工具链支持（配置、数据库、部署）
+- 你的团队熟悉 Spring Boot，想尝试更轻量的替代方案
+
+**代码风格**：
+
+```java
+@Controller
+public class HelloController {
+    @RequestMapping("/")
+    public String hello() {
+        return "Hello, World!";
+    }
+}
+```
+
+> 💡 **入门路径**：[Feat Cloud 导览](/feat/cloud/)
+
+### Feat AI：AI 能力接入层
+
+提供对话模型、Embedding、Agent、MCP 等 AI 能力的统一接入。
+
+**适合场景**：
+- 你已经在用 Java 写服务，需要接入大模型能力
+- 你希望统一管理 HTTP 服务和 AI 接口调用
+- 你想在现有 Feat 项目中增加 AI 功能
+
+**代码风格**：
+
+```java
+ChatModel model = FeatAI.chatModel("gpt-4");
+String response = model.chat("你好");
+```
+
+> 💡 **入门路径**：[Feat AI 简介](/feat/ai/)
+
+## 与 Spring Boot、Vert.x 的关系
+
+最简单的理解方式不是"Feat 是不是谁的替代品"，而是看你当前更在意什么：
+
+| 你的关注点 | 可比较的框架 |
+|-----------|-------------|
+| 底层 HTTP 服务模型、资源效率 | Feat Core ↔ Vert.x |
+| 注解式开发、业务开发体验 | Feat Cloud ↔ Spring Boot |
+| AI 能力接入 | Feat AI ↔ Spring AI |
+
+但 Feat 并不试图一比一复刻任何现成框架。它的真正方向是：**用更轻的底座，把三条线串起来**。
+
+这意味着：
+- 你可以从 Core 开始，逐步引入 Cloud 的注解能力
+- 也可以在 Cloud 应用中随时使用 Core 的底层 API
+- AI 能力可以无缝集成到任何 Feat 项目中
+
+## 什么时候适合考虑 Feat
+
+**Feat 更适合**：
+
+- 你对 Java 服务的启动成本和资源占用比较敏感
+- 你希望既能从底层写起，也能逐步切到高层开发模型
+- 你想把云原生服务和 AI 接入放在同一套生态里
+- 你想要一个比 Spring Boot 更轻、比 Vert.x 更易上手的选择
+
+**Feat 不一定适合**：
+
+- 你团队已经深度依赖 Spring 生态的扩展能力，短期没有迁移意愿
+- 你当前只需要"生态最庞大的默认选项"
+- 你不关心底层服务模型，只希望直接套用现成企业框架栈
+
+## 开始之前
 
 <CardGrid>
-  <LinkCard
-    title="Feat 是什么"
-    href="/feat/guides/about/"
-    description="Feat 的定位、设计来源，以及它和 Spring Boot、Vert.x 的区别。"
-  />
   <LinkCard
     title="系统要求"
     href="/feat/guides/system-requirements/"
@@ -31,40 +125,7 @@ import { CardGrid, LinkCard } from '@astrojs/starlight/components';
   />
 </CardGrid>
 
-## 什么时候读这组文档
+<Aside type="tip">
+如果你已经决定使用 Feat，直接去[选择学习路径](/feat/getting-started/)开始编码。
+</Aside>
 
-**建议先读**：
-- 你还在评估 Feat，不确定是否适合当前项目
-- 需要向团队解释 Feat 的定位和优势
-- 准备做版本升级，需要了解兼容性变化
-
-**可以跳过**：
-- 你已经决定使用 Feat，想直接写代码 → 去[快速入门](/feat/getting-started/)
-- 你只想查 API 用法 → 去对应模块的参考文档
-
-## 推荐阅读顺序
-
-```
-Feat 是什么 → 系统要求 → [选择你的学习路径]
-```
-
-读完前两篇后，根据你的目标选择：
-
-| 你的目标 | 下一步 |
-|---------|--------|
-| 理解底层 HTTP 服务模型 | [Feat Core 导览](/feat/server/) |
-| 快速构建注解式 Web 应用 | [Feat Cloud 导览](/feat/cloud/) |
-| 接入 AI 能力 | [Feat AI 简介](/feat/ai/) |
-
-## 一个关键认知
-
-Feat 不是"另一个 Spring Boot"，也不是"Java 版的 Express"。
-
-它的设计思路更接近：**从底层网络服务能力出发，再逐层生长出高层开发模型**。
-
-这意味着：
-- 你可以从 Core 层开始，完全控制请求处理流程
-- 也可以直接使用 Cloud 层，获得类似 Spring Boot 的开发体验
-- 还可以在同一个项目中混用不同层级的能力
-
-理解这一点，会帮助你更好地选择学习路径和使用方式。
