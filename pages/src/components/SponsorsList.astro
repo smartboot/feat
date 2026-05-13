@@ -16,7 +16,7 @@ interface SponsorsData {
   };
 }
 
-const yamlPath = new URL('../../feat-cloud-aot/src/main/resources/feat_users.yaml', import.meta.url).pathname;
+const yamlPath = new URL('../../../feat-cloud-aot/src/main/resources/feat_users.yaml', import.meta.url).pathname;
 const yamlContent = readFileSync(yamlPath, 'utf-8');
 const data = yaml.load(yamlContent) as SponsorsData;
 const users = data.users;
