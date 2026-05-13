@@ -130,9 +130,7 @@ flowchart TD
 | **设计大纲** | [02-content-architecture.md](02-content-architecture.md) - 内容架构模式 |
 | **编写代码** | [03-code-standards.md](03-code-standards.md) - 代码规范 |
 | **自查优化** | [04-anti-patterns.md](04-anti-patterns.md) - 写作反模式 |
-| **SEO 优化** | [05-seo-guide.md](05-seo-guide.md) - SEO 指南 |
 | **质量检查** | [06-quality-checklist.md](06-quality-checklist.md) - 检查清单 |
-| **系列教程** | [07-in-action-style.md](07-in-action-style.md) - "In Action"风格 |
 | **添加图表** | [08-diagram-standards.md](08-diagram-standards.md) - 图表标准 |
 | **目录管理** | [09-toc-manager.md](09-toc-manager.md) - 教程目录管理 |
 

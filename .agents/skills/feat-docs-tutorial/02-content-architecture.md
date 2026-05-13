@@ -1,436 +1,348 @@
 # 内容架构模式
 
-> **重要**：本文档提供结构模板，但请避免机械套用。
-> 写作前请先阅读 [00-writing-philosophy.md](00-writing-philosophy.md) 理解叙事驱动理念。
-
-## 叙事结构模板（推荐）
-
-### 模板1：问题-探索-解决（PES）
-
-适用于：解决具体技术问题的教程
-
-```
-1. 场景引入（故事化）
-   "假设你正在开发一个电商系统，需要处理用户下单..."
-
-2. 遇到的挑战（产生共鸣）
-   "传统的做法会遇到以下问题..."
-
-3. 探索方案（对比分析）
-   "我们尝试过 A、B、C 三种方案..."
-
-4. Feat 的解决方式（核心内容）
-   "Feat 通过 xxx 特性优雅地解决了这个问题..."
-
-5. 完整实现（可运行代码）
-   "下面是完整的实现代码..."
-
-6. 效果验证（可验证）
-   "运行后，你可以看到..."
-
-7. 延伸思考（启发性）
-   "这个方案还可以扩展到..."
-```
-
-### 模板2：概念-演进-实践（CEP）
-
-适用于：需要理解设计思想的教程
-
-```
-1. 核心概念（一句话定义）
-   "依赖注入的本质是..."
-
-2. 演进历程（为什么需要）
-   "在没有 DI 之前，我们是这样做的..."
-   "这种方式的问题在于..."
-   "于是产生了 DI 模式..."
-
-3. Feat 的实现（具体用法）
-   "Feat 的 DI 设计遵循以下原则..."
-
-4. 实践案例（真实场景）
-   "来看一个用户服务的实际案例..."
-
-5. 常见误区（避坑指南）
-   "初学者容易犯这些错误..."
-```
-
-### 模板3：场景-选型-实现（SSI）
-
-适用于：多种方案对比的教程
-
-```
-1. 业务场景（具体描述）
-   "你需要为一个高并发系统选择缓存方案..."
-
-2. 方案对比（客观分析）
-   | 方案 | 适用场景 | 优缺点 |
-
-3. Feat 支持（能力展示）
-   "Feat 支持以上所有方案，使用方式分别是..."
-
-4. 推荐选择（给出建议）
-   "对于你的场景，我建议..."
-
-5. 实现步骤（详细指导）
-   "下面是具体的配置步骤..."
-```
-
-## 连贯性设计
-
-### 前置依赖声明
-
-每篇文档开头必须明确：
-
-```mdx
----
-title: 路由配置详解
-description: 学习 Feat 的路由配置，包括路径匹配、参数提取和中间件
----
-
-# 路由配置详解
-
-> **学习路径位置**：第 2 篇，共 8 篇
+> **核心理念**：Feat 教程采用**功能模块驱动**的写作风格——每个教程对应 Feat 的一个具体功能模块，提供可直接运行的代码示例。
 >
-> 上一篇：[快速入门](/feat/getstart/) | 下一篇：[拦截器使用](/feat/interceptor/)
-```
+> 参考 Spring、Vert.x 等成熟框架的官方文档风格。
 
-### 跨文档引用规范
-
-```mdx
-<!-- 引用之前学过的内容 -->
-> 📚 **回顾**：在[快速入门](/feat/getstart/)中，我们创建了一个基础服务。
-> 现在我们将为其添加路由功能。
-
-<!-- 预告后续内容 -->
-> 🔜 **预告**：本节只介绍基础路由配置。
-> 关于路由分组和中间件，将在[下一篇](/feat/router-advanced/)详细讲解。
-
-<!-- 关联其他模块 -->
-> 🔗 **关联**：路由配置完成后，你可能需要学习
-> [拦截器](/feat/interceptor/)来实现权限控制。
-```
-
-## 传统教程类型与结构（参考）
-
-以下提供传统结构模板，但建议优先使用上方的叙事模板。
-
-### 1. 快速入门教程
-
-**目标读者：** 初次接触 Feat 的开发者
-**认知目标：** 应用（30 分钟内跑通第一个 Demo）
-**字数控制：** 800-1500 字
-
-**结构模板：**
-
-```mdx
----
-title: 快速入门
-description: 5分钟快速上手 Feat
 ---
 
+## 架构设计原则
+
+### 1. 功能模块驱动（Feature-Driven）
+
+**不是**：围绕一个虚构的完整项目展开长篇连载
+**而是**：每个教程讲解 Feat 的一个具体功能模块
+
+```mdx
+# ❌ 项目驱动方式
+我们正在构建一个电商系统...
+（需要读者从头跟到尾）
+
+# ✅ 功能模块驱动方式
+## Router 路由模块
+本文介绍 Feat 的路由配置功能...
+
+## Interceptor 拦截器
+本文介绍 Feat 的拦截器机制...
+
+## WebSocket 支持
+本文介绍 Feat 的 WebSocket 实现...
+```
+
+### 2. 即学即用（Ready-to-Run）
+
+每个代码示例都应该是**完整可运行**的：
+
+```java
+// 完整的可运行示例
+public class HelloWorld {
+    public static void main(String[] args) {
+        Feat.createServer()
+            .get("/", ctx -> ctx.write("Hello, World!"))
+            .listen(8080);
+    }
+}
+```
+
+### 3. 渐进深入（Progressive Depth）
+
+从基础用法到高级特性：
+
+1. **基础用法** - 最简单的代码（首屏可见）
+2. **常见场景** - 实际开发中的典型用法
+3. **高级特性** - 性能优化、边缘情况处理
+
+---
+
+## 文档类型
+
+Feat 文档分为两类：
+
+- **功能模块文档** - 讲解 Feat 的各个功能模块（Router、Interceptor、WebSocket 等）
+- **集成文档** - 讲解与第三方组件的集成（Redis、MySQL、JWT 等）
+
+### 1. 快速入门（Getting Started）
+
+**目标**：让读者 5 分钟内跑通第一个 Demo  
+**字数**：500-1000 字
+
+**结构**：
+```mdx
 # 快速入门
 
-## 环境准备
+## 环境要求
+- JDK 8+
+- Maven 3.6+
 
-### 必需环境
-- JDK 8 或更高版本
-- Maven 3.6+ 或 Gradle 6.0+
-
-### 可选工具
-- IntelliJ IDEA（推荐）
-- Eclipse
-
-## 创建第一个项目
+## 创建项目
 
 ### 1. 添加依赖
 
-<Steps>
-  <Step>
-    **Maven 方式**
-
-    在 `pom.xml` 中添加：
-  </Step>
-</Steps>
-
-\```xml
+```xml
 <dependency>
     <groupId>tech.smartboot.feat</groupId>
     <artifactId>feat-core</artifactId>
-    <version>{最新版本}</version>
+    <version>${version}</version>
 </dependency>
-\```
+```
 
 ### 2. 编写代码
 
-\```java
-public class HelloWorld {
+```java
+public class QuickStart {
     public static void main(String[] args) {
-        FeatCloud.cloudServer()
-                .get("/", ctx -> ctx.write("Hello Feat!"))
-                .listen();
+        Feat.createServer()
+            .get("/", ctx -> ctx.write("Hello, Feat!"))
+            .listen(8080);
     }
 }
-\```
+```
 
-### 3. 运行项目
+### 3. 运行
 
-\```bash
-mvn compile exec:java -Dexec.mainClass="HelloWorld"
-\```
+```bash
+mvn compile exec:java -Dexec.mainClass="QuickStart"
+```
 
-## 验证结果
-
-打开浏览器访问 `http://localhost:8080`，看到 "Hello Feat!" 即表示成功。
+访问 http://localhost:8080 查看结果。
 
 ## 下一步
 
-- 了解更多 [路由配置](/feat/server/router/)
-- 学习 [依赖注入](/feat/cloud/controller/)
+- [创建 RESTful API](/docs/rest-api)
+- [处理表单数据](/docs/form)
 ```
 
-**关键约束：**
-- 前 200 字必须让读者看到可运行的代码
-- 每个步骤不超过 3 个操作
-- 必须包含"验证结果"章节
+**关键约束**：
+- 前 200 字内必须出现可运行的代码
+- 步骤不超过 3 个
+- 必须包含验证环节
 
-### 2. 功能教程
+---
 
-**目标读者：** 需要学习特定功能的开发者
-**认知目标：** 应用 → 分析（会用 + 懂边界情况）
-**字数控制：** 1500-3000 字
+### 2. 功能模块文档（Feature Module Guide）
 
-**结构模板：**
+**目标**：深入讲解 Feat 的某个功能模块
+**字数**：1000-2500 字
 
+**结构**：
 ```mdx
----
-title: 功能名称
-description: 功能简介
----
+# Router 路由模块
 
-# 功能名称
+Feat 的 Router 模块提供声明式路由配置，支持路径参数、查询参数、路由分组等功能。
 
-## 功能概述
+## 注册路由
 
-简要说明功能的作用、价值和应用场景。
+最简单的代码示例（首屏可见）：
 
-## 基础用法
-
-### 最简示例
-
-\```java
-// 最简单的使用方式
-\```
-
-### 参数说明
-
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| param1 | String | 是 | 参数说明 |
-| param2 | int | 否 | 参数说明 |
-
-## 进阶用法
-
-### 场景1：XXX
-
-\```java
-// 场景1的代码示例
-\```
-
-**适用场景：** 说明何时使用这种方式
-
-### 场景2：XXX
-
-\```java
-// 场景2的代码示例
-\```
-
-**适用场景：** 说明何时使用这种方式
-
-## 最佳实践
-
-<Aside type="tip">
-最佳实践提示
-</Aside>
-
-## 常见问题
-
-### Q1：问题描述？
-
-**A：** 解决方案说明
-
-## 相关链接
-
-- [相关功能1](/feat/xxx/)
-- [相关功能2](/feat/xxx/)
+```java
+server.get("/hello", ctx -> {
+    ctx.write("Hello!");
+});
 ```
 
-**关键约束：**
-- "基础用法"必须在首屏（无需滚动即可看到代码）
-- "进阶用法"按使用频率排序，高频在前
-- 必须包含"常见错误"反模式示例
+## 路径参数
 
-### 3. 集成教程
+从 URL 中提取参数：
 
-**目标读者：** 需要集成第三方组件的开发者
-**认知目标：** 应用（跑通集成）→ 评估（选型依据）
-**字数控制：** 2000-4000 字
+```java
+server.get("/user/:id", ctx -> {
+    String userId = ctx.pathParam("id");
+    ctx.write("User: " + userId);
+});
+```
 
-**结构模板：**
+## 查询参数
 
+获取 URL 查询字符串：
+
+```java
+server.get("/search", ctx -> {
+    String keyword = ctx.queryParam("q");
+    ctx.write("Search: " + keyword);
+});
+```
+
+## 路由分组
+
+将相关路由组织在一起：
+
+```java
+server.group("/api", api -> {
+    api.get("/users", ...);
+    api.post("/users", ...);
+});
+```
+
+## 完整示例
+
+```java
+public class RouterExample {
+    public static void main(String[] args) {
+        Feat.createServer()
+            .get("/", ctx -> ctx.write("Home"))
+            .get("/user/:id", ctx -> {
+                ctx.write("User: " + ctx.pathParam("id"));
+            })
+            .listen(8080);
+    }
+}
+```
+
+> 🔗 **相关文档**：[拦截器](/docs/interceptor)、[错误处理](/docs/error-handling)
+```
+
+**关键约束**：
+- "基础用法"必须在首屏（无需滚动）
+- 每个代码块都应该是可运行的
+- 包含一个"完整示例"章节
+
+---
+
+### 3. 集成文档（Integration Guide）
+
+**目标**：讲解如何与第三方组件集成
+**字数**：1500-3000 字
+
+**结构**：
 ```mdx
----
-title: 集成 XXX
-description: 如何在 Feat 中集成 XXX
----
+# 集成 Redis
 
-# 集成 XXX
+本文介绍如何在 Feat 中集成 Redis，实现数据缓存功能。
 
-## 前置条件
+## 添加依赖
 
-- 已安装 XXX
-- 版本要求：XXX
-
-## 集成步骤
-
-### 1. 添加依赖
-
-\```xml
+```xml
 <dependency>
-    <groupId>xxx</groupId>
-    <artifactId>xxx</artifactId>
-    <version>xxx</version>
+    <groupId>tech.smartboot.feat</groupId>
+    <artifactId>feat-redis</artifactId>
+    <version>${version}</version>
 </dependency>
-\```
+```
 
-### 2. 配置
+## 连接 Redis
 
-\```yaml
-# application.yml
-xxx:
-  enabled: true
-  option: value
-\```
+```java
+RedisClient redis = RedisClient.create("redis://localhost:6379");
+```
 
-### 3. 使用
+## 基本操作
 
-\```java
-// 使用示例
-\```
+存储和读取数据：
 
-## 验证集成
+```java
+redis.set("key", "value");
+String value = redis.get("key");
+```
 
-如何验证集成是否成功。
+在 Web 应用中使用：
+
+```java
+server.get("/cache/:key", ctx -> {
+    String key = ctx.pathParam("key");
+    String value = redis.get(key);
+    ctx.write(value != null ? value : "Not found");
+});
+```
+
+## 配置选项
+
+| 选项 | 默认值 | 说明 |
+|------|--------|------|
+| host | localhost | Redis 服务器地址 |
+| port | 6379 | 端口号 |
+| timeout | 5000 | 连接超时（毫秒） |
 
 ## 故障排查
 
-### 常见错误1
+**连接失败**（`Connection refused`）
 
-**错误信息：** XXX
+通常是因为 Redis 服务未启动，请确保 Redis 服务正在运行。
 
-**解决方案：** XXX
+## 版本兼容性
 
-## 参考资料
-
-- [XXX 官方文档](https://xxx)
+| Feat 版本 | Redis 版本 |
+|-----------|------------|
+| 1.0.x | 5.0+ |
+| 1.1.x | 6.0+ |
 ```
 
-**关键约束：**
-- 必须列出所有版本兼容性矩阵
-- "故障排查"必须基于真实 issue
-- 提供回退方案（集成失败时的降级策略）
+**关键约束**：
+- 必须列出版本兼容性
+- 包含故障排查章节
+- 提供配置选项表
 
-## 内容架构模式
-
-### 模式对比
-
-```mermaid
-flowchart LR
-    subgraph PES["PES 模式"]
-        P1[问题描述] --> P2[探索方案]
-        P2 --> P3[解决实现]
-        P3 --> P4[效果验证]
-    end
-    
-    subgraph CEP["CEP 模式"]
-        C1[核心概念] --> C2[演进历程]
-        C2 --> C3[实践应用]
-        C3 --> C4[常见误区]
-    end
-    
-    subgraph SSI["SSI 模式"]
-        S1[业务场景] --> S2[方案对比]
-        S2 --> S3[选型建议]
-        S3 --> S4[实现步骤]
-    end
-    
-    style PES fill:#e3f2fd
-    style CEP fill:#fff3e0
-    style SSI fill:#e8f5e9
-```
-
-### 模式1：问题-探索-解决（PES）
-
-适用于：解决特定技术问题的教程
-
-```mermaid
-flowchart TD
-    A[场景引入<br/>建立上下文] --> B[遇到的挑战<br/>产生共鸣]
-    B --> C[探索方案<br/>对比分析]
-    C --> D[Feat 的解决方式<br/>核心内容]
-    D --> E[完整实现<br/>可运行代码]
-    E --> F[效果验证<br/>可验证]
-    F --> G[延伸思考<br/>启发性]
-```
-
-### 模式2：概念-演进-实践（CEP）
-
-适用于：需要理解设计思想的教程
-
-```mermaid
-flowchart TD
-    A[核心概念<br/>一句话定义] --> B[演进历程<br/>为什么需要]
-    B --> C[Feat 的实现<br/>具体用法]
-    C --> D[实践案例<br/>真实场景]
-    D --> E[常见误区<br/>避坑指南]
-```
-
-### 模式3：场景-选型-实现（SSI）
-
-适用于：多种方案对比的教程
-
-```mermaid
-flowchart TD
-    A[业务场景<br/>具体描述] --> B[方案对比<br/>客观分析]
-    B --> C[推荐选择<br/>给出建议]
-    C --> D[实现步骤<br/>详细指导]
-    D --> E[迁移指南<br/>从其他方案迁移]
-```
+---
 
 ## 内容组织原则
 
-**去重原则：**
+### 去重原则
 
-每个知识点只在一处详细讲解，其他地方简要提及 + 链接引用：
+每个知识点只在一处详细讲解，其他地方链接引用：
 
 ```mdx
 <!-- 详细讲解处 -->
-## Router 路由组件
-Router 负责将 HTTP 请求分发到对应的处理器...
-（完整讲解）
+## 路由配置
+完整讲解路由的各种用法...
 
 <!-- 其他文档引用时 -->
-使用 Router 处理路由，详见 [Router 路由组件](/feat/server/router/)。
+关于路由配置，详见 [路由配置](/docs/router)。
 ```
 
-**渐进式展开：**
+### 渐进式展开
 
 - 先讲最简单的用法
-- 再讲常用场景
-- 最后讲高级用法
+- 再讲常见场景
+- 最后讲高级特性
 
-**结构灵活性：**
+### 代码优先
 
-- 简单的内容，一篇文档足够
-- 复杂的内容，拆分成系列文档
-- 根据内容特点调整结构
+- 代码示例比文字说明更重要
+- 每个代码块都应该是可运行的
+- 复杂示例要有注释说明
+
+---
+
+## 写作风格
+
+### 使用第二人称
+
+```mdx
+✅ 你可以使用 `ctx.pathParam()` 获取路径参数
+❌ 用户可以使用 `ctx.pathParam()` 获取路径参数
+```
+
+### 简洁直接
+
+```mdx
+✅ 使用 `server.get()` 注册 GET 路由
+❌ 在 Feat 框架中，开发者可以通过调用 Server 对象的 get 方法来注册一个处理 HTTP GET 请求的路由
+```
+
+### 使用提示框
+
+```mdx
+> 💡 **提示**：这是推荐的做法
+
+> ⚠️ **注意**：这里有个常见的陷阱
+
+> 🔗 **参见**：[相关文档](/docs/xxx)
+```
+
+---
+
+## 检查清单
+
+发布前确认：
+
+- [ ] 所有代码示例都经过测试，可以运行
+- [ ] "基础用法"在首屏可见（无需滚动）
+- [ ] 包含一个完整的、可运行的示例
+- [ ] 使用了第二人称（"你"）
+- [ ] 链接到相关文档
+
+### 避免的陷阱
+
+- ❌ 代码示例不完整，无法直接运行
+- ❌ 使用虚构的项目场景
+- ❌ 章节之间强依赖，必须按顺序阅读
+- ❌ 只有文字说明，缺少代码示例
