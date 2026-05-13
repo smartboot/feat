@@ -1,263 +1,270 @@
 ---
 title: 版本历史
-description: 记录 Feat 的版本演进、升级提示和兼容性变化
+description: Feat 的版本演进、升级提示和兼容性变化记录
 sidebar:
     order: 3
 ---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+
+> **这篇文档是升级前的必读材料**。在升级版本之前，先查看对应版本的兼容性说明和升级指南。
+
+版本号遵循语义化版本规范：`主版本.次版本.修订号`
+
+- **主版本**：可能包含破坏性变更
+- **次版本**：新增功能，向后兼容
+- **修订号**：问题修复，向后兼容
+
+---
+
 ## v2.0.0 (2026-04-07)
 
-### 版本特性
+### 重要变更：开源协议升级
 
-**开源协议升级：AGPL → Apache 2.0**
-
-这是 Feat 项目的一个重要里程碑。我们将开源协议从 AGPL 升级至 Apache 2.0，为企业和开发者提供更加友好的商业使用环境。
+这是 Feat 项目的一个重要里程碑。我们将开源协议从 AGPL 升级至 **Apache 2.0**。
 
 **为什么切换协议？**
 
-Feat 项目自 2024 年 12 月启动以来，经历了快速的发展和迭代。在项目初期，我们选择 AGPL 协议旨在保护开源项目的完整性。然而，随着项目日益成熟，我们深刻认识到 AGPL 协议的"传染性"条款对企业用户构成了显著的法律风险，成为阻碍 Feat 广泛采用的主要因素。
+在项目初期，我们选择 AGPL 旨在保护开源项目的完整性。但随着项目成熟，AGPL 的"传染性"条款对企业用户构成了法律风险，成为阻碍广泛采用的主要因素。
 
-Apache 2.0 已成为企业级开源项目的事实标准。Spring Framework、Kubernetes、TensorFlow 等顶级项目均采用该协议，在保护创作者权益与促进生态繁荣之间取得了良好平衡。
+Apache 2.0 已成为企业级开源项目的事实标准（Spring Framework、Kubernetes、TensorFlow 等均采用）。它在保护创作者权益与促进生态繁荣之间取得了良好平衡。
 
-**对企业用户的价值：**
-- 商业友好：可自由用于商业闭源项目，无需担心代码开源义务
-- 专利授权：明确的专利使用权，降低知识产权风险
-- 技术选型：降低法务审批门槛，加速技术决策流程
-- 生态参与：可自由定制和扩展，无需回馈代码
+**对企业用户的价值**：
 
-**战略意义：**
-- 商业应用拓展：企业可放心将 Feat 应用于金融科技、电商平台、物联网、企业内部系统等场景
-- 生态繁荣：吸引更多贡献者参与，促进第三方库、工具链、解决方案等生态组件的繁荣发展
-- 长期规划：为后续的技术路线图实施扫清障碍
+| 方面 | 变化 |
+|------|------|
+| 商业使用 | 可自由用于商业闭源项目，无需开源义务 |
+| 专利授权 | 明确的专利使用权，降低知识产权风险 |
+| 技术选型 | 降低法务审批门槛，加速决策流程 |
+| 生态参与 | 可自由定制和扩展，促进第三方库发展 |
 
 ### 升级指南
 
-v2.0.0 与 v1.x 完全兼容，只需更新版本号：
+v2.0.0 与 v1.x **完全兼容**，只需更新版本号：
 
 ```xml
 <feat.version>2.0.0</feat.version>
 ```
 
-### 兼容性说明
+无需修改任何代码，升级后自动适用 Apache 2.0 协议。
 
-升级至 v2.0.0 后，项目自动适用 Apache 2.0 协议。企业用户可放心用于商业项目，无需担心开源义务。
+<Aside type="tip">
+发版详情：[Feat 2.0 发布：Apache 2.0 协议升级](https://mp.weixin.qq.com/s/uXmXC8QiNt848_3fKqD98w)
+</Aside>
 
 ---
 
-发版详情：[https://mp.weixin.qq.com/s/uXmXC8QiNt848_3fKqD98w](https://mp.weixin.qq.com/s/uXmXC8QiNt848_3fKqD98w)
-
 ## v1.5.0 (2026-02-24)
 
-### 版本特性
+### 新特性概览
 
-- **Feat Core：**
-  - [client] 重构 GZIP 输入流实现，支持完整的头部解析和更先进的异步解码算法。
-  - [client] 修复 SSE 事件数据中的换行符转义问题。
-  - [server] 修复静态资源处理器中的路径解析、HEAD 请求、空指针异常和 404 页面返回问题。
-  - [server] 优化静态资源处理器的类路径资源定位功能，支持配置静态资源路径。
-  - [server] 修复 HTTP 协议解析中的缓冲区边界检查和字节缓冲区位置错误。
-  - [core] 添加方法实例化 Bean 的支持。
-  - [core] 优化字节树子节点获取逻辑。
-  - [router] 支持花括号 `{}` 形式的路径参数匹配。
-  - 移除过时的 DeflaterInputStream 引用并优化异常处理。
-  - 升级 smart-socket 至 1.8.3。
+#### Feat Core
 
-- **Feat AI：**
-  - 实现 ReAct Agent 智能体，支持系统提示词、工具执行钩子和异常处理。
-  - AI 代理工具改为异步执行模式，优化执行流程和消息处理机制。
-  - 新增流式响应错误处理机制和失败处理机制。
-  - 新增 Kimi-K2.5-Instruct 模型支持。
-  - 重构提示词模板接口设计，优化 ReAct 智能体提示模板结构。
-  - 新增子代理任务委托功能。
-  - 实现 AI Agent 动作解析功能。
-  - 新增 WebReader 网页阅读器功能，支持读取和转换网页内容。
+- **Client**：重构 GZIP 输入流，支持完整头部解析和异步解码
+- **Client**：修复 SSE 事件数据换行符转义问题
+- **Server**：修复静态资源处理器路径解析、HEAD 请求、空指针等问题
+- **Server**：支持配置静态资源路径
+- **Router**：支持花括号 `{}` 形式的路径参数匹配
+- **Core**：升级 smart-socket 至 1.8.3
 
-- **Feat Cloud：**
-  - 新增 MyBatis 集成支持，包括配置序列化、编译期 XML 配置解析和代码生成。
-  - 新增分布式会话管理功能，集成 Redisun 支持集群会话管理。
-  - 重构会话管理架构，实现本地会话管理器和集群会话管理器。
-  - 改进 AOT 编译逻辑，支持扩展序列化器（MyBatis 和 Redisun 集成）。
-  - RequestMapping 支持 `{}` 花括号形式的路径参数匹配。
-  - 新增静态资源路径配置功能。
-  - 新增 JSONArray 支持和结构体参数处理。
-  - 增强控制器序列化器的参数处理能力，支持复杂类型参数。
-  - 修复 JSON 解析空值导致的异常问题。
-  - 修复列表参数反序列化问题。
-  - 新增 Docker 部署支持，包括 JRE 版本和原生镜像示例。
-  - 添加 Fat Jar 打包支持。
-  - AsyncResponse 的 complete 方法返回类型调整为 AsyncResponse。
+#### Feat AI
 
-### 升级指南
-1. 升级版本后处理编译报错问题。
-2. 若使用了 `AsyncResponse@complete` 方法，注意其返回类型已变更为 `AsyncResponse`。
-3. 若需技术支持可通过 [Gitee ISSUE](https://gitee.com/smartboot/feat/issues) 提交反馈。
+- **Agent**：实现 ReAct Agent 智能体，支持系统提示词、工具执行钩子
+- **Agent**：AI 代理工具改为异步执行模式
+- **模型**：新增 Kimi-K2.5-Instruct 支持
+- **工具**：新增 WebReader 网页阅读器功能
+
+#### Feat Cloud
+
+- **数据库**：新增 MyBatis 集成支持
+- **会话**：新增分布式会话管理，集成 Redis
+- **部署**：新增 Docker 部署支持（JRE 和 Native Image）
+- **打包**：新增 Fat Jar 打包支持
+- **路由**：RequestMapping 支持 `{}` 花括号路径参数
+
+### 升级步骤
+
+<Steps>
+1. **更新版本号**
+
+   ```xml
+   <feat.version>1.5.0</feat.version>
+   ```
+
+2. **处理编译报错**
+
+   升级后若出现编译错误，根据错误提示调整代码。
+
+3. **检查 AsyncResponse 使用**
+
+   `AsyncResponse.complete()` 方法返回类型从 `void` 变更为 `AsyncResponse`：
+
+   ```java
+   // v1.4 及之前
+   asyncResponse.complete();
+   
+   // v1.5+
+   return asyncResponse.complete();
+   ```
+</Steps>
 
 ### 兼容性说明
-1. `AsyncResponse@complete` 方法返回类型从 `void` 修改为 `AsyncResponse`。
-2. `ApplicationContext` 类已设为 final，构造函数访问权限调整。
-3. Feat AI 模块中 Agent 相关接口存在多处重构，如 AgentOptions 构造方式、工具接口等。
 
-发版详情：[https://mp.weixin.qq.com/s/fi0EmKhN9GHbUtZ6FfK3LA](https://mp.weixin.qq.com/s/fi0EmKhN9GHbUtZ6FfK3LA)
+| 变更项 | 影响 | 处理方式 |
+|--------|------|----------|
+| `AsyncResponse.complete()` 返回类型 | 有返回值 | 按需要接收返回值 |
+| `ApplicationContext` 设为 final | 无法继承 | 使用组合而非继承 |
+| Feat AI Agent 接口重构 | 多处变更 | 参考新文档调整 |
+
+<Aside type="tip">
+发版详情：[Feat 1.5 发布：ReAct Agent、MyBatis 集成、Docker 支持](https://mp.weixin.qq.com/s/fi0EmKhN9GHbUtZ6FfK3LA)
+</Aside>
+
+---
 
 ## v1.4.0 (2025-11-28)
-### 版本特性
-- **Feat Core：**
-  - [client] 新增友好的 SSE 接口，更好的赋能 AI 开发。
-  - [client] 修复特定情况下 SSE 解码异常问题。
-  - [client] HttpClient 支持链路复用，以及连接资源自动释放。
-  - [client] 支持解析 `Content-Encoding:dcz` 响应结果。
-  - [client] 采用自定义 gzip 解析，支持异步解码。
-  - [server] 简化 Http ReadListener 的接口实现。
-  - [server] Cookie Name 默认采用 rfc2109 规范。
-  - [server] 支持非 UTF8 字符集的请求。
-  - [server] 修复非法 upgrade 引发的请求参数解析阻塞问题。
-  - [server] 改进编解码算法。
-  - [server] 废弃 HttpResponse@writeJson 方法。
-  - [server] 优化 smart-socket 插件注册顺序。
-  - 升级 smart-socket 至 1.7.5。
 
-- **Feat AI：**
-  - 适配全新的 SSE 接口，提升代码可读性和可维护性。
-  - 探索 AI Agent 相关技术：并初步实现通用 Agent 能力，并内置了多款工具。
-  - 重构提示词模版接口设计，提升使用体验及解析性能。
-  - 新增多款 Gitee AI 模型：DeepSeek-V3.2-Exp、DeepSeek-V3_1、Qwen3-8B、Qwen3-32B
-- **Feat Cloud**
-  - 异步接收 Form 表单数据，带来并发性能前所未有的提升。
-  - 新增 feat.yaml 配置项：`$.server.autoSSL` 自动启用 HTTPS。
-  - 优化 MCP 注册路由的控制台输出。
-  - 优化 AOT VM 模块，尽量对齐 AOT 运行表现。
+### 新特性概览
 
+#### Feat Core
 
-### 升级指南
-1. 升级版本后处理编译报错问题。
-2. 若需技术支持可通过 [Gitee ISSUE](https://gitee.com/smartboot/feat/issues) 提交反馈。
+- **Client**：新增友好的 SSE 接口，更好的赋能 AI 开发
+- **Client**：HttpClient 支持链路复用和连接资源自动释放
+- **Client**：支持解析 `Content-Encoding: dcz` 响应
+- **Server**：Cookie Name 默认采用 RFC2109 规范
+- **Server**：支持非 UTF-8 字符集的请求
+- **Core**：升级 smart-socket 至 1.7.5
+
+#### Feat AI
+
+- **SSE**：适配全新 SSE 接口，提升代码可读性
+- **Agent**：初步实现通用 Agent 能力，内置多款工具
+- **模型**：新增 DeepSeek-V3.2-Exp、DeepSeek-V3_1、Qwen3-8B、Qwen3-32B
+
+#### Feat Cloud
+
+- **性能**：异步接收 Form 表单数据，并发性能大幅提升
+- **HTTPS**：新增 `feat.yaml` 配置项 `$.server.autoSSL` 自动启用 HTTPS
+- **AOT**：优化 AOT VM 模块，对齐 AOT 运行表现
+
+### 升级步骤
+
+1. 更新版本号至 1.4.0
+2. 处理编译报错（主要是包路径迁移）
+3. 若使用 Feat AI Agent，注意接口存在不兼容重构
+
 ### 兼容性说明
-1. feat-core 模块中的多个工具类进行包路径迁移。
-2. feat-agent 模块多出不兼容的接口重构，并且在未来一段时期内该情况持续存在。
+
+- feat-core 模块中多个工具类进行包路径迁移
+- feat-ai 模块 Agent 相关接口存在多处重构，未来一段时期内该情况持续存在
+
+---
 
 ## v1.3.0 (2025-09-14)
-### 版本特性
-- **Feat Core：**
-    - 将静态资源服务迁移至示例模块。
-    - `FeatUtils` 增加 `isEmpty` 和 `isNotEmpty` 方法。
-    - 优化部分 Http 编解码逻辑。
-    - 优化 Router 路径参数解析性能。
-- **Feat AI：**
-    - 更加规范、统一的接口定义。
-- **Feat Cloud**
-    - 引入编译期 LICENSE 授权验证机制，帮助用户提前规避合格风险。
-    - 剥离 AOT 相关代码作为独立模块，仅在编译器依赖，缩减最终包体积。
-    - 针对无 package 的 AOT 编译主动触发异常提示。
-    - 增加 AOT VM 模块，提升本地开发环境的运行体验。
 
-### 升级指南
-无
+### 新特性概览
+
+#### Feat Core
+
+- 静态资源服务迁移至示例模块
+- `FeatUtils` 增加 `isEmpty` 和 `isNotEmpty` 方法
+- 优化 Router 路径参数解析性能
+
+#### Feat AI
+
+- 更加规范、统一的接口定义
+
+#### Feat Cloud
+
+- 引入编译期 LICENSE 授权验证机制
+- 剥离 AOT 相关代码作为独立模块
+- 新增 AOT VM 模块，提升本地开发体验
+
 ### 兼容性说明
-1. Feat AI 模版存在多出接口定义及配置参数的重构。
-2. 原 feat-cloud 中的 AOT 相关代码剥离成独立模块，保留原包路径定义，基本保持兼容性。
+
+- Feat AI 模板存在多处接口定义及配置参数重构
+- AOT 相关代码剥离成独立模块，保留原包路径定义，基本保持兼容性
+
+---
 
 ## v1.2.0 (2025-07-24)
 
-### 版本特性
-- **Feat Core：**
-    - 优化 HttpClient 实现，并修复已知 bug
-    - 启用SSE时默认禁用 chunked 响应header
-    - 扩充 ByteTree 初始化缓存值，提升服务性能。
-    - 修复 Runlogger 未实现日志级别判定的问题。
-    - 修复关闭进程时可能触发的 RunLogger 空指针问题。
-    - 版本号的定义从 `ServerOptions.java` 迁移至 `Feat.java`。
-- **Feat AI：**
-    - 新增 MCP 规范实现
-- **Feat Cloud**
-  - 新增`@HttpClient`注解，用于发起 HTTP 请求。
-  - 支持响应结果为 bool 值的 HTTP 接口服务。
-  - 预定义高频使用的byte数组，节省 APT 编译产生的常量bytes.
-  - @Controller 增加配置项：gzip、gzipThreshold，用于配置gzip响应策略。
-  - 新增基于注解的 MCP Server 开发能力。
-  - 重构 AOT 代码，提升扩展性。
-### 升级指南
-无
-### 兼容性说明
-无
+### 新特性概览
+
+#### Feat Core
+
+- 优化 HttpClient 实现，修复已知 bug
+- 启用 SSE 时默认禁用 chunked 响应 header
+- 扩充 ByteTree 初始化缓存值，提升服务性能
+- 版本号定义从 `ServerOptions.java` 迁移至 `Feat.java`
+
+#### Feat AI
+
+- 新增 MCP 规范实现
+
+#### Feat Cloud
+
+- 新增 `@HttpClient` 注解，用于发起 HTTP 请求
+- 支持响应结果为 bool 值的 HTTP 接口
+- `@Controller` 增加 gzip、gzipThreshold 配置项
+- 新增基于注解的 MCP Server 开发能力
 
 ---
 
 ## v1.1.0 (2025-06-13)
 
-### 版本特性
+### 新特性概览
 
-- **Feat Core：**
-    - 限制单进程内 Feat Banner 最多输出一次。
-    - **`Router`** 支持定义相同 URL、不同 HTTP Method 的接口服务，提升 API 设计的灵活性。
-    - RunLogger 自动感应日志级别变化，支持动态调整日志级别。
-    - 日志级别环境变量由 `smarthttp.log.level` 调整为 `feat.log.level` 。
-    - 将 DateUtils、GzipUtils、HttpUtils、NumberUtils、StringUtils、CollectionUtils、Constant、SHA1、WebSocketUtil 等工具类能力统一汇集至 `FeatUtils` 中，简化使用成本。
-    - ByteTree 不再支持匹配期间动态 addNode，保障内存使用稳定性。
-    - 升级 smart-socket 至 1.5.69。
-- **Feat Cloud**
-  - 新增 `feat.yaml`/`feat.yml` 配置文件解析，并通过`@Value`注入 Bean 或 Controller中。(类似 Spring 的 `application.yaml`)
-  - 支持运行时动态调整指定 `loggerName` 的日志级别，便于灵活监控与调试。
-  - ApplicationContext 新增 getOptions 方法用于获 Feat Cloud 配置。
-  - Annotation Processor 重构，简化代码复杂度，提升扩展性。
-  - 编译器自动将非统配 URI 注册至 ByteTree，提升解析性能。
+#### Feat Core
 
----
+- **Router**：支持定义相同 URL、不同 HTTP Method 的接口
+- **日志**：RunLogger 自动感应日志级别变化，支持动态调整
+- **日志**：日志级别环境变量由 `smarthttp.log.level` 调整为 `feat.log.level`
+- **工具类**：将 DateUtils、GzipUtils、HttpUtils 等统一汇集至 `FeatUtils`
+- **Banner**：限制单进程内 Feat Banner 最多输出一次
 
-### 升级指南
+#### Feat Cloud
 
-**pom升级**
+- **配置**：新增 `feat.yaml`/`feat.yml` 配置文件解析，支持 `@Value` 注入
+- **日志**：支持运行时动态调整指定 loggerName 的日志级别
+- **性能**：编译器自动将非通配 URI 注册至 ByteTree，提升解析性能
 
-tech.smartboot.feat:
-    - feat-core：`1.0.0` => `1.1.0`
-    - feat-cloud-starter：`1.0.0` => `1.1.0`
-    - feat-ai：`1.0.0` => `1.1.0`
+### 升级步骤
 
-**代码升级**
+**POM 升级**：
 
-参见下述**兼容性说明**
+```xml
+<dependency>
+    <groupId>tech.smartboot.feat</groupId>
+    <artifactId>feat-core</artifactId>
+    <version>1.1.0</version>
+</dependency>
+```
 
-----
-### 兼容性说明
-- CloudOptions@addExternalBean 方法重命名为 registerBean，用于注册外部 Bean。
-- 已废弃：DateUtils、GzipUtils、HttpUtils、NumberUtils、StringUtils、CollectionUtils、Constant、SHA1、WebSocketUtil
+**代码调整**：
+
+- `CloudOptions.addExternalBean()` 重命名为 `registerBean()`
+- 废弃工具类：DateUtils、GzipUtils、HttpUtils、NumberUtils、StringUtils、CollectionUtils、Constant、SHA1、WebSocketUtil
 
 ---
+
 ## v1.0.0 (2025-05-24)
 
-Feat v1.0.0 是首个正式发布版本，提供了完整的企业级 Web 服务开发框架功能。
+Feat 首个正式发布版本，提供完整的企业级 Web 服务开发框架功能。
 
-### 版本特性
-作为一款高性能 Java Web 服务框架，Feat 具备以下核心能力：
+### 核心能力
 
-**卓越的性能表现**
-- 基于智能异步通信框架，轻松应对高并发场景
-- 极低的资源消耗，适合容器化部署
-- 快速启动（&lt;1秒），适合 serverless 场景
-- 编译期静态分析，提升运行性能
+- **性能**：基于智能异步通信框架，轻松应对高并发场景
+- **协议**：支持 HTTP/1.0、HTTP/1.1、HTTP/2、WebSocket、SSE
+- **功能**：内置静态资源服务器、灵活路由、RESTful API 支持
+- **部署**：快速启动（&lt;1秒），适合容器化和 Serverless 场景
+- **企业级**：Feat Cloud 提供类似 Spring Boot 的开发体验
+- **AI**：Feat AI 模块支持 AI 应用开发
 
-**全面的协议支持**
+---
 
-- 支持 HTTP/1.0、HTTP/1.1、HTTP/2 协议
-- 内置 WebSocket 实现，便于开发实时应用
-- 支持 SSE（Server-Sent Events）
-- 完整的 HTTPS 支持（PEM 证书）
+## 获取帮助
 
-**企业级功能**
-- 内置高性能静态资源服务器
-- 灵活的路由组件，轻松实现 RESTful API
-- 简洁的 API 设计，提高开发效率
-- 插件化架构，满足不同业务需求
-
-**轻量级设计**
-- 核心框架轻量化，无过多依赖
-- 简单易用的 API，降低学习成本
-- 类似于 Vert.x 的编程模型，但更加简洁
-
-**企业级解决方案**
-- Feat Cloud 企业版提供类似 Spring Boot 的开发体验
-- 适合构建复杂的企业级应用
-- 支持 AI 应用开发（Feat AI 模块）
-
-### 升级指南
-无
-### 兼容性说明
-无
+- **问题反馈**：[Gitee Issues](https://gitee.com/smartboot/feat/issues)
+- **版本咨询**：查看对应版本的微信公众号发布文章
+- **升级支持**：在 Issue 中描述你的升级场景，获取针对性建议

@@ -1,83 +1,138 @@
 ---
 title: 系统要求
-description: 在开始使用 Feat 之前，先确认你的 JDK、构建工具和运行环境是否匹配
+description: 确认 JDK、Maven、运行环境是否满足 Feat 的最低要求
 sidebar:
     order: 2
 ---
 
 import { Aside } from '@astrojs/starlight/components';
 
-这页不是兼容性宣传页，而是一张使用前检查表。  
-如果下面这些条件都满足，你就可以放心进入后面的教程。
+> **这篇文档是一张检查表**。确认下面的条件满足后，你就可以放心地开始后续教程。
+
+Feat 的设计目标之一是保持轻量，因此它的系统要求并不高。但如果你准备在生产环境使用，还是建议完整阅读本章。
 
 ## 最低要求
 
-| 项目 | 要求 |
-| --- | --- |
-| JDK | 8 或更高版本 |
-| Maven | 可正常构建 Java 8 项目 |
-| 操作系统 | 任何能稳定运行标准 Java 运行时的环境 |
+| 项目 | 要求 | 说明 |
+|------|------|------|
+| JDK | 8 或更高 | 主线模块以 Java 8 为编译目标 |
+| Maven | 3.6+ | 用于构建和依赖管理 |
+| 操作系统 | 任何支持标准 Java 运行时的环境 | Windows、Linux、macOS 均可 |
 
-从仓库当前构建配置来看，Feat 的主线模块仍以 Java 8 为编译目标。  
-这意味着：
+### JDK 版本说明
 
-- 你可以在更高版本的 JDK 上运行
-- 但如果你要自己扩展或构建相关模块，仍应理解它的 Java 8 兼容边界
+Feat 的主线模块以 Java 8 为编译目标，这意味着：
 
-## Maven 说明
+- **你可以运行**：在 JDK 8、11、17、21 等更高版本上运行 Feat 应用
+- **但你应该知道**：如果你要扩展 Feat 或查看源码，需要理解它的 Java 8 兼容边界
 
-当前仓库和示例工程都是以 Maven 为主线。  
-如果你只是想跑官方示例或跟着文档操作，优先准备 Maven 环境就够了。
+```bash
+# 检查你的 JDK 版本
+java -version
+```
+
+### Maven 说明
+
+Feat 的示例工程和文档都默认使用 Maven。如果你习惯 Gradle，理论上也可以工作，但文档中的示例命令都是 Maven 风格。
+
+```bash
+# 检查 Maven 版本
+mvn -v
+```
 
 <Aside type="tip">
-文档里的 quickstart 和 demo 都默认你已经有一套可工作的 Maven Java 工具链，而不是从 Gradle 起步。
+如果你只是想跑官方示例或跟着文档操作，优先准备 Maven 环境就够了。
 </Aside>
 
 ## 运行环境说明
 
-Feat 不依赖传统 Servlet 容器。  
-换句话说，你不需要先准备 Tomcat、Jetty 或 Undertow 这类外部容器，直接有 Java 运行时即可。
+Feat **不依赖传统 Servlet 容器**。你不需要准备 Tomcat、Jetty 或 Undertow，直接有 Java 运行时即可。
 
-更具体地说，你至少要满足：
+更具体地说，你的运行环境需要满足：
 
 - 能运行普通 Java 应用
-- 能打开本机监听端口
-- 有能力加载项目依赖和资源文件
+- 能打开本机监听端口（默认 8080）
+- 能加载项目依赖和资源文件
 
-这也是为什么大多数示例都能直接用 `main()` 方式启动。
+这也是为什么大多数示例都能直接用 `main()` 方式启动：
 
-## 本地开发时通常还需要什么
+```java
+public class Bootstrap {
+    public static void main(String[] args) {
+        Feat.createServer()
+            .get("/", ctx -> ctx.write("Hello"))
+            .listen(8080);
+    }
+}
+```
+
+## 各模块的额外要求
 
 不同模块对额外环境的需求不一样：
 
-- 如果你看 Feat Core，大多数时候只需要 JDK + Maven + 浏览器或 `curl`
-- 如果你看 Feat Cloud，通常还需要一个支持 Maven/注解处理的 IDE
-- 如果你看 Feat AI，还要额外准备 Ollama 或云端 API Key
+### Feat Core
 
-所以真正的系统要求最好按路径理解，而不是把所有东西塞成一张大表。
+只需要 JDK + Maven + 浏览器或 `curl`。
 
-## Native Image 相关要求
+```bash
+# 验证 Core 示例
+curl http://localhost:8080/
+```
 
-如果你只是想使用 Feat，本页可以先跳过这一部分。  
-只有在你明确准备构建原生镜像时，再回来看这里。
+### Feat Cloud
 
-当前文档和示例主要围绕 GraalVM 21 系列展开。  
-但从实际落地角度看，建议先做这两个判断：
+需要支持 Maven 和注解处理的 IDE（推荐 IntelliJ IDEA）。
 
-1. 你的应用是否真的需要原生镜像
-2. 你是否已经先把普通 JRE 部署跑通
-
-<Aside type="tip">
-对大多数项目来说，先用 JRE 交付是更稳的路径。Native Image 更适合在你已经确认收益之后再投入。
+<Aside type="note">
+Feat Cloud 使用编译期注解处理（APT）生成代码，因此 IDE 需要正确配置注解处理器。
 </Aside>
 
-## 开始之前快速自检
+### Feat AI
 
-如果你满足下面这些条件，就足够开始读后续教程：
+需要额外准备：
 
-- 你能运行 Java 8+ 程序
-- 你能执行 `mvn clean package`
-- 你能在本机打开一个 HTTP 端口
-- 你有浏览器、`curl` 或其他 HTTP 调试工具
+- **本地模型**：Ollama 或其他本地推理服务
+- **云端 API**：OpenAI、Anthropic、Gitee AI 等平台的 API Key
 
-满足这些之后，直接回到 [从哪里开始读 Feat 文档](/feat/getting-started/) 选路径即可。
+```bash
+# 检查 Ollama 是否运行
+ollama list
+```
+
+## Native Image 要求（可选）
+
+如果你只是想使用 Feat，可以跳过这一部分。只有在你明确准备构建原生镜像时，才需要关注。
+
+### GraalVM 版本
+
+当前文档和示例主要围绕 GraalVM 21 系列展开。
+
+### 建议的使用路径
+
+```
+1. 先用 JRE 部署跑通 → 2. 确认需要 Native Image → 3. 投入 Native Image 优化
+```
+
+<Aside type="caution">
+对大多数项目来说，先用 JRE 交付是更稳的路径。Native Image 更适合在你已经确认收益（启动速度、内存占用）之后再投入。
+</Aside>
+
+## 快速自检清单
+
+在继续之前，确认你能完成以下操作：
+
+- [ ] 运行 `java -version`，显示 Java 8 或更高版本
+- [ ] 运行 `mvn -v`，显示 Maven 3.6+
+- [ ] 运行 `mvn clean package`，成功构建一个 Java 项目
+- [ ] 能在本机打开一个 HTTP 端口（如 8080）
+- [ ] 有浏览器、`curl` 或其他 HTTP 调试工具
+
+满足这些条件后，你就可以开始选择学习路径了。
+
+---
+
+**下一步**：根据你的目标选择学习路径
+
+- [从 Feat Core 开始](/feat/server/) - 理解底层 HTTP 服务模型
+- [从 Feat Cloud 开始](/feat/cloud/) - 快速构建注解式 Web 应用
+- [从 Feat AI 开始](/feat/ai/) - 接入 AI 能力
