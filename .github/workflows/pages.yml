@@ -28,7 +28,7 @@ jobs:
            path: pages # The root location of your Astro project inside the repository. (optional)
            node-version: 24 # The specific version of Node that should be used to build your site. Defaults to 18. (optional)
            package-man]ager: npm # The Node package manager that should be used to install dependencies and build your site. Automatically detected based on your lockfile. (optional)
-           cache: false
+#           cache: false
 
   deploy:
     needs: build
