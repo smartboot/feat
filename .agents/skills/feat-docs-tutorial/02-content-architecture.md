@@ -124,77 +124,19 @@ mvn compile exec:java -Dexec.mainClass="QuickStart"
 **目标**：深入讲解 Feat 的某个功能模块
 **字数**：1000-2500 字
 
-**结构**：
-```mdx
-# Router 路由模块
+**写作原则**：
 
-Feat 的 Router 模块提供声明式路由配置，支持路径参数、查询参数、路由分组等功能。
+1. **开门见山**：首屏直接展示最简单的代码示例
+2. **由浅入深**：从基础用法到高级特性逐步展开
+3. **标题即功能**：用功能点作为标题（如"路径参数"、"路由分组"）
+4. **完整可运行**：包含一个完整的示例代码
 
-## 注册路由
-
-最简单的代码示例（首屏可见）：
-
-```java
-server.get("/hello", ctx -> {
-    ctx.write("Hello!");
-});
-```
-
-## 路径参数
-
-从 URL 中提取参数：
-
-```java
-server.get("/user/:id", ctx -> {
-    String userId = ctx.pathParam("id");
-    ctx.write("User: " + userId);
-});
-```
-
-## 查询参数
-
-获取 URL 查询字符串：
-
-```java
-server.get("/search", ctx -> {
-    String keyword = ctx.queryParam("q");
-    ctx.write("Search: " + keyword);
-});
-```
-
-## 路由分组
-
-将相关路由组织在一起：
-
-```java
-server.group("/api", api -> {
-    api.get("/users", ...);
-    api.post("/users", ...);
-});
-```
-
-## 完整示例
-
-```java
-public class RouterExample {
-    public static void main(String[] args) {
-        Feat.createServer()
-            .get("/", ctx -> ctx.write("Home"))
-            .get("/user/:id", ctx -> {
-                ctx.write("User: " + ctx.pathParam("id"));
-            })
-            .listen(8080);
-    }
-}
-```
-
-> 🔗 **相关文档**：[拦截器](/docs/interceptor)、[错误处理](/docs/error-handling)
-```
-
-**关键约束**：
-- "基础用法"必须在首屏（无需滚动）
-- 每个代码块都应该是可运行的
-- 包含一个"完整示例"章节
+**参考结构**（根据实际模块灵活调整）：
+- 模块简介（一句话说明用途）
+- 最简单的用法（首屏可见）
+- 各功能点讲解（用功能命名标题）
+- 完整示例（可运行的代码）
+- 相关文档链接
 
 ---
 
@@ -203,73 +145,21 @@ public class RouterExample {
 **目标**：讲解如何与第三方组件集成
 **字数**：1500-3000 字
 
-**结构**：
-```mdx
-# 集成 Redis
+**写作原则**：
 
-本文介绍如何在 Feat 中集成 Redis，实现数据缓存功能。
+1. **依赖先行**：首先说明需要添加的依赖
+2. **配置清晰**：提供配置选项和默认值
+3. **场景结合**：展示在 Feat 中如何使用
+4. **问题排查**：列出常见问题和解决方案
 
-## 添加依赖
-
-```xml
-<dependency>
-    <groupId>tech.smartboot.feat</groupId>
-    <artifactId>feat-redis</artifactId>
-    <version>${version}</version>
-</dependency>
-```
-
-## 连接 Redis
-
-```java
-RedisClient redis = RedisClient.create("redis://localhost:6379");
-```
-
-## 基本操作
-
-存储和读取数据：
-
-```java
-redis.set("key", "value");
-String value = redis.get("key");
-```
-
-在 Web 应用中使用：
-
-```java
-server.get("/cache/:key", ctx -> {
-    String key = ctx.pathParam("key");
-    String value = redis.get(key);
-    ctx.write(value != null ? value : "Not found");
-});
-```
-
-## 配置选项
-
-| 选项 | 默认值 | 说明 |
-|------|--------|------|
-| host | localhost | Redis 服务器地址 |
-| port | 6379 | 端口号 |
-| timeout | 5000 | 连接超时（毫秒） |
-
-## 故障排查
-
-**连接失败**（`Connection refused`）
-
-通常是因为 Redis 服务未启动，请确保 Redis 服务正在运行。
-
-## 版本兼容性
-
-| Feat 版本 | Redis 版本 |
-|-----------|------------|
-| 1.0.x | 5.0+ |
-| 1.1.x | 6.0+ |
-```
-
-**关键约束**：
-- 必须列出版本兼容性
-- 包含故障排查章节
-- 提供配置选项表
+**参考结构**（根据实际集成灵活调整）：
+- 集成简介（说明用途和效果）
+- 添加依赖
+- 基础配置
+- 使用示例（结合 Feat 场景）
+- 配置选项表
+- 故障排查
+- 版本兼容性
 
 ---
 
