@@ -1,6 +1,7 @@
 ---
 import yaml from 'js-yaml';
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
+import { join, resolve } from 'path';
 import PaymentQrCode from './PaymentQrCode.astro';
 import LicenseGenerator from './LicenseGenerator.astro';
 
@@ -16,10 +17,31 @@ interface SponsorsData {
   };
 }
 
-const yamlPath = new URL('../../../feat-cloud-aot/src/main/resources/feat_users.yaml', import.meta.url).pathname;
-const yamlContent = readFileSync(yamlPath, 'utf-8');
-const data = yaml.load(yamlContent) as SponsorsData;
-const users = data.users;
+// 尝试多个可能的路径来找到 YAML 文件
+const possiblePaths = [
+  // 相对于项目根目录的路径（GitHub Actions 构建环境）
+  resolve(process.cwd(), 'feat-cloud-aot/src/main/resources/feat_users.yaml'),
+  // 相对于当前文件的路径（本地开发环境）
+  resolve(process.cwd(), '../feat-cloud-aot/src/main/resources/feat_users.yaml'),
+  // 如果 pages 是子目录的情况
+  resolve(process.cwd(), '../../feat-cloud-aot/src/main/resources/feat_users.yaml'),
+];
+
+let yamlPath: string | null = null;
+for (const path of possiblePaths) {
+  if (existsSync(path)) {
+    yamlPath = path;
+    break;
+  }
+}
+
+// 如果找不到文件，使用默认的空数据
+let users: { [key: string]: Sponsor } = {};
+if (yamlPath) {
+  const yamlContent = readFileSync(yamlPath, 'utf-8');
+  const data = yaml.load(yamlContent) as SponsorsData;
+  users = data.users || {};
+}
 
 const sponsorsList = Object.entries(users);
 ---
