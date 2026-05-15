@@ -20,6 +20,8 @@ import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.openai.api.OpenAiApi;
 import reactor.core.publisher.Flux;
 
+import java.util.concurrent.CountDownLatch;
+
 /**
  * Spring AI 使用示例
  * <p>
@@ -95,6 +97,7 @@ public class SpringAIExample {
         // 流式输出，返回 Flux<ChatResponse>
         Flux<ChatResponse> stream = streamingChatModel.stream(prompt);
 
+        CountDownLatch latch = new CountDownLatch(1);
         // 订阅流并处理每个响应
         stream.subscribe(
                 response -> {
@@ -107,13 +110,19 @@ public class SpringAIExample {
                         }
                     }
                 },
-                error -> System.err.println("错误: " + error.getMessage()),
-                () -> System.out.println("\n[流式输出完成]\n")
+                error -> {
+                    System.err.println("错误: " + error.getMessage());
+                    latch.countDown();
+                },
+                () -> {
+                    System.out.println("\n[流式输出完成]\n");
+                    latch.countDown();
+                }
         );
 
         // 等待流完成
         try {
-            Thread.sleep(5000);
+            latch.await();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

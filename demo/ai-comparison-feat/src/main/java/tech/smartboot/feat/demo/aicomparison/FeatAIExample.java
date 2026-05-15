@@ -16,6 +16,8 @@ import tech.smartboot.feat.ai.chat.ChatStreamListener;
 import tech.smartboot.feat.ai.chat.ThinkOption;
 import tech.smartboot.feat.ai.chat.entity.ChatResponse;
 
+import java.util.concurrent.CountDownLatch;
+
 /**
  * Feat AI 使用示例
  * <p>
@@ -31,7 +33,7 @@ import tech.smartboot.feat.ai.chat.entity.ChatResponse;
  */
 public class FeatAIExample {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         System.out.println("=== Feat AI 示例 ===\n");
 
         // 1. 基础对话示例
@@ -71,13 +73,14 @@ public class FeatAIExample {
     /**
      * 流式输出 - 实时响应处理
      */
-    public static void streamingChat() {
+    public static void streamingChat() throws InterruptedException {
         System.out.println("--- 流式输出 ---");
 
         ChatModel chatModel = FeatAI.chatModel(opts ->
                 opts.model("Qwen3-235B-A22B").extraBody(ThinkOption.Qwen.DISABLE)
         );
 
+        CountDownLatch latch = new CountDownLatch(1);
         // 流式输出，通过 ChatStreamListener 处理实时响应
         chatModel.chatStream(
                 "请用5句话描述 Java 异步编程的优势。",
@@ -91,9 +94,16 @@ public class FeatAIExample {
                     @Override
                     public void onCompletion(ChatResponse chatResponse) {
                         System.out.println("\n[流式输出完成]\n");
+                        latch.countDown();
+                    }
+
+                    @Override
+                    public void onError(Throwable throwable) {
+                        latch.countDown();
                     }
                 }
         );
+        latch.await();
     }
 
     /**

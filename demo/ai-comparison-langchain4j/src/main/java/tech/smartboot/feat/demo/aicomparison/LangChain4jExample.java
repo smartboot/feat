@@ -21,6 +21,7 @@ import dev.langchain4j.model.output.Response;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * LangChain4j 使用示例
@@ -37,7 +38,7 @@ import java.util.List;
  */
 public class LangChain4jExample {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         System.out.println("=== LangChain4j 示例 ===\n");
 
         // 1. 基础对话示例
@@ -72,7 +73,7 @@ public class LangChain4jExample {
     /**
      * 流式输出 - StreamingResponseHandler
      */
-    public static void streamingChat() {
+    public static void streamingChat() throws InterruptedException {
         System.out.println("--- 流式输出 ---");
 
         StreamingChatLanguageModel streamingModel = OpenAiStreamingChatModel.builder()
@@ -81,6 +82,7 @@ public class LangChain4jExample {
                 .baseUrl("https://ai.gitee.com/v1/")
             .build();
 
+        CountDownLatch latch = new CountDownLatch(1);
         // 流式输出，通过 StreamingResponseHandler 处理
         streamingModel.generate(
             "请用5句话描述 Java 异步编程的优势。",
@@ -94,14 +96,17 @@ public class LangChain4jExample {
                 @Override
                 public void onComplete(Response<AiMessage> response) {
                     System.out.println("\n[流式输出完成]\n");
+                    latch.countDown();
                 }
 
                 @Override
                 public void onError(Throwable error) {
                     System.err.println("错误: " + error.getMessage());
+                    latch.countDown();
                 }
             }
         );
+        latch.await();
     }
 
     /**
