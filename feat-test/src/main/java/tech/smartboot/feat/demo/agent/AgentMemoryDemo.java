@@ -80,11 +80,8 @@ public class AgentMemoryDemo {
             String userInput = CONVERSATION_HISTORY.get(i);
             System.out.println("用户: " + userInput);
             
-            // 注意：无Memory时，每次只传递当前消息
-            List<Message> messages = Arrays.asList(Message.ofUser(userInput));
-            
             try {
-                CompletableFuture<String> future = agentWithoutMemory.execute(messages);
+                CompletableFuture<String> future = agentWithoutMemory.execute(userInput);
                 String response = future.get();
                 System.out.println("Agent: " + truncate(response, 200));
             } catch (Exception e) {
@@ -125,11 +122,8 @@ public class AgentMemoryDemo {
             String userInput = CONVERSATION_HISTORY.get(i);
             System.out.println("用户: " + userInput);
             
-            // 构建消息列表
-            List<Message> messages = Arrays.asList(Message.ofUser(userInput));
-            
             try {
-                CompletableFuture<String> future = agentWithMemory.execute(messages);
+                CompletableFuture<String> future = agentWithMemory.execute(userInput);
                 String response = future.get();
                 System.out.println("Agent: " + truncate(response, 200));
                 

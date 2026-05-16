@@ -17,11 +17,11 @@ import tech.smartboot.feat.ai.agent.tools.FileOperationTool;
 import tech.smartboot.feat.ai.agent.tools.SearchTool;
 import tech.smartboot.feat.ai.agent.tools.WebPageReaderTool;
 import tech.smartboot.feat.ai.chat.ChatModel;
-import tech.smartboot.feat.ai.chat.entity.Message;
-import tech.smartboot.feat.ai.chat.entity.ChatResponse;
 import tech.smartboot.feat.ai.chat.ChatStreamListener;
+import tech.smartboot.feat.ai.chat.entity.ChatResponse;
 import tech.smartboot.feat.ai.chat.prompt.Prompt;
 import tech.smartboot.feat.ai.chat.prompt.PromptTemplate;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
@@ -202,12 +202,8 @@ public class ReActAgent extends FeatAgent {
     }
 
     @Override
-    public CompletableFuture<String> execute(List<Message> input) {
+    public CompletableFuture<String> execute(String input) {
         options.hook().preCall(input);
-        StringBuilder sb = new StringBuilder();
-        for (Message message : input) {
-            sb.append(message.getRole()).append(" : ").append(message.getContent().replace("\n", "\\n")).append("\n");
-        }
 
         // 将输入消息存入记忆系统
         storeMessagesToMemory(input);
@@ -216,7 +212,7 @@ public class ReActAgent extends FeatAgent {
         // 准备模板数据
         Map<String, String> templateData = new HashMap<>();
         templateData.put("date", new Date().toString());
-        templateData.put("input", sb.toString());
+        templateData.put("input", input);
         templateData.put("tool_descriptions", getToolDescriptions());
         templateData.put("tool_names", getToolNames());
 
@@ -231,10 +227,8 @@ public class ReActAgent extends FeatAgent {
         completableFuture.thenApply(result -> {
             // 将结果存入记忆系统
             storeResultToMemory(result);
-
-            Message output = Message.ofAssistant(result);
-            options.hook().postCall(output);
-            return output.getContent();
+            options.hook().postCall(result);
+            return result;
         });
         return completableFuture;
     }
@@ -242,30 +236,25 @@ public class ReActAgent extends FeatAgent {
     /**
      * 将输入消息存入记忆系统
      *
-     * @param messages 输入消息列表
+     * @param message 输入消息列表
      */
-    private void storeMessagesToMemory(List<Message> messages) {
-        if (!options.isMemoryEnabled() || options.getMemory() == null) {
+    private void storeMessagesToMemory(String message) {
+        if (!options.isMemoryEnabled() || options.getMemory() == null || FeatUtils.isBlank(message)) {
             return;
         }
 
         List<MemoryMessage> memoryMessages = new ArrayList<>();
         String sessionId = options.getSessionId();
 
-        for (Message message : messages) {
-            MemoryRole role = convertToMemoryRole(message.getRole());
-            MemoryMessage memoryMessage = new MemoryMessage();
-            memoryMessage.setContent(message.getContent());
-            memoryMessage.setRole(role);
-            memoryMessage.setSessionId(sessionId);
-            memoryMessage.setTimestamp(System.currentTimeMillis());
-            memoryMessages.add(memoryMessage);
-        }
+        MemoryMessage memoryMessage = new MemoryMessage();
+        memoryMessage.setContent(message);
+        memoryMessage.setRole(MemoryRole.USER);
+        memoryMessage.setSessionId(sessionId);
+        memoryMessage.setTimestamp(System.currentTimeMillis());
+        memoryMessages.add(memoryMessage);
 
-        if (!memoryMessages.isEmpty()) {
-            options.getMemory().add(memoryMessages);
-            logger.debug("存储 {} 条用户输入消息到记忆系统", memoryMessages.size());
-        }
+        options.getMemory().add(memoryMessages);
+        logger.debug("存储 {} 条用户输入消息到记忆系统", memoryMessages.size());
     }
 
     /**
@@ -293,26 +282,14 @@ public class ReActAgent extends FeatAgent {
      * @param input 当前输入消息
      * @return 相关记忆字符串，用于添加到提示词中
      */
-    private String retrieveRelevantMemories(List<Message> input) {
-        if (!options.isMemoryEnabled() || options.getMemory() == null) {
+    private String retrieveRelevantMemories(String input) {
+        if (!options.isMemoryEnabled() || options.getMemory() == null || FeatUtils.isBlank(input)) {
             return "无";
         }
 
-        // 提取查询内容
-        StringBuilder queryBuilder = new StringBuilder();
-        for (Message message : input) {
-            if ("user".equalsIgnoreCase(message.getRole())) {
-                queryBuilder.append(message.getContent()).append(" ");
-            }
-        }
-        String query = queryBuilder.toString().trim();
-
-        if (query.isEmpty()) {
-            return "无";
-        }
 
         try {
-            List<MemoryMessage> relevantMemories = options.getMemory().search(query, options.getMemoryTopK());
+            List<MemoryMessage> relevantMemories = options.getMemory().search(input, options.getMemoryTopK());
 
             if (relevantMemories.isEmpty()) {
                 return "无";

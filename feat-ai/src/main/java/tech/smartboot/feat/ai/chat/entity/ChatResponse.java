@@ -20,12 +20,15 @@ import java.util.List;
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
-public class ChatResponse extends Message {
+public class ChatResponse {
     /**
      * 请求是否成功
      */
     private boolean success;
-
+    /**
+     * 消息角色，可以是用户、系统或助手
+     */
+    private String role;
     /**
      * 错误信息，当请求失败时包含错误详情
      */
@@ -48,6 +51,11 @@ public class ChatResponse extends Message {
      */
     @JSONField(name = "reasoning_content")
     private String reasoningContent;
+
+    /**
+     * 消息内容
+     */
+    private String content;
 
     /**
      * 获取工具调用列表
@@ -137,5 +145,21 @@ public class ChatResponse extends Message {
      */
     public void setReasoningContent(String reasoningContent) {
         this.reasoningContent = reasoningContent;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 }

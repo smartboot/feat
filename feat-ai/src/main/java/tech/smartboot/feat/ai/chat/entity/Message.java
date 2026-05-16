@@ -35,11 +35,6 @@ public class Message {
      */
     private String role;
 
-    /**
-     * 消息内容
-     */
-    private String content;
-
 
     /**
      * 创建一条用户消息
@@ -48,7 +43,7 @@ public class Message {
      * @return Message实例
      */
     public static Message ofUser(String content) {
-        Message message = new Message();
+        TextMessage message = new TextMessage();
         message.setRole(ROLE_USER);
         message.setContent(content);
         return message;
@@ -61,7 +56,7 @@ public class Message {
      * @return Message实例
      */
     public static Message ofSystem(String content) {
-        Message message = new Message();
+        TextMessage message = new TextMessage();
         message.setRole(ROLE_SYSTEM);
         message.setContent(content);
         return message;
@@ -74,11 +69,13 @@ public class Message {
      * @return Message实例
      */
     public static Message ofAssistant(String content) {
-        Message message = new Message();
+        TextMessage message = new TextMessage();
         message.setRole(ROLE_ASSISTANT);
         message.setContent(content);
         return message;
     }
+
+//    public static Message ofImage()
 
     /**
      * 获取消息角色
@@ -98,21 +95,4 @@ public class Message {
         this.role = role;
     }
 
-    /**
-     * 获取消息内容
-     *
-     * @return 消息内容
-     */
-    public String getContent() {
-        return content;
-    }
-
-    /**
-     * 设置消息内容
-     *
-     * @param content 消息内容
-     */
-    public void setContent(String content) {
-        this.content = content;
-    }
 }

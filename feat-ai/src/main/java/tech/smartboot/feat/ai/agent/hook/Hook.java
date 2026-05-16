@@ -67,7 +67,7 @@ public interface Hook {
      * @see Message 消息类定义
      * @see tech.smartboot.feat.ai.chat.ChatModel#chatStream 流式聊天请求
      */
-    default void preCall(List<Message> message) {
+    default void preCall(String message) {
     }
 
     /**
@@ -89,7 +89,7 @@ public interface Hook {
      *                通常为助手角色 (assistant) 的消息
      * @see Message 消息类定义
      */
-    default void postCall(Message message) {
+    default void postCall(String message) {
     }
 
     /**
