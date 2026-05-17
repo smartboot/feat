@@ -6,8 +6,9 @@ import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.ai.chat.ChatOptions;
 import tech.smartboot.feat.ai.chat.ChatStreamListener;
-import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ChatResponse;
+import tech.smartboot.feat.ai.chat.entity.ImageMessage;
+import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.Tool;
 import tech.smartboot.feat.ai.chat.entity.ToolCall;
 import tech.smartboot.feat.ai.chat.provider.Provider;
@@ -23,6 +24,7 @@ import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -326,5 +328,20 @@ public class OpenAiProvider extends Provider {
         }
         result.addAll(messages);
         return result;
+    }
+
+    public static Message ofImage(String input, String imageUrl) {
+        ImageMessage message = new ImageMessage();
+        message.setRole(Message.ROLE_USER);
+        JSONObject inputContent = new JSONObject();
+        inputContent.put("text", input);
+        inputContent.put("type", "text");
+
+        JSONObject imageContent = new JSONObject();
+        imageContent.put("type", "image_url");
+        imageContent.put("image_url", JSONObject.of("url", imageUrl));
+
+        message.setContent(Arrays.asList(inputContent, imageContent));
+        return message;
     }
 }

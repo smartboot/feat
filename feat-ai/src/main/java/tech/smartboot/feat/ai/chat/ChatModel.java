@@ -10,8 +10,8 @@
 
 package tech.smartboot.feat.ai.chat;
 
-import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ChatResponse;
+import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.Tool;
 import tech.smartboot.feat.ai.chat.provider.Provider;
 import tech.smartboot.feat.ai.chat.provider.StreamContext;
@@ -153,6 +153,10 @@ public class ChatModel {
      */
     public CompletableFuture<ChatResponse> chat(String content) {
         return chat(Collections.singletonList(Message.ofUser(content)), null);
+    }
+
+    public CompletableFuture<ChatResponse> chat(Message message) {
+        return chat(Collections.singletonList(message), null);
     }
 
     /**

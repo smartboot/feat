@@ -6,8 +6,9 @@ import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.ai.chat.ChatOptions;
 import tech.smartboot.feat.ai.chat.ChatStreamListener;
-import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ChatResponse;
+import tech.smartboot.feat.ai.chat.entity.ImageMessage;
+import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.Tool;
 import tech.smartboot.feat.ai.chat.entity.ToolCall;
 import tech.smartboot.feat.ai.chat.entity.Usage;
@@ -23,6 +24,7 @@ import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -316,5 +318,23 @@ public class AnthropicProvider extends Provider {
     public AnthropicProvider maxTokens(int maxTokens) {
         options.extraBody(json -> json.put("max_tokens", maxTokens));
         return this;
+    }
+
+    public static Message ofImage(String input, String media_type, String data) {
+        ImageMessage message = new ImageMessage();
+        message.setRole(Message.ROLE_USER);
+
+        JSONObject imageContent = new JSONObject();
+        imageContent.put("type", "image");
+        imageContent.put("source", new JSONObject().fluentPut("type", "base64").fluentPut("data", data).fluentPut("media_type", media_type));
+
+
+        JSONObject inputContent = new JSONObject();
+        inputContent.put("text", input);
+        inputContent.put("type", "text");
+
+
+        message.setContent(Arrays.asList(imageContent, inputContent));
+        return message;
     }
 }
