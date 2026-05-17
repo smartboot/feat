@@ -7,7 +7,7 @@ import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.ai.chat.ChatOptions;
 import tech.smartboot.feat.ai.chat.ChatStreamListener;
 import tech.smartboot.feat.ai.chat.entity.ChatResponse;
-import tech.smartboot.feat.ai.chat.entity.ImageMessage;
+import tech.smartboot.feat.ai.chat.entity.MediaMessage;
 import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.Tool;
 import tech.smartboot.feat.ai.chat.entity.ToolCall;
@@ -321,7 +321,7 @@ public class AnthropicProvider extends Provider {
     }
 
     public static Message ofImage(String input, String media_type, String data) {
-        ImageMessage message = new ImageMessage();
+        MediaMessage message = new MediaMessage();
         message.setRole(Message.ROLE_USER);
 
         JSONObject imageContent = new JSONObject();

@@ -4,7 +4,7 @@ import com.alibaba.fastjson2.JSONObject;
 
 import java.util.List;
 
-public class ImageMessage extends Message {
+public class MediaMessage extends Message {
     private List<JSONObject> content;
 
     public List<JSONObject> getContent() {
