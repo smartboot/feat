@@ -10,9 +10,9 @@
 
 package tech.smartboot.feat.core.client;
 
-import org.smartboot.socket.extension.multiplex.MultiplexOptions;
-import org.smartboot.socket.extension.plugins.Plugin;
-import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
+import io.github.smartboot.socket.Plugin;
+import io.github.smartboot.socket.extension.multiplex.MultiplexOptions;
+import io.github.smartboot.socket.extension.plugins.StreamMonitorPlugin;
 
 import java.nio.channels.AsynchronousChannelGroup;
 import java.util.Map;

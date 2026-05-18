@@ -10,7 +10,7 @@
 
 package tech.smartboot.feat.core.client;
 
-import org.smartboot.socket.transport.AioSession;
+import io.github.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;

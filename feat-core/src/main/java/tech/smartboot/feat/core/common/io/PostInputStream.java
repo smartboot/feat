@@ -10,7 +10,7 @@
 
 package tech.smartboot.feat.core.common.io;
 
-import org.smartboot.socket.transport.AioSession;
+import io.github.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.server.impl.HttpEndpoint;

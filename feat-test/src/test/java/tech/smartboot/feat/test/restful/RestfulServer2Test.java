@@ -15,7 +15,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
+import io.github.smartboot.socket.extension.plugins.StreamMonitorPlugin;
 import tech.smartboot.feat.cloud.FeatCloud;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.common.HeaderValue;

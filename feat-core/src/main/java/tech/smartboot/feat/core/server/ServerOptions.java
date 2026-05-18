@@ -10,10 +10,10 @@
 
 package tech.smartboot.feat.core.server;
 
-import org.smartboot.socket.extension.plugins.Plugin;
-import org.smartboot.socket.extension.plugins.ProxyProtocolPlugin;
-import org.smartboot.socket.extension.plugins.SslPlugin;
-import org.smartboot.socket.extension.plugins.StreamMonitorPlugin;
+import io.github.smartboot.socket.Plugin;
+import io.github.smartboot.socket.extension.plugins.ProxyProtocolPlugin;
+import io.github.smartboot.socket.extension.plugins.SslPlugin;
+import io.github.smartboot.socket.extension.plugins.StreamMonitorPlugin;
 import tech.smartboot.feat.core.common.ByteTree;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.server.impl.HttpEndpoint;

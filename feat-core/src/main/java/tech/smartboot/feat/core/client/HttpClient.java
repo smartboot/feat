@@ -10,9 +10,9 @@
 
 package tech.smartboot.feat.core.client;
 
-import org.smartboot.socket.extension.multiplex.MultiplexClient;
-import org.smartboot.socket.transport.AioQuickClient;
-import org.smartboot.socket.transport.AioSession;
+import io.github.smartboot.socket.extension.multiplex.MultiplexClient;
+import io.github.smartboot.socket.transport.AioQuickClient;
+import io.github.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.client.impl.HttpRequestImpl;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;

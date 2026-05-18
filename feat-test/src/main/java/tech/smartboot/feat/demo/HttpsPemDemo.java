@@ -10,8 +10,8 @@
 
 package tech.smartboot.feat.demo;
 
-import org.smartboot.socket.extension.plugins.SslPlugin;
-import org.smartboot.socket.extension.ssl.factory.PemServerSSLContextFactory;
+import io.github.smartboot.socket.extension.plugins.SslPlugin;
+import io.github.smartboot.socket.extension.ssl.factory.PemServerSSLContextFactory;
 import tech.smartboot.feat.Feat;
 
 import java.io.InputStream;

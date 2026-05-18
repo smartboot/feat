@@ -10,7 +10,7 @@
 
 package tech.smartboot.feat.core.common;
 
-import org.smartboot.socket.transport.WriteBuffer;
+import io.github.smartboot.socket.transport.WriteBuffer;
 
 import java.io.IOException;
 

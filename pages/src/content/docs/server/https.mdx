@@ -42,8 +42,8 @@ Feat 本身不需要你重写一套服务逻辑。
 你真正需要做的是：在原来的 HTTP 服务上加一个 `SslPlugin`。
 
 ```java title="HttpsPemDemo.java"
-import org.smartboot.socket.extension.plugins.SslPlugin;
-import org.smartboot.socket.extension.ssl.factory.PemServerSSLContextFactory;
+import io.github.smartboot.socket.extension.plugins.SslPlugin;
+import io.github.smartboot.socket.extension.ssl.factory.PemServerSSLContextFactory;
 import tech.smartboot.feat.Feat;
 
 import java.io.InputStream;
@@ -92,8 +92,8 @@ public class HttpsPemDemo {
 如果你明确需要它，就要在 `SslPlugin` 初始化时把它传上来：
 
 ```java title="HttpsSSLEngineDemo.java"
-import org.smartboot.socket.extension.plugins.SslPlugin;
-import org.smartboot.socket.extension.ssl.factory.AutoServerSSLContextFactory;
+import io.github.smartboot.socket.extension.plugins.SslPlugin;
+import io.github.smartboot.socket.extension.ssl.factory.AutoServerSSLContextFactory;
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.core.server.HttpRequest;
 

@@ -10,11 +10,11 @@
 
 package tech.smartboot.feat.core.client;
 
-import org.smartboot.socket.extension.plugins.Plugin;
-import org.smartboot.socket.extension.plugins.SslPlugin;
-import org.smartboot.socket.extension.ssl.factory.ClientSSLContextFactory;
-import org.smartboot.socket.transport.AioQuickClient;
-import org.smartboot.socket.transport.AioSession;
+import io.github.smartboot.socket.Plugin;
+import io.github.smartboot.socket.extension.plugins.SslPlugin;
+import io.github.smartboot.socket.extension.ssl.factory.ClientSSLContextFactory;
+import io.github.smartboot.socket.transport.AioQuickClient;
+import io.github.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.client.impl.WebSocketRequestImpl;
 import tech.smartboot.feat.core.client.impl.WebSocketResponseImpl;
 import tech.smartboot.feat.core.common.FeatUtils;

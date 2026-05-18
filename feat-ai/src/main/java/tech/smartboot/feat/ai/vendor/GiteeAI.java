@@ -12,7 +12,7 @@ package tech.smartboot.feat.ai.vendor;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
-import org.smartboot.socket.timer.HashedWheelTimer;
+import io.github.smartboot.socket.timer.HashedWheelTimer;
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.core.client.HttpClient;
 import tech.smartboot.feat.core.client.HttpPost;

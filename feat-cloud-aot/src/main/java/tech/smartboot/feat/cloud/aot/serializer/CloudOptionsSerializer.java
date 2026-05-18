@@ -11,8 +11,8 @@
 package tech.smartboot.feat.cloud.aot.serializer;
 
 import com.alibaba.fastjson2.JSONPath;
-import org.smartboot.socket.extension.plugins.SslPlugin;
-import org.smartboot.socket.extension.ssl.factory.AutoServerSSLContextFactory;
+import io.github.smartboot.socket.extension.plugins.SslPlugin;
+import io.github.smartboot.socket.extension.ssl.factory.AutoServerSSLContextFactory;
 import org.yaml.snakeyaml.Yaml;
 import tech.smartboot.feat.cloud.AbstractCloudService;
 import tech.smartboot.feat.cloud.ApplicationContext;

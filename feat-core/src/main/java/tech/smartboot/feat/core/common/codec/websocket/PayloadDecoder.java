@@ -11,8 +11,8 @@
 package tech.smartboot.feat.core.common.codec.websocket;
 
 
-import org.smartboot.socket.extension.decoder.FixedLengthFrameDecoder;
-import org.smartboot.socket.extension.decoder.SmartDecoder;
+import io.github.smartboot.socket.extension.decoder.FixedLengthFrameDecoder;
+import io.github.smartboot.socket.extension.decoder.SmartDecoder;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;

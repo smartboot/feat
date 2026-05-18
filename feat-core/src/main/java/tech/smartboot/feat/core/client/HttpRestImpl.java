@@ -10,7 +10,7 @@
 
 package tech.smartboot.feat.core.client;
 
-import org.smartboot.socket.transport.AioSession;
+import io.github.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.client.impl.HttpRequestImpl;
 import tech.smartboot.feat.core.client.impl.HttpResponseImpl;
 import tech.smartboot.feat.core.client.stream.Stream;

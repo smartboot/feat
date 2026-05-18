@@ -10,7 +10,7 @@
 
 package tech.smartboot.feat.core.common.io;
 
-import org.smartboot.socket.transport.WriteBuffer;
+import io.github.smartboot.socket.transport.WriteBuffer;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.Reset;
 

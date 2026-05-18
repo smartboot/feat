@@ -11,7 +11,7 @@
 package tech.smartboot.feat.core.common.codec.h2.codec;
 
 
-import org.smartboot.socket.transport.WriteBuffer;
+import io.github.smartboot.socket.transport.WriteBuffer;
 import tech.smartboot.feat.core.common.FeatUtils;
 
 import java.io.IOException;

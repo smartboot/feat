@@ -10,9 +10,9 @@
 
 package tech.smartboot.feat.core.server;
 
-import org.smartboot.socket.buffer.BufferPagePool;
-import org.smartboot.socket.extension.plugins.Plugin;
-import org.smartboot.socket.transport.AioQuickServer;
+import io.github.smartboot.socket.buffer.BufferPagePool;
+import io.github.smartboot.socket.Plugin;
+import io.github.smartboot.socket.transport.AioQuickServer;
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.core.common.ByteTree;
 import tech.smartboot.feat.core.common.FeatUtils;

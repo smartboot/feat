@@ -10,7 +10,7 @@
 
 package tech.smartboot.feat.core.common;
 
-import org.smartboot.socket.timer.HashedWheelTimer;
+import io.github.smartboot.socket.timer.HashedWheelTimer;
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.logging.Logger;

@@ -11,7 +11,7 @@
 package tech.smartboot.feat.core.server.upgrade.sse;
 
 import com.alibaba.fastjson2.JSON;
-import org.smartboot.socket.transport.AioSession;
+import io.github.smartboot.socket.transport.AioSession;
 
 import java.io.IOException;
 import java.util.function.Consumer;

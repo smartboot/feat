@@ -10,8 +10,8 @@
 
 package tech.smartboot.feat.core.server.impl;
 
-import org.smartboot.socket.Protocol;
-import org.smartboot.socket.transport.AioSession;
+import io.github.smartboot.socket.Protocol;
+import io.github.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.common.ByteTree;
 import tech.smartboot.feat.core.common.DecodeState;
 import tech.smartboot.feat.core.common.FeatUtils;

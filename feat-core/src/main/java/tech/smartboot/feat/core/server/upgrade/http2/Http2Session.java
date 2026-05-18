@@ -10,7 +10,7 @@
 
 package tech.smartboot.feat.core.server.upgrade.http2;
 
-import org.smartboot.socket.transport.WriteBuffer;
+import io.github.smartboot.socket.transport.WriteBuffer;
 import tech.smartboot.feat.core.common.codec.h2.codec.Http2Frame;
 import tech.smartboot.feat.core.common.codec.h2.codec.SettingsFrame;
 import tech.smartboot.feat.core.common.codec.h2.hpack.Decoder;

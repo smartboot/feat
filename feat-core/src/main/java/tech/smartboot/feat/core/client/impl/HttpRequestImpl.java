@@ -10,7 +10,7 @@
 
 package tech.smartboot.feat.core.client.impl;
 
-import org.smartboot.socket.transport.AioSession;
+import io.github.smartboot.socket.transport.AioSession;
 
 /**
  * @author 三刀 zhengjunweimail@163.com

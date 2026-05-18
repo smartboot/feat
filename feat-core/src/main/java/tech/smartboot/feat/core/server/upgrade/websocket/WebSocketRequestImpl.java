@@ -10,7 +10,7 @@
 
 package tech.smartboot.feat.core.server.upgrade.websocket;
 
-import org.smartboot.socket.extension.decoder.SmartDecoder;
+import io.github.smartboot.socket.extension.decoder.SmartDecoder;
 import tech.smartboot.feat.core.common.Reset;
 import tech.smartboot.feat.core.common.codec.websocket.WebSocket;
 import tech.smartboot.feat.core.server.WebSocketRequest;
