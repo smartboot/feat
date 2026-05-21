@@ -4,16 +4,27 @@
 
 ### 来源要求
 
-- 必须来自真实项目：`demo/` 或 `feat-test/`
-- 禁止手写未经测试的代码
+- **代码必须自包含**：文档中的代码示例必须是完整的，AI 可以直接从文档中获取并使用
+- **必须优先从 `demo/` 或 `feat-test/` 获取真实代码**，禁止手写未经测试的代码
 - 代码必须可编译、可运行
 
-### 代码获取流程
+### 代码示例前置检查
 
-1. 在 `demo/` 或 `feat-test/` 中找到相关示例
-2. 复制代码到文档
-3. 运行验证（如可能）
-4. 添加必要的注释
+**在获取代码之前，必须先确认代码示例存在！**
+
+如果在 `demo/` 或 `feat-test/` 中找不到相关功能的完整代码示例，必须**立即停止文档编写**，并**先生成示例代码**。
+
+**检查清单**：
+- [ ] 该功能在 `demo/` 目录下是否有可运行的示例？
+- [ ] 该功能在 `feat-test/` 目录下是否有测试代码？
+- [ ] 示例代码是否完整（包含包声明、导入、类定义、main 方法）？
+- [ ] 示例代码是否可编译、可运行？
+
+**如果代码示例不存在**：
+1. **停止文档编写**
+2. **创建示例代码**：在 `demo/` 或 `feat-test/` 中创建完整的可运行示例
+3. **验证示例代码**：确保代码可以编译和运行
+4. **继续文档编写**：基于已验证的示例代码编写文档
 
 ### 完整代码示例结构
 
@@ -22,7 +33,7 @@
 ```mdx
 **文件**：`HelloWorld.java`
 
-**位置**：`demo/src/main/java/com/example/HelloWorld.java`
+**参考来源**：`demo/src/main/java/com/example/HelloWorld.java`（可选，仅用于追溯）
 
 **依赖**：
 
@@ -34,22 +45,15 @@
 </dependency>
 ```
 
-**代码**：
+**代码**：（完整代码，AI 可直接复制使用）
 
 ```java
 package com.example;
 
 import tech.smartboot.feat.Feat;
 
-/**
- * Feat Hello World 示例
- * 
- * 功能：创建一个简单的 HTTP 服务器
- * 适用版本：Feat ≥ 2.0.0
- */
 public class HelloWorld {
     public static void main(String[] args) {
-        // 创建 Feat 服务器并监听 8080 端口
         Feat.createServer()
             .get("/", ctx -> ctx.write("Hello, World!"))
             .listen(8080);
@@ -124,27 +128,6 @@ catch (Exception e) {
 }
 ```
 
-### 代码块标注
-
-```mdx
-// ❌ 无标题代码块
-\```java
-code...
-\```
-
-// ✅ 有标题和路径标注
-\```java title="HelloWorld.java" {5-7}
-// src/main/java/com/example/HelloWorld.java
-public class HelloWorld {
-    public static void main(String[] args) {
-        FeatCloud.cloudServer()
-                .get("/", ctx -> ctx.write("Hello Feat!"))
-                .listen();
-    }
-}
-\```
-```
-
 ---
 
 ## 步骤编写规范
@@ -187,85 +170,12 @@ mvn exec:java -Dexec.mainClass="HelloWorld"
 **验证**：访问 `http://localhost:8080`，应返回 `Hello, World!`。
 ```
 
-### 步骤编号
-
-- 使用阿拉伯数字：1. 2. 3.
-- 保持全文一致
-
 ### 每个步骤包含
 
 1. **步骤标题**（做什么）
 2. **操作说明**（为什么）
 3. **操作指令**（怎么做）
 4. **验证方法**（如何确认）
-
----
-
-## 格式规范
-
-### Aside 组件使用
-
-**用于真正需要突出的信息：**
-
-```mdx
-<Aside type="tip">
-提示信息，帮助用户更好地理解。
-</Aside>
-
-<Aside type="caution">
-警告信息，提醒用户注意潜在风险。
-</Aside>
-
-<Aside type="note">
-补充信息，提供额外的背景知识。
-</Aside>
-```
-
-**不要滥用：**
-
-```
-❌ <Aside type="note">配置文件位于 conf/app.yml。</Aside>
-
-✅ 配置文件位于 `conf/app.yml`。
-```
-
-### 代码块
-
-指定语言，提高可读性：
-
-````mdx
-```java
-// Java 代码
-```
-
-```bash
-mvn compile
-```
-
-```yaml
-server:
-  port: 8080
-```
-````
-
-### 表格
-
-用于参数说明、对比等：
-
-```mdx
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| host | String | 是 | 服务器地址 |
-| port | int | 否 | 端口号，默认 8080 |
-```
-
-### 链接
-
-```mdx
-[内部文档](/feat/cloud/controller/)
-[外部链接](https://maven.apache.org/)
-[源码链接](https://gitee.com/smartboot/feat/blob/master/xxx)
-```
 
 ---
 
@@ -297,88 +207,10 @@ server:
 |----------|----------|
 | IllegalArgumentException | 路径格式错误或 handler 为 null |
 
-**示例**：
+**示例**：（完整可运行代码，AI 可直接复制使用）
 
 ```java
 Router router = new Router();
 router.get("/users", ctx -> ctx.write("用户列表"));
-```
-
-**相关**：
-- [Router 类](link)
-- [RouterHandler 接口](link)
-```
-
-### 类文档
-
-```mdx
-## Router 类
-
-**定义**：请求路由分发器
-
-**位置**：`tech.smartboot.feat.router.Router`
-
-**继承关系**：
-
-```
-java.lang.Object
-  └── tech.smartboot.feat.router.Router
-```
-
-**实现接口**：
-- `RouterHandler`
-
-**构造方法**：
-
-| 构造方法 | 说明 |
-|----------|------|
-| `Router()` | 创建默认 Router 实例 |
-
-**核心方法**：
-
-| 方法 | 返回值 | 说明 |
-|------|--------|------|
-| `get(String, RouterHandler)` | Router | 注册 GET 路由 |
-| `post(String, RouterHandler)` | Router | 注册 POST 路由 |
-
-**使用示例**：
-
-```java
-// 示例代码
-```
-```
-
----
-
-## 配置文档规范
-
-### 配置项表格
-
-```mdx
-| 配置项 | 类型 | 默认值 | 必填 | 说明 |
-|--------|------|--------|------|------|
-| server.port | int | 8080 | 否 | 服务器监听端口 |
-| server.host | String | "0.0.0.0" | 否 | 服务器绑定地址 |
-```
-
-### 配置示例
-
-```mdx
-## 基础配置
-
-```yaml
-server:
-  port: 8080
-```
-
-## 完整配置
-
-```yaml
-server:
-  port: 8080
-  host: "0.0.0.0"
-  threadPool:
-    coreSize: 10
-    maxSize: 100
 ```
 ```

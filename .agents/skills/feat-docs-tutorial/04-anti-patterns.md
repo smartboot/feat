@@ -58,13 +58,11 @@ public class RouterConfig {
 - AI 无法运行不完整的代码
 - 缺少依赖信息
 - 缺少验证步骤
-- 无法验证代码正确性
 
 **解决策略**：
 1. 提供完整的代码文件（包声明、导入、类定义）
 2. 包含依赖配置
 3. 提供验证步骤
-4. 给出预期输出
 
 ---
 
@@ -95,71 +93,77 @@ public class RouterConfig {
 **问题诊断**：
 - AI 无法验证代码是否正确
 - 无法判断配置是否生效
-- 难以诊断问题
 
 **解决策略**：
 1. 每个代码块后提供验证步骤
 2. 给出预期输出
-3. 提供故障排查指南
 
 ---
 
-### 反模式 C03：缺少错误处理
+### 反模式 C03：代码不自包含
 
 ```mdx
-// ❌ 错误：理想化的代码，无错误处理
+// ❌ 错误：代码依赖外部文件，AI 无法访问
+## 路由配置
+
 ```java
-public void handle(Context ctx) {
-    String data = ctx.getRequest().getBody();
-    User user = objectMapper.readValue(data, User.class);
-    userService.save(user);
-    ctx.write("保存成功");
-}
+// 仅展示部分代码
+router.get("/", ctx -> ctx.write("Hello"));
 ```
 
-// ✅ 正确：包含错误处理
+> 完整代码参见 [HelloWorld.java](../../demo/src/main/java/com/example/HelloWorld.java)
+
+// ✅ 正确：代码自包含，AI 可直接使用
+## 路由配置
+
+**文件**：`HelloWorld.java`
+
+**参考来源**：`demo/src/main/java/com/example/HelloWorld.java`
+
 ```java
-public void handle(Context ctx) {
-    try {
-        String data = ctx.getRequest().getBody();
-        if (data == null || data.isEmpty()) {
-            ctx.getResponse().setStatus(400);
-            ctx.write("请求体不能为空");
-            return;
-        }
+package com.example;
+
+import tech.smartboot.feat.Feat;
+import tech.smartboot.feat.router.Router;
+
+public class HelloWorld {
+    public static void main(String[] args) {
+        Router router = new Router();
+        router.get("/", ctx -> ctx.write("Hello, World!"));
         
-        User user = objectMapper.readValue(data, User.class);
+        Feat.createServer(router)
+            .listen(8080);
         
-        // 验证
-        if (user.getName() == null || user.getName().trim().isEmpty()) {
-            ctx.getResponse().setStatus(400);
-            ctx.write("用户名不能为空");
-            return;
-        }
-        
-        userService.save(user);
-        ctx.getResponse().setStatus(201);
-        ctx.write("保存成功");
-    } catch (JsonProcessingException e) {
-        ctx.getResponse().setStatus(400);
-        ctx.write("JSON 格式错误: " + e.getMessage());
-    } catch (Exception e) {
-        ctx.getResponse().setStatus(500);
-        ctx.write("服务器错误: " + e.getMessage());
+        System.out.println("服务器启动成功");
     }
 }
 ```
+
+**依赖**：
+
+```xml
+<dependency>
+    <groupId>tech.smartboot.feat</groupId>
+    <artifactId>feat-core</artifactId>
+    <version>2.0.0</version>
+</dependency>
+```
+
+**验证步骤**：
+1. 编译：`mvn compile`
+2. 运行：`mvn exec:java -Dexec.mainClass="com.example.HelloWorld"`
+3. 测试：`curl http://localhost:8080/`
+4. 预期输出：`Hello, World!`
 ```
 
 **问题诊断**：
-- AI 生成的代码可能忽略边界情况
-- 缺乏异常处理示例
-- 代码健壮性不足
+- AI 无法访问 Feat 仓库中的 `demo/` 或 `feat-test/` 目录
+- 仅提供代码片段和外部链接，AI 无法获取完整代码
 
 **解决策略**：
-1. 包含错误处理示例
-2. 展示边界情况处理
-3. 提供异常处理最佳实践
+1. **代码必须自包含**：文档中的代码示例必须是完整的
+2. **禁止依赖外部文件**：不要仅提供代码片段并指向外部文件
+3. **参考来源仅用于追溯**：可以标注代码来源路径，但 AI 不应依赖它获取代码
 
 ---
 
@@ -196,7 +200,6 @@ Router 可以处理请求。
 **问题诊断**：
 - AI 无法推断未显式声明的信息
 - 缺乏类型、位置、依赖等关键信息
-- 无法建立知识图谱
 
 **解决策略**：
 1. 每个概念必须包含 What/Why/How/When/Where
@@ -318,7 +321,7 @@ Router 可以处理请求。
 |--------|------|----------|
 | C01 代码不完整 | AI 无法运行不完整代码 | 提供完整代码+依赖+验证 |
 | C02 无验证步骤 | 无法确认代码正确性 | 每个示例后加验证步骤 |
-| C03 缺少错误处理 | 代码健壮性不足 | 包含异常处理示例 |
+| C03 代码不自包含 | AI 无法访问外部代码 | 代码必须完整，禁止依赖外部文件 |
 | D01 信息不完整 | AI 无法推断关键信息 | 提供 What/Why/How/Where |
 | D02 隐式上下文 | 前置知识不明确 | 显式声明依赖和前置知识 |
 | D03 文档孤岛 | 缺乏知识关联 | 建立前后文档链接 |
