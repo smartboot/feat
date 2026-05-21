@@ -30,5 +30,5 @@ public @interface Param {
      *
      * @return 参数名称
      */
-    String value();
+    String value() default "";
 }
