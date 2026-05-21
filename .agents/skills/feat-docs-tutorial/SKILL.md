@@ -1,150 +1,383 @@
 ---
 name: "feat-docs-tutorial"
-description: "Feat 官方教程写作专家。专注于在 pages/src/content/docs/ 目录下创作叙事驱动、连贯性强的官方教程文档。当用户需要为Feat编写或优化官方教程文档时调用。"
+description: "Feat 官方教程写作专家。专注于在 pages/src/content/docs/ 目录下创作结构化、机器可解析的官方教程文档。核心目标：让 AI 能够根据文档写出高质量、可运行的 Feat 代码。"
+version: "2.0.0"
 ---
 
 # Feat 官方教程写作专家
 
 ## 角色定位
 
-Feat 官方教程写作专家，专门负责在 `pages/src/content/docs/` 目录下创作**叙事驱动、连贯性强**的官方教程文档。
+专门负责在 `pages/src/content/docs/` 目录下创作**结构化、机器可解析**的官方教程文档。
 
-**核心使命**：通过故事化的场景引入、清晰的学习路径和真实的代码示例，让开发者不仅学会"怎么做"，更理解"为什么这么做"。
+**核心使命**：通过清晰的结构化内容、完整的上下文信息和精确的代码示例，让 AI 能够：
+1. **充分理解** Feat 框架的使用实践
+2. **生成高质量**、可运行的 Feat 代码
+3. **诊断和修复**代码中的常见问题
 
 **适用范围**：仅限 `pages/src/content/docs/` 目录下的 Feat 官方教程文档编写。
 
 ---
 
-## 决策流程
+## 快速开始
 
-### 第 1 步：检查写作范围
+### 5 分钟上手
+
+```mermaid
+flowchart LR
+    A[阅读<br/>写作哲学] --> B[选择<br/>文档类型]
+    B --> C[应用<br/>代码模式]
+    C --> D[执行<br/>质量检查]
+```
+
+**新文档创建流程**：
+
+1. **确定文档类型**（见下文文档类型矩阵）
+2. **查阅对应规范**：
+   - 代码示例 → [03-code-standards.md](03-code-standards.md)
+   - 代码结构 → [05-code-patterns.md](05-code-patterns.md)
+   - 避免错误 → [04-anti-patterns.md](04-anti-patterns.md)
+3. **使用文档模板**（见下文模板库）
+4. **执行质量检查** → [06-quality-checklist.md](06-quality-checklist.md)
+
+---
+
+## 文档体系架构
+
+### 文档地图
+
+```
+feat-docs-tutorial/
+├── SKILL.md                    # [入口] 本文件 - 快速导航与核心原则
+├── 00-writing-philosophy.md    # [必读] 写作哲学 - 为什么这样设计
+├── 01-cognitive-framework.md   # [必读] AI 认知框架 - 如何让 AI 理解文档
+├── 02-content-architecture.md  # [参考] 内容架构 - 文档组织结构
+├── 03-code-standards.md        # [工具] 代码规范 - 代码示例标准
+├── 04-anti-patterns.md         # [工具] 反模式目录 - 常见错误与避免方法
+├── 05-code-patterns.md         # [工具] 代码模式库 - 标准化代码模板
+├── 06-quality-checklist.md     # [工具] 质量检查清单 - 发布前检查
+├── 07-ai-prompts.md            # [工具] AI 提示词库 - 辅助写作提示词
+├── 08-diagram-standards.md     # [工具] 图表规范 - 可视化标准
+├── 09-toc-manager.md           # [工具] 目录管理 - 导航结构维护
+└── _meta.json                  # [配置] 文档元数据
+```
+
+### 文档类型矩阵
+
+| 文档类型 | 适用场景 | 主要规范 | 模板位置 |
+|---------|---------|---------|---------|
+| **快速入门** | 新用户首次使用 | Pattern-01, C01-C03 | 见下文模板 |
+| **API 文档** | 接口方法说明 | 03-code-standards API 章节 | 见下文模板 |
+| **教程** | 完整功能实现 | Pattern-02~05, D01-D05 | 见下文模板 |
+| **最佳实践** | 推荐用法 | 04-anti-patterns 解决策略 | 见下文模板 |
+| **故障排查** | 常见问题解决 | 04-anti-patterns 错误诊断 | 见下文模板 |
+
+---
+
+## 写作流程
+
+### 标准流程
 
 ```mermaid
 flowchart TD
-    A[开始写作] --> B{目标路径在<br/>pages/src/content/docs/?}
-    B -->|是| C[继续: 确定写作场景]
-    B -->|否| D[拒绝: 本技能仅用于<br/>pages/src/content/docs/ 目录]
-    
-    C --> E{内容类型?}
-    E -->|单篇功能教程| F[叙事驱动结构]
-    E -->|系列入门教程| G["In Action"风格]
-    E -->|版本发布文章| H[使用 feat-wechat-release]
-    E -->|技术深度分享| I[使用 feat-wechat-tech]
-    E -->|API 参考文档| J[保持简洁，无需详细步骤]
+    A[开始] --> B[步骤1: 需求分析]
+    B --> C{文档类型?}
+    C -->|快速入门| D[使用 Pattern-01]
+    C -->|功能教程| E[组合 Pattern-02~05]
+    C -->|API 文档| F[使用 API 模板]
+    D --> G[步骤2: 代码提取]
+    E --> G
+    F --> G
+    G --> H[步骤3: 代码验证]
+    H --> I{验证通过?}
+    I -->|否| J[修复代码]
+    J --> H
+    I -->|是| K[步骤4: 编写文档]
+    K --> L[步骤5: 质量检查]
+    L --> M{检查通过?}
+    M -->|否| N[修复文档]
+    N --> L
+    M -->|是| O[完成]
 ```
 
-**重要限制**：本技能仅适用于 `pages/src/content/docs/` 目录下的文档编写。如果用户请求在其他目录编写文档，应拒绝并说明适用范围。
+### 核心原则
 
-### 第 2 步：选择叙事结构（单篇教程）
+1. **代码优先** - 先有可运行的代码，再写文档
+2. **模式驱动** - 识别代码模式，生成标准化示例
+3. **验证闭环** - 每个示例都有验证步骤
+4. **结构化优先** - 使用清晰的标题层级、列表和表格
+5. **上下文完整** - 每个概念必须包含定义、用途、示例
+6. **精确性** - 使用准确的术语，提供具体参数和返回值
 
-```mermaid
-flowchart TD
-    A[选择叙事结构] --> B{内容特点?}
-    B -->|解决具体问题| C[PES: 问题-探索-解决]
-    B -->|理解设计思想| D[CEP: 概念-演进-实践]
-    B -->|多种方案选型| E[SSI: 场景-选型-实现]
-    
-    C --> F[查阅 02-content-architecture.md]
-    D --> F
-    E --> F
+---
+
+## 文档模板库
+
+### 模板 1：快速入门文档
+
+```mdx
+---
+title: {功能名称} 快速入门
+description: {30-50字描述}
+---
+
+# {功能名称} 快速入门
+
+## 你将学到什么
+
+- 知识点 1
+- 知识点 2
+- 知识点 3
+
+## 前置要求
+
+- [ ] Java 8+
+- [ ] Maven 3.6+
+- [ ] 完成 [基础入门](/feat/getstart/)
+
+## 步骤 1：添加依赖
+
+**操作**：在 `pom.xml` 中添加依赖
+
+```xml
+<dependency>
+    <groupId>tech.smartboot.feat</groupId>
+    <artifactId>feat-{模块}</artifactId>
+    <version>{版本}</version>
+</dependency>
 ```
 
-### 第 3 步：写作流程
+**验证**：运行 `mvn dependency:tree | grep feat-{模块}`
 
-```mermaid
-flowchart TD
-    A[开始写作] --> B{检查目录缓存}
-    B -->|_meta.json 不存在| C[执行 09-toc-manager<br/>生成目录缓存]
-    B -->|缓存存在| D[理解写作哲学]
-    C --> D
-    D --> E[设计学习路径]
-    E --> F[编写场景引入]
-    F --> G[编写核心内容]
-    G --> H[建立文档连接]
-    H --> I[质量检查]
-    I --> J{检查通过?}
-    J -->|否| K[修复问题]
-    K --> I
-    J -->|是| L[完成]
-    
-    D -.->|查阅| D1[00-writing-philosophy.md]
-    G -.->|查阅| G1[03-code-standards.md]
-    I -.->|查阅| I1[06-quality-checklist.md]
+## 步骤 2：编写代码
+
+**文件**：`{ClassName}.java`
+
+**代码模式**：使用 [Pattern-XX](05-code-patterns.md)
+
+```java
+// 完整可运行代码
 ```
 
-**缓存检查说明**：
-- 目录缓存文件位置：`.agents/skills/feat-docs-tutorial/_meta.json`
-- 若缓存不存在，必须先执行 [09-toc-manager.md](09-toc-manager.md) 生成缓存
-- 缓存用于了解现有文档结构，确保新文档与已有内容形成连贯的知识网络
+**验证步骤**：
+1. 编译：`mvn compile`
+2. 运行：`mvn exec:java -Dexec.mainClass="..."`
+3. 测试：`curl ...`
+4. 预期输出：`...`
 
-### 第 4 步：判断是否需要图表
+## 步骤 3：验证结果
 
-```mermaid
-flowchart TD
-    A[需要图表?] --> B{展示什么?}
-    B -->|步骤/流程| C[查阅 08-diagram-standards<br/>使用流程图]
-    B -->|关系/连接| D[查阅 08-diagram-standards<br/>使用关系图]
-    B -->|时间/体验| E[查阅 08-diagram-standards<br/>使用用户旅程]
-    B -->|分类/维度| F[查阅 08-diagram-standards<br/>使用思维导图]
-    B -->|复杂架构| G[调用 feat-illustrator]
+**预期行为**：...
+
+## 常见错误
+
+### 错误 1：{错误描述}
+
+**现象**：...
+**原因**：...
+**解决**：...
+
+## 下一步
+
+- [{进阶教程}](link)
+- [{API 参考}](link)
 ```
 
-### 第 5 步：更新教程目录
+### 模板 2：API 文档
 
-```mermaid
-flowchart TD
-    A[完成文档编写] --> B{文档类型?}
-    B -->|新文档| C[查阅 09-toc-manager<br/>添加目录项]
-    B -->|修改文档| D[查阅 09-toc-manager<br/>更新目录项]
-    B -->|删除文档| E[查阅 09-toc-manager<br/>移除目录项]
-    
-    C --> F[更新 _meta.json]
-    D --> F
-    E --> F
-    F --> G[同步 description]
-    G --> H[检查目录健康度]
+```mdx
+---
+title: {ClassName} API
+description: {30-50字描述}
+---
+
+# {ClassName}
+
+## 定义
+
+{一句话精确定义}
+
+## 继承关系
+
+```
+java.lang.Object
+  └── {完整类名}
 ```
 
-**触发条件**（必须同时满足）：
-1. **路径条件**：目标文档路径必须在 `pages/src/content/docs/` 目录下
-2. **内容条件**：以下情况之一
-   - 新增功能需要创建文档
-   - 修改文档影响目录结构
-   - 删除文档需要清理目录
-   - 定期检测代码新功能
+## 构造方法
 
-**拒绝场景**：
-- 用户请求在非 `pages/src/content/docs/` 目录编写文档
-- 用户请求编写非 Feat 官方教程类文档（如博客文章、API参考等）
+| 构造方法 | 参数 | 说明 |
+|---------|------|------|
+| `{ClassName}()` | - | 默认构造 |
+
+## 核心方法
+
+### {methodName}({params})
+
+**功能**：{一句话描述}
+
+**参数**：
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| {param} | {type} | {是/否} | {说明} |
+
+**返回值**：
+
+| 类型 | 说明 |
+|------|------|
+| {type} | {说明} |
+
+**异常**：
+
+| 异常类型 | 触发条件 |
+|---------|---------|
+| {Exception} | {条件} |
+
+**示例**：
+
+```java
+// 代码示例
+```
+
+**适用代码模式**：[Pattern-XX](05-code-patterns.md)
+
+## 完整示例
+
+```java
+// 完整可运行示例
+```
+
+## 相关类
+
+- [{RelatedClass}](link)
+```
+
+### 模板 3：最佳实践文档
+
+```mdx
+---
+title: {功能} 最佳实践
+description: {30-50字描述}
+---
+
+# {功能} 最佳实践
+
+## 场景分析
+
+### 场景 1：{场景描述}
+
+**问题**：...
+**解决方案**：...
+**代码模式**：[Pattern-XX](05-code-patterns.md)
+
+```java
+// 推荐实现
+```
+
+**避免的反模式**：[AntiPattern-CXX](04-anti-patterns.md)
+
+## 性能优化
+
+### 优化 1：{优化项}
+
+**优化前**：...
+**优化后**：...
+**效果**：...
+
+## 安全考虑
+
+### 风险 1：{风险描述}
+
+**防护措施**：...
+
+## 相关文档
+
+- [反模式目录](04-anti-patterns.md)
+- [代码模式库](05-code-patterns.md)
+```
 
 ---
 
 ## 规范文档索引
 
-根据当前写作阶段，查阅对应文档：
-
-| 阶段 | 查阅文档 |
-|------|---------|
-| **动笔前** | [00-writing-philosophy.md](00-writing-philosophy.md) - 写作哲学、叙事结构 |
-| **确定深度** | [01-cognitive-framework.md](01-cognitive-framework.md) - 认知目标框架 |
-| **设计大纲** | [02-content-architecture.md](02-content-architecture.md) - 内容架构模式 |
-| **编写代码** | [03-code-standards.md](03-code-standards.md) - 代码规范 |
-| **自查优化** | [04-anti-patterns.md](04-anti-patterns.md) - 写作反模式 |
-| **质量检查** | [06-quality-checklist.md](06-quality-checklist.md) - 检查清单 |
-| **添加图表** | [08-diagram-standards.md](08-diagram-standards.md) - 图表标准 |
-| **目录管理** | [09-toc-manager.md](09-toc-manager.md) - 教程目录管理 |
+| 阶段 | 目标 | 查阅文档 |
+|------|------|---------|
+| **理解理念** | 为什么这样设计 | [00-writing-philosophy.md](00-writing-philosophy.md) |
+| **AI 认知** | 如何让 AI 理解 | [01-cognitive-framework.md](01-cognitive-framework.md) |
+| **内容架构** | 文档组织结构 | [02-content-architecture.md](02-content-architecture.md) |
+| **代码规范** | 代码示例标准 | [03-code-standards.md](03-code-standards.md) |
+| **避免错误** | 常见错误与解决 | [04-anti-patterns.md](04-anti-patterns.md) |
+| **代码模式** | 标准化代码模板 | [05-code-patterns.md](05-code-patterns.md) |
+| **质量检查** | 发布前检查 | [06-quality-checklist.md](06-quality-checklist.md) |
+| **AI 提示词** | 辅助写作提示词 | [07-ai-prompts.md](07-ai-prompts.md) |
+| **图表规范** | 可视化标准 | [08-diagram-standards.md](08-diagram-standards.md) |
+| **目录管理** | 导航结构维护 | [09-toc-manager.md](09-toc-manager.md) |
 
 ---
 
-## 核心原则
+## AI 辅助写作提示词
 
-1. **叙事驱动** - 每篇文档围绕真实场景或问题展开
-2. **连贯性优先** - 文档之间形成知识网络，有明确学习路径
-3. **对话式写作** - 像有经验的开发者分享经验
-4. **步骤清晰** - 每一步都可操作、可验证
-5. **代码真实** - 来自实际项目，可运行
-6. **渐进式展开** - 由浅入深，循序渐进
-7. **灵活不教条** - 结构服务于内容，避免模板化
+### 提示词 1：生成代码示例
+
+```
+请为 {功能名称} 生成符合 Feat 代码规范的示例：
+
+要求：
+1. 使用 Pattern-XX 代码模式
+2. 包含完整的包声明、导入、类定义
+3. 代码必须 JDK 8 兼容
+4. 包含详细的注释说明
+5. 提供验证步骤（编译→运行→测试→预期输出）
+6. 包含常见错误及解决方案
+
+输出格式：
+- 文件名称
+- 依赖配置
+- 完整代码
+- 验证步骤
+- 常见错误
+```
+
+### 提示词 2：文档质量检查
+
+```
+请检查以下文档是否符合 Feat 文档规范：
+
+文档内容：
+{文档内容}
+
+检查项：
+1. 代码示例是否完整可运行？
+2. 是否包含验证步骤？
+3. 是否使用标准代码模式？
+4. 是否存在反模式？
+5. 术语使用是否一致？
+6. 版本信息是否明确？
+
+输出格式：
+- 通过项：[列表]
+- 未通过项：[列表，含具体位置和修复建议]
+- 改进建议：[列表]
+```
+
+### 提示词 3：提取代码模式
+
+```
+请从以下代码中提取标准化代码模式：
+
+代码：
+{代码}
+
+要求：
+1. 识别适用场景
+2. 提取关键要素（必须包含的代码元素）
+3. 定义验证步骤
+4. 列出常见错误
+5. 标注相关模式
+
+输出格式参考 Pattern-XX 模板。
+```
 
 ---
 
@@ -152,7 +385,7 @@ flowchart TD
 
 **官方教程目录**：`pages/src/content/docs/`
 
-**重要说明**：本技能**仅**用于在 `pages/src/content/docs/` 目录下编写 Feat 官方教程文档。不支持其他目录的文档编写。
+**重要说明**：本技能**仅**用于在 `pages/src/content/docs/` 目录下编写 Feat 官方教程文档。
 
 ```
 pages/src/content/docs/
@@ -166,4 +399,13 @@ pages/src/content/docs/
 **路径验证**：
 - 所有新创建的文档必须位于 `pages/src/content/docs/` 或其子目录下
 - 文档文件扩展名应为 `.md` 或 `.mdx`
-- 文档名称应使用小写字母和连字符（kebab_case）
+- 文档名称应使用小写字母和连字符（kebab-case）
+
+---
+
+## 版本历史
+
+| 版本 | 日期 | 变更内容 |
+|------|------|---------|
+| 2.0.0 | 2025-05 | 重构文档结构，添加快速开始、文档模板库、AI 提示词 |
+| 1.0.0 | 2025-04 | 初始版本 |
