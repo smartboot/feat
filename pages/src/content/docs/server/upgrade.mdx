@@ -1,5 +1,5 @@
 ---
-title: 在 Feat 中使用协议升级
+title: 协议升级
 description: 在同一个 Feat 服务里启用 WebSocket、SSE 或 HTTP/2，并理解它们各自解决的问题
 sidebar:
     order: 6
@@ -16,8 +16,8 @@ sidebar:
 - **SSE**：服务端单向推送，客户端主要负责监听
 - **HTTP/2**：更偏向协议层能力和服务器推送，不是实时交互的默认入口
 
-如果你的目标只是客户端接收事件流，先看 [SSE 客户端教程](/feat/client/sse_client/)。  
-如果你的目标是聊天室、协作或实时控制，先看 [连接第一个 WebSocket 服务](/feat/client/ws_client/)。
+如果你的目标只是客户端接收事件流，先看 [SSE 客户端](/feat/client/sse_client/)。
+如果你的目标是聊天室、协作或实时控制，先看 [WebSocket 客户端](/feat/client/ws_client/)。
 
 ## WebSocket：把 HTTP 请求升级成双向连接
 
@@ -192,6 +192,6 @@ public class Http2Demo {
 
 ## 下一步
 
-- 要看客户端怎么接收 WebSocket：去 [连接第一个 WebSocket 服务](/feat/client/ws_client/)
-- 要看客户端怎么接收 SSE：去 [SSE 客户端教程](/feat/client/sse_client/)
+- 要看客户端怎么接收 WebSocket：去 [WebSocket 客户端](/feat/client/ws_client/)
+- 要看客户端怎么接收 SSE：去 [SSE 客户端](/feat/client/sse_client/)
 - 如果你其实还没写过最基本的服务：先回到 [构建第一个 Feat HTTP 服务](/feat/server/getstart/)

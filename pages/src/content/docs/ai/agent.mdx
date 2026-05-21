@@ -1,5 +1,5 @@
 ---
-title: 让模型开始使用工具
+title: Agent 工具
 description: 用 Feat AI 的 Agent 机制组织模型与工具协作，而不是只做单次问答
 sidebar:
     order: 3
@@ -20,7 +20,7 @@ Feat AI 的 Agent 是建立在 ReAct 思路上的：
 - 模型需要读取外部信息
 - 模型需要调用一个或多个工具才能完成任务
 
-如果你当前只是普通问答、摘要、翻译或单次生成，先停在 [配置对话模型并处理流式输出](/feat/ai/chat/) 即可。
+如果你当前只是普通问答、摘要、翻译或单次生成，先停在 [对话模型](/feat/ai/chat/) 即可。
 
 ## 先看一个最小 Agent
 
@@ -132,5 +132,5 @@ opts.tool(new FileOperationTool());
 
 ## 下一步
 
-- 如果你还没把对话模型用熟，先回到 [配置对话模型并处理流式输出](/feat/ai/chat/)
+- 如果你还没把对话模型用熟，先回到 [对话模型](/feat/ai/chat/)
 - 如果你准备做检索增强，再去看 [Embedding 与向量](/feat/ai/embedding/)
