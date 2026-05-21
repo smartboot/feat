@@ -11,8 +11,14 @@
     <dependencies>
         <dependency>
             <groupId>tech.smartboot.feat</groupId>
+            <artifactId>feat-cloud</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>tech.smartboot.feat</groupId>
             <artifactId>feat-cloud-starter</artifactId>
             <version>${project.version}</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
