@@ -43,7 +43,7 @@ public class RouterConfig {
 <dependency>
     <groupId>tech.smartboot.feat</groupId>
     <artifactId>feat-core</artifactId>
-    <version>3.2.0</version>
+    <version>2.0.0</version>
 </dependency>
 ```
 
@@ -242,7 +242,7 @@ java.lang.ClassNotFoundException: tech.smartboot.feat.Feat
 <dependency>
     <groupId>tech.smartboot.feat</groupId>
     <artifactId>feat-core</artifactId>
-    <version>3.2.0</version>
+    <version>2.0.0</version>
 </dependency>
 ```
 ```
@@ -324,7 +324,7 @@ Router 可以处理请求。
 <dependency>
     <groupId>tech.smartboot.feat</groupId>
     <artifactId>feat-redis</artifactId>
-    <version>3.2.0</version>
+    <version>2.0.0</version>
 </dependency>
 ```
 
@@ -425,10 +425,10 @@ private UserService userService;
 // ✅ 正确：版本信息集中展示
 ## 快速开始
 
-**适用版本**：Feat ≥ 3.2.0
+**适用版本**：Feat ≥ 2.0.0
 
 <Aside type="note">
-Feat 3.1.x 用户请参考 [旧版文档](/feat/v3.1/getstart/)
+Feat 1.x 用户请参考 [旧版文档](/feat/v1/getstart/)
 </Aside>
 
 **依赖**：
@@ -437,7 +437,7 @@ Feat 3.1.x 用户请参考 [旧版文档](/feat/v3.1/getstart/)
 <dependency>
     <groupId>tech.smartboot.feat</groupId>
     <artifactId>feat-core</artifactId>
-    <version>3.2.0</version>
+    <version>2.0.0</version>
 </dependency>
 ```
 ```

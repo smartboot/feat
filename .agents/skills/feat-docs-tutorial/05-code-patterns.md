@@ -1,6 +1,12 @@
 
 ---
 
+# 代码模式库
+
+> **核心目标**：提供标准化的代码模板，让 AI 能够生成一致、可运行的 Feat 代码。
+
+---
+
 ## 扩展模式
 
 ### Pattern-06: WebSocket 服务器
@@ -23,7 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * WebSocket 服务器示例
  * 
  * 功能：实现简单的 WebSocket 聊天服务器
- * 适用版本：Feat ≥ 3.2.0
+ * 适用版本：Feat ≥ 2.0.0
  */
 public class WebSocketServer {
     // 存储所有连接的客户端
@@ -139,7 +145,7 @@ try {
 <dependency>
     <groupId>tech.smartboot.feat</groupId>
     <artifactId>feat-ai</artifactId>
-    <version>3.2.0</version>
+    <version>2.0.0</version>
 </dependency>
 ```
 
@@ -158,7 +164,7 @@ import tech.smartboot.feat.ai.chat.message.ChatResponse;
  * Feat AI 基础调用示例
  * 
  * 功能：使用 Feat AI 进行简单的对话
- * 适用版本：Feat ≥ 3.2.0
+ * 适用版本：Feat ≥ 2.0.0
  */
 public class AiChatExample {
     public static void main(String[] args) {
@@ -246,7 +252,7 @@ import java.util.function.Function;
  * Feat AI Agent 示例
  * 
  * 功能：创建一个简单的计算器 Agent
- * 适用版本：Feat ≥ 3.2.0
+ * 适用版本：Feat ≥ 2.0.0
  */
 public class AiAgentExample {
     
@@ -322,7 +328,7 @@ public class AiAgentExample {
 <dependency>
     <groupId>tech.smartboot.feat</groupId>
     <artifactId>feat-cloud-starter</artifactId>
-    <version>3.2.0</version>
+    <version>2.0.0</version>
 </dependency>
 ```
 
@@ -345,7 +351,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * 用户管理 Controller
  * 
  * 功能：使用 Feat Cloud 实现 RESTful API
- * 适用版本：Feat ≥ 3.2.0
+ * 适用版本：Feat ≥ 2.0.0
  */
 @Controller
 @RequestMapping("/users")
@@ -483,7 +489,7 @@ import java.io.IOException;
  * HTTP 客户端示例
  * 
  * 功能：使用 Feat HTTP Client 发送 HTTP 请求
- * 适用版本：Feat ≥ 3.2.0
+ * 适用版本：Feat ≥ 2.0.0
  */
 public class HttpClientExample {
     public static void main(String[] args) throws IOException {
@@ -576,69 +582,9 @@ flowchart TD
 
 ---
 
-## AI 代码生成提示词（扩展）
+## 版本历史
 
-### 生成 WebSocket 服务器
-
-```
-请使用 Pattern-06 生成 WebSocket 服务器：
-
-要求：
-- 实现 /chat 端点
-- 支持连接、消息、关闭回调
-- 实现消息广播功能
-- 包含异常处理
-- 提供验证步骤
-```
-
-### 生成 Feat AI 调用
-
-```
-请使用 Pattern-07 生成 Feat AI 调用代码：
-
-要求：
-- 配置 API Key 和模型
-- 实现同步对话
-- 实现流式输出
-- 包含异常处理
-- 提供验证步骤
-```
-
-### 生成 Feat AI Agent
-
-```
-请使用 Pattern-08 生成 Feat AI Agent：
-
-要求：
-- 定义自定义工具
-- 配置系统提示词
-- 使用内存保持上下文
-- 实现工具调用
-- 提供验证步骤
-```
-
-### 生成 Feat Cloud Controller
-
-```
-请使用 Pattern-09 生成 Feat Cloud Controller：
-
-要求：
-- 使用 @Controller 和 @RequestMapping
-- 实现 CRUD 操作
-- 使用注解驱动
-- 包含 Controller 扫描配置
-- 提供验证步骤
-```
-
-### 生成 HTTP 客户端
-
-```
-请使用 Pattern-10 生成 HTTP 客户端代码：
-
-要求：
-- 配置基础 URL 和超时
-- 实现 GET 和 POST 请求
-- 支持同步和异步调用
-- 包含请求头和响应处理
-- 提供验证步骤
-```
+| 版本 | 日期 | 变更 |
+|------|------|------|
+| 2.0.0 | 2025-05 | 移除冗余的 AI 提示词（已移至 07-ai-prompts.md），简化决策树 |
+| 1.0.0 | 2025-04 | 初始版本 |

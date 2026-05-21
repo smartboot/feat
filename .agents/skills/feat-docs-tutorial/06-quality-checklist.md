@@ -29,7 +29,7 @@
 
 - [ ] 每个概念包含：定义、使用场景、代码示例
 - [ ] API 说明包含参数类型、返回值
-- [ ] 版本信息明确（如 Feat ≥ 3.2.0）
+- [ ] 版本信息明确（如 Feat ≥ 2.0.0）
 - [ ] 术语使用一致
 - [ ] 反模式包含 ❌/✅ 对比示例
 
@@ -41,80 +41,6 @@
 - [ ] 错误诊断包含现象、原因、解决三步
 - [ ] 文档间引用使用相对路径
 - [ ] 代码模式引用使用标准格式 `[Pattern-XX](05-code-patterns.md)`
-
----
-
-## 自动化检查脚本
-
-### 检查脚本 1：代码完整性
-
-```bash
-#!/bin/bash
-# check-code.sh - 检查代码示例完整性
-
-echo "=== 代码完整性检查 ==="
-
-# 检查代码块是否包含包声明
-grep -n "^package " "$1" | wc -l
-echo "✓ 包含包声明的代码块数"
-
-# 检查是否包含导入语句
-grep -n "^import " "$1" | wc -l
-echo "✓ 包含导入语句的代码块数"
-
-# 检查是否包含验证步骤
-grep -n "**验证步骤**" "$1" | wc -l
-echo "✓ 包含验证步骤的代码块数"
-
-# 检查是否标注代码模式
-grep -n "Pattern-" "$1" | wc -l
-echo "✓ 引用代码模式的次数"
-```
-
-### 检查脚本 2：术语一致性
-
-```bash
-#!/bin/bash
-# check-terminology.sh - 检查术语一致性
-
-echo "=== 术语一致性检查 ==="
-
-# 定义标准术语
-TERMS=("Router" "Context" "Interceptor" "Handler" "FeatAI" "ChatModel")
-
-for term in "${TERMS[@]}"; do
-    count=$(grep -o "$term" "$1" | wc -l)
-    echo "$term: 出现 $count 次"
-done
-
-# 检查非标准术语
-echo ""
-echo "=== 可能的非标准术语 ==="
-grep -n "路由组件\|请求上下文\|拦截器" "$1" || echo "未发现明显非标准术语"
-```
-
-### 检查脚本 3：链接有效性
-
-```bash
-#!/bin/bash
-# check-links.sh - 检查内部链接有效性
-
-echo "=== 链接有效性检查 ==="
-
-# 提取所有 Markdown 链接
-links=$(grep -oE '\[([^]]+)\]\(([^)]+)\)' "$1" | grep -v "http" | sed 's/.*(\(.*\))/\1/')
-
-for link in $links; do
-    # 移除 # 锚点
-    clean_link="${link%%#*}"
-    
-    if [ -f "$clean_link" ] || [ -f "$clean_link.md" ] || [ -f "$clean_link.mdx" ]; then
-        echo "✓ $link"
-    else
-        echo "✗ $link (文件不存在)"
-    fi
-done
-```
 
 ---
 
@@ -250,5 +176,5 @@ done
 
 | 版本 | 日期 | 变更 |
 |------|------|------|
-| 2.0.0 | 2025-05 | 添加 AI 可解析性检查、自动化脚本、质量评分标准 |
+| 2.0.0 | 2025-05 | 简化内容，移除未实现的自动化脚本 |
 | 1.0.0 | 2025-04 | 初始版本 |

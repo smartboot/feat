@@ -1,7 +1,7 @@
 ---
 name: "feat-docs-tutorial"
 description: "Feat 官方教程写作专家。专注于在 pages/src/content/docs/ 目录下创作结构化、机器可解析的官方教程文档。核心目标：让 AI 能够根据文档写出高质量、可运行的 Feat 代码。"
-version: "2.0.0"
+version: "3.0.0"
 ---
 
 # Feat 官方教程写作专家
@@ -23,21 +23,14 @@ version: "2.0.0"
 
 ### 5 分钟上手
 
-```mermaid
-flowchart LR
-    A[阅读<br/>写作哲学] --> B[选择<br/>文档类型]
-    B --> C[应用<br/>代码模式]
-    C --> D[执行<br/>质量检查]
-```
-
 **新文档创建流程**：
 
-1. **确定文档类型**（见下文文档类型矩阵）
+1. **确定文档类型**：快速入门 / API 文档 / 教程 / 最佳实践
 2. **查阅对应规范**：
    - 代码示例 → [03-code-standards.md](03-code-standards.md)
    - 代码结构 → [05-code-patterns.md](05-code-patterns.md)
    - 避免错误 → [04-anti-patterns.md](04-anti-patterns.md)
-3. **使用文档模板**（见下文模板库）
+3. **使用文档模板**（见下文）
 4. **执行质量检查** → [06-quality-checklist.md](06-quality-checklist.md)
 
 ---
@@ -48,29 +41,24 @@ flowchart LR
 
 ```
 feat-docs-tutorial/
-├── SKILL.md                    # [入口] 本文件 - 快速导航与核心原则
-├── 00-writing-philosophy.md    # [必读] 写作哲学 - 为什么这样设计
-├── 01-cognitive-framework.md   # [必读] AI 认知框架 - 如何让 AI 理解文档
-├── 02-content-architecture.md  # [参考] 内容架构 - 文档组织结构
-├── 03-code-standards.md        # [工具] 代码规范 - 代码示例标准
-├── 04-anti-patterns.md         # [工具] 反模式目录 - 常见错误与避免方法
-├── 05-code-patterns.md         # [工具] 代码模式库 - 标准化代码模板
-├── 06-quality-checklist.md     # [工具] 质量检查清单 - 发布前检查
-├── 07-ai-prompts.md            # [工具] AI 提示词库 - 辅助写作提示词
-├── 08-diagram-standards.md     # [工具] 图表规范 - 可视化标准
-├── 09-toc-manager.md           # [工具] 目录管理 - 导航结构维护
-└── _meta.json                  # [配置] 文档元数据
+├── SKILL.md                     # [入口] 本文件 - 快速导航与核心原则
+├── 03-code-standards.md         # [工具] 代码规范 - 代码示例标准
+├── 04-anti-patterns.md          # [工具] 反模式目录 - 常见错误与避免方法
+├── 05-code-patterns.md          # [工具] 代码模式库 - 标准化代码模板
+├── 06-quality-checklist.md      # [工具] 质量检查清单 - 发布前检查
+├── 07-ai-prompts.md             # [工具] AI 提示词库 - 辅助写作提示词
+└── _meta.json                   # [配置] 文档元数据
 ```
 
 ### 文档类型矩阵
 
-| 文档类型 | 适用场景 | 主要规范 | 模板位置 |
-|---------|---------|---------|---------|
-| **快速入门** | 新用户首次使用 | Pattern-01, C01-C03 | 见下文模板 |
-| **API 文档** | 接口方法说明 | 03-code-standards API 章节 | 见下文模板 |
-| **教程** | 完整功能实现 | Pattern-02~05, D01-D05 | 见下文模板 |
-| **最佳实践** | 推荐用法 | 04-anti-patterns 解决策略 | 见下文模板 |
-| **故障排查** | 常见问题解决 | 04-anti-patterns 错误诊断 | 见下文模板 |
+| 文档类型 | 适用场景 | 主要规范 |
+|---------|---------|---------|
+| **快速入门** | 新用户首次使用 | Pattern-01, C01-C03 |
+| **API 文档** | 接口方法说明 | 03-code-standards API 章节 |
+| **教程** | 完整功能实现 | Pattern-02~05, D01-D05 |
+| **最佳实践** | 推荐用法 | 04-anti-patterns 解决策略 |
+| **故障排查** | 常见问题解决 | 04-anti-patterns 错误诊断 |
 
 ---
 
@@ -78,27 +66,11 @@ feat-docs-tutorial/
 
 ### 标准流程
 
-```mermaid
-flowchart TD
-    A[开始] --> B[步骤1: 需求分析]
-    B --> C{文档类型?}
-    C -->|快速入门| D[使用 Pattern-01]
-    C -->|功能教程| E[组合 Pattern-02~05]
-    C -->|API 文档| F[使用 API 模板]
-    D --> G[步骤2: 代码提取]
-    E --> G
-    F --> G
-    G --> H[步骤3: 代码验证]
-    H --> I{验证通过?}
-    I -->|否| J[修复代码]
-    J --> H
-    I -->|是| K[步骤4: 编写文档]
-    K --> L[步骤5: 质量检查]
-    L --> M{检查通过?}
-    M -->|否| N[修复文档]
-    N --> L
-    M -->|是| O[完成]
-```
+1. **需求分析**：确定文档类型和目标读者
+2. **代码提取**：从 `demo/` 或 `feat-test/` 获取可运行代码
+3. **代码验证**：确保代码可编译、可运行
+4. **编写文档**：使用标准模板和代码模式
+5. **质量检查**：对照检查清单验证
 
 ### 核心原则
 
@@ -303,16 +275,11 @@ description: {30-50字描述}
 
 | 阶段 | 目标 | 查阅文档 |
 |------|------|---------|
-| **理解理念** | 为什么这样设计 | [00-writing-philosophy.md](00-writing-philosophy.md) |
-| **AI 认知** | 如何让 AI 理解 | [01-cognitive-framework.md](01-cognitive-framework.md) |
-| **内容架构** | 文档组织结构 | [02-content-architecture.md](02-content-architecture.md) |
 | **代码规范** | 代码示例标准 | [03-code-standards.md](03-code-standards.md) |
 | **避免错误** | 常见错误与解决 | [04-anti-patterns.md](04-anti-patterns.md) |
 | **代码模式** | 标准化代码模板 | [05-code-patterns.md](05-code-patterns.md) |
 | **质量检查** | 发布前检查 | [06-quality-checklist.md](06-quality-checklist.md) |
 | **AI 提示词** | 辅助写作提示词 | [07-ai-prompts.md](07-ai-prompts.md) |
-| **图表规范** | 可视化标准 | [08-diagram-standards.md](08-diagram-standards.md) |
-| **目录管理** | 导航结构维护 | [09-toc-manager.md](09-toc-manager.md) |
 
 ---
 
@@ -407,5 +374,6 @@ pages/src/content/docs/
 
 | 版本 | 日期 | 变更内容 |
 |------|------|---------|
+| 3.0.0 | 2025-05 | 简化文档结构，移除冗余内容，删除未实现的"质量保证体系" |
 | 2.0.0 | 2025-05 | 重构文档结构，添加快速开始、文档模板库、AI 提示词 |
 | 1.0.0 | 2025-04 | 初始版本 |

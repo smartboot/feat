@@ -30,7 +30,7 @@
 <dependency>
     <groupId>tech.smartboot.feat</groupId>
     <artifactId>feat-core</artifactId>
-    <version>3.2.0</version>
+    <version>2.0.0</version>
 </dependency>
 ```
 
@@ -45,7 +45,7 @@ import tech.smartboot.feat.Feat;
  * Feat Hello World 示例
  * 
  * 功能：创建一个简单的 HTTP 服务器
- * 适用版本：Feat ≥ 3.2.0
+ * 适用版本：Feat ≥ 2.0.0
  */
 public class HelloWorld {
     public static void main(String[] args) {
@@ -160,7 +160,7 @@ public class HelloWorld {
 <dependency>
     <groupId>tech.smartboot.feat</groupId>
     <artifactId>feat-core</artifactId>
-    <version>3.2.0</version>
+    <version>2.0.0</version>
 </dependency>
 ```
 
