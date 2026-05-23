@@ -68,19 +68,19 @@ export default defineConfig({
                         paths: ['guides/**'],
                     },
                     {
-                        label: 'Feat Core',
-                        description: 'Feat 核心服务器模块文档',
-                        paths: ['server/**'],
-                    },
-                    {
-                        label: 'Feat Cloud',
+                        label: '云原生',
                         description: 'Feat 云原生模块文档',
                         paths: ['cloud/**'],
                     },
                     {
-                        label: 'Feat AI',
+                        label: 'AI原生',
                         description: 'Feat AI 集成模块文档',
                         paths: ['ai/**'],
+                    },
+                    {
+                        label: '服务端',
+                        description: 'Feat 核心服务器模块文档',
+                        paths: ['server/**'],
                     },
                     {
                         label: '客户端',
@@ -124,16 +124,8 @@ export default defineConfig({
             },
             sidebar: [
                 {
-                    label: '开始这里',
-                    items: [{autogenerate: {directory: 'getting-started'}}],
-                },
-                {
                     label: '理解 Feat',
                     items: [{ autogenerate: {directory: 'guides'}}],
-                },
-                {
-                    label: 'Feat Core',
-                    items: [{ autogenerate: {directory: 'server'}}],
                 },
                 {
                     label: 'Feat Cloud',
@@ -144,8 +136,14 @@ export default defineConfig({
                     items: [{  autogenerate: {directory: 'ai'}}],
                 },
                 {
-                    label: '客户端',
-                    items: [{autogenerate: {directory: 'client'}}],
+                    label: 'Feat Core',
+                    items: [{
+                        label: '服务端',
+                        items: [{autogenerate: {directory: 'server'}}],
+                    },{
+                        label: '客户端',
+                        items: [{autogenerate: {directory: 'client'}}],
+                    }],
                 },
                 {
                     label: '附录',
