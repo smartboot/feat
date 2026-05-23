@@ -11,7 +11,6 @@
 package tech.smartboot.feat.core.common;
 
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 
 /**
  * 字节树(ByteTree)是一种高效的字节序列查找树数据结构，用于快速匹配和检索字节序列。
@@ -189,7 +188,8 @@ public class ByteTree<T> {
                 byte[] data = new byte[length];
                 buffer.position(buffer.position() - length);
                 buffer.get(data, 0, length);
-                return new VirtualByteTree(new String(data, 0, length - 1, StandardCharsets.US_ASCII));
+                // 支持中文解析，https://gitee.com/smartboot/feat/issues/IJPD9F
+                return new VirtualByteTree(new String(data, 0, length - 1));
             }
         }
         buffer.position(markPosition);
