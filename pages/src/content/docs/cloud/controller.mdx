@@ -5,7 +5,7 @@ sidebar:
     order: 2
 ---
 
-import { Aside } from '@astrojs/starlight/components'
+import { Aside, Tabs, TabItem, CardGrid, LinkCard } from '@astrojs/starlight/components'
 
 在 Web 应用开发中，控制器（Controller）是连接用户请求与业务逻辑的桥梁。Feat Cloud 采用 **编译期注解处理（AOT）** 技术，在编译阶段就将注解转换为高效的路由代码，运行时无需反射，性能接近手写代码。
 
@@ -24,7 +24,7 @@ import { Aside } from '@astrojs/starlight/components'
 
 ---
 
-## 2.1 工作原理：编译期发生了什么
+## 工作原理：编译期发生了什么
 
 Feat Cloud 与传统 Spring Boot 的最大区别在于：**路由映射在编译期完成，而非运行时反射**。
 
@@ -39,8 +39,7 @@ Feat Cloud 与传统 Spring Boot 的最大区别在于：**路由映射在编译
 
 生成的代码示例（简化）：
 
-```java
-// 编译期自动生成，无需手动编写
+```java title="编译期自动生成，无需手动编写"
 public class UserControllerCloudService extends AbstractCloudService {
     private UserController bean;
     
@@ -60,17 +59,16 @@ public class UserControllerCloudService extends AbstractCloudService {
 }
 ```
 
-<Aside type="tip">
-**性能优势：**
-- 无运行时反射，调用开销接近直接方法调用
-- 无动态代理，内存占用更低
-- 启动时无需扫描类路径，启动速度更快
-- 支持 Native Image 编译
+<Aside type="tip" title="性能优势">
+- **无运行时反射**：调用开销接近直接方法调用
+- **无动态代理**：内存占用更低
+- **启动更快**：无需扫描类路径
+- **支持 Native Image**：可编译为原生可执行文件
 </Aside>
 
 ---
 
-## 2.2 Controller 基础结构
+## Controller 基础结构
 
 ### 多 Controller 组织
 
@@ -107,7 +105,7 @@ public class UserController {
 
 启动应用后，你会在控制台看到：
 
-```
+```text
 Feat Router:
  |-> /users/hello ==> UserController@hello
 http://0.0.0.0:8080/
@@ -119,18 +117,18 @@ http://0.0.0.0:8080/
 hello controller
 ```
 
-<Aside type="note">
-**代码解析：**
-- `@Controller("users")` 定义基础路径为 `/users`
-- `@RequestMapping` 将 `/hello` 映射到 `hello()` 方法
-- `method = RequestMethod.GET` 指定只接受 GET 请求
-- 返回的字符串直接作为 HTTP 响应体输出
+<Aside type="note" title="代码解析">
+| 注解/配置 | 作用 |
+|-----------|------|
+| `@Controller("users")` | 定义基础路径为 `/users` |
+| `@RequestMapping` | 将 `/hello` 映射到 `hello()` 方法 |
+| `method = RequestMethod.GET` | 指定只接受 GET 请求 |
+| 返回字符串 | 直接作为 HTTP 响应体输出 |
 </Aside>
-
 
 ---
 
-## 2.3 请求映射详解
+## 请求映射详解
 
 ### 基础路径映射
 
@@ -167,23 +165,24 @@ public String search(@Param("keyword") String keyword,
 }
 ```
 
-**请求示例：**
+<Tabs>
+  <TabItem label="请求示例">
+    ```shell
+    curl "http://localhost:8080/users/search?keyword=feat&page=1"
+    ```
+  </TabItem>
+  <TabItem label="输出结果">
+    ```
+    搜索: feat, 页码: 1
+    ```
+  </TabItem>
+</Tabs>
 
-```shell
-curl "http://localhost:8080/users/search?keyword=feat&page=1"
-```
-
-**输出：**
-
-```
-搜索: feat, 页码: 1
-```
-
-<Aside type="note">
-**参数类型支持：**
-- 基本类型：`String`、`int`、`long`、`boolean` 等
-- 包装类型：`Integer`、`Long`、`Boolean` 等
-- 如果参数不存在且没有默认值，基本类型会报错，包装类型为 `null`
+<Aside type="note" title="参数类型支持">
+| 类型类别 | 具体类型 | 说明 |
+|---------|---------|------|
+| 基本类型 | `String`、`int`、`long`、`boolean` 等 | 参数不存在时会报错 |
+| 包装类型 | `Integer`、`Long`、`Boolean` 等 | 参数不存在时为 `null` |
 </Aside>
 
 ### 路径参数绑定
@@ -197,25 +196,26 @@ public String getUser(@PathParam("userId") String userId) {
 }
 ```
 
-**请求示例：**
+<Tabs>
+  <TabItem label="请求示例">
+    ```shell
+    curl http://localhost:8080/users/12345
+    ```
+  </TabItem>
+  <TabItem label="输出结果">
+    ```
+    用户ID: 12345
+    ```
+  </TabItem>
+</Tabs>
 
-```shell
-curl http://localhost:8080/users/12345
-```
-
-**输出：**
-
-```
-用户ID: 12345
-```
-
-<Aside type="tip">
-**路径参数命名规范：**
+<Aside type="tip" title="路径参数命名规范">
 Feat Cloud 支持两种路径参数定义形式：
-- `:paramName` - 冒号形式，如 `/:userId`、 `/users/:userId/orders/:orderId`
-- `{paramName}` - 花括号形式，如 `/{userId}`、`/users/{userId}/orders/{orderId}`
 
-两种形式功能等价，可根据团队习惯选择。冒号形式更简洁，花括号形式可读性更强。
+- **冒号形式**：`/:userId`、`/users/:userId/orders/:orderId` —— 更简洁
+- **花括号形式**：`/{userId}`、`/users/{userId}/orders/{orderId}` —— 可读性更强
+
+两种形式功能等价，可根据团队习惯选择。
 </Aside>
 
 ### 组合使用示例
@@ -261,29 +261,37 @@ public class UserController {
 
 **测试命令：**
 
-```shell
-# 基础路径
-curl http://localhost:8080/users/hello
-# 输出: hello controller
+<Tabs>
+  <TabItem label="基础路径">
+    ```shell
+    curl http://localhost:8080/users/hello
+    # 输出: hello controller
+    ```
+  </TabItem>
+  <TabItem label="查询参数">
+    ```shell
+    curl "http://localhost:8080/users/search?keyword=feat"
+    # 输出: search: feat
+    ```
+  </TabItem>
+  <TabItem label="路径参数">
+    ```shell
+    curl http://localhost:8080/users/smartboot
+    # 输出: {"username":"smartboot","roles":["user"]}
+    ```
+  </TabItem>
+</Tabs>
 
-# 查询参数
-curl "http://localhost:8080/users/search?keyword=feat"
-# 输出: search: feat
-
-# 路径参数
-curl http://localhost:8080/users/smartboot
-# 输出: {"username":"smartboot","roles":["user"]}
-```
-
-<Aside type="note">
-**自动序列化：**
-- `String` 类型直接输出为纯文本
-- 对象或集合自动序列化为 JSON 格式
+<Aside type="note" title="自动序列化">
+| 返回类型 | 输出格式 |
+|---------|---------|
+| `String` | 直接输出为纯文本 |
+| 对象或集合 | 自动序列化为 JSON 格式 |
 </Aside>
 
 ---
 
-## 2.4 HTTP 方法映射
+## HTTP 方法映射
 
 ### RequestMethod 枚举
 
@@ -347,7 +355,7 @@ public class ArticleController {
 
 ---
 
-## 2.5 内置参数注入
+## 内置参数注入
 
 除了 `@Param` 和 `@PathParam`，Feat Cloud 支持直接注入多种内置对象。
 
@@ -421,7 +429,7 @@ public AsyncResponse async() {
 
 ---
 
-## 2.6 高级特性
+## 高级特性
 
 ### 编译期序列化
 
@@ -442,7 +450,7 @@ public void serializeUser(User user, OutputStream os) {
 }
 ```
 
-**性能优势：**
+**性能对比：**
 
 | 特性 | 传统反射序列化 | Feat Cloud 编译期序列化 |
 |------|--------------|----------------------|
@@ -492,7 +500,7 @@ Gzip 压缩适用于返回大量文本数据的接口。对于小数据量响应
 
 ---
 
-## 2.7 完整实战示例
+## 完整实战示例
 
 生产级控制器示例，展示各种特性的综合应用：
 
@@ -594,22 +602,33 @@ public class OrderController {
 
 **API 测试命令：**
 
-```shell
-# 获取订单列表（分页）
-curl "http://localhost:8080/api/v1/orders/?page=1&size=10"
-
-# 获取单个订单
-curl http://localhost:8080/api/v1/orders/12345
-
-# 创建订单
-curl -X POST "http://localhost:8080/api/v1/orders/?productId=PROD-001&quantity=2"
-
-# 更新订单状态
-curl -X PUT "http://localhost:8080/api/v1/orders/12345/status?status=shipped"
-
-# 取消订单
-curl -X DELETE http://localhost:8080/api/v1/orders/12345
-```
+<Tabs>
+  <TabItem label="获取订单列表">
+    ```shell
+    curl "http://localhost:8080/api/v1/orders/?page=1&size=10"
+    ```
+  </TabItem>
+  <TabItem label="获取单个订单">
+    ```shell
+    curl http://localhost:8080/api/v1/orders/12345
+    ```
+  </TabItem>
+  <TabItem label="创建订单">
+    ```shell
+    curl -X POST "http://localhost:8080/api/v1/orders/?productId=PROD-001&quantity=2"
+    ```
+  </TabItem>
+  <TabItem label="更新订单状态">
+    ```shell
+    curl -X PUT "http://localhost:8080/api/v1/orders/12345/status?status=shipped"
+    ```
+  </TabItem>
+  <TabItem label="取消订单">
+    ```shell
+    curl -X DELETE http://localhost:8080/api/v1/orders/12345
+    ```
+  </TabItem>
+</Tabs>
 
 ---
 
@@ -624,11 +643,3 @@ curl -X DELETE http://localhost:8080/api/v1/orders/12345
 5. **内置注入**：支持 `Session`、`Context`、`AsyncResponse` 等对象注入
 6. **高级特性**：`gzip` 属性开启响应压缩
 
----
-
-## 参考文档
-
-- [Feat Cloud 快速开始](/feat/cloud/)
-- [CloudOptions 配置](/feat/cloud/options/)
-- [Router 路由详解](/feat/server/router/)
-- [异步处理](/feat/server/async/)
