@@ -7,7 +7,7 @@ sidebar:
 
 import { Aside } from '@astrojs/starlight/components'
 
-这篇教程假设你已经完成 [Feat Cloud 快速入门](/feat/cloud/quickstart/)，并且已经能跑起一个最小控制器。现在我们进一步把它写成更像真实项目的接口层。
+这篇教程假设你已经完成 [Feat Cloud 快速开始](/feat/cloud/)，并且已经能跑起一个最小控制器。现在我们进一步把它写成更像真实项目的接口层。
 
 ## 你会完成什么
 
@@ -206,29 +206,3 @@ public AsyncResponse async() {
 
 适合后续做异步返回或延迟完成响应。真正的异步处理细节建议放到专门的异步教程里学。
 
-## 常见问题
-
-### 控制器写好了，但访问还是 404
-
-优先检查：
-
-1. 控制器类是否在 Feat Cloud 的扫描范围内
-2. `@Controller` 和 `@RequestMapping` 是否都已加上
-3. 实际访问路径是否等于“控制器路径 + 方法路径”
-
-### 查询参数取不到值
-
-优先检查 URL 里参数名是否与 `@Param("...")` 完全一致。
-
-### 路径参数没有绑定成功
-
-优先检查：
-
-1. 路由模板是否写成 `/:username`
-2. `@PathParam("username")` 的名字是否和模板保持一致
-
-## 下一步
-
-- [CloudOptions 配置](/feat/cloud/options/)：查看包扫描、静态资源和 Bean 注册配置
-- [MyBatis 集成](/feat/cloud/db/)：把控制器接到数据库查询
-- [用 Router 组织服务端路由](/feat/server/router/)：如果你想回到底层路由模型

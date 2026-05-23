@@ -10,10 +10,6 @@ import { Aside } from '@astrojs/starlight/components'
 这一页不再试图做一份“所有 MyBatis 配置项大全”。  
 它只回答一个更实际的问题：如果你已经能写 Feat Cloud 控制器，现在要把数据库接进来，应该按什么顺序做。
 
-<Aside type="tip">
-开始之前，建议你已经完成 [Feat Cloud 快速入门](/feat/cloud/quickstart/) 和 [Controller 开发实践](/feat/cloud/controller/)。
-</Aside>
-
 ## 参考项目
 
 仓库里已经有一套完整示例，可以直接对照阅读：
@@ -271,31 +267,3 @@ curl -X POST http://localhost:8080/users \
 在 Feat Cloud 里，MyBatis 集成的体验更像“编译期接线”而不是“运行时手工拼装”。  
 这也是它和很多传统 Spring/MyBatis 示例在阅读感受上的区别。
 
-## 常见问题
-
-### 接口能启动，但一访问就报数据库相关错误
-
-优先检查：
-
-1. `feat.yaml` 里的 `feat.mybatis.path` 是否指向了真实文件
-2. `mybatis-config.xml` 里的 mapper 包是否正确
-3. `schema.sql` 是否真的被打进了资源目录
-
-### 查不到初始化数据
-
-优先检查：
-
-1. `feat.mybatis.initial-sql` 是否写对
-2. SQL 脚本是否在启动时成功执行
-3. 你当前使用的是否真的是同一个数据源配置
-
-### 为什么文档不推荐一上来就讲多数据源
-
-因为大多数第一次接入的人还没把“单数据源链路”走通。  
-先把单条 CRUD 线打通，再讨论多数据源，排错成本更低。
-
-## 下一步
-
-- [CloudOptions 配置](/feat/cloud/options/)：继续理解 Cloud 启动阶段的配置能力
-- [Controller 开发实践](/feat/cloud/controller/)：回头补齐控制器层的绑定和映射细节
-- [打包与部署](/feat/cloud/deployment/)：把这套链路带到真实环境里
