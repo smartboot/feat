@@ -266,19 +266,19 @@ public class ServerOptions {
         return bannerEnabled;
     }
 
-    /**
-     * 设置是否启用控制台 banner
-     * <p>
-     * 启用后，服务器启动时会在控制台打印 Feat 框架的版本信息。
-     * 在生产环境中，建议关闭此选项以避免暴露版本信息。
-     *
-     * @param bannerEnabled 是否启用控制台 banner
-     * @return 当前 ServerOptions 实例，支持链式调用
-     */
-    public ServerOptions bannerEnabled(boolean bannerEnabled) {
-        this.bannerEnabled = bannerEnabled;
-        return this;
-    }
+//    /**
+//     * 设置是否启用控制台 banner
+//     * <p>
+//     * 启用后，服务器启动时会在控制台打印 Feat 框架的版本信息。
+//     * 在生产环境中，建议关闭此选项以避免暴露版本信息。
+//     *
+//     * @param bannerEnabled 是否启用控制台 banner
+//     * @return 当前 ServerOptions 实例，支持链式调用
+//     */
+//    public ServerOptions bannerEnabled(boolean bannerEnabled) {
+//        this.bannerEnabled = bannerEnabled;
+//        return this;
+//    }
 
     /**
      * 获取 HTTP 请求头数量上限

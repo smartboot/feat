@@ -53,7 +53,8 @@ public class Test {
                 .httpHandler(route)
                 .options()
                 .debug(true)
-                .bannerEnabled(true);
+//                .bannerEnabled(true)
+        ;
         bootstrap
 
                 .listen(8098);
