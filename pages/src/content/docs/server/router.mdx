@@ -1,204 +1,324 @@
 ---
 title: Router 路由
-description: 用 Feat Router 构建多路由 HTTP 服务，并掌握路径参数、会话与拦截器的基本用法
+description: 掌握 Feat Router 的完整功能：路由注册、路径参数、Session 管理和拦截器机制
+toc: true
 sidebar:
   order: 3
 ---
 
-import { Aside } from '@astrojs/starlight/components';
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 
-这篇教程的目标很明确：在你已经能启动 Feat HTTP 服务的前提下，进一步学会把一个处理器扩展成一组可维护的路由规则。
+Router 是 Feat 提供的路由管理器，让你可以在一个服务里处理多个路径，支持路径参数、Session 管理和拦截器等高级功能。
 
-## 你会完成什么
+## 创建与配置
 
-- 创建一个 `Router`
-- 注册静态路由、路径参数路由和按 HTTP 方法区分的路由
-- 使用 `Session` 保存简单状态
-- 为指定路径添加拦截器
+### 基础路由
 
-## 前置条件
+使用 Router 注册多个路由处理器：
 
-- 已完成 [Feat Core 快速入门](/feat/server/getstart/)
-- 了解 Java Lambda 表达式
-- 能使用 `curl` 或浏览器访问本机服务
+```java
+Router router = new Router();
 
-## 步骤 1：创建第一个 Router 服务
+router.route("/", ctx -> ctx.Response.write("Welcome"));
+router.route("/users", ctx -> ctx.Response.write("User list"));
 
-下面的例子把多个请求路径交给 `Router` 统一管理：
-
-```java title="RouterDemo.java"
-import tech.smartboot.feat.Feat;
-import tech.smartboot.feat.router.Router;
-
-public class RouterDemo {
-    public static void main(String[] args) {
-        Router router = new Router();
-
-        router.route("/", ctx -> {
-            ctx.Response.write("root: " + ctx.Request.getRequestURI());
-        });
-
-        router.route("/users/:id", ctx -> {
-            ctx.Response.write("userId: " + ctx.pathParam("id"));
-        });
-
-        router.route("/articles", "GET", ctx -> {
-            ctx.Response.write("list articles");
-        });
-
-        router.route("/articles", "POST", ctx -> {
-            ctx.Response.write("create article");
-        });
-
-        Feat.httpServer().httpHandler(router).listen(8080);
-    }
-}
+Feat.httpServer().httpHandler(router).listen(8080);
 ```
 
-这里有四个关键信息：
+### 路径参数
 
-- `new Router()` 创建路由容器
-- `route("/path", handler)` 注册一个路径
-- `route("/path", "GET", handler)` 可以按 HTTP 方法注册不同处理器
-- `Feat.httpServer().httpHandler(router)` 让 Router 接管请求分发
+使用 `:paramName` 语法捕获 URL 中的动态值：
 
-## 步骤 2：验证路由匹配
+```java
+// 捕获 /users/123 中的 123
+router.route("/users/:id", ctx -> {
+    String userId = ctx.pathParam("id");
+    ctx.Response.write("User ID: " + userId);
+});
 
-启动程序后，依次访问下面几个请求：
-
-```shell
-curl http://localhost:8080/
-curl http://localhost:8080/users/42
-curl -X GET http://localhost:8080/articles
-curl -X POST http://localhost:8080/articles
+// 多个路径参数
+router.route("/users/:userId/orders/:orderId", ctx -> {
+    ctx.Response.write("User: " + ctx.pathParam("userId"));
+});
 ```
-
-预期结果：
-
-```text
-root: /
-userId: 42
-list articles
-create article
-```
-
-到这里你已经验证了 Router 的三个最核心能力：
-
-- 路径分发
-- 路径参数提取
-- 同一路径下的多 HTTP 方法分发
-
-## 路由规则怎么写
-
-在 Feat Router 里，最常用的是三种模式：
-
-| 模式 | 含义 | 示例 |
-|------|------|------|
-| `/users` | 精确匹配 | 只匹配 `/users` |
-| `/users/:id` | 路径参数 | 匹配 `/users/42` |
-| `/static/*` | 通配符 | 匹配 `/static/js/app.js` |
 
 <Aside type="tip">
-如果你只需要一个稳定、明确的教程路径，优先使用精确路径和 `:param` 形式的路径参数。通配符更适合做兜底逻辑或资源路径处理。
+路径参数名称区分大小写，`pathParam("id")` 和 `pathParam("ID")` 是不同的参数。
 </Aside>
 
-## 步骤 3：使用 Session 保存状态
+### HTTP 方法路由
 
-Router 内置了会话能力。最简单的用法是先写入 Session，再从另一个接口读取：
+同一路径支持不同 HTTP 方法：
 
-```java title="RouterSessionDemo.java"
-import tech.smartboot.feat.Feat;
-import tech.smartboot.feat.core.server.Session;
-import tech.smartboot.feat.router.Router;
-
-public class RouterSessionDemo {
-    public static void main(String[] args) {
-        Router router = new Router();
-
-        router.route("/createSession", ctx -> {
-            ctx.session().put("flag", "ready");
-            ctx.Response.write("session created");
-        });
-
-        router.route("/session/check", ctx -> {
-            Session session = ctx.session();
-            ctx.Response.write("flag: " + session.get("flag"));
-        });
-
-        Feat.httpServer().httpHandler(router).listen(8080);
-    }
-}
+```java
+router.route("/articles", "GET", ctx -> { /* ... */ });
+router.route("/articles", "POST", ctx -> { /* ... */ });
+router.route("/articles", "PUT", ctx -> { /* ... */ });
+router.route("/articles", "DELETE", ctx -> { /* ... */ });
 ```
 
-你可以按下面顺序验证：
+## 路由匹配规则
+
+### 匹配模式
+
+| 模式 | 匹配示例 | 说明 |
+|------|----------|------|
+| `/users` | `/users` | 精确匹配 |
+| `/users/:id` | `/users/42` | `:id` 捕获路径参数 |
+| `/static/*` | `/static/js/app.js` | `*` 匹配任意后续路径 |
+| `*.html` | `/page.html` | 后缀匹配 |
+
+### 匹配优先级
+
+当多个规则可能匹配同一请求时，Router 按以下优先级选择：
+
+1. **精确匹配**（最高）
+2. **路径参数匹配**
+3. **通配符匹配**（最低）
+
+```java
+router.route("/users/profile", ctx -> { /* 精确匹配优先 */ });
+router.route("/users/:id", ctx -> { /* 路径参数次之 */ });
+router.route("/users/*", ctx -> { /* 通配符兜底 */ });
+```
+
+访问 `/users/profile` 时，**精确匹配**胜出。
+
+<Aside type="tip">
+将更具体的路径放在前面注册，有助于代码可读性。
+</Aside>
+
+## Session 管理
+
+Router 内置基于 Cookie 的 Session 管理：
+
+```java
+// 登录：创建 Session
+router.route("/login", ctx -> {
+    Session session = ctx.session();
+    session.put("user", ctx.Request.getParameter("username"));
+    ctx.Response.write("登录成功");
+});
+
+// 读取 Session
+router.route("/profile", ctx -> {
+    String user = ctx.session().get("user");
+    if (user == null) {
+        ctx.Response.setHttpStatus(401);
+        return;
+    }
+    ctx.Response.write("用户: " + user);
+});
+
+// 注销：销毁 Session
+router.route("/logout", ctx -> {
+    ctx.session().invalidate();
+});
+```
+
+验证流程：
 
 ```shell
-curl -i http://localhost:8080/createSession
-curl -i http://localhost:8080/session/check
+# 登录（-c 保存 Cookie）
+curl -c cookies.txt "http://localhost:8080/login?username=alice"
+
+# 访问个人资料（-b 携带 Cookie）
+curl -b cookies.txt http://localhost:8080/profile
 ```
 
-在真实浏览器里验证会更直观，因为浏览器会自动带上 Cookie。命令行测试时，如果你要跨请求保留 Cookie，需要自己维护 Cookie。
+<Aside type="caution">
+默认的内存 Session 在应用重启后数据丢失，且不支持分布式共享。生产环境建议实现 `SessionManager` 接口，使用 Redis 等外部存储。
+</Aside>
 
-## 步骤 4：为指定路径添加拦截器
+## 拦截器
 
-拦截器适合做鉴权、日志、前置检查这类横切逻辑。
+### 基础拦截器
 
-```java title="RouterInterceptorDemo.java"
-import tech.smartboot.feat.Feat;
-import tech.smartboot.feat.router.Router;
+拦截器让你可以在请求到达处理器前执行鉴权、日志等逻辑：
 
-public class RouterInterceptorDemo {
-    public static void main(String[] args) {
-        Router router = new Router();
-
-        router.addInterceptor("/admin/*", (context, completableFuture, chain) -> {
-            String token = context.Request.getHeader("X-Token");
-            if (!"feat".equals(token)) {
-                context.Response.write("forbidden");
-                completableFuture.complete(null);
-                return;
-            }
-            chain.proceed(context, completableFuture);
-        });
-
-        router.route("/admin/ping", ctx -> {
-            ctx.Response.write("ok");
-        });
-
-        Feat.httpServer().httpHandler(router).listen(8080);
+```java
+// 拦截 /admin/* 路径
+router.addInterceptor("/admin/*", (ctx, future, chain) -> {
+    String token = ctx.Request.getHeader("X-Token");
+    
+    if (!"secret-token".equals(token)) {
+        ctx.Response.setHttpStatus(HttpStatus.FORBIDDEN);
+        future.complete(null);
+        return; // 不调用 chain.proceed()，请求中断
     }
-}
+    
+    chain.proceed(ctx, future); // 鉴权通过，继续执行
+});
 ```
 
-验证：
+### 多拦截器链式处理
+
+拦截器按注册顺序执行，可以形成处理链：
+
+```java
+// 拦截器 1：请求日志
+router.addInterceptor("/*", (ctx, future, chain) -> {
+    System.out.println(ctx.Request.getMethod() + " " + ctx.Request.getRequestURI());
+    chain.proceed(ctx, future);
+});
+
+// 拦截器 2：CORS 处理
+router.addInterceptor("/api/*", (ctx, future, chain) -> {
+    ctx.Response.setHeader("Access-Control-Allow-Origin", "*");
+    chain.proceed(ctx, future);
+});
+```
+
+以下泳道图展示了多拦截器的执行流程：
+
+```mermaid
+sequenceDiagram
+    participant Client as 客户端
+    participant I1 as 日志拦截器
+    participant I2 as CORS拦截器
+    participant Handler as 路由处理器
+
+    Client->>I1: HTTP Request
+    I1->>I2: chain.proceed()
+    I2->>Handler: chain.proceed()
+    Handler-->>I2: 处理完成
+    I2-->>I1: 返回
+    I1-->>Client: HTTP Response
+```
+
+<Aside type="tip">
+拦截器执行顺序遵循"先进先出"原则。轻量级拦截器（如日志）建议放在前面，尽早中断无效请求。
+</Aside>
+
+## 异步处理
+
+Router 支持同步和异步两种处理模式：
+
+<Tabs>
+<TabItem label="同步处理">
+
+```java
+// 适合简单操作
+router.route("/sync", ctx -> {
+    ctx.Response.write("同步响应");
+});
+```
+
+**适合场景**：纯内存操作、简单数据转换、快速状态查询
+
+</TabItem>
+<TabItem label="异步处理">
+
+```java
+// 适合耗时操作
+router.route("/async", (ctx, future) -> {
+    CompletableFuture.supplyAsync(() -> fetchData())
+        .thenAccept(result -> {
+            ctx.Response.write(result);
+            future.complete(null); // 必须调用！
+        });
+});
+```
+
+**适合场景**：耗时操作（>10ms）、外部 API 调用、数据库查询、文件 IO
+
+</TabItem>
+</Tabs>
+
+<Aside type="tip">
+异步模式不会阻塞线程，适合高并发场景。同步模式代码更简洁，适合简单接口。
+</Aside>
+
+## 完整示例
+
+### RESTful API 服务
+
+```java title="UserApiDemo.java"
+Router router = new Router();
+
+// 获取所有用户
+router.route("/api/users", "GET", ctx -> {
+    ctx.Response.write(users.toString());
+});
+
+// 获取单个用户
+router.route("/api/users/:id", "GET", ctx -> {
+    String user = users.get(ctx.pathParam("id"));
+    ctx.Response.write(user != null ? user : "Not found");
+});
+
+// 创建用户
+router.route("/api/users", "POST", ctx -> {
+    users.put(ctx.Request.getParameter("id"), ctx.Request.getParameter("name"));
+    ctx.Response.setHttpStatus(HttpStatus.CREATED);
+});
+
+Feat.httpServer().httpHandler(router).listen(8080);
+```
+
+### 测试命令
 
 ```shell
-curl http://localhost:8080/admin/ping
-curl -H 'X-Token: feat' http://localhost:8080/admin/ping
-```
+# 创建用户
+curl -X POST "http://localhost:8080/api/users?id=1&name=Alice"
 
-预期第一条返回 `forbidden`，第二条返回 `ok`。
+# 获取用户
+curl http://localhost:8080/api/users/1
+
+# 获取所有用户
+curl http://localhost:8080/api/users
+```
 
 ## 常见问题
 
-### 路由明明写了，但返回 404
+### 路由返回 404
 
-优先检查：
+排查清单：
 
-1. 你是否真的把 `router` 传给了 `httpHandler(...)`
-2. 请求路径是否与注册路径完全一致
-3. 路径参数是不是写成了 `:id` 而不是别的形式
+1. 确认 `router` 已传给 `httpHandler()`
+2. 检查路径是否完全一致（注意末尾 `/`）
+3. 路径参数格式是 `:paramName`，不是 `{param}`
+4. 检查 HTTP 方法是否匹配
 
-### 同一路径注册多个处理器，结果不符合预期
+```java
+// 注意：这两个路由是不同的
+router.route("/users", handler);     // 匹配 /users
+router.route("/users/", handler);    // 匹配 /users/
+```
 
-如果你需要区分请求方法，显式写上 `"GET"`、`"POST"` 这类 method 参数，不要只注册一个通用路径。
+### 拦截器不生效
 
-### Session 看起来没有生效
+`/admin/*` 匹配 `/admin/users` 但不匹配 `/admin` 本身：
 
-浏览器会自动维护 Cookie，但 `curl` 默认不会跨请求保存 Cookie。排查 Session 问题时，优先用浏览器，或者显式处理 Cookie。
+```java
+// 如需包含 /admin，额外注册
+router.addInterceptor("/admin", interceptor);      // 匹配 /admin
+router.addInterceptor("/admin/*", interceptor);     // 匹配 /admin/xxx
+```
 
-## 下一步
+### Session 数据丢失
 
-- [异步处理](/feat/server/async/)：当路由内出现耗时逻辑时，如何避免阻塞
-- [ServerOptions 配置](/feat/server/serveroptions/)：定制端口、线程数和调试行为
-- [Feat Cloud 快速入门](/feat/cloud/quickstart/)：如果你想换成注解式控制器开发
+1. curl 需显式指定 `-c` 和 `-b` 参数保存/携带 Cookie
+2. 浏览器可能禁用了第三方 Cookie
+3. Session 默认 30 分钟过期
+
+### 异步请求不返回
+
+异步处理必须调用 `future.complete(null)`，否则请求不会结束：
+
+```java
+router.route("/async", (ctx, future) -> {
+    doAsyncWork(result -> {
+        ctx.Response.write(result);
+        future.complete(null); // 必须调用！
+    });
+});
+```
+
+## 性能建议
+
+1. **路由设计**：避免过度使用通配符，合理规划 API 层级
+2. **拦截器**：轻量级拦截器放前面，尽早中断无效请求
+3. **Session**：仅存储必要数据，分布式环境使用外部存储
+4. **异步选择**：耗时操作使用异步，简单操作使用同步
+
