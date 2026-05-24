@@ -1,200 +1,361 @@
 ---
 title: ServerOptions 配置
-description: 按场景理解 Feat HTTP 服务器的常用配置项，而不是机械记忆整张参数表
+description: 掌握 Feat HTTP 服务器的配置选项，按场景调整端口、线程、缓冲区、安全等参数
 sidebar:
-    order: 4
+    order: 1
 ---
 
-import { Aside } from '@astrojs/starlight/components';
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 
-`ServerOptions` 是 Feat HTTP 服务的运行时配置入口。高质量的用法不是把所有选项都改一遍，而是按场景只动那些真正影响行为的项。
 
-## 什么时候需要看这页
+Feat 提供两种配置 `ServerOptions` 的方式：
 
-- 你已经能跑起 [Feat Core 快速入门](/feat/server/getstart/)
-- 现在要改端口、线程数、调试模式、上传大小或 HTTPS
-- 你希望按部署场景建立一套可复用的配置模板
+```java title="OptionsDemo.java"
+import tech.smartboot.feat.Feat;
+import tech.smartboot.feat.core.server.ServerOptions;
 
-## 最常用的配置项
+public class OptionsDemo {
+    public static void main(String[] args) {
+        // 方式 1：Lambda 配置（推荐）
+        Feat.httpServer(options -> {
+            options.port(9090);
+            options.threadNum(8);
+            options.debug(true);
+        }).listen();
 
-| 配置项 | 方法 | 默认值 | 什么时候改 |
-|------|------|------|------|
-| 端口 | `port(int)` | `8080` | 本机端口冲突、多服务并行 |
-| 监听地址 | `host(String)` | `0.0.0.0` | 只允许本机访问、绑定特定网卡 |
-| 线程数 | `threadNum(int)` | `max(CPU, 2)` | 压测后需要调优吞吐或资源占用 |
-| 读缓冲区 | `readBufferSize(int)` | `8 * 1024` | 请求头大、上传大、长 URL |
-| 写缓冲区 | `writeBufferSize(int)` | `8 * 1024` | 响应体较大、推送较多 |
-| 空闲超时 | `setIdleTimeout(long)` | `60000` ms | 长连接或慢客户端场景 |
-| Header 限制 | `headerLimiter(int)` | `100` | 防止异常请求头滥用 |
-| 最大请求体 | `setMaxRequestSize(long)` | `Integer.MAX_VALUE` | 上传、表单、反序列化安全 |
-| 调试模式 | `debug(boolean)` | `false` | 本地排查协议和流量问题 |
-| Banner | `bannerEnabled(boolean)` | `true` | 生产环境减少无关输出 |
-| 低内存模式 | `setLowMemory(boolean)` | `false` | 容器或资源受限环境 |
+        // 方式 2：直接创建配置对象
+        ServerOptions options = new ServerOptions();
+        options.port(9090);
+        options.threadNum(8);
+        Feat.httpServer(options).listen();
+    }
+}
+```
+
+两种方式完全等价，Lambda 方式更简洁，是推荐的写法。
+
+## 基础配置
+
+### 端口与主机
+
+```java title="PortHostDemo.java"
+import tech.smartboot.feat.Feat;
+
+public class PortHostDemo {
+    public static void main(String[] args) {
+        Feat.httpServer(options -> {
+            // 监听端口，默认 8080
+            options.port(9090);
+            // 监听地址，默认 "0.0.0.0"（所有网卡）
+            options.host("127.0.0.1");
+        }).httpHandler(req -> {
+            req.getResponse().write("Server running on 127.0.0.1:9090");
+        }).listen();
+    }
+}
+```
+
+验证：
+
+```shell
+curl http://127.0.0.1:9090
+```
 
 <Aside type="tip">
-如果你还没有压测数据，优先只改 `port`、`debug`、`setMaxRequestSize` 这类“行为明确”的项。线程数和缓冲区大小不要凭感觉乱调。
+`host("127.0.0.1")` 表示只接受本机连接，适合开发环境。生产环境通常保持默认 `"0.0.0.0"`。
 </Aside>
 
-## 场景 1：本地开发
+## 性能配置
 
-本地开发最常见的需求是避免端口冲突，同时打开调试输出。
+### 线程数
 
-```java title="LocalDevServer.java"
+```java title="ThreadConfigDemo.java"
 import tech.smartboot.feat.Feat;
 
-public class LocalDevServer {
+public class ThreadConfigDemo {
     public static void main(String[] args) {
         Feat.httpServer(options -> {
-            options.port(8081);
-            options.debug(true);
-            options.bannerEnabled(true);
+            // 设置服务线程数为 8
+            // 默认值为 CPU 核心数（至少为 2）
+            options.threadNum(8);
+        }).httpHandler(req -> {
+            req.getResponse().write("Thread config demo");
         }).listen();
     }
 }
 ```
 
-这里最重要的三个点：
+线程数的选择建议：
 
-- `port(8081)`：避免和其他本地服务抢 `8080`
-- `debug(true)`：把协议收发打印出来，适合排查请求问题
-- `bannerEnabled(true)`：保留启动信息，便于本地确认版本和启动状态
+| 应用类型 | 建议线程数 | 说明 |
+|---------|-----------|------|
+| IO 密集型 | CPU 核数 × 2-4 | 等待网络/数据库时线程可切换处理其他请求 |
+| CPU 密集型 | CPU 核数 × 1-2 | 避免过多线程导致上下文切换开销 |
+| 混合场景 | 从默认值开始压测调整 | 根据实际负载测试确定最佳值 |
 
-## 场景 2：生产环境的基础模板
+### 缓冲区大小
 
-生产环境通常要关注的是“少暴露、少噪音、行为稳定”。
-
-```java title="ProductionServer.java"
+```java title="BufferConfigDemo.java"
 import tech.smartboot.feat.Feat;
 
-public class ProductionServer {
+public class BufferConfigDemo {
     public static void main(String[] args) {
         Feat.httpServer(options -> {
-            options.host("0.0.0.0");
-            options.port(8080);
-            options.bannerEnabled(false);
-            options.threadNum(Runtime.getRuntime().availableProcessors() * 2);
-            options.setIdleTimeout(60000);
-            options.headerLimiter(100);
-        }).listen();
-    }
-}
-```
-
-这套模板的意义在于：
-
-- 显式声明监听地址和端口，避免环境歧义
-- 关闭 Banner，减少控制台噪音
-- 保持一个保守而合理的线程数起点
-- 对连接闲置和 Header 数量设置明确边界
-
-## 场景 3：处理上传或大请求
-
-如果你的服务要接收较大的 JSON、表单或上传内容，最关键的是请求体上限和读缓冲区。
-
-```java title="UploadServer.java"
-import tech.smartboot.feat.Feat;
-
-public class UploadServer {
-    public static void main(String[] args) {
-        Feat.httpServer(options -> {
-            options.port(8080);
+            // 读缓冲区大小，默认 8KB
             options.readBufferSize(16 * 1024);
+            // 写缓冲区大小，默认 8KB
             options.writeBufferSize(16 * 1024);
-            options.setIdleTimeout(120000);
-            options.setMaxRequestSize(20L * 1024 * 1024);
+        }).httpHandler(req -> {
+            req.getResponse().write("Buffer config demo");
         }).listen();
     }
 }
 ```
 
-这里的配置重点：
+<Aside type="caution">
+读缓冲区大小至少要能容纳一个完整的 URL 或 Header 值，否则将触发异常。处理大请求体（如文件上传）时需要适当增大。
+</Aside>
 
-- `readBufferSize(...)`：适合更大的请求头或更复杂的请求
-- `writeBufferSize(...)`：适合较大的响应输出
-- `setIdleTimeout(...)`：给慢上传或长处理链路更多时间
-- `setMaxRequestSize(...)`：显式限制最大请求体，避免“无限放大”
+## 安全与限制配置
 
+### 请求大小限制
 
-## 场景 4：资源受限环境
+```java title="RequestLimitDemo.java"
+import tech.smartboot.feat.Feat;
 
-如果服务跑在小容器、边缘节点或内存非常紧张的环境，可以保守一点：
+public class RequestLimitDemo {
+    public static void main(String[] args) {
+        Feat.httpServer(options -> {
+            // 最大请求报文大小，默认 Integer.MAX_VALUE
+            // 这里限制为 10MB
+            options.setMaxRequestSize(10 * 1024 * 1024);
+            
+            // HTTP 请求头数量上限，默认 100
+            options.headerLimiter(50);
+        }).httpHandler(req -> {
+            req.getResponse().write("Request limit demo");
+        }).listen();
+    }
+}
+```
+
+### 连接超时
+
+```java title="TimeoutDemo.java"
+import tech.smartboot.feat.Feat;
+
+public class TimeoutDemo {
+    public static void main(String[] args) {
+        Feat.httpServer(options -> {
+            // 连接闲置超时时间（毫秒），默认 60000（1分钟）
+            options.setIdleTimeout(30000); // 30秒
+        }).httpHandler(req -> {
+            req.getResponse().write("Timeout demo");
+        }).listen();
+    }
+}
+```
+
+## 调试配置
+
+### 启用调试模式
+
+```java title="DebugDemo.java"
+import tech.smartboot.feat.Feat;
+
+public class DebugDemo {
+    public static void main(String[] args) {
+        Feat.httpServer(options -> {
+            // 启用调试模式，控制台会打印请求和响应详情
+            options.debug(true);
+        }).httpHandler(req -> {
+            req.getResponse().write("Debug mode enabled");
+        }).listen();
+    }
+}
+```
+
+启动后，控制台会输出类似：
+
+```text
+[DEBUG] Request: GET / HTTP/1.1
+[DEBUG] Headers: {Host=localhost:8080, User-Agent=curl/7.64.1}
+[DEBUG] Response: HTTP/1.1 200 OK
+```
+
+<Aside type="caution">
+生产环境务必关闭调试模式，避免性能下降和敏感信息泄露。
+</Aside>
+
+## 高级配置
+
+### 代理协议支持
+
+当服务器部署在 Nginx、HAProxy 等代理后面时，启用此选项可以获取客户端真实 IP：
+
+```java title="ProxyProtocolDemo.java"
+import tech.smartboot.feat.Feat;
+
+public class ProxyProtocolDemo {
+    public static void main(String[] args) {
+        Feat.httpServer(options -> {
+            // 启用代理协议支持
+            options.proxyProtocolSupport();
+        }).httpHandler(req -> {
+            // 可以通过 req.getRemoteAddr() 获取真实客户端 IP
+            req.getResponse().write("Real client IP: " + req.getRemoteAddr());
+        }).listen();
+    }
+}
+```
+
+### 低内存模式
+
+在资源受限环境（如嵌入式设备）中启用：
+
+```java title="LowMemoryDemo.java"
+import tech.smartboot.feat.Feat;
+
+public class LowMemoryDemo {
+    public static void main(String[] args) {
+        Feat.httpServer(options -> {
+            // 启用低内存模式
+            options.setLowMemory(true);
+        }).httpHandler(req -> {
+            req.getResponse().write("Low memory mode");
+        }).listen();
+    }
+}
+```
+
+### 关闭钩子
+
+```java title="ShutdownHookDemo.java"
+import tech.smartboot.feat.Feat;
+
+public class ShutdownHookDemo {
+    public static void main(String[] args) {
+        Feat.httpServer(options -> {
+            // 设置服务器关闭钩子
+            options.shutdownHook(() -> {
+                System.out.println("Server is shutting down...");
+                // 执行资源清理、状态保存等操作
+            });
+        }).httpHandler(req -> {
+            req.getResponse().write("Shutdown hook demo");
+        }).listen();
+    }
+}
+```
+
+## 配置参数速查表
+
+| 配置项 | 方法 | 默认值 | 说明 |
+|--------|------|--------|------|
+| 端口 | `port(int)` | 8080 | 服务监听端口 |
+| 主机 | `host(String)` | "0.0.0.0" | 服务监听地址 |
+| 线程数 | `threadNum(int)` | CPU 核心数 | IO 处理线程数 |
+| 读缓冲区 | `readBufferSize(int)` | 8192 (8KB) | 请求数据缓冲区 |
+| 写缓冲区 | `writeBufferSize(int)` | 8192 (8KB) | 响应数据缓冲区 |
+| 最大请求大小 | `setMaxRequestSize(long)` | Integer.MAX_VALUE | 请求体大小限制 |
+| Header 数量限制 | `headerLimiter(int)` | 100 | 请求头数量上限 |
+| 连接超时 | `setIdleTimeout(long)` | 60000ms | 连接闲置超时 |
+| 调试模式 | `debug(boolean)` | false | 打印请求响应详情 |
+| 低内存模式 | `setLowMemory(boolean)` | false | 减少内存占用 |
+| 代理协议 | `proxyProtocolSupport()` | - | 获取真实客户端 IP |
+
+## 场景化配置建议
+
+### 开发环境
 
 ```java
 Feat.httpServer(options -> {
-    options.threadNum(2);
-    options.readBufferSize(4 * 1024);
-    options.writeBufferSize(4 * 1024);
-    options.setLowMemory(true);
-}).listen();
+    options.port(8080);
+    options.debug(true);  // 开启调试便于排查问题
+})
 ```
 
-这类配置的目标不是追求极致吞吐，而是先保证服务能稳定活下来。
-
-## 场景 5：HTTPS 和代理协议
-
-如果服务直接启用 HTTPS，或部署在支持 Proxy Protocol 的负载均衡后面，可以这样配：
-
-```java title="HttpsServer.java"
-import io.github.smartboot.socket.extension.plugins.SslPlugin;
-import tech.smartboot.feat.Feat;
-
-public class HttpsServer {
-    public static void main(String[] args) {
-        Feat.httpServer(options -> {
-            options.addPlugin(new SslPlugin<>("keystore.jks", "password", "JKS"));
-            options.proxyProtocolSupport();
-            options.port(8443);
-        }).listen();
-    }
-}
-```
-
-这里有两个重要事实：
-
-- 添加 `SslPlugin` 后，服务会自动进入 HTTPS 模式
-- `proxyProtocolSupport()` 适合放在 Nginx、HAProxy 或 LB 后面时使用，用来拿到真实客户端地址
-
-## 场景 6：优雅停机和高级线程控制
-
-如果你需要在关闭时清理资源，或者自己管理异步通道组，可以继续使用这些高级项：
+### 生产环境（通用）
 
 ```java
-options.shutdownHook(() -> {
-    System.out.println("server is shutting down");
-    // 清理资源、关闭连接池、落盘状态
-});
+Feat.httpServer(options -> {
+    options.port(80);
+    options.threadNum(Runtime.getRuntime().availableProcessors() * 2);
+    options.setMaxRequestSize(10 * 1024 * 1024);  // 10MB 请求限制
+    options.headerLimiter(100);
+    // debug 保持默认 false
+})
 ```
+
+### 高并发场景
 
 ```java
-AsynchronousChannelGroup group = AsynchronousChannelGroup.withFixedThreadPool(
-        4,
-        Executors.defaultThreadFactory()
-);
-options.group(group);
+Feat.httpServer(options -> {
+    options.port(8080);
+    options.threadNum(32);  // 根据压测结果调整
+    options.readBufferSize(32 * 1024);   // 增大缓冲区
+    options.writeBufferSize(32 * 1024);
+    options.setIdleTimeout(60000);  // 保持长连接
+})
 ```
 
-这两项都属于“确实有需要再用”，不是 quickstart 阶段的必配项。
+### 嵌入式/IoT 设备
+
+```java
+Feat.httpServer(options -> {
+    options.port(8080);
+    options.threadNum(2);  // 减少线程数
+    options.setLowMemory(true);  // 启用低内存模式
+    options.readBufferSize(2048);   // 减小缓冲区
+    options.writeBufferSize(2048);
+})
+```
 
 ## 常见问题
 
-### 我已经把服务跑起来了，为什么还要改 `host`
+### 端口被占用
 
-默认值本来就是 `0.0.0.0`，很多情况下不用改。只有当你要显式限制成 `127.0.0.1`，或者绑定特定 IP 时才需要动它。
+```
+Exception in thread "main" java.net.BindException: Address already in use
+```
 
-### `debug(true)` 能不能一直开着
+解决方案：更换端口或查找占用进程：
 
-本地调试可以，生产环境不建议。它底层会挂一个流量监控插件，输出很多协议细节，既影响性能也可能暴露敏感信息。
+```shell
+# 查找占用 8080 端口的进程
+lsof -i :8080
+# 或更换端口
+Feat.httpServer(options -> options.port(9090)).listen();
+```
 
-### 线程数是不是越大越好
+### 请求体过大被截断
 
-不是。线程数过大可能带来更高的上下文切换成本。没有压测数据时，从默认值开始通常更稳。
+增大 `setMaxRequestSize` 的值，特别是处理文件上传时：
 
-### 为什么不建议一开始就大改缓冲区
+```java
+options.setMaxRequestSize(100 * 1024 * 1024);  // 100MB
+```
 
-缓冲区直接影响内存占用。只有当你已经遇到“大请求、慢上传、长 URL、响应很大”这类具体问题时，再有针对性地调。
+### Header 数量超限
+
+如果收到 400 Bad Request，可能是 Header 数量超过限制：
+
+```java
+options.headerLimiter(200);  // 增大限制
+```
+
+### 调试模式没有输出
+
+确保在 `httpHandler` 之前配置 `debug(true)`：
+
+```java
+Feat.httpServer(options -> options.debug(true))  // 先配置
+    .httpHandler(...)                           // 再设置处理器
+    .listen();
+```
 
 ## 下一步
 
-- [Router 路由组件](/feat/server/router/)：当你要把单个处理器扩展成一组路由
-- [异步处理](/feat/server/async/)：当请求里出现阻塞或耗时逻辑
-- [CloudOptions 配置](/feat/cloud/options/)：如果你已经切到 Feat Cloud 开发模型
+- [HTTPS](/feat/server/https/)：配置 SSL/TLS 证书，启用 HTTPS 访问
+- [异步处理](/feat/server/async/)：当请求出现耗时操作时，如何避免阻塞
+- [协议升级](/feat/server/upgrade/)：WebSocket 和 HTTP/2 协议升级支持
