@@ -1,6 +1,6 @@
 ---
 name: "feat-docs-principles"
-description: "Feat 框架文档编写原则与规范。定义 Feat 技术文档的写作风格、结构规范、代码示例标准，确保文档一致性和高质量。当需要编写或审查 Feat 文档时调用。"
+description: "Feat 框架文档编写原则与规范。定义 Feat 技术文档的写作风格、结构规范、代码示例标准，确保文档一致性和高质量。仅针对 pages/src/content/docs 目录下的文档编写时调用。"
 ---
 
 # Feat 文档编写原则
