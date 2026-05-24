@@ -129,6 +129,7 @@ export default defineConfig({
                 },
                 {
                     label: 'Feat Cloud',
+                    badge: { text: 'VIP', variant: 'danger' },
                     items: [{  autogenerate: {directory: 'cloud'}},'sponsors'],
                 },
                 {
