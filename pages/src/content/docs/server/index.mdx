@@ -1,54 +1,157 @@
 ---
-title: Core 导览
-description: 了解 Feat Core 这一组文档分别解决什么问题，以及应该按什么顺序阅读
+title: 快速开始
+description: 从零开始构建 Feat HTTP 服务，理解请求处理模型，掌握路由、异步和配置
 sidebar:
   order: 0
 ---
 
-import { CardGrid, LinkCard } from '@astrojs/starlight/components';
+import { CardGrid, LinkCard, Aside, TabItem, Tabs } from '@astrojs/starlight/components';
+import helloFeat from './img/1_2_hello_feat.png';
+import helloWorld from './img/1_2_hello_world.png';
 
-Feat Core 这一组文档围绕的是最底层的 HTTP 服务能力。  
-如果你想直接掌握 Feat 的服务端模型，从这里进入最合适。
+Feat Core 服务端适合需要直接操作 HTTP 协议、精确控制每个字节，或者希望从零开始理解 Feat 服务端模型的开发者。
 
-```mermaid
-flowchart LR
-    A["构建第一个 HTTP 服务"] --> B["理解请求处理模型"]
-    B --> C["用 Router 组织路由"]
-    C --> D["把耗时逻辑移到异步处理"]
-    D --> E["再回来看 ServerOptions"]
-    E --> F["按需进入 HTTPS / 协议升级"]
+如果你希望用更接近 Spring Boot 的注解式开发体验，建议从 [Feat Cloud 快速开始](/feat/cloud/) 开始。
+
+## 编写第一个应用
+
+你将构建一个最小的 HTTP 服务，访问 `http://localhost:8080` 返回 `Hello Feat`。
+
+**前置要求**：JDK 8+、Maven 3.0+、`curl` 或浏览器
+
+### 1. 添加依赖
+
+在 `pom.xml` 中加入：
+
+```xml title="pom.xml"
+<dependency>
+    <groupId>tech.smartboot.feat</groupId>
+    <artifactId>feat-core</artifactId>
+    <version>${feat.version}</version>
+</dependency>
 ```
+
+<Aside>
+`${feat.version}` 请替换为实际版本。最新版本可以在 [Maven Central](https://central.sonatype.com/artifact/tech.smartboot.feat/feat-core) 查看。
+</Aside>
+
+### 2. 编写服务
+
+创建 `HelloFeat.java`：
+
+```java title="HelloFeat.java"
+import tech.smartboot.feat.Feat;
+
+public class HelloFeat {
+    public static void main(String[] args) {
+        Feat.httpServer().listen();
+    }
+}
+```
+
+关键点：`Feat.httpServer()` 创建服务，`.listen()` 启动监听。
+
+### 3. 运行并验证
+
+运行 `HelloFeat.main()`，访问 `http://localhost:8080`：
+
+<Tabs>
+    <TabItem value="浏览器" label="浏览器">
+        <img src={helloFeat.src} alt="Feat 默认响应" width="60%" className="shadow"/>
+    </TabItem>
+    <TabItem value="curl" label="curl">
+        ```shell
+        curl -i http://localhost:8080
+        HTTP/1.1 200 OK
+        Server: feat
+        Content-Type: text/html; charset=utf-8
+
+        Hello Feat
+        ```
+    </TabItem>
+</Tabs>
+
+看到 `Hello Feat` 说明依赖、服务和链路都正常。
+
+### 自定义响应
+
+接管请求处理，返回自定义响应：
+
+```java title="HelloWorld.java"
+import tech.smartboot.feat.Feat;
+
+public class HelloWorld {
+    public static void main(String[] args) {
+        Feat.httpServer()
+            .httpHandler(request -> request.getResponse().write("Hello World"))
+            .listen(8081);
+    }
+}
+```
+
+<Tabs>
+    <TabItem value="浏览器" label="浏览器">
+        <img src={helloWorld.src} alt="自定义响应" width="60%" className="shadow"/>
+    </TabItem>
+    <TabItem value="curl" label="curl">
+        ```shell
+        curl -i http://localhost:8081
+        HTTP/1.1 200 OK
+        Server: feat
+        Content-Type: text/html; charset=utf-8
+
+        Hello World
+        ```
+    </TabItem>
+</Tabs>
+
+Feat Core 的模型：创建服务 → 注册处理器 → 启动监听。
+
+## 继续学习
+
+完成第一个应用后，按以下顺序深入：
 
 <CardGrid>
   <LinkCard
-    title="快速开始"
-    href="/feat/server/getstart/"
-    description="先把一个最小 HTTP 服务跑起来。"
-  />
-  <LinkCard
     title="Router"
     href="/feat/server/router/"
-    description="把单个处理器扩展成多路由服务。"
+    description="用 Router 组织多路由，支持路径参数和拦截器。"
   />
   <LinkCard
     title="异步处理"
     href="/feat/server/async/"
-    description="处理耗时逻辑，避免阻塞请求线程。"
+    description="把耗时逻辑移出请求线程，避免阻塞。"
   />
   <LinkCard
-    title="配置"
+    title="ServerOptions"
     href="/feat/server/serveroptions/"
-    description="在你真的需要改端口、线程数、缓冲区时再看。"
+    description="端口、线程数、缓冲区、调试模式等配置项。"
+  />
+  <LinkCard
+    title="HTTPS"
+    href="/feat/server/https/"
+    description="配置 SSL/TLS 证书，启用 HTTPS 访问。"
+  />
+  <LinkCard
+    title="协议升级"
+    href="/feat/server/upgrade/"
+    description="WebSocket 和 HTTP/2 协议升级支持。"
+  />
+  <LinkCard
+    title="Feat Cloud（可选）"
+    href="/feat/cloud/"
+    description="注解式开发体验，更接近 Spring Boot。"
   />
 </CardGrid>
 
-## 建议顺序
+## 常见问题
 
-如果你是第一次接触 Feat Core，建议这样读：
+**端口被占用**
+```java
+Feat.httpServer().listen(9090);
+```
 
-1. [构建第一个 Feat HTTP 服务](/feat/server/getstart/)
-2. [Router 路由组件](/feat/server/router/)
-3. [异步响应](/feat/server/async/)
-4. [ServerOptions 配置指南](/feat/server/serveroptions/)
-
-`HTTPS` 和 `协议升级` 更适合在你已经有实际需求时按需查阅。
+**浏览器访问不到**
+1. 端口是否一致
+2. 程序是否退出或报错
+3. 防火墙是否拦截

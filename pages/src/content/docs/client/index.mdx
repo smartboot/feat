@@ -1,25 +1,78 @@
 ---
-title: Client 导览
-description: 了解 Feat 客户端侧能力，并决定应该从 HTTP、SSE 还是 WebSocket 开始
+title: 快速开始
+description: 用 Feat HttpClient 发送第一个 HTTP 请求，理解异步回调模型
 sidebar:
   order: 0
 ---
 
-import { CardGrid, LinkCard } from '@astrojs/starlight/components';
+import { CardGrid, LinkCard, Aside, TabItem, Tabs } from '@astrojs/starlight/components';
 
-这一组文档讲的是“如何从 Java 程序主动连接外部服务”。  
-它和 Feat Core/Cloud 的区别在于：前者讲你如何暴露服务，这里讲你如何消费服务。
+Feat Core 客户端适合需要从 Java 程序主动连接外部 HTTP 服务、处理流式响应或建立双向实时通信的开发者。
+
+它和 Feat Core 服务端的区别在于：服务端讲如何暴露服务，客户端讲如何消费服务。
+
+如果你希望用更接近 Spring Boot 的注解式开发体验，建议从 [Feat Cloud 快速开始](/feat/cloud/) 开始。
+
+## 编写第一个应用
+
+你将构建一个最小的 HTTP 客户端，向 `https://smartboot.tech/feat/` 发送 GET 请求并打印响应内容。
+
+**前置要求**：JDK 8+、Maven 3.0+
+
+### 1. 添加依赖
+
+在 `pom.xml` 中加入：
+
+```xml title="pom.xml"
+<dependency>
+    <groupId>tech.smartboot.feat</groupId>
+    <artifactId>feat-core</artifactId>
+    <version>${feat.version}</version>
+</dependency>
+```
+
+<Aside>
+`${feat.version}` 请替换为实际版本。最新版本可以在 [Maven Central](https://central.sonatype.com/artifact/tech.smartboot.feat/feat-core) 查看。
+</Aside>
+
+### 2. 编写客户端
+
+创建 `HttpGetDemo.java`：
+
+```java title="HttpGetDemo.java"
+import tech.smartboot.feat.Feat;
+
+public class HttpGetDemo {
+    public static void main(String[] args) {
+        Feat.httpClient("https://smartboot.tech")
+                .get("/feat/")
+                .onSuccess(response -> System.out.println(response.body()))
+                .onFailure(Throwable::printStackTrace)
+                .submit();
+    }
+}
+```
+
+关键点：`Feat.httpClient()` 创建客户端，`.get()` 发起请求，`.onSuccess()` 处理响应，`.submit()` 提交执行。
+
+### 3. 运行并验证
+
+运行 `HttpGetDemo.main()`，控制台将输出响应内容。
+
+## 继续学习
+
+完成第一个应用后，按以下顺序深入：
 
 <CardGrid>
   <LinkCard
     title="HttpClient"
     href="/feat/client/http_client/"
-    description="普通 HTTP 请求，从这里开始。"
+    description="请求头、查询参数、POST JSON 和响应回调。"
   />
   <LinkCard
     title="SSE 客户端"
     href="/feat/client/sse_client/"
-    description="当服务端持续推送事件时使用。"
+    description="当服务端持续推送事件流时使用。"
   />
   <LinkCard
     title="WebSocket 客户端"
@@ -28,8 +81,20 @@ import { CardGrid, LinkCard } from '@astrojs/starlight/components';
   />
 </CardGrid>
 
-## 如何选择
+## 常见问题
 
-- 大多数项目先看 [HttpClient 实战教程](/feat/client/http_client/)
-- 如果服务端持续推送事件流，再看 [SSE 客户端](/feat/client/sse_client/)
-- 如果要双向实时通信，再看 [WebSocket 客户端](/feat/client/ws_client/)
+**`new HttpClient("localhost:8080")` 直接报错**
+
+`HttpClient(String url)` 必须传完整 URL，包括 schema。正确写法：
+
+```java
+new HttpClient("http://localhost:8080");
+```
+
+**想看更细的网络调试信息**
+
+可以打开调试：
+
+```java
+httpClient.options().debug(true);
+```
