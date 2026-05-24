@@ -3,7 +3,6 @@ export default new Map([
 ["src/content/docs/ai/agent.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fai%2Fagent.mdx&astroContentModuleFlag=true")],
 ["src/content/docs/ai/chat.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fai%2Fchat.mdx&astroContentModuleFlag=true")],
 ["src/content/docs/ai/embedding.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fai%2Fembedding.mdx&astroContentModuleFlag=true")],
-["src/content/docs/ai/getstart.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fai%2Fgetstart.mdx&astroContentModuleFlag=true")],
 ["src/content/docs/ai/index.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fai%2Findex.mdx&astroContentModuleFlag=true")],
 ["src/content/docs/ai/jina-ai-tool.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fai%2Fjina-ai-tool.mdx&astroContentModuleFlag=true")],
 ["src/content/docs/appendix/aot.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fappendix%2Faot.mdx&astroContentModuleFlag=true")],

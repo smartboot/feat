@@ -7,18 +7,17 @@ sidebar:
 
 import { Aside } from '@astrojs/starlight/components';
 
-如果说前面的对话模型是在回答“模型能不能说话”，那么 Agent 这页解决的是下一步问题：
+如果说前面的对话模型是在回答"模型能不能说话"，那么 Agent 这页解决的是下一步问题：
 
 > 当模型需要去读网页、调工具、分步完成任务时，该怎么组织它？
 
-Feat AI 的 Agent 是建立在 ReAct 思路上的：  
-模型先做判断，再调用工具，再根据工具结果继续推进。
+Feat AI 的 Agent 是建立在 ReAct 思路上的：模型先做判断，再调用工具，再根据工具结果继续推进。
 
-## Agent 适合什么场景
+## 什么时候需要看这页
 
-- 问题本身不是一句提示词就能回答
-- 模型需要读取外部信息
-- 模型需要调用一个或多个工具才能完成任务
+- 模型需要读取外部信息才能回答问题
+- 任务需要多步骤完成
+- 你要把"推理"和"执行"串起来
 
 如果你当前只是普通问答、摘要、翻译或单次生成，先停在 [对话模型](/feat/ai/chat/) 即可。
 
@@ -51,12 +50,11 @@ public class AgentDemo {
 - 先给 Agent 一个对话模型
 - 再给它至少一个它能调用的工具
 
-没有工具时，Agent 只是“会多想一点”的模型；  
-有了工具之后，它才真正开始具备完成复杂任务的能力。
+没有工具时，Agent 只是"会多想一点"的模型；有了工具之后，它才真正开始具备完成复杂任务的能力。
 
 ## Agent 和普通 ChatModel 的区别
 
-### `ChatModel`
+### ChatModel
 
 适合：
 
@@ -64,15 +62,15 @@ public class AgentDemo {
 - 提示词生成
 - 普通对话
 
-### `FeatAgent`
+### FeatAgent
 
 适合：
 
 - 需要外部信息的任务
 - 多步骤任务
-- 要把“推理”和“执行”串起来的场景
+- 要把"推理"和"执行"串起来的场景
 
-所以不要把 Agent 理解成“更强的对话模型”，它更像是“对话模型 + 工具调度层”。
+所以不要把 Agent 理解成"更强的对话模型"，它更像是"对话模型 + 工具调度层"。
 
 ## 什么时候该开始注册工具
 
@@ -86,18 +84,21 @@ public class AgentDemo {
 
 在 Feat AI 里，你可以把工具注册到 `AgentOptions` 上：
 
-```java
+```java title="RegisterTools.java"
+import tech.smartboot.feat.ai.agent.tools.SearchTool;
+import tech.smartboot.feat.ai.agent.tools.WebPageReaderTool;
+import tech.smartboot.feat.ai.agent.tools.FileOperationTool;
+
 opts.tool(new SearchTool());
 opts.tool(new WebPageReaderTool());
 opts.tool(new FileOperationTool());
 ```
 
-仓库里的示例更偏向使用内置工具去完成实际任务，所以你完全可以先从现成工具开始，而不是立刻写自定义工具。
+Feat AI 内置了这些工具，所以你完全可以先从现成工具开始，而不是立刻写自定义工具。
 
-## 一个实用建议
+## 一个容易踩的坑
 
-做 Agent 时，不要一开始就追求“大而全工具箱”。  
-更稳的方式通常是：
+做 Agent 时，不要一开始就追求"大而全工具箱"。更稳的方式通常是：
 
 1. 先让一个 Agent 只接一两个工具
 2. 确认它真的能稳定完成任务
@@ -117,8 +118,7 @@ opts.tool(new FileOperationTool());
 
 ### Agent 能调用工具，但结果质量一般
 
-这通常不是一个单点问题。  
-可能涉及：
+这通常不是一个单点问题。可能涉及：
 
 - 模型本身
 - 工具描述是否清楚
@@ -127,10 +127,4 @@ opts.tool(new FileOperationTool());
 
 ### 我是不是应该先学 Agent 再学 Chat
 
-不建议。  
-如果你还没把普通模型调用用熟，Agent 的排错成本会高很多。
-
-## 下一步
-
-- 如果你还没把对话模型用熟，先回到 [对话模型](/feat/ai/chat/)
-- 如果你准备做检索增强，再去看 [Embedding 与向量](/feat/ai/embedding/)
+不建议。如果你还没把普通模型调用用熟，Agent 的排错成本会高很多。

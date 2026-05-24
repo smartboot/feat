@@ -7,12 +7,11 @@ sidebar:
 
 import { Aside } from '@astrojs/starlight/components';
 
-Embedding 不是“另一种聊天模型”，它解决的是另一类问题：  
-如何把文本变成可计算相似度的向量表示。
+Embedding 不是"另一种聊天模型"，它解决的是另一类问题：如何把文本变成可计算相似度的向量表示。
 
-如果你没有要做检索、RAG、去重、聚类或语义搜索，就不用急着看这一页。
+如果你没有要做检索、RAG、去重、聚类或语义搜索，就不用急着看这页。
 
-## 什么时候你才需要 Embedding
+## 什么时候需要看这页
 
 - 你要做 RAG
 - 你要做语义检索
@@ -50,7 +49,10 @@ public class EmbeddingDemo {
 
 实际项目里更常见的是一次处理一批文本：
 
-```java
+```java title="BatchEmbedding.java"
+import java.util.Arrays;
+import java.util.List;
+
 List<String> texts = Arrays.asList("Hello World", "你好");
 List<float[]> vectors = model.embed(texts);
 ```
@@ -75,8 +77,7 @@ EmbeddingModelVendor.Ollama.nomic_embed_text
 
 ## 你应该怎样理解这些向量
 
-这一页不要求你马上写出完整向量检索系统。  
-你只需要先接受两件事：
+这页不要求你马上写出完整向量检索系统。你只需要先接受两件事：
 
 1. 不同文本会变成不同向量
 2. 相近语义通常会对应更接近的向量空间位置
@@ -89,8 +90,7 @@ EmbeddingModelVendor.Ollama.nomic_embed_text
 
 ## Embedding 和 RAG 的关系
 
-很多人第一次看 Embedding，就是因为想做 RAG。  
-可以把它们的关系理解成：
+很多人第一次看 Embedding，就是因为想做 RAG。可以把它们的关系理解成：
 
 - Embedding 负责把问题和文档都变成向量
 - 向量检索负责找出最相关的文档块
@@ -109,15 +109,8 @@ EmbeddingModelVendor.Ollama.nomic_embed_text
 
 ### 向量维度和数值范围为什么不一样
 
-因为不同模型的向量空间不同。  
-所以不同 Embedding 模型生成的向量一般不要混用。
+因为不同模型的向量空间不同。所以不同 Embedding 模型生成的向量一般不要混用。
 
 ### 我是不是应该一开始就接向量库
 
-不一定。  
-如果你只是验证 Embedding 能力，先完成单条和批量向量化就够了。等你真正开始做检索链路时，再引入向量库。
-
-## 下一步
-
-- 如果你还没学对话模型，先回到 [对话模型](/feat/ai/chat/)
-- 如果你准备让模型调用工具，去看 [Agent 工具](/feat/ai/agent/)
+不一定。如果你只是验证 Embedding 能力，先完成单条和批量向量化就够了。等你真正开始做检索链路时，再引入向量库。
