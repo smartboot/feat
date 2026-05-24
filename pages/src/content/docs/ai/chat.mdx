@@ -9,6 +9,10 @@ import { Aside } from '@astrojs/starlight/components';
 
 在 [快速入门](/feat/ai/) 中，你已经跑通了最基本的模型调用。这页系统讲解 `ChatModel` 的配置项、两种调用模式的完整用法、多轮对话的实现方式，以及如何处理异常。
 
+<Aside type="tip">
+**Feat AI 的底层支撑**：`ChatModel` 基于 Feat Core 的 [`HttpClient`](/feat/client/http_client/) 构建，同步调用使用标准 HTTP 请求，流式调用则基于 [`SseClient`](/feat/client/sse_client/) 实现 Server-Sent Events 协议。这意味着你获得的是 Feat Core 的高性能异步 I/O、连接池复用和完整的 HTTP 协议支持。
+</Aside>
+
 ## 什么时候需要看这页
 
 - 你要配置模型参数（温度、系统提示词等）
@@ -77,6 +81,8 @@ ChatModel chatModel = FeatAI.chatModel(opts -> opts
 
 `chat(...)` 系列方法返回 `CompletableFuture<ChatResponse>`，适合需要完整响应后再处理的场景。
 
+底层基于 Feat Core 的 [`HttpClient`](../../../server/client/) 发送标准 HTTP POST 请求，自动处理 JSON 序列化和响应解析。
+
 ### 最简单的单轮对话
 
 ```java title="SyncChatExample.java"
@@ -108,6 +114,8 @@ chatModel.chat("你好").thenAccept(rsp -> {
 ## 流式调用：chatStream(...)
 
 `chatStream(...)` 通过 `ChatStreamListener` 回调实时接收模型生成的片段，适合需要逐字展示的场景。
+
+底层基于 Feat Core 的 [`SseClient`](../../../server/client/) 实现 Server-Sent Events 协议，通过长连接实时推送模型生成的 token。
 
 ### 基础用法
 
@@ -228,13 +236,13 @@ chatModel.chatStream("你好", new ChatStreamListener() {
 
 ### HTTP 状态码异常
 
-Feat AI 内部已经处理了常见的 HTTP 错误场景：
+Feat AI 底层复用 Feat Core 的 HTTP 错误处理机制，自动识别以下场景：
 
 - **401/403**：API Key 无效或权限不足
 - **429**：请求频率过高
 - **5xx**：服务端错误
 
-这些错误会触发 `onError` 回调，或在同步调用中导致 `CompletableFuture` 异常完成。
+这些错误会触发 `onError` 回调，或在同步调用中导致 `CompletableFuture` 异常完成。得益于 Feat Core 的完整 HTTP 协议实现，你能获得准确的错误信息和状态码。
 
 ## 常见问题
 
