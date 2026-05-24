@@ -1,32 +1,22 @@
 ---
 title: WebSocket 客户端
-description: 用 Feat WebSocketClient 建立双向实时通信，掌握连接管理、消息收发和生命周期处理
+description: 掌握 Feat WebSocketClient 的完整功能：连接管理、消息收发和生命周期处理，轻松建立双向实时通信
+toc: true
 sidebar:
     order: 3
 ---
 
-import { Aside } from '@astrojs/starlight/components';
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 
-WebSocket 提供全双工通信通道，适合需要客户端和服务端持续双向交互的场景，如即时通讯、协作编辑、实时游戏等。
+这篇指南的目标：让你在 5 分钟内掌握 Feat WebSocket 客户端的核心用法，从简单的连接到复杂的消息处理和生命周期管理。
 
-## WebSocket vs SSE vs HTTP
+Feat WebSocket 客户端采用异步回调模型，适合高并发场景。如果你正在寻找一个轻量级、高性能的 WebSocket 客户端替代方案，这篇文档就是为你准备的。
 
-| 特性 | HTTP | SSE | WebSocket |
-|-----|------|-----|-----------|
-| 通信模式 | 请求-响应 | 服务端推送 | 双向实时 |
-| 连接方式 | 短连接 | 长连接 | 长连接 |
-| 客户端发送 | ✅ | ❌ | ✅ |
-| 服务端发送 | ✅ | ✅ | ✅ |
-| 协议开销 | 高（每次请求头） | 中 | 低（首次握手后） |
-| 适用场景 | REST API | 通知推送 | 聊天、协作 |
+## 创建与配置
 
-<Aside type="tip">
-选择建议：简单数据获取 → HTTP；服务端单向推送 → SSE；双向实时交互 → WebSocket
-</Aside>
+### 创建客户端
 
-## 创建连接
-
-### 方式一：使用 Feat 工厂方法
+使用 Feat 工厂方法创建 WebSocket 连接：
 
 ```java
 import tech.smartboot.feat.Feat;
@@ -45,20 +35,19 @@ Feat.websocket("ws://localhost:8080/chat", new WebSocketListener() {
 });
 ```
 
-### 方式二：直接实例化（推荐）
+<Aside type="caution">
+WebSocket URL 必须使用 `ws://`（非加密）或 `wss://`（加密）协议头。
+</Aside>
+
+### 带配置的连接
 
 ```java
-import tech.smartboot.feat.core.client.WebSocketClient;
-import tech.smartboot.feat.core.client.WebSocketListener;
-
-// 创建并配置客户端
 WebSocketClient client = new WebSocketClient("ws://localhost:8080/chat");
 client.options()
         .debug(true)
         .connectTimeout(5000)
         .readBufferSize(8192);
 
-// 建立连接
 client.connect(new WebSocketListener() {
     @Override
     public void onOpen(WebSocketClient client, WebSocketResponse response) {
@@ -82,9 +71,33 @@ client.connect(new WebSocketListener() {
 });
 ```
 
-<Aside type="caution">
-WebSocket URL 必须使用 `ws://`（非加密）或 `wss://`（加密）协议头。
-</Aside>
+### 连接配置
+
+```java
+WebSocketClient client = new WebSocketClient("ws://localhost:8080");
+
+client.options()
+        .debug(true)                    // 开启调试日志
+        .connectTimeout(5000)          // 连接超时（毫秒）
+        .readTimeout(30000)            // 读取超时（毫秒）
+        .readBufferSize(8192)          // 读缓冲区大小
+        .writeBufferSize(8192)         // 写缓冲区大小
+        .maxFrameSize(65536);          // 最大帧大小
+```
+
+### 自定义请求头
+
+```java
+import tech.smartboot.feat.core.common.HeaderName;
+
+WebSocketClient client = new WebSocketClient("ws://localhost:8080");
+
+client.header(header -> header
+        .set(HeaderName.USER_AGENT, "Feat-WebSocket-Client")
+        .set(HeaderName.AUTHORIZATION, "Bearer token123"));
+
+client.connect(listener);
+```
 
 ## 消息收发
 
@@ -124,6 +137,51 @@ public void onMessage(WebSocketClient client, byte[] message) {
 ```
 
 ## 生命周期管理
+
+### 回调触发顺序
+
+以下泳道图展示了 WebSocket 连接过程中各回调的触发时机：
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant App as 应用程序
+    participant Client as WebSocket Client
+    participant Server as WebSocket 服务器
+
+    App->>Client: connect() 发起连接
+    Client->>Server: WebSocket Handshake
+    
+    alt 连接成功
+        Server-->>Client: Handshake Response (101)
+        Client-->>App: onOpen()
+        
+        loop 双向通信
+            App->>Client: sendMessage()
+            Client->>Server: WebSocket Frame
+            Server-->>Client: WebSocket Frame
+            Client-->>App: onMessage()
+        end
+        
+        Server-->>Client: Close Frame
+        Client-->>App: onClose()
+    else 连接失败
+        Client-->>App: onError()
+        Client-->>App: onClose()
+    end
+```
+
+**回调触发顺序说明：**
+
+1. **发起连接** - 调用 `connect()` 后，客户端发送 WebSocket 握手请求
+2. **连接成功** - 握手成功（HTTP 101）时触发 `onOpen()`，此时可以开始发送消息
+3. **接收消息** - 收到服务端消息时触发 `onMessage()`
+4. **连接失败** - 握手失败或网络异常时触发 `onError()`
+5. **连接关闭** - 无论成功或失败，连接关闭时都会触发 `onClose()`
+
+<Aside type="tip">
+`onClose()` 是**最终回调**，无论连接成功还是失败都会执行，适合用于资源清理操作。
+</Aside>
 
 ### 完整生命周期示例
 
@@ -181,33 +239,47 @@ public class ChatClient {
 }
 ```
 
-## 连接配置
+## 连接管理
 
-### 常用配置项
+### 手动关闭连接
 
-```java
-WebSocketClient client = new WebSocketClient("ws://localhost:8080");
-
-client.options()
-        .debug(true)                    // 开启调试日志
-        .connectTimeout(5000)          // 连接超时（毫秒）
-        .readTimeout(30000)              // 读取超时（毫秒）
-        .readBufferSize(8192)            // 读缓冲区大小
-        .writeBufferSize(8192)           // 写缓冲区大小
-        .maxFrameSize(65536);            // 最大帧大小
-```
-
-### 自定义请求头
+WebSocket 是长连接，程序不会自动退出，需要显式关闭。
 
 ```java
-WebSocketClient client = new WebSocketClient("ws://localhost:8080");
+// 正常关闭
+client.close(1000, "Normal closure");
 
-client.header(header -> header
-        .set(HeaderName.USER_AGENT, "Feat-WebSocket-Client")
-        .set(HeaderName.AUTHORIZATION, "Bearer token123"));
-
-client.connect(listener);
+// 强制关闭
+client.close();
 ```
+
+### 实现重连
+
+```java
+public void onClose(WebSocketClient client, WebSocketResponse response, CloseReason reason) {
+    if (reconnectAttempts < MAX_RECONNECT) {
+        reconnectAttempts++;
+        System.out.println("连接断开，尝试重连 (" + reconnectAttempts + "/" + MAX_RECONNECT + ")");
+        try {
+            Thread.sleep(3000);
+            doConnect();  // 重新建立连接
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+## 关闭码说明
+
+| 代码 | 名称 | 说明 |
+|-----|------|------|
+| 1000 | Normal Closure | 正常关闭 |
+| 1001 | Going Away | 服务端或客户端离开 |
+| 1002 | Protocol Error | 协议错误 |
+| 1006 | Abnormal Closure | 异常关闭（连接意外断开） |
+| 1009 | Message Too Big | 消息太大 |
+| 1011 | Internal Error | 服务端内部错误 |
 
 ## 完整示例
 
@@ -282,17 +354,6 @@ public class InteractiveWebSocketClient {
 }
 ```
 
-## 关闭码说明
-
-| 代码 | 名称 | 说明 |
-|-----|------|------|
-| 1000 | Normal Closure | 正常关闭 |
-| 1001 | Going Away | 服务端或客户端离开 |
-| 1002 | Protocol Error | 协议错误 |
-| 1006 | Abnormal Closure | 异常关闭（连接意外断开） |
-| 1009 | Message Too Big | 消息太大 |
-| 1011 | Internal Error | 服务端内部错误 |
-
 ## 常见问题
 
 **连接失败**
@@ -322,24 +383,27 @@ client.close(1000, "Normal closure");
 client.close();
 ```
 
-**如何实现重连**
+## 适用场景
 
-```java
-public void onClose(WebSocketClient client, WebSocketResponse response, CloseReason reason) {
-    if (reconnectAttempts < MAX_RECONNECT) {
-        reconnectAttempts++;
-        System.out.println("连接断开，尝试重连 (" + reconnectAttempts + "/" + MAX_RECONNECT + ")");
-        try {
-            Thread.sleep(3000);
-            doConnect();  // 重新建立连接
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-}
-```
+### 什么时候用 Feat WebSocket 客户端
 
-## 下一步
+Feat WebSocket 客户端适合以下场景：
 
-- **[HTTP 客户端](/feat/client/http_client/)**: 普通 HTTP 请求
-- **[SSE 客户端](/feat/client/sse_client/)**: 服务端单向推送场景
+- **高并发服务端** - 异步非阻塞模型，不会阻塞线程
+- **微服务间通信** - 轻量级，启动快，内存占用低
+- **需要双向实时通信** - 聊天、协作编辑、实时游戏等
+- **嵌入式场景** - 不依赖 Spring 等重量级框架
+
+### 什么时候不该用
+
+以下情况你可能需要考虑其他方案：
+
+- **只需要服务端单向推送** → 考虑使用 [SSE 客户端](/feat/client/sse_client/)
+- **简单的请求-响应场景** → 考虑使用 [HTTP 客户端](/feat/client/http_client/)
+- **需要完整的 Reactive Streams 支持**（Mono/Flux）→ 考虑 WebFlux 的 WebClient
+- **团队已深度使用 Spring** 且需要无缝集成 → Spring 生态的 WebSocket 集成更好
+
+<Aside type="tip">
+Feat WebSocket 客户端的设计哲学是**简单高效**。相比其他复杂的 WebSocket 库，Feat 使用标准的回调模型，学习成本更低，更容易上手。如果你需要 WebSocket 客户端但不想引入复杂的依赖，Feat 是一个很好的选择。
+</Aside>
+
