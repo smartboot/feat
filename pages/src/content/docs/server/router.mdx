@@ -10,9 +10,9 @@ import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 
 Router 是 Feat 提供的路由管理器，让你可以在一个服务里处理多个路径，支持路径参数、Session 管理和拦截器等高级功能。
 
-## 创建与配置
+## 基础用法
 
-### 基础路由
+### 创建 Router
 
 使用 Router 注册多个路由处理器：
 
@@ -57,7 +57,7 @@ router.route("/articles", "PUT", ctx -> { /* ... */ });
 router.route("/articles", "DELETE", ctx -> { /* ... */ });
 ```
 
-## 路由匹配规则
+## 路由匹配机制
 
 ### 匹配模式
 
@@ -88,7 +88,48 @@ router.route("/users/*", ctx -> { /* 通配符兜底 */ });
 将更具体的路径放在前面注册，有助于代码可读性。
 </Aside>
 
-## Session 管理
+## 请求处理
+
+Router 支持同步和异步两种处理模式：
+
+<Tabs>
+<TabItem label="同步处理">
+
+```java
+// 适合简单操作
+router.route("/sync", ctx -> {
+    ctx.Response.write("同步响应");
+});
+```
+
+**适合场景**：纯内存操作、简单数据转换、快速状态查询
+
+</TabItem>
+<TabItem label="异步处理">
+
+```java
+// 适合耗时操作
+router.route("/async", (ctx, future) -> {
+    CompletableFuture.supplyAsync(() -> fetchData())
+        .thenAccept(result -> {
+            ctx.Response.write(result);
+            future.complete(null); // 必须调用！
+        });
+});
+```
+
+**适合场景**：耗时操作（>10ms）、外部 API 调用、数据库查询、文件 IO
+
+</TabItem>
+</Tabs>
+
+<Aside type="tip">
+异步模式不会阻塞线程，适合高并发场景。同步模式代码更简洁，适合简单接口。
+</Aside>
+
+## 中间件机制
+
+### Session 管理
 
 Router 内置基于 Cookie 的 Session 管理：
 
@@ -130,9 +171,7 @@ curl -b cookies.txt http://localhost:8080/profile
 默认的内存 Session 在应用重启后数据丢失，且不支持分布式共享。生产环境建议实现 `SessionManager` 接口，使用 Redis 等外部存储。
 </Aside>
 
-## 拦截器
-
-### 基础拦截器
+### 拦截器
 
 拦截器让你可以在请求到达处理器前执行鉴权、日志等逻辑：
 
@@ -151,7 +190,7 @@ router.addInterceptor("/admin/*", (ctx, future, chain) -> {
 });
 ```
 
-### 多拦截器链式处理
+#### 多拦截器链式处理
 
 拦截器按注册顺序执行，可以形成处理链：
 
@@ -190,46 +229,7 @@ sequenceDiagram
 拦截器执行顺序遵循"先进先出"原则。轻量级拦截器（如日志）建议放在前面，尽早中断无效请求。
 </Aside>
 
-## 异步处理
-
-Router 支持同步和异步两种处理模式：
-
-<Tabs>
-<TabItem label="同步处理">
-
-```java
-// 适合简单操作
-router.route("/sync", ctx -> {
-    ctx.Response.write("同步响应");
-});
-```
-
-**适合场景**：纯内存操作、简单数据转换、快速状态查询
-
-</TabItem>
-<TabItem label="异步处理">
-
-```java
-// 适合耗时操作
-router.route("/async", (ctx, future) -> {
-    CompletableFuture.supplyAsync(() -> fetchData())
-        .thenAccept(result -> {
-            ctx.Response.write(result);
-            future.complete(null); // 必须调用！
-        });
-});
-```
-
-**适合场景**：耗时操作（>10ms）、外部 API 调用、数据库查询、文件 IO
-
-</TabItem>
-</Tabs>
-
-<Aside type="tip">
-异步模式不会阻塞线程，适合高并发场景。同步模式代码更简洁，适合简单接口。
-</Aside>
-
-## 完整示例
+## 实战示例
 
 ### RESTful API 服务
 
@@ -269,9 +269,11 @@ curl http://localhost:8080/api/users/1
 curl http://localhost:8080/api/users
 ```
 
-## 常见问题
+## 参考指南
 
-### 路由返回 404
+### 常见问题
+
+#### 路由返回 404
 
 排查清单：
 
@@ -286,7 +288,7 @@ router.route("/users", handler);     // 匹配 /users
 router.route("/users/", handler);    // 匹配 /users/
 ```
 
-### 拦截器不生效
+#### 拦截器不生效
 
 `/admin/*` 匹配 `/admin/users` 但不匹配 `/admin` 本身：
 
@@ -296,13 +298,13 @@ router.addInterceptor("/admin", interceptor);      // 匹配 /admin
 router.addInterceptor("/admin/*", interceptor);     // 匹配 /admin/xxx
 ```
 
-### Session 数据丢失
+#### Session 数据丢失
 
 1. curl 需显式指定 `-c` 和 `-b` 参数保存/携带 Cookie
 2. 浏览器可能禁用了第三方 Cookie
 3. Session 默认 30 分钟过期
 
-### 异步请求不返回
+#### 异步请求不返回
 
 异步处理必须调用 `future.complete(null)`，否则请求不会结束：
 
@@ -315,10 +317,9 @@ router.route("/async", (ctx, future) -> {
 });
 ```
 
-## 性能建议
+### 性能建议
 
 1. **路由设计**：避免过度使用通配符，合理规划 API 层级
 2. **拦截器**：轻量级拦截器放前面，尽早中断无效请求
 3. **Session**：仅存储必要数据，分布式环境使用外部存储
 4. **异步选择**：耗时操作使用异步，简单操作使用同步
-
