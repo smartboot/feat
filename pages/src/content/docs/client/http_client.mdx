@@ -7,7 +7,9 @@ sidebar:
 
 import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 
-Feat [`HttpClient`](feat-core/src/main/java/tech/smartboot/feat/core/client/HttpClient.java) 提供完整的 HTTP/1.1 客户端支持，采用异步回调模型，适合高并发场景。
+这篇指南的目标：让你在 5 分钟内掌握 Feat HttpClient 的核心用法，从简单的 GET 请求到复杂的文件上传和流式处理。
+
+Feat HttpClient 采用异步回调模型，适合高并发场景。如果你正在寻找一个轻量级、高性能的 HTTP 客户端替代方案，这篇文档就是为你准备的。
 
 ### 创建客户端
 
@@ -44,9 +46,7 @@ client.get("/users")
         .submit();
 ```
 
-## 请求方法
-
-### GET 请求
+## 发送 GET 请求
 
 GET 请求用于获取资源，支持链式添加查询参数：
 
@@ -58,7 +58,7 @@ client.get("/users")
         .submit();
 ```
 
-### POST 请求
+## 发送 POST 请求
 
 POST 请求支持多种数据格式：
 
@@ -108,7 +108,7 @@ client.post("/users")
 </TabItem>
 </Tabs>
 
-### 其他 HTTP 方法
+## 发送 PUT、DELETE 等请求
 
 使用 `rest()` 方法发送 PUT、DELETE 等请求：
 
@@ -119,7 +119,7 @@ client.rest("PUT", "/users/1")
         .submit();
 ```
 
-## 响应处理
+## 处理响应
 
 ### 异步回调
 
@@ -187,7 +187,7 @@ sequenceDiagram
 `onClose()` 是**最终回调**，无论请求成功还是失败都会执行，适合用于资源清理操作。
 </Aside>
 
-### 读取响应数据
+## 读取响应数据
 
 #### 响应体
 
@@ -223,7 +223,7 @@ client.get("/users")
         .submit();
 ```
 
-### 同步等待
+## 同步等待响应
 
 如需阻塞等待响应，使用 `CompletableFuture.get()`：
 
@@ -239,9 +239,7 @@ System.out.println(response.body());
 异步模式不会阻塞线程，适合高并发服务端；同步模式适合简单脚本和测试场景。
 </Aside>
 
-## 请求配置
-
-### 请求头
+## 配置请求头
 
 ```java
 import tech.smartboot.feat.core.common.HeaderName;
@@ -269,7 +267,7 @@ client.post("/upload")
         .submit();
 ```
 
-### 连接选项
+## 配置连接选项
 
 ```java
 HttpClient client = Feat.httpClient("https://api.example.com", options -> {
@@ -281,7 +279,7 @@ HttpClient client = Feat.httpClient("https://api.example.com", options -> {
 });
 ```
 
-### 连接池
+## 配置连接池
 
 HttpClient 内部自动维护连接池，通过 `keepalive` 配置启用连接复用：
 
@@ -291,9 +289,7 @@ client.get("/users")
         .submit();
 ```
 
-## 高级特性
-
-### 文件上传（Multipart）
+## 文件上传（Multipart）
 
 上传文件使用 `multipart` 表单：
 
@@ -313,7 +309,7 @@ client.post("/upload")
         .submit();
 ```
 
-### 代理配置
+## 配置 HTTP 代理
 
 配置 HTTP 代理服务器：
 
@@ -329,7 +325,7 @@ HttpClient client = Feat.httpClient("https://api.example.com", options -> {
 });
 ```
 
-### SSE 客户端
+## 使用 SSE 客户端
 
 处理 Server-Sent Events 流式响应。详见 [SSE 客户端](/feat/client/sse_client/) 章节。
 
@@ -342,7 +338,7 @@ client.get("/events")
         .submit();
 ```
 
-### 流式响应处理
+## 流式响应处理
 
 如需处理二进制数据或大文件，使用 `onResponseBody` 流式处理：
 
@@ -356,7 +352,7 @@ client.get("/large-file.zip")
         .submit();
 ```
 
-### 大文件下载
+## 大文件下载
 
 使用流式 API 处理大文件，避免内存溢出：
 
@@ -373,7 +369,7 @@ client.get("/large-file.zip")
         .submit();
 ```
 
-### 动态路径构造
+## 动态路径构造
 
 使用 `HttpClient(String host, int port)` 构造方式，适合需要动态指定路径的场景：
 
@@ -418,3 +414,24 @@ public class HttpClientDemo {
     }
 }
 ```
+
+## 什么时候用 Feat HttpClient
+
+Feat HttpClient 适合以下场景：
+
+- **高并发服务端** - 异步非阻塞模型，不会阻塞线程
+- **微服务间通信** - 轻量级，启动快，内存占用低
+- **需要精细控制** - 支持流式处理、连接池、代理等高级配置
+- **嵌入式场景** - 不依赖 Spring 等重量级框架
+
+## 什么时候不该用
+
+以下情况你可能需要考虑其他方案：
+
+- **需要声明式 HTTP 客户端**（如 Spring 的 `@FeignClient`）→ 考虑 OpenFeign
+- **需要完整的 Reactive Streams 支持**（Mono/Flux）→ 考虑 WebFlux 的 WebClient
+- **团队已深度使用 Spring** 且需要无缝集成 → Spring 生态的 HttpClient 集成更好
+
+<Aside type="tip">
+Feat HttpClient 的设计哲学是**简单高效**。相比 WebFlux 的 `Mono`/`Flux`，Feat 使用标准的 `CompletableFuture`，学习成本更低，更容易上手。如果你需要异步 HTTP 客户端但不想引入复杂的响应式编程模型，Feat 是一个很好的选择。
+</Aside>

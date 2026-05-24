@@ -287,42 +287,7 @@ public void greet(String name, int times) {
 
 ---
 
-### ❌ 不要遗漏关键 import
 
-**错误示例：**
-
-```java
-public class Demo {
-    public static void main(String[] args) {
-        ChatModel model = FeatAI.chatModel(opts -> opts
-                .model("qwen2.5:7b")
-        );
-    }
-}
-```
-
-**原因：**
-
-- 读者不知道类从哪里来
-- 复制后编译失败
-- 增加调试时间
-
-**正确做法：**
-
-```java
-import tech.smartboot.feat.ai.FeatAI;
-import tech.smartboot.feat.ai.chat.ChatModel;
-
-public class Demo {
-    public static void main(String[] args) {
-        ChatModel model = FeatAI.chatModel(opts -> opts
-                .model("qwen2.5:7b")
-        );
-    }
-}
-```
-
----
 
 ### ❌ 不要混用术语
 
