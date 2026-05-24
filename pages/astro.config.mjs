@@ -129,7 +129,7 @@ export default defineConfig({
                 },
                 {
                     label: 'Feat Cloud',
-                    items: [{  autogenerate: {directory: 'cloud'}}],
+                    items: [{  autogenerate: {directory: 'cloud'}},'sponsors'],
                 },
                 {
                     label: 'Feat AI',
@@ -148,10 +148,6 @@ export default defineConfig({
                 {
                     label: '附录',
                     items: [{ autogenerate: {directory: 'appendix'}}],
-                },
-                {
-                    label: '支持项目',
-                    items: ['sponsors'],
                 },
             ],
         }),
