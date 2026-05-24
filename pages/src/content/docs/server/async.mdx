@@ -1,189 +1,266 @@
 ---
 title: 异步处理
-description: 当请求里出现耗时操作时，如何把工作移出主处理线程，并正确结束响应
+description: 掌握 Feat 服务端异步处理模型：将耗时操作移出主线程，提升并发处理能力
+toc: true
 sidebar:
     order: 3
 ---
 
-import { Aside } from '@astrojs/starlight/components'
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 
-如果你的请求里会做数据库查询、远程 HTTP 调用、文件处理或任何明显耗时的工作，就不应该一直把这些操作压在主处理流程里。  
-这篇文档讲的就是：什么时候需要异步，以及在 Feat 里应该怎么写。
+当请求处理涉及数据库查询、远程 HTTP 调用、文件 IO 等耗时操作时，应该使用异步处理模式。这样可以将工作移出 Feat 的主处理线程，避免阻塞其他请求，显著提升并发处理能力。
 
-## 先判断：你真的需要异步吗
+## 同步 vs 异步
 
-如果你的请求处理只是：
+| 特性 | 同步处理 | 异步处理 |
+|------|---------|---------|
+| 执行线程 | 主处理线程 | 自定义线程池 |
+| 阻塞影响 | 阻塞主线程，降低并发 | 不阻塞主线程 |
+| 适用场景 | 简单、快速的操作 | 耗时操作（>10ms） |
+| 代码复杂度 | 简单 | 需要管理 CompletableFuture |
 
-- 读取几个参数
-- 拼一段字符串
-- 返回一个很快就能得到的结果
+<Aside type="tip">
+选择建议：纯内存操作、简单数据转换 → 同步；数据库查询、外部 API 调用、文件 IO → 异步
+</Aside>
 
-那通常没必要上异步。  
+## 异步处理模型
 
-但如果你的处理链路里有这些动作，就值得认真看完这页：
-
-- 数据库查询
-- 第三方 API 调用
-- 文件上传或转码
-- 明显会阻塞的计算或等待
-
-## Feat 里的异步处理模型
-
-Feat 的服务端异步处理不是魔法，它依赖的是 `HttpHandler` 里的另一个 `handle(...)` 入口：
+Feat 的异步处理依赖 [`HttpHandler`](feat-core/src/main/java/tech/smartboot/feat/core/server/HttpHandler.java:33) 接口的双参数方法：
 
 ```java
 void handle(HttpRequest request, CompletableFuture<Void> future)
 ```
 
-你要做的事只有两件：
+使用异步模式只需做两件事：
 
-1. 把耗时逻辑挪到自己的线程池里执行
-2. 完成后记得调用 `future.complete(null)`
+1. **将耗时逻辑放到自定义线程池执行**
+2. **完成后调用 `future.complete(null)` 通知 Feat**
 
-如果第二步忘了做，请求就会一直挂着。
+<Aside type="caution">
+如果忘记调用 `future.complete(null)`，请求将一直挂起，客户端收不到响应。
+</Aside>
 
-## 一个最小但真实的异步示例
+## 基础用法
 
-下面这个例子几乎就是仓库示例的核心写法：
+### 创建异步处理器
 
-```java title="AsyncHttpDemo.java"
+```java
+import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpRequest;
-import tech.smartboot.feat.core.server.HttpServer;
 
-import java.io.IOException;
-import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class AsyncHttpDemo {
+public class AsyncDemo {
     public static void main(String[] args) {
-        ExecutorService executorService = Executors.newFixedThreadPool(
-                Runtime.getRuntime().availableProcessors()
-        );
+        // 创建业务线程池
+        ExecutorService executor = Executors.newFixedThreadPool(4);
 
-        HttpServer server = new HttpServer();
-        server.options().debug(true);
+        Feat.httpServer()
+            .httpHandler(new HttpHandler() {
+                @Override
+                public void handle(HttpRequest request, CompletableFuture<Void> future) {
+                    executor.execute(() -> {
+                        try {
+                            // 模拟耗时操作
+                            Thread.sleep(100);
+                            request.getResponse().write("Async response");
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        } finally {
+                            // 必须调用，否则请求不会结束
+                            future.complete(null);
+                        }
+                    });
+                }
 
-        server.httpHandler(new HttpHandler() {
-            @Override
-            public void handle(HttpRequest request, CompletableFuture<Void> future) throws IOException {
-                executorService.execute(() -> {
-                    try {
-                        Thread.sleep(1000);
-                        request.getResponse().write(
-                                ("currentThread: " + Thread.currentThread() + " at " + new Date()).getBytes()
-                        );
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    } finally {
-                        future.complete(null);
-                    }
-                });
-            }
-
-            @Override
-            public void handle(HttpRequest request) {
-                // 异步模式下这里通常不再承担主逻辑
-            }
-        });
-
-        server.listen(8080);
+                @Override
+                public void handle(HttpRequest request) {
+                    // 异步模式下这里不处理主逻辑
+                }
+            })
+            .listen(8080);
     }
 }
 ```
 
-## 这个例子里真正重要的部分
+### 使用 Lambda 简化
 
-很多人会把注意力放在 `Thread.sleep(1000)` 这种演示代码上，但真正重要的是这三行：
+如果不需要复杂的线程池管理，可以用 Lambda 快速创建异步处理器：
 
 ```java
-executorService.execute(() -> {
-    // 耗时工作
-    future.complete(null);
-});
+Feat.httpServer()
+    .httpHandler(new HttpHandler() {
+        @Override
+        public void handle(HttpRequest request, CompletableFuture<Void> future) {
+            CompletableFuture.supplyAsync(() -> {
+                // 耗时操作
+                return fetchDataFromDatabase();
+            }).thenAccept(result -> {
+                request.getResponse().write(result);
+                future.complete(null); // 完成后通知 Feat
+            });
+        }
+
+        @Override
+        public void handle(HttpRequest request) {
+        }
+    })
+    .listen(8080);
 ```
 
-它们分别表达了：
+## 回调触发流程
 
-- “主线程不要做这件事”
-- “把工作交给另外的执行器”
-- “做完后显式通知 Feat 这次请求已经可以结束”
+以下泳道图展示了异步请求的处理流程：
 
-## 运行之后会看到什么
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Client as 客户端
+    participant Feat as Feat 服务器
+    participant ThreadPool as 业务线程池
+    participant Handler as HttpHandler
 
-启动服务后访问 `http://localhost:8080`，你会在大约 1 秒后拿到响应。  
-响应内容里会带上执行线程信息，说明这段逻辑不是在主请求线程里同步跑完的。
-
-这正是异步处理的价值：
-
-- 请求入口更快释放
-- 主处理线程不用被单个慢请求拖住
-- 你可以用自己的线程池管理耗时任务
-
-## 一个更接近真实项目的写法
-
-如果你已经在使用 `Feat.httpServer(...)`，也可以直接把异步处理器挂进去：
-
-```java
-Feat.httpServer(options -> options.debug(true))
-        .httpHandler(new HttpHandler() {
-            @Override
-            public void handle(HttpRequest request, CompletableFuture<Void> future) {
-                businessExecutor.execute(() -> {
-                    try {
-                        String result = callSlowService();
-                        request.getResponse().write(result);
-                    } finally {
-                        future.complete(null);
-                    }
-                });
-            }
-
-            @Override
-            public void handle(HttpRequest request) {
-            }
-        })
-        .listen();
+    Client->>Feat: HTTP Request
+    Feat->>Handler: handle(request, future)
+    Handler->>ThreadPool: 提交耗时任务
+    Handler-->>Feat: 立即返回（不阻塞）
+    
+    Feat->>Feat: 继续处理其他请求
+    
+    ThreadPool->>ThreadPool: 执行耗时操作
+    ThreadPool->>Feat: 写入响应
+    ThreadPool->>Handler: future.complete(null)
+    Handler-->>Feat: 通知请求完成
+    Feat-->>Client: HTTP Response
 ```
 
-这里最需要控制的是 `businessExecutor`，而不是 Feat 本身。  
-换句话说，异步处理真正的核心问题通常是你的业务线程池策略。
+**流程说明：**
 
-## 最容易犯的错误
+1. **接收请求** - Feat 主线程接收 HTTP 请求
+2. **调用处理器** - 调用 `handle(request, future)` 方法
+3. **提交任务** - 将耗时操作提交到业务线程池
+4. **立即返回** - 主线程立即返回，继续处理其他请求
+5. **异步执行** - 业务线程池执行耗时操作
+6. **完成通知** - 调用 `future.complete(null)` 通知 Feat 请求完成
+7. **发送响应** - Feat 将响应发送给客户端
 
-### 1. 忘记 `future.complete(null)`
+## 完整示例
 
-这是最典型的问题。  
-结果通常是：服务端看起来没报错，但客户端请求一直不结束。
+### 数据库查询场景
 
-### 2. 在异步线程里抛异常，却没有兜底
+```java title="AsyncDatabaseDemo.java"
+import tech.smartboot.feat.Feat;
+import tech.smartboot.feat.core.server.HttpHandler;
+import tech.smartboot.feat.core.server.HttpRequest;
 
-至少应该确保无论成功还是失败，都能结束 future：
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-```java
-executorService.execute(() -> {
-    try {
-        doSomething(request);
-    } catch (Throwable e) {
-        e.printStackTrace();
-    } finally {
-        future.complete(null);
+public class AsyncDatabaseDemo {
+    // 业务线程池
+    private static final ExecutorService executor = Executors.newFixedThreadPool(8);
+    
+    public static void main(String[] args) {
+        Feat.httpServer(options -> options.debug(true))
+            .httpHandler(new HttpHandler() {
+                @Override
+                public void handle(HttpRequest request, CompletableFuture<Void> future) {
+                    String userId = request.getParameter("id");
+                    
+                    executor.execute(() -> {
+                        try {
+                            // 模拟数据库查询
+                            User user = queryDatabase(userId);
+                            
+                            if (user != null) {
+                                request.getResponse().write(
+                                    "{\"id\":\"" + user.id + "\",\"name\":\"" + user.name + "\"}"
+                                );
+                            } else {
+                                request.getResponse().setHttpStatus(404);
+                                request.getResponse().write("User not found");
+                            }
+                        } catch (Exception e) {
+                            request.getResponse().setHttpStatus(500);
+                            request.getResponse().write("Internal error");
+                            e.printStackTrace();
+                        } finally {
+                            // 无论成功失败，都要完成 future
+                            future.complete(null);
+                        }
+                    });
+                }
+
+                @Override
+                public void handle(HttpRequest request) {
+                }
+            })
+            .listen(8080);
     }
-});
+    
+    static User queryDatabase(String userId) throws InterruptedException {
+        // 模拟数据库查询耗时
+        Thread.sleep(50);
+        return new User(userId, "User_" + userId);
+    }
+    
+    static class User {
+        String id, name;
+        User(String id, String name) {
+            this.id = id; this.name = name;
+        }
+    }
+}
 ```
 
-### 3. 把所有异步任务都丢给无限增长的线程池
+### 外部 API 调用场景
 
-异步不是“越多线程越好”。  
-如果线程池不受控，最终只是把阻塞从主线程搬到了另一堆线程上。
+```java title="AsyncHttpCallDemo.java"
+import tech.smartboot.feat.Feat;
+import tech.smartboot.feat.core.server.HttpHandler;
+import tech.smartboot.feat.core.server.HttpRequest;
 
-## 什么时候应该继续往下看
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-如果你已经确认自己需要异步，接下来通常会遇到两类问题：
+public class AsyncHttpCallDemo {
+    private static final ExecutorService executor = Executors.newFixedThreadPool(4);
+    
+    public static void main(String[] args) {
+        Feat.httpServer()
+            .httpHandler(new HttpHandler() {
+                @Override
+                public void handle(HttpRequest request, CompletableFuture<Void> future) {
+                    executor.execute(() -> {
+                        try {
+                            // 调用外部 API
+                            String result = callExternalApi();
+                            request.getResponse().write(result);
+                        } catch (Exception e) {
+                            request.getResponse().setHttpStatus(502);
+                            request.getResponse().write("External service error");
+                        } finally {
+                            future.complete(null);
+                        }
+                    });
+                }
 
-- 路由开始复杂起来：去看 [Router 路由组件](/feat/server/router/)
-- 线程数、超时、缓冲区需要一起调：去看 [ServerOptions 配置指南](/feat/server/serveroptions/)
-
-如果你已经打算切到注解式开发模型，再回去看 [Feat Cloud 导览](/feat/cloud/) 会更合适。
+                @Override
+                public void handle(HttpRequest request) {
+                }
+            })
+            .listen(8080);
+    }
+    
+    static String callExternalApi() throws InterruptedException {
+        // 模拟 HTTP 调用耗时
+        Thread.sleep(200);
+        return "{\"status\":\"ok\",\"data\":[]}";
+    }
+}
+```
