@@ -13,12 +13,7 @@ import { Aside } from '@astrojs/starlight/components';
 **Feat AI 的底层支撑**：`ChatModel` 基于 Feat Core 的 [`HttpClient`](/feat/client/http_client/) 构建，同步调用使用标准 HTTP 请求，流式调用则基于 [`SseClient`](/feat/client/sse_client/) 实现 Server-Sent Events 协议。这意味着你获得的是 Feat Core 的高性能异步 I/O、连接池复用和完整的 HTTP 协议支持。
 </Aside>
 
-## 什么时候需要看这页
-
-- 你要配置模型参数（温度、系统提示词等）
-- 你要在同步和流式调用之间做选择
-- 你要实现多轮对话
-- 你要处理调用异常
+这里会详细介绍 `ChatModel` 的配置选项、两种调用方式的区别、多轮对话的实现，以及异常处理。如果你刚跑通第一个示例，想深入了解如何控制模型行为，从这里继续。
 
 ## 创建 ChatModel
 
@@ -81,7 +76,6 @@ ChatModel chatModel = FeatAI.chatModel(opts -> opts
 
 `chat(...)` 系列方法返回 `CompletableFuture<ChatResponse>`，适合需要完整响应后再处理的场景。
 
-底层基于 Feat Core 的 [`HttpClient`](../../../server/client/) 发送标准 HTTP POST 请求，自动处理 JSON 序列化和响应解析。
 
 ### 最简单的单轮对话
 
@@ -114,8 +108,6 @@ chatModel.chat("你好").thenAccept(rsp -> {
 ## 流式调用：chatStream(...)
 
 `chatStream(...)` 通过 `ChatStreamListener` 回调实时接收模型生成的片段，适合需要逐字展示的场景。
-
-底层基于 Feat Core 的 [`SseClient`](../../../server/client/) 实现 Server-Sent Events 协议，通过长连接实时推送模型生成的 token。
 
 ### 基础用法
 
