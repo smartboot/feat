@@ -50,9 +50,27 @@ public class WebSocketDemo {
 - 服务端决定把它升级成 WebSocket
 - 升级成功后，后续处理就进入 WebSocket 消息收发模型
 
-仓库里的完整示例见：
+完整示例代码：
 
-- [WebSocketDemo.java](https://gitee.com/smartboot/feat/blob/master/feat-test/src/main/java/tech/smartboot/feat/demo/WebSocketDemo.java)
+```java title="WebSocketServer.java"
+import tech.smartboot.feat.Feat;
+import tech.smartboot.feat.core.server.WebSocketRequest;
+import tech.smartboot.feat.core.server.WebSocketResponse;
+import tech.smartboot.feat.core.server.upgrade.websocket.WebSocketUpgrade;
+
+public class WebSocketServer {
+    public static void main(String[] args) {
+        Feat.httpServer().httpHandler(request -> {
+            request.upgrade(new WebSocketUpgrade() {
+                @Override
+                public void handleTextMessage(WebSocketRequest request, WebSocketResponse response, String message) {
+                    response.sendTextMessage("收到消息：" + message);
+                }
+            });
+        }).listen(8080);
+    }
+}
+```
 
 ## SSE：把 HTTP 请求升级成事件流
 
