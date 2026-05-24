@@ -107,51 +107,8 @@ public class HelloWorld {
 
 Feat Core 的模型：创建服务 → 注册处理器 → 启动监听。
 
-## 继续学习
+## 下一步：配置你的服务
 
-完成第一个应用后，按以下顺序深入：
+刚才的示例使用了默认配置（端口 8080、线程数自动等）。在实际开发中，你几乎总是需要调整这些参数：换端口、调线程、开调试、配 HTTPS...
 
-<CardGrid>
-  <LinkCard
-    title="Router"
-    href="/feat/server/router/"
-    description="用 Router 组织多路由，支持路径参数和拦截器。"
-  />
-  <LinkCard
-    title="异步处理"
-    href="/feat/server/async/"
-    description="把耗时逻辑移出请求线程，避免阻塞。"
-  />
-  <LinkCard
-    title="ServerOptions"
-    href="/feat/server/serveroptions/"
-    description="端口、线程数、缓冲区、调试模式等配置项。"
-  />
-  <LinkCard
-    title="HTTPS"
-    href="/feat/server/https/"
-    description="配置 SSL/TLS 证书，启用 HTTPS 访问。"
-  />
-  <LinkCard
-    title="协议升级"
-    href="/feat/server/upgrade/"
-    description="WebSocket 和 HTTP/2 协议升级支持。"
-  />
-  <LinkCard
-    title="Feat Cloud（可选）"
-    href="/feat/cloud/"
-    description="注解式开发体验，更接近 Spring Boot。"
-  />
-</CardGrid>
-
-## 常见问题
-
-**端口被占用**
-```java
-Feat.httpServer().listen(9090);
-```
-
-**浏览器访问不到**
-1. 端口是否一致
-2. 程序是否退出或报错
-3. 防火墙是否拦截
+继续阅读 [ServerOptions 配置](/feat/server/serveroptions/)，了解如何按场景定制服务参数。

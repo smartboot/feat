@@ -7,6 +7,9 @@ sidebar:
 
 import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 
+在[快速开始](/feat/server/)中，我们用默认配置启动了服务。但在实际开发中，你需要根据场景调整端口、线程数、缓冲区大小等参数。本章介绍 Feat 提供的所有配置选项。
+
+## 两种配置方式
 
 Feat 提供两种配置 `ServerOptions` 的方式：
 
@@ -353,4 +356,3 @@ Feat.httpServer(options -> options.debug(true))  // 先配置
     .httpHandler(...)                           // 再设置处理器
     .listen();
 ```
-
