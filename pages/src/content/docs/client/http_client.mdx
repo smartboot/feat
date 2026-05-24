@@ -1,220 +1,391 @@
 ---
 title: HTTP 客户端
-description: 用 Feat HttpClient 发送 GET 和 POST 请求，并掌握回调、请求头、查询参数和基础配置
+description: 掌握 Feat HttpClient 的完整功能：请求构建、响应处理、连接配置和高级特性
 sidebar:
     order: 1
 ---
 
-import { Aside } from '@astrojs/starlight/components';
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 
-这篇教程聚焦在最常用的场景上：先把 HTTP 请求发出去，再逐步补上请求头、查询参数、POST JSON 和响应回调。
+Feat [`HttpClient`](feat-core/src/main/java/tech/smartboot/feat/core/client/HttpClient.java) 提供完整的 HTTP/1.1 客户端支持，采用异步回调模型，适合高并发场景。
 
-## 你会完成什么
+## 快速开始
 
-- 创建一个 `HttpClient`
-- 发送一个 GET 请求
-- 读取响应头和响应体
-- 发送 JSON POST 请求
-- 理解 `submit()`、`onSuccess()`、`onFailure()` 的基本协作方式
+### 创建客户端
 
-## 前置条件
+使用 Feat 工厂方法创建客户端实例：
 
-- JDK 1.8 或更高版本
-- Maven 3.0 或更高版本
-- 已引入 `feat-core`
-
-如果你还没有引入依赖：
-
-```xml title="pom.xml"
-<dependency>
-    <groupId>tech.smartboot.feat</groupId>
-    <artifactId>feat-core</artifactId>
-    <version>${feat.version}</version>
-</dependency>
-```
-
-## 步骤 1：发送第一个 GET 请求
-
-最短路径是先请求一个现成地址，确认客户端工作正常：
-
-```java title="HttpGetDemo.java"
+```java
+import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.core.client.HttpClient;
 
-public class HttpGetDemo {
-    public static void main(String[] args) {
-        HttpClient httpClient = new HttpClient("https://smartboot.tech");
-        httpClient.get("/feat/")
-                .onSuccess(response -> System.out.println(response.body()))
-                .onFailure(Throwable::printStackTrace)
-                .submit();
-    }
-}
+// 基础创建
+HttpClient client = Feat.httpClient("https://api.example.com");
+
+// 带配置选项
+HttpClient client = Feat.httpClient("https://api.example.com", options -> {
+    options.debug(true)
+           .connectTimeout(5000)
+           .idleTimeout(30000);
+});
 ```
 
-这个例子里：
-
-- `new HttpClient("https://smartboot.tech")` 使用 `host + schema` 形式创建客户端
-- `get("/feat/")` 发起 GET 请求
-- `onSuccess(...)` 处理成功响应
-- `onFailure(...)` 处理异常
-- `submit()` 真正提交请求
-
-<Aside type="tip">
-`submit()` 返回的是 `CompletableFuture<HttpResponse>`。如果你只想走回调模式，可以像上面一样直接注册回调；如果你要和别的异步流程拼接，可以进一步操作这个 `Future`。
+<Aside type="caution">
+`HttpClient(String url)` 必须包含协议头（`http://` 或 `https://`），否则将抛出异常。
 </Aside>
 
-## 步骤 2：读取状态码和响应头
+### 发送第一个请求
 
-如果你不仅关心响应体，还想知道状态码和头部信息，可以用 `onResponseHeader(...)`：
-
-```java title="ResponseHeaderDemo.java"
-import tech.smartboot.feat.core.client.HttpClient;
-
-public class ResponseHeaderDemo {
-    public static void main(String[] args) {
-        HttpClient httpClient = new HttpClient("https://smartboot.tech");
-        httpClient.get("/feat/")
-                .onResponseHeader(response -> {
-                    System.out.println("status: " + response.statusCode());
-                    for (String name : response.getHeaderNames()) {
-                        System.out.println(name + ": " + response.getHeader(name));
-                    }
-                })
-                .submit();
-    }
-}
-```
-
-这适合做：
-
-- 响应状态判断
-- 内容类型检查
-- 调试接口返回头
-
-## 步骤 3：添加请求头和查询参数
-
-Feat HttpClient 的 header 设置是通过 `Consumer<Header>` 完成的，不是传统的 `header("k", "v")` 形式：
-
-```java title="HttpGetWithHeaderDemo.java"
-import tech.smartboot.feat.core.client.HttpClient;
+```java
 import tech.smartboot.feat.core.common.HeaderName;
 
-public class HttpGetWithHeaderDemo {
-    public static void main(String[] args) {
-        HttpClient httpClient = new HttpClient("https://smartboot.tech");
-        httpClient.get("/feat/")
-                .header(header -> header
-                        .set(HeaderName.USER_AGENT, "feat-doc-demo")
-                        .keepalive(true))
-                .addQueryParam("from", "docs")
-                .onSuccess(response -> System.out.println(response.body()))
-                .onFailure(Throwable::printStackTrace)
-                .submit();
-    }
-}
+// GET 请求
+client.get("/users")
+        .addQueryParam("page", "1")
+        .onSuccess(response -> System.out.println(response.body()))
+        .submit();
+
+// POST JSON 请求
+client.post("/users")
+        .postJson(Map.of("name", "feat"))
+        .onSuccess(response -> System.out.println(response.body()))
+        .submit();
 ```
 
-这里最常用的几个能力是：
+<Aside type="tip">
+`postJson()` 会自动序列化对象并设置 Content-Type 为 application/json。
+</Aside>
 
-- `header(...).set(...)`：覆盖同名请求头
-- `header(...).add(...)`：追加同名请求头
-- `keepalive(true)`：控制连接复用
-- `addQueryParam(...)`：追加查询参数
+## 请求方法
 
-## 步骤 4：发送 POST JSON 请求
+### GET 请求
 
-对于 POST JSON，最省事的方式是直接用 `postJson(...)`：
+GET 请求用于获取资源，支持链式添加查询参数：
 
-```java title="HttpPostJsonDemo.java"
-import tech.smartboot.feat.core.client.HttpClient;
+```java
+client.get("/users")
+        .addQueryParam("page", "1")
+        .addQueryParam("size", "20")
+        .onSuccess(response -> System.out.println(response.body()))
+        .submit();
+```
 
+### POST 请求
+
+POST 请求支持多种数据格式：
+
+<Tabs>
+<TabItem label="JSON">
+
+```java
+Map<String, Object> payload = new HashMap<>();
+payload.put("name", "feat");
+
+client.post("/users")
+        .postJson(payload)  // 自动序列化并设置 Content-Type
+        .onSuccess(response -> System.out.println(response.body()))
+        .submit();
+```
+
+<Aside type="tip">
+`postJson()` 会自动序列化对象并设置 Content-Type 为 application/json。
+</Aside>
+
+</TabItem>
+<TabItem label="表单">
+
+```java
 import java.util.HashMap;
 import java.util.Map;
 
-public class HttpPostJsonDemo {
-    public static void main(String[] args) {
-        HttpClient httpClient = new HttpClient("https://api.example.com");
+Map<String, String> formData = new HashMap<>();
+formData.put("name", "feat");
+formData.put("version", "1.0");
 
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("name", "feat");
-        payload.put("type", "demo");
-
-        httpClient.post("/users")
-                .postJson(payload)
-                .onSuccess(response -> {
-                    System.out.println("status: " + response.statusCode());
-                    System.out.println(response.body());
-                })
-                .onFailure(Throwable::printStackTrace)
-                .submit();
-    }
-}
+client.post("/users")
+        .postBody(body -> body.formUrlencoded(formData))
+        .submit();
 ```
 
-`postJson(...)` 会自动完成两件事：
+</TabItem>
+<TabItem label="原始 Body">
 
-- 把对象序列化成 JSON
-- 设置合适的 `Content-Type` 和 `Content-Length`
+```java
+client.post("/users")
+        .body(body -> body.write("raw data".getBytes()))
+        .header(header -> header.set(HeaderName.CONTENT_TYPE, "text/plain"))
+        .submit();
+```
 
-## 步骤 5：使用通用 REST 入口
+</TabItem>
+</Tabs>
 
-如果你不想分别调用 `get()`、`post()`，也可以使用更通用的 `rest(...)`：
+### 其他 HTTP 方法
 
-```java title="HttpRestDemo.java"
+使用 `rest()` 方法发送 PUT、DELETE 等请求：
+
+```java
+client.rest("PUT", "/users/1")
+        .postJson(userData)
+        .onSuccess(response -> System.out.println(response.body()))
+        .submit();
+```
+
+## 响应处理
+
+### 异步回调
+
+Feat 采用异步回调模型处理响应：
+
+```java
+client.get("/users")
+        .onResponseHeader(response -> {
+            // 收到响应头时触发
+            System.out.println("Status: " + response.statusCode());
+        })
+        .onSuccess(response -> {
+            // 收到完整响应体时触发
+            System.out.println("Body: " + response.body());
+        })
+        .onFailure(error -> {
+            // 请求失败时触发
+            error.printStackTrace();
+        })
+        .onClose(() -> {
+            // 连接关闭时触发
+            System.out.println("Connection closed");
+        })
+        .submit();
+```
+
+### 读取响应数据
+
+#### 响应体
+
+响应体以字符串形式返回：
+
+```java
+client.get("/users")
+        .onSuccess(response -> {
+            String body = response.body();  // 获取响应体字符串
+        })
+        .submit();
+```
+
+#### 响应头
+
+读取响应头信息：
+
+```java
+client.get("/users")
+        .onResponseHeader(response -> {
+            // 获取单个头
+            String contentType = response.getHeader(HeaderName.CONTENT_TYPE);
+            
+            // 获取所有头名称
+            Collection<String> headerNames = response.getHeaderNames();
+            
+            // 获取指定头的所有值（支持多值）
+            Collection<String> values = response.getHeaders("Set-Cookie");
+            
+            System.out.println("Status: " + response.statusCode());
+            System.out.println("Protocol: " + response.getProtocol());
+        })
+        .submit();
+```
+
+### 同步等待
+
+如需阻塞等待响应，使用 `CompletableFuture.get()`：
+
+```java
+HttpResponse response = client.get("/users")
+        .submit()
+        .get();  // 阻塞等待
+
+System.out.println(response.body());
+```
+
+<Aside type="tip">
+异步模式不会阻塞线程，适合高并发服务端；同步模式适合简单脚本和测试场景。
+</Aside>
+
+## 请求配置
+
+### 请求头
+
+```java
+import tech.smartboot.feat.core.common.HeaderName;
+
+client.get("/users")
+        .header(header -> header
+                .set(HeaderName.USER_AGENT, "Feat-Client/1.0")
+                .set(HeaderName.AUTHORIZATION, "Bearer token123")
+                .keepalive(true))
+        .submit();
+```
+
+#### set() vs add()
+
+- `set()` - 覆盖同名 header，适合设置唯一值（如 Content-Type）
+- `add()` - 追加 header，支持同名多值（如 Set-Cookie）
+
+```java
+client.post("/upload")
+        .header(header -> {
+            header.set(HeaderName.CONTENT_TYPE, "application/json");  // 覆盖
+            header.add("X-Custom-Header", "value1");  // 追加
+            header.add("X-Custom-Header", "value2");  // 同名追加
+        })
+        .submit();
+```
+
+### 连接选项
+
+```java
+HttpClient client = Feat.httpClient("https://api.example.com", options -> {
+    options.debug(true)                    // 开启调试日志
+           .connectTimeout(5000)           // 连接超时（毫秒）
+           .idleTimeout(30000)             // 空闲超时（毫秒）
+           .readBufferSize(8192)           // 读缓冲区大小
+           .setWriteBufferSize(8192);      // 写缓冲区大小
+});
+```
+
+### 连接池
+
+HttpClient 内部自动维护连接池，通过 `keepalive` 配置启用连接复用：
+
+```java
+client.get("/users")
+        .header(header -> header.keepalive(true))  // 启用连接复用
+        .submit();
+```
+
+## 高级特性
+
+### 文件上传（Multipart）
+
+上传文件使用 `multipart` 表单：
+
+```java
+import tech.smartboot.feat.core.client.Multipart;
+import java.io.File;
+
+File avatar = new File("/path/to/avatar.jpg");
+
+client.post("/upload")
+        .postBody(body -> body.multipart(Arrays.asList(
+                Multipart.newFormMultipart("name", "feat"),
+                Multipart.newFormMultipart("version", "1.0"),
+                Multipart.newFileMultipart("avatar", avatar)
+        )))
+        .onSuccess(response -> System.out.println(response.body()))
+        .submit();
+```
+
+### 代理配置
+
+配置 HTTP 代理服务器：
+
+```java
+// 基础代理
+HttpClient client = Feat.httpClient("https://api.example.com", options -> {
+    options.proxy("proxy.example.com", 8080);
+});
+
+// 带认证的代理
+HttpClient client = Feat.httpClient("https://api.example.com", options -> {
+    options.proxy("proxy.example.com", 8080, "username", "password");
+});
+```
+
+### SSE 客户端
+
+处理 Server-Sent Events 流式响应。详见 [SSE 客户端](/feat/client/sse_client/) 章节。
+
+```java
+client.get("/events")
+        .onSSE(sse -> {
+            sse.onOpen(response -> System.out.println("SSE connection opened"));
+            sse.onData(event -> System.out.println("Received: " + event.getData()));
+        })
+        .submit();
+```
+
+### 流式响应处理
+
+如需处理二进制数据或大文件，使用 `onResponseBody` 流式处理：
+
+```java
+client.get("/large-file.zip")
+        .onResponseBody((response, bytes, end) -> {
+            // 分块接收响应体数据
+            // bytes: 当前数据块
+            // end: 是否为最后一块
+        })
+        .submit();
+```
+
+### 大文件下载
+
+使用流式 API 处理大文件，避免内存溢出：
+
+```java
+FileOutputStream fos = new FileOutputStream("download.zip");
+
+client.get("/large-file.zip")
+        .onResponseBody((response, bytes, end) -> {
+            fos.write(bytes);
+            if (end) {
+                fos.close();
+            }
+        })
+        .submit();
+```
+
+### 动态路径构造
+
+使用 `HttpClient(String host, int port)` 构造方式，适合需要动态指定路径的场景：
+
+```java
+HttpClient client = new HttpClient("api.example.com", 443);
+client.get("/users").submit();  // 必须指定 path
+```
+
+<Aside type="caution">
+使用 `HttpClient(host, port)` 构造后，必须调用带参的 `get(String uri)` / `post(String uri)` 方法，调用无参方法将抛出 `UnsupportedOperationException`。
+</Aside>
+
+## 完整示例
+
+```java title="HttpClientDemo.java"
+import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.core.client.HttpClient;
-import tech.smartboot.feat.core.common.HttpMethod;
+import tech.smartboot.feat.core.client.HttpResponse;
+import tech.smartboot.feat.core.common.HeaderName;
 
-public class HttpRestDemo {
-    public static void main(String[] args) {
-        HttpClient client = new HttpClient("https://smartboot.tech");
-        client.options().debug(true);
-
-        client.rest(HttpMethod.GET, "/feat/")
+public class HttpClientDemo {
+    public static void main(String[] args) throws Exception {
+        // 1. 创建客户端
+        HttpClient client = Feat.httpClient("https://api.github.com", options -> {
+            options.debug(true).connectTimeout(5000);
+        });
+        
+        // 2. 发送请求
+        client.get("/users/smartboot")
+                .header(header -> header
+                        .set(HeaderName.USER_AGENT, "Feat-Client")
+                        .set(HeaderName.ACCEPT, "application/json"))
+                .onResponseHeader(response -> {
+                    System.out.println("Status: " + response.statusCode());
+                })
                 .onSuccess(response -> {
-                    System.out.println("Status Code: " + response.statusCode());
                     System.out.println("Body: " + response.body());
                 })
-                .submit();
+                .onFailure(Throwable::printStackTrace)
+                .submit()
+                .get();
     }
 }
 ```
-
-当你在封装通用 API 客户端、动态决定方法类型时，`rest(...)` 会更合适。
-
-## 常见问题
-
-### `new HttpClient("localhost:8080")` 直接报错
-
-`HttpClient(String url)` 必须传完整 URL，包括 schema。正确写法类似：
-
-```java
-new HttpClient("http://localhost:8080");
-```
-
-### `get()` 调用抛出 `UnsupportedOperationException`
-
-无参 `get()` 只支持在“完整 URL 构造函数”下使用，例如：
-
-```java
-new HttpClient("http://localhost:8080/hello").get();
-```
-
-如果你是 `new HttpClient("localhost", 8080)` 这种构造方式，就要使用 `get("/hello")`。
-
-### 为什么 GET 不能写请求体
-
-`HttpGet.body()` 明确不支持请求体，这是客户端 API 的设计约束。需要请求体时，改用 `post(...)` 或 `rest(...)`。
-
-### 我想看更细的网络调试信息
-
-可以打开调试：
-
-```java
-httpClient.options().debug(true);
-```
-
-## 下一步
-
-- [SSE 客户端](/feat/client/sse_client/)：如果你要处理流式事件响应
-- [WebSocket 客户端](/feat/client/ws_client/)：如果你要建立双向实时连接
-- [Feat Core 快速入门](/feat/server/getstart/)：如果你还需要先搭一个本地服务做联调

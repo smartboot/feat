@@ -1,219 +1,345 @@
 ---
 title: WebSocket 客户端
-description: 用 Feat WebSocketClient 建立长连接、发送消息、接收回包，并理解连接生命周期
+description: 用 Feat WebSocketClient 建立双向实时通信，掌握连接管理、消息收发和生命周期处理
 sidebar:
     order: 3
 ---
 
 import { Aside } from '@astrojs/starlight/components';
 
-如果说 `HttpClient` 适合请求-响应式通信，`SSE` 适合服务端单向推送，那么 WebSocket 适合真正的长连接实时交互。  
-这篇文档不打算做完整协议百科，而是带你把第一条连接建起来。
+WebSocket 提供全双工通信通道，适合需要客户端和服务端持续双向交互的场景，如即时通讯、协作编辑、实时游戏等。
 
-## 什么时候应该用 WebSocket
+## WebSocket vs SSE vs HTTP
 
-先判断一下你的场景是不是它：
+| 特性 | HTTP | SSE | WebSocket |
+|-----|------|-----|-----------|
+| 通信模式 | 请求-响应 | 服务端推送 | 双向实时 |
+| 连接方式 | 短连接 | 长连接 | 长连接 |
+| 客户端发送 | ✅ | ❌ | ✅ |
+| 服务端发送 | ✅ | ✅ | ✅ |
+| 协议开销 | 高（每次请求头） | 中 | 低（首次握手后） |
+| 适用场景 | REST API | 通知推送 | 聊天、协作 |
 
-- 客户端和服务端需要双向实时通信
-- 消息会持续来回交互，而不是一次请求一次响应
-- 你要做聊天室、协作编辑、游戏、实时控制台这类长连接场景
+<Aside type="tip">
+选择建议：简单数据获取 → HTTP；服务端单向推送 → SSE；双向实时交互 → WebSocket
+</Aside>
 
-如果只是服务端持续推送，而客户端不需要主动发消息，先看 [SSE 客户端](/feat/client/sse_client/)。
+## 创建连接
 
-## 先准备一个最小服务端
+### 方式一：使用 Feat 工厂方法
 
-如果你手头还没有 WebSocket 服务，可以先用这个最小回声服务器本地自测：
+```java
+import tech.smartboot.feat.Feat;
+import tech.smartboot.feat.core.client.WebSocketListener;
 
-```java title="SimpleWebSocketServer.java"
+Feat.websocket("ws://localhost:8080/chat", new WebSocketListener() {
+    @Override
+    public void onOpen(WebSocketClient client, WebSocketResponse response) {
+        System.out.println("连接已建立");
+    }
+    
+    @Override
+    public void onMessage(WebSocketClient client, String message) {
+        System.out.println("收到消息: " + message);
+    }
+});
+```
+
+### 方式二：直接实例化（推荐）
+
+```java
+import tech.smartboot.feat.core.client.WebSocketClient;
+import tech.smartboot.feat.core.client.WebSocketListener;
+
+// 创建并配置客户端
+WebSocketClient client = new WebSocketClient("ws://localhost:8080/chat");
+client.options()
+        .debug(true)
+        .connectTimeout(5000)
+        .readBufferSize(8192);
+
+// 建立连接
+client.connect(new WebSocketListener() {
+    @Override
+    public void onOpen(WebSocketClient client, WebSocketResponse response) {
+        System.out.println("连接成功!");
+    }
+    
+    @Override
+    public void onMessage(WebSocketClient client, String message) {
+        System.out.println("收到: " + message);
+    }
+    
+    @Override
+    public void onClose(WebSocketClient client, WebSocketResponse response, CloseReason reason) {
+        System.out.println("连接关闭: " + reason);
+    }
+    
+    @Override
+    public void onError(WebSocketClient client, Throwable error) {
+        error.printStackTrace();
+    }
+});
+```
+
+<Aside type="caution">
+WebSocket URL 必须使用 `ws://`（非加密）或 `wss://`（加密）协议头。
+</Aside>
+
+## 消息收发
+
+### 发送消息
+
+```java
+@Override
+public void onOpen(WebSocketClient client, WebSocketResponse response) {
+    try {
+        // 发送文本消息
+        client.sendMessage("Hello, WebSocket!");
+        client.sendMessage("{\"type\":\"chat\",\"content\":\"hello\"}");
+        
+        // 发送二进制消息
+        byte[] data = "Binary data".getBytes(StandardCharsets.UTF_8);
+        client.sendBinary(data);
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+}
+```
+
+### 接收消息
+
+```java
+@Override
+public void onMessage(WebSocketClient client, String message) {
+    // 处理文本消息
+    System.out.println("收到文本: " + message);
+}
+
+@Override
+public void onMessage(WebSocketClient client, byte[] message) {
+    // 处理二进制消息
+    System.out.println("收到二进制: " + message.length + " bytes");
+}
+```
+
+## 生命周期管理
+
+### 完整生命周期示例
+
+```java
+import tech.smartboot.feat.core.client.WebSocketClient;
+import tech.smartboot.feat.core.client.WebSocketListener;
+import tech.smartboot.feat.core.common.codec.websocket.CloseReason;
+
+public class ChatClient {
+    private WebSocketClient client;
+    
+    public void connect(String url) throws IOException {
+        client = new WebSocketClient(url);
+        client.options().debug(true).connectTimeout(5000);
+        
+        client.connect(new WebSocketListener() {
+            @Override
+            public void onOpen(WebSocketClient client, WebSocketResponse response) {
+                System.out.println("[连接成功] " + response.getStatusCode());
+                try {
+                    client.sendMessage("{\"type\":\"join\",\"room\":\"lobby\"}");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            
+            @Override
+            public void onMessage(WebSocketClient client, String message) {
+                System.out.println("[收到消息] " + message);
+            }
+            
+            @Override
+            public void onClose(WebSocketClient client, WebSocketResponse response, CloseReason reason) {
+                System.out.println("[连接关闭] Code: " + reason.getCode());
+            }
+            
+            @Override
+            public void onError(WebSocketClient client, Throwable error) {
+                System.err.println("[错误] " + error.getMessage());
+            }
+        });
+    }
+    
+    public void send(String message) throws IOException {
+        if (client != null && client.isConnected()) {
+            client.sendMessage(message);
+        }
+    }
+    
+    public void close() throws IOException {
+        if (client != null) {
+            client.close(1000, "Normal closure");
+        }
+    }
+}
+```
+
+## 连接配置
+
+### 常用配置项
+
+```java
+WebSocketClient client = new WebSocketClient("ws://localhost:8080");
+
+client.options()
+        .debug(true)                    // 开启调试日志
+        .connectTimeout(5000)          // 连接超时（毫秒）
+        .readTimeout(30000)              // 读取超时（毫秒）
+        .readBufferSize(8192)            // 读缓冲区大小
+        .writeBufferSize(8192)           // 写缓冲区大小
+        .maxFrameSize(65536);            // 最大帧大小
+```
+
+### 自定义请求头
+
+```java
+WebSocketClient client = new WebSocketClient("ws://localhost:8080");
+
+client.header(header -> header
+        .set(HeaderName.USER_AGENT, "Feat-WebSocket-Client")
+        .set(HeaderName.AUTHORIZATION, "Bearer token123"));
+
+client.connect(listener);
+```
+
+## 完整示例
+
+### 回声服务端
+
+```java title="EchoWebSocketServer.java"
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.core.server.WebSocketRequest;
 import tech.smartboot.feat.core.server.WebSocketResponse;
 import tech.smartboot.feat.core.server.upgrade.websocket.WebSocketUpgrade;
 
-public class SimpleWebSocketServer {
+public class EchoWebSocketServer {
     public static void main(String[] args) {
-        Feat.httpServer().httpHandler(req -> req.upgrade(new WebSocketUpgrade(2000) {
-            @Override
-            public void handleTextMessage(WebSocketRequest request, WebSocketResponse response, String data) {
-                response.sendTextMessage(data);
-            }
-        })).listen(8080);
+        Feat.httpServer().httpHandler(req -> {
+            req.upgrade(new WebSocketUpgrade(65536) {
+                @Override
+                public void handleTextMessage(WebSocketRequest request, WebSocketResponse response, String data) {
+                    System.out.println("收到: " + data);
+                    response.sendTextMessage("Echo: " + data);
+                }
+            });
+        }).listen(8080);
     }
 }
 ```
 
-它的行为很简单：你发什么，它回什么。
+### 交互式客户端
 
-## 建立第一条连接
-
-客户端最短写法如下：
-
-```java title="WebSocketDemo.java"
+```java title="InteractiveWebSocketClient.java"
 import tech.smartboot.feat.core.client.WebSocketClient;
 import tech.smartboot.feat.core.client.WebSocketListener;
-import tech.smartboot.feat.core.client.WebSocketResponse;
 import tech.smartboot.feat.core.common.codec.websocket.CloseReason;
 
-import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 
-public class WebSocketDemo {
-    public static void main(String[] args) throws IOException {
-        WebSocketClient client = new WebSocketClient("ws://localhost:8080");
-
+public class InteractiveWebSocketClient {
+    private static WebSocketClient client;
+    
+    public static void main(String[] args) throws Exception {
+        client = new WebSocketClient("ws://localhost:8080");
+        client.options().debug(true);
+        
         client.connect(new WebSocketListener() {
             @Override
             public void onOpen(WebSocketClient client, WebSocketResponse response) {
-                try {
-                    client.sendMessage("hello world");
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+                System.out.println("已连接到服务器，输入消息（输入 'exit' 退出）：");
             }
-
+            
             @Override
             public void onMessage(WebSocketClient client, String message) {
-                System.out.println("received: " + message);
+                System.out.println("服务器: " + message);
             }
-
+            
             @Override
             public void onClose(WebSocketClient client, WebSocketResponse response, CloseReason reason) {
-                System.out.println("closed: " + reason);
+                System.out.println("连接已关闭: " + reason);
             }
         });
+        
+        // 读取用户输入
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        String line;
+        while ((line = reader.readLine()) != null) {
+            if ("exit".equalsIgnoreCase(line)) {
+                client.close(1000, "User requested");
+                break;
+            }
+            client.sendMessage(line);
+        }
     }
 }
 ```
 
-这个例子其实已经覆盖了 WebSocket 客户端的完整最小生命周期：
+## 关闭码说明
 
-1. 创建客户端
-2. 建立连接
-3. `onOpen(...)` 后发送消息
-4. 在 `onMessage(...)` 里接收服务端消息
-5. 最后由连接关闭或手动关闭收尾
-
-## 为什么消息要放在 `onOpen(...)` 之后再发
-
-因为只有握手成功以后，连接才真的可用。  
-在 Feat 的客户端模型里，`onOpen(...)` 就是你可以安全开始发第一条消息的时机。
-
-## 运行之后你应该看到什么
-
-如果服务端是上面的回声服务器，那么客户端会打印：
-
-```text
-received: hello world
-```
-
-只要看到这一行，就说明下面几件事已经全部成立：
-
-- WebSocket 握手成功
-- 客户端成功发出了文本消息
-- 服务端成功处理并返回
-- 客户端监听器成功收到了回包
-
-## 发送文本和二进制消息
-
-### 文本消息
-
-文本消息最常见：
-
-```java
-client.sendMessage("Hello, Feat!");
-client.sendMessage("{\"type\":\"chat\",\"content\":\"hello\"}");
-```
-
-### 二进制消息
-
-如果你要发二进制数据，可以用：
-
-```java
-byte[] binaryData = "Binary Data".getBytes();
-client.sendBinary(binaryData);
-```
-
-这类用法更适合自定义协议、音视频片段或压缩后的消息体。
-
-## 调试和连接配置
-
-如果你想看连接过程，或者需要改一些连接参数：
-
-```java
-WebSocketClient client = new WebSocketClient("ws://localhost:8080");
-client.options()
-        .debug(true)
-        .connectTimeout(5000)
-        .readBufferSize(8192)
-        .writeBufferSize(8192);
-```
-
-这些配置里，最常用的通常是：
-
-- `debug(true)`：本地排查连接和收发过程
-- `connectTimeout(...)`：防止长时间握手卡住
-
-## 用 `Feat.websocket(...)` 的便捷方式
-
-如果你不想分两步写 `new WebSocketClient(...)` 和 `connect(...)`，Feat 还提供了便捷入口：
-
-```java
-import tech.smartboot.feat.Feat;
-
-Feat.websocket("ws://localhost:8080", new WebSocketListener() {
-    @Override
-    public void onOpen(WebSocketClient client, WebSocketResponse response) {
-        try {
-            client.sendMessage("hello");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-});
-```
-
-它更适合写非常短的 demo。  
-如果你还要进一步调 `options()`，那还是显式创建 `WebSocketClient` 更清楚。
-
-## 关闭连接
-
-如果你的客户端是长期运行的程序，记得在合适的时候手动关闭连接：
-
-```java
-client.close();
-```
-
-如果需要带关闭码和原因：
-
-```java
-client.close(1000, "normal shutdown");
-```
+| 代码 | 名称 | 说明 |
+|-----|------|------|
+| 1000 | Normal Closure | 正常关闭 |
+| 1001 | Going Away | 服务端或客户端离开 |
+| 1002 | Protocol Error | 协议错误 |
+| 1006 | Abnormal Closure | 异常关闭（连接意外断开） |
+| 1009 | Message Too Big | 消息太大 |
+| 1011 | Internal Error | 服务端内部错误 |
 
 ## 常见问题
 
-### 连接总是建不起来
+**连接失败**
 
-优先检查：
+检查清单：
+1. URL 是否为 `ws://` 或 `wss://`
+2. 服务端是否支持 WebSocket 升级
+3. 端口和路径是否正确
 
-1. URL 是否真的是 `ws://` 或 `wss://`
-2. 服务端是否真的支持 WebSocket 升级
-3. 端口和路径是否对应正确
+**`sendMessage` 抛出 IOException**
 
-### `sendMessage(...)` 抛 `IOException`
+连接未就绪或已断开。只在 `onOpen` 回调后发送消息：
+```java
+if (client.isConnected()) {
+    client.sendMessage("data");
+}
+```
 
-通常意味着连接还没准备好，或者已经断开。  
-最稳妥的做法是：只在 `onOpen(...)` 之后发送第一条消息。
+**程序不退出**
 
-### 我明明收到了消息，但程序不退出
+WebSocket 是长连接，需要手动关闭：
+```java
+// 正常关闭
+client.close(1000, "Normal closure");
 
-这是正常的。  
-WebSocket 是长连接，不会像普通 HTTP 请求那样自动结束。你要自己决定何时关闭。
+// 强制关闭
+client.close();
+```
 
-### 我只是想单向接收事件流
+**如何实现重连**
 
-那通常不是 WebSocket 的最佳入口，先看 [SSE 客户端](/feat/client/sse_client/)。
+```java
+public void onClose(WebSocketClient client, WebSocketResponse response, CloseReason reason) {
+    if (reconnectAttempts < MAX_RECONNECT) {
+        reconnectAttempts++;
+        System.out.println("连接断开，尝试重连 (" + reconnectAttempts + "/" + MAX_RECONNECT + ")");
+        try {
+            Thread.sleep(3000);
+            doConnect();  // 重新建立连接
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
 
 ## 下一步
 
-- [HttpClient 实战教程](/feat/client/http_client/)：如果你的通信其实还是普通 HTTP
-- [SSE 客户端](/feat/client/sse_client/)：如果你的场景只是服务端推送
-- [Feat Core 导览](/feat/server/)：如果你还要自己写对应的服务端能力
+- **[HTTP 客户端](/feat/client/http_client/)**: 普通 HTTP 请求
+- **[SSE 客户端](/feat/client/sse_client/)**: 服务端单向推送场景
