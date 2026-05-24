@@ -403,25 +403,3 @@ public class HttpClientDemo {
 }
 ```
 
-## 适用场景
-
-### 什么时候用 Feat HttpClient
-
-Feat HttpClient 适合以下场景：
-
-- **高并发服务端** - 异步非阻塞模型，不会阻塞线程
-- **微服务间通信** - 轻量级，启动快，内存占用低
-- **需要精细控制** - 支持流式处理、连接池、代理等高级配置
-- **嵌入式场景** - 不依赖 Spring 等重量级框架
-
-### 什么时候不该用
-
-以下情况你可能需要考虑其他方案：
-
-- **需要声明式 HTTP 客户端**（如 Spring 的 `@FeignClient`）→ 考虑 OpenFeign
-- **需要完整的 Reactive Streams 支持**（Mono/Flux）→ 考虑 WebFlux 的 WebClient
-- **团队已深度使用 Spring** 且需要无缝集成 → Spring 生态的 HttpClient 集成更好
-
-<Aside type="tip">
-Feat HttpClient 的设计哲学是**简单高效**。相比 WebFlux 的 `Mono`/`Flux`，Feat 使用标准的 `CompletableFuture`，学习成本更低，更容易上手。如果你需要异步 HTTP 客户端但不想引入复杂的响应式编程模型，Feat 是一个很好的选择。
-</Aside>
