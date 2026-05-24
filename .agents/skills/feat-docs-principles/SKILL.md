@@ -287,31 +287,6 @@ public void greet(String name, int times) {
 
 ---
 
-
-
-### ❌ 不要混用术语
-
-**错误示例：**
-
-```markdown
-FeatAI 提供了 chatModel 方法，你可以通过 Feat AI 的 ChatModel 类来创建...
-```
-
-**原因：**
-
-- 同一概念多种写法
-- 读者困惑
-- 不专业
-
-**正确做法：**
-
-统一使用：
-- `FeatAI`（代码中的类名）
-- Feat AI（模块名称）
-- `ChatModel`（代码中的类名）
-
----
-
 ### ❌ 不要创建过宽的表格
 
 **错误示例：**
@@ -338,30 +313,6 @@ FeatAI 提供了 chatModel 方法，你可以通过 Feat AI 的 ChatModel 类来
 
 ---
 
-### ❌ 不要遗漏前置条件
-
-**错误示例：**
-
-```markdown
-## 快速开始
-
-首先，创建一个 ChatModel...
-```
-
-**原因：**
-
-- 读者不知道是否需要准备环境
-- 运行失败时困惑
-- 体验差
-
-**正确做法：**
-
-```markdown
-## 前置条件
-
-- JDK 8+
-- Maven 3.0+
-- 本地 Ollama 已安装并运行
 
 ## 快速开始
 ```
