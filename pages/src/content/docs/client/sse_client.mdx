@@ -1,31 +1,21 @@
 ---
 title: SSE 客户端
-description: 用 Feat SSE 客户端接收服务端推送的流式事件，掌握事件监听、连接管理和错误处理
+description: 掌握 Feat SSE 客户端的完整功能：事件监听、连接管理和错误处理，轻松接收服务端推送的流式事件
 sidebar:
     order: 2
 ---
 
-import { Aside } from '@astrojs/starlight/components';
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 
-Server-Sent Events (SSE) 是 HTTP 协议之上的单向推送技术，适合服务端持续向客户端推送数据的场景，如实时通知、日志流、监控指标等。
+这篇指南的目标：让你在 5 分钟内掌握 Feat SSE 客户端的核心用法，从简单的连接到复杂的事件处理和连接管理。
 
-## SSE vs WebSocket
+Feat SSE 客户端基于 HttpClient 构建，采用异步回调模型，适合实时通知、日志流、监控指标等单向推送场景。
 
-| 特性 | SSE | WebSocket |
-|-----|-----|-----------|
-| 通信方向 | 服务端 → 客户端 | 双向 |
-| 协议基础 | HTTP | WebSocket |
-| 自动重连 | 浏览器原生支持 | 需手动实现 |
-| 适用场景 | 单向推送 | 双向交互 |
-| 复杂度 | 低 | 高 |
+## 创建与配置
 
-<Aside type="tip">
-如果只需要服务端推送数据，SSE 比 WebSocket 更简单；如果需要双向通信，选择 WebSocket。
-</Aside>
+### 基础连接
 
-## 基本使用
-
-### 连接 SSE 端点
+使用 Feat 工厂方法创建 SSE 连接：
 
 ```java
 import tech.smartboot.feat.Feat;
@@ -45,7 +35,28 @@ Feat.httpClient("http://localhost:8080")
         .submit();
 ```
 
-### 事件对象结构
+<Aside type="caution">
+SSE 端点 URL 必须包含协议头（`http://` 或 `https://`），否则将抛出异常。
+</Aside>
+
+### 带配置的连接
+
+```java
+Feat.httpClient("http://localhost:8080", options -> {
+    options.debug(true)
+           .connectTimeout(5000)
+           .idleTimeout(30000);
+})
+        .get("/events")
+        .onSSE(sse -> sse.onData(event -> System.out.println(event.getData())))
+        .submit();
+```
+
+## 事件处理
+
+### 基本事件监听
+
+SSE 事件对象包含三个核心字段：
 
 ```java
 public interface SseEvent {
@@ -55,9 +66,9 @@ public interface SseEvent {
 }
 ```
 
-## 处理命名事件
+### 处理命名事件
 
-SSE 支持通过 `event:` 字段定义事件类型，客户端可以为不同类型注册不同处理器。
+SSE 支持通过 `event:` 字段定义事件类型，客户端可以为不同类型注册不同处理器：
 
 ```java
 Feat.httpClient("http://localhost:8080")
@@ -80,6 +91,49 @@ Feat.httpClient("http://localhost:8080")
 
 <Aside type="note">
 如果收到未注册的事件类型，会落入默认的 `onData` 处理器。
+</Aside>
+
+### 回调触发顺序
+
+以下泳道图展示了 SSE 连接过程中各回调的触发时机：
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant App as 应用程序
+    participant Client as SSE Client
+    participant Server as SSE 服务器
+
+    App->>Client: submit() 发起连接
+    Client->>Server: HTTP Request (Accept: text/event-stream)
+    
+    alt 连接成功
+        Server-->>Client: HTTP Response Headers
+        Client-->>App: onOpen()
+        
+        loop 持续推送
+            Server-->>Client: SSE Event (data: ...)
+            Client-->>App: onData() / onEvent()
+        end
+        
+        Server-->>Client: 连接关闭
+        Client-->>App: onClose()
+    else 连接失败
+        Client-->>App: onFailure()
+        Client-->>App: onClose()
+    end
+```
+
+**回调触发顺序说明：**
+
+1. **发起连接** - 调用 `submit()` 后，客户端发送 HTTP 请求
+2. **连接成功** - 收到响应头时触发 `onOpen()`，此时可以获取状态码和响应头
+3. **接收事件** - 服务端推送事件时触发 `onData()` 或对应的 `onEvent()`
+4. **连接失败** - 网络异常或超时等情况下触发 `onFailure()`
+5. **连接关闭** - 无论成功或失败，连接关闭时都会触发 `onClose()`
+
+<Aside type="tip">
+`onClose()` 是**最终回调**，无论连接成功还是失败都会执行，适合用于资源清理操作。
 </Aside>
 
 ## 请求配置
@@ -107,6 +161,7 @@ Feat.httpClient("http://localhost:8080")
 | `Accept: text/event-stream` | 必需，声明接受 SSE 格式 |
 | `Last-Event-ID` | 可选，断点续传时指定上次接收的事件 ID |
 | `Authorization` | 可选，认证令牌 |
+| `Cache-Control: no-cache` | 可选，禁用缓存 |
 
 ## 连接管理
 
@@ -134,6 +189,7 @@ rest.submit();
 // Thread.sleep(30000);
 // rest.close();
 ```
+
 
 ## 完整示例
 
@@ -221,38 +277,3 @@ public class SseClientDemo {
 }
 ```
 
-## 常见问题
-
-**`onData` 不触发**
-
-检查清单：
-1. 响应头 `Content-Type` 是否为 `text/event-stream`
-2. 状态码是否为 200
-3. 服务端是否真正发送了数据（SSE 格式要求 `data:` 开头）
-
-**命名事件未触发**
-
-服务端发送 `event: notification`，客户端必须注册对应处理器：
-```java
-.onEvent("notification", event -> { ... })  // ✅ 正确
-.onEvent("notify", event -> { ... })        // ❌ 错误，名称不匹配
-```
-
-**程序不退出**
-
-SSE 是长连接，需要手动关闭：
-```java
-HttpRest rest = ...;
-rest.submit();
-// ... 处理事件 ...
-rest.close();  // 显式关闭
-```
-
-**与 `onResponseHeader` 冲突**
-
-`onSSE()` 和 `onResponseHeader()` 都会接管响应处理，不能同时使用。只使用 `onSSE()`，在 `onOpen` 回调中获取响应头信息。
-
-## 下一步
-
-- **[WebSocket 客户端](/feat/client/ws_client/)**: 需要双向通信时
-- **[HTTP 客户端](/feat/client/http_client/)**: 普通请求-响应模式
