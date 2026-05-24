@@ -9,8 +9,6 @@ import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 
 Feat [`HttpClient`](feat-core/src/main/java/tech/smartboot/feat/core/client/HttpClient.java) 提供完整的 HTTP/1.1 客户端支持，采用异步回调模型，适合高并发场景。
 
-## 快速开始
-
 ### 创建客户端
 
 使用 Feat 工厂方法创建客户端实例：
@@ -44,17 +42,7 @@ client.get("/users")
         .addQueryParam("page", "1")
         .onSuccess(response -> System.out.println(response.body()))
         .submit();
-
-// POST JSON 请求
-client.post("/users")
-        .postJson(Map.of("name", "feat"))
-        .onSuccess(response -> System.out.println(response.body()))
-        .submit();
 ```
-
-<Aside type="tip">
-`postJson()` 会自动序列化对象并设置 Content-Type 为 application/json。
-</Aside>
 
 ## 请求方法
 
@@ -157,6 +145,47 @@ client.get("/users")
         })
         .submit();
 ```
+
+以下泳道图展示了请求过程中各回调的触发时机：
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant App as 应用程序
+    participant Client as HttpClient
+    participant Server as 服务器
+
+    App->>Client: submit() 发送请求
+    Client->>Server: HTTP Request
+    
+    alt 请求成功
+        Server-->>Client: HTTP Response Headers
+        Client-->>App: onResponseHeader()
+        
+        Server-->>Client: Response Body (分块接收)
+        Client-->>App: onResponseBody() (可选)
+        
+        Server-->>Client: 响应完成
+        Client-->>App: onSuccess()
+    else 请求失败
+        Client-->>App: onFailure()
+    end
+    
+    Client-->>App: onClose()
+```
+
+**回调触发顺序说明：**
+
+1. **请求发送** - 调用 `submit()` 后，请求开始发送
+2. **收到响应头** - 服务器返回响应头时触发 `onResponseHeader()`，此时可以获取状态码和响应头
+3. **接收响应体** - 如果注册了 `onResponseBody()`，会分块接收响应体数据
+4. **请求成功** - 响应体完整接收后触发 `onSuccess()`
+5. **请求失败** - 网络异常或超时等情况下触发 `onFailure()`
+6. **连接关闭** - 无论成功或失败，连接关闭时都会触发 `onClose()`
+
+<Aside type="tip">
+`onClose()` 是**最终回调**，无论请求成功还是失败都会执行，适合用于资源清理操作。
+</Aside>
 
 ### 读取响应数据
 
