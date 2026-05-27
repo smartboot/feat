@@ -272,6 +272,5 @@
         <module>feat-cloud</module>
         <module>feat-ai</module>
         <module>feat-cloud-aot</module>
-        <module>feat-cloud-aot-mybatis</module>
     </modules>
 </project>
