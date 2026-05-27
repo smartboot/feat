@@ -10,8 +10,6 @@
 
 package tech.smartboot.feat.ai.alg.cnn;
 
-import tech.smartboot.feat.ai.alg.BackPropagation;
-
 import java.util.ArrayList;
 import java.util.List;
 

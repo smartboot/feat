@@ -12,7 +12,6 @@ package tech.smartboot.feat.ai.alg;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
 
 /**
  * 全连接神经网络 (Fully Connected Neural Network / Multi-Layer Perceptron)
