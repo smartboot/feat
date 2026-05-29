@@ -54,7 +54,7 @@ public class Http2Demo {
             public void accept(SSLEngine sslEngine) {
                 SSLParameters sslParameters = new SSLParameters();
                 sslEngine.setUseClientMode(false);
-                sslParameters.setApplicationProtocols(new String[]{HeaderValue.Upgrade.H2});
+//                sslParameters.setApplicationProtocols(new String[]{HeaderValue.Upgrade.H2});
                 sslEngine.setSSLParameters(sslParameters);
                 HttpRequest.SSL_ENGINE_THREAD_LOCAL.set(sslEngine);
             }
