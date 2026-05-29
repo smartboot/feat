@@ -17,6 +17,65 @@ import { Aside, Steps } from '@astrojs/starlight/components';
 
 ---
 
+## v2.1.0 (2026-05-29)
+
+### 新特性概览
+
+#### Feat Core
+
+- **依赖**：升级 smart-socket 至 2.0.0
+- **Server**：`ServerOptions#setMaxRequestSize` 方法调整为链式风格，支持流式配置
+- **协议**：修复文件上传场景中文文件名解析乱码问题【ISSUE:IJPD9F】
+
+#### Feat AI
+
+- **模型**：新增 Anthropic 接口规范适配，支持 Claude 系列模型
+- **MCP**：废弃 MCP Server 对于 SSE 的适配（规范已过时），仅保留 Streamable HTTP 传输方式
+- **Chat**：移除 chat 接口的模型定制化逻辑，优先遵循 OpenAI 接口规范，简化多模型适配
+- **Chat**：新增图像消息支持，支持多模态对话
+- **Chat**：重构工具调用实体类，优化工具调用流程
+
+#### Feat Cloud
+
+- **模块**：移除 feat-cloud-aot-vm 模块
+
+### 升级步骤
+
+<Steps>
+1. **更新版本号**
+
+   ```xml
+   <feat.version>2.1.0</feat.version>
+   ```
+
+2. **检查 ServerOptions 链式调用**
+
+   `setMaxRequestSize` 现在支持链式调用：
+
+   ```java
+   // v2.1.0 推荐写法
+   server.options()
+       .setMaxRequestSize(1024 * 1024)
+       .setPort(8080);
+   ```
+
+3. **Feat AI 接口调整**
+
+   - 若使用 Anthropic 模型，通过 `apiSpec(ApiSpec.ANTHROPIC)` 切换 API 规范
+   - SSE 传输方式已移除，请使用 Streamable HTTP 方式
+</Steps>
+
+### 兼容性说明
+
+| 变更项 | 影响 | 处理方式 |
+|--------|------|----------|
+| `setMaxRequestSize` 返回类型 | 支持链式调用 | 可按需链式配置 |
+| feat-cloud-aot-vm 模块移除 | 模块不存在 | 移除相关依赖 |
+| MCP SSE 传输方式移除 | 功能废弃 | 迁移至 Streamable HTTP |
+| Feat AI Chat 接口重构 | 定制化逻辑移除 | 遵循标准 OpenAI 规范 |
+
+---
+
 ## v2.0.0 (2026-04-07)
 
 ### 重要变更：开源协议升级
