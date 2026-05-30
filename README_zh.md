@@ -2,9 +2,7 @@
 
 
 
-# Feat - 高性能Java Web服务框架
-[![Apache License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/smartboot/feat)
+# <img src="logo.svg" width="80" height="80"/> Feat - 高性能Java Web服务框架 [![Apache License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0) [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/smartboot/feat)
 
 有点像 Vert.x，又有点像 SpringBoot 的 Java Web 服务开发框架
 
