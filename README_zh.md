@@ -66,6 +66,54 @@ Feat 框架各模块的主要三方包依赖如下：
 
 所有依赖均采用最新稳定版本，确保安全性和性能的最优表现。
 
+---
+
+## 快速开始
+
+### Hello World (Feat Cloud)
+
+使用 Feat Cloud 创建一个简单的注解式 Web 应用：
+
+```java
+import tech.smartboot.feat.cloud.FeatCloud;
+import tech.smartboot.feat.cloud.annotation.Controller;
+import tech.smartboot.feat.cloud.annotation.RequestMapping;
+
+@Controller
+public class HelloWorld {
+
+    @RequestMapping("/hello")
+    public String hello() {
+        return "Hello, World!";
+    }
+
+    public static void main(String[] args) {
+        FeatCloud.cloudServer().listen();
+    }
+}
+```
+
+**Maven 依赖：**
+
+```xml
+<!-- 运行期依赖 -->
+<dependency>
+    <groupId>tech.smartboot.feat</groupId>
+    <artifactId>feat-cloud</artifactId>
+    <version>2.1.0</version>
+</dependency>
+
+<!-- 编译期转码 -->
+<dependency>
+    <groupId>tech.smartboot.feat</groupId>
+    <artifactId>feat-cloud-starter</artifactId>
+    <version>2.1.0</version>
+    <scope>provided</scope>
+</dependency>
+```
+
+---
+
 ## 性能对比
 
 与其他主流Java框架相比，Feat在以下方面表现卓越：

@@ -64,6 +64,52 @@ All dependencies use the latest stable versions to ensure optimal security and p
 
 ---
 
+## Quick Start
+
+### Hello World (Feat Cloud)
+
+Create a simple annotation-based Web application with Feat Cloud:
+
+```java
+import tech.smartboot.feat.cloud.FeatCloud;
+import tech.smartboot.feat.cloud.annotation.Controller;
+import tech.smartboot.feat.cloud.annotation.RequestMapping;
+
+@Controller
+public class HelloWorld {
+
+    @RequestMapping("/hello")
+    public String hello() {
+        return "Hello, World!";
+    }
+
+    public static void main(String[] args) {
+        FeatCloud.cloudServer().listen();
+    }
+}
+```
+
+**Maven Dependencies:**
+
+```xml
+<!-- Runtime -->
+<dependency>
+    <groupId>tech.smartboot.feat</groupId>
+    <artifactId>feat-cloud</artifactId>
+    <version>2.1.0</version>
+</dependency>
+
+<!-- Compile-time code generation -->
+<dependency>
+    <groupId>tech.smartboot.feat</groupId>
+    <artifactId>feat-cloud-starter</artifactId>
+    <version>2.1.0</version>
+    <scope>provided</scope>
+</dependency>
+```
+
+---
+
 ## Performance Comparison
 
 Compared to other mainstream Java frameworks, Feat excels in the following areas:
