@@ -10,17 +10,16 @@
 
 package tech.smartboot.feat.cloud.aot.serializer;
 
-import com.alibaba.fastjson2.JSONPath;
-import org.apache.ibatis.session.SqlSession;
-import org.apache.ibatis.session.SqlSessionFactory;
+import tech.smartboot.feat.cloud.annotation.orm.Select;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.VariableElement;
+import javax.sql.DataSource;
 import java.io.IOException;
-
-import static tech.smartboot.feat.cloud.aot.controller.JsonSerializer.headBlank;
+import java.io.PrintWriter;
+import java.sql.Connection;
 
 /**
  * @author 三刀
@@ -33,14 +32,14 @@ public final class FeatMapperSerializer extends AbstractSerializer {
 
     @Override
     public void serializeImport() {
-        printWriter.println("import " + SqlSessionFactory.class.getName() + ";");
-        printWriter.println("import " + SqlSession.class.getName() + ";");
+        printWriter.println("import " + DataSource.class.getName() + ";");
+        printWriter.println("import " + Connection.class.getName() + ";");
         super.serializeImport();
     }
 
     @Override
     public void serializeProperty() {
-        printWriter.println("\tprivate SqlSessionFactory factory;");
+        printWriter.println("\tprivate DataSource dataSource;");
         super.serializeProperty();
     }
 
@@ -80,6 +79,15 @@ public final class FeatMapperSerializer extends AbstractSerializer {
                 }
             }
             printWriter.println(") {");
+            printWriter.println("\t\t\t\ttry{");
+            printWriter.println("\t\t\t\t\tConnection connection=dataSource.getConnection();");
+            Select select = se.getAnnotation(Select.class);
+            if (select != null) {
+                serialSelect(printWriter, se, select);
+            }
+            printWriter.println("\t\t\t\t} catch (Exception e) {");
+            printWriter.println("\t\t\t\t\tthrow new RuntimeException(e);");
+            printWriter.println("\t\t\t\t}");
 //            printWriter.append(headBlank(1)).println("try (SqlSession " + sessionName + " = factory.openSession(true)) {");
 //            printWriter.print(headBlank(2));
 //            if (!"void".equals(returnType)) {
@@ -110,10 +118,15 @@ public final class FeatMapperSerializer extends AbstractSerializer {
     @Override
     public void serializeAutowired() {
         super.serializeAutowired();
-        printWriter.println("\t\tfactory = applicationContext.getBean(\"sessionFactory\");");
-        //addMapper
-        if (JSONPath.eval(config, "$.feat.mybatis.path") != null) {
-            printWriter.println("\t\tfactory.getConfiguration().addMapper(" + element.getSimpleName() + ".class);");
-        }
+//        printWriter.println("\t\tfactory = applicationContext.getBean(\"sessionFactory\");");
+//        //addMapper
+//        if (JSONPath.eval(config, "$.feat.mybatis.path") != null) {
+//            printWriter.println("\t\tfactory.getConfiguration().addMapper(" + element.getSimpleName() + ".class);");
+//        }
+    }
+
+    private void serialSelect(PrintWriter printWriter, Element se, Select select) {
+        String sql = select.value();
+
     }
 }

@@ -5,9 +5,9 @@ import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Result;
 import org.apache.ibatis.annotations.Results;
-import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 import tech.smartboot.feat.cloud.annotation.orm.Mapper;
+import tech.smartboot.feat.cloud.annotation.orm.Select;
 import tech.smartboot.feat.demo.mybatis.entity.User;
 
 import java.util.List;
