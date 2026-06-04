@@ -52,6 +52,7 @@ public final class FeatMapperSerializer extends AbstractSerializer {
         printWriter.println("import " + PreparedStatement.class.getName() + ";");
         printWriter.println("import " + ResultSet.class.getName() + ";");
         printWriter.println("import " + ResultSetMetaData.class.getName() + ";");
+        printWriter.println("import " + ArrayList.class.getName() + ";");
         super.serializeImport();
     }
 
@@ -64,21 +65,6 @@ public final class FeatMapperSerializer extends AbstractSerializer {
     @Override
     public void serializeLoadBean() {
         StringBuilder sessionName = new StringBuilder("session");
-//        int i = 0;
-//        for (Element se : element.getEnclosedElements()) {
-//            printWriter.print("\t\t\t" + Method.class.getName() + " " + se.getSimpleName() + (i++) + " =" + element.getSimpleName() + ".class.getDeclaredMethod(\"" + se.getSimpleName() + "\"");
-//            for (VariableElement param : ((ExecutableElement) se).getParameters()) {
-//                printWriter.print(",");
-//                if (param.asType().toString().startsWith("java.util.List")) {
-//                    printWriter.print("java.util.List.class");
-//                } else {
-//                    printWriter.print(param.asType().toString() + ".class");
-//                }
-//
-//            }
-//            printWriter.append(");");
-//        }
-//        i = 0;
         printWriter.println("\t\tbean = new " + element.getSimpleName() + "() { ");
         for (Element se : element.getEnclosedElements()) {
             String returnType = ((ExecutableElement) se).getReturnType().toString();
@@ -106,25 +92,6 @@ public final class FeatMapperSerializer extends AbstractSerializer {
             printWriter.println("\t\t\t\t} catch (Exception e) {");
             printWriter.println("\t\t\t\t\tthrow new RuntimeException(e);");
             printWriter.println("\t\t\t\t}");
-//            printWriter.append(headBlank(1)).println("try (SqlSession " + sessionName + " = factory.openSession(true)) {");
-//            printWriter.print(headBlank(2));
-//            if (!"void".equals(returnType)) {
-//                printWriter.print("return ");
-//            }
-////            printWriter.print("(" + returnType + ")new " + MapperMethod.class.getName() + "(" + element.getSimpleName() + ".class," + se.getSimpleName() + (i++) + "," + sessionName + ".getConfiguration()).execute(" + sessionName + ",new Object[]{");
-//            printWriter.print(sessionName + ".getMapper(" + element.getSimpleName() + ".class)." + se.getSimpleName() + "(");
-//            first = true;
-//            for (VariableElement param : ((ExecutableElement) se).getParameters()) {
-//                if (first) {
-//                    first = false;
-//                } else {
-//                    printWriter.print(", ");
-//                }
-//                printWriter.print(param.getSimpleName().toString());
-//            }
-//            printWriter.println(");");
-////            printWriter.println("});");
-//            printWriter.append(headBlank(1)).println("}");
             printWriter.println("\t\t\t}");
             printWriter.println();
         }
@@ -133,25 +100,16 @@ public final class FeatMapperSerializer extends AbstractSerializer {
         printWriter.println("\t\tapplicationContext.addBean(\"" + beanName + "\", bean);");
     }
 
-    @Override
-    public void serializeAutowired() {
-        super.serializeAutowired();
-//        printWriter.println("\t\tfactory = applicationContext.getBean(\"sessionFactory\");");
-//        //addMapper
-//        if (JSONPath.eval(config, "$.feat.mybatis.path") != null) {
-//            printWriter.println("\t\tfactory.getConfiguration().addMapper(" + element.getSimpleName() + ".class);");
-//        }
-    }
 
     private void serialSelect(PrintWriter printWriter, Element se, Select select) {
         String sql = select.value();
         TypeMirror returnType = ((ExecutableElement) se).getReturnType();
         boolean isList = false;
         if (returnType.toString().startsWith("java.util.List")) {
-            if (((DeclaredType) se).getTypeArguments().isEmpty()) {
+            if (((DeclaredType) returnType).getTypeArguments().size() != 1) {
                 throw new RuntimeException("List未指定泛型");
             }
-            printWriter.println("\t\t\t\t\t\tList<" + returnType.toString().substring(returnType.toString().indexOf("<") + 1, returnType.toString().indexOf(">")) + "> result = new ArrayList<>();");
+            printWriter.println("\t\t\t\t\t\t" + returnType + " list = new ArrayList<>();");
             returnType = ((DeclaredType) returnType).getTypeArguments().get(0);
             isList = true;
         }
@@ -252,14 +210,14 @@ public final class FeatMapperSerializer extends AbstractSerializer {
 
 
         if (isList) {
-            printWriter.println("\t\t\t\t\t\tresult.add(result);");
+            printWriter.println("\t\t\t\t\t\tlist.add(result);");
         } else {
             printWriter.println("\t\t\t\t\t\treturn result;");
         }
         printWriter.println("\t\t\t\t\t}");
 
         if (isList) {
-            printWriter.println("\t\t\t\t\treturn result;");
+            printWriter.println("\t\t\t\t\treturn list;");
         } else {
             printWriter.println("\t\t\t\t\treturn null;");
         }
