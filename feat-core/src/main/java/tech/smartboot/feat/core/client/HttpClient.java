@@ -197,7 +197,8 @@ public final class HttpClient {
         options.getHeaders().forEach(request::addHeader);
 
         httpRestImpl.getCompletableFuture().thenAccept(httpResponse -> {
-            boolean close = !HeaderValue.Connection.KEEPALIVE.equalsIgnoreCase(httpResponse.getHeader(HeaderName.CONNECTION));
+            String connection = httpResponse.getHeader(HeaderName.CONNECTION);
+            boolean close = FeatUtils.isNotBlank(connection) && !HeaderValue.Connection.KEEPALIVE.equalsIgnoreCase(connection);
             if (!close) {
                 close = !HeaderValue.Connection.KEEPALIVE.equalsIgnoreCase(request.getHeader(HeaderName.CONNECTION));
             }
