@@ -10,8 +10,8 @@
 
 package tech.smartboot.feat.core.server;
 
-import io.github.smartboot.socket.buffer.BufferPagePool;
 import io.github.smartboot.socket.Plugin;
+import io.github.smartboot.socket.buffer.BufferPagePool;
 import io.github.smartboot.socket.transport.AioQuickServer;
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.core.common.ByteTree;
@@ -107,7 +107,7 @@ public class HttpServer {
                 server.start(options.group());
             }
 
-            if (options.isBannerEnabled() && bannerEnabled) {
+            if (bannerEnabled) {
                 bannerEnabled = false;
                 System.out.println(FeatUtils.getResourceAsString("feat-banner.txt") + "\r\n :: Feat :: (" + Feat.VERSION + ")");
                 System.out.println(FeatUtils.getResourceAsString("feat-support.txt"));

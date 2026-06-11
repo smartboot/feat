@@ -86,14 +86,6 @@ public class ServerOptions {
     private Plugin<HttpEndpoint> debugPlugin;
 
     /**
-     * 是否启用控制台 banner
-     * <p>
-     * 启用后，服务器启动时会在控制台打印 Feat 框架的版本信息。
-     * 在生产环境中，建议关闭此选项以避免暴露版本信息。
-     */
-    private boolean bannerEnabled = true;
-
-    /**
      * 读缓冲区大小（字节）
      * <p>
      * 该缓冲区用于存储客户端发送的 HTTP 请求数据。
@@ -256,29 +248,6 @@ public class ServerOptions {
         this.writeBufferSize = writeBufferSize;
         return this;
     }
-
-    /**
-     * 判断是否启用控制台 banner
-     *
-     * @return 如果启用返回 true，否则返回 false
-     */
-    boolean isBannerEnabled() {
-        return bannerEnabled;
-    }
-
-//    /**
-//     * 设置是否启用控制台 banner
-//     * <p>
-//     * 启用后，服务器启动时会在控制台打印 Feat 框架的版本信息。
-//     * 在生产环境中，建议关闭此选项以避免暴露版本信息。
-//     *
-//     * @param bannerEnabled 是否启用控制台 banner
-//     * @return 当前 ServerOptions 实例，支持链式调用
-//     */
-//    public ServerOptions bannerEnabled(boolean bannerEnabled) {
-//        this.bannerEnabled = bannerEnabled;
-//        return this;
-//    }
 
     /**
      * 获取 HTTP 请求头数量上限
