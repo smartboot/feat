@@ -134,11 +134,11 @@ public final class HttpClient {
             httpRestImpl = new HttpRestImpl(client.getSession());
             initRest(httpRestImpl, uri, client);
         } catch (Throwable e) {
-            if (client != null) {
-                System.err.println("release client.");
-                e.printStackTrace();
-                multiplexClient.release(client);
-            }
+//            if (client != null) {
+//                System.err.println("release client.");
+//                e.printStackTrace();
+//                multiplexClient.release(client);
+//            }
             httpRestImpl = new HttpRestImpl(null) {
                 @Override
                 public CompletableFuture<HttpResponse> submit() {
@@ -198,8 +198,10 @@ public final class HttpClient {
 
         httpRestImpl.getCompletableFuture().thenAccept(httpResponse -> {
             String connection = httpResponse.getHeader(HeaderName.CONNECTION);
-            boolean close = FeatUtils.isNotBlank(connection) && !HeaderValue.Connection.KEEPALIVE.equalsIgnoreCase(connection);
-            if (!close) {
+            boolean close;
+            if (FeatUtils.isNotBlank(connection) && !HeaderValue.Connection.KEEPALIVE.equalsIgnoreCase(connection)) {
+                close = true;
+            } else {
                 close = !HeaderValue.Connection.KEEPALIVE.equalsIgnoreCase(request.getHeader(HeaderName.CONNECTION));
             }
             //非keep-alive,主动断开连接
