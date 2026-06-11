@@ -98,7 +98,7 @@ public class HttpServer {
         server = new AioQuickServer(host, port, protocol, processor);
         server.setThreadNum(options.getThreadNum()).setBannerEnabled(false).setReadBufferSize(options.getReadBufferSize()).setBufferPagePool(bufferPagePool, bufferPagePool).setWriteBuffer(options.getWriteBufferSize(), 16);
         if (!options.isLowMemory()) {
-            server.disableLowMemory();
+            server.retainReadBuffer();
         }
         try {
             if (options.group() == null) {
