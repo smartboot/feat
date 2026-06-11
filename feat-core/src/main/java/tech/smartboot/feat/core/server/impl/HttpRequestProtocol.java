@@ -201,7 +201,7 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
                     break;
                 }
             case DecodeState.STATE_BODY_READING_CALLBACK:
-                return true;
+                return byteBuffer.hasRemaining();
         }
         return false;
     }
