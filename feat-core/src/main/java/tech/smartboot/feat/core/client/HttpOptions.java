@@ -109,6 +109,11 @@ public final class HttpOptions extends Options<HttpResponse> {
         return this;
     }
 
+    public HttpOptions maxConnections(int maxConnections) {
+        multiplexOptions.maxConnections(maxConnections);
+        return this;
+    }
+
     @Override
     public HttpOptions setHeaders(Map<String, String> headers) {
         super.setHeaders(headers);
