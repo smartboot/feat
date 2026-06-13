@@ -18,10 +18,29 @@ import tech.smartboot.feat.core.client.HttpClient;
  */
 public class HttpGetDemo {
     public static void main(String[] args) {
-        HttpClient httpClient = new HttpClient("https://smartboot.tech");
-        httpClient.get("/feat/")
-                .onSuccess(response -> System.out.println(response.body()))
-                .onFailure(Throwable::printStackTrace)
-                .submit();
+        HttpClient httpClient = new HttpClient("https://www.baidu.com");
+        httpClient.options().debug(false).maxConnections(128);
+
+        for (int i = 0; i < 2; i++) {
+            new Thread(() -> {
+                int j = 0;
+                while (true) {
+                    httpClient.get("/")
+                            .header(h -> h.keepalive(true))
+//                    .onSuccess(response -> System.out.println(response.body()))
+                            .onFailure(Throwable::printStackTrace)
+                            .submit();
+                    System.out.println(j++);
+                    if(j%100==0){
+                        try {
+                            Thread.sleep(30000);
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                }
+            }).start();
+        }
+
     }
 }
