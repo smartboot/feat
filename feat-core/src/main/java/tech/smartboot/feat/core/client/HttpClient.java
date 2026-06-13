@@ -128,17 +128,11 @@ public final class HttpClient {
 
     private HttpRestImpl rest0(String uri) {
         HttpRestImpl httpRestImpl;
-        AioQuickClient client = null;
         try {
-            client = multiplexClient.acquire();
+            AioQuickClient client = multiplexClient.acquire();
             httpRestImpl = new HttpRestImpl(client.getSession());
             initRest(httpRestImpl, uri, client);
         } catch (Throwable e) {
-//            if (client != null) {
-//                System.err.println("release client.");
-//                e.printStackTrace();
-//                multiplexClient.release(client);
-//            }
             httpRestImpl = new HttpRestImpl(null) {
                 @Override
                 public CompletableFuture<HttpResponse> submit() {
