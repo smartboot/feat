@@ -1,50 +1,96 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg width="800" height="400" xmlns="http://www.w3.org/2000/svg">
-    <!-- Smart Socket 底层 -->
-    <g transform="translate(0,300)">
-        <rect x="100" y="0" width="600" height="60" rx="5" fill="#f8f9fa"/>
-        <rect x="100" y="0" width="600" height="60" rx="5" fill="#212529" opacity="0.05"/>
-        <text x="400" y="35" font-size="18" text-anchor="middle" fill="#212529" font-weight="500">smart socket</text>
-        <text x="400" y="55" font-size="12" text-anchor="middle" fill="#495057">高性能网络通信引擎</text>
+<svg width="1200" height="760" viewBox="0 0 1200 760" xmlns="http://www.w3.org/2000/svg">
+
+    <defs>
+
+        <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#f7f9ff"/>
+            <stop offset="100%" stop-color="#eef1f8"/>
+        </linearGradient>
+
+        <filter id="shadow">
+            <feDropShadow dx="0" dy="12" stdDeviation="18" flood-color="#000" flood-opacity="0.12"/>
+        </filter>
+
+        <filter id="glow">
+            <feGaussianBlur stdDeviation="5" result="b"/>
+            <feMerge>
+                <feMergeNode in="b"/>
+                <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+        </filter>
+
+        <style>
+            text {
+            font-family: "PingFang SC","Microsoft YaHei",sans-serif;
+            }
+
+            .flow {
+            stroke-dasharray: 10;
+            animation: dash 2.2s linear infinite;
+            }
+
+            @keyframes dash {
+            to { stroke-dashoffset: -40; }
+            }
+        </style>
+
+    </defs>
+
+    <!-- 背景 -->
+    <rect width="1200" height="760" fill="url(#bg)"/>
+
+    <!-- 标题 -->
+    <text x="600" y="45" text-anchor="middle" font-size="24" fill="#333" font-weight="bold">
+        Feat 架构模型
+    </text>
+
+    <!-- ================= CLOUD ================= -->
+    <g filter="url(#shadow)">
+        <rect x="120" y="120" width="380" height="170" rx="18" fill="#e8f1ff"/>
+        <text x="310" y="165" text-anchor="middle" font-size="26" fill="#1f6fff" font-weight="bold">Feat Cloud</text>
+        <text x="310" y="200" text-anchor="middle" font-size="16" fill="#333">应用开发层</text>
+        <text x="310" y="230" text-anchor="middle" font-size="14" fill="#666">MVC ｜ DI ｜ 配置体系</text>
     </g>
-    
-    <!-- Feat Core 核心层 -->
-    <g transform="translate(0,200)">
-        <rect x="100" y="0" width="600" height="80" rx="5" fill="#f8f9fa"/>
-        <rect x="100" y="0" width="600" height="80" rx="5" fill="#343a40" opacity="0.08"/>
-        <text x="400" y="35" font-size="18" text-anchor="middle" fill="#212529" font-weight="500">Feat Core</text>
-        <text x="400" y="55" font-size="12" text-anchor="middle" fill="#495057">HTTP/WebSocket/SSE | 响应式服务 | 静态服务</text>
+
+    <!-- ================= AI ================= -->
+    <g filter="url(#shadow)">
+        <rect x="700" y="120" width="380" height="170" rx="18" fill="#ffe6f3"/>
+        <text x="890" y="165" text-anchor="middle" font-size="26" fill="#ff2d75" font-weight="bold">Feat AI</text>
+        <text x="890" y="200" text-anchor="middle" font-size="16" fill="#333">智能能力扩展层</text>
+        <text x="890" y="230" text-anchor="middle" font-size="14" fill="#666">依赖 Core HTTP Client</text>
     </g>
-    
-    <!-- Feat Cloud 和 Feat AI 业务层 -->
-    <g transform="translate(0,40)">
-        <!-- Feat Cloud -->
-        <g transform="translate(0,0)">
-            <rect x="100" y="0" width="280" height="140" rx="5" fill="#f8f9fa"/>
-            <rect x="100" y="0" width="280" height="140" rx="5" fill="#1890ff" opacity="0.12"/>
-            <text x="240" y="40" font-size="18" text-anchor="middle" fill="#1890ff" font-weight="500">Feat Cloud</text>
-            <text x="240" y="70" font-size="12" text-anchor="middle" fill="#495057">企业级开发框架</text>
-            <text x="240" y="90" font-size="12" text-anchor="middle" fill="#495057">类Spring Boot开发体验</text>
-            <text x="240" y="110" font-size="12" text-anchor="middle" fill="#495057">静态编译 | 零反射</text>
-        </g>
-        
-        <!-- Feat AI -->
-        <g transform="translate(320,0)">
-            <rect x="100" y="0" width="280" height="140" rx="5" fill="#f8f9fa"/>
-            <rect x="100" y="0" width="280" height="140" rx="5" fill="#eb2f96" opacity="0.12"/>
-            <text x="240" y="40" font-size="18" text-anchor="middle" fill="#eb2f96" font-weight="500">Feat AI</text>
-            <text x="240" y="70" font-size="12" text-anchor="middle" fill="#495057">智能对话框架</text>
-            <text x="240" y="90" font-size="12" text-anchor="middle" fill="#495057">多模型支持 | 异步处理</text>
-            <text x="240" y="110" font-size="12" text-anchor="middle" fill="#495057">流式响应 | 灵活配置</text>
-        </g>
+
+    <!-- ================= CORE ================= -->
+    <g filter="url(#glow)">
+        <rect x="360" y="340" width="480" height="200" rx="22" fill="#eaeaea" stroke="#cfcfcf"/>
+        <text x="600" y="405" text-anchor="middle" font-size="32" fill="#111" font-weight="bold">Feat Core</text>
+        <text x="600" y="445" text-anchor="middle" font-size="16" fill="#444">
+            HTTP 运行内核 ｜ 路由 ｜ 调度 ｜ Client / Server
+        </text>
+        <text x="600" y="480" text-anchor="middle" font-size="14" fill="#666">
+            系统唯一运行中心
+        </text>
     </g>
-    
-    <!-- 连接线 -->
-    <g stroke="#adb5bd" stroke-width="1.5" opacity="0.7">
-        <!-- Cloud和AI到Core的连接 -->
-        <line x1="240" y1="180" x2="240" y2="200"/>
-        <line x1="560" y1="180" x2="560" y2="200"/>
-        <!-- Core到Socket的连接 -->
-        <line x1="400" y1="280" x2="400" y2="300"/>
+
+    <!-- ================= smart-socket (F O U N D A T I O N) ================= -->
+    <g filter="url(#shadow)">
+        <rect x="260" y="600" width="680" height="90" rx="18" fill="#f7f7f7"/>
+        <text x="600" y="640" text-anchor="middle" font-size="24" fill="#333" font-weight="bold">smart-socket</text>
+        <text x="600" y="665" text-anchor="middle" font-size="14" fill="#666">IO 原语层 ｜ 网络通信底座（Foundation Layer）</text>
     </g>
+
+    <!-- ================= CONNECTIONS ================= -->
+
+    <!-- Cloud → Core -->
+    <line x1="310" y1="290" x2="520" y2="340"
+          stroke="#7aa7ff" stroke-width="2" class="flow"/>
+
+    <!-- AI → Core -->
+    <line x1="890" y1="290" x2="680" y2="340"
+          stroke="#ff7ab8" stroke-width="2" class="flow"/>
+
+    <!-- Core → smart-socket -->
+    <line x1="600" y1="540" x2="600" y2="600"
+          stroke="#999" stroke-width="2" class="flow"/>
+
 </svg>
