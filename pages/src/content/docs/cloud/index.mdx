@@ -1,3 +1,4 @@
+
 ---
 title: 快速开始
 description: 用 Feat Cloud 写出第一个注解式 Web 应用，理解整体学习路径
@@ -5,7 +6,7 @@ sidebar:
   order: 0
 ---
 
-import { Aside, CardGrid, LinkCard, TabItem, Tabs } from "@astrojs/starlight/components";
+import { Aside, TabItem, Tabs } from "@astrojs/starlight/components";
 import demo from './img/demo.png';
 import idea_setting from './img/idea_setting.png';
 
@@ -84,7 +85,7 @@ public class Bootstrap {
 
 运行 `Bootstrap.main()`，控制台出现以下内容说明路由注册成功：
 
-```text
+```text title="控制台输出"
 Feat Router:
  |-> /hello ==> Bootstrap@helloWorld
 http://0.0.0.0:8080/
@@ -97,7 +98,7 @@ http://0.0.0.0:8080/
     <img src={demo.src} alt="Feat Cloud 浏览器访问效果图" width="60%" className="shadow"/>
   </TabItem>
   <TabItem value="curl" label="curl">
-    ```shell
+    ```shell title="curl 验证"
     curl -i http://localhost:8080/hello
     HTTP/1.1 200 OK
     Content-Type: text/plain; charset=utf-8
@@ -106,40 +107,3 @@ http://0.0.0.0:8080/
     ```
   </TabItem>
 </Tabs>
-
-## 继续学习
-
-完成第一个应用后，按以下顺序深入：
-
-<CardGrid>
-  <LinkCard
-    title="Controller"
-    href="/feat/cloud/controller/"
-    description="参数绑定、路径参数和请求方法映射。"
-  />
-  <LinkCard
-    title="CloudOptions"
-    href="/feat/cloud/options/"
-    description="扫描范围、外部 Bean 和静态资源。"
-  />
-  <LinkCard
-    title="MyBatis"
-    href="/feat/cloud/db/"
-    description="数据库访问与 ORM 集成。"
-  />
-  <LinkCard
-    title="Session"
-    href="/feat/cloud/session/"
-    description="会话管理与状态保持。"
-  />
-  <LinkCard
-    title="MCP（可选）"
-    href="/feat/cloud/mcp/"
-    description="Model Context Protocol 集成。"
-  />
-  <LinkCard
-    title="部署与交付"
-    href="/feat/cloud/deployment/"
-    description="打包、Native Image 与生产部署。"
-  />
-</CardGrid>

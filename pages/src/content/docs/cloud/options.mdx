@@ -2,7 +2,7 @@
 title: CloudOptions 配置
 description: 理解 Feat Cloud 启动阶段最重要的三个配置项：包扫描、外部 Bean 和静态资源
 sidebar:
-    order: 3
+    order: 5
 ---
 
 import { Aside } from '@astrojs/starlight/components';
@@ -84,7 +84,7 @@ public class ExternalBeanDemo {
 
 `registerBean(...)` 的 key 不能重复。源码里如果发现同名 key，直接抛 `FeatException`。
 
-```java
+```java title="重复注册同名 Bean 会失败"
 options.registerBean("dataSource", ds1);
 options.registerBean("dataSource", ds2); // 会失败
 ```
@@ -109,7 +109,7 @@ public class StaticLocationDemo {
 
 你可以使用两种路径形式：
 
-```java
+```java title="静态资源配置"
 // 类路径资源
 options.setStaticLocations("classpath:static");
 options.setStaticLocations("classpath:public");
@@ -166,7 +166,7 @@ public class CloudOptionsDemo {
 
 如果你需要完全自定义路由入口，而不是只靠 `setStaticLocations(...)` 生成的静态资源 Router，可以直接替换：
 
-```java
+```java title="替换默认 Router"
 options.setRouter(customRouter);
 ```
 

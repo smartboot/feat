@@ -2,7 +2,7 @@
 title: Session 使用
 description: 在 Feat Cloud 里使用 Session 保存状态，并判断什么时候应该继续留在 Session 模型，什么时候该换方式
 sidebar:
-  order: 5
+  order: 7
 ---
 
 import { Aside } from '@astrojs/starlight/components';
@@ -14,7 +14,7 @@ Session 的核心价值很简单：让多次请求之间共享一点状态。
 
 最简单的方式，是在 Controller 方法里直接注入 `Session`：
 
-```java
+```java title="UserController.java"
 @Controller
 public class UserController {
 
@@ -71,7 +71,7 @@ public class UserController {
 
 ## 常用操作
 
-```java
+```java title="Session 常用操作"
 session.put("username", "john");
 String username = session.get("username");
 session.setTimeout(1800);

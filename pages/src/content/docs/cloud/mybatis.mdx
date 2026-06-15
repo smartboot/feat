@@ -2,12 +2,12 @@
 title: MyBatis 集成
 description: 通过 demo/mybatis 的实际结构，完成一个最小但完整的数据库访问链路
 sidebar:
-    order: 4
+    order: 6
 ---
 
 import { Aside } from '@astrojs/starlight/components'
 
-这一页不再试图做一份“所有 MyBatis 配置项大全”。  
+这一页不再试图做一份"MyBatis 配置项大全"。
 它只回答一个更实际的问题：如果你已经能写 Feat Cloud 控制器，现在要把数据库接进来，应该按什么顺序做。
 
 ## 你最终会得到什么
@@ -16,13 +16,14 @@ import { Aside } from '@astrojs/starlight/components'
 
 - 访问 `/users` 能查到所有用户
 - 访问 `/users/{username}` 能查到单个用户
+- 访问 `/users/role/{role}` 能按角色查用户
 - `POST /users` 能创建用户
 - `PUT /users` 能更新用户
 - `DELETE /users/{username}` 能删除用户
 
 ## 第一步：加依赖
 
-在 `pom.xml` 中引入 `feat-cloud-starter`、`mybatis` 和数据库驱动。  
+在 `pom.xml` 中引入 `feat-cloud-starter`、`mybatis` 和数据库驱动。
 示例项目里使用的是 H2 内存数据库：
 
 ```xml title="pom.xml"
@@ -35,15 +36,17 @@ import { Aside } from '@astrojs/starlight/components'
 <dependency>
     <groupId>org.mybatis</groupId>
     <artifactId>mybatis</artifactId>
-    <version>3.5.15</version>
+    <version>${mybatis.version}</version>
 </dependency>
 
 <dependency>
     <groupId>com.h2database</groupId>
     <artifactId>h2</artifactId>
-    <version>2.2.224</version>
+    <version>${h2.version}</version>
 </dependency>
 ```
+
+> 示例中 MyBatis 和 H2 的版本号使用占位符，实际使用时请替换为当前稳定版本。
 
 ## 第二步：把 MyBatis 配置接到 Feat Cloud 启动流程
 
@@ -91,7 +94,7 @@ feat:
 </configuration>
 ```
 
-而 `schema.sql` 负责建表并插入几条初始数据。  
+而 `schema.sql` 负责建表并插入几条初始数据。
 这一步让后面的 Controller 和 Service 能立刻验证，不需要再手动准备数据库。
 
 ## 第四步：启动应用
@@ -110,20 +113,52 @@ public class Bootstrap {
 }
 ```
 
-这个类本身几乎没做业务事，但它给了 Feat Cloud 一个明确的启动入口。  
+这个类本身几乎没做业务事，但它给了 Feat Cloud 一个明确的启动入口。
 MyBatis 的配置接入，主要是靠前面的 `feat.yaml` 和资源文件完成的。
 
-## 第五步：定义 Mapper
+## 第五步：定义实体和 Mapper
 
-在示例里，Mapper 就是标准 MyBatis 注解接口：
+### User 实体
+
+```java title="User.java"
+package tech.smartboot.feat.demo.mybatis.entity;
+
+public class User {
+    private String username;
+    private String password;
+    private String desc;
+    private String role;
+
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
+
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
+
+    public String getDesc() { return desc; }
+    public void setDesc(String desc) { this.desc = desc; }
+
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
+}
+```
+
+MyBatis 用字段映射数据库列，Feat Cloud 用 getter 做 JSON 序列化，所以实体里需要同时有字段和 getter。
+
+### UserMapper
 
 ```java title="UserMapper.java"
+package tech.smartboot.feat.demo.mybatis.mapper;
+
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
+import tech.smartboot.feat.demo.mybatis.entity.User;
+
+import java.util.List;
 
 @Mapper
 public interface UserMapper {
@@ -133,6 +168,9 @@ public interface UserMapper {
 
     @Select("SELECT * FROM user_info")
     List<User> selectAll();
+
+    @Select("SELECT * FROM user_info WHERE role = #{role}")
+    List<User> selectByRole(@Param("role") String role);
 
     @Insert("INSERT INTO user_info(username, password, `desc`, role) VALUES(#{username}, #{password}, #{desc}, #{role})")
     int insert(User user);
@@ -155,8 +193,14 @@ public interface UserMapper {
 示例项目没有直接在 Controller 里操作 Mapper，而是先过一层 Service：
 
 ```java title="UserService.java"
+package tech.smartboot.feat.demo.mybatis.service;
+
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Bean;
+import tech.smartboot.feat.demo.mybatis.entity.User;
+import tech.smartboot.feat.demo.mybatis.mapper.UserMapper;
+
+import java.util.List;
 
 @Bean
 public class UserService {
@@ -170,6 +214,37 @@ public class UserService {
 
     public List<User> findAll() {
         return userMapper.selectAll();
+    }
+
+    public List<User> findByRole(String role) {
+        return userMapper.selectByRole(role);
+    }
+
+    public boolean insert(User user) {
+        try {
+            return userMapper.insert(user) > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean update(User user) {
+        try {
+            return userMapper.update(user) > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean deleteByUsername(String username) {
+        try {
+            return userMapper.deleteByUsername(username) > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 }
 ```
@@ -187,12 +262,18 @@ public class UserService {
 最后在 Controller 里把这条链路接到 HTTP 上：
 
 ```java title="UserController.java"
+package tech.smartboot.feat.demo.mybatis.controller;
+
 import tech.smartboot.feat.cloud.RestResult;
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.PathParam;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.cloud.annotation.RequestMethod;
+import tech.smartboot.feat.demo.mybatis.entity.User;
+import tech.smartboot.feat.demo.mybatis.service.UserService;
+
+import java.util.List;
 
 @Controller
 public class UserController {
@@ -211,14 +292,35 @@ public class UserController {
         return user != null ? RestResult.ok(user) : RestResult.fail("User not found");
     }
 
+    @RequestMapping("/users/role/{role}")
+    public RestResult<List<User>> getUsersByRole(@PathParam("role") String role) {
+        return RestResult.ok(userService.findByRole(role));
+    }
+
     @RequestMapping(value = "/users", method = RequestMethod.POST)
     public RestResult<String> createUser(User user) {
         return userService.insert(user)
                 ? RestResult.ok("User created successfully")
                 : RestResult.fail("Failed to create user");
     }
+
+    @RequestMapping(value = "/users", method = RequestMethod.PUT)
+    public RestResult<String> updateUser(User user) {
+        return userService.update(user)
+                ? RestResult.ok("User updated successfully")
+                : RestResult.fail("Failed to update user");
+    }
+
+    @RequestMapping(value = "/users/{username}", method = RequestMethod.DELETE)
+    public RestResult<String> deleteUser(@PathParam("username") String username) {
+        return userService.deleteByUsername(username)
+                ? RestResult.ok("User deleted successfully")
+                : RestResult.fail("Failed to delete user");
+    }
 }
 ```
+
+注意 `createUser(User user)` 和 `updateUser(User user)` 的参数没有加任何注解。Feat Cloud 检测到参数类型是自定义 POJO 时，会自动从 JSON 请求体里反序列化出这个对象。
 
 到这一步，链路已经完整了：
 
@@ -228,7 +330,7 @@ public class UserController {
 
 启动 `demo/mybatis` 后，可以先验证读接口：
 
-```shell
+```shell title="查询接口验证"
 curl http://localhost:8080/users
 curl http://localhost:8080/users/feat
 curl http://localhost:8080/users/role/admin
@@ -236,10 +338,16 @@ curl http://localhost:8080/users/role/admin
 
 再验证写接口：
 
-```shell
+```shell title="写接口验证"
 curl -X POST http://localhost:8080/users \
   -H 'Content-Type: application/json' \
   -d '{"username":"new_user","password":"123456","desc":"created from docs","role":"user"}'
+
+curl -X PUT http://localhost:8080/users \
+  -H 'Content-Type: application/json' \
+  -d '{"username":"new_user","password":"654321","desc":"updated from docs","role":"admin"}'
+
+curl -X DELETE http://localhost:8080/users/new_user
 ```
 
 如果这些请求都能返回合理结果，说明：
@@ -251,6 +359,6 @@ curl -X POST http://localhost:8080/users \
 
 ## 一个重要的认识
 
-在 Feat Cloud 里，MyBatis 集成的体验更像“编译期接线”而不是“运行时手工拼装”。  
-这也是它和很多传统 Spring/MyBatis 示例在阅读感受上的区别。
-
+在 Feat Cloud 里，MyBatis 集成不是要你重写一套数据访问层。
+你要做的只是：按 MyBatis 的方式写 Mapper 和 Service，然后在启动配置里告诉 Feat Cloud 它们在哪里。
+剩下的接线工作，编译期就完成了。

@@ -1,90 +1,27 @@
 ---
-title: Controller 开发
-description: 用 Feat Cloud 的注解式控制器构建接口，并掌握参数绑定、路径参数与请求方法映射
+title: Controller 基础
+description: 用 @Controller 和 @RequestMapping 写出第一个 Feat Cloud 控制器，理解基础路径和返回类型
 sidebar:
     order: 2
 ---
 
-import { Aside, Tabs, TabItem, CardGrid, LinkCard } from '@astrojs/starlight/components'
+import { Aside } from '@astrojs/starlight/components'
 
-在 Web 应用开发中，控制器（Controller）是连接用户请求与业务逻辑的桥梁。Feat Cloud 采用 **编译期注解处理（AOT）** 技术，在编译阶段就将注解转换为高效的路由代码，运行时无需反射，性能接近手写代码。
+Feat Cloud 的控制器写起来和 Spring Boot 很像：一个类加 `@Controller`，方法加 `@RequestMapping`。但底层实现不同：路由映射在编译期生成，运行时不再反射扫描。
 
-本节将带你从零开始构建一个完整的控制器，理解 Feat Cloud 的 AOT 机制如何工作。
+本章只关注一件事：写出第一个能正确响应 HTTP 请求的控制器。
 
-## 本节目标
+## 本章目标
 
-完成本节学习后，你将能够：
+完成本章后，你会得到一个 `UserController`，它能：
 
-- 理解 Feat Cloud 的 AOT 编译期处理机制
-- 使用 `@Controller` 定义控制器及其基础路径
-- 使用 `@RequestMapping` 映射 URL 和 HTTP 方法
-- 使用 `@Param` 和 `@PathParam` 获取请求参数
-- 理解 Session、Context 等内置参数的注入机制
-- 配置 Gzip 压缩优化响应性能
+- 通过 `@Controller` 声明基础路径
+- 通过 `@RequestMapping` 把 URL 映射到方法
+- 返回字符串或 JSON 给客户端
 
----
+## 第一个控制器
 
-## 工作原理：编译期发生了什么
-
-Feat Cloud 与传统 Spring Boot 的最大区别在于：**路由映射在编译期完成，而非运行时反射**。
-
-### AOT 处理流程
-
-当你编译代码时，`feat-cloud-starter` 中的注解处理器会：
-
-1. **扫描**带有 `@Controller` 注解的类
-2. **解析**`@RequestMapping` 定义的路径和方法
-3. **生成**`CloudService` 实现类（如 `XxxControllerCloudService`）
-4. **注册**路由到 `Router`
-
-生成的代码示例（简化）：
-
-```java title="编译期自动生成，无需手动编写"
-public class UserControllerCloudService extends AbstractCloudService {
-    private UserController bean;
-    
-    public void loadBean(ApplicationContext ctx) {
-        bean = new UserController(); // 直接实例化，无反射
-    }
-    
-    public void router(ApplicationContext ctx, Router router) {
-        // 直接注册路由，路径在编译期确定
-        router.route("/users/hello", new String[]{"GET"}, new RouterHandler() {
-            public void handle(Context ctx) {
-                String result = bean.hello(); // 直接调用，无代理
-                ctx.Response.write(result.getBytes());
-            }
-        });
-    }
-}
-```
-
-<Aside type="tip" title="性能优势">
-- **无运行时反射**：调用开销接近直接方法调用
-- **无动态代理**：内存占用更低
-- **启动更快**：无需扫描类路径
-- **支持 Native Image**：可编译为原生可执行文件
-</Aside>
-
----
-
-## Controller 基础结构
-
-### 多 Controller 组织
-
-在实际项目中，通常会将 Controller 按功能模块拆分到不同类中。以下是一个典型的项目结构：
-
-```
-src/main/java/com/example/
-├── Bootstrap.java          # 启动类
-├── controller/
-│   ├── UserController.java # 用户模块
-│   └── OrderController.java# 订单模块
-└── service/
-    └── UserService.java    # 业务逻辑
-```
-
-**UserController.java**：
+下面是一个最小但完整的控制器。它只做一件事：访问 `http://localhost:8080/users/hello` 时返回一段文本。
 
 ```java title="UserController.java"
 package com.example.controller;
@@ -103,542 +40,96 @@ public class UserController {
 }
 ```
 
-启动应用后，你会在控制台看到：
+启动应用后，控制台会输出路由注册信息：
 
-```text
+```text title="路由注册日志"
 Feat Router:
  |-> /users/hello ==> UserController@hello
 http://0.0.0.0:8080/
 ```
 
-访问 `http://localhost:8080/users/hello`，输出：
+访问 `http://localhost:8080/users/hello`：
 
+```shell title="curl 验证"
+curl http://localhost:8080/users/hello
 ```
+
+返回：
+
+```text title="响应结果"
 hello controller
 ```
 
-<Aside type="note" title="代码解析">
-| 注解/配置 | 作用 |
-|-----------|------|
-| `@Controller("users")` | 定义基础路径为 `/users` |
-| `@RequestMapping` | 将 `/hello` 映射到 `hello()` 方法 |
-| `method = RequestMethod.GET` | 指定只接受 GET 请求 |
-| 返回字符串 | 直接作为 HTTP 响应体输出 |
-</Aside>
-
----
-
-## 请求映射详解
-
-### 基础路径映射
+## 基础路径
 
 `@Controller` 的 `value` 属性定义该控制器下所有方法的 URL 前缀。
 
-```java
-@Controller("users")  // 基础路径: /users
-public class UserController {
-
-    @RequestMapping("/list")  // 完整路径: /users/list
-    public String list() {
-        return "user list";
-    }
-}
-```
-
-**路径组合规则：**
-
 | 控制器路径 | 方法路径 | 完整 URL |
 |-----------|---------|---------|
-| `users` | `/list` | `/users/list` |
+| `users` | `/hello` | `/users/hello` |
 | `api/v1` | `/users` | `/api/v1/users` |
 | （空） | `/hello` | `/hello` |
 
-### 查询参数绑定
+基础路径为空时，方法路径就是完整 URL。
 
-使用 `@Param` 注解从 URL 查询字符串提取参数值。
+## 返回类型
 
-```java
-@RequestMapping(value = "/search", method = RequestMethod.GET)
-public String search(@Param("keyword") String keyword, 
-                     @Param("page") int page) {
-    return "搜索: " + keyword + ", 页码: " + page;
-}
-```
+Feat Cloud 根据返回类型决定响应格式：
 
-<Tabs>
-  <TabItem label="请求示例">
-    ```shell
-    curl "http://localhost:8080/users/search?keyword=feat&page=1"
-    ```
-  </TabItem>
-  <TabItem label="输出结果">
-    ```
-    搜索: feat, 页码: 1
-    ```
-  </TabItem>
-</Tabs>
-
-<Aside type="note" title="参数类型支持">
-| 类型类别 | 具体类型 | 说明 |
-|---------|---------|------|
-| 基本类型 | `String`、`int`、`long`、`boolean` 等 | 参数不存在时会报错 |
-| 包装类型 | `Integer`、`Long`、`Boolean` 等 | 参数不存在时为 `null` |
-</Aside>
-
-### 路径参数绑定
-
-使用 `@PathParam` 注解从 URL 路径提取变量值。
-
-```java
-@RequestMapping(value = "/:userId", method = RequestMethod.GET)
-public String getUser(@PathParam("userId") String userId) {
-    return "用户ID: " + userId;
-}
-```
-
-<Tabs>
-  <TabItem label="请求示例">
-    ```shell
-    curl http://localhost:8080/users/12345
-    ```
-  </TabItem>
-  <TabItem label="输出结果">
-    ```
-    用户ID: 12345
-    ```
-  </TabItem>
-</Tabs>
-
-<Aside type="tip" title="路径参数命名规范">
-Feat Cloud 支持两种路径参数定义形式：
-
-- **冒号形式**：`/:userId`、`/users/:userId/orders/:orderId` —— 更简洁
-- **花括号形式**：`/{userId}`、`/users/{userId}/orders/{orderId}` —— 可读性更强
-
-两种形式功能等价，可根据团队习惯选择。
-</Aside>
-
-### 组合使用示例
-
-```java title="UserController.java"
-package com.example.controller;
-
-import tech.smartboot.feat.cloud.annotation.Controller;
-import tech.smartboot.feat.cloud.annotation.Param;
-import tech.smartboot.feat.cloud.annotation.PathParam;
-import tech.smartboot.feat.cloud.annotation.RequestMapping;
-import tech.smartboot.feat.cloud.annotation.RequestMethod;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-
-@Controller("users")
-public class UserController {
-
-    // 基础路径示例
-    @RequestMapping(value = "/hello", method = RequestMethod.GET)
-    public String hello() {
-        return "hello controller";
-    }
-
-    // 查询参数示例
-    @RequestMapping(value = "/search", method = RequestMethod.GET)
-    public String search(@Param("keyword") String keyword) {
-        return "search: " + keyword;
-    }
-
-    // 路径参数示例
-    @RequestMapping(value = "/:username", method = RequestMethod.GET)
-    public Map<String, Object> profile(@PathParam("username") String username) {
-        Map<String, Object> data = new HashMap<>();
-        data.put("username", username);
-        data.put("roles", Collections.singletonList("user"));
-        return data;
-    }
-}
-```
-
-**测试命令：**
-
-<Tabs>
-  <TabItem label="基础路径">
-    ```shell
-    curl http://localhost:8080/users/hello
-    # 输出: hello controller
-    ```
-  </TabItem>
-  <TabItem label="查询参数">
-    ```shell
-    curl "http://localhost:8080/users/search?keyword=feat"
-    # 输出: search: feat
-    ```
-  </TabItem>
-  <TabItem label="路径参数">
-    ```shell
-    curl http://localhost:8080/users/smartboot
-    # 输出: {"username":"smartboot","roles":["user"]}
-    ```
-  </TabItem>
-</Tabs>
-
-<Aside type="note" title="自动序列化">
 | 返回类型 | 输出格式 |
 |---------|---------|
 | `String` | 直接输出为纯文本 |
-| 对象或集合 | 自动序列化为 JSON 格式 |
-</Aside>
+| 对象或集合 | 自动序列化为 JSON |
 
----
-
-## HTTP 方法映射
-
-### RequestMethod 枚举
-
-```java
-public enum RequestMethod {
-    GET,    // 获取资源
-    HEAD,   // 获取资源头部信息
-    POST,   // 创建资源
-    PUT,    // 更新资源（全量）
-    PATCH,  // 部分更新资源
-    DELETE, // 删除资源
-    OPTIONS,// 获取支持的请求方法
-    TRACE   // 回显服务器收到的请求
-}
-```
-
-### 同路径多方法支持
-
-为同一路径配置不同 HTTP 方法，实现 RESTful API：
-
-```java title="ArticleController.java"
-@Controller("articles")
-public class ArticleController {
-
-    @RequestMapping(value = "/", method = RequestMethod.GET)
-    public String list() {
-        return "list articles";
-    }
-
-    @RequestMapping(value = "/", method = RequestMethod.POST)
-    public String create() {
-        return "create article";
-    }
-
-    @RequestMapping(value = "/:id", method = RequestMethod.GET)
-    public String get(@PathParam("id") String id) {
-        return "get article: " + id;
-    }
-
-    @RequestMapping(value = "/:id", method = RequestMethod.PUT)
-    public String update(@PathParam("id") String id) {
-        return "update article: " + id;
-    }
-
-    @RequestMapping(value = "/:id", method = RequestMethod.DELETE)
-    public String delete(@PathParam("id") String id) {
-        return "delete article: " + id;
-    }
-}
-```
-
-**API 端点总结：**
-
-| HTTP 方法 | URL | 操作 |
-|----------|-----|------|
-| GET | `/articles` | 获取文章列表 |
-| POST | `/articles` | 创建新文章 |
-| GET | `/articles/:id` | 获取指定文章 |
-| PUT | `/articles/:id` | 更新指定文章 |
-| DELETE | `/articles/:id` | 删除指定文章 |
-
----
-
-## 内置参数注入
-
-除了 `@Param` 和 `@PathParam`，Feat Cloud 支持直接注入多种内置对象。
-
-### Session 会话对象
-
-```java
-import tech.smartboot.feat.core.server.Session;
-
-@RequestMapping("/session")
-public String session(Session session) {
-    // 获取会话 ID
-    String sessionId = session.getSessionId();
-    
-    // 存储会话属性
-    session.setAttribute("user", "smartboot");
-    
-    // 读取会话属性
-    String user = (String) session.getAttribute("user");
-    
-    return "Session ID: " + sessionId + ", User: " + user;
-}
-```
-
-### Context 请求上下文
-
-```java
-import tech.smartboot.feat.router.Context;
-
-@RequestMapping("/context")
-public String context(Context context) {
-    // 获取请求 URI
-    String uri = context.Request.getRequestURI();
-    
-    // 获取请求方法
-    String method = context.Request.getMethod();
-    
-    // 获取请求头
-    String contentType = context.Request.getHeader("Content-Type");
-    
-    return "URI: " + uri + ", Method: " + method;
-}
-```
-
-### AsyncResponse 异步响应
-
-```java
-import tech.smartboot.feat.cloud.AsyncResponse;
-
-@RequestMapping("/async")
-public AsyncResponse async() {
-    AsyncResponse response = new AsyncResponse();
-    
-    // 在异步线程中完成响应
-    new Thread(() -> {
-        try {
-            Thread.sleep(1000); // 模拟耗时操作
-            response.write("异步响应完成");
-            response.complete();
-        } catch (InterruptedException e) {
-            response.complete();
-        }
-    }).start();
-    
-    return response;
-}
-```
-
-<Aside type="tip">
-异步响应适用于耗时操作场景。更多细节请参考 [异步处理](/feat/server/async/) 章节。
-</Aside>
-
----
-
-## 高级特性
-
-### 编译期序列化
-
-Feat Cloud 的 JSON 序列化在**编译期完成代码生成**，而非运行时反射：
-
-```java
-// 编译期生成的序列化代码示例（简化）
-public void serializeUser(User user, OutputStream os) {
-    os.write('{');
-    os.write("\"username\":".getBytes());
-    os.write('"');
-    os.write(user.getUsername().getBytes());
-    os.write('"');
-    os.write(',');
-    os.write("\"age\":".getBytes());
-    os.write(String.valueOf(user.getAge()).getBytes());
-    os.write('}');
-}
-```
-
-**性能对比：**
-
-| 对比项 | 传统反射 | Feat Cloud |
-|--------|---------|------------|
-| 反射开销 | 有 | 无 |
-| 字段访问 | 反射调用 | 直接调用 |
-| 类型检查 | 运行时 | 编译期 |
-| 内存分配 | 较多 | 极少 |
-
-**序列化规则：**
-
-- `String` 类型直接输出为纯文本
-- 基本类型、包装类型、Date、Timestamp 等生成直接序列化代码
-- 自定义对象在编译期分析字段并生成序列化逻辑
-- 深层级对象（>4层）或数组回退到 FastJSON2 处理
-
-### Gzip 压缩
-
-`@Controller` 注解支持开启 Gzip 压缩，减少响应体积：
-
-```java
-@Controller(
-    value = "api", 
-    gzip = true,           // 开启 Gzip 压缩
-    gzipThreshold = 256    // 压缩阈值：256 字节
-)
-public class CompressedController {
-    
-    @RequestMapping(value = "/large", method = RequestMethod.GET)
-    public String largeResponse() {
-        // 当响应内容超过 256 字节时，自动启用 Gzip 压缩
-        return "这是一段很长的文本内容...";
-    }
-}
-```
-
-**Gzip 属性说明：**
-
-| 属性 | 类型 | 默认值 | 说明 |
-|-----|------|--------|------|
-| `gzip` | boolean | false | 是否开启 Gzip 压缩 |
-| `gzipThreshold` | int | 256 | 压缩阈值（字节），低于此值不压缩 |
-
-<Aside type="note">
-Gzip 压缩适用于返回大量文本数据的接口。对于小数据量响应，压缩开销可能大于收益。
-</Aside>
-
----
-
-## 完整实战示例
-
-生产级控制器示例，展示各种特性的综合应用：
-
-```java title="OrderController.java"
-package com.example.controller;
-
-import tech.smartboot.feat.cloud.annotation.Controller;
-import tech.smartboot.feat.cloud.annotation.Param;
-import tech.smartboot.feat.cloud.annotation.PathParam;
-import tech.smartboot.feat.cloud.annotation.RequestMapping;
-import tech.smartboot.feat.cloud.annotation.RequestMethod;
-import tech.smartboot.feat.core.server.Session;
-
+```java title="UserController.java"
 import java.util.HashMap;
 import java.util.Map;
 
-@Controller(
-    value = "api/v1/orders",
-    gzip = true,
-    gzipThreshold = 512
-)
-public class OrderController {
-
-    /**
-     * 获取订单列表（支持分页）
-     */
-    @RequestMapping(value = "/", method = RequestMethod.GET)
-    public Map<String, Object> list(
-            @Param("page") int page,
-            @Param("size") int size,
-            Session session) {
-        
-        Map<String, Object> result = new HashMap<>();
-        result.put("page", page);
-        result.put("size", size);
-        result.put("sessionId", session.getSessionId());
-        result.put("orders", new String[]{});
-        
-        return result;
-    }
-
-    /**
-     * 获取单个订单详情
-     */
-    @RequestMapping(value = "/:orderId", method = RequestMethod.GET)
-    public Map<String, Object> detail(@PathParam("orderId") String orderId) {
-        Map<String, Object> order = new HashMap<>();
-        order.put("orderId", orderId);
-        order.put("status", "completed");
-        order.put("amount", 199.99);
-        
-        return order;
-    }
-
-    /**
-     * 创建订单
-     */
-    @RequestMapping(value = "/", method = RequestMethod.POST)
-    public Map<String, Object> create(@Param("productId") String productId,
-                                       @Param("quantity") int quantity) {
-        Map<String, Object> result = new HashMap<>();
-        result.put("success", true);
-        result.put("orderId", "ORD-" + System.currentTimeMillis());
-        result.put("productId", productId);
-        result.put("quantity", quantity);
-        
-        return result;
-    }
-
-    /**
-     * 更新订单状态
-     */
-    @RequestMapping(value = "/:orderId/status", method = RequestMethod.PUT)
-    public Map<String, Object> updateStatus(
-            @PathParam("orderId") String orderId,
-            @Param("status") String status) {
-        
-        Map<String, Object> result = new HashMap<>();
-        result.put("orderId", orderId);
-        result.put("newStatus", status);
-        result.put("updated", true);
-        
-        return result;
-    }
-
-    /**
-     * 取消订单
-     */
-    @RequestMapping(value = "/:orderId", method = RequestMethod.DELETE)
-    public Map<String, Object> cancel(@PathParam("orderId") String orderId) {
-        Map<String, Object> result = new HashMap<>();
-        result.put("orderId", orderId);
-        result.put("cancelled", true);
-        
-        return result;
-    }
+@RequestMapping(value = "/info", method = RequestMethod.GET)
+public Map<String, Object> info() {
+    Map<String, Object> data = new HashMap<>();
+    data.put("framework", "Feat");
+    data.put("version", "2.1");
+    return data;
 }
 ```
 
-**API 测试命令：**
+访问 `/users/info` 会返回 JSON：
 
-<Tabs>
-  <TabItem label="获取订单列表">
-    ```shell
-    curl "http://localhost:8080/api/v1/orders/?page=1&size=10"
-    ```
-  </TabItem>
-  <TabItem label="获取单个订单">
-    ```shell
-    curl http://localhost:8080/api/v1/orders/12345
-    ```
-  </TabItem>
-  <TabItem label="创建订单">
-    ```shell
-    curl -X POST "http://localhost:8080/api/v1/orders/?productId=PROD-001&quantity=2"
-    ```
-  </TabItem>
-  <TabItem label="更新订单状态">
-    ```shell
-    curl -X PUT "http://localhost:8080/api/v1/orders/12345/status?status=shipped"
-    ```
-  </TabItem>
-  <TabItem label="取消订单">
-    ```shell
-    curl -X DELETE http://localhost:8080/api/v1/orders/12345
-    ```
-  </TabItem>
-</Tabs>
+```text title="响应结果"
+{"framework":"Feat","version":"2.1"}
+```
 
----
+<Aside type="tip">
+这里的 JSON 序列化由 Feat Cloud 在编译期生成，不需要你写 `ObjectMapper` 或引入额外的 JSON 库。
+</Aside>
 
-## 本节小结
+## 路由映射是怎么发生的
 
-本节详细介绍了 Feat Cloud 控制器的核心概念和使用方法：
+传统框架在运行时才去扫描类路径、解析注解、生成代理。Feat Cloud 在编译期就做完了这些事。
 
-1. **AOT 机制**：编译期生成路由代码，运行时无反射，性能更高
-2. **基础配置**：使用 `@Controller` 定义基础路径，`@RequestMapping` 映射端点
-3. **参数绑定**：`@Param` 获取查询参数，`@PathParam` 获取路径参数
-4. **HTTP 方法**：使用 `RequestMethod` 实现 RESTful API
-5. **内置注入**：支持 `Session`、`Context`、`AsyncResponse` 等对象注入
-6. **高级特性**：`gzip` 属性开启响应压缩
+当你运行 `mvn compile` 时，`feat-cloud-starter` 中的注解处理器会：
 
+1. 扫描 `@Controller` 类
+2. 解析 `@RequestMapping` 的路径和方法
+3. 生成 `CloudService` 实现类
+4. 把路由注册到 `Router`
+
+带来的直接好处：调用开销接近直接方法调用、内存占用更低、启动更快，也更容易构建 Native Image。
+
+## 动手试一试
+
+给 `UserController` 添加一个新接口，访问 `http://localhost:8080/users/time` 时返回当前时间字符串。
+
+```java title="练习代码"
+@RequestMapping(value = "/time", method = RequestMethod.GET)
+public String time() {
+    return java.time.LocalDateTime.now().toString();
+}
+```
+
+验证：
+
+```shell title="curl 验证"
+curl http://localhost:8080/users/time
+```

@@ -1,0 +1,165 @@
+---
+title: 请求映射与参数
+description: 掌握 @Param、@PathParam 和 RequestMethod，用 Feat Cloud 写出 RESTful 接口
+sidebar:
+    order: 3
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components'
+
+上一章写出了一个能返回文本和 JSON 的控制器。这一章继续扩展它，学习如何接收客户端传过来的参数，以及如何为同一路径配置不同的 HTTP 方法。
+
+## 本章目标
+
+完成本章后，你的 `UserController` 会支持：
+
+- 查询参数绑定
+- 路径参数绑定
+- RESTful 风格的 GET/POST/PUT/DELETE
+
+## 查询参数
+
+使用 `@Param` 注解从 URL 查询字符串提取参数值。
+
+```java title="UserController.java"
+@RequestMapping(value = "/search", method = RequestMethod.GET)
+public String search(@Param("keyword") String keyword,
+                     @Param("page") int page) {
+    return "搜索: " + keyword + ", 页码: " + page;
+}
+```
+
+<Tabs>
+  <TabItem label="请求">
+    ```shell title="curl 请求"
+    curl "http://localhost:8080/users/search?keyword=feat&page=1"
+    ```
+  </TabItem>
+  <TabItem label="响应">
+    ```text title="响应结果"
+    搜索: feat, 页码: 1
+    ```
+  </TabItem>
+</Tabs>
+
+### 支持的参数类型
+
+| 类型类别 | 具体类型 | 说明 |
+|---------|---------|------|
+| 基本类型 | `int`、`long`、`boolean` 等 | 缺失参数时取值为 `null`，拆箱可能触发 `NullPointerException` |
+| 包装类型 | `Integer`、`Long`、`Boolean` 等 | 缺失参数时为 `null` |
+| 字符串 | `String` | 缺失参数时为 `null` |
+
+<Aside type="caution">
+基本类型没有 `null` 状态。如果查询字符串里没有对应参数，内部解析会得到 `null`，再拆箱成 `int` 或 `long` 时就会抛出 `NullPointerException`。建议把可能缺失的参数声明为包装类型，或在业务代码里做判空处理。
+</Aside>
+
+## 路径参数
+
+使用 `@PathParam` 注解从 URL 路径提取变量值。
+
+```java title="UserController.java"
+@RequestMapping(value = "/:userId", method = RequestMethod.GET)
+public String getUser(@PathParam("userId") String userId) {
+    return "用户ID: " + userId;
+}
+```
+
+<Tabs>
+  <TabItem label="请求">
+    ```shell title="curl 请求"
+    curl http://localhost:8080/users/12345
+    ```
+  </TabItem>
+  <TabItem label="响应">
+    ```text title="响应结果"
+    用户ID: 12345
+    ```
+  </TabItem>
+</Tabs>
+
+<Aside type="tip">
+Feat Cloud 支持两种路径参数写法：
+
+- 冒号形式：`/:userId`
+- 花括号形式：`/{userId}`
+
+两种写法功能等价，团队内部统一即可。
+</Aside>
+
+## HTTP 方法
+
+### RequestMethod 枚举
+
+```java title="RequestMethod.java"
+public enum RequestMethod {
+    GET, HEAD, POST, PUT, PATCH, DELETE, OPTIONS, TRACE
+}
+```
+
+### RESTful 接口
+
+为同一路径配置不同方法：
+
+```java title="UserController.java"
+@RequestMapping(value = "/", method = RequestMethod.GET)
+public String list() {
+    return "list all users";
+}
+
+@RequestMapping(value = "/", method = RequestMethod.POST)
+public String create(@Param("name") String name) {
+    return "created user: " + name;
+}
+
+@RequestMapping(value = "/:id", method = RequestMethod.GET)
+public String get(@PathParam("id") String id) {
+    return "get user: " + id;
+}
+
+@RequestMapping(value = "/:id", method = RequestMethod.PUT)
+public String update(@PathParam("id") String id, @Param("name") String name) {
+    return "updated user " + id + " to " + name;
+}
+
+@RequestMapping(value = "/:id", method = RequestMethod.DELETE)
+public String delete(@PathParam("id") String id) {
+    return "deleted user: " + id;
+}
+```
+
+测试命令：
+
+<Tabs>
+  <TabItem label="GET 列表">
+    ```shell title="curl 请求"
+    curl http://localhost:8080/users/
+    ```
+  </TabItem>
+  <TabItem label="POST 创建">
+    ```shell title="curl 请求"
+    curl -X POST "http://localhost:8080/users/?name=Bob"
+    ```
+  </TabItem>
+  <TabItem label="GET 单个">
+    ```shell title="curl 请求"
+    curl http://localhost:8080/users/123
+    ```
+  </TabItem>
+  <TabItem label="PUT 更新">
+    ```shell title="curl 请求"
+    curl -X PUT "http://localhost:8080/users/123?name=Charlie"
+    ```
+  </TabItem>
+  <TabItem label="DELETE 删除">
+    ```shell title="curl 请求"
+    curl -X DELETE http://localhost:8080/users/123
+    ```
+  </TabItem>
+</Tabs>
+
+## 动手试一试
+
+把路径参数从 `:id` 改成 `{id}` 形式，重新编译并验证 `/users/123` 是否仍然可以访问。
+
+完成后，你的 `UserController` 就具备了完整的 RESTful 查询能力。
