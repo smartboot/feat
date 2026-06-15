@@ -1,16 +1,17 @@
+
 ---
 title: Feat 简介
-description: 理解 Feat 的定位、三层架构设计，以及如何选择适合你的学习路径
+description: 理解 Feat 的定位、三层架构，以及如何根据你的目标选择学习路径
 sidebar:
   order: 0
 ---
 
 import architecture from './img/architecture.svg';
-import { Aside, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import { CardGrid, LinkCard, Aside } from '@astrojs/starlight/components';
 
-Feat 是一个从底层网络服务能力生长出来的 Java Web 框架，把 Core、Cloud、AI 三条线收拢到同一套技术栈里。
+如果你已经会用 Java 写 Web 服务，但希望有一个比 Spring Boot 更轻量、启动更快、资源占用更低的选项；或者你想把 AI 能力直接接入 Java 后端而不引入 Python 服务，Feat 很可能是你要找的工具。
 
-它不是 Servlet 容器的包装层，也不是单纯的注解框架。
+Feat 是一个从底层网络服务能力生长出来的 Java Web 框架。它不是 Servlet 容器的包装层，也不是单纯的注解框架。它把 Core、Cloud、AI 三条线收拢到同一套技术栈里，每一层都可以独立使用。
 
 <img src={architecture.src} alt="Feat 架构图" width="800" height="400" />
 
@@ -20,7 +21,13 @@ Feat 是一个从底层网络服务能力生长出来的 Java Web 框架，把 C
 | **Feat Cloud** | 注解式开发模型 | 快速构建业务应用，类似 Spring Boot 体验 |
 | **Feat AI** | AI 能力接入层 | 统一接入对话、Embedding、Agent、MCP |
 
-## 选择学习路径
+<Aside type="caution">
+Feat 主线仓库采用 Apache 2.0。Feat Core 与 Feat AI 可直接使用；Feat Cloud 通过赞助支持模式开放，如需使用请先[成为赞助者](/feat/sponsors/)获取授权。
+</Aside>
+
+## 根据目标选择起点
+
+不要从第一页顺序读到最后一页。先判断你当前最想解决什么问题，然后选择一条路径跑通第一个示例：
 
 <CardGrid>
   <LinkCard
@@ -30,7 +37,7 @@ Feat 是一个从底层网络服务能力生长出来的 Java Web 框架，把 C
   />
   <LinkCard
     title="Feat Cloud"
-    href="/feat/cloud/quickstart/"
+    href="/feat/cloud/"
     description="如果你更习惯注解式开发，从这里开始。"
   />
   <LinkCard
@@ -40,15 +47,4 @@ Feat 是一个从底层网络服务能力生长出来的 Java Web 框架，把 C
   />
 </CardGrid>
 
-<Aside type="caution">
-Feat 主线仓库采用 Apache 2.0。Feat Core 与 Feat AI 可直接使用；Feat Cloud 通过赞助支持模式开放，如需使用请先[成为赞助者](/feat/sponsors/)获取授权。
-</Aside>
-
-## 阅读建议
-
-第一次接触 Feat 的读者，建议先选一条路径跑通一个最小示例，再沿着该路径继续深入。不需要一开始就读完所有文档。
-
-- 对某个能力感兴趣 → 沿着该能力的教程继续读
-- 需要查参数、排错 → 再进入配置页和附录
-
-先跑通，再扩展；先教程，再参考。
+跑通第一个示例后，你会对 Feat 的编码风格有一个直观印象。之后再深入同一层级的其他主题，会比从头读理论轻松得多。
