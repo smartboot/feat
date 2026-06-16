@@ -5,44 +5,36 @@ sidebar:
     order: 10
 ---
 
-import { Aside } from '@astrojs/starlight/components';
+![](./img/deployment_1.png)
+# 部署指南
 
-到了这一页，默认你已经能把应用跑起来了。  
-现在要解决的问题不再是“怎么写 Controller”，而是“怎么把它交给别的环境去跑”。
+到这一页，默认你已经能把应用在本地跑起来了。接下来介绍三种部署方式，按复杂度递增排列：
 
-本文不追求覆盖所有部署形态，而是基于仓库里的 `demo/helloworld_docker` 给出一条最短交付路径。
+- **直接运行 Fat Jar**：有服务器、装了 JDK，最快的方式
+- **JRE 容器镜像**：标准的容器化交付
+- **Native Image 容器**：启动更快、镜像更小，构建更复杂
 
-```mermaid
-flowchart LR
-    A["代码可运行"] --> B["mvn clean package"]
-    B --> C["得到可执行 Jar"]
-    C --> D{"交付目标是什么？"}
-    D --> E["先走 JRE 容器"]
-    D --> F["评估 Native"]
-    E --> G["调试简单、链路稳定"]
-    F --> H["启动更快、构建更复杂"]
+> 建议先走 Fat Jar 或 JRE 容器把链路跑通，再考虑 Native。
+
+---
+
+## 第一步：打包
+
+三种方式都从同一个起点出发。执行：
+
+```bash
+mvn clean package
 ```
 
+`target/` 下会生成一个可执行 Fat Jar（shaded jar 默认替换原始 jar，文件名不带 `-shaded` 后缀）：
 
-## 先回答一个问题：你要交付什么
+```
+target/yourapp-1.0.jar
+```
 
-对于 Feat Cloud 应用，最常见的两种交付物是：
+**打包需要正确配置 `maven-shade-plugin`**，两点缺一不可：
 
-1. 一个可执行 Fat Jar
-2. 一个容器镜像
-
-而容器镜像又常见地分成两种：
-
-- 基于 JRE 运行 Jar
-- 基于 GraalVM Native Image 运行本地可执行文件
-
-## 第一步：先把 Jar 打出来
-
-> 示例中插件和基础镜像版本号使用占位符，实际使用时请替换为当前稳定版本。
-
-`demo/helloworld_docker/pom.xml` 里已经给出了典型的 `maven-shade-plugin` 配置：
-
-```xml title="pom.xml"
+```xml
 <plugin>
     <groupId>org.apache.maven.plugins</groupId>
     <artifactId>maven-shade-plugin</artifactId>
@@ -50,18 +42,16 @@ flowchart LR
     <executions>
         <execution>
             <phase>package</phase>
-            <goals>
-                <goal>shade</goal>
-            </goals>
+            <goals><goal>shade</goal></goals>
             <configuration>
                 <transformers>
-                    <transformer
-                            implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                    <!-- 合并 CloudService 服务发现文件，缺少这个路由会全部 404 -->
+                    <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                         <resource>META-INF/services/tech.smartboot.feat.cloud.CloudService</resource>
                     </transformer>
-                    <transformer
-                            implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                        <mainClass>tech.smartboot.feat.demo.Bootstrap</mainClass>
+                    <!-- 指定启动主类，缺少这个 java -jar 会报错 -->
+                    <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                        <mainClass>com.example.Bootstrap</mainClass>
                     </transformer>
                 </transformers>
             </configuration>
@@ -70,126 +60,94 @@ flowchart LR
 </plugin>
 ```
 
-这里最关键的不是 Shade 本身，而是两件事：
+---
 
-- 合并 `CloudService` 的服务发现文件
-- 把启动主类写进 manifest
+## 方案一：直接运行 Fat Jar
 
-打包命令：
-
-```bash title="打包命令"
-mvn clean package
+```bash
+java -jar target/yourapp-1.0.jar
 ```
 
-完成后，`target/` 目录下就会出现可执行 Jar。
+验证：
 
-## 第二步：决定你是走 JRE 还是 Native
+```bash
+curl http://localhost:8080/hello
+```
 
-### 方案一：JRE 容器
+后台运行：
 
-如果你想要更简单、调试更直接的交付方式，先用 JRE 镜像。
+```bash
+nohup java -jar yourapp-1.0.jar > app.log 2>&1 &
+```
 
-`demo/helloworld_docker/Dockerfile_jre`：
+---
 
-```dockerfile title="Dockerfile_jre"
-FROM eclipse-temurin:${jre.version}-jre-alpine
-WORKDIR /feat
-COPY target/helloworld_docker*.jar helloworld.jar
+## 方案二：JRE 容器镜像
+
+```dockerfile
+FROM eclipse-temurin:21-jre-alpine
+
+WORKDIR /app
+
+COPY target/yourapp-1.0.jar app.jar
 
 EXPOSE 8080
 
-CMD ["java", "-jar", "helloworld.jar"]
+CMD ["java", "-jar", "app.jar"]
 ```
 
-这是最容易理解的一种交付方式：
+构建并运行：
 
-- 你交付的是 Jar
-- 容器里只负责提供 JRE
-- 启动命令仍然是 `java -jar`
+```bash
+docker build -t yourapp:latest .
+docker run -p 8080:8080 yourapp:latest
+```
 
-### 方案二：Native 容器
+---
 
-如果你的目标是更快启动、更小运行时依赖，可以考虑 Native Image。
+## 方案三：Native Image 容器
 
-`demo/helloworld_docker/Dockerfile_native`：
+构建前确认已完成 [Native Image](./native-image) 的相关配置。
 
-```dockerfile title="Dockerfile_native"
-FROM container-registry.oracle.com/graalvm/native-image:${graalvm.version}-ol8 AS builder
+```dockerfile
+# 第一阶段：编译
+FROM container-registry.oracle.com/graalvm/native-image:21-ol9 AS builder
 
-COPY target/helloworld_docker*.jar helloworld.jar
+WORKDIR /build
+COPY target/yourapp-1.0.jar app.jar
+RUN native-image --no-fallback -jar app.jar -o yourapp
 
-RUN native-image --no-fallback -jar helloworld.jar
+# 第二阶段：运行
+FROM ubuntu:22.04
 
-FROM ubuntu:${base.image.version}
+WORKDIR /app
+COPY --from=builder /build/yourapp yourapp
+
 EXPOSE 8080
-
-COPY --from=builder /app/helloworld helloworld
-ENTRYPOINT ["/helloworld"]
+ENTRYPOINT ["/app/yourapp"]
 ```
 
-这条路径的核心区别是：
+构建并运行：
 
-- 前半段用 GraalVM 生成本地可执行文件
-- 后半段运行时不再需要完整 JRE
-
-## 第三步：构建并运行
-
-示例工程里给了一个简单的 `Makefile`：
-
-```makefile title="Makefile"
-native:
-	mvn clean package
-	podman build -t feat-docker:native -f Dockerfile_native
-	podman build -t feat-docker:jre -f Dockerfile_jre
+```bash
+docker build -t yourapp:native .
+docker run -p 8080:8080 yourapp:native
 ```
 
-如果你使用 `docker`，把 `podman` 替换掉即可。
+Native Image 构建耗时较长（通常几分钟），属于正常现象。启动完成后可以观察日志，启动时间通常在 100ms 以内。
 
-手动执行也很直接：
+---
 
-```bash title="手动构建并运行"
-mvn clean package
-docker build -t feat-docker:jre -f Dockerfile_jre demo/helloworld_docker
-docker run -p 8080:8080 feat-docker:jre
+## 常见问题
+
+**启动后路由全部 404**：`AppendingTransformer` 未配置，导致 `CloudService` 服务发现文件被覆盖。检查 `pom.xml` 确认配置完整。
+
+**`java -jar` 启动报错**：`mainClass` 写错或未配置。可用以下命令验证 Manifest：
+
+```bash
+unzip -p target/yourapp-1.0.jar META-INF/MANIFEST.MF
 ```
 
-然后访问：
+输出里应包含 `Main-Class: com.example.Bootstrap`。
 
-```text title="验证地址"
-http://localhost:8080/hello
-```
-
-## 怎么选
-
-### 先选 JRE 容器，如果：
-
-- 你更在乎交付简单
-- 你还在频繁调试
-- 你希望运行环境和本地 Java 行为更接近
-
-### 再考虑 Native，如果：
-
-- 你很在意启动时间
-- 你部署在资源敏感环境
-- 你已经能稳定构建并运行普通 Jar 版本
-
-不要一开始就把 Native 当默认路径。  
-先把 JRE 交付链路跑通，再上 Native，通常更稳。
-
-## 实际交付时最容易漏掉什么
-
-### 1. 忘了配置 Shade 插件
-
-结果通常是：
-
-- Jar 打出来了
-- 但运行时找不到 Feat Cloud 生成的服务信息
-
-### 2. `mainClass` 写错
-
-结果是 Jar 可以打包，但不能直接启动。
-
-### 3. Dockerfile 的 `COPY` 路径对不上
-
-尤其是模块项目里，经常会因为构建目录和 Docker build 上下文不一致导致文件根本没复制进去。
-
+**Docker `COPY` 找不到文件**：确认 `docker build` 的执行目录，`COPY` 路径相对于构建上下文，不能使用绝对路径。
