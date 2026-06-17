@@ -22,6 +22,7 @@ import tech.smartboot.feat.cloud.aot.License;
 import tech.smartboot.feat.cloud.aot.Serializer;
 import tech.smartboot.feat.cloud.aot.serializer.extension.MybatisSerializer;
 import tech.smartboot.feat.cloud.aot.serializer.extension.RedisunSerializer;
+import tech.smartboot.feat.cloud.aot.serializer.extension.DataSourceSerializer;
 import tech.smartboot.feat.cloud.session.ClusterSessionManager;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.exception.FeatException;
@@ -141,6 +142,10 @@ public final class CloudOptionsSerializer implements Serializer {
 
         if (JSONPath.eval(config, "$.feat.mybatis") != null) {
             extensions.add(new MybatisSerializer(processingEnv, config, printWriter));
+        }
+
+        if (JSONPath.eval(config, "$.feat.datasource") != null) {
+            extensions.add(new DataSourceSerializer(processingEnv, config, printWriter));
         }
     }
 

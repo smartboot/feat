@@ -1,6 +1,7 @@
 package tech.smartboot.feat.demo.mybatis.entity;
 
 import java.util.Date;
+import java.util.List;
 
 public class User {
     private String username;
@@ -10,14 +11,23 @@ public class User {
     private Date createTime;
     private Date editTime;
 
+    private List<Post> posts;
+
+    private Address address;
+
     // Constructors
     public User() {}
 
-    public User(String username, String password, String desc, String role) {
+   public User(String username, String password, String desc, String role) {
+       this.username = username;
+       this.password = password;
+       this.desc = desc;
+       this.role = role;
+   }
+
+    public User(String username, List<Post> posts) {
         this.username = username;
-        this.password = password;
-        this.desc = desc;
-        this.role = role;
+        this.posts = posts;
     }
 
     // Getters and Setters
@@ -67,6 +77,22 @@ public class User {
 
     public void setEditTime(Date editTime) {
         this.editTime = editTime;
+    }
+
+    public List<Post> getPosts() {
+        return posts;
+    }
+
+    public void setPosts(List<Post> posts) {
+        this.posts = posts;
+    }
+
+    public Address getAddress() {
+        return address;
+    }
+
+    public void setAddress(Address address) {
+        this.address = address;
     }
 
     @Override

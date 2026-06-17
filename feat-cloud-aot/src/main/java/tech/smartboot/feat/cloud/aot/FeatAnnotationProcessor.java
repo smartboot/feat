@@ -69,6 +69,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         types.add(Autowired.class.getCanonicalName());
         types.add(Controller.class.getCanonicalName());
         types.add(Mapper.class.getCanonicalName());
+        types.add(tech.smartboot.feat.cloud.annotation.orm.Mapper.class.getCanonicalName());
         types.add(McpEndpoint.class.getCanonicalName());
         return types;
     }

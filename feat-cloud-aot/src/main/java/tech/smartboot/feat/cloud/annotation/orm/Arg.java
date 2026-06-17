@@ -6,49 +6,40 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * 单个构造器参数映射，与 MyBatis {@code @Arg} 行为一致。
+ */
 @Target({})
 @Retention(RetentionPolicy.SOURCE)
 @Documented
-public @interface Result {
+public @interface Arg {
     /**
-     * 数据库列名
+     * 数据库列名。
      */
     String column();
-    
+
     /**
-     * Java 对象属性名
-     */
-    String property();
-    
-    /**
-     * Java 类型（可选）
-     * 用于类型转换
+     * Java 类型。
      */
     Class<?> javaType() default void.class;
-    
+
     /**
-     * JDBC 类型（可选）
-     * 用于指定数据库列的 JDBC 类型
+     * JDBC 类型。
      */
     String jdbcType() default "";
-    
+
     /**
-     * 是否为主键
+     * 是否为主键。
      */
     boolean id() default false;
 
     /**
-     * 一对一嵌套查询。
+     * 嵌套查询语句 ID（暂预留）。
      */
-    One one() default @One;
+    String select() default "";
 
     /**
-     * 一对多嵌套查询。
-     */
-    Many many() default @Many;
-
-    /**
-     * 类型处理器。
+     * 类型处理器（暂预留）。
      */
     Class<?> typeHandler() default void.class;
 }
