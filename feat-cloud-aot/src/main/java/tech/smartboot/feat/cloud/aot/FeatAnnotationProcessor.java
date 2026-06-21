@@ -23,7 +23,6 @@ import tech.smartboot.feat.cloud.aot.serializer.BeanSerializer;
 import tech.smartboot.feat.cloud.aot.serializer.CloudOptionsSerializer;
 import tech.smartboot.feat.cloud.aot.serializer.ControllerSerializer;
 import tech.smartboot.feat.cloud.aot.serializer.DefaultMcpServerSerializer;
-import tech.smartboot.feat.cloud.aot.serializer.FeatMapperSerializer;
 import tech.smartboot.feat.cloud.aot.serializer.MapperSerializer;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.exception.FeatException;
@@ -69,7 +68,6 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         types.add(Autowired.class.getCanonicalName());
         types.add(Controller.class.getCanonicalName());
         types.add(Mapper.class.getCanonicalName());
-        types.add(tech.smartboot.feat.cloud.annotation.orm.Mapper.class.getCanonicalName());
         types.add(McpEndpoint.class.getCanonicalName());
         return types;
     }
@@ -150,14 +148,6 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         for (Element element : roundEnv.getElementsAnnotatedWith(Mapper.class)) {
             try {
                 createAptLoader(new MapperSerializer(processingEnv, config, element));
-            } catch (Throwable e) {
-                exception = e;
-            }
-        }
-
-        for (Element element : roundEnv.getElementsAnnotatedWith(tech.smartboot.feat.cloud.annotation.orm.Mapper.class)) {
-            try {
-                createAptLoader(new FeatMapperSerializer(processingEnv, config, element));
             } catch (Throwable e) {
                 exception = e;
             }
