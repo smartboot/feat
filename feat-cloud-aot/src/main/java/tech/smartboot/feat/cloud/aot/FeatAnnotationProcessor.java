@@ -19,6 +19,7 @@ import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Bean;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
+import tech.smartboot.feat.cloud.aot.serializer.ApiDocSerializer;
 import tech.smartboot.feat.cloud.aot.serializer.BeanSerializer;
 import tech.smartboot.feat.cloud.aot.serializer.CloudOptionsSerializer;
 import tech.smartboot.feat.cloud.aot.serializer.ControllerSerializer;
@@ -77,6 +78,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
     private Throwable exception = null;
     private final List<BeanUnit> services = new ArrayList<>();
     private String config;
+    private ApiDocSerializer apiDocSerializer;
 
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
@@ -91,6 +93,8 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             }
             serviceFile = processingEnv.getFiler().createResource(StandardLocation.CLASS_OUTPUT, "", "META-INF/services/" + CloudService.class.getName());
             serviceWrite = new PrintWriter(serviceFile.openWriter());
+            // 初始化 API 文档生成器
+            apiDocSerializer = new ApiDocSerializer(processingEnv, config);
             System.out.println("processor init: " + this);
         } catch (Throwable e) {
             throw new FeatException(e);
@@ -132,6 +136,8 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                     rootMcpEnable = true;
                 }
                 createAptLoader(serializer);
+                // 收集 API 文档信息
+                apiDocSerializer.addController(element);
             } catch (Throwable e) {
                 exception = e;
             }
@@ -169,6 +175,9 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         }
         serviceWrite.flush();
         serviceWrite.close();
+
+        // 生成 OpenAPI 文档
+        apiDocSerializer.generateOpenApiDoc();
 
         if (exception != null) {
             exception.printStackTrace();
