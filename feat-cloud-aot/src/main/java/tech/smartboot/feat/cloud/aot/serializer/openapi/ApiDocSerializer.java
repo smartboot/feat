@@ -443,9 +443,7 @@ public final class ApiDocSerializer {
                             parameter.put("required", param.isRequired());
                             parameter.put("description", "");
 
-                            JSONObject schema = new JSONObject();
-                            schema.put("type", param.getType());
-                            parameter.put("schema", schema);
+                            parameter.put("schema", JSONObject.of("type", param.getType()));
                             parameters.add(parameter);
                         }
                     }
