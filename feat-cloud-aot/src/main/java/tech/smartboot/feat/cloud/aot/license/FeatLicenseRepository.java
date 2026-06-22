@@ -8,7 +8,7 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.cloud.aot;
+package tech.smartboot.feat.cloud.aot.license;
 
 import java.util.Map;
 
@@ -16,7 +16,7 @@ import java.util.Map;
  * @author 三刀
  * @version v1.0 8/26/25
  */
-public class FeatLicenseRepository {
+class FeatLicenseRepository {
     private Map<String, License> users;
 
     public Map<String, License> getUsers() {

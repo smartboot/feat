@@ -10,11 +10,14 @@
 
 package tech.smartboot.feat.cloud.aot.serializer;
 
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONWriter;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.Param;
 import tech.smartboot.feat.cloud.annotation.PathParam;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.cloud.aot.Serializer;
+import tech.smartboot.feat.cloud.aot.license.License;
 import tech.smartboot.feat.core.common.FeatUtils;
 
 import javax.annotation.processing.ProcessingEnvironment;
@@ -178,103 +181,103 @@ public final class ApiDocSerializer implements Serializer {
     }
 
     public String generateOpenApiJson(String title, String version) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("{\n");
-        sb.append("  \"openapi\": \"3.0.0\",\n");
-        sb.append("  \"info\": {\n");
-        sb.append("    \"title\": \"").append(escapeJson(title)).append("\",\n");
-        sb.append("    \"version\": \"").append(escapeJson(version)).append("\",\n");
-        sb.append("    \"description\": \"Auto-generated API documentation\"\n");
-        sb.append("  },\n");
-        sb.append("  \"paths\": {\n");
+        OpenApiDoc doc = new OpenApiDoc();
+        doc.openapi = "3.0.0";
 
-        // 按路径分组
+        // 设置 info
+        doc.info = new Info();
+        doc.info.title = title;
+        doc.info.version = version;
+        doc.info.description = "Auto-generated API documentation";
+
+        // 按路径分组构建 paths
+        doc.paths = new LinkedHashMap<>();
         Map<String, List<ApiEndpoint>> pathMap = new LinkedHashMap<>();
         for (ApiEndpoint endpoint : endpoints) {
             pathMap.computeIfAbsent(endpoint.path, k -> new ArrayList<>()).add(endpoint);
         }
 
-        boolean firstPath = true;
         for (Map.Entry<String, List<ApiEndpoint>> entry : pathMap.entrySet()) {
-            if (!firstPath) {
-                sb.append(",\n");
-            }
-            firstPath = false;
+            PathItem pathItem = new PathItem();
+            doc.paths.put(entry.getKey(), pathItem);
 
-            sb.append("    \"").append(escapeJson(entry.getKey())).append("\": {\n");
-
-            boolean firstMethod = true;
             for (ApiEndpoint endpoint : entry.getValue()) {
-                if (!firstMethod) {
-                    sb.append(",\n");
-                }
-                firstMethod = false;
-
                 for (String method : endpoint.methods) {
-                    sb.append("      \"").append(method).append("\": {\n");
-                    sb.append("        \"summary\": \"").append(escapeJson(endpoint.description)).append("\",\n");
-                    sb.append("        \"parameters\": [");
+                    Operation operation = new Operation();
+                    operation.summary = endpoint.description;
 
-                    boolean firstParam = true;
+                    // 设置参数
+                    operation.parameters = new ArrayList<>();
                     for (ApiParameter param : endpoint.parameters) {
-                        if (!firstParam) {
-                            sb.append(", ");
-                        }
-                        firstParam = false;
-                        sb.append("{");
-                        sb.append("\"name\": \"").append(escapeJson(param.name)).append("\", ");
-                        sb.append("\"in\": \"").append(param.in).append("\", ");
-                        sb.append("\"required\": ").append(param.required).append(", ");
-                        sb.append("\"schema\": { \"type\": \"").append(param.type).append("\" }");
-                        sb.append("}");
+                        Parameter parameter = new Parameter();
+                        parameter.name = param.name;
+                        parameter.in = param.in;
+                        parameter.required = param.required;
+                        parameter.schema = new Schema();
+                        parameter.schema.type = param.type;
+                        operation.parameters.add(parameter);
                     }
-                    sb.append("],\n");
 
-                    sb.append("        \"responses\": {\n");
-                    sb.append("          \"200\": {\n");
-                    sb.append("            \"description\": \"Successful response\",\n");
+                    // 设置响应
+                    operation.responses = new LinkedHashMap<>();
+                    Response response = new Response();
+                    response.description = "Successful response";
+
                     if (!endpoint.responseType.equals("void")) {
-                        sb.append("            \"content\": {\n");
-                        sb.append("              \"application/json\": {\n");
-                        sb.append("                \"schema\": { \"type\": \"")
-                                .append(mapToOpenApiType(endpoint.responseType)).append("\" }\n");
-                        sb.append("              }\n");
-                        sb.append("            }\n");
-                        sb.append("          }\n");
+                        response.content = new Content();
+                        response.content.applicationJson = new MediaType();
+                        response.content.applicationJson.schema = new Schema();
+                        response.content.applicationJson.schema.type = mapToOpenApiType(endpoint.responseType);
                     }
-                    sb.append("        }\n");
-                    sb.append("      }");
+
+                    operation.responses.put("200", response);
+
+                    // 根据 HTTP 方法设置对应的操作
+                    switch (method.toLowerCase()) {
+                        case "get":
+                            pathItem.get = operation;
+                            break;
+                        case "post":
+                            pathItem.post = operation;
+                            break;
+                        case "put":
+                            pathItem.put = operation;
+                            break;
+                        case "delete":
+                            pathItem.delete = operation;
+                            break;
+                        case "patch":
+                            pathItem.patch = operation;
+                            break;
+                        case "options":
+                            pathItem.options = operation;
+                            break;
+                        case "head":
+                            pathItem.head = operation;
+                            break;
+                        default:
+                            pathItem.get = operation;
+                    }
                 }
             }
-            sb.append("\n    }");
         }
 
-        sb.append("\n  },\n");
-
-        // 添加 components/schemas
-        sb.append("  \"components\": {\n");
-        sb.append("    \"schemas\": {\n");
-        boolean firstSchema = true;
+        // 设置 components/schemas
+        doc.components = new Components();
+        doc.components.schemas = new LinkedHashMap<>();
         for (String schema : schemas) {
-            if (!firstSchema) {
-                sb.append(",\n");
-            }
-            firstSchema = false;
-            sb.append("      \"").append(escapeJson(schema.substring(schema.lastIndexOf('.') + 1))).append("\": {\n");
-            sb.append("        \"type\": \"object\"\n");
-            sb.append("      }");
+            Schema schemaObj = new Schema();
+            schemaObj.type = "object";
+            doc.components.schemas.put(schema.substring(schema.lastIndexOf('.') + 1), schemaObj);
         }
-        sb.append("\n    }\n");
-        sb.append("  }\n");
-        sb.append("}\n");
 
-        return sb.toString();
+        return JSON.toJSONString(doc, JSONWriter.Feature.PrettyFormat);
     }
 
     /**
      * 生成 OpenAPI 文档
      */
-    public void generateOpenApiDoc() {
+    public void generateOpenApiDoc(License license) {
         try {
             // 从配置中获取项目信息
             String title = "Feat API";
@@ -307,16 +310,67 @@ public final class ApiDocSerializer implements Serializer {
         }
     }
 
-    private String escapeJson(String str) {
-        if (str == null) {
-            return "";
-        }
-        return str.replace("\\", "\\\\")
-                .replace("\"", "\\\"")
-                .replace("\n", "\\n")
-                .replace("\r", "\\r")
-                .replace("\t", "\\t");
+    // ==================== OpenAPI POJO 类 ====================
+
+    static class OpenApiDoc {
+        String openapi;
+        Info info;
+        Map<String, PathItem> paths;
+        Components components;
     }
+
+    static class Info {
+        String title;
+        String version;
+        String description;
+    }
+
+    static class PathItem {
+        Operation get;
+        Operation post;
+        Operation put;
+        Operation delete;
+        Operation patch;
+        Operation options;
+        Operation head;
+    }
+
+    static class Operation {
+        String summary;
+        List<Parameter> parameters;
+        Map<String, Response> responses;
+    }
+
+    static class Parameter {
+        String name;
+        String in;
+        boolean required;
+        Schema schema;
+    }
+
+    static class Response {
+        String description;
+        Content content;
+    }
+
+    static class Content {
+        @com.alibaba.fastjson2.annotation.JSONField(name = "application/json")
+        MediaType applicationJson;
+    }
+
+    static class MediaType {
+        Schema schema;
+    }
+
+    static class Components {
+        Map<String, Schema> schemas;
+    }
+
+    static class Schema {
+        String type;
+    }
+
+    // ==================== 原有数据结构 ====================
 
     static class ApiEndpoint {
         String path;

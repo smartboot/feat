@@ -19,6 +19,7 @@ import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Bean;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
+import tech.smartboot.feat.cloud.aot.license.LicenseLoader;
 import tech.smartboot.feat.cloud.aot.serializer.ApiDocSerializer;
 import tech.smartboot.feat.cloud.aot.serializer.BeanSerializer;
 import tech.smartboot.feat.cloud.aot.serializer.CloudOptionsSerializer;
@@ -79,12 +80,14 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
     private final List<BeanUnit> services = new ArrayList<>();
     private String config;
     private ApiDocSerializer apiDocSerializer;
+    private LicenseLoader licenseLoader;
 
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
         try {
             this.config = loadFeatYaml(processingEnv);
+            this.licenseLoader = new LicenseLoader(config);
             //清理原service文件。
             serviceFile = processingEnv.getFiler().getResource(StandardLocation.CLASS_OUTPUT, "", "META-INF/services/" + CloudService.class.getName());
             File file = new File(serviceFile.toUri());
@@ -166,7 +169,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                 list.add(beanUnit.name);
             }
             services.clear();
-            createAptLoader(new CloudOptionsSerializer(processingEnv, config, list));
+            createAptLoader(new CloudOptionsSerializer(processingEnv, config, list, licenseLoader.getLicense()));
         } catch (Throwable e) {
             exception = e;
         }
@@ -177,7 +180,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         serviceWrite.close();
 
         // 生成 OpenAPI 文档
-        apiDocSerializer.generateOpenApiDoc();
+        apiDocSerializer.generateOpenApiDoc(licenseLoader.getLicense());
 
         if (exception != null) {
             exception.printStackTrace();
