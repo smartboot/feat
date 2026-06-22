@@ -11,6 +11,7 @@
 package tech.smartboot.feat.cloud.aot.serializer.openapi;
 
 import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.JSONWriter;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.Param;
@@ -341,52 +342,56 @@ public final class ApiDocSerializer {
         return null;
     }
 
-    private RequestBody buildRequestBody(String refSchema) {
-        RequestBody requestBody = new RequestBody();
-        requestBody.setRequired(true);
+    private JSONObject buildRequestBody(String refSchema) {
+        JSONObject requestBody = new JSONObject();
+        requestBody.put("required", true);
 
-        Content content = new Content();
-        MediaType mediaType = new MediaType();
-
-        Schema schema = new Schema();
-        schema.setRef("#/components/schemas/" + refSchema);
-        mediaType.setSchema(schema);
-        content.setApplicationJson(mediaType);
-        requestBody.setContent(content);
+        JSONObject content = new JSONObject();
+        JSONObject mediaType = new JSONObject();
+        JSONObject schema = new JSONObject();
+        schema.put("$ref", "#/components/schemas/" + refSchema);
+        mediaType.put("schema", schema);
+        content.put("application/json", mediaType);
+        requestBody.put("content", content);
 
         return requestBody;
     }
 
-    private Content buildContent(String responseType) {
-        Content content = new Content();
-        MediaType mediaType = new MediaType();
-        Schema schema = new Schema();
+    private JSONObject buildContent(String responseType) {
+        JSONObject content = new JSONObject();
+        JSONObject mediaType = new JSONObject();
+        JSONObject schema = new JSONObject();
 
         if (responseType.startsWith("java.util.List") || responseType.startsWith("java.util.Set")) {
-            schema.setType("array");
+            schema.put("type", "array");
             String itemType = extractGenericType(responseType);
             if (itemType != null) {
-                Schema itemsSchema = new Schema();
+                JSONObject itemsSchema = new JSONObject();
                 if (isSimpleType(itemType)) {
-                    itemsSchema.setType(mapToOpenApiTypeByName(itemType));
-                    itemsSchema.setFormat(mapToOpenApiFormatByName(itemType));
+                    itemsSchema.put("type", mapToOpenApiTypeByName(itemType));
+                    String format = mapToOpenApiFormatByName(itemType);
+                    if (format != null) {
+                        itemsSchema.put("format", format);
+                    }
                 } else {
-                    itemsSchema.setRef("#/components/schemas/" + extractSimpleClassName(itemType));
+                    itemsSchema.put("$ref", "#/components/schemas/" + extractSimpleClassName(itemType));
                 }
-                schema.setItems(itemsSchema);
+                schema.put("items", itemsSchema);
             }
         } else if (responseType.startsWith("java.util.Map")) {
-            schema.setType("object");
-            // Map 类型简化处理
+            schema.put("type", "object");
         } else if (isSimpleType(responseType)) {
-            schema.setType(mapToOpenApiTypeByName(responseType));
-            schema.setFormat(mapToOpenApiFormatByName(responseType));
+            schema.put("type", mapToOpenApiTypeByName(responseType));
+            String format = mapToOpenApiFormatByName(responseType);
+            if (format != null) {
+                schema.put("format", format);
+            }
         } else {
-            schema.setRef("#/components/schemas/" + extractSimpleClassName(responseType));
+            schema.put("$ref", "#/components/schemas/" + extractSimpleClassName(responseType));
         }
 
-        mediaType.setSchema(schema);
-        content.setApplicationJson(mediaType);
+        mediaType.put("schema", schema);
+        content.put("application/json", mediaType);
 
         return content;
     }
@@ -437,37 +442,6 @@ public final class ApiDocSerializer {
         return null;
     }
 
-    private void setOperationByMethod(PathItem pathItem, String method, Operation operation) {
-        switch (method) {
-            case "get":
-                pathItem.setGet(operation);
-                break;
-            case "post":
-                pathItem.setPost(operation);
-                break;
-            case "put":
-                pathItem.setPut(operation);
-                break;
-            case "delete":
-                pathItem.setDelete(operation);
-                break;
-            case "patch":
-                pathItem.setPatch(operation);
-                break;
-            case "options":
-                pathItem.setOptions(operation);
-                break;
-            case "head":
-                pathItem.setHead(operation);
-                break;
-            case "trace":
-                pathItem.setTrace(operation);
-                break;
-            default:
-                pathItem.setGet(operation);
-        }
-    }
-
     /**
      * 生成 OpenAPI 文档
      */
@@ -475,97 +449,112 @@ public final class ApiDocSerializer {
         if (license == null) {
             return;
         }
-        // 生成 OpenAPI JSON
-        OpenApiDoc doc = new OpenApiDoc();
-        doc.setOpenapi("3.0.3");
+
+        JSONObject doc = new JSONObject();
+        doc.put("openapi", "3.0.3");
 
         // 设置 info
-        Info info = new Info();
-        info.setTitle("Feat API");
-        info.setVersion("1.0.0");
-        info.setDescription("Auto-generated API documentation for Feat framework");
+        JSONObject info = new JSONObject();
+        info.put("title", "Feat API");
+        info.put("version", "1.0.0");
+        info.put("description", "Auto-generated API documentation for Feat framework");
 
-        // 设置授权信息（遵循 OpenAPI 3.0 规范）
-        LicenseInfo licenseInfo = new LicenseInfo();
-        licenseInfo.setName(license.getName());
-        licenseInfo.setUrl("https://smartboot.tech/feat/sponsors/");
-        info.setLicense(licenseInfo);
-        doc.setInfo(info);
+        JSONObject licenseInfo = new JSONObject();
+        licenseInfo.put("name", "Feat赞助列表");
+        licenseInfo.put("url", "https://smartboot.tech/feat/sponsors/");
+        info.put("license", licenseInfo);
+        info.put("description", "🎉 感谢您成为 Feat 框架的尊贵授权用户！\n\n" +
+                "此 API 文档由 Feat Cloud AOT 自动生成，为您的企业应用提供专业的接口描述能力。\n\n" +
+                "您的信任是我们前进的动力，Feat 团队将持续为您提供优质的技术支持与服务。\n\n" +
+                "授权企业：" + license.getName() + "\n" +
+                "授权编号：" + license.getNum());
+        doc.put("info", info);
 
         // 按路径分组构建 paths
-        doc.setPaths(new LinkedHashMap<>());
+        JSONObject paths = new JSONObject(new LinkedHashMap());
         Map<String, List<ApiEndpoint>> pathMap = new LinkedHashMap<>();
         for (ApiEndpoint endpoint : endpoints) {
             pathMap.computeIfAbsent(endpoint.getPath(), k -> new ArrayList<>()).add(endpoint);
         }
 
         for (Map.Entry<String, List<ApiEndpoint>> entry : pathMap.entrySet()) {
-            PathItem pathItem = new PathItem();
-            doc.getPaths().put(entry.getKey(), pathItem);
+            JSONObject pathItem = new JSONObject(new LinkedHashMap());
+            paths.put(entry.getKey(), pathItem);
 
             for (ApiEndpoint endpoint : entry.getValue()) {
                 for (String method : endpoint.getMethods()) {
-                    Operation operation = new Operation();
-                    operation.setSummary(endpoint.getDescription());
-                    operation.setOperationId(endpoint.getOperationId());
+                    JSONObject operation = new JSONObject(new LinkedHashMap());
+                    operation.put("summary", endpoint.getDescription());
+                    operation.put("operationId", endpoint.getOperationId());
 
                     // 设置参数
-                    operation.setParameters(new ArrayList<>());
-                    for (ApiParameter param : endpoint.getParameters()) {
-                        Parameter parameter = new Parameter();
-                        parameter.setName(param.getName());
-                        parameter.setIn(param.getIn());
-                        parameter.setRequired(param.isRequired());
-                        parameter.setDescription("");
+                    List<JSONObject> parameters = new ArrayList<>();
+                    JSONObject requestBody = null;
 
+                    for (ApiParameter param : endpoint.getParameters()) {
                         if ("body".equals(param.getIn())) {
-                            // 请求体使用 requestBody
-                            operation.setRequestBody(buildRequestBody(param.getRefSchema()));
+                            requestBody = buildRequestBody(param.getRefSchema());
                         } else {
-                            // 查询参数和路径参数使用 schema
-                            Schema schema = new Schema();
-                            schema.setType(param.getType());
+                            JSONObject parameter = new JSONObject();
+                            parameter.put("name", param.getName());
+                            parameter.put("in", param.getIn());
+                            parameter.put("required", param.isRequired());
+                            parameter.put("description", "");
+
+                            JSONObject schema = new JSONObject();
+                            schema.put("type", param.getType());
                             if (param.getFormat() != null) {
-                                schema.setFormat(param.getFormat());
+                                schema.put("format", param.getFormat());
                             }
-                            parameter.setSchema(schema);
-                            operation.getParameters().add(parameter);
+                            parameter.put("schema", schema);
+                            parameters.add(parameter);
                         }
                     }
 
-                    // 设置响应
-                    operation.setResponses(new LinkedHashMap<>());
-                    Response response = new Response();
-                    response.setDescription("Successful response");
-
-                    if (!endpoint.getResponseType().equals("void")) {
-                        response.setContent(buildContent(endpoint.getResponseType()));
+                    if (!parameters.isEmpty()) {
+                        operation.put("parameters", parameters);
+                    }
+                    if (requestBody != null) {
+                        operation.put("requestBody", requestBody);
                     }
 
-                    operation.getResponses().put("200", response);
+                    // 设置响应
+                    JSONObject responses = new JSONObject(new LinkedHashMap());
+                    JSONObject response = new JSONObject();
+                    response.put("description", "Successful response");
 
-                    // 添加默认错误响应
-                    Response errorResponse = new Response();
-                    errorResponse.setDescription("Error response");
-                    operation.getResponses().put("400", errorResponse);
-                    operation.getResponses().put("500", errorResponse);
+                    if (!endpoint.getResponseType().equals("void")) {
+                        response.put("content", buildContent(endpoint.getResponseType()));
+                    }
+
+                    responses.put("200", response);
+
+                    JSONObject errorResponse = new JSONObject();
+                    errorResponse.put("description", "Error response");
+                    responses.put("400", errorResponse);
+                    responses.put("500", errorResponse);
+
+                    operation.put("responses", responses);
 
                     // 根据 HTTP 方法设置对应的操作
-                    setOperationByMethod(pathItem, method.toLowerCase(), operation);
+                    pathItem.put(method.toLowerCase(), operation);
                 }
             }
         }
 
+        doc.put("paths", paths);
+
         // 设置 components/schemas
-        doc.setComponents(new Components());
-        doc.getComponents().setSchemas(new LinkedHashMap<>());
+        JSONObject components = new JSONObject(new LinkedHashMap());
+        JSONObject schemas = new JSONObject(new LinkedHashMap());
         for (String schemaType : schemaTypes) {
             String schemaName = extractSimpleClassName(schemaType);
-            Schema schema = new Schema();
-            schema.setType("object");
-            // 添加 $ref 支持的占位符
-            doc.getComponents().getSchemas().put(schemaName, schema);
+            JSONObject schema = new JSONObject();
+            schema.put("type", "object");
+            schemas.put(schemaName, schema);
         }
+        components.put("schemas", schemas);
+        doc.put("components", components);
 
         String openApiJson = JSON.toJSONString(doc, JSONWriter.Feature.PrettyFormat);
 
