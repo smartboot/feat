@@ -47,10 +47,12 @@ public final class ApiDocSerializer implements Serializer {
     private final String config;
     private final List<ApiEndpoint> endpoints = new ArrayList<>();
     private final Set<String> schemas = new HashSet<>();
+    private final License license;
 
-    public ApiDocSerializer(ProcessingEnvironment processingEnv, String config) {
+    public ApiDocSerializer(ProcessingEnvironment processingEnv, String config, License license) {
         this.processingEnv = processingEnv;
         this.config = config;
+        this.license = license;
     }
 
     @Override

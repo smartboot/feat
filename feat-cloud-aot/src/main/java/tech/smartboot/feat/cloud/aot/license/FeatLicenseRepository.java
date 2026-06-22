@@ -16,7 +16,7 @@ import java.util.Map;
  * @author 三刀
  * @version v1.0 8/26/25
  */
-class FeatLicenseRepository {
+public class FeatLicenseRepository {
     private Map<String, License> users;
 
     public Map<String, License> getUsers() {
