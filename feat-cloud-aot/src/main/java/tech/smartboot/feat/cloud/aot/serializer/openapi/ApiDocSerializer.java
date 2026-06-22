@@ -457,17 +457,17 @@ public final class ApiDocSerializer {
         JSONObject info = new JSONObject();
         info.put("title", "Feat API");
         info.put("version", "1.0.0");
-        info.put("description", "Auto-generated API documentation for Feat framework");
-
-        JSONObject licenseInfo = new JSONObject();
-        licenseInfo.put("name", "Feat赞助列表");
-        licenseInfo.put("url", "https://smartboot.tech/feat/sponsors/");
-        info.put("license", licenseInfo);
         info.put("description", "🎉 感谢您成为 Feat 框架的尊贵授权用户！\n\n" +
                 "此 API 文档由 Feat Cloud AOT 自动生成，为您的企业应用提供专业的接口描述能力。\n\n" +
                 "您的信任是我们前进的动力，Feat 团队将持续为您提供优质的技术支持与服务。\n\n" +
                 "授权企业：" + license.getName() + "\n" +
                 "授权编号：" + license.getNum());
+
+        JSONObject licenseInfo = new JSONObject();
+        licenseInfo.put("name", "Feat赞助列表");
+        licenseInfo.put("url", "https://smartboot.tech/feat/sponsors/");
+        info.put("license", licenseInfo);
+
         doc.put("info", info);
 
         // 按路径分组构建 paths
