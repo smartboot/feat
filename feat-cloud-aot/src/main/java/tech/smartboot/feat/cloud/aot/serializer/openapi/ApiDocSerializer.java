@@ -384,7 +384,7 @@ public final class ApiDocSerializer {
      * https://swagger.io/specification/
      */
     public void generateOpenApiDoc(License license) throws IOException {
-        if (license == null) {
+        if (license == null || endpoints.isEmpty()) {
             return;
         }
 
