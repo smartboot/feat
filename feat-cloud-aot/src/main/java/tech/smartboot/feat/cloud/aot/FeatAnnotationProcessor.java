@@ -20,7 +20,7 @@ import tech.smartboot.feat.cloud.annotation.Bean;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
 import tech.smartboot.feat.cloud.aot.license.LicenseLoader;
-import tech.smartboot.feat.cloud.aot.serializer.ApiDocSerializer;
+import tech.smartboot.feat.cloud.aot.serializer.doc.ApiDocSerializer;
 import tech.smartboot.feat.cloud.aot.serializer.BeanSerializer;
 import tech.smartboot.feat.cloud.aot.serializer.CloudOptionsSerializer;
 import tech.smartboot.feat.cloud.aot.serializer.ControllerSerializer;
@@ -97,7 +97,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             serviceFile = processingEnv.getFiler().createResource(StandardLocation.CLASS_OUTPUT, "", "META-INF/services/" + CloudService.class.getName());
             serviceWrite = new PrintWriter(serviceFile.openWriter());
             // 初始化 API 文档生成器
-            apiDocSerializer = new ApiDocSerializer(processingEnv, config, licenseLoader.getLicense());
+            apiDocSerializer = new ApiDocSerializer(processingEnv, config);
             System.out.println("processor init: " + this);
         } catch (Throwable e) {
             throw new FeatException(e);
