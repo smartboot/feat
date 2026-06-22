@@ -4,7 +4,6 @@ public class ApiParameter {
     private String name;
     private String in;
     private String type;
-    private String format;
     private String refSchema;
     private boolean required;
 
@@ -30,14 +29,6 @@ public class ApiParameter {
 
     public void setType(String type) {
         this.type = type;
-    }
-
-    public String getFormat() {
-        return format;
-    }
-
-    public void setFormat(String format) {
-        this.format = format;
     }
 
     public String getRefSchema() {

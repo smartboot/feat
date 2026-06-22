@@ -7,7 +7,6 @@ public class ApiEndpoint {
     private String path;
     private String description;
     private String responseType;
-    private String operationId;
     private List<String> methods = new ArrayList<>();
     private List<ApiParameter> parameters = new ArrayList<>();
 
@@ -33,14 +32,6 @@ public class ApiEndpoint {
 
     public void setResponseType(String responseType) {
         this.responseType = responseType;
-    }
-
-    public String getOperationId() {
-        return operationId;
-    }
-
-    public void setOperationId(String operationId) {
-        this.operationId = operationId;
     }
 
     public List<String> getMethods() {

@@ -30,8 +30,6 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.Elements;
-import javax.lang.model.util.Types;
 import javax.tools.FileObject;
 import javax.tools.StandardLocation;
 import java.io.IOException;
@@ -92,7 +90,6 @@ public final class ApiDocSerializer {
             ApiEndpoint endpoint = new ApiEndpoint();
             endpoint.setPath(fullPath);
             endpoint.setDescription(buildDescription(controllerElement, methodElement));
-            endpoint.setOperationId(buildOperationId(controllerName, methodElement.getSimpleName().toString()));
 
             // 处理 HTTP 方法
             for (tech.smartboot.feat.cloud.annotation.RequestMethod rm : requestMapping.method()) {
@@ -139,19 +136,7 @@ public final class ApiDocSerializer {
         return controllerElement.getSimpleName().toString() + "." + methodElement.getSimpleName().toString();
     }
 
-    private String buildOperationId(String controllerName, String methodName) {
-        // 移除 Controller 后缀，转换为驼峰式
-        String prefix = controllerName;
-        if (prefix.endsWith("Controller")) {
-            prefix = prefix.substring(0, prefix.length() - 10);
-        }
-        return prefix + methodName;
-    }
-
     private void handleParameters(ApiEndpoint endpoint, ExecutableElement executableElement) {
-        Types typeUtils = processingEnv.getTypeUtils();
-        Elements elementUtils = processingEnv.getElementUtils();
-
         boolean hasRequestBody = false;
 
         for (VariableElement param : executableElement.getParameters()) {
@@ -159,7 +144,10 @@ public final class ApiDocSerializer {
             String paramTypeName = paramType.toString();
 
             // 跳过特殊类型参数
-            if (isSpecialType(paramTypeName)) {
+            if (paramTypeName.equals(HttpRequest.class.getName())
+                    || paramTypeName.equals(HttpResponse.class.getName())
+                    || paramTypeName.equals(Session.class.getName())
+                    || paramTypeName.equals(Context.class.getName())) {
                 continue;
             }
 
@@ -173,7 +161,6 @@ public final class ApiDocSerializer {
                 parameter.setIn("path");
                 parameter.setRequired(true);
                 parameter.setType(mapToOpenApiType(paramType));
-                parameter.setFormat(mapToOpenApiFormat(paramType));
                 endpoint.getParameters().add(parameter);
             } else if (paramAnnotation != null) {
                 // 查询参数
@@ -185,7 +172,6 @@ public final class ApiDocSerializer {
                 parameter.setIn("query");
                 parameter.setRequired(false);
                 parameter.setType(mapToOpenApiType(paramType));
-                parameter.setFormat(mapToOpenApiFormat(paramType));
                 endpoint.getParameters().add(parameter);
                 collectSchemaTypes(paramType);
             } else if (!paramTypeName.startsWith("java.")) {
@@ -203,13 +189,6 @@ public final class ApiDocSerializer {
                 collectSchemaTypes(paramType);
             }
         }
-    }
-
-    private boolean isSpecialType(String typeName) {
-        return typeName.equals(HttpRequest.class.getName())
-                || typeName.equals(HttpResponse.class.getName())
-                || typeName.equals(Session.class.getName())
-                || typeName.equals(Context.class.getName());
     }
 
     private void collectSchemaTypes(TypeMirror type) {
@@ -254,8 +233,6 @@ public final class ApiDocSerializer {
                     return "number";
                 case BOOLEAN:
                     return "boolean";
-                case CHAR:
-                    return "string";
                 default:
                     return "string";
             }
@@ -286,46 +263,6 @@ public final class ApiDocSerializer {
         return "object";
     }
 
-    private String mapToOpenApiFormat(TypeMirror type) {
-        String typeName = type.toString();
-
-        if (type.getKind().isPrimitive()) {
-            switch (type.getKind()) {
-                case INT:
-                    return "int32";
-                case LONG:
-                    return "int64";
-                case SHORT:
-                    return "int32";
-                case BYTE:
-                    return "int32";
-                case DOUBLE:
-                    return "double";
-                case FLOAT:
-                    return "float";
-                default:
-                    return null;
-            }
-        }
-
-        if (typeName.equals("java.lang.Integer") || typeName.equals("java.lang.Short")) {
-            return "int32";
-        }
-        if (typeName.equals("java.lang.Long")) {
-            return "int64";
-        }
-        if (typeName.equals("java.lang.Double")) {
-            return "double";
-        }
-        if (typeName.equals("java.lang.Float")) {
-            return "float";
-        }
-        if (typeName.equals("java.lang.Byte")) {
-            return "int32";
-        }
-
-        return null;
-    }
 
     private String extractSimpleClassName(String fullClassName) {
         if (fullClassName == null || !fullClassName.contains(".")) {
@@ -444,6 +381,7 @@ public final class ApiDocSerializer {
 
     /**
      * 生成 OpenAPI 文档
+     * https://swagger.io/specification/
      */
     public void generateOpenApiDoc(License license) throws IOException {
         if (license == null) {
@@ -463,10 +401,15 @@ public final class ApiDocSerializer {
                 "授权企业：" + license.getName() + "\n" +
                 "授权编号：" + license.getNum());
 
+        info.put("termsOfService", "https://smartboot.tech/feat/");
         JSONObject licenseInfo = new JSONObject();
-        licenseInfo.put("name", "Feat赞助列表");
+        licenseInfo.put("name", "Feat授权用户");
         licenseInfo.put("url", "https://smartboot.tech/feat/sponsors/");
         info.put("license", licenseInfo);
+        JSONObject contact = new JSONObject();
+        contact.put("name", "Feat Support");
+        contact.put("url", "https://gitee.com/smartboot/feat/issues");
+        info.put("contact", contact);
 
         doc.put("info", info);
 
@@ -485,7 +428,6 @@ public final class ApiDocSerializer {
                 for (String method : endpoint.getMethods()) {
                     JSONObject operation = new JSONObject(new LinkedHashMap());
                     operation.put("summary", endpoint.getDescription());
-                    operation.put("operationId", endpoint.getOperationId());
 
                     // 设置参数
                     List<JSONObject> parameters = new ArrayList<>();
@@ -503,9 +445,6 @@ public final class ApiDocSerializer {
 
                             JSONObject schema = new JSONObject();
                             schema.put("type", param.getType());
-                            if (param.getFormat() != null) {
-                                schema.put("format", param.getFormat());
-                            }
                             parameter.put("schema", schema);
                             parameters.add(parameter);
                         }
@@ -528,12 +467,6 @@ public final class ApiDocSerializer {
                     }
 
                     responses.put("200", response);
-
-                    JSONObject errorResponse = new JSONObject();
-                    errorResponse.put("description", "Error response");
-                    responses.put("400", errorResponse);
-                    responses.put("500", errorResponse);
-
                     operation.put("responses", responses);
 
                     // 根据 HTTP 方法设置对应的操作
