@@ -180,11 +180,11 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         serviceWrite.close();
 
         // 生成 OpenAPI 文档
-        try {
-            apiDocSerializer.generateOpenApiDoc(licenseLoader.getLicense());
-        } catch (Throwable e) {
-            exception = e;
-        }
+//        try {
+//            apiDocSerializer.generateOpenApiDoc(licenseLoader.getLicense());
+//        } catch (Throwable e) {
+//            exception = e;
+//        }
 
 
         if (exception != null) {
