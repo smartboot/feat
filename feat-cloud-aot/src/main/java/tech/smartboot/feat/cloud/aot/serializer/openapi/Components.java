@@ -1,4 +1,4 @@
-package tech.smartboot.feat.cloud.aot.serializer.doc;
+package tech.smartboot.feat.cloud.aot.serializer.openapi;
 
 import java.util.Map;
 

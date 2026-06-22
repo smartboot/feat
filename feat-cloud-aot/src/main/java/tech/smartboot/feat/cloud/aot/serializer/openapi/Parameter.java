@@ -1,9 +1,10 @@
-package tech.smartboot.feat.cloud.aot.serializer.doc;
+package tech.smartboot.feat.cloud.aot.serializer.openapi;
 
 public class Parameter {
     private String name;
     private String in;
     private boolean required;
+    private String description;
     private Schema schema;
 
     public String getName() {
@@ -28,6 +29,14 @@ public class Parameter {
 
     public void setRequired(boolean required) {
         this.required = required;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public Schema getSchema() {

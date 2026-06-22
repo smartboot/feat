@@ -1,4 +1,4 @@
-package tech.smartboot.feat.cloud.aot.serializer.doc;
+package tech.smartboot.feat.cloud.aot.serializer.openapi;
 
 public class Content {
     @com.alibaba.fastjson2.annotation.JSONField(name = "application/json")

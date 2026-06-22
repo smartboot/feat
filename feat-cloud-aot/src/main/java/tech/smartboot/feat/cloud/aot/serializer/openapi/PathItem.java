@@ -1,4 +1,4 @@
-package tech.smartboot.feat.cloud.aot.serializer.doc;
+package tech.smartboot.feat.cloud.aot.serializer.openapi;
 
 public class PathItem {
     private Operation get;
@@ -8,6 +8,7 @@ public class PathItem {
     private Operation patch;
     private Operation options;
     private Operation head;
+    private Operation trace;
 
     public Operation getGet() {
         return get;
@@ -64,5 +65,12 @@ public class PathItem {
     public void setHead(Operation head) {
         this.head = head;
     }
-}
 
+    public Operation getTrace() {
+        return trace;
+    }
+
+    public void setTrace(Operation trace) {
+        this.trace = trace;
+    }
+}

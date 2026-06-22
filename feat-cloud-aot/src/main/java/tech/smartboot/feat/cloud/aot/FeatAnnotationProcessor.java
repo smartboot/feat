@@ -20,12 +20,12 @@ import tech.smartboot.feat.cloud.annotation.Bean;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
 import tech.smartboot.feat.cloud.aot.license.LicenseLoader;
-import tech.smartboot.feat.cloud.aot.serializer.doc.ApiDocSerializer;
 import tech.smartboot.feat.cloud.aot.serializer.BeanSerializer;
 import tech.smartboot.feat.cloud.aot.serializer.CloudOptionsSerializer;
 import tech.smartboot.feat.cloud.aot.serializer.ControllerSerializer;
 import tech.smartboot.feat.cloud.aot.serializer.DefaultMcpServerSerializer;
 import tech.smartboot.feat.cloud.aot.serializer.MapperSerializer;
+import tech.smartboot.feat.cloud.aot.serializer.openapi.ApiDocSerializer;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.router.Router;
@@ -97,7 +97,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             serviceFile = processingEnv.getFiler().createResource(StandardLocation.CLASS_OUTPUT, "", "META-INF/services/" + CloudService.class.getName());
             serviceWrite = new PrintWriter(serviceFile.openWriter());
             // 初始化 API 文档生成器
-            apiDocSerializer = new ApiDocSerializer(processingEnv, config);
+            apiDocSerializer = new ApiDocSerializer(processingEnv);
             System.out.println("processor init: " + this);
         } catch (Throwable e) {
             throw new FeatException(e);
@@ -180,7 +180,12 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         serviceWrite.close();
 
         // 生成 OpenAPI 文档
-        apiDocSerializer.generateOpenApiDoc(licenseLoader.getLicense());
+        try {
+            apiDocSerializer.generateOpenApiDoc(licenseLoader.getLicense());
+        } catch (Throwable e) {
+            exception = e;
+        }
+
 
         if (exception != null) {
             exception.printStackTrace();
