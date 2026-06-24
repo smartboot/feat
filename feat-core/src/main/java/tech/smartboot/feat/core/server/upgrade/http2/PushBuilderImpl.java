@@ -10,12 +10,12 @@
 
 package tech.smartboot.feat.core.server.upgrade.http2;
 
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HttpMethod;
 import tech.smartboot.feat.core.common.codec.h2.codec.ContinuationFrame;
 import tech.smartboot.feat.core.common.codec.h2.codec.Http2Frame;
 import tech.smartboot.feat.core.common.codec.h2.codec.PushPromiseFrame;
-import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.server.PushBuilder;
 
 import java.io.IOException;
@@ -44,8 +44,15 @@ public class PushBuilderImpl implements PushBuilder {
     public PushBuilderImpl(int streamId, Http2ResponseImpl response, Http2Session session) {
         this.streamId = streamId;
         this.pushRequest = new Http2Endpoint(session.getPushStreamId().addAndGet(2), session, true);
-        response.getCookies().forEach(cookie -> pushRequest.addHeader(HeaderName.COOKIE.getLowCaseName(),
-                HeaderName.COOKIE.getName(), cookie.getName() + "=" + cookie.getValue()));
+        if (!response.getCookies().isEmpty()) {
+            StringBuilder sb = new StringBuilder();
+            response.getCookies().stream().filter(cookie -> cookie.getMaxAge() != 0).forEach(cookie -> {
+                sb.append(cookie.getName()).append('=').append(cookie.getValue()).append(';');
+            });
+            if (sb.length() > 0) {
+                pushRequest.setHeader(HeaderName.COOKIE.getLowCaseName(), sb.substring(0, sb.length() - 1));
+            }
+        }
 
         method(HttpMethod.GET);
     }
