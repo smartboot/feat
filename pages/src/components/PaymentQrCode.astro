@@ -60,6 +60,7 @@ const modalId = 'payment-modal-' + Math.random().toString(36).substr(2, 9);
         
         <div class="modal-footer">
           <span class="step-hint">① 扫码赞助 → ② 加微信好友 → ③ 记录到赞助者名单</span>
+          <span class="note-hint">如果您的公司尚处于创业初期且存在资金压力，可先免费申请开通 Feat Cloud 授权，待未来步入正轨后再回馈 Feat</span>
         </div>
       </div>
     </div>
@@ -329,6 +330,12 @@ const modalId = 'payment-modal-' + Math.random().toString(36).substr(2, 9);
     color: #64748b;
   }
 
+  :global(.note-hint) {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    text-align: center;
+    line-height: 1.5;
+  }
   /* 平板响应式 */
   @media (max-width: 640px) {
     :global(.modal-content) {
