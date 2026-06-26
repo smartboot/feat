@@ -85,6 +85,7 @@ public abstract class BodyInputStream extends InputStream {
      * listener#onAllDataRead方法需要触发futuren.complete
      *
      * @param listener
+     * @deprecated 适配 Jakarta servlet 规范，未来可能会被清除
      */
     public final void setReadListener(ReadListener listener) {
         if (listener == null) {

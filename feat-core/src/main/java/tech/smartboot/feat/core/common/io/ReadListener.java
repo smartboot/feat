@@ -16,6 +16,7 @@ import java.util.EventListener;
 /**
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
+ * @deprecated 适配 Jakarta servlet 规范，未来可能会被清除
  */
 public interface ReadListener extends EventListener {
 
