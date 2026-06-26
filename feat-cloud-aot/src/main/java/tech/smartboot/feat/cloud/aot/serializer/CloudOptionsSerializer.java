@@ -11,13 +11,15 @@
 package tech.smartboot.feat.cloud.aot.serializer;
 
 import com.alibaba.fastjson2.JSONPath;
+import io.github.smartboot.socket.Plugin;
 import io.github.smartboot.socket.extension.plugins.SslPlugin;
 import io.github.smartboot.socket.extension.ssl.factory.AutoServerSSLContextFactory;
+import io.github.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.cloud.AbstractCloudService;
 import tech.smartboot.feat.cloud.ApplicationContext;
 import tech.smartboot.feat.cloud.CloudService;
-import tech.smartboot.feat.cloud.aot.license.License;
 import tech.smartboot.feat.cloud.aot.Serializer;
+import tech.smartboot.feat.cloud.aot.license.License;
 import tech.smartboot.feat.cloud.aot.serializer.extension.DataSourceSerializer;
 import tech.smartboot.feat.cloud.aot.serializer.extension.MybatisSerializer;
 import tech.smartboot.feat.cloud.aot.serializer.extension.RedisunSerializer;
@@ -26,9 +28,7 @@ import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.server.ServerOptions;
-import tech.smartboot.feat.router.Chain;
-import tech.smartboot.feat.router.Context;
-import tech.smartboot.feat.router.Interceptor;
+import tech.smartboot.feat.core.server.impl.HttpEndpoint;
 import tech.smartboot.feat.router.Router;
 import tech.smartboot.feat.router.session.LocalSessionManager;
 import tech.smartboot.feat.router.session.SessionManager;
@@ -59,7 +59,6 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * @author 三刀 zhengjunweimail@163.com
@@ -242,10 +241,9 @@ public final class CloudOptionsSerializer implements Serializer {
             printWriter.println("import " + AutoServerSSLContextFactory.class.getName() + ";");
         }
         if (license == null) {
-            printWriter.println("import " + Interceptor.class.getName() + ";");
-            printWriter.println("import " + Context.class.getName() + ";");
-            printWriter.println("import " + CompletableFuture.class.getName() + ";");
-            printWriter.println("import " + Chain.class.getName() + ";");
+            printWriter.println("import " + AioSession.class.getName() + ";");
+            printWriter.println("import " + HttpEndpoint.class.getName() + ";");
+            printWriter.println("import " + Plugin.class.getName() + ";");
         }
 
         extensions.forEach(Serializer::serializeImport);
@@ -353,11 +351,11 @@ public final class CloudOptionsSerializer implements Serializer {
         // license 为 null 时，添加拦截器打印请求日志
         if (license == null) {
             printWriter.println("\t\t");
-            printWriter.println("\t\trouter.addInterceptor(\"/*\", new " + Interceptor.class.getSimpleName() + "() {");
+            printWriter.println("\t\tapplicationContext.getOptions().addPlugin(new Plugin<HttpEndpoint>() {");
             printWriter.println("\t\t\t@Override");
-            printWriter.println("\t\t\tpublic void intercept(" + Context.class.getSimpleName() + " ctx, CompletableFuture<Void> completableFuture, " + Chain.class.getSimpleName() + " chain) throws Throwable {");
-            printWriter.println("\t\t\t\tSystem.out.println(ctx.Request.getMethod() + \" \" + ctx.Request.getRequestURI() + \" - [成为赞助商解锁Feat Cloud：https://smartboot.tech/feat/sponsors/ ]\");");
-            printWriter.println("\t\t\t\tchain.proceed(ctx, completableFuture);");
+            printWriter.println("\t\t\tpublic boolean preProcess(AioSession session, HttpEndpoint httpEndpoint) {");
+            printWriter.println("\t\t\t\tSystem.out.println(httpEndpoint.getMethod() + \" \" + httpEndpoint.getRequestURI() + \" - [成为赞助商解锁Feat Cloud：https://smartboot.tech/feat/sponsors/ ]\");");
+            printWriter.println("\t\t\t\treturn true;");
             printWriter.println("\t\t\t}");
             printWriter.println("\t\t});");
         }
