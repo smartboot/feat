@@ -48,8 +48,8 @@ import java.time.Year;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.LinkedHashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -117,6 +117,14 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         }
 
         try {
+            //清理 build 目录
+            FileObject preFileObject = processingEnv.getFiler().getResource(StandardLocation.SOURCE_OUTPUT, CloudOptionsSerializer.BUILD_PACKAGE, "feat.java");
+            File buildDir = new File(preFileObject.toUri()).getParentFile();
+            deleteBuildDir(buildDir);
+            preFileObject = processingEnv.getFiler().getResource(StandardLocation.CLASS_OUTPUT, CloudOptionsSerializer.BUILD_PACKAGE, "feat.class");
+            buildDir = new File(preFileObject.toUri()).getParentFile();
+            deleteBuildDir(buildDir);
+
             for (Map.Entry<String, String> entry : configs.entrySet()) {
                 processProfile(roundEnv, entry.getKey(), entry.getValue());
             }
@@ -142,6 +150,19 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         }
         // 如果不希望后续的处理器继续处理这些注解，返回 true，否则返回 false
         return false;
+    }
+
+    private void deleteBuildDir(File dir) {
+        if (!dir.isDirectory()) {
+            return;
+        }
+        File[] files = dir.listFiles();
+        for (File file : files) {
+            if (file.isDirectory()) {
+                deleteBuildDir(file);
+            }
+            file.delete();
+        }
     }
 
     private void processProfile(RoundEnvironment roundEnv, String env, String config) throws Throwable {

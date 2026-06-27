@@ -34,7 +34,6 @@ import tech.smartboot.feat.router.session.LocalSessionManager;
 import tech.smartboot.feat.router.session.SessionManager;
 
 import javax.annotation.processing.ProcessingEnvironment;
-import javax.tools.FileObject;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
 import java.io.File;
@@ -66,6 +65,7 @@ import java.util.Set;
  */
 public final class CloudOptionsSerializer implements Serializer {
     private static final Logger logger = LoggerFactory.getLogger(CloudOptionsSerializer.class);
+    public static final String BUILD_PACKAGE = "tech.smartboot.feat.build";
     private final String PACKAGE;
     private final String CLASS_NAME;
     private final String profileKey;
@@ -92,16 +92,8 @@ public final class CloudOptionsSerializer implements Serializer {
         this.profileAware = profileAware;
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
         String date = sdf.format(new Date());
-        PACKAGE = "tech.smartboot.feat.build.v" + date;
+        PACKAGE = BUILD_PACKAGE + ".v" + date;
         CLASS_NAME = "FeatApplication" + (classSuffix == null ? "" : classSuffix);
-
-        //清理build目录
-        FileObject preFileObject = processingEnv.getFiler().getResource(StandardLocation.SOURCE_OUTPUT, packageName(), className() + ".java");
-        File buildDir = new File(preFileObject.toUri()).getParentFile().getParentFile();
-        deleteBuildDir(buildDir);
-        preFileObject = processingEnv.getFiler().getResource(StandardLocation.CLASS_OUTPUT, packageName(), className() + ".class");
-        buildDir = new File(preFileObject.toUri()).getParentFile().getParentFile();
-        deleteBuildDir(buildDir);
 
         //清理feat.yaml文件
 //        deleteFeatYamlFile(processingEnv);
@@ -195,19 +187,6 @@ public final class CloudOptionsSerializer implements Serializer {
 
     }
 
-
-    private void deleteBuildDir(File dir) {
-        if (!dir.isDirectory()) {
-            return;
-        }
-        File[] files = dir.listFiles();
-        for (File file : files) {
-            if (file.isDirectory()) {
-                deleteBuildDir(file);
-            }
-            file.delete();
-        }
-    }
 
     @Override
     public PrintWriter getPrintWriter() {
