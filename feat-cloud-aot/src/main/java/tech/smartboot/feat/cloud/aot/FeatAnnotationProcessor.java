@@ -33,7 +33,6 @@ import tech.smartboot.feat.router.Router;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
-import javax.annotation.processing.SupportedOptions;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
@@ -61,10 +60,8 @@ import java.util.Set;
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
-@SupportedOptions(FeatAnnotationProcessor.FEAT_PROFILES_ACTIVE)
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 public class FeatAnnotationProcessor extends AbstractProcessor {
-    static final String FEAT_PROFILES_ACTIVE = "feat.profiles.active";
 
     @Override
     public Set<String> getSupportedAnnotationTypes() {
@@ -260,10 +257,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
     private String loadFeatYaml(ProcessingEnvironment processingEnv) throws IOException {
         JSONObject config = loadYamlConfig(processingEnv, Arrays.asList("feat.yml", "feat.yaml"));
 
-        String env = processingEnv.getOptions().get(FEAT_PROFILES_ACTIVE);
-        if (FeatUtils.isBlank(env)) {
-            env = System.getProperty(FEAT_PROFILES_ACTIVE);
-        }
+        String env = System.getProperty("feat.profiles.active");
         if (FeatUtils.isBlank(env)) {
             env = System.getenv("FEAT_PROFILES_ACTIVE");
         }
@@ -273,7 +267,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         }
 
         env = env.trim();
-        if (!env.matches("[A-Za-z0-9_-]+")) {
+        if (!env.matches("[A-Za-z0-9]+")) {
             throw new FeatException("非法的 feat.env 参数: " + env);
         }
 
