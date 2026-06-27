@@ -69,6 +69,7 @@ public final class CloudOptionsSerializer implements Serializer {
     private final String PACKAGE;
     private final String CLASS_NAME;
     private final String profileKey;
+    private final boolean profileAware;
     private final String config;
     private final Set<String> availableTypes = new HashSet<>(Arrays.asList(String.class.getName(), int.class.getName()));
 
@@ -83,11 +84,12 @@ public final class CloudOptionsSerializer implements Serializer {
      */
     private final List<Serializer> extensions = new ArrayList<>();
 
-    public CloudOptionsSerializer(ProcessingEnvironment processingEnv, String config, List<String> services, License license, String profileKey, String classSuffix) throws Throwable {
+    public CloudOptionsSerializer(ProcessingEnvironment processingEnv, String config, List<String> services, License license, String profileKey, String classSuffix, boolean profileAware) throws Throwable {
         this.config = config;
         this.services = services;
         this.license = license;
         this.profileKey = profileKey == null ? "" : profileKey;
+        this.profileAware = profileAware;
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
         String date = sdf.format(new Date());
         PACKAGE = "tech.smartboot.feat.build.v" + date;
@@ -272,24 +274,28 @@ public final class CloudOptionsSerializer implements Serializer {
         }
 
         printWriter.println("\tprivate List<" + CloudService.class.getSimpleName() + "> services = new " + ArrayList.class.getSimpleName() + "(" + services.size() + ");");
-        printWriter.println();
-        printWriter.println("\tprivate boolean acceptProfile() {");
-        printWriter.println("\t\tString active = System.getProperty(\"feat.profiles.active\");");
-        printWriter.println("\t\tif (FeatUtils.isBlank(active)) {");
-        printWriter.println("\t\t\tactive = System.getenv(\"FEAT_PROFILES_ACTIVE\");");
-        printWriter.println("\t\t}");
-        printWriter.println("\t\tif (FeatUtils.isBlank(active)) {");
-        printWriter.println("\t\t\treturn FeatUtils.isBlank(profiles_active);");
-        printWriter.println("\t\t}");
-        printWriter.println("\t\treturn profiles_active.equals(active.trim());");
-        printWriter.println("\t}");
+        if (profileAware) {
+            printWriter.println();
+            printWriter.println("\tprivate boolean acceptProfile() {");
+            printWriter.println("\t\tString active = System.getProperty(\"feat.profiles.active\");");
+            printWriter.println("\t\tif (FeatUtils.isBlank(active)) {");
+            printWriter.println("\t\t\tactive = System.getenv(\"FEAT_PROFILES_ACTIVE\");");
+            printWriter.println("\t\t}");
+            printWriter.println("\t\tif (FeatUtils.isBlank(active)) {");
+            printWriter.println("\t\t\treturn FeatUtils.isBlank(profiles_active);");
+            printWriter.println("\t\t}");
+            printWriter.println("\t\treturn profiles_active.equals(active.trim());");
+            printWriter.println("\t}");
+        }
     }
 
     @Override
     public void serializeLoadBean() {
-        printWriter.println("\t\tif (!acceptProfile()) {");
-        printWriter.println("\t\t\treturn;");
-        printWriter.println("\t\t}");
+        if (profileAware) {
+            printWriter.println("\t\tif (!acceptProfile()) {");
+            printWriter.println("\t\t\treturn;");
+            printWriter.println("\t\t}");
+        }
         for (Field field : ServerOptions.class.getDeclaredFields()) {
             Class<?> type = field.getType();
             if (type.isArray()) {

@@ -199,7 +199,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
 
         services.sort(Comparator.comparingInt(o -> o.order));
         List<String> list = services.stream().map(beanUnit -> beanUnit.name).collect(Collectors.toList());
-        String cloudApplicationClass = createAptLoader(new CloudOptionsSerializer(processingEnv, config, list, licenseLoader.getLicense(), env, suffix));
+        String cloudApplicationClass = createAptLoader(new CloudOptionsSerializer(processingEnv, config, list, licenseLoader.getLicense(), env, suffix, configs.size() > 1));
         serviceWrite.println(cloudApplicationClass);
     }
 
