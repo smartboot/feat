@@ -132,6 +132,56 @@ options.setStaticLocations("./public");
 `setStaticLocations(...)` 不只是记住一个路径，它会顺手创建一个新的 `Router` 来挂载静态资源处理器。所以如果你还要自定义底层路由，请明确知道谁是最终生效的 Router。
 </Aside>
 
+## 场景 4：按环境拆分 `feat.yml`
+
+如果你的项目会区分开发、测试、生产环境，可以把配置拆成两层：
+
+- `feat.yml` 作为默认配置
+- `feat-dev.yml`、`feat-prod.yml` 作为环境覆盖配置
+
+Feat Cloud 在编译期会先读取默认配置，再把对应环境的配置覆盖上去，最后为每个环境生成一套完整代码。  
+默认环境对应的生成类不会带后缀，其他环境会在类名上追加环境名，比如 `FeatApplicationDev`、`UserControllerCloudServiceProd`。
+
+```yaml title="feat.yml"
+server:
+  port: 8080
+feat:
+  datasource:
+    url: jdbc:mysql://localhost:3306/app
+```
+
+```yaml title="feat-dev.yml"
+server:
+  port: 8081
+feat:
+  datasource:
+    url: jdbc:mysql://localhost:3306/app_dev
+```
+
+```yaml title="feat-prod.yml"
+server:
+  port: 80
+feat:
+  datasource:
+    url: jdbc:mysql://db.prod:3306/app
+```
+
+运行时通过 `feat.profiles.active` 选择要启用的环境：
+
+```bash
+java -Dfeat.profiles.active=dev -jar yourapp.jar
+```
+
+也可以用环境变量：
+
+```bash
+FEAT_PROFILES_ACTIVE=prod java -jar yourapp.jar
+```
+
+<Aside type="tip">
+如果项目里只有一份默认配置，就不需要额外设置 `feat.profiles.active`。这时生成的代码只会保留默认环境那一套，不会多出 profile 判断。
+</Aside>
+
 ## 组合使用示例
 
 实际项目里，这三个配置项经常一起出现：
@@ -171,4 +221,3 @@ options.setRouter(customRouter);
 ```
 
 这个能力属于高级扩展场景，通常只有在你明确需要接管更底层的路由行为时才会用到。
-
