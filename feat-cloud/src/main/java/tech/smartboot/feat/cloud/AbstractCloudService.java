@@ -712,6 +712,23 @@ public abstract class AbstractCloudService implements CloudService {
     }
 
     /**
+     * 判断当前生成类是否匹配运行时 profile
+     *
+     * @param profilesActive 生成时绑定的 profile 名称，默认环境传空字符串
+     * @return 匹配则返回 true
+     */
+    protected final boolean acceptProfile(String profilesActive) {
+        String active = System.getProperty("feat.profiles.active");
+        if (FeatUtils.isBlank(active)) {
+            active = System.getenv("FEAT_PROFILES_ACTIVE");
+        }
+        if (FeatUtils.isBlank(active)) {
+            return FeatUtils.isBlank(profilesActive);
+        }
+        return FeatUtils.equals(profilesActive, active.trim());
+    }
+
+    /**
      * 打印路由映射信息
      * <p>
      * 在控制台以格式化的方式输出路由与控制器方法的映射关系
