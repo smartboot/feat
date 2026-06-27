@@ -33,6 +33,7 @@ import tech.smartboot.feat.router.Router;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
+import javax.annotation.processing.SupportedOptions;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
@@ -60,8 +61,10 @@ import java.util.Set;
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
+@SupportedOptions(FeatAnnotationProcessor.FEAT_PROFILES_ACTIVE)
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 public class FeatAnnotationProcessor extends AbstractProcessor {
+    static final String FEAT_PROFILES_ACTIVE = "feat.profiles.active";
 
     @Override
     public Set<String> getSupportedAnnotationTypes() {
@@ -255,28 +258,49 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
     }
 
     private String loadFeatYaml(ProcessingEnvironment processingEnv) throws IOException {
+        JSONObject config = loadYamlConfig(processingEnv, Arrays.asList("feat.yml", "feat.yaml"));
+
+        String env = processingEnv.getOptions().get(FEAT_PROFILES_ACTIVE);
+        if (FeatUtils.isBlank(env)) {
+            env = System.getProperty(FEAT_PROFILES_ACTIVE);
+        }
+        if (FeatUtils.isBlank(env)) {
+            env = System.getenv("FEAT_PROFILES_ACTIVE");
+        }
+        // 未指定环境
+        if (FeatUtils.isBlank(env)) {
+            return config.toJSONString();
+        }
+
+        env = env.trim();
+        if (!env.matches("[A-Za-z0-9_-]+")) {
+            throw new FeatException("非法的 feat.env 参数: " + env);
+        }
+
+        if (FeatUtils.isNotBlank(env)) {
+            config.putAll(loadYamlConfig(processingEnv, Arrays.asList("feat-" + env + ".yml", "feat-" + env + ".yaml")));
+        }
+        return config.toJSONString();
+    }
+
+    private JSONObject loadYamlConfig(ProcessingEnvironment processingEnv, List<String> filenames) throws IOException {
         FileObject featYaml = null;
-        for (String filename : Arrays.asList("feat.yml", "feat.yaml")) {
+        for (String filename : filenames) {
             try {
                 featYaml = processingEnv.getFiler().getResource(StandardLocation.CLASS_OUTPUT, "", filename);
+                if (featYaml != null && new File(featYaml.toUri()).isFile()) {
+                    break;
+                }
             } catch (IOException ignored) {
             }
-            if (featYaml != null && new File(featYaml.toUri()).isFile()) {
-                break;
-            }
+            featYaml = null;
         }
-
         if (featYaml == null) {
-            return "{}";
-        }
-
-        File featFile = new File(featYaml.toUri());
-        if (!featFile.exists()) {
-            return "{}";
+            return new JSONObject();
         }
 
         Yaml yaml = new Yaml();
-        return JSONObject.from(yaml.load(featYaml.openInputStream())).toJSONString();
+        return JSONObject.from(yaml.load(featYaml.openInputStream()));
     }
 
     static class BeanUnit {
