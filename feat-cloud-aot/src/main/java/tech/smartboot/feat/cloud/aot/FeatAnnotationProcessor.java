@@ -43,16 +43,17 @@ import javax.tools.StandardLocation;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.lang.annotation.Annotation;
 import java.time.LocalDateTime;
 import java.time.Year;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 // 该注解表示该处理器支持的 Java 源代码版本
 
@@ -77,17 +78,15 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
     FileObject serviceFile;
     PrintWriter serviceWrite;
     private Throwable exception = null;
-    private final List<BeanUnit> services = new ArrayList<>();
-    private String config;
+    private final Map<String, String> configs = new LinkedHashMap<>();
     private ApiDocSerializer apiDocSerializer;
-    private LicenseLoader licenseLoader;
+    private boolean generated;
 
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
         try {
-            this.config = loadFeatYaml(processingEnv);
-            this.licenseLoader = new LicenseLoader(config);
+            this.configs.putAll(loadFeatConfigs(processingEnv));
             //清理原service文件。
             serviceFile = processingEnv.getFiler().getResource(StandardLocation.CLASS_OUTPUT, "", "META-INF/services/" + CloudService.class.getName());
             File file = new File(serviceFile.toUri());
@@ -106,21 +105,10 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-        if (annotations.isEmpty()) {
+        if (generated || annotations.isEmpty()) {
             return false;
         }
         System.out.println("annotation process: " + this + " ,annotations: " + annotations);
-
-
-        for (Element element : roundEnv.getElementsAnnotatedWith(Bean.class)) {
-            if (element.getKind() == ElementKind.CLASS) {
-                try {
-                    createAptLoader(new BeanSerializer(processingEnv, config, element));
-                } catch (Throwable e) {
-                    exception = e;
-                }
-            }
-        }
 
         for (Element element : roundEnv.getElementsAnnotatedWith(McpEndpoint.class)) {
             if (element.getAnnotation(Controller.class) == null) {
@@ -128,56 +116,17 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             }
         }
 
-        boolean rootMcpEnable = false;
-        for (Element element : roundEnv.getElementsAnnotatedWith(Controller.class)) {
-            try {
-//                if (element.getAnnotation(McpEndpoint.class) != null) {
-//                    throw new FeatException("@Controller and @McpEndpoint cannot be used together!");
-//                }
-                ControllerSerializer serializer = new ControllerSerializer(processingEnv, config, element);
-                if (serializer.rootMcpEnable()) {
-                    rootMcpEnable = true;
-                }
-                createAptLoader(serializer);
-                // 收集 API 文档信息
-                apiDocSerializer.addController(element);
-            } catch (Throwable e) {
-                exception = e;
-            }
-        }
-        //
-        if (rootMcpEnable) {
-            try {
-                createAptLoader(new DefaultMcpServerSerializer(processingEnv, config));
-            } catch (Throwable e) {
-                exception = e;
-            }
-        }
-
-        for (Element element : roundEnv.getElementsAnnotatedWith(Mapper.class)) {
-            try {
-                createAptLoader(new MapperSerializer(processingEnv, config, element));
-            } catch (Throwable e) {
-                exception = e;
-            }
-        }
-
         try {
-            services.sort(Comparator.comparingInt(o -> o.order));
-            List<String> list = new ArrayList<>(services.size());
-            for (BeanUnit beanUnit : services) {
-                list.add(beanUnit.name);
+            for (Map.Entry<String, String> entry : configs.entrySet()) {
+                processProfile(roundEnv, entry.getKey(), entry.getValue());
             }
-            services.clear();
-            createAptLoader(new CloudOptionsSerializer(processingEnv, config, list, licenseLoader.getLicense()));
+            serviceWrite.flush();
+            generated = true;
         } catch (Throwable e) {
             exception = e;
+        } finally {
+            serviceWrite.close();
         }
-        for (BeanUnit service : services) {
-            serviceWrite.println(service.name);
-        }
-        serviceWrite.flush();
-        serviceWrite.close();
 
         // 生成 OpenAPI 文档
 //        try {
@@ -195,11 +144,67 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         return false;
     }
 
-    private <T extends Annotation> void createAptLoader(Serializer serializer) throws IOException {
-        //生成service配置
-        services.add(new BeanUnit(serializer.packageName() + "." + serializer.className(), serializer.order()));
+    private void processProfile(RoundEnvironment roundEnv, String env, String config) throws Throwable {
+        String suffix = environmentSuffix(env);
+        List<BeanUnit> services = new java.util.ArrayList<>();
+        LicenseLoader licenseLoader = new LicenseLoader(config);
 
+        for (Element element : roundEnv.getElementsAnnotatedWith(Bean.class)) {
+            if (element.getKind() == ElementKind.CLASS) {
+                try {
+                    BeanSerializer serializer = new BeanSerializer(processingEnv, config, element, suffix);
+                    services.add(new BeanUnit(createAptLoader(serializer), serializer.order()));
+                } catch (Throwable e) {
+                    exception = e;
+                }
+            }
+        }
 
+        boolean rootMcpEnable = false;
+        for (Element element : roundEnv.getElementsAnnotatedWith(Controller.class)) {
+            try {
+//                if (element.getAnnotation(McpEndpoint.class) != null) {
+//                    throw new FeatException("@Controller and @McpEndpoint cannot be used together!");
+//                }
+                ControllerSerializer serializer = new ControllerSerializer(processingEnv, config, element, suffix);
+                if (serializer.rootMcpEnable()) {
+                    rootMcpEnable = true;
+                }
+                services.add(new BeanUnit(createAptLoader(serializer), serializer.order()));
+                // 收集 API 文档信息
+                if (FeatUtils.isBlank(env)) {
+                    apiDocSerializer.addController(element);
+                }
+            } catch (Throwable e) {
+                exception = e;
+            }
+        }
+        //
+        if (rootMcpEnable) {
+            try {
+                services.add(new BeanUnit(createAptLoader(new DefaultMcpServerSerializer(processingEnv, suffix)), 0));
+            } catch (Throwable e) {
+                exception = e;
+            }
+        }
+
+        for (Element element : roundEnv.getElementsAnnotatedWith(Mapper.class)) {
+            try {
+                MapperSerializer serializer = new MapperSerializer(processingEnv, config, element, suffix);
+                services.add(new BeanUnit(createAptLoader(serializer), serializer.order()));
+            } catch (Throwable e) {
+                exception = e;
+            }
+        }
+
+        services.sort(Comparator.comparingInt(o -> o.order));
+        List<String> list = services.stream().map(beanUnit -> beanUnit.name).collect(Collectors.toList());
+        String cloudApplicationClass = createAptLoader(new CloudOptionsSerializer(processingEnv, config, list, licenseLoader.getLicense(), env, suffix));
+        serviceWrite.println(cloudApplicationClass);
+    }
+
+    private String createAptLoader(Serializer serializer) throws IOException {
+        String fullClassName = serializer.packageName() + "." + serializer.className();
         PrintWriter printWriter = serializer.getPrintWriter();
         if (FeatUtils.isNotBlank(serializer.packageName())) {
             printWriter.println("package " + serializer.packageName() + ";");
@@ -252,29 +257,38 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         printWriter.println("\t}");
         printWriter.println("}");
         printWriter.close();
+        return fullClassName;
     }
 
-    private String loadFeatYaml(ProcessingEnvironment processingEnv) throws IOException {
-        JSONObject config = loadYamlConfig(processingEnv, Arrays.asList("feat.yml", "feat.yaml"));
+    private Map<String, String> loadFeatConfigs(ProcessingEnvironment processingEnv) throws IOException {
+        Map<String, String> result = new LinkedHashMap<>();
+        JSONObject defaultConfig = loadYamlConfig(processingEnv, Arrays.asList("feat.yml", "feat.yaml"));
+        result.put("", defaultConfig.toJSONString());
 
-        String env = System.getProperty("feat.profiles.active");
-        if (FeatUtils.isBlank(env)) {
-            env = System.getenv("FEAT_PROFILES_ACTIVE");
+        FileObject featYaml = processingEnv.getFiler().getResource(StandardLocation.CLASS_OUTPUT, "", "feat.yml");
+        File rootDir = new File(featYaml.toUri()).getParentFile();
+        if (rootDir != null && rootDir.isDirectory()) {
+            File[] files = rootDir.listFiles(file -> {
+                String name = file.getName();
+                return file.isFile() && name.matches("feat-[A-Za-z0-9]+\\.ya?ml");
+            });
+            if (files != null) {
+                Arrays.sort(files, Comparator
+                        .comparingInt((File file) -> file.getName().endsWith(".yml") ? 0 : 1)
+                        .thenComparing(File::getName));
+                for (File file : files) {
+                    String env = parseEnv(file.getName());
+                    if (FeatUtils.isBlank(env) || result.containsKey(env)) {
+                        continue;
+                    }
+                    JSONObject config = new JSONObject();
+                    config.putAll(defaultConfig);
+                    config.putAll(loadYamlConfig(file));
+                    result.put(env, config.toJSONString());
+                }
+            }
         }
-        // 未指定环境
-        if (FeatUtils.isBlank(env)) {
-            return config.toJSONString();
-        }
-
-        env = env.trim();
-        if (!env.matches("[A-Za-z0-9]+")) {
-            throw new FeatException("非法的 feat.env 参数: " + env);
-        }
-
-        if (FeatUtils.isNotBlank(env)) {
-            config.putAll(loadYamlConfig(processingEnv, Arrays.asList("feat-" + env + ".yml", "feat-" + env + ".yaml")));
-        }
-        return config.toJSONString();
+        return result;
     }
 
     private JSONObject loadYamlConfig(ProcessingEnvironment processingEnv, List<String> filenames) throws IOException {
@@ -294,7 +308,38 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         }
 
         Yaml yaml = new Yaml();
-        return JSONObject.from(yaml.load(featYaml.openInputStream()));
+        try (java.io.InputStream inputStream = featYaml.openInputStream()) {
+            Object data = yaml.load(inputStream);
+            return data == null ? new JSONObject() : JSONObject.from(data);
+        }
+    }
+
+    private JSONObject loadYamlConfig(File file) throws IOException {
+        Yaml yaml = new Yaml();
+        try (java.io.InputStream inputStream = new java.io.FileInputStream(file)) {
+            Object data = yaml.load(inputStream);
+            return data == null ? new JSONObject() : JSONObject.from(data);
+        }
+    }
+
+    private String parseEnv(String filename) {
+        if ("feat.yml".equals(filename) || "feat.yaml".equals(filename)) {
+            return "";
+        }
+        if (filename.startsWith("feat-") && filename.endsWith(".yml")) {
+            return filename.substring(5, filename.length() - 4);
+        }
+        if (filename.startsWith("feat-") && filename.endsWith(".yaml")) {
+            return filename.substring(5, filename.length() - 5);
+        }
+        throw new FeatException("非法的 feat 配置文件名: " + filename);
+    }
+
+    private String environmentSuffix(String env) {
+        if (FeatUtils.isBlank(env)) {
+            return "";
+        }
+        return env.substring(0, 1).toUpperCase() + env.substring(1);
     }
 
     static class BeanUnit {

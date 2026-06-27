@@ -53,15 +53,15 @@ public abstract class AbstractSerializer implements Serializer {
     private final String className;
     protected ProcessingEnvironment processingEnv;
 
-
-    public AbstractSerializer(ProcessingEnvironment processingEnv, String config, Element element) throws IOException {
+    public AbstractSerializer(ProcessingEnvironment processingEnv, String config, Element element, String classSuffix) throws IOException {
         this.config = config;
         this.element = element;
         this.packageName = element.getEnclosingElement().asType().toString();
         if (FeatUtils.isBlank(packageName)) {
             throw new FeatException("Compilation for class " + element.getSimpleName() + " with an empty package is not supported. Please declare a valid package (e.g., 'com.example.service') for the class.");
         }
-        this.className = element.getSimpleName() + "CloudService";
+        String classSuffix1 = classSuffix == null ? "" : classSuffix;
+        this.className = element.getSimpleName() + "CloudService" + classSuffix1;
 
         this.processingEnv = processingEnv;
 

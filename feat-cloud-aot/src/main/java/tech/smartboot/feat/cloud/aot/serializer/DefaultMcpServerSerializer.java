@@ -34,15 +34,17 @@ public class DefaultMcpServerSerializer implements Serializer {
     private static final String PACKAGE = "tech.smartboot.feat.sandao";
     private static final String CLASS_NAME = "FeatDefaultMcpServerAptLoader";
     private final PrintWriter printWriter;
+    private final String classSuffix;
 
-    public DefaultMcpServerSerializer(ProcessingEnvironment processingEnv, String config) throws IOException {
-        FileObject preFileObject = processingEnv.getFiler().getResource(StandardLocation.SOURCE_OUTPUT, PACKAGE, CLASS_NAME + ".java");
+    public DefaultMcpServerSerializer(ProcessingEnvironment processingEnv, String classSuffix) throws IOException {
+        this.classSuffix = classSuffix == null ? "" : classSuffix;
+        FileObject preFileObject = processingEnv.getFiler().getResource(StandardLocation.SOURCE_OUTPUT, PACKAGE, className() + ".java");
         File f = new File(preFileObject.toUri());
         if (f.exists()) {
             f.delete();
         }
 
-        JavaFileObject javaFileObject = processingEnv.getFiler().createSourceFile(PACKAGE + "." + CLASS_NAME);
+        JavaFileObject javaFileObject = processingEnv.getFiler().createSourceFile(PACKAGE + "." + className());
         Writer writer = javaFileObject.openWriter();
         printWriter = new PrintWriter(writer);
     }
@@ -80,7 +82,7 @@ public class DefaultMcpServerSerializer implements Serializer {
 
     @Override
     public String className() {
-        return CLASS_NAME;
+        return CLASS_NAME + classSuffix;
     }
 
     @Override

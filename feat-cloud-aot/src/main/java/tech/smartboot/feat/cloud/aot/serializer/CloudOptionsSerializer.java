@@ -68,6 +68,7 @@ public final class CloudOptionsSerializer implements Serializer {
     private static final Logger logger = LoggerFactory.getLogger(CloudOptionsSerializer.class);
     private final String PACKAGE;
     private final String CLASS_NAME;
+    private final String profileKey;
     private final String config;
     private final Set<String> availableTypes = new HashSet<>(Arrays.asList(String.class.getName(), int.class.getName()));
 
@@ -82,14 +83,15 @@ public final class CloudOptionsSerializer implements Serializer {
      */
     private final List<Serializer> extensions = new ArrayList<>();
 
-    public CloudOptionsSerializer(ProcessingEnvironment processingEnv, String config, List<String> services, License license) throws Throwable {
+    public CloudOptionsSerializer(ProcessingEnvironment processingEnv, String config, List<String> services, License license, String profileKey, String classSuffix) throws Throwable {
         this.config = config;
         this.services = services;
         this.license = license;
+        this.profileKey = profileKey == null ? "" : profileKey;
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
         String date = sdf.format(new Date());
         PACKAGE = "tech.smartboot.feat.build.v" + date;
-        CLASS_NAME = "FeatApplication";
+        CLASS_NAME = "FeatApplication" + (classSuffix == null ? "" : classSuffix);
 
         //清理build目录
         FileObject preFileObject = processingEnv.getFiler().getResource(StandardLocation.SOURCE_OUTPUT, packageName(), className() + ".java");
@@ -225,6 +227,7 @@ public final class CloudOptionsSerializer implements Serializer {
         printWriter.println("import " + ApplicationContext.class.getName() + ";");
         printWriter.println("import " + Router.class.getName() + ";");
         printWriter.println("import " + CloudService.class.getName() + ";");
+        printWriter.println("import " + FeatUtils.class.getName() + ";");
         printWriter.println("import " + List.class.getName() + ";");
         printWriter.println("import " + SessionManager.class.getName() + ";");
         if (redisSession) {
@@ -255,6 +258,8 @@ public final class CloudOptionsSerializer implements Serializer {
         printWriter.println(license == null ? "null;" : "\"" + license.getNum() + "\";");
         printWriter.append("\tpublic static final String license_name = ");
         printWriter.println(license == null ? "null;" : "\"" + license.getName() + "\";");
+        printWriter.append("\tprivate static final String profiles_active = ");
+        printWriter.println("\"" + profileKey + "\";");
 
         printWriter.println();
 
@@ -267,10 +272,24 @@ public final class CloudOptionsSerializer implements Serializer {
         }
 
         printWriter.println("\tprivate List<" + CloudService.class.getSimpleName() + "> services = new " + ArrayList.class.getSimpleName() + "(" + services.size() + ");");
+        printWriter.println();
+        printWriter.println("\tprivate boolean acceptProfile() {");
+        printWriter.println("\t\tString active = System.getProperty(\"feat.profiles.active\");");
+        printWriter.println("\t\tif (FeatUtils.isBlank(active)) {");
+        printWriter.println("\t\t\tactive = System.getenv(\"FEAT_PROFILES_ACTIVE\");");
+        printWriter.println("\t\t}");
+        printWriter.println("\t\tif (FeatUtils.isBlank(active)) {");
+        printWriter.println("\t\t\treturn FeatUtils.isBlank(profiles_active);");
+        printWriter.println("\t\t}");
+        printWriter.println("\t\treturn profiles_active.equals(active.trim());");
+        printWriter.println("\t}");
     }
 
     @Override
     public void serializeLoadBean() {
+        printWriter.println("\t\tif (!acceptProfile()) {");
+        printWriter.println("\t\t\treturn;");
+        printWriter.println("\t\t}");
         for (Field field : ServerOptions.class.getDeclaredFields()) {
             Class<?> type = field.getType();
             if (type.isArray()) {

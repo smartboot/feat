@@ -29,8 +29,9 @@ import static tech.smartboot.feat.cloud.aot.controller.JsonSerializer.headBlank;
  * @version v1.0 7/23/25
  */
 public final class MapperSerializer extends AbstractSerializer {
-    public MapperSerializer(ProcessingEnvironment processingEnv, String config, Element element) throws IOException {
-        super(processingEnv, config, element);
+
+    public MapperSerializer(ProcessingEnvironment processingEnv, String config, Element element, String classSuffix) throws IOException {
+        super(processingEnv, config, element, classSuffix);
     }
 
     @Override

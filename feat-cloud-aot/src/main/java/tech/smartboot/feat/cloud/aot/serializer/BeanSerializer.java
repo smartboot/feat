@@ -24,8 +24,8 @@ import java.io.IOException;
  * @version v1.0 7/23/25
  */
 public final class BeanSerializer extends AbstractSerializer {
-    public BeanSerializer(ProcessingEnvironment processingEnv, String config, Element element) throws IOException {
-        super(processingEnv, config, element);
+    public BeanSerializer(ProcessingEnvironment processingEnv, String config, Element element, String classSuffix) throws IOException {
+        super(processingEnv, config, element, classSuffix);
         for (Element e : element.getEnclosedElements()) {
             if (e.getAnnotation(InterceptorMapping.class) != null) {
                 throw new FeatException("Bean can not be used with InterceptorMapping");

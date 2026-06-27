@@ -58,8 +58,8 @@ public final class ControllerSerializer extends AbstractSerializer {
     private final McpEndpointSerializer mcpEndpointSerializer;
     private final McpEndpointSerializer.McpServerOption mcpServerOption;
 
-    public ControllerSerializer(ProcessingEnvironment processingEnv, String config, Element element) throws IOException {
-        super(processingEnv, config, element);
+    public ControllerSerializer(ProcessingEnvironment processingEnv, String config, Element element, String classSuffix) throws IOException {
+        super(processingEnv, config, element, classSuffix);
         McpEndpoint mcpEndpoint = element.getAnnotation(McpEndpoint.class);
         mcpServerOption = new McpEndpointSerializer.McpServerOption();
         if (mcpEndpoint != null) {
