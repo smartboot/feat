@@ -7,19 +7,13 @@ sidebar:
 
 import { Aside, Tabs, TabItem } from '@astrojs/starlight/components'
 
-前面两章已经能写出完整的 RESTful 接口。这一章学习几个在真实项目中经常遇到的能力：会话注入、请求上下文、异步响应和响应压缩。
+前面两章解决了 HTTP 接口的主体：路径、方法、参数和返回值。真实项目还会遇到几类更靠近运行时的问题：当前请求上下文怎么拿，耗时任务怎么返回，大响应怎么压缩，JSON 序列化到底发生在什么时候。
 
-## 本章目标
-
-完成本章后，你会知道：
-
-- 如何注入 `Session`、`Context` 等内置对象
-- 什么时候使用 `AsyncResponse`
-- 什么时候开启 Gzip 压缩
+这些能力不应该一开始就全用上。它们更像工具箱：当接口开始碰到状态、异步和性能边界时，再把对应工具拿出来。
 
 ## 注入 Session
 
-把 `Session` 声明为方法参数即可注入当前请求的会话对象。注意：这个功能需要服务端启用 SessionManager，否则可能拿到空实现或新会话。
+把 `Session` 声明为方法参数即可注入当前请求的会话对象。这里先看最小用法；如果要判断本地 Session、Redis Session 和认证模型的边界，可以继续看后面的 Session 章节。
 
 ```java title="UserController.java"
 import tech.smartboot.feat.core.server.Session;
@@ -108,6 +102,12 @@ Gzip 属性说明：
 | `gzip` | boolean | false | 是否开启 Gzip 压缩 |
 | `gzipThreshold` | int | 256 | 压缩阈值（字节），低于此值不压缩 |
 
+可以用带 `Accept-Encoding: gzip` 的请求验证压缩效果：
+
+```shell title="Gzip 请求"
+curl -H "Accept-Encoding: gzip" http://localhost:8080/api/large --compressed
+```
+
 ## 编译期序列化
 
 Feat Cloud 的 JSON 序列化在编译期生成代码：注解处理器会分析 Controller 方法的返回类型，并为它生成专门的序列化逻辑。
@@ -132,14 +132,12 @@ Feat Cloud 的 JSON 序列化在编译期生成代码：注解处理器会分析
 编译期序列化只覆盖同步返回的对象。`AsyncResponse` 返回的 `RestResult` 是在运行时用 FastJSON2 序列化的，因为它在编译期无法确定异步完成时的具体结果。
 </Aside>
 
-## 动手试一试
+## 如何判断该用哪一个
 
-给 `ApiController` 添加一个 `/heavy` 接口，返回一段超过 256 字节的文本，然后分别用普通请求和带 `Accept-Encoding: gzip` 头的请求访问，观察响应大小变化。
+如果只是读写一个普通资源，前两章的 `@RequestMapping`、`@Param`、`@PathParam` 已经足够。  
+只有出现下面这些信号时，再引入本章能力：
 
-```shell title="普通请求"
-curl http://localhost:8080/api/heavy
-```
-
-```shell title="Gzip 请求"
-curl -H "Accept-Encoding: gzip" http://localhost:8080/api/heavy --compressed
-```
+- 需要读取完整请求或直接设置响应头时，用 `Context`
+- 需要在多次请求间保存少量状态时，用 `Session`
+- 当前请求会等待远程调用或较长任务时，用 `AsyncResponse`
+- 返回体经常超过几百字节且客户端支持压缩时，再考虑 Gzip

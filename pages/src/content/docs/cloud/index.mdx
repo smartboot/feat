@@ -14,17 +14,20 @@ import idea_setting from './img/idea_setting.png';
 Feat 主线仓库采用 Apache 2.0；其中 Feat Cloud 通过赞助支持模式开放。如需使用 Feat Cloud，请先[成为赞助者](/feat/sponsors/)获取授权。
 </Aside>
 
-Feat Cloud 适合已经接受 Feat 技术路线，但又希望用更接近 Spring Boot 的注解式开发体验来构建应用的团队。
+Feat Cloud 面向这样一种场景：你已经接受 Feat Core 的轻量、高性能路线，但在业务项目里仍然希望保留 Controller、Bean、自动装配这些更熟悉的组织方式。
 
 如果你还在评估 Feat，建议先从 [Feat Core 快速开始](/feat/server/) 开始。
 
-## 编写第一个应用
+这章先不展开配置、数据库或部署。我们只做一件事：写出一个能被编译期识别、启动后可以访问的最小 Feat Cloud 应用。
 
-你将构建一个最小的注解式 Web 应用，访问 `http://localhost:8080/hello` 返回 `hello Feat Cloud`。
+## 一个最小应用
 
-**前置要求**：JDK 8+、Maven 3.0+、Java IDE
+最终效果很小：访问 `http://localhost:8080/hello` 返回 `hello Feat Cloud`。  
+但这条链路会经过 Feat Cloud 最重要的机制：编译期扫描注解、生成服务代码、启动时注册路由。
 
-### 1. 添加依赖
+开始前确认本地已经有 JDK 8+、Maven 3.0+ 和一个能正常运行 Maven 项目的 IDE。
+
+### 添加依赖
 
 在 `pom.xml` 中加入：
 
@@ -36,7 +39,7 @@ Feat Cloud 适合已经接受 Feat 技术路线，但又希望用更接近 Sprin
     <version>${feat.version}</version>
 </dependency>
 
-<!--编译期转码-->
+<!--编译期生成代码-->
 <dependency>
     <groupId>tech.smartboot.feat</groupId>
     <artifactId>feat-cloud-starter</artifactId>
@@ -49,7 +52,10 @@ Feat Cloud 适合已经接受 Feat 技术路线，但又希望用更接近 Sprin
 `${feat.version}` 请替换为实际版本。最新版本可以在 [Maven Central](https://central.sonatype.com/artifact/tech.smartboot.feat/feat-cloud-starter) 查看。
 </Aside>
 
-### 2. 编写控制器
+这里有一个容易忽略的分工：`feat-cloud` 是运行期依赖，`feat-cloud-starter` 负责在编译期生成代码。  
+如果少了后者，应用可以编译到某一步，但 Controller 不会被转成可加载的 `CloudService`。
+
+### 编写入口和控制器
 
 创建 `Bootstrap.java`：
 
@@ -72,9 +78,14 @@ public class Bootstrap {
 }
 ```
 
-关键点：`@Controller` 声明控制器，`@RequestMapping` 声明路径，`FeatCloud.cloudServer().listen()` 启动服务。
+这个类同时承担两个角色：
 
-### 3. 运行并验证
+- `main` 方法是应用启动入口
+- `@Controller` 和 `@RequestMapping` 让编译器知道这里有一个 HTTP 路由
+
+在真实项目里，你通常会把启动类和 Controller 拆开。这里合在一起，是为了让第一条链路尽量短。
+
+### 运行并验证
 
 <Aside type="tip">
 如果你修改控制器后发现路由没有更新，建议检查 IDEA 设置：`Preferences` → `Build, Execution, Deployment` → `Build Tools` → `Maven` → `Runner`，勾选 `Delegate IDE build/run actions to Maven`。
@@ -107,3 +118,5 @@ http://0.0.0.0:8080/
     ```
   </TabItem>
 </Tabs>
+
+到这里，你已经跑通了 Feat Cloud 的基本闭环。后面的章节会把这个最小应用拆开：先讲 Controller 如何组织，再讲参数绑定、启动配置、环境配置、数据库集成和最终部署。

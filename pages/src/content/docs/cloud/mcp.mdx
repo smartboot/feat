@@ -2,41 +2,16 @@
 title: MCP 服务
 description: 用 Feat Cloud 的注解式方式暴露 Tool、Prompt 和 Resource，并决定是否需要自定义 MCP 端点
 sidebar:
-    order: 8
+    order: 9
 ---
 
-MCP 这页最容易写成“大量注解参数说明”，但那样其实帮不了你真正落地。  
-更实际的问题是：如果你已经有一个 Feat Cloud 应用，现在想把它变成一个 MCP 服务，应该从哪种方式开始。
+前面的章节一直在讲 HTTP：Controller 接收请求，调用业务代码，再返回文本或 JSON。MCP 让同一类业务能力多了一个入口：模型客户端可以发现它、理解它的参数，并把它当成工具、提示模板或资源来调用。
 
-## 先判断：你需要哪一种 MCP 暴露方式
+Feat Cloud 的优势仍然来自编译期生成。你在 Controller 上声明 `@Tool`、`@Prompt`、`@Resource` 或 `@McpEndpoint`，编译期会把这些声明转成 MCP Server 的注册代码。运行时要做的事情很少：加载生成类，把能力挂到对应端点上。
 
-在 Feat Cloud 里，MCP 大体有两种用法：
+## 先把一个方法变成工具
 
-### 默认 MCP 服务器
-
-当你的 Controller 里出现 `@Tool`、`@Prompt`、`@Resource` 这些注解时，Feat Cloud 可以在编译期帮你生成默认 MCP 服务。
-
-适合：
-
-- 你只是想把少量工具或资源先暴露出去
-- 你不打算自定义一整套 MCP 路径
-- 你希望先用最少的配置打通能力
-
-### 自定义 MCP 端点
-
-如果你需要明确指定 MCP 服务名、SSE 端点、消息端点和流式端点，就用 `@McpEndpoint`。
-
-适合：
-
-- 你已经把 MCP 当成一个明确的服务能力来设计
-- 你希望自己控制端点路径和服务边界
-- 你不想完全依赖默认端点行为
-
-## 从默认方式开始
-
-如果你只是想先把一个工具暴露给 MCP 客户端，不一定需要自定义服务端点。
-
-下面这种 Controller 已经足够表达一个最小用例：
+如果只是把少量业务方法开放给 MCP 客户端，不需要一开始就设计完整端点。给方法加 `@Tool`，给参数补上 `@Param` 元信息，就能先跑通最小链路：
 
 ```java title="DefaultMcpController.java"
 import tech.smartboot.feat.cloud.annotation.Controller;
@@ -53,23 +28,28 @@ public class DefaultMcpController {
 }
 ```
 
-这类写法的重点不是“看起来像注解示例”，而是它已经足够让编译期生成 MCP 对应服务能力。
+这里的 `@Param` 不是 HTTP 查询参数，而是 MCP 参数描述。它告诉客户端这个工具需要什么输入、参数是否必填、参数含义是什么。对模型客户端来说，这些描述会直接影响工具能不能被正确选择和调用。
 
-## 什么时候切到自定义端点
+## 默认服务还是独立端点
 
-一旦你开始真正管理一个 MCP 服务，而不是单独抛几个工具，就应该考虑 `@McpEndpoint`。
+Feat Cloud 提供两种 MCP 暴露方式。
 
-仓库里的真实示例是：
+默认 MCP 服务适合早期接入：项目里出现 `@Tool`、`@Prompt`、`@Resource` 后，Feat Cloud 会生成默认 MCP Server，把这些能力挂进去。它的价值是低成本验证：先确认客户端能发现工具、能发起调用、能拿到结果。
+
+当 MCP 已经成为应用边界的一部分，就应该使用 `@McpEndpoint` 显式定义端点。它让服务名、SSE 路径、消息路径和 Streamable HTTP 路径都写在代码里，部署、网关和客户端配置也更容易保持稳定。
 
 ```java title="McpDemoController.java"
 import tech.smartboot.feat.ai.mcp.enums.PromptType;
 import tech.smartboot.feat.ai.mcp.model.ToolResult;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
+import tech.smartboot.feat.cloud.annotation.mcp.Param;
 import tech.smartboot.feat.cloud.annotation.mcp.Prompt;
 import tech.smartboot.feat.cloud.annotation.mcp.Resource;
 import tech.smartboot.feat.cloud.annotation.mcp.Tool;
-import tech.smartboot.feat.cloud.annotation.mcp.Param;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Controller
 @McpEndpoint(
@@ -82,14 +62,15 @@ import tech.smartboot.feat.cloud.annotation.mcp.Param;
 public class McpDemoController {
 
     @Tool(name = "getUserInfo", description = "根据用户ID获取用户信息")
-    public UserInfo getUserInfo(
+    public Map<String, Object> getUserInfo(
         @Param(required = true, description = "用户ID") Long userId,
         @Param(required = false, description = "是否包含详细信息") Boolean detailed
     ) {
-        UserInfo user = new UserInfo();
-        user.setId(userId);
-        user.setName("User " + userId);
-        user.setEmail(userId + "@example.com");
+        Map<String, Object> user = new HashMap<>();
+        user.put("id", userId);
+        user.put("name", "User " + userId);
+        user.put("email", userId + "@example.com");
+        user.put("detailed", Boolean.TRUE.equals(detailed));
         return user;
     }
 
@@ -123,51 +104,38 @@ public class McpDemoController {
 }
 ```
 
-这段示例已经很能说明问题了：
+这段代码里有三类能力：
 
 - `@Tool` 暴露可调用能力
 - `@Prompt` 暴露提示模板
 - `@Resource` 暴露文本或二进制资源
-- `@McpEndpoint` 负责把这整组能力挂到一组明确端点上
 
-## 怎么理解这些注解
+`@McpEndpoint` 则负责把这组能力放进一个明确的 MCP 服务边界里。到了这个阶段，你应该像设计 HTTP API 一样设计 MCP 端点：路径要稳定，名称要能表达服务意图，参数描述要足够让调用方理解。
 
-### `@Tool`
+## Tool、Prompt、Resource 的分工
 
-把一个方法暴露成 MCP 可调用工具。  
-如果你的目标是“让模型调用这段业务逻辑”，从这里开始最自然。
+`@Tool` 适合执行动作或查询数据。如果你的目标是“让模型调用这段业务逻辑”，从 Tool 开始最自然，例如查用户、算价格、生成报表摘要。
 
-### `@Prompt`
+`@Prompt` 适合暴露提示模板。它不是普通 Controller 里直接返回一段文本，而是把一套可复用的提示结构交给 MCP 客户端，让客户端在合适时填入参数并使用。
 
-把一段模板化提示词暴露出去。  
-更适合“把一套提示结构交给外部 MCP 客户端使用”，而不是普通 Controller 里直接返回文本。
+`@Resource` 适合暴露稳定材料，例如团队规范、产品说明、接口文档、图片或二进制资源。资源一般不表达“做一件事”，而是让客户端读取一份内容。
 
-### `@Resource`
+## 不要把 MCP Controller 写成大杂烩
 
-暴露一段文本资源或二进制资源。  
-适合团队规范、说明文档、静态内容、图片等可被外部读取的材料。
+MCP 能力应该围绕调用方的任务组织，而不是围绕注解类型堆叠。一个面向代码审查的 MCP 服务，可以包含代码审查 Prompt、读取编码规范的 Resource、查询项目元数据的 Tool；另一个面向运维的 MCP 服务，则应该独立成另一组 Controller 和端点。
 
-### `@Param`
+如果你是第一次接入 MCP，比较稳的顺序是：
 
-描述 MCP 工具或提示词参数。  
-这里的 `@Param` 不是普通 Controller 查询参数的同一层概念，而是 MCP 参数元信息的一部分。
+1. 先暴露一个最小 Tool，确认客户端能调用
+2. 再补充必要的参数描述，观察模型是否能正确选择工具
+3. 需要复用提示结构时再加入 Prompt
+4. 需要稳定材料时再加入 Resource
+5. 服务边界稳定后，再迁移到显式 `@McpEndpoint`
 
-## 一个更实用的建议
+## 什么时候直接操作 `McpServer`
 
-如果你是第一次做 MCP，不要一上来就把 Tool、Prompt、Resource 全部堆在一个大 Controller 里。  
-更稳的做法通常是：
+注解方式适合大多数静态能力：工具、提示和资源在编译期就能确定，Feat Cloud 可以直接生成注册代码。
 
-1. 先暴露一个最小 Tool
-2. 再加一个 Prompt
-3. 最后再考虑是否需要 Resource
+如果你的工具集合需要在运行时动态变化，例如从数据库、插件系统或外部配置加载工具，就可以注入 `McpServer` 并在代码里管理。这个方式更灵活，也意味着你要自己维护更多边界：何时注册、何时下线、如何避免重复、如何处理并发变化。
 
-也就是说，先确认“服务能被 MCP 客户端发现和调用”，再扩能力。
-
-## 什么时候需要 `McpServer`
-
-仓库里也有直接注入 `McpServer` 的例子，例如 `McpToolMainController`。  
-这类写法更适合你在代码里动态管理工具，而不是完全依赖注解生成。
-
-如果你当前只是想把业务能力暴露出去，优先用注解方式。  
-当你开始需要更精细的控制时，再考虑直接操作 `McpServer`。
-
+所以默认选择很简单：能用注解清楚表达的能力，优先交给编译期生成；只有当能力本身就是动态的，再直接操作 `McpServer`。

@@ -9,13 +9,7 @@ import { Aside, Tabs, TabItem } from '@astrojs/starlight/components'
 
 上一章写出了一个能返回文本和 JSON 的控制器。这一章继续扩展它，学习如何接收客户端传过来的参数，以及如何为同一路径配置不同的 HTTP 方法。
 
-## 本章目标
-
-完成本章后，你的 `UserController` 会支持：
-
-- 查询参数绑定
-- 路径参数绑定
-- RESTful 风格的 GET/POST/PUT/DELETE
+HTTP 接口真正进入业务之后，固定返回值很快就不够用了。你需要从查询字符串里拿筛选条件，从路径里拿资源标识，再用不同 HTTP 方法表达读取、创建、更新和删除。
 
 ## 查询参数
 
@@ -158,8 +152,9 @@ public String delete(@PathParam("id") String id) {
   </TabItem>
 </Tabs>
 
-## 动手试一试
+## 路径风格如何取舍
 
-把路径参数从 `:id` 改成 `{id}` 形式，重新编译并验证 `/users/123` 是否仍然可以访问。
+Feat Cloud 同时支持 `:id` 和 `{id}` 两种路径参数写法。  
+如果你的团队来自前端路由或 Feat Core 路由体系，`:id` 会更自然；如果团队长期使用 Spring MVC，`{id}` 往往更容易迁移。
 
-完成后，你的 `UserController` 就具备了完整的 RESTful 查询能力。
+两者没有能力差异，真正重要的是团队内部保持一致。路径风格一旦混用，后续排查路由时会增加不必要的认知成本。

@@ -1,26 +1,62 @@
 ---
-title: 部署指南
-description: 以 demo/helloworld_docker 为例，说明 Feat 应用从打包到容器交付的最短路径
+title: 部署
+description: 将 Feat Cloud 应用从本地运行推进到 Fat Jar 和 JRE 容器交付
 sidebar:
     order: 10
 ---
 
 ![](./img/deployment_1.png)
-# 部署指南
 
-到这一页，默认你已经能把应用在本地跑起来了。接下来介绍三种部署方式，按复杂度递增排列：
+到这一页，应用已经不只是“能在 IDE 里跑”。部署要回答的是另一个问题：怎样把编译期生成的 `CloudService`、运行期依赖和启动入口一起打进可交付产物里。
 
-- **直接运行 Fat Jar**：有服务器、装了 JDK，最快的方式
-- **JRE 容器镜像**：标准的容器化交付
-- **Native Image 容器**：启动更快、镜像更小，构建更复杂
+Feat Cloud 的部署路线可以分成两层：
 
-> 建议先走 Fat Jar 或 JRE 容器把链路跑通，再考虑 Native。
+- **Fat Jar**：最短路径，适合普通服务器或快速验证
+- **JRE 容器镜像**：更适合标准化交付和容器平台
 
----
+Native Image 是另一条优化路线，建议在 JRE 交付稳定之后再评估。
 
-## 第一步：打包
+## 打包前先确认服务发现文件
 
-三种方式都从同一个起点出发。执行：
+Feat Cloud 依赖 Java `ServiceLoader` 加载编译期生成的 `CloudService`。  
+这意味着打包时必须保留并合并这个文件：
+
+```text
+META-INF/services/tech.smartboot.feat.cloud.CloudService
+```
+
+如果 Fat Jar 打包时把它覆盖掉，应用能启动，但路由会全部丢失。  
+所以 `maven-shade-plugin` 里必须配置 `AppendingTransformer`。
+
+```xml title="pom.xml"
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-shade-plugin</artifactId>
+    <version>${maven-shade-plugin.version}</version>
+    <executions>
+        <execution>
+            <phase>package</phase>
+            <goals><goal>shade</goal></goals>
+            <configuration>
+                <transformers>
+                    <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                        <resource>META-INF/services/tech.smartboot.feat.cloud.CloudService</resource>
+                    </transformer>
+                    <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                        <mainClass>com.example.Bootstrap</mainClass>
+                    </transformer>
+                </transformers>
+            </configuration>
+        </execution>
+    </executions>
+</plugin>
+```
+
+`AppendingTransformer` 保留生成服务，`ManifestResourceTransformer` 指定 `java -jar` 的启动入口。两者缺一不可。
+
+## 构建 Fat Jar
+
+执行：
 
 ```bash
 mvn clean package
@@ -32,37 +68,7 @@ mvn clean package
 target/yourapp-1.0.jar
 ```
 
-**打包需要正确配置 `maven-shade-plugin`**，两点缺一不可：
-
-```xml
-<plugin>
-    <groupId>org.apache.maven.plugins</groupId>
-    <artifactId>maven-shade-plugin</artifactId>
-    <version>${maven-shade-plugin.version}</version>
-    <executions>
-        <execution>
-            <phase>package</phase>
-            <goals><goal>shade</goal></goals>
-            <configuration>
-                <transformers>
-                    <!-- 合并 CloudService 服务发现文件，缺少这个路由会全部 404 -->
-                    <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-                        <resource>META-INF/services/tech.smartboot.feat.cloud.CloudService</resource>
-                    </transformer>
-                    <!-- 指定启动主类，缺少这个 java -jar 会报错 -->
-                    <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                        <mainClass>com.example.Bootstrap</mainClass>
-                    </transformer>
-                </transformers>
-            </configuration>
-        </execution>
-    </executions>
-</plugin>
-```
-
----
-
-## 方案一：直接运行 Fat Jar
+直接运行：
 
 ```bash
 java -jar target/yourapp-1.0.jar
@@ -80,9 +86,9 @@ curl http://localhost:8080/hello
 nohup java -jar yourapp-1.0.jar > app.log 2>&1 &
 ```
 
----
+## 构建 JRE 容器镜像
 
-## 方案二：JRE 容器镜像
+容器化时，Fat Jar 仍然是交付物。Dockerfile 只负责提供 JRE 环境并启动它：
 
 ```dockerfile
 FROM eclipse-temurin:21-jre-alpine
@@ -103,40 +109,7 @@ docker build -t yourapp:latest .
 docker run -p 8080:8080 yourapp:latest
 ```
 
----
-
-## 方案三：Native Image 容器
-
-构建前确认已完成 [Native Image](./native-image) 的相关配置。
-
-```dockerfile
-# 第一阶段：编译
-FROM container-registry.oracle.com/graalvm/native-image:21-ol9 AS builder
-
-WORKDIR /build
-COPY target/yourapp-1.0.jar app.jar
-RUN native-image --no-fallback -jar app.jar -o yourapp
-
-# 第二阶段：运行
-FROM ubuntu:22.04
-
-WORKDIR /app
-COPY --from=builder /build/yourapp yourapp
-
-EXPOSE 8080
-ENTRYPOINT ["/app/yourapp"]
-```
-
-构建并运行：
-
-```bash
-docker build -t yourapp:native .
-docker run -p 8080:8080 yourapp:native
-```
-
-Native Image 构建耗时较长（通常几分钟），属于正常现象。启动完成后可以观察日志，启动时间通常在 100ms 以内。
-
----
+如果你需要进一步追求启动速度和更小运行时，再进入 [Native Image](/feat/cloud/native-image/)。
 
 ## 常见问题
 

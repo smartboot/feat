@@ -8,15 +8,21 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 
 `CloudOptions` 继承自 [`ServerOptions`](/feat/server/serveroptions/)，所以端口、线程数、调试模式、HTTPS 这类基础能力仍然在 `ServerOptions` 里配置。  
-这页只讲 Feat Cloud 启动阶段最关键的三项额外能力。
+这一章只讲 Feat Cloud 启动阶段最关键的三项额外能力：扫描边界、外部 Bean 和静态资源。
 
-## 什么时候需要看这页
+它和 `feat.yml` 的职责不同。`feat.yml` 是编译期生成代码的输入；`CloudOptions` 是启动应用时传给 Feat Cloud 的运行时选项。前者改变后通常需要重新编译，后者在启动入口里决定本次应用如何运行。
 
-- 控制器明明写了，但没有被扫描到
-- 你要在容器启动前手动注册某个 Bean
-- 你想让 Feat Cloud 顺手托管静态资源
+## 先划清边界
 
-## 你最常用的 3 个配置项
+遇到这些问题时，通常应该看 `CloudOptions`：
+
+- 控制器已经写好，但你想限制哪些包会被接受
+- 有对象必须在 Feat Cloud 容器启动前就准备好
+- 应用需要顺手托管 `classpath` 或文件系统里的静态资源
+
+如果你要处理 `feat.yml`、`feat-dev.yml` 这类配置文件，那属于 [配置与 Profile](/feat/cloud/profiles/) 的范围。
+
+## 启动时最常碰到的三件事
 
 | 配置项 | 方法 | 默认值 | 典型用途 |
 |------|------|------|------|
@@ -24,7 +30,7 @@ import { Aside } from '@astrojs/starlight/components';
 | 外部 Bean | `registerBean(String, Object)` | 空 | 把启动前已有对象注册进容器 |
 | 静态资源 | `setStaticLocations(String)` | `classpath:static` | 托管类路径或本地目录里的静态文件 |
 
-## 场景 1：控制扫描范围
+## 收窄扫描边界
 
 如果你的启动类和控制器不在同一个合理的根包下，或者你只想限制扫描范围，可以显式设置包路径。
 
@@ -53,7 +59,7 @@ public class Bootstrap {
 如果你的启动类本身已经位于合理的根包下，很多情况下并不需要写 `setPackages(...)`。只有在扫描行为不符合预期时，再显式收窄范围。
 </Aside>
 
-## 场景 2：注册外部 Bean
+## 把已有对象交给容器
 
 有些对象不是通过 Feat Cloud 自己创建的，比如数据源、第三方客户端、配置对象。这时可以在启动时手动注册。
 
@@ -91,7 +97,7 @@ options.registerBean("dataSource", ds2); // 会失败
 
 所以命名上建议用稳定且业务明确的名字。
 
-## 场景 3：托管静态资源
+## 托管静态资源
 
 Feat Cloud 默认静态资源目录是 `classpath:static`。如果你项目里有前端页面、上传后的公开文件或静态文档，可以直接改位置。
 
@@ -132,9 +138,7 @@ options.setStaticLocations("./public");
 `setStaticLocations(...)` 不只是记住一个路径，它会顺手创建一个新的 `Router` 来挂载静态资源处理器。所以如果你还要自定义底层路由，请明确知道谁是最终生效的 Router。
 </Aside>
 
-如果你关心 `feat.yml` / `feat-dev.yml` 这类编译期配置约定，看 [配置与 Profile](/feat/cloud/profiles/)。
-
-## 组合使用示例
+## 把启动策略写在入口
 
 实际项目里，这三个配置项经常一起出现：
 

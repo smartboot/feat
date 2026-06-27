@@ -1,18 +1,17 @@
 ---
 title: MyBatis 集成
-description: 通过 demo/mybatis 的实际结构，完成一个最小但完整的数据库访问链路
+description: 把 MyBatis Mapper 接入 Feat Cloud 的 Bean 生命周期，完成一条可验证的数据访问链路
 sidebar:
-    order: 6
+    order: 7
 ---
 
-import { Aside } from '@astrojs/starlight/components'
+到这里，HTTP 层、启动配置和 Profile 已经就位。接下来要把数据访问接进应用。
 
-这一页不再试图做一份"MyBatis 配置项大全"。
-它只回答一个更实际的问题：如果你已经能写 Feat Cloud 控制器，现在要把数据库接进来，应该按什么顺序做。
+Feat Cloud 的 MyBatis 集成不试图替代 MyBatis。它做的是另一件事：在编译期把 Mapper 接进 Feat Cloud 的 Bean 生命周期，让 Controller 可以像注入普通 Bean 一样使用它。
 
-## 你最终会得到什么
+## 一条完整的数据访问链路
 
-一个最小的 CRUD 链路：
+这一章会搭出一个最小的 CRUD 链路：
 
 - 访问 `/users` 能查到所有用户
 - 访问 `/users/{username}` 能查到单个用户
@@ -21,18 +20,11 @@ import { Aside } from '@astrojs/starlight/components'
 - `PUT /users` 能更新用户
 - `DELETE /users/{username}` 能删除用户
 
-## 第一步：加依赖
+## 准备依赖
 
-在 `pom.xml` 中引入 `feat-cloud-starter`、`mybatis` 和数据库驱动。
-示例项目里使用的是 H2 内存数据库：
+在已有 Feat Cloud 应用基础上，引入 MyBatis 和数据库驱动。下面的示例使用 H2 内存数据库，适合先把链路跑通：
 
 ```xml title="pom.xml"
-<dependency>
-    <groupId>tech.smartboot.feat</groupId>
-    <artifactId>feat-cloud-starter</artifactId>
-    <version>${feat.version}</version>
-</dependency>
-
 <dependency>
     <groupId>org.mybatis</groupId>
     <artifactId>mybatis</artifactId>
@@ -46,11 +38,11 @@ import { Aside } from '@astrojs/starlight/components'
 </dependency>
 ```
 
-> 示例中 MyBatis 和 H2 的版本号使用占位符，实际使用时请替换为当前稳定版本。
+示例中 MyBatis 和 H2 的版本号使用占位符，实际使用时请替换为当前稳定版本。`feat-cloud` 与 `feat-cloud-starter` 仍按快速开始中的方式保留：前者提供运行期，后者负责生成 MyBatis 接入代码。
 
-## 第二步：把 MyBatis 配置接到 Feat Cloud 启动流程
+## 让 Feat Cloud 找到 MyBatis
 
-在 `src/main/resources/feat.yaml` 里声明两件事：
+在 `src/main/resources/feat.yaml` 里声明 MyBatis 主配置和初始化 SQL：
 
 ```yaml title="feat.yaml"
 feat:
@@ -59,16 +51,11 @@ feat:
     initial-sql: mybatis/ddl/schema.sql
 ```
 
-这里的含义很直接：
+`path` 指向 MyBatis 主配置；`initial-sql` 指向启动时要执行的初始化脚本。它们都属于编译期配置输入，和前一章讲的 `feat.yml` / `feat-{env}.yml` 一样，修改后需要重新构建。
 
-- `path`：告诉 Feat Cloud 去哪里读 MyBatis 主配置
-- `initial-sql`：告诉它启动时顺手执行数据库初始化脚本
+## 准备 MyBatis 自己的资源
 
-这就是示例项目为什么一启动就能直接查到用户数据，而不需要你手写额外初始化逻辑。
-
-## 第三步：准备 MyBatis 配置和表结构
-
-`demo/mybatis` 的 `mybatis-config.xml` 很克制，只做了三件事：
+示例里的 `mybatis-config.xml` 只做三件事：
 
 1. 打开 SQL 日志
 2. 配置 H2 数据源
@@ -94,10 +81,9 @@ feat:
 </configuration>
 ```
 
-而 `schema.sql` 负责建表并插入几条初始数据。
-这一步让后面的 Controller 和 Service 能立刻验证，不需要再手动准备数据库。
+`schema.sql` 负责建表并插入几条初始数据。这样后面的 Controller 和 Service 能立刻验证，不需要再手动准备数据库。
 
-## 第四步：启动应用
+## 保持启动入口干净
 
 示例里的启动类非常简单：
 
@@ -113,10 +99,10 @@ public class Bootstrap {
 }
 ```
 
-这个类本身几乎没做业务事，但它给了 Feat Cloud 一个明确的启动入口。
+这个类本身几乎不做业务事，但它给了 Feat Cloud 一个明确的启动入口。
 MyBatis 的配置接入，主要是靠前面的 `feat.yaml` 和资源文件完成的。
 
-## 第五步：定义实体和 Mapper
+## 定义领域对象和 Mapper
 
 ### User 实体
 
@@ -183,12 +169,12 @@ public interface UserMapper {
 }
 ```
 
-这里最重要的不是注解语法本身，而是：
+这里的关键不是 MyBatis 注解语法，而是职责边界：
 
 - Mapper 仍然是纯 MyBatis 思维
 - Feat Cloud 负责把它接进应用上下文
 
-## 第六步：在 Service 里使用 Mapper
+## 在 Service 里组织业务动作
 
 示例项目没有直接在 Controller 里操作 Mapper，而是先过一层 Service：
 
@@ -249,7 +235,7 @@ public class UserService {
 }
 ```
 
-这一步的意义很简单：
+这一层让职责保持清楚：
 
 - Controller 负责 HTTP
 - Service 负责业务动作
@@ -257,7 +243,7 @@ public class UserService {
 
 这样后面继续扩展权限、事务、校验时，结构不会乱。
 
-## 第七步：暴露 HTTP 接口
+## 把数据访问暴露成 HTTP 接口
 
 最后在 Controller 里把这条链路接到 HTTP 上：
 
@@ -326,9 +312,9 @@ public class UserController {
 
 `HTTP -> Controller -> Service -> Mapper -> DB`
 
-## 怎么验证这套链路
+## 验证整条链路
 
-启动 `demo/mybatis` 后，可以先验证读接口：
+启动应用后，可以先验证读接口：
 
 ```shell title="查询接口验证"
 curl http://localhost:8080/users
@@ -357,8 +343,8 @@ curl -X DELETE http://localhost:8080/users/new_user
 - 初始化 SQL 生效
 - Mapper / Service / Controller 整条链路都打通了
 
-## 一个重要的认识
+## Feat Cloud 负责接线，MyBatis 仍负责访问数据
 
-在 Feat Cloud 里，MyBatis 集成不是要你重写一套数据访问层。
-你要做的只是：按 MyBatis 的方式写 Mapper 和 Service，然后在启动配置里告诉 Feat Cloud 它们在哪里。
-剩下的接线工作，编译期就完成了。
+在 Feat Cloud 里，MyBatis 集成不是重写一套数据访问层。Mapper 仍按 MyBatis 的方式定义，SQL 仍由 MyBatis 执行，Service 仍组织业务动作。
+
+Feat Cloud 负责的是另一半：读取 `feat.yaml`，在编译期生成 Mapper 接入和 Bean 装配代码，让 Controller 可以通过 `@Autowired` 使用数据访问层。理解这个边界之后，后续切换数据库、拆分环境配置或进入部署阶段都会更清晰。

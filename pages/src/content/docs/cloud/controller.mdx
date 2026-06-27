@@ -9,15 +9,7 @@ import { Aside } from '@astrojs/starlight/components'
 
 Feat Cloud 的控制器写起来和 Spring Boot 很像：一个类加 `@Controller`，方法加 `@RequestMapping`。但底层实现不同：路由映射在编译期生成，运行时不再反射扫描。
 
-本章只关注一件事：写出第一个能正确响应 HTTP 请求的控制器。
-
-## 本章目标
-
-完成本章后，你会得到一个 `UserController`，它能：
-
-- 通过 `@Controller` 声明基础路径
-- 通过 `@RequestMapping` 把 URL 映射到方法
-- 返回字符串或 JSON 给客户端
+这一章从最基础的 Controller 讲起。先把路径、方法和返回值的关系弄清楚，再看 Feat Cloud 为什么能在启动时快速注册路由。
 
 ## 第一个控制器
 
@@ -117,11 +109,11 @@ public Map<String, Object> info() {
 
 带来的直接好处：调用开销接近直接方法调用、内存占用更低、启动更快，也更容易构建 Native Image。
 
-## 动手试一试
+## 继续扩展这个控制器
 
 给 `UserController` 添加一个新接口，访问 `http://localhost:8080/users/time` 时返回当前时间字符串。
 
-```java title="练习代码"
+```java title="UserController.java"
 @RequestMapping(value = "/time", method = RequestMethod.GET)
 public String time() {
     return java.time.LocalDateTime.now().toString();
@@ -133,3 +125,5 @@ public String time() {
 ```shell title="curl 验证"
 curl http://localhost:8080/users/time
 ```
+
+当你能稳定新增这样的接口，就可以继续进入参数绑定：让同一个 Controller 不只是返回固定内容，而是能从 URL、路径和请求体里接收输入。

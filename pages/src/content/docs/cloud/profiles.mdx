@@ -7,7 +7,7 @@ sidebar:
 
 import { Aside } from "@astrojs/starlight/components";
 
-这篇文档解决一个很具体的问题：同一套 Feat Cloud 代码，如何在开发、测试、生产环境使用不同配置。
+业务应用很少只有一个运行环境。本地开发可能连本机数据库，测试环境要打开更多日志，生产环境则使用独立的数据库、Redis 和端口。
 
 如果你只需要改端口、数据库地址或 Redis 地址，不应该为每个环境维护一份 Java 代码。  
 更合理的做法是把公共配置放在 `feat.yml`，再用 `feat-dev.yml`、`feat-prod.yml` 写环境差异。
@@ -190,7 +190,7 @@ FEAT_PROFILES_ACTIVE=prod java -jar yourapp.jar
 不建议把业务开关、灰度策略或用户级动态规则放进 `feat-{env}.yml`。  
 这些配置更适合放进数据库、配置中心或业务自己的配置系统，因为它们通常需要运行时调整。
 
-## 构建时需要注意
+## 重新构建才会生效
 
 多环境配置影响的是编译期生成结果。  
 如果你修改了 `feat-dev.yml`，只重启已经打好的 jar 不会生效，需要重新执行构建。
