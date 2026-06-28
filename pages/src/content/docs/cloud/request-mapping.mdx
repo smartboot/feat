@@ -10,7 +10,7 @@ import { Aside, Tabs, TabItem } from '@astrojs/starlight/components'
 上一章写出了一个能返回文本和 JSON 的控制器。这一章继续扩展它，学习如何接收客户端传过来的参数，以及如何为同一路径配置不同的 HTTP 方法。
 
 HTTP 接口真正进入业务之后，固定返回值很快就不够用了。你需要从查询字符串里拿筛选条件，从路径里拿资源标识，再用不同 HTTP 方法表达读取、创建、更新和删除。
-
+![简笔手绘卡通风格，一条 HTTP 路径像手绘路线图，路线上有 query 参数、path 参数、GET POST PUT DELETE 小路牌，最终到达 Controller，画面轻松但专业，900x383，无复杂文字](./img/request_mapping_1.png)
 ## 查询参数
 
 使用 `@Param` 注解从 URL 查询字符串提取参数值。

@@ -10,7 +10,7 @@ import { Aside, Tabs, TabItem } from '@astrojs/starlight/components'
 前面两章解决了 HTTP 接口的主体：路径、方法、参数和返回值。真实项目还会遇到几类更靠近运行时的问题：当前请求上下文怎么拿，耗时任务怎么返回，大响应怎么压缩，JSON 序列化到底发生在什么时候。
 
 这些能力不应该一开始就全用上。它们更像工具箱：当接口开始碰到状态、异步和性能边界时，再把对应工具拿出来。
-
+![简笔手绘卡通风格，一个 Controller 工具箱打开，里面有 Session 卡片、Context 放大镜、Async 小沙漏、Gzip 压缩夹，表现高级能力按需取用，线稿清楚，少量强调色，900x383](./img/controller_advanced_1.png)
 ## 注入 Session
 
 把 `Session` 声明为方法参数即可注入当前请求的会话对象。这里先看最小用法；如果要判断本地 Session、Redis Session 和认证模型的边界，可以继续看后面的 Session 章节。

@@ -11,7 +11,7 @@ import lifecycle from './img/lifecycle.svg';
 在传统框架里，这通常意味着运行时扫描类路径、解析注解、创建代理、注册路由。Feat Cloud 选择的是另一条路：在编译期把这些工作提前完成。
 
 这章不要求你记住内部类名。它只解释一件事：为什么 Feat Cloud 写起来像注解式框架，启动时却更接近一组已经生成好的普通 Java 类。
-
+![简笔手绘卡通风格，左侧是带注解的小代码卡片，中间是编译器齿轮，右侧生成一个 CloudService 模块并连接到 Router，表现“编译期生成、运行期加载”，线条清晰，少量绿色高亮路径，900x383，无大段文字](./img/runtime_1.png)
 ## 从注解到 `CloudService`
 
 当项目执行 `mvn compile` 时，`feat-cloud-starter` 中的注解处理器会读取 `@Controller`、`@Bean`、`@Autowired`、`@RequestMapping` 等注解，并生成 `CloudService` 实现类。

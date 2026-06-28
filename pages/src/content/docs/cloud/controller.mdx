@@ -10,7 +10,7 @@ import { Aside } from '@astrojs/starlight/components'
 Feat Cloud 的控制器写起来和 Spring Boot 很像：一个类加 `@Controller`，方法加 `@RequestMapping`。但底层实现不同：路由映射在编译期生成，运行时不再反射扫描。
 
 这一章从最基础的 Controller 讲起。先把路径、方法和返回值的关系弄清楚，再看 Feat Cloud 为什么能在启动时快速注册路由。
-
+![简笔手绘卡通风格，一个 Controller 小屋接收 HTTP 请求箭头，门口写着 GET 图标，里面伸出一条响应纸带，表现 URL 映射到方法，黑色手绘线稿，柔和绿色和蓝色，900x383](./img/controller_1.png)
 ## 第一个控制器
 
 下面是一个最小但完整的控制器。它只做一件事：访问 `http://localhost:8080/users/hello` 时返回一段文本。

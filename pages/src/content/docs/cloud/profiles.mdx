@@ -11,7 +11,7 @@ import { Aside } from "@astrojs/starlight/components";
 
 如果你只需要改端口、数据库地址或 Redis 地址，不应该为每个环境维护一份 Java 代码。  
 更合理的做法是把公共配置放在 `feat.yml`，再用 `feat-dev.yml`、`feat-prod.yml` 写环境差异。
-
+![简笔手绘卡通风格，中央是默认 feat.yml 配置卡片，分叉到 dev、test、prod 三张环境卡片，环境卡片与默认卡片像透明纸叠加，表现深度合并和环境覆盖，900x383，绿色高亮合并路径](./img/profiles_1.png)
 ## 为什么它发生在编译期
 
 Feat Cloud 的很多能力来自编译期生成：Controller 路由、Bean 装配、配置值注入都会提前转成 Java 代码。  
