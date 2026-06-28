@@ -11,7 +11,11 @@ import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 
 对业务接口来说，返回值不只是“能输出 JSON”。它还承担三个职责：让调用方知道请求是否成功，拿到业务数据，并在失败时得到可处理的错误信息。
 
-## 直接返回文本
+## 基础返回值
+
+先看最直接的两类返回值：文本和对象。
+
+### 直接返回文本
 
 最短的接口可以直接返回 `String`。这种方式适合健康检查、简单文本响应或非常小的演示接口。
 
@@ -42,7 +46,7 @@ curl http://localhost:8080/health/ping
 pong
 ```
 
-## 返回对象或集合
+### 返回对象或集合
 
 如果返回的是自定义对象、集合或 `Map`，Feat Cloud 会把它序列化为 JSON。
 
@@ -70,7 +74,11 @@ public Map<String, Object> info() {
 
 这种写法适合很小的内部接口。只要接口会被前端、移动端或其他服务长期依赖，就建议使用统一响应对象。
 
-## 用 RestResult 统一业务响应
+## 统一业务响应
+
+当接口会被前端、移动端或其他服务长期依赖时，建议使用稳定响应结构。
+
+### 用 RestResult 统一业务响应
 
 `RestResult<T>` 是 Feat Cloud 提供的通用响应封装。它把一次业务调用拆成四个字段：
 
@@ -129,7 +137,7 @@ public class UserController {
 
 `RestResult.fail(...)` 表达的是业务失败，不等同于 HTTP 传输失败。也就是说，客户端仍然拿到一个结构稳定的 JSON 响应，可以按 `success` 和 `code` 做统一处理。
 
-## 什么时候不用 RestResult
+### 什么时候不用 RestResult
 
 不是所有接口都必须包一层 `RestResult`。
 
@@ -154,5 +162,5 @@ Feat Cloud 的 JSON 序列化在编译期生成代码。注解处理器会分析
 这也是 Feat Cloud 性能模型的一部分：框架尽量在编译期确定响应结构，运行时少做反射和动态判断。
 
 <Aside type="caution">
-`AsyncResponse` 的完成结果发生在运行时，编译期无法提前知道具体对象结构，因此会走运行时 JSON 序列化。异步响应的写法放在后面的高级能力章节里。
+`AsyncResponse` 的完成结果发生在运行时，编译期无法提前知道具体对象结构，因此会走运行时 JSON 序列化。异步响应的写法放在 [Controller 与请求处理](/feat/cloud/controller/) 的运行时能力部分。
 </Aside>

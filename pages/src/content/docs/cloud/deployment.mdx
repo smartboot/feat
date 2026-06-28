@@ -19,7 +19,11 @@ Feat Cloud 的交付路线可以分成三层：
 
 建议顺序是先跑通普通 jar，再容器化，最后再决定是否投入 Native。
 
-## 打包前先确认服务发现文件
+## 常规交付路线
+
+先把应用作为普通 Java 服务交付。这个阶段的目标很明确：生成可执行 jar，确认 `CloudService` 服务发现文件没有丢，再把同一个 jar 放进 JRE 容器。
+
+### 打包前先确认服务发现文件
 
 Feat Cloud 依赖 Java `ServiceLoader` 加载编译期生成的 `CloudService`。这意味着打包时必须保留并合并这个文件：
 
@@ -55,7 +59,7 @@ META-INF/services/tech.smartboot.feat.cloud.CloudService
 
 `AppendingTransformer` 保留生成服务，`ManifestResourceTransformer` 指定 `java -jar` 的启动入口。两者缺一不可。
 
-## 构建 Fat Jar
+### 构建 Fat Jar
 
 执行：
 
@@ -87,7 +91,7 @@ curl http://localhost:8080/hello
 nohup java -jar yourapp-1.0.jar > app.log 2>&1 &
 ```
 
-## 构建 JRE 容器镜像
+### 构建 JRE 容器镜像
 
 容器化时，Fat Jar 仍然是交付物。Dockerfile 只负责提供 JRE 环境并启动它：
 
@@ -112,7 +116,13 @@ docker run -p 8080:8080 yourapp:latest
 
 到这里，已经完成了最常见的服务交付路线。Native Image 是另一条优化路线，不建议一开始就作为默认目标。
 
-## 先稳定 JRE 版本
+## Native 优化路线
+
+只有当 JRE 版本已经稳定，且启动速度、内存或镜像体积真的成为问题时，再进入 Native Image。
+
+![简笔手绘卡通风格，左边是普通 JRE 运行箱，右边是更小的 native executable 小火箭形态，二者通过验证清单连接，表达 Native 是稳定后的优化路线，不夸张，900x383](./img/native_image_1.png)
+
+### 先稳定 JRE 版本
 
 如果你当前只是：
 
@@ -123,8 +133,8 @@ docker run -p 8080:8080 yourapp:latest
 
 那就先停在 JRE 路线。普通 `java -jar` 能更快暴露业务错误、配置错误和依赖冲突。等应用的启动入口、生成代码、资源文件和打包方式都稳定之后，再进入 Native，排查范围会小很多。
 
-## 适合投入 Native 的场景
-![简笔手绘卡通风格，左边是普通 JRE 运行箱，右边是更小的 native executable 小火箭形态，二者通过验证清单连接，表达 Native 是稳定后的优化路线，不夸张，900x383](./img/native_image_1.png)
+### 适合投入 Native 的场景
+
 - 你非常在意启动速度
 - 你运行在资源受限环境
 - 你部署在 Serverless 或弹性伸缩场景
@@ -133,7 +143,7 @@ docker run -p 8080:8080 yourapp:latest
 
 如果这些收益对当前项目不关键，Native 往往不是优先级最高的工作。它能带来明显收益，也会把构建链路、调试方式和兼容性验证一起变复杂。
 
-## Native 推荐构建节奏
+### Native 推荐构建节奏
 
 Native Image 的关键不是记住某条命令，而是把验证顺序安排对。
 
@@ -176,7 +186,7 @@ curl http://localhost:8080/hello
 不同依赖对 Native Image 的支持程度不同。只要引入了运行时反射、动态代理、资源扫描或 JNI，就可能需要额外配置。Feat Cloud 能减少框架自身的动态行为，但不能替第三方库消除所有 Native 约束。
 </Aside>
 
-## 验证什么才算通过
+### 验证什么才算通过
 
 Native 产物能启动，只是第一步。真正应该验证的是完整业务路径：
 

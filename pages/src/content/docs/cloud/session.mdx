@@ -11,7 +11,11 @@ HTTP 请求天然是无状态的，但很多业务并不是：登录后的用户
 
 Feat Cloud 的 Session 解决的就是这种“小而短”的请求状态。它不是默认认证架构，也不应该替代数据库、缓存或权限系统；它更像一层贴近 HTTP 的会话能力，让 Controller 可以在需要时读写当前访问者的状态。
 
-## 在 Controller 中读写会话
+## 基本用法
+
+先看 Session 如何进入 Controller，以及什么内容适合放进会话里。
+
+### 在 Controller 中读写会话
 
 Controller 方法声明 `Session` 参数后，Feat Cloud 会把当前请求对应的会话对象传入方法。下面的接口用它记录访问次数：
 
@@ -36,7 +40,7 @@ public class UserController {
 
 第一次访问时，Feat 会创建会话并通过 Cookie 把会话 ID 返回给客户端。之后客户端带着同一个 Cookie 再请求，`session.get("visitCount")` 就能读到前一次写入的值。
 
-## 只放少量状态
+### 只放少量状态
 
 Session 适合保存能用字符串表达、体积很小、过期后可重新建立的状态，例如：
 
@@ -54,7 +58,11 @@ Session 适合保存能用字符串表达、体积很小、过期后可重新建
 
 Session 的生命周期跟访问者和过期时间相关，而不是跟业务数据的生命周期相关。订单、账户、审计记录这类信息应该进入数据库；访问者当前是谁、短时间内走到哪一步，才是 Session 的职责范围。
 
-## Session 存在哪里
+## 存储与边界
+
+Session 的风险通常不在 API 本身，而在存储位置、数据大小和认证模型边界。
+
+### Session 存在哪里
 
 Feat Cloud 会在编译期根据 `feat.yml` 生成 SessionManager 的初始化代码。默认情况下使用本地内存 Session；当配置为 Redis 存储时，会生成 `ClusterSessionManager`，让多实例共享同一份会话状态。
 
@@ -86,7 +94,7 @@ feat:
 
 这类配置属于编译期输入。修改 `feat.yml` 或 `feat-prod.yml` 后，需要重新构建应用，生成代码才会更新。多环境项目里，本地环境可以继续用内存 Session，生产环境再通过 `feat-prod.yml` 覆盖为 Redis Session。
 
-## 会话 API 的边界
+### 会话 API 的边界
 
 ```java title="Session 常用操作"
 session.put("username", "john");
@@ -102,7 +110,7 @@ session.invalidate();
 Redis Session 读取和写入时会刷新过期时间。不要把高频、大体积的数据放进 Session，否则很容易把会话存储变成隐蔽的性能热点。
 </Aside>
 
-## 什么时候该换一种状态模型
+### 什么时候该换一种状态模型
 
 如果你的应用已经开始走向下面这些方向：
 

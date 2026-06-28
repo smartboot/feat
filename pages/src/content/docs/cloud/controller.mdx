@@ -9,7 +9,12 @@ import { Aside, Tabs, TabItem } from '@astrojs/starlight/components'
 
 Feat Cloud 的控制器写起来和 Spring Boot 很像：一个类加 `@Controller`，方法加 `@RequestMapping`。但底层实现不同：路由映射在编译期生成，运行时不再反射扫描。
 
-这一章集中讲 HTTP 请求进入 Controller 的完整过程：URL 如何映射到方法，参数从哪里来，请求体如何绑定成对象，以及少数需要直接接触运行时上下文的能力。
+这一章集中讲 HTTP 请求进入 Controller 的完整过程：
+
+- 先建立 URL 到方法的映射
+- 再处理查询参数、路径参数和 JSON 请求体
+- 最后补充少数需要直接接触运行时上下文的能力
+
 ![简笔手绘卡通风格，一个 Controller 小屋接收 HTTP 请求箭头，门口写着 GET 图标，里面伸出一条响应纸带，表现 URL 映射到方法，黑色手绘线稿，柔和绿色和蓝色，900x383](./img/controller_1.png)
 
 ## 第一个控制器
@@ -51,7 +56,7 @@ curl http://localhost:8080/users/hello
 hello controller
 ```
 
-## 基础路径
+### 基础路径
 
 `@Controller` 的 `value` 属性定义该控制器下所有方法的 URL 前缀。
 
@@ -63,7 +68,15 @@ hello controller
 
 基础路径为空时，方法路径就是完整 URL。
 
-## 查询参数
+## 常用请求输入
+
+Controller 最常见的输入来源有三种：查询字符串、路径变量和 JSON 请求体。
+
+从这里开始，示例代码默认写在前面的 `UserController` 里，只展示当前接口方法和必要的局部类型。
+
+![简笔手绘卡通风格，一条 HTTP 路径像手绘路线图，路线上有 query 参数、path 参数、GET POST PUT DELETE 小路牌，最终到达 Controller，画面轻松但专业，900x383，无复杂文字](./img/request_mapping_1.png)
+
+### 查询参数
 
 使用 `@Param` 注解从 URL 查询字符串提取参数值。
 
@@ -93,7 +106,7 @@ public String search(@Param("keyword") String keyword,
 可能缺失的查询参数建议声明为包装类型，例如 `Integer`、`Long`、`Boolean`。如果用 `int` 这类基本类型，缺失参数在拆箱时可能触发 `NullPointerException`。
 </Aside>
 
-## 路径参数
+### 路径参数
 
 使用 `@PathParam` 注解从 URL 路径提取变量值。
 
@@ -115,7 +128,7 @@ Feat Cloud 支持两种路径参数写法：
 
 两种写法功能等价，团队内部统一即可。如果团队来自前端路由或 Feat Core 路由体系，`:id` 会更自然；如果团队长期使用 Spring MVC，`{id}` 往往更容易迁移。
 
-## JSON 请求体
+### JSON 请求体
 
 创建和更新资源时，参数通常不会继续塞在 URL 里，而是放进 JSON 请求体。Controller 方法可以直接声明一个自定义 POJO 参数，不需要额外注解。
 
@@ -153,8 +166,8 @@ curl -X POST http://localhost:8080/users/ \
 
 进入正式业务接口后，常见做法是用路径表达资源位置，用请求体承载要创建或更新的数据。
 
-## HTTP 方法
-![简笔手绘卡通风格，一条 HTTP 路径像手绘路线图，路线上有 query 参数、path 参数、GET POST PUT DELETE 小路牌，最终到达 Controller，画面轻松但专业，900x383，无复杂文字](./img/request_mapping_1.png)
+## HTTP 方法与 REST 风格
+
 `RequestMethod` 覆盖常见 HTTP 方法：
 
 ```java title="RequestMethod.java"
@@ -195,7 +208,11 @@ public String delete(@PathParam("id") String id) {
 ## 运行时能力
 
 大部分接口只需要 `@RequestMapping`、`@Param`、`@PathParam` 和请求体绑定。遇到下面这些场景时，再使用更靠近运行时的能力。
+
+这部分不是日常接口的起点，更像工具箱：只有当普通参数绑定不够用时，再取对应能力。
+
 ![简笔手绘卡通风格，一个 Controller 工具箱打开，里面有 Context 放大镜、Async 小沙漏、Gzip 压缩夹，表现高级能力按需取用，线稿清楚，少量强调色，900x383](./img/controller_advanced_1.png)
+
 ### 注入 Context
 
 需要直接读取请求头、设置响应头或访问完整 URI 时，注入 `Context`。
@@ -266,7 +283,7 @@ public class ApiController {
 curl -H "Accept-Encoding: gzip" http://localhost:8080/api/large --compressed
 ```
 
-## 路由映射是怎么发生的
+## 编译期路由映射
 
 传统框架在运行时才去扫描类路径、解析注解、生成代理。Feat Cloud 在编译期就做完了这些事。
 

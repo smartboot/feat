@@ -30,9 +30,11 @@ public class DefaultMcpController {
 
 这里的 `@Param` 不是 HTTP 查询参数，而是 MCP 参数描述。它告诉客户端这个工具需要什么输入、参数是否必填、参数含义是什么。对模型客户端来说，这些描述会直接影响工具能不能被正确选择和调用。
 
-## 默认服务还是独立端点
+## 设计 MCP 端点
 
-Feat Cloud 提供两种 MCP 暴露方式。
+Feat Cloud 提供两种 MCP 暴露方式：默认 MCP 服务和显式 `@McpEndpoint`。
+
+### 默认服务还是独立端点
 
 默认 MCP 服务适合早期接入：项目里出现 `@Tool`、`@Prompt`、`@Resource` 后，Feat Cloud 会生成默认 MCP Server，把这些能力挂进去。它的价值是低成本验证：先确认客户端能发现工具、能发起调用、能拿到结果。
 
@@ -112,7 +114,7 @@ public class McpDemoController {
 
 `@McpEndpoint` 则负责把这组能力放进一个明确的 MCP 服务边界里。到了这个阶段，你应该像设计 HTTP API 一样设计 MCP 端点：路径要稳定，名称要能表达服务意图，参数描述要足够让调用方理解。
 
-## Tool、Prompt、Resource 的分工
+### Tool、Prompt、Resource 的分工
 
 `@Tool` 适合执行动作或查询数据。如果你的目标是“让模型调用这段业务逻辑”，从 Tool 开始最自然，例如查用户、算价格、生成报表摘要。
 
@@ -120,7 +122,7 @@ public class McpDemoController {
 
 `@Resource` 适合暴露稳定材料，例如团队规范、产品说明、接口文档、图片或二进制资源。资源一般不表达“做一件事”，而是让客户端读取一份内容。
 
-## 不要把 MCP Controller 写成大杂烩
+### 不要把 MCP Controller 写成大杂烩
 
 MCP 能力应该围绕调用方的任务组织，而不是围绕注解类型堆叠。一个面向代码审查的 MCP 服务，可以包含代码审查 Prompt、读取编码规范的 Resource、查询项目元数据的 Tool；另一个面向运维的 MCP 服务，则应该独立成另一组 Controller 和端点。
 

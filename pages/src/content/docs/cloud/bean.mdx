@@ -11,7 +11,11 @@ Controller 负责接住 HTTP 请求，但真实业务不会只写在 Controller 
 
 这一章讲的是 Feat Cloud 应用的骨架：哪些对象由容器创建，依赖什么时候注入，初始化和销毁方法在什么阶段执行。
 
-## 声明一个 Bean
+## Bean 声明与注入
+
+先看最常见的三件事：声明 Bean、在 Controller 中注入 Bean、从配置中注入值。
+
+### 声明一个 Bean
 
 把类标记为 `@Bean` 后，Feat Cloud 会在编译期识别它，并在启动时创建实例。
 
@@ -37,7 +41,7 @@ public class UserService {
 
 稳定命名适合跨模块协作，或者你希望启动报错里出现更清楚的业务对象名称。
 
-## 在 Controller 中注入 Bean
+### 在 Controller 中注入 Bean
 
 `@Autowired` 用在字段上。编译期会生成对应的注入代码，运行时不需要扫描字段注解。
 
@@ -69,7 +73,7 @@ public class UserController {
 
 如果启动时报 Bean 不存在，优先检查目标类是否带了 `@Bean`，以及它是否在扫描范围内。
 
-## 从配置注入值
+### 从配置注入值
 
 `@Value` 可以把配置值注入字段。配置来自 `feat.yml` 或当前激活环境合并后的配置。
 
@@ -112,7 +116,11 @@ public class AppConfig {
 
 `@Value` 注入会调用字段对应的 setter。配置参与编译期生成，修改 `feat.yml`、`feat-dev.yml` 或 `feat-prod.yml` 后，需要重新构建应用，生成代码才会更新。
 
-## 初始化和销毁
+## 生命周期与创建顺序
+
+Bean 进入容器之后，还会经历初始化、依赖顺序和方法级 Bean 创建这些阶段。
+
+### 初始化和销毁
 
 如果 Bean 创建后需要建立连接、预热缓存或检查依赖，可以使用 `@PostConstruct`。应用关闭时需要释放资源，则使用 `@PreDestroy`。
 
@@ -147,7 +155,7 @@ public class ClientHolder {
 
 这个顺序决定了一个重要边界：不要在字段声明或构造阶段依赖 `@Autowired` 字段。需要使用依赖对象时，放到业务方法或 `@PostConstruct` 之后。
 
-## 控制创建顺序
+### 控制创建顺序
 
 `@Bean` 支持 `order` 属性。少数情况下，某个 Bean 必须先于另一个 Bean 准备好，可以显式调整顺序。
 
@@ -161,7 +169,7 @@ public class DataSourceHolder {
 `order` 是解决启动依赖顺序的工具，不应该成为业务编排手段。大量依赖顺序问题通常说明对象边界需要重新拆分。
 </Aside>
 
-## 方法级 Bean
+### 方法级 Bean
 
 `@Bean` 也可以标在方法上，用来把一个返回对象交给容器管理。方法级 Bean 的名称来自方法名。它适合创建第三方客户端、配置对象或已经封装好的外部资源。
 

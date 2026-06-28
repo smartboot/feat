@@ -9,7 +9,11 @@ Feat Cloud 的很多行为发生在编译期。排查问题时，不要只盯着
 
 这一页按现象组织。遇到问题时，先找最接近的症状，再顺着检查项缩小范围。
 
-## Controller 写了，访问却是 404
+## 开发期问题
+
+开发期问题通常和注解处理、生成代码、参数绑定有关。先确认 IDE 或 Maven 是否真的重新生成了代码。
+
+### Controller 写了，访问却是 404
 
 最常见原因是路由没有被生成或没有被加载。
 
@@ -32,7 +36,7 @@ http://0.0.0.0:8080/
 
 如果本地运行正常，打成 Fat Jar 后变成 404，优先看部署章节里的 `AppendingTransformer`。服务发现文件被覆盖后，应用可以启动，但生成的 `CloudService` 不会被加载。
 
-## 改了 feat.yml，但运行结果没变化
+### 改了 feat.yml，但运行结果没变化
 
 `feat.yml`、`feat-dev.yml`、`feat-prod.yml` 是编译期输入。只重启已经打好的 jar，不会重新生成代码。
 
@@ -42,7 +46,7 @@ mvn clean package
 
 如果你只是在 IDE 里点运行，也要确认 IDE 的构建动作会触发 Maven 注解处理器。否则代码变了，生成类仍然是旧的。
 
-## Profile 没有按预期生效
+### Profile 没有按预期生效
 
 运行时通过 `feat.profiles.active` 选择环境：
 
@@ -66,7 +70,7 @@ FEAT_PROFILES_ACTIVE=prod java -jar yourapp.jar
 
 如果你修改了环境文件，仍然需要重新构建。
 
-## @Autowired 字段是 null
+### @Autowired 字段是 null
 
 这通常说明目标 Bean 没有进入应用上下文，或者注入发生前就提前使用了字段。
 
@@ -80,7 +84,7 @@ FEAT_PROFILES_ACTIVE=prod java -jar yourapp.jar
 
 业务代码里使用依赖对象，放在请求方法或 `@PostConstruct` 之后更稳。
 
-## JSON 请求体解析失败
+### JSON 请求体解析失败
 
 如果 Controller 方法接收自定义 POJO，调用方需要发送 JSON 请求体，并带上正确的 `Content-Type`。
 
@@ -99,7 +103,7 @@ curl -X POST http://localhost:8080/users \
 
 如果只是接收 URL 查询参数，继续使用 `@Param` 即可，不需要 JSON 请求体。
 
-## 查询参数缺失后报 NullPointerException
+### 查询参数缺失后报 NullPointerException
 
 `@Param` 绑定到基本类型时，如果参数缺失，内部值可能是 `null`，拆箱到 `int`、`long`、`boolean` 时会触发异常。
 
@@ -112,7 +116,11 @@ public String search(@Param("page") Integer page) {
 
 可能缺失的参数优先使用包装类型，再在业务代码里给默认值。
 
-## Fat Jar 启动后路由全部丢失
+## 交付期问题
+
+交付期问题通常发生在 Fat Jar、容器、Redis Session 或 Native Image 上。它们的共同点是：本地 IDE 运行正常，但换成构建产物后行为不同。
+
+### Fat Jar 启动后路由全部丢失
 
 Feat Cloud 依赖 `ServiceLoader` 加载生成的 `CloudService`。Fat Jar 打包时必须合并下面这个文件：
 
@@ -128,7 +136,7 @@ META-INF/services/tech.smartboot.feat.cloud.CloudService
 jar tf target/yourapp-1.0.jar | grep 'META-INF/services/tech.smartboot.feat.cloud.CloudService'
 ```
 
-## Redis Session 没有共享
+### Redis Session 没有共享
 
 先确认当前环境真的启用了 Redis Session：
 
@@ -154,7 +162,7 @@ feat:
 
 本地内存 Session 不能跨实例共享，应用重启后也会丢失。
 
-## Native Image 下行为和 JRE 不一致
+### Native Image 下行为和 JRE 不一致
 
 先用普通 JRE 路线确认业务本身是稳定的：
 
