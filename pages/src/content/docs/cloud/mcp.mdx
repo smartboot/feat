@@ -8,7 +8,7 @@ sidebar:
 前面的章节一直在讲 HTTP：Controller 接收请求，调用业务代码，再返回文本或 JSON。MCP 让同一类业务能力多了一个入口：模型客户端可以发现它、理解它的参数，并把它当成工具、提示模板或资源来调用。
 
 Feat Cloud 的优势仍然来自编译期生成。你在 Controller 上声明 `@Tool`、`@Prompt`、`@Resource` 或 `@McpEndpoint`，编译期会把这些声明转成 MCP Server 的注册代码。运行时要做的事情很少：加载生成类，把能力挂到对应端点上。
-
+![简笔手绘卡通风格，一个模型客户端通过 MCP 线缆连接到 Feat Cloud Controller，Controller 旁边分出 Tool、Prompt、Resource 三个小卡片，表现业务能力被模型发现和调用，现代技术插画，900x383](./img/mcp_1.png)
 ## 先把一个方法变成工具
 
 如果只是把少量业务方法开放给 MCP 客户端，不需要一开始就设计完整端点。给方法加 `@Tool`，给参数补上 `@Param` 元信息，就能先跑通最小链路：

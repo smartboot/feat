@@ -10,7 +10,7 @@ import { Aside } from "@astrojs/starlight/components";
 上一章的部署路线默认以 JRE 为运行环境。它最通用，也最容易排查问题。Native Image 是另一条路线：把应用提前编译成本地可执行文件，用更小的运行时换取更快启动和更低内存。
 
 Feat Cloud 对 Native 友好，是因为它本来就把 Controller、Bean 装配和路由注册提前生成成 Java 代码。运行时少扫描、少反射，进入 Native Image 时要补的运行时元信息也更少。
-
+![简笔手绘卡通风格，左边是普通 JRE 运行箱，右边是更小的 native executable 小火箭形态，二者通过验证清单连接，表达 Native 是稳定后的优化路线，不夸张，900x383](./img/native_image_1.png)
 但 Native 不应该是第一个部署目标。它更适合作为 JRE 交付稳定后的优化步骤。
 
 ## 先稳定 JRE 版本
