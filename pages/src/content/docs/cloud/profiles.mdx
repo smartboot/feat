@@ -107,7 +107,7 @@ Feat Cloud 会先读取默认配置，再读取环境配置。
 3. 将 `feat-dev.yml` 的内容覆盖到默认配置上
 
 这里最容易误解的是“覆盖”的粒度。  
-当前合并是按顶层 key 覆盖，不是递归深度合并。
+Feat Cloud 会对 YAML 对象做深度合并：同名对象继续向下合并，普通值和数组则由环境配置替换默认配置。
 
 看这个例子：
 
@@ -123,24 +123,24 @@ server:
   port: 8081
 ```
 
-合并后，`server` 这个顶层配置会以 `feat-dev.yml` 中的 `server` 为准：
+合并后，`server.port` 会被 `feat-dev.yml` 覆盖，而 `debug` 和 `host` 会继续保留默认值：
 
 ```yaml title="dev 环境最终参与生成的 server 配置"
-server:
-  port: 8081
-```
-
-这意味着 `debug` 和 `host` 不会从默认配置里自动保留下来。  
-如果你希望它们在 `dev` 环境继续存在，就需要在 `feat-dev.yml` 里一起写出来：
-
-```yaml title="feat-dev.yml"
 server:
   port: 8081
   debug: false
   host: 0.0.0.0
 ```
 
-这个规则虽然没有深度合并那么“聪明”，但它更明确：环境文件里出现的顶层模块，就是该环境对这个模块的完整声明。
+如果环境文件里的值不是对象，而是普通值或数组，就会整体替换默认值。比如：
+
+```yaml title="feat-dev.yml"
+server:
+  interceptors:
+    - devTrace
+```
+
+这里的 `interceptors` 会以 `feat-dev.yml` 中的数组为准，不会和默认数组拼接。对象深度合并，数组整体替换，这是多环境配置最重要的判断规则。
 
 ## 编译期会生成什么
 

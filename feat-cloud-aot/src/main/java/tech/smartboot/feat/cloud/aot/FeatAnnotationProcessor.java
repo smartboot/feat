@@ -302,14 +302,36 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
                     if (FeatUtils.isBlank(env) || result.containsKey(env)) {
                         continue;
                     }
-                    JSONObject config = new JSONObject();
-                    config.putAll(defaultConfig);
-                    config.putAll(loadYamlConfig(file));
+                    JSONObject config = mergeYamlConfig(defaultConfig, loadYamlConfig(file));
                     result.put(env, config.toJSONString());
                 }
             }
         }
         return result;
+    }
+
+    private JSONObject mergeYamlConfig(JSONObject defaultConfig, JSONObject profileConfig) {
+        JSONObject config = JSONObject.parseObject(defaultConfig.toJSONString());
+        mergeYamlConfigInto(config, profileConfig);
+        return config;
+    }
+
+    private void mergeYamlConfigInto(JSONObject config, JSONObject profileConfig) {
+        if (profileConfig == null) {
+            return;
+        }
+        for (Map.Entry<String, Object> entry : profileConfig.entrySet()) {
+            Object currentValue = config.get(entry.getKey());
+            Object profileValue = entry.getValue();
+            if (currentValue instanceof Map && profileValue instanceof Map) {
+                JSONObject currentObject = currentValue instanceof JSONObject ? (JSONObject) currentValue : JSONObject.from(currentValue);
+                JSONObject profileObject = profileValue instanceof JSONObject ? (JSONObject) profileValue : JSONObject.from(profileValue);
+                mergeYamlConfigInto(currentObject, profileObject);
+                config.put(entry.getKey(), currentObject);
+            } else {
+                config.put(entry.getKey(), profileValue);
+            }
+        }
     }
 
     private JSONObject loadYamlConfig(ProcessingEnvironment processingEnv, List<String> filenames) throws IOException {
