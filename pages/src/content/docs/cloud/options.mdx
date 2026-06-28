@@ -1,34 +1,46 @@
 ---
-title: CloudOptions 配置
-description: 理解 Feat Cloud 启动阶段最重要的三个配置项：包扫描、外部 Bean 和静态资源
+title: 配置与环境
+description: 区分 CloudOptions 与 feat.yml 的职责，理解启动配置、Profile 合并和多环境生成方式
 sidebar:
-    order: 7
+    order: 5
 ---
 
 import { Aside } from '@astrojs/starlight/components';
 
-`CloudOptions` 继承自 [`ServerOptions`](/feat/server/serveroptions/)，所以端口、线程数、调试模式、HTTPS 这类基础能力仍然在 `ServerOptions` 里配置。  
-这一章只讲 Feat Cloud 启动阶段最关键的三项额外能力：扫描边界、外部 Bean 和静态资源。
+Feat Cloud 里有两类配置很容易混在一起：
 
-它和 `feat.yml` 的职责不同。`feat.yml` 是编译期生成代码的输入；`CloudOptions` 是启动应用时传给 Feat Cloud 的运行时选项。前者改变后通常需要重新编译，后者在启动入口里决定本次应用如何运行。
+- `CloudOptions`：启动应用时传给 Feat Cloud 的运行时选项
+- `feat.yml` / `feat-{env}.yml`：编译期生成代码时读取的配置输入
+
+这章把它们放在一起讲。核心判断很简单：**启动入口里本次怎么跑，看 `CloudOptions`；会影响生成代码的环境差异，看 `feat.yml`。**
+
+![简笔手绘卡通风格，中央是默认 feat.yml 配置卡片，分叉到 dev、test、prod 三张环境卡片，环境卡片与默认卡片像透明纸叠加，表现深度合并和环境覆盖，900x383，绿色高亮合并路径](./img/profiles_1.png)
 
 ## 先划清边界
 
-遇到这些问题时，通常应该看 `CloudOptions`：
+`CloudOptions` 继承自 [`ServerOptions`](/feat/server/serveroptions/)，所以端口、线程数、调试模式、HTTPS 这类基础能力仍然在 `ServerOptions` 里配置。
+
+遇到这些问题时，通常看 `CloudOptions`：
 
 - 控制器已经写好，但你想限制哪些包会被接受
 - 有对象必须在 Feat Cloud 容器启动前就准备好
 - 应用需要顺手托管 `classpath` 或文件系统里的静态资源
+- 本次启动要临时调整端口、debug 或 Router
 
-如果你要处理 `feat.yml`、`feat-dev.yml` 这类配置文件，那属于 [配置与 Profile](/feat/cloud/profiles/) 的范围。Bean 创建和依赖注入则放在 [Bean 与依赖注入](/feat/cloud/bean/)。
+遇到这些问题时，通常看 `feat.yml` 或 Profile：
+
+- 不同环境使用不同端口、数据库或 Redis
+- Session 存储方式在本地和生产不同
+- MyBatis、Redis 等扩展需要参与编译期生成
+- 修改后需要重新构建才生效
 
 ## 启动时最常碰到的三件事
 
-| 配置项 | 方法 | 默认值 | 典型用途 |
-|------|------|------|------|
-| 包扫描 | `setPackages(String...)` | `null` | 控制 Controller / Bean 的扫描范围 |
-| 外部 Bean | `registerBean(String, Object)` | 空 | 把启动前已有对象注册进容器 |
-| 静态资源 | `setStaticLocations(String)` | `classpath:static` | 托管类路径或本地目录里的静态文件 |
+| 配置项 | 方法 | 典型用途 |
+|------|------|------|
+| 包扫描 | `setPackages(String...)` | 控制 Controller / Bean 的扫描范围 |
+| 外部 Bean | `registerBean(String, Object)` | 把启动前已有对象注册进容器 |
+| 静态资源 | `setStaticLocations(String)` | 托管类路径或本地目录里的静态文件 |
 
 ## 收窄扫描边界
 
@@ -55,9 +67,7 @@ public class Bootstrap {
 - 你只想扫描少量包，提高启动阶段的可控性
 - 你要避免把不相关 demo 或测试类扫进来
 
-<Aside type="tip">
-如果你的启动类本身已经位于合理的根包下，很多情况下并不需要写 `setPackages(...)`。只有在扫描行为不符合预期时，再显式收窄范围。
-</Aside>
+如果启动类本身已经位于合理根包下，很多情况下不需要写 `setPackages(...)`。
 
 ## 把已有对象交给容器
 
@@ -80,22 +90,12 @@ public class ExternalBeanDemo {
 }
 ```
 
-这类用法通常出现在：
-
-- 你已经有一套外部初始化逻辑
-- 某个对象必须在容器启动前构造好
-- 你希望让 `@Autowired` 能直接拿到该对象
-
-### 一个容易踩的坑
-
-`registerBean(...)` 的 key 不能重复。源码里如果发现同名 key，直接抛 `FeatException`。
+`registerBean(...)` 的 key 不能重复。源码里如果发现同名 key，会直接抛 `FeatException`。
 
 ```java title="重复注册同名 Bean 会失败"
 options.registerBean("dataSource", ds1);
 options.registerBean("dataSource", ds2); // 会失败
 ```
-
-所以命名上建议用稳定且业务明确的名字。
 
 ## 托管静态资源
 
@@ -116,23 +116,13 @@ public class StaticLocationDemo {
 你可以使用两种路径形式：
 
 ```java title="静态资源配置"
-// 类路径资源
 options.setStaticLocations("classpath:static");
 options.setStaticLocations("classpath:public");
-
-// 文件系统目录
 options.setStaticLocations("/var/www/static");
 options.setStaticLocations("./public");
 ```
 
-### 默认行为
-
-当你配置静态资源目录后，Feat Cloud 会使用静态资源处理器来提供这些能力：
-
-- 访问目录时自动返回 `index.html`
-- 自动识别常见文件类型
-- 基于 `Last-Modified` 支持缓存
-- 找不到资源时返回 404
+当你配置静态资源目录后，Feat Cloud 会使用静态资源处理器提供目录首页、常见文件类型识别、`Last-Modified` 缓存和 404 返回。
 
 <Aside type="caution">
 `setStaticLocations(...)` 不只是记住一个路径，它会顺手创建一个新的 `Router` 来挂载静态资源处理器。所以如果你还要自定义底层路由，请明确知道谁是最终生效的 Router。
@@ -140,7 +130,7 @@ options.setStaticLocations("./public");
 
 ## 把启动策略写在入口
 
-实际项目里，这三个配置项经常一起出现：
+实际项目里，这几个配置项经常一起出现：
 
 ```java title="CloudOptionsDemo.java"
 import tech.smartboot.feat.cloud.FeatCloud;
@@ -163,17 +153,152 @@ public class CloudOptionsDemo {
 }
 ```
 
-这段代码表达的启动策略是：
+这段代码表达的是本次应用如何启动。它不会替代 `feat.yml` 的环境配置，也不会改变已经生成好的代码结构。
 
-- 用 `ServerOptions` 部分配置基础服务行为
-- 用 `CloudOptions` 部分控制扫描、注入和静态资源
+## Profile 文件命名
+![简笔手绘卡通风格，中央是默认 feat.yml 配置卡片，分叉到 dev、test、prod 三张环境卡片，环境卡片与默认卡片像透明纸叠加，表现深度合并和环境覆盖，900x383，绿色高亮合并路径](./img/profiles_1.png)
+业务应用很少只有一个运行环境。本地开发可能连本机数据库，测试环境要打开更多日志，生产环境则使用独立的数据库、Redis 和端口。
 
-## 进阶：替换默认 Router
+默认配置文件有两种写法：
 
-如果你需要完全自定义路由入口，而不是只靠 `setStaticLocations(...)` 生成的静态资源 Router，可以直接替换：
+- `feat.yml`
+- `feat.yaml`
 
-```java title="替换默认 Router"
-options.setRouter(customRouter);
+环境配置文件也有两种写法：
+
+- `feat-dev.yml`
+- `feat-dev.yaml`
+- `feat-prod.yml`
+- `feat-prod.yaml`
+
+其中 `dev`、`prod` 就是环境名。环境名只能包含字母和数字，例如 `dev`、`test`、`prod`、`gray1`。
+
+<Aside type="caution">
+不要使用 `feat-prod-us.yml` 这类带横线的环境名。当前环境名只允许字母和数字，横线、下划线和点号都不会被识别为合法环境名。
+</Aside>
+
+## 最小可用结构
+
+一个典型项目可以这样组织资源文件：
+
+```text title="src/main/resources"
+src/main/resources/
+├── feat.yml
+├── feat-dev.yml
+└── feat-prod.yml
 ```
 
-这个能力属于高级扩展场景，通常只有在你明确需要接管更底层的路由行为时才会用到。
+`feat.yml` 放所有环境都共享的默认值：
+
+```yaml title="feat.yml"
+server:
+  port: 8080
+  debug: false
+
+feat:
+  datasource:
+    url: jdbc:mysql://localhost:3306/app
+    username: app
+    password: app
+```
+
+`feat-dev.yml` 只写开发环境要覆盖的内容：
+
+```yaml title="feat-dev.yml"
+server:
+  port: 8081
+
+feat:
+  datasource:
+    url: jdbc:mysql://localhost:3306/app_dev
+    username: dev
+    password: dev
+```
+
+## 合并规则
+
+Feat Cloud 会先读取默认配置，再读取环境配置。
+
+对 `dev` 环境来说，顺序是：
+
+1. 读取 `feat.yml`
+2. 读取 `feat-dev.yml`
+3. 将 `feat-dev.yml` 的内容覆盖到默认配置上
+
+覆盖粒度遵循一个规则：**对象深度合并，普通值和数组整体替换。**
+
+```yaml title="feat.yml"
+server:
+  port: 8080
+  debug: false
+  host: 0.0.0.0
+```
+
+```yaml title="feat-dev.yml"
+server:
+  port: 8081
+```
+
+合并后，`server.port` 会被覆盖，而 `debug` 和 `host` 会继续保留：
+
+```yaml title="dev 环境最终配置"
+server:
+  port: 8081
+  debug: false
+  host: 0.0.0.0
+```
+
+如果环境文件里的值是数组，则以环境配置为准，不会和默认数组拼接。
+
+## 编译期会生成什么
+
+如果项目里只有 `feat.yml`，Feat Cloud 只会生成默认环境的一套代码。
+
+如果同时存在 `feat-dev.yml`、`feat-prod.yml`，Feat Cloud 会为每个环境生成一套完整代码：
+
+| 配置文件 | 生成类名示例 |
+|---------|-------------|
+| `feat.yml` | `FeatApplication` |
+| `feat-dev.yml` | `FeatApplicationDev` |
+| `feat-prod.yml` | `FeatApplicationProd` |
+
+Controller、Bean、Mapper 等生成类也会追加同样的环境后缀。这样做是为了让每个环境都有独立的配置结果，同时避免生成类同名冲突。
+
+## 运行时如何选择环境
+
+打包后的应用里可能已经包含多套环境代码。启动时通过 `feat.profiles.active` 选择其中一套：
+
+```bash title="使用 JVM 参数"
+java -Dfeat.profiles.active=dev -jar yourapp.jar
+```
+
+也可以使用环境变量：
+
+```bash title="使用环境变量"
+FEAT_PROFILES_ACTIVE=prod java -jar yourapp.jar
+```
+
+如果两者都没有设置，Feat Cloud 会使用默认环境，也就是 `feat.yml` 对应的那套生成结果。
+
+## 什么时候应该拆环境配置
+
+适合拆分的内容通常有这些：
+
+- 端口
+- 数据库地址
+- Redis 地址
+- 会话存储方式
+- 第三方服务地址
+- 只在某个环境启用的 Feat Cloud 扩展配置
+
+不建议把业务开关、灰度策略或用户级动态规则放进 `feat-{env}.yml`。这些配置更适合放进数据库、配置中心或业务自己的配置系统，因为它们通常需要运行时调整。
+
+## 重新构建才会生效
+
+多环境配置影响的是编译期生成结果。如果你修改了 `feat-dev.yml`，只重启已经打好的 jar 不会生效，需要重新执行构建。
+
+```bash title="重新生成代码并打包"
+mvn clean package
+```
+
+这也是 Feat Cloud profile 与传统运行期 profile 最大的区别：它追求的是启动时少扫描、少反射、少动态决策，而不是运行时随时重载配置。

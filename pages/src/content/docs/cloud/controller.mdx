@@ -1,16 +1,17 @@
 ---
-title: Controller 基础
-description: 用 @Controller 和 @RequestMapping 写出第一个 Feat Cloud 控制器，理解基础路径和返回类型
+title: Controller 与请求处理
+description: 用 @Controller 和 @RequestMapping 组织 HTTP 接口，处理路径、参数、请求体和少量运行时能力
 sidebar:
     order: 2
 ---
 
-import { Aside } from '@astrojs/starlight/components'
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components'
 
 Feat Cloud 的控制器写起来和 Spring Boot 很像：一个类加 `@Controller`，方法加 `@RequestMapping`。但底层实现不同：路由映射在编译期生成，运行时不再反射扫描。
 
-这一章先讲控制器如何组织 URL。请求参数、请求体和统一响应会在后面的章节展开。
+这一章集中讲 HTTP 请求进入 Controller 的完整过程：URL 如何映射到方法，参数从哪里来，请求体如何绑定成对象，以及少数需要直接接触运行时上下文的能力。
 ![简笔手绘卡通风格，一个 Controller 小屋接收 HTTP 请求箭头，门口写着 GET 图标，里面伸出一条响应纸带，表现 URL 映射到方法，黑色手绘线稿，柔和绿色和蓝色，900x383](./img/controller_1.png)
+
 ## 第一个控制器
 
 下面是一个最小但完整的控制器。它只做一件事：访问 `http://localhost:8080/users/hello` 时返回一段文本。
@@ -40,13 +41,11 @@ Feat Router:
 http://0.0.0.0:8080/
 ```
 
-访问 `http://localhost:8080/users/hello`：
+验证：
 
 ```shell title="curl 验证"
 curl http://localhost:8080/users/hello
 ```
-
-返回：
 
 ```text title="响应结果"
 hello controller
@@ -64,37 +63,208 @@ hello controller
 
 基础路径为空时，方法路径就是完整 URL。
 
-## 简单返回值
+## 查询参数
 
-Feat Cloud 会根据返回类型决定响应格式。这里先看最常见的两类：
-
-| 返回类型 | 输出格式 |
-|---------|---------|
-| `String` | 直接输出为纯文本 |
-| 对象或集合 | 自动序列化为 JSON |
+使用 `@Param` 注解从 URL 查询字符串提取参数值。
 
 ```java title="UserController.java"
-import java.util.HashMap;
-import java.util.Map;
-
-@RequestMapping(value = "/info", method = RequestMethod.GET)
-public Map<String, Object> info() {
-    Map<String, Object> data = new HashMap<>();
-    data.put("framework", "Feat");
-    data.put("version", "2.1");
-    return data;
+@RequestMapping(value = "/search", method = RequestMethod.GET)
+public String search(@Param("keyword") String keyword,
+                     @Param("page") Integer page) {
+    int currentPage = page == null ? 1 : page;
+    return "搜索: " + keyword + ", 页码: " + currentPage;
 }
 ```
 
-访问 `/users/info` 会返回 JSON：
+<Tabs>
+  <TabItem label="请求">
+    ```shell title="curl 请求"
+    curl "http://localhost:8080/users/search?keyword=feat&page=1"
+    ```
+  </TabItem>
+  <TabItem label="响应">
+    ```text title="响应结果"
+    搜索: feat, 页码: 1
+    ```
+  </TabItem>
+</Tabs>
 
-```text title="响应结果"
-{"framework":"Feat","version":"2.1"}
+<Aside type="caution">
+可能缺失的查询参数建议声明为包装类型，例如 `Integer`、`Long`、`Boolean`。如果用 `int` 这类基本类型，缺失参数在拆箱时可能触发 `NullPointerException`。
+</Aside>
+
+## 路径参数
+
+使用 `@PathParam` 注解从 URL 路径提取变量值。
+
+```java title="UserController.java"
+@RequestMapping(value = "/:userId", method = RequestMethod.GET)
+public String getUser(@PathParam("userId") String userId) {
+    return "用户ID: " + userId;
+}
 ```
 
-<Aside type="tip">
-这里的 JSON 序列化由 Feat Cloud 在编译期生成，不需要你写 `ObjectMapper` 或引入额外的 JSON 库。
-</Aside>
+```shell title="curl 请求"
+curl http://localhost:8080/users/12345
+```
+
+Feat Cloud 支持两种路径参数写法：
+
+- 冒号形式：`/:userId`
+- 花括号形式：`/{userId}`
+
+两种写法功能等价，团队内部统一即可。如果团队来自前端路由或 Feat Core 路由体系，`:id` 会更自然；如果团队长期使用 Spring MVC，`{id}` 往往更容易迁移。
+
+## JSON 请求体
+
+创建和更新资源时，参数通常不会继续塞在 URL 里，而是放进 JSON 请求体。Controller 方法可以直接声明一个自定义 POJO 参数，不需要额外注解。
+
+```java title="User.java"
+public class User {
+    private String username;
+    private String password;
+    private String role;
+
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
+
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
+
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
+}
+```
+
+```java title="UserController.java"
+@RequestMapping(value = "/", method = RequestMethod.POST)
+public String create(User user) {
+    return "created user: " + user.getUsername();
+}
+```
+
+请求时带上 `Content-Type: application/json`：
+
+```shell title="curl 请求"
+curl -X POST http://localhost:8080/users/ \
+  -H 'Content-Type: application/json' \
+  -d '{"username":"Bob","password":"123456","role":"admin"}'
+```
+
+进入正式业务接口后，常见做法是用路径表达资源位置，用请求体承载要创建或更新的数据。
+
+## HTTP 方法
+![简笔手绘卡通风格，一条 HTTP 路径像手绘路线图，路线上有 query 参数、path 参数、GET POST PUT DELETE 小路牌，最终到达 Controller，画面轻松但专业，900x383，无复杂文字](./img/request_mapping_1.png)
+`RequestMethod` 覆盖常见 HTTP 方法：
+
+```java title="RequestMethod.java"
+public enum RequestMethod {
+    GET, HEAD, POST, PUT, PATCH, DELETE, OPTIONS, TRACE
+}
+```
+
+为同一路径配置不同方法：
+
+```java title="UserController.java"
+@RequestMapping(value = "/", method = RequestMethod.GET)
+public String list() {
+    return "list all users";
+}
+
+@RequestMapping(value = "/", method = RequestMethod.POST)
+public String create(User user) {
+    return "created user: " + user.getUsername();
+}
+
+@RequestMapping(value = "/:id", method = RequestMethod.GET)
+public String get(@PathParam("id") String id) {
+    return "get user: " + id;
+}
+
+@RequestMapping(value = "/:id", method = RequestMethod.PUT)
+public String update(@PathParam("id") String id, User user) {
+    return "updated user " + id + " to " + user.getUsername();
+}
+
+@RequestMapping(value = "/:id", method = RequestMethod.DELETE)
+public String delete(@PathParam("id") String id) {
+    return "deleted user: " + id;
+}
+```
+
+## 运行时能力
+
+大部分接口只需要 `@RequestMapping`、`@Param`、`@PathParam` 和请求体绑定。遇到下面这些场景时，再使用更靠近运行时的能力。
+![简笔手绘卡通风格，一个 Controller 工具箱打开，里面有 Context 放大镜、Async 小沙漏、Gzip 压缩夹，表现高级能力按需取用，线稿清楚，少量强调色，900x383](./img/controller_advanced_1.png)
+### 注入 Context
+
+需要直接读取请求头、设置响应头或访问完整 URI 时，注入 `Context`。
+
+```java title="UserController.java"
+import tech.smartboot.feat.router.Context;
+
+@RequestMapping(value = "/context", method = RequestMethod.GET)
+public String context(Context context) {
+    String uri = context.Request.getRequestURI();
+    String method = context.Request.getMethod();
+    return "URI: " + uri + ", Method: " + method;
+}
+```
+
+### 异步响应
+
+当方法内部需要调用远程服务或执行耗时操作时，可以返回 `AsyncResponse`，避免阻塞 Feat 的工作线程。
+
+```java title="UserController.java"
+import tech.smartboot.feat.cloud.AsyncResponse;
+import tech.smartboot.feat.cloud.RestResult;
+import java.util.concurrent.CompletableFuture;
+
+@RequestMapping(value = "/async", method = RequestMethod.GET)
+public AsyncResponse async() {
+    AsyncResponse response = new AsyncResponse();
+
+    CompletableFuture.runAsync(() -> {
+        try {
+            Thread.sleep(1000);
+            response.complete(RestResult.ok("异步响应完成"));
+        } catch (InterruptedException e) {
+            response.complete(RestResult.fail(e.getMessage()));
+        }
+    });
+
+    return response;
+}
+```
+
+生产环境请把 `CompletableFuture.runAsync` 换成自定义线程池，避免占满 common pool。
+
+### Gzip 压缩
+
+在 `@Controller` 上开启 Gzip，可以压缩返回的大段文本或 JSON。默认阈值是 256 字节，低于该值的响应不会压缩。
+
+```java title="ApiController.java"
+import tech.smartboot.feat.cloud.annotation.Controller;
+
+@Controller(
+    value = "api",
+    gzip = true,
+    gzipThreshold = 256
+)
+public class ApiController {
+
+    @RequestMapping(value = "/large", method = RequestMethod.GET)
+    public String largeResponse() {
+        return "这是一段很长的文本内容，重复多次使其超过 256 字节。".repeat(10);
+    }
+}
+```
+
+可以用带 `Accept-Encoding: gzip` 的请求验证压缩效果：
+
+```shell title="Gzip 请求"
+curl -H "Accept-Encoding: gzip" http://localhost:8080/api/large --compressed
+```
 
 ## 路由映射是怎么发生的
 
@@ -108,22 +278,3 @@ public Map<String, Object> info() {
 4. 把路由注册到 `Router`
 
 带来的直接好处：调用开销接近直接方法调用、内存占用更低、启动更快，也更容易构建 Native Image。
-
-## 继续扩展这个控制器
-
-给 `UserController` 添加一个新接口，访问 `http://localhost:8080/users/time` 时返回当前时间字符串。
-
-```java title="UserController.java"
-@RequestMapping(value = "/time", method = RequestMethod.GET)
-public String time() {
-    return java.time.LocalDateTime.now().toString();
-}
-```
-
-验证：
-
-```shell title="curl 验证"
-curl http://localhost:8080/users/time
-```
-
-当你能稳定新增这样的接口，就可以继续进入请求映射与参数绑定：让同一个 Controller 不只是返回固定内容，而是能从 URL、路径和请求体里接收输入。
