@@ -1,16 +1,14 @@
 ---
-title: 运行模型
-description: 理解 Feat Cloud 为什么把 Controller、Bean 和配置提前生成成 CloudService，以及启动时生命周期如何展开
+title: 工作模型
+description: 理解 Feat Cloud 为什么把注解、配置和装配提前生成成 CloudService，以及为什么修改后需要重新构建
 sidebar:
     order: 1
 ---
 
-import lifecycle from './img/lifecycle.svg';
+快速开始里，一个 `@Controller` 方法变成了可访问的 HTTP 路由。
+这背后最重要的不是某个 API，而是 Feat Cloud 的工作模型：开发时用注解表达意图，编译期生成普通 Java 代码，运行时加载这些生成结果。
 
-快速开始里，一个 `@Controller` 方法变成了可访问的 HTTP 路由。  
-在传统框架里，这通常意味着运行时扫描类路径、解析注解、创建代理、注册路由。Feat Cloud 选择的是另一条路：在编译期把这些工作提前完成。
-
-这章不要求你记住内部类名。它只解释一件事：为什么 Feat Cloud 写起来像注解式框架，启动时却更接近一组已经生成好的普通 Java 类。
+理解这一点之后，后面的 Controller、Bean、Profile、MyBatis、MCP 和部署问题都会更容易判断。
 ![简笔手绘卡通风格，左侧是带注解的小代码卡片，中间是编译器齿轮，右侧生成一个 CloudService 模块并连接到 Router，表现“编译期生成、运行期加载”，线条清晰，少量绿色高亮路径，900x383，无大段文字](./img/runtime_1.png)
 ## 从注解到 `CloudService`
 
@@ -38,7 +36,7 @@ Feat Cloud 启动时，`ApplicationContext` 会按顺序调用所有 `CloudServi
 5. `router(...)`：注册 HTTP 路由
 6. `destroy()`：应用关闭时释放资源
 
-<img src={lifecycle.src} alt="Feat Cloud 生命周期" width="100%" className="shadow"/>
+![](./img/runtime_2.png)
 
 这个顺序解释了很多行为：为什么 Bean 要先创建再注入，为什么路由要等初始化完成后才注册，为什么启动日志里能直接打印出最终路由。
 
@@ -54,9 +52,14 @@ Feat Cloud 启动时，`ApplicationContext` 会按顺序调用所有 `CloudServi
 它也带来一个边界：当你修改 Controller、Bean 或 `feat.yml` 这类编译期输入后，需要重新编译。  
 如果只重启已经打好的 jar，生成代码不会自动变化。
 
-## 读后面的章节时要记住这一点
+## 修改后为什么要重新构建
 
-后面的 Controller、参数绑定、Profile、MyBatis、MCP 都建立在同一个模型上：开发时用注解表达意图，编译期把意图转成 Java 代码，运行时加载生成结果。
+Controller、Bean、`feat.yml` 和 MCP 声明都是编译期输入。你改了这些内容之后，旧 jar 里的生成代码不会自动变化。
 
-理解这一点之后，Feat Cloud 的很多设计就会变得自然：它不是在运行时做更多魔法，而是在编译期把魔法拆开、写成代码。
+所以本地开发时，IDE 要真正触发 Maven 编译；部署前，也要重新执行构建命令：
 
+```bash title="重新生成并打包"
+mvn clean package
+```
+
+如果你遇到“代码明明改了，路由或配置却没变化”，第一反应应该是检查生成代码有没有更新，而不是只重启应用。

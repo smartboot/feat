@@ -1,0 +1,181 @@
+---
+title: Bean 与依赖注入
+description: 用 @Bean、@Autowired、@Value 组织业务对象，并理解 Feat Cloud 的生命周期顺序
+sidebar:
+    order: 5
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Controller 负责接住 HTTP 请求，但真实业务不会只写在 Controller 里。你通常会把规则、数据库访问、第三方客户端和配置对象拆成不同的 Bean，再由 Feat Cloud 在编译期生成装配代码。
+
+这一章讲的是 Feat Cloud 应用的骨架：哪些对象由容器创建，依赖什么时候注入，初始化和销毁方法在什么阶段执行。
+
+## 声明一个 Bean
+
+把类标记为 `@Bean` 后，Feat Cloud 会在编译期识别它，并在启动时创建实例。
+
+```java title="UserService.java"
+import tech.smartboot.feat.cloud.annotation.Bean;
+
+@Bean
+public class UserService {
+
+    public String findDisplayName(String username) {
+        return "User " + username;
+    }
+}
+```
+
+默认情况下，Bean 名称来自类名首字母小写后的结果。例如 `UserService` 会注册成 `userService`。你也可以显式指定一个稳定名称：
+
+```java title="UserService.java"
+@Bean("userService")
+public class UserService {
+}
+```
+
+稳定命名适合跨模块协作，或者你希望启动报错里出现更清楚的业务对象名称。
+
+## 在 Controller 中注入 Bean
+
+`@Autowired` 用在字段上。编译期会生成对应的注入代码，运行时不需要扫描字段注解。
+
+```java title="UserController.java"
+import tech.smartboot.feat.cloud.RestResult;
+import tech.smartboot.feat.cloud.annotation.Autowired;
+import tech.smartboot.feat.cloud.annotation.Controller;
+import tech.smartboot.feat.cloud.annotation.PathParam;
+import tech.smartboot.feat.cloud.annotation.RequestMapping;
+
+@Controller("users")
+public class UserController {
+
+    @Autowired
+    private UserService userService;
+
+    @RequestMapping("/{username}")
+    public RestResult<String> getName(@PathParam("username") String username) {
+        return RestResult.ok(userService.findDisplayName(username));
+    }
+}
+```
+
+这段代码表达的结构是：
+
+- Controller 只处理 HTTP 入参和响应
+- UserService 承担业务动作
+- Feat Cloud 负责在启动阶段把两者接起来
+
+如果启动时报 Bean 不存在，优先检查目标类是否带了 `@Bean`，以及它是否在扫描范围内。
+
+## 从配置注入值
+
+`@Value` 可以把配置值注入字段。配置来自 `feat.yml` 或当前激活环境合并后的配置。
+
+```yaml title="feat.yml"
+app:
+  name: demo
+  max-users: 100
+```
+
+```java title="AppConfig.java"
+import tech.smartboot.feat.cloud.annotation.Bean;
+import tech.smartboot.feat.cloud.annotation.Value;
+
+@Bean
+public class AppConfig {
+
+    @Value("app.name")
+    private String appName;
+
+    @Value("app.max-users")
+    private int maxUsers;
+
+    public String getAppName() {
+        return appName;
+    }
+
+    public void setAppName(String appName) {
+        this.appName = appName;
+    }
+
+    public int getMaxUsers() {
+        return maxUsers;
+    }
+
+    public void setMaxUsers(int maxUsers) {
+        this.maxUsers = maxUsers;
+    }
+}
+```
+
+`@Value` 注入会调用字段对应的 setter。配置参与编译期生成，修改 `feat.yml`、`feat-dev.yml` 或 `feat-prod.yml` 后，需要重新构建应用，生成代码才会更新。
+
+## 初始化和销毁
+
+如果 Bean 创建后需要建立连接、预热缓存或检查依赖，可以使用 `@PostConstruct`。应用关闭时需要释放资源，则使用 `@PreDestroy`。
+
+```java title="ClientHolder.java"
+import tech.smartboot.feat.cloud.annotation.Bean;
+import tech.smartboot.feat.cloud.annotation.PostConstruct;
+import tech.smartboot.feat.cloud.annotation.PreDestroy;
+
+@Bean
+public class ClientHolder {
+
+    @PostConstruct
+    public void init() {
+        // 建立连接或检查必要资源
+    }
+
+    @PreDestroy
+    public void close() {
+        // 释放连接、线程池或文件句柄
+    }
+}
+```
+
+生命周期顺序可以简化理解成：
+
+1. 创建 Bean
+2. 注入 `@Value`
+3. 注入 `@Autowired`
+4. 执行 `@PostConstruct`
+5. 注册 Controller 路由
+6. 应用关闭时执行 `@PreDestroy`
+
+这个顺序决定了一个重要边界：不要在字段声明或构造阶段依赖 `@Autowired` 字段。需要使用依赖对象时，放到业务方法或 `@PostConstruct` 之后。
+
+## 控制创建顺序
+
+`@Bean` 支持 `order` 属性。少数情况下，某个 Bean 必须先于另一个 Bean 准备好，可以显式调整顺序。
+
+```java title="OrderedBean.java"
+@Bean(value = "dataSource", order = -10)
+public class DataSourceHolder {
+}
+```
+
+<Aside type="caution">
+`order` 是解决启动依赖顺序的工具，不应该成为业务编排手段。大量依赖顺序问题通常说明对象边界需要重新拆分。
+</Aside>
+
+## 方法级 Bean
+
+`@Bean` 也可以标在方法上，用来把一个返回对象交给容器管理。方法级 Bean 的名称来自方法名。它适合创建第三方客户端、配置对象或已经封装好的外部资源。
+
+```java title="ClientFactory.java"
+import tech.smartboot.feat.cloud.annotation.Bean;
+
+@Bean
+public class ClientFactory {
+
+    @Bean("paymentClient")
+    public PaymentClient paymentClient() {
+        return new PaymentClient("https://api.example.com");
+    }
+}
+```
+
+如果对象必须在 Feat Cloud 容器启动前由外部代码准备好，可以改用 `CloudOptions.registerBean(...)`。这部分放在启动配置章节里讲。

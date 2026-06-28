@@ -1,6 +1,6 @@
 ---
 title: 请求映射与参数
-description: 掌握 @Param、@PathParam 和 RequestMethod，用 Feat Cloud 写出 RESTful 接口
+description: 掌握 @Param、@PathParam、JSON 请求体和 RequestMethod，用 Feat Cloud 写出 RESTful 接口
 sidebar:
     order: 3
 ---
@@ -9,7 +9,7 @@ import { Aside, Tabs, TabItem } from '@astrojs/starlight/components'
 
 上一章写出了一个能返回文本和 JSON 的控制器。这一章继续扩展它，学习如何接收客户端传过来的参数，以及如何为同一路径配置不同的 HTTP 方法。
 
-HTTP 接口真正进入业务之后，固定返回值很快就不够用了。你需要从查询字符串里拿筛选条件，从路径里拿资源标识，再用不同 HTTP 方法表达读取、创建、更新和删除。
+HTTP 接口真正进入业务之后，固定返回值很快就不够用了。你需要从查询字符串里拿筛选条件，从路径里拿资源标识，从 JSON 请求体里拿业务对象，再用不同 HTTP 方法表达读取、创建、更新和删除。
 ![简笔手绘卡通风格，一条 HTTP 路径像手绘路线图，路线上有 query 参数、path 参数、GET POST PUT DELETE 小路牌，最终到达 Controller，画面轻松但专业，900x383，无复杂文字](./img/request_mapping_1.png)
 ## 查询参数
 
@@ -81,6 +81,50 @@ Feat Cloud 支持两种路径参数写法：
 两种写法功能等价，团队内部统一即可。
 </Aside>
 
+## JSON 请求体
+
+创建和更新资源时，参数通常不会继续塞在 URL 里，而是放进 JSON 请求体。Controller 方法可以直接声明一个自定义 POJO 参数，不需要额外注解。
+
+```java title="User.java"
+public class User {
+    private String username;
+    private String password;
+    private String role;
+
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
+
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
+
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
+}
+```
+
+```java title="UserController.java"
+@RequestMapping(value = "/", method = RequestMethod.POST)
+public String create(User user) {
+    return "created user: " + user.getUsername();
+}
+```
+
+请求时带上 `Content-Type: application/json`：
+
+```shell title="curl 请求"
+curl -X POST http://localhost:8080/users/ \
+  -H 'Content-Type: application/json' \
+  -d '{"username":"Bob","password":"123456","role":"admin"}'
+```
+
+返回：
+
+```text title="响应结果"
+created user: Bob
+```
+
+这里的判断规则很简单：`@Param` 读取 URL 或表单参数，`@PathParam` 读取路径变量，自定义 POJO 参数读取 JSON 请求体。进入正式业务接口后，常见做法是用路径表达资源位置，用请求体承载要创建或更新的数据。
+
 ## HTTP 方法
 
 ### RequestMethod 枚举
@@ -102,8 +146,8 @@ public String list() {
 }
 
 @RequestMapping(value = "/", method = RequestMethod.POST)
-public String create(@Param("name") String name) {
-    return "created user: " + name;
+public String create(User user) {
+    return "created user: " + user.getUsername();
 }
 
 @RequestMapping(value = "/:id", method = RequestMethod.GET)
@@ -112,8 +156,8 @@ public String get(@PathParam("id") String id) {
 }
 
 @RequestMapping(value = "/:id", method = RequestMethod.PUT)
-public String update(@PathParam("id") String id, @Param("name") String name) {
-    return "updated user " + id + " to " + name;
+public String update(@PathParam("id") String id, User user) {
+    return "updated user " + id + " to " + user.getUsername();
 }
 
 @RequestMapping(value = "/:id", method = RequestMethod.DELETE)
@@ -132,7 +176,9 @@ public String delete(@PathParam("id") String id) {
   </TabItem>
   <TabItem label="POST 创建">
     ```shell title="curl 请求"
-    curl -X POST "http://localhost:8080/users/?name=Bob"
+    curl -X POST http://localhost:8080/users/ \
+      -H 'Content-Type: application/json' \
+      -d '{"username":"Bob","password":"123456","role":"admin"}'
     ```
   </TabItem>
   <TabItem label="GET 单个">
@@ -142,7 +188,9 @@ public String delete(@PathParam("id") String id) {
   </TabItem>
   <TabItem label="PUT 更新">
     ```shell title="curl 请求"
-    curl -X PUT "http://localhost:8080/users/123?name=Charlie"
+    curl -X PUT http://localhost:8080/users/123 \
+      -H 'Content-Type: application/json' \
+      -d '{"username":"Charlie","password":"654321","role":"user"}'
     ```
   </TabItem>
   <TabItem label="DELETE 删除">

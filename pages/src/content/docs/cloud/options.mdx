@@ -2,7 +2,7 @@
 title: CloudOptions 配置
 description: 理解 Feat Cloud 启动阶段最重要的三个配置项：包扫描、外部 Bean 和静态资源
 sidebar:
-    order: 5
+    order: 7
 ---
 
 import { Aside } from '@astrojs/starlight/components';
@@ -20,7 +20,7 @@ import { Aside } from '@astrojs/starlight/components';
 - 有对象必须在 Feat Cloud 容器启动前就准备好
 - 应用需要顺手托管 `classpath` 或文件系统里的静态资源
 
-如果你要处理 `feat.yml`、`feat-dev.yml` 这类配置文件，那属于 [配置与 Profile](/feat/cloud/profiles/) 的范围。
+如果你要处理 `feat.yml`、`feat-dev.yml` 这类配置文件，那属于 [配置与 Profile](/feat/cloud/profiles/) 的范围。Bean 创建和依赖注入则放在 [Bean 与依赖注入](/feat/cloud/bean/)。
 
 ## 启动时最常碰到的三件事
 

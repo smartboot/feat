@@ -2,7 +2,7 @@
 title: 部署
 description: 将 Feat Cloud 应用从本地运行推进到 Fat Jar 和 JRE 容器交付
 sidebar:
-    order: 10
+    order: 12
 ---
 
 ![](./img/deployment_1.png)
@@ -124,3 +124,5 @@ unzip -p target/yourapp-1.0.jar META-INF/MANIFEST.MF
 输出里应包含 `Main-Class: com.example.Bootstrap`。
 
 **Docker `COPY` 找不到文件**：确认 `docker build` 的执行目录，`COPY` 路径相对于构建上下文，不能使用绝对路径。
+
+如果问题不止发生在部署阶段，可以继续看 [故障排查](/feat/cloud/troubleshooting/)。

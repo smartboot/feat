@@ -2,10 +2,10 @@
 title: MyBatis 集成
 description: 把 MyBatis Mapper 接入 Feat Cloud 的 Bean 生命周期，完成一条可验证的数据访问链路
 sidebar:
-    order: 7
+    order: 10
 ---
 
-到这里，HTTP 层、启动配置和 Profile 已经就位。接下来要把数据访问接进应用。
+到这里，HTTP 层、响应模型、Bean 装配、启动配置和 Profile 已经就位。接下来要把数据访问接进应用。
 
 Feat Cloud 的 MyBatis 集成不试图替代 MyBatis。它做的是另一件事：在编译期把 Mapper 接进 Feat Cloud 的 Bean 生命周期，让 Controller 可以像注入普通 Bean 一样使用它。
 
@@ -306,7 +306,7 @@ public class UserController {
 }
 ```
 
-注意 `createUser(User user)` 和 `updateUser(User user)` 的参数没有加任何注解。Feat Cloud 检测到参数类型是自定义 POJO 时，会自动从 JSON 请求体里反序列化出这个对象。
+注意 `createUser(User user)` 和 `updateUser(User user)` 的参数没有加任何注解。这个写法在请求映射章节已经出现过：Feat Cloud 检测到参数类型是自定义 POJO 时，会自动从 JSON 请求体里反序列化出这个对象。
 
 到这一步，链路已经完整了：
 

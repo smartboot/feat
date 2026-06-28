@@ -1,0 +1,173 @@
+---
+title: 故障排查
+description: 用现象定位 Feat Cloud 常见问题：APT、路由、配置、打包、Profile、Session 与 Native Image
+sidebar:
+    order: 14
+---
+
+Feat Cloud 的很多行为发生在编译期。排查问题时，不要只盯着“应用有没有重启”，还要确认“生成代码有没有更新、打包有没有保留、运行时有没有选中正确环境”。
+
+这一页按现象组织。遇到问题时，先找最接近的症状，再顺着检查项缩小范围。
+
+## Controller 写了，访问却是 404
+
+最常见原因是路由没有被生成或没有被加载。
+
+先看启动日志里有没有类似路由输出：
+
+```text title="启动日志"
+Feat Router:
+ |-> /hello ==> Bootstrap@helloWorld
+http://0.0.0.0:8080/
+```
+
+如果没有对应路由，按顺序检查：
+
+- Controller 类是否加了 `@Controller`
+- 方法是否加了 `@RequestMapping`
+- 项目是否引入了 `feat-cloud-starter`
+- IDE 是否真的执行了 Maven 编译
+- `CloudOptions.setPackages(...)` 是否把 Controller 所在包排除掉了
+- 修改 Controller 后是否重新执行了 `mvn compile` 或 `mvn package`
+
+如果本地运行正常，打成 Fat Jar 后变成 404，优先看部署章节里的 `AppendingTransformer`。服务发现文件被覆盖后，应用可以启动，但生成的 `CloudService` 不会被加载。
+
+## 改了 feat.yml，但运行结果没变化
+
+`feat.yml`、`feat-dev.yml`、`feat-prod.yml` 是编译期输入。只重启已经打好的 jar，不会重新生成代码。
+
+```bash title="重新生成代码"
+mvn clean package
+```
+
+如果你只是在 IDE 里点运行，也要确认 IDE 的构建动作会触发 Maven 注解处理器。否则代码变了，生成类仍然是旧的。
+
+## Profile 没有按预期生效
+
+运行时通过 `feat.profiles.active` 选择环境：
+
+```bash title="JVM 参数"
+java -Dfeat.profiles.active=dev -jar yourapp.jar
+```
+
+也可以使用环境变量：
+
+```bash title="环境变量"
+FEAT_PROFILES_ACTIVE=prod java -jar yourapp.jar
+```
+
+检查顺序：
+
+- 环境文件名是否是 `feat-dev.yml`、`feat-prod.yml` 这种格式
+- 环境名是否只包含字母和数字
+- 构建产物里是否已经包含该环境对应的生成代码
+- 启动命令里是否拼错了 `feat.profiles.active`
+- JVM 参数是否放在 `-jar` 之前
+
+如果你修改了环境文件，仍然需要重新构建。
+
+## @Autowired 字段是 null
+
+这通常说明目标 Bean 没有进入应用上下文，或者注入发生前就提前使用了字段。
+
+检查项：
+
+- 被注入的类是否加了 `@Bean`
+- 类是否在包扫描范围内
+- 是否存在同名 Bean 冲突或加载顺序问题
+- 是否在构造方法、字段初始化表达式里使用了 `@Autowired` 字段
+- 是否需要用 `@Bean(order = ...)` 调整少量启动顺序
+
+业务代码里使用依赖对象，放在请求方法或 `@PostConstruct` 之后更稳。
+
+## JSON 请求体解析失败
+
+如果 Controller 方法接收自定义 POJO，调用方需要发送 JSON 请求体，并带上正确的 `Content-Type`。
+
+```shell title="正确示例"
+curl -X POST http://localhost:8080/users \
+  -H 'Content-Type: application/json' \
+  -d '{"username":"feat","role":"admin"}'
+```
+
+常见问题：
+
+- 请求头没有设置 `Content-Type: application/json`
+- JSON 字段名和 Java 属性名不一致
+- POJO 缺少 setter，导致字段无法写入
+- 请求体不是对象，而是数组或纯字符串
+
+如果只是接收 URL 查询参数，继续使用 `@Param` 即可，不需要 JSON 请求体。
+
+## 查询参数缺失后报 NullPointerException
+
+`@Param` 绑定到基本类型时，如果参数缺失，内部值可能是 `null`，拆箱到 `int`、`long`、`boolean` 时会触发异常。
+
+```java title="更稳的写法"
+public String search(@Param("page") Integer page) {
+    int currentPage = page == null ? 1 : page;
+    return "page: " + currentPage;
+}
+```
+
+可能缺失的参数优先使用包装类型，再在业务代码里给默认值。
+
+## Fat Jar 启动后路由全部丢失
+
+Feat Cloud 依赖 `ServiceLoader` 加载生成的 `CloudService`。Fat Jar 打包时必须合并下面这个文件：
+
+```text title="服务发现文件"
+META-INF/services/tech.smartboot.feat.cloud.CloudService
+```
+
+使用 `maven-shade-plugin` 时，需要配置 `AppendingTransformer`。如果这个文件被覆盖，应用仍可能启动，但 Controller 路由不会注册。
+
+可以用下面的命令检查 jar 内文件：
+
+```bash title="检查服务发现文件"
+jar tf target/yourapp-1.0.jar | grep 'META-INF/services/tech.smartboot.feat.cloud.CloudService'
+```
+
+## Redis Session 没有共享
+
+先确认当前环境真的启用了 Redis Session：
+
+```yaml title="feat-prod.yml"
+server:
+  session:
+    store-type: redis
+    timeout: 1800
+
+feat:
+  redis:
+    host: redis.example.com
+    port: 6379
+```
+
+再检查：
+
+- 启动时是否选择了 `prod` 环境
+- 修改配置后是否重新构建
+- 多个实例是否连接同一个 Redis
+- 客户端请求是否带上同一个 Session Cookie
+- 是否把过大的数据写进 Session，导致 Redis 压力异常
+
+本地内存 Session 不能跨实例共享，应用重启后也会丢失。
+
+## Native Image 下行为和 JRE 不一致
+
+先用普通 JRE 路线确认业务本身是稳定的：
+
+```bash title="先验证 JRE 版本"
+java -jar target/yourapp-1.0.jar
+curl http://localhost:8080/hello
+```
+
+只有 JRE 正常、Native 异常时，再重点排查 Native Image：
+
+- 资源文件是否被打进镜像
+- 第三方库是否依赖反射、动态代理或 JNI
+- MyBatis Mapper、SQL 初始化脚本是否可读取
+- MCP、Session、Profile 是否跑过同一组接口验证
+
+Native Image 是优化路线，不应该用来替代普通 jar 的基础验证。

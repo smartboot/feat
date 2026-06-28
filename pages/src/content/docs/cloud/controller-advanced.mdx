@@ -1,31 +1,16 @@
 ---
-title: Controller 高级特性
-description: 在 Feat Cloud 控制器中注入 Session、Context，使用异步响应和 Gzip 压缩
+title: Controller 高级能力
+description: 在 Feat Cloud 控制器中注入 Context，使用异步响应和 Gzip 压缩
 sidebar:
-    order: 4
+    order: 6
 ---
 
 import { Aside, Tabs, TabItem } from '@astrojs/starlight/components'
 
-前面两章解决了 HTTP 接口的主体：路径、方法、参数和返回值。真实项目还会遇到几类更靠近运行时的问题：当前请求上下文怎么拿，耗时任务怎么返回，大响应怎么压缩，JSON 序列化到底发生在什么时候。
+前面的章节已经解决了 HTTP 接口的主体：路径、方法、参数、请求体和返回值。真实项目还会遇到几类更靠近运行时的问题：当前请求上下文怎么拿，耗时任务怎么返回，大响应怎么压缩。
 
 这些能力不应该一开始就全用上。它们更像工具箱：当接口开始碰到状态、异步和性能边界时，再把对应工具拿出来。
-![简笔手绘卡通风格，一个 Controller 工具箱打开，里面有 Session 卡片、Context 放大镜、Async 小沙漏、Gzip 压缩夹，表现高级能力按需取用，线稿清楚，少量强调色，900x383](./img/controller_advanced_1.png)
-## 注入 Session
-
-把 `Session` 声明为方法参数即可注入当前请求的会话对象。这里先看最小用法；如果要判断本地 Session、Redis Session 和认证模型的边界，可以继续看后面的 Session 章节。
-
-```java title="UserController.java"
-import tech.smartboot.feat.core.server.Session;
-
-@RequestMapping(value = "/session", method = RequestMethod.GET)
-public String session(Session session) {
-    String sessionId = session.getSessionId();
-    session.put("user", "smartboot");
-    String user = session.get("user");
-    return "Session ID: " + sessionId + ", User: " + user;
-}
-```
+![简笔手绘卡通风格，一个 Controller 工具箱打开，里面有 Context 放大镜、Async 小沙漏、Gzip 压缩夹，表现高级能力按需取用，线稿清楚，少量强调色，900x383](./img/controller_advanced_1.png)
 
 ## 注入 Context
 
@@ -108,36 +93,13 @@ Gzip 属性说明：
 curl -H "Accept-Encoding: gzip" http://localhost:8080/api/large --compressed
 ```
 
-## 编译期序列化
-
-Feat Cloud 的 JSON 序列化在编译期生成代码：注解处理器会分析 Controller 方法的返回类型，并为它生成专门的序列化逻辑。
-
-这意味着：
-
-- `String`、`int`、`long`、`boolean` 及其包装类型，以及 `Date`、`Timestamp` 等常用类型，都会生成直接调用的序列化代码。
-- 字段访问是直接调用 getter，而不是反射。
-- 当对象嵌套超过 4 层、字段类型为 `Object`、或为数组时，会回退到 FastJSON2 进行序列化。
-
-以下类型会享受编译期优化：
-
-| 类型 | 序列化方式 |
-|------|-----------|
-| `String`、基本类型、包装类型 | 直接写输出流 |
-| `Date`、`Timestamp` | 直接格式化后写输出流 |
-| 自定义 POJO | 按字段生成 getter 调用 |
-| `List`、`Map` | 生成遍历代码 |
-| 数组、`Object`、嵌套超过 4 层 | 回退 FastJSON2 |
-
-<Aside type="caution">
-编译期序列化只覆盖同步返回的对象。`AsyncResponse` 返回的 `RestResult` 是在运行时用 FastJSON2 序列化的，因为它在编译期无法确定异步完成时的具体结果。
-</Aside>
-
 ## 如何判断该用哪一个
 
 如果只是读写一个普通资源，前两章的 `@RequestMapping`、`@Param`、`@PathParam` 已经足够。  
 只有出现下面这些信号时，再引入本章能力：
 
 - 需要读取完整请求或直接设置响应头时，用 `Context`
-- 需要在多次请求间保存少量状态时，用 `Session`
 - 当前请求会等待远程调用或较长任务时，用 `AsyncResponse`
 - 返回体经常超过几百字节且客户端支持压缩时，再考虑 Gzip
+
+如果你需要在多次请求之间保存少量状态，继续看 Session 章节。返回值、统一响应和序列化边界，放在返回值与错误响应章节里。
