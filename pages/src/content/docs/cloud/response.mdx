@@ -149,7 +149,34 @@ public class UserController {
 
 ## 编译期序列化如何工作
 
-Feat Cloud 的 JSON 序列化在编译期生成代码。注解处理器会分析 Controller 方法的返回类型，并为常见类型生成直接写出逻辑。
+把它先理解成一件很具体的事：**你写业务返回值，Feat Cloud 在编译期替你补上“怎么写到响应流里”这段样板代码**。
+
+如果只说“编译期生成代码”，读者很容易觉得抽象。更直观的方式，是直接看它生成出来大概长什么样。
+
+以一个返回 `String` 的接口为例，源码里你只写：
+
+```java
+public String helloWorld() {
+    return "hello world";
+}
+```
+
+但编译后，框架实际做的事情大致类似下面这样：
+
+```java
+String rst = bean.helloWorld();
+byte[] bytes = rst.getBytes("UTF-8");
+if (bytes.length > 256) {
+    bytes = tech.smartboot.feat.core.common.FeatUtils.gzip(bytes);
+    ctx.Response.setHeader("Content-Encoding", "gzip");
+}
+ctx.Response.setContentLength(bytes.length);
+ctx.Response.write(bytes);
+```
+
+换句话说，编译期序列化不是“神秘地帮你返回 JSON”，而是把“把返回值转成字节并写出去”这件事提前展开成了普通 Java 代码。
+
+注解处理器会分析 Controller 方法的返回类型，并为常见类型生成直接写出逻辑。
 
 | 类型 | 序列化方式 |
 |------|-----------|
@@ -159,7 +186,19 @@ Feat Cloud 的 JSON 序列化在编译期生成代码。注解处理器会分析
 | `List`、`Map` | 生成遍历代码 |
 | 数组、`Object`、嵌套过深对象 | 回退到 FastJSON2 |
 
-这也是 Feat Cloud 性能模型的一部分：框架尽量在编译期确定响应结构，运行时少做反射和动态判断。
+如果返回的是 `RestResult<List<Map<String, String>>>` 这种更复杂的结构，生成出来的代码会更像“按字段逐个写出”：
+
+```java
+RestResult<List<Map<String, String>>> rst = bean.hello1ss2();
+os.write(b_success_true);
+os.write(b_code);
+writeInt(os, rst.getCode());
+os.write(b_message);
+writeJsonValue(os, rst.getMessage());
+os.write(b_data);
+```
+
+这也是 Feat Cloud 性能模型的一部分：框架尽量在编译期确定响应结构，运行时少做反射和动态判断。对读者来说，真正能感受到的不是术语，而是“我写的一个返回值，最后会被展开成一段具体的写出逻辑”。
 
 <Aside type="caution">
 `AsyncResponse` 的完成结果发生在运行时，编译期无法提前知道具体对象结构，因此会走运行时 JSON 序列化。异步响应的写法放在 [Controller 与请求处理](/feat/cloud/controller/) 的运行时能力部分。
