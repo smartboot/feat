@@ -10,7 +10,7 @@ import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 前面的章节已经解决了“请求如何进入方法”。这一章换到出口：Controller 方法返回什么，Feat Cloud 就如何把它写回客户端。
 
 对业务接口来说，返回值不只是“能输出 JSON”。它还承担三个职责：让调用方知道请求是否成功，拿到业务数据，并在失败时得到可处理的错误信息。
-
+![简笔手绘卡通风格科技插画，蓝白科技配色，一个 Feat Cloud Controller 小工程师站在中间，左边 HTTP 请求箭头进入 Controller，右边分成三条输出通道：绿色 Success 数据包、蓝色 JSON 对象、红色 Error Message。每条通道分别标注 success、data、message。旁边有小型客户端机器人等待接收统一结果。整体像“请求入口→响应出口”的流水线，轻松幽默但专业，线条简洁，适合技术文档插图，16:9 横版。](./img/response_1.png)
 ## 基础返回值
 
 先看最直接的两类返回值：文本和对象。
@@ -77,9 +77,8 @@ public Map<String, Object> info() {
 ## 统一业务响应
 
 当接口会被前端、移动端或其他服务长期依赖时，建议使用稳定响应结构。
-
+![简笔手绘卡通风格科技插画，一个名为“RestResult\<T>”的大型透明集装箱漂浮在画面中央，内部整齐放置四个发光模块：success（绿色勾选图标）、code（数字面板）、message（对话气泡）、data（数据立方体）。前端网页、小程序手机、微服务机器人三位角色同时连接到这个统一容器，开心地读取相同格式的数据。整体表达“统一协议、统一响应结构”的概念，蓝色科技背景，线条清爽，带轻微拟人化元素，16:9 横版。](./img/response_2.png)
 ### 用 RestResult 统一业务响应
-
 `RestResult<T>` 是 Feat Cloud 提供的通用响应封装。它把一次业务调用拆成四个字段：
 
 | 字段 | 含义 |
@@ -148,7 +147,7 @@ public class UserController {
 关键不是形式统一，而是调用方能不能稳定理解你的响应。
 
 ## 编译期序列化如何工作
-
+![简笔手绘卡通风格科技插画，左边是一位 Java 开发者只写了一行代码 return user;，神情轻松。中间是一个巨大的“Feat Compiler”自动工厂，内部齿轮运转，标注 AOT、Code Generation、Serializer。右边输出大量已经展开好的普通 Java 代码模块：writeBytes()、writeInt()、writeJsonValue()、gzip() 等零件，最终汇聚成 HTTP Response 数据流发送给客户端。画面表现“编译期提前展开序列化逻辑，而不是运行时反射”的核心思想。整体科技蓝配色，轻松幽默，工程感强，16:9 横版。](./img/response_3.png)
 把它先理解成一件很具体的事：**你写业务返回值，Feat Cloud 在编译期替你补上“怎么写到响应流里”这段样板代码**。
 
 如果只说“编译期生成代码”，读者很容易觉得抽象。更直观的方式，是直接看它生成出来大概长什么样。
