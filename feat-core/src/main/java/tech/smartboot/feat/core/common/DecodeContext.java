@@ -14,7 +14,7 @@ package tech.smartboot.feat.core.common;
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
-public class DecodeState {
+public class DecodeContext {
     public static final int STATE_PROTOCOL_DECODE = 0;
     public static final int STATE_STATUS_CODE = 1;
     public static final int STATE_STATUS_DESC = 2;
@@ -42,9 +42,9 @@ public class DecodeState {
      * HTTP响应报文解析状态
      */
     private int state;
+    private ByteTree<HeaderName> decodeHeaderName;
 
-
-    public DecodeState(int state) {
+    public DecodeContext(int state) {
         this.state = state;
     }
 
@@ -56,4 +56,11 @@ public class DecodeState {
         this.state = state;
     }
 
+    public final ByteTree<HeaderName> getDecodeHeaderName() {
+        return decodeHeaderName;
+    }
+
+    public final void setDecodeHeaderName(ByteTree<HeaderName> decodeHeaderName) {
+        this.decodeHeaderName = decodeHeaderName;
+    }
 }

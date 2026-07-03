@@ -49,7 +49,7 @@ class HttpRestImpl implements HttpRest {
         this.request = new HttpRequestImpl(session);
         this.response = new HttpResponseImpl(session, completableFuture);
         if (session != null) {
-            DecoderUnit attachment = session.getAttachment();
+            ClientDecodeContext attachment = session.getAttachment();
             if (attachment.getResponse() != null) {
                 throw new FeatException("HttpRestImpl can not be reused");
             }

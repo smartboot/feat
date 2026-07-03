@@ -14,11 +14,12 @@ import io.github.smartboot.socket.AbstractMessageProcessor;
 import io.github.smartboot.socket.Protocol;
 import io.github.smartboot.socket.StateMachineEnum;
 import io.github.smartboot.socket.transport.AioSession;
-import tech.smartboot.feat.core.common.DecodeState;
+import tech.smartboot.feat.core.common.ByteTree;
+import tech.smartboot.feat.core.common.DecodeContext;
 import tech.smartboot.feat.core.common.FeatUtils;
+import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.exception.HttpException;
-import tech.smartboot.feat.core.common.ByteTree;
 
 import java.nio.ByteBuffer;
 
@@ -27,52 +28,53 @@ import java.nio.ByteBuffer;
  * @version v1.0.0
  */
 final class HttpMessageProcessor extends AbstractMessageProcessor<AbstractResponse> implements Protocol<AbstractResponse> {
+    private final static ByteTree<HeaderName> HEADER_NAME_CACHE = new ByteTree<>();
 
     @Override
     public AbstractResponse decode(ByteBuffer buffer, AioSession session) {
-        DecoderUnit attachment = session.getAttachment();
+        ClientDecodeContext attachment = session.getAttachment();
         AbstractResponse response = attachment.getResponse();
         switch (attachment.getState()) {
             // 协议解析
-            case DecodeState.STATE_PROTOCOL_DECODE: {
+            case DecodeContext.STATE_PROTOCOL_DECODE: {
                 ByteTree<?> method = FeatUtils.scanByteTree(buffer, ByteTree.SP_END_MATCHER, ByteTree.DEFAULT);
                 if (method == null) {
                     return null;
                 }
                 response.setProtocol(method.getStringValue());
-                attachment.setState(DecodeState.STATE_STATUS_CODE);
+                attachment.setState(DecodeContext.STATE_STATUS_CODE);
             }
             // 状态码解析
-            case DecodeState.STATE_STATUS_CODE: {
+            case DecodeContext.STATE_STATUS_CODE: {
                 ByteTree<?> byteTree = FeatUtils.scanByteTree(buffer, ByteTree.SP_END_MATCHER, ByteTree.DEFAULT);
                 if (byteTree == null) {
                     return null;
                 }
                 int statusCode = Integer.parseInt(byteTree.getStringValue());
                 response.setStatus(statusCode);
-                attachment.setState(DecodeState.STATE_STATUS_DESC);
+                attachment.setState(DecodeContext.STATE_STATUS_DESC);
             }
             // 状态码描述解析
-            case DecodeState.STATE_STATUS_DESC: {
+            case DecodeContext.STATE_STATUS_DESC: {
                 ByteTree<?> byteTree = FeatUtils.scanByteTree(buffer, ByteTree.CR_END_MATCHER, ByteTree.DEFAULT);
                 if (byteTree == null) {
                     return null;
                 }
                 response.setReasonPhrase(byteTree.getStringValue());
-                attachment.setState(DecodeState.STATE_START_LINE_END);
+                attachment.setState(DecodeContext.STATE_START_LINE_END);
             }
             // 状态码结束
-            case DecodeState.STATE_START_LINE_END: {
+            case DecodeContext.STATE_START_LINE_END: {
                 if (buffer.remaining() == 0) {
                     return null;
                 }
                 if (buffer.get() != FeatUtils.LF) {
                     throw new HttpException(HttpStatus.BAD_REQUEST);
                 }
-                attachment.setState(DecodeState.STATE_HEADER_END_CHECK);
+                attachment.setState(DecodeContext.STATE_HEADER_END_CHECK);
             }
             // header结束判断
-            case DecodeState.STATE_HEADER_END_CHECK: {
+            case DecodeContext.STATE_HEADER_END_CHECK: {
                 if (buffer.remaining() < 2) {
                     return null;
                 }
@@ -82,24 +84,24 @@ final class HttpMessageProcessor extends AbstractMessageProcessor<AbstractRespon
                     if (buffer.get() != FeatUtils.LF) {
                         throw new HttpException(HttpStatus.BAD_REQUEST);
                     }
-                    attachment.setState(DecodeState.STATE_HEADER_CALLBACK);
+                    attachment.setState(DecodeContext.STATE_HEADER_CALLBACK);
                     return response;
                 } else {
                     buffer.reset();
-                    attachment.setState(DecodeState.STATE_HEADER_NAME);
+                    attachment.setState(DecodeContext.STATE_HEADER_NAME);
                 }
             }
             // header name解析
-            case DecodeState.STATE_HEADER_NAME: {
-                ByteTree<?> name = FeatUtils.scanByteTree(buffer, ByteTree.COLON_END_MATCHER, ByteTree.DEFAULT);
+            case DecodeContext.STATE_HEADER_NAME: {
+                ByteTree<HeaderName> name = FeatUtils.scanByteTree(buffer, ByteTree.COLON_END_MATCHER, HEADER_NAME_CACHE);
                 if (name == null) {
                     return null;
                 }
-                attachment.setDecodeHeaderName(name.getStringValue());
-                attachment.setState(DecodeState.STATE_HEADER_VALUE);
+                attachment.setDecodeHeaderName(name);
+                attachment.setState(DecodeContext.STATE_HEADER_VALUE);
             }
             // header value解析
-            case DecodeState.STATE_HEADER_VALUE: {
+            case DecodeContext.STATE_HEADER_VALUE: {
                 ByteTree<?> value = FeatUtils.scanByteTree(buffer, ByteTree.CR_END_MATCHER, ByteTree.DEFAULT);
                 if (value == null) {
                     if (buffer.remaining() == buffer.capacity()) {
@@ -107,22 +109,22 @@ final class HttpMessageProcessor extends AbstractMessageProcessor<AbstractRespon
                     }
                     return null;
                 }
-                response.setHeader(attachment.getDecodeHeaderName(), value.getStringValue());
-                attachment.setState(DecodeState.STATE_HEADER_LINE_END);
+                response.setHeader(attachment.getDecodeHeaderName().getStringValue(), value.getStringValue());
+                attachment.setState(DecodeContext.STATE_HEADER_LINE_END);
             }
             // header line结束
-            case DecodeState.STATE_HEADER_LINE_END: {
+            case DecodeContext.STATE_HEADER_LINE_END: {
                 if (!buffer.hasRemaining()) {
                     return null;
                 }
                 if (buffer.get() != FeatUtils.LF) {
                     throw new HttpException(HttpStatus.BAD_REQUEST);
                 }
-                attachment.setState(DecodeState.STATE_HEADER_END_CHECK);
+                attachment.setState(DecodeContext.STATE_HEADER_END_CHECK);
                 return decode(buffer, session);
             }
             //
-            case DecodeState.STATE_BODY: {
+            case DecodeContext.STATE_BODY: {
                 response.onBodyStream(buffer);
             }
         }
@@ -131,10 +133,10 @@ final class HttpMessageProcessor extends AbstractMessageProcessor<AbstractRespon
 
     @Override
     public void process0(AioSession session, AbstractResponse response) {
-        DecoderUnit decoderUnit = session.getAttachment();
-        if (decoderUnit.getState() == DecodeState.STATE_HEADER_CALLBACK) {
+        ClientDecodeContext decodeContext = session.getAttachment();
+        if (decodeContext.getState() == DecodeContext.STATE_HEADER_CALLBACK) {
             response.onHeaderComplete();
-            decoderUnit.setState(DecoderUnit.STATE_BODY);
+            decodeContext.setState(DecodeContext.STATE_BODY);
             response.onBodyStream(session.readBuffer());
             return;
         }
@@ -146,7 +148,7 @@ final class HttpMessageProcessor extends AbstractMessageProcessor<AbstractRespon
     public void stateEvent0(AioSession session, StateMachineEnum stateMachineEnum, Throwable throwable) {
         switch (stateMachineEnum) {
             case NEW_SESSION: {
-                DecoderUnit attachment = new DecoderUnit();
+                ClientDecodeContext attachment = new ClientDecodeContext();
                 session.setAttachment(attachment);
             }
             break;
@@ -157,7 +159,7 @@ final class HttpMessageProcessor extends AbstractMessageProcessor<AbstractRespon
                 session.close();
                 break;
             case DECODE_EXCEPTION: {
-                DecoderUnit attachment = session.getAttachment();
+                ClientDecodeContext attachment = session.getAttachment();
                 AbstractResponse response = attachment.getResponse();
                 if (response != null) {
                     response.future.completeExceptionally(throwable);
@@ -165,7 +167,7 @@ final class HttpMessageProcessor extends AbstractMessageProcessor<AbstractRespon
             }
             break;
             case SESSION_CLOSED: {
-                DecoderUnit attachment = session.getAttachment();
+                ClientDecodeContext attachment = session.getAttachment();
                 AbstractResponse response = attachment.getResponse();
                 if (response != null) {
                     response.onClose();

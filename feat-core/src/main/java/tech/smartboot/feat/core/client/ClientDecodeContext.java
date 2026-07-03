@@ -10,17 +10,16 @@
 
 package tech.smartboot.feat.core.client;
 
-import tech.smartboot.feat.core.common.DecodeState;
+import tech.smartboot.feat.core.common.DecodeContext;
 
 /**
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
  */
-class DecoderUnit extends DecodeState {
-    private String decodeHeaderName;
+class ClientDecodeContext extends DecodeContext {
 
-    public DecoderUnit() {
-        super(DecodeState.STATE_PROTOCOL_DECODE);
+    public ClientDecodeContext() {
+        super(DecodeContext.STATE_PROTOCOL_DECODE);
     }
 
     private AbstractResponse response;
@@ -32,14 +31,6 @@ class DecoderUnit extends DecodeState {
 
     public void setResponse(AbstractResponse response) {
         this.response = response;
-    }
-
-    public String getDecodeHeaderName() {
-        return decodeHeaderName;
-    }
-
-    public void setDecodeHeaderName(String decodeHeaderName) {
-        this.decodeHeaderName = decodeHeaderName;
     }
 
 }

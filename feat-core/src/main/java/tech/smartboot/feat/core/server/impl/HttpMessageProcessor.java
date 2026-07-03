@@ -14,7 +14,7 @@ import io.github.smartboot.socket.AbstractMessageProcessor;
 import io.github.smartboot.socket.StateMachineEnum;
 import io.github.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.Feat;
-import tech.smartboot.feat.core.common.DecodeState;
+import tech.smartboot.feat.core.common.DecodeContext;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
@@ -51,27 +51,27 @@ public final class HttpMessageProcessor extends AbstractMessageProcessor<HttpEnd
 
     @Override
     public void process0(AioSession session, HttpEndpoint request) {
-        DecodeState decodeState = request.getDecodeState();
+        DecodeContext decodeContext = request.getDecodeContext();
         HttpHandler httpHandler = request.getServerHandler();
         if (httpHandler == null) {
             request.setServerHandler(httpServerHandler == null ? BASE_HTTP_HANDLER : httpServerHandler);
         }
         try {
-            switch (decodeState.getState()) {
-                case DecodeState.STATE_HEADER_CALLBACK: {
+            switch (decodeContext.getState()) {
+                case DecodeContext.STATE_HEADER_CALLBACK: {
                     doHttpHeader(request);
                     if (request.getResponse().isClosed()) {
                         break;
                     } else {
-                        decodeState.setState(DecodeState.STATE_BODY_READING_CALLBACK);
+                        decodeContext.setState(DecodeContext.STATE_BODY_READING_CALLBACK);
                     }
                 }
-                case DecodeState.STATE_BODY_READING_CALLBACK: {
-                    decodeState.setState(DecodeState.STATE_BODY_READING_MONITOR);
+                case DecodeContext.STATE_BODY_READING_CALLBACK: {
+                    decodeContext.setState(DecodeContext.STATE_BODY_READING_MONITOR);
                     Upgrade upgrade = request.getUpgrade();
                     if (upgrade != null) {
                         upgrade.onBodyStream(session.readBuffer());
-                        if (decodeState.getState() == DecodeState.STATE_BODY_ASYNC_READING_DONE) {
+                        if (decodeContext.getState() == DecodeContext.STATE_BODY_ASYNC_READING_DONE) {
                             onBodyStream(request);
                         }
                     } else {

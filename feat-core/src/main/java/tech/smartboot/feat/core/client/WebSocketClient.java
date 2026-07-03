@@ -189,7 +189,7 @@ public class WebSocketClient {
             throw new RuntimeException(e);
         }
         AioSession session = client.getSession();
-        DecoderUnit attachment = session.getAttachment();
+        ClientDecodeContext attachment = session.getAttachment();
         CompletableFuture<WebSocketResponseImpl> completableFuture = new CompletableFuture<>();
         completableFuture.thenAccept(new Consumer<WebSocketResponseImpl>() {
             @Override
@@ -231,7 +231,7 @@ public class WebSocketClient {
                     completableFuture.thenAccept(this);
                     webSocketResponse.setFuture(completableFuture);
                     webSocketResponse.reset();
-                    attachment.setState(DecoderUnit.STATE_BODY);
+                    attachment.setState(ClientDecodeContext.STATE_BODY);
                 }
             }
         });

@@ -13,7 +13,7 @@ package tech.smartboot.feat.core.server.impl;
 import io.github.smartboot.socket.Protocol;
 import io.github.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.common.ByteTree;
-import tech.smartboot.feat.core.common.DecodeState;
+import tech.smartboot.feat.core.common.DecodeContext;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HttpProtocol;
@@ -50,18 +50,18 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
     }
 
     private boolean decode(ByteBuffer byteBuffer, HttpEndpoint request) {
-        DecoderUnit decodeState = request.getDecodeState();
-        switch (decodeState.getState()) {
-            case DecodeState.STATE_METHOD: {
+        DecodeContext decodeContext = request.getDecodeContext();
+        switch (decodeContext.getState()) {
+            case DecodeContext.STATE_METHOD: {
                 ByteTree<?> method = FeatUtils.scanByteTree(byteBuffer, ByteTree.SP_END_MATCHER, options.getByteCache());
                 if (method == null) {
                     break;
                 }
                 request.setMethod(method.getStringValue());
-                decodeState.setState(DecodeState.STATE_URI);
+                decodeContext.setState(DecodeContext.STATE_URI);
                 WAF.methodCheck(options, request);
             }
-            case DecodeState.STATE_URI: {
+            case DecodeContext.STATE_URI: {
                 ByteTree<HttpHandler> uriTreeNode = FeatUtils.scanByteTree(byteBuffer, URI_END_MATCHER, options.getUriByteTree());
                 if (uriTreeNode == null) {
                     break;
@@ -73,25 +73,25 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
                 WAF.checkUri(options, request);
                 switch (byteBuffer.get(byteBuffer.position() - 1)) {
                     case FeatUtils.SP:
-                        decodeState.setState(DecodeState.STATE_PROTOCOL_DECODE);
+                        decodeContext.setState(DecodeContext.STATE_PROTOCOL_DECODE);
                         break;
                     case '?':
-                        decodeState.setState(DecodeState.STATE_URI_QUERY);
+                        decodeContext.setState(DecodeContext.STATE_URI_QUERY);
                         break;
                     default:
                         throw new HttpException(HttpStatus.BAD_REQUEST);
                 }
                 return decode(byteBuffer, request);
             }
-            case DecodeState.STATE_URI_QUERY: {
+            case DecodeContext.STATE_URI_QUERY: {
                 ByteTree<?> query = FeatUtils.scanByteTree(byteBuffer, ByteTree.SP_END_MATCHER, options.getByteCache());
                 if (query == null) {
                     break;
                 }
                 request.setQueryString(query.getStringValue());
-                decodeState.setState(DecodeState.STATE_PROTOCOL_DECODE);
+                decodeContext.setState(DecodeContext.STATE_PROTOCOL_DECODE);
             }
-            case DecodeState.STATE_PROTOCOL_DECODE: {
+            case DecodeContext.STATE_PROTOCOL_DECODE: {
                 if (byteBuffer.remaining() < 12) {
                     break;
                 }
@@ -115,65 +115,65 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
                 if (byteBuffer.getShort() != 3338) {
                     throw new HttpException(HttpStatus.BAD_REQUEST);
                 }
-                decodeState.setState(DecodeState.STATE_HEADER_END_CHECK);
+                decodeContext.setState(DecodeContext.STATE_HEADER_END_CHECK);
             }
             // header结束判断
-            case DecodeState.STATE_HEADER_END_CHECK: {
+            case DecodeContext.STATE_HEADER_END_CHECK: {
                 //header解码结束
                 if (byteBuffer.get() == FeatUtils.CR) {
                     if (byteBuffer.get() != FeatUtils.LF) {
                         throw new HttpException(HttpStatus.BAD_REQUEST);
                     }
-                    decodeState.setState(DecodeState.STATE_HEADER_CALLBACK);
+                    decodeContext.setState(DecodeContext.STATE_HEADER_CALLBACK);
                     return true;
                 }
                 byteBuffer.position(byteBuffer.position() - 1);
                 if (request.getHeaderSize() < options.getHeaderLimiter()) {
-                    decodeState.setState(DecodeState.STATE_HEADER_NAME);
+                    decodeContext.setState(DecodeContext.STATE_HEADER_NAME);
                 } else {
-                    decodeState.setState(DecodeState.STATE_HEADER_IGNORE);
+                    decodeContext.setState(DecodeContext.STATE_HEADER_IGNORE);
                     return decode(byteBuffer, request);
                 }
             }
             // header name解析
-            case DecodeState.STATE_HEADER_NAME: {
+            case DecodeContext.STATE_HEADER_NAME: {
                 ByteTree<HeaderName> name = FeatUtils.scanByteTree(byteBuffer, ByteTree.COLON_END_MATCHER, options.getHeaderNameByteTree());
                 if (name == null) {
                     break;
                 }
-                decodeState.setDecodeHeaderName(name);
-                decodeState.setState(DecodeState.STATE_HEADER_VALUE);
+                decodeContext.setDecodeHeaderName(name);
+                decodeContext.setState(DecodeContext.STATE_HEADER_VALUE);
             }
             // header value解析
-            case DecodeState.STATE_HEADER_VALUE: {
+            case DecodeContext.STATE_HEADER_VALUE: {
                 ByteTree<?> value = FeatUtils.scanByteTree(byteBuffer, ByteTree.CR_END_MATCHER, options.getByteCache());
                 if (value == null) {
                     if (byteBuffer.remaining() == byteBuffer.capacity()) {
-                        throw new HttpException(HttpStatus.REQUEST_HEADER_FIELDS_TOO_LARGE, "The length of the value of header <u>" + decodeState.getDecodeHeaderName().getStringValue() + "</u> exceeds the read buffer.");
+                        throw new HttpException(HttpStatus.REQUEST_HEADER_FIELDS_TOO_LARGE, "The length of the value of header <u>" + decodeContext.getDecodeHeaderName().getStringValue() + "</u> exceeds the read buffer.");
                     }
                     break;
                 }
-                HeaderName headerName = decodeState.getDecodeHeaderName().getAttach();
+                HeaderName headerName = decodeContext.getDecodeHeaderName().getAttach();
                 if (headerName != null) {
-                    request.addHeader(headerName.getLowCaseName(), decodeState.getDecodeHeaderName().getStringValue(), value.getStringValue());
+                    request.addHeader(headerName.getLowCaseName(), decodeContext.getDecodeHeaderName().getStringValue(), value.getStringValue());
                 } else {
-                    request.addHeader(decodeState.getDecodeHeaderName().getStringValue().toLowerCase(), decodeState.getDecodeHeaderName().getStringValue(), value.getStringValue());
+                    request.addHeader(decodeContext.getDecodeHeaderName().getStringValue().toLowerCase(), decodeContext.getDecodeHeaderName().getStringValue(), value.getStringValue());
                 }
 
-                decodeState.setState(DecodeState.STATE_HEADER_LINE_END);
+                decodeContext.setState(DecodeContext.STATE_HEADER_LINE_END);
             }
             // header line结束
-            case DecodeState.STATE_HEADER_LINE_END: {
+            case DecodeContext.STATE_HEADER_LINE_END: {
                 if (byteBuffer.remaining() < 3) {
                     break;
                 }
                 if (byteBuffer.get() != FeatUtils.LF) {
                     throw new HttpException(HttpStatus.BAD_REQUEST);
                 }
-                decodeState.setState(DecodeState.STATE_HEADER_END_CHECK);
+                decodeContext.setState(DecodeContext.STATE_HEADER_END_CHECK);
                 return decode(byteBuffer, request);
             }
-            case DecodeState.STATE_HEADER_IGNORE: {
+            case DecodeContext.STATE_HEADER_IGNORE: {
                 while (byteBuffer.remaining() >= 4) {
                     int position = byteBuffer.position() + 3;
                     byte b = byteBuffer.get(position);
@@ -187,7 +187,7 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
                     // header 结束符匹配，最后2字节已经是CR、LF,无需重复验证
                     if (byteBuffer.getShort(position - 3) == 3338) {
                         byteBuffer.position(position + 1);
-                        decodeState.setState(DecodeState.STATE_HEADER_CALLBACK);
+                        decodeContext.setState(DecodeContext.STATE_HEADER_CALLBACK);
                         return true;
                     } else {
                         byteBuffer.position(position - 1);
@@ -195,12 +195,12 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
                 }
                 return false;
             }
-            case DecodeState.STATE_BODY_READING_MONITOR:
-                decodeState.setState(DecodeState.STATE_BODY_READING_CALLBACK);
+            case DecodeContext.STATE_BODY_READING_MONITOR:
+                decodeContext.setState(DecodeContext.STATE_BODY_READING_CALLBACK);
                 if (byteBuffer.position() > 0) {
                     break;
                 }
-            case DecodeState.STATE_BODY_READING_CALLBACK:
+            case DecodeContext.STATE_BODY_READING_CALLBACK:
                 return byteBuffer.hasRemaining();
         }
         return false;

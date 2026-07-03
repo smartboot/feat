@@ -10,7 +10,7 @@
 
 package tech.smartboot.feat.cloud;
 
-import tech.smartboot.feat.core.common.DecodeState;
+import tech.smartboot.feat.core.common.DecodeContext;
 import tech.smartboot.feat.core.common.io.BodyInputStream;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
@@ -97,7 +97,7 @@ public class AsyncBodyReadUpgrade extends Upgrade {
         // 缓冲区已满，创建异步输入流并设置到请求对象中
         request.setInputStream(new AsyncBodyInputStream(request));
         // 更新请求解码状态为异步读取完成
-        request.getDecodeState().setState(DecodeState.STATE_BODY_ASYNC_READING_DONE);
+        request.getDecodeContext().setState(DecodeContext.STATE_BODY_ASYNC_READING_DONE);
         // 清除升级处理器
         request.setUpgrade(null);
         // 翻转缓冲区，准备读取数据

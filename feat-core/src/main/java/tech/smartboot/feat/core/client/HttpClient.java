@@ -14,6 +14,7 @@ import io.github.smartboot.socket.extension.multiplex.MultiplexClient;
 import io.github.smartboot.socket.transport.AioQuickClient;
 import io.github.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.client.impl.HttpRequestImpl;
+import tech.smartboot.feat.core.common.DecodeContext;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
@@ -37,9 +38,9 @@ public final class HttpClient {
         @Override
         protected void onReuse(AioQuickClient client) {
             AioSession session = client.getSession();
-            DecoderUnit attachment = session.getAttachment();
+            ClientDecodeContext attachment = session.getAttachment();
             //重置附件，为下一个响应作准备
-            attachment.setState(DecoderUnit.STATE_PROTOCOL_DECODE);
+            attachment.setState(DecodeContext.STATE_PROTOCOL_DECODE);
             attachment.setResponse(null);
         }
     };

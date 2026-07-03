@@ -13,7 +13,7 @@ package tech.smartboot.feat.core.server.impl;
 import io.github.smartboot.socket.timer.HashedWheelTimer;
 import io.github.smartboot.socket.timer.TimerTask;
 import io.github.smartboot.socket.transport.AioSession;
-import tech.smartboot.feat.core.common.DecodeState;
+import tech.smartboot.feat.core.common.DecodeContext;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
@@ -49,7 +49,7 @@ import java.util.concurrent.TimeUnit;
 public final class HttpEndpoint extends Endpoint implements HttpRequest, Reset {
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpEndpoint.class);
 
-    private final DecoderUnit decodeState = new DecoderUnit();
+    private final DecodeContext decodeContext = new DecodeContext(DecodeContext.STATE_METHOD);
     private HttpHandler serverHandler;
 
     private List<Part> parts;
@@ -226,8 +226,8 @@ public final class HttpEndpoint extends Endpoint implements HttpRequest, Reset {
     }
 
 
-    public DecoderUnit getDecodeState() {
-        return decodeState;
+    public DecodeContext getDecodeContext() {
+        return decodeContext;
     }
 
     public Upgrade getUpgrade() {
@@ -294,7 +294,7 @@ public final class HttpEndpoint extends Endpoint implements HttpRequest, Reset {
         serverHandler = null;
         remainingThreshold = options.getMaxRequestSize();
         method = null;
-        decodeState.setState(DecodeState.STATE_METHOD);
+        decodeContext.setState(DecodeContext.STATE_METHOD);
         trailerFields = null;
         if (inputStream != null) {
             try {
