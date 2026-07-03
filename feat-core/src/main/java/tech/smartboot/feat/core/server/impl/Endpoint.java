@@ -48,7 +48,6 @@ import java.util.Set;
  */
 public abstract class Endpoint implements Reset {
     private static final Logger LOGGER = LoggerFactory.getLogger(Endpoint.class);
-    private static final Locale defaultLocale = Locale.getDefault();
     private static final int INIT_CONTENT_LENGTH = -2;
     private static final int NONE_CONTENT_LENGTH = -1;
 
@@ -406,7 +405,7 @@ public abstract class Endpoint implements Reset {
     public final Enumeration<Locale> getLocales() {
         Collection<String> acceptLanguage = getHeaders(HeaderName.ACCEPT_LANGUAGE.getName());
         if (acceptLanguage.isEmpty()) {
-            return Collections.enumeration(Collections.singletonList(defaultLocale));
+            return Collections.enumeration(Collections.singletonList(Locale.getDefault()));
         }
         List<Locale> locales = new ArrayList<>();
         for (String language : acceptLanguage) {
