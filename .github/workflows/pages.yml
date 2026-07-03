@@ -37,6 +37,9 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
