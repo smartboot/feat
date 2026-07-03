@@ -97,7 +97,7 @@ final class HttpMessageProcessor extends AbstractMessageProcessor<AbstractRespon
                 if (name == null) {
                     return null;
                 }
-                attachment.setDecodeHeaderName(name);
+                attachment.setHeaderName(name);
                 attachment.setState(DecodeContext.STATE_HEADER_VALUE);
             }
             // header value解析
@@ -109,7 +109,7 @@ final class HttpMessageProcessor extends AbstractMessageProcessor<AbstractRespon
                     }
                     return null;
                 }
-                response.setHeader(attachment.getDecodeHeaderName().getStringValue(), value.getStringValue());
+                response.setHeader(attachment.getHeaderName().getStringValue(), value.getStringValue());
                 attachment.setState(DecodeContext.STATE_HEADER_LINE_END);
             }
             // header line结束

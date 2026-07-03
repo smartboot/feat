@@ -141,7 +141,7 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
                 if (name == null) {
                     break;
                 }
-                decodeContext.setDecodeHeaderName(name);
+                decodeContext.setHeaderName(name);
                 decodeContext.setState(DecodeContext.STATE_HEADER_VALUE);
             }
             // header value解析
@@ -149,15 +149,15 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
                 ByteTree<?> value = FeatUtils.scanByteTree(byteBuffer, ByteTree.CR_END_MATCHER, options.getByteCache());
                 if (value == null) {
                     if (byteBuffer.remaining() == byteBuffer.capacity()) {
-                        throw new HttpException(HttpStatus.REQUEST_HEADER_FIELDS_TOO_LARGE, "The length of the value of header <u>" + decodeContext.getDecodeHeaderName().getStringValue() + "</u> exceeds the read buffer.");
+                        throw new HttpException(HttpStatus.REQUEST_HEADER_FIELDS_TOO_LARGE, "The length of the value of header <u>" + decodeContext.getHeaderName().getStringValue() + "</u> exceeds the read buffer.");
                     }
                     break;
                 }
-                HeaderName headerName = decodeContext.getDecodeHeaderName().getAttach();
+                HeaderName headerName = decodeContext.getHeaderName().getAttach();
                 if (headerName != null) {
-                    request.addHeader(headerName.getLowCaseName(), decodeContext.getDecodeHeaderName().getStringValue(), value.getStringValue());
+                    request.addHeader(headerName.getLowCaseName(), decodeContext.getHeaderName().getStringValue(), value.getStringValue());
                 } else {
-                    request.addHeader(decodeContext.getDecodeHeaderName().getStringValue().toLowerCase(), decodeContext.getDecodeHeaderName().getStringValue(), value.getStringValue());
+                    request.addHeader(decodeContext.getHeaderName().getStringValue().toLowerCase(), decodeContext.getHeaderName().getStringValue(), value.getStringValue());
                 }
 
                 decodeContext.setState(DecodeContext.STATE_HEADER_LINE_END);

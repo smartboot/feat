@@ -42,7 +42,8 @@ public class DecodeContext {
      * HTTP响应报文解析状态
      */
     private int state;
-    private ByteTree<HeaderName> decodeHeaderName;
+
+    private ByteTree<HeaderName> headerName;
 
     public DecodeContext(int state) {
         this.state = state;
@@ -56,11 +57,11 @@ public class DecodeContext {
         this.state = state;
     }
 
-    public final ByteTree<HeaderName> getDecodeHeaderName() {
-        return decodeHeaderName;
+    public final ByteTree<HeaderName> getHeaderName() {
+        return headerName;
     }
 
-    public final void setDecodeHeaderName(ByteTree<HeaderName> decodeHeaderName) {
-        this.decodeHeaderName = decodeHeaderName;
+    public final void setHeaderName(ByteTree<HeaderName> headerName) {
+        this.headerName = headerName;
     }
 }
