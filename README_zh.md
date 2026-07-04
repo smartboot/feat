@@ -2,11 +2,24 @@
 
 
 
-# <img src="logo.svg" width="80" height="80"/> Feat - 高性能Java Web服务框架 [![Apache License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0) [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/smartboot/feat)
+# <img src="https://smartboot.tech/feat/_astro/feat_logo_v2.oO6h6Mx4.svg" width="80" height="80"/> Feat - 高性能Java Web服务框架 [![Apache License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0) [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/smartboot/feat)
 
-有点像 Vert.x，又有点像 SpringBoot 的 Java Web 服务开发框架
+Feat 是一个现代化 Java 服务开发框架。
 
-![](./pages/src/assets/performance.svg)
+它拥有接近 Spring Boot 的开发体验，却以编译期 AOT、零反射、非 Servlet 架构实现更低的启动时间、更小的内存占用和更高的运行性能。
+
+如果你正在思考：
+
+为什么 Java 服务必须消耗数百 MB 内存？
+为什么修改一行代码需要等待数秒重启？
+为什么 Native Image 仍然如此复杂？
+为什么 Go 正在抢占云原生时代的后端市场？
+
+Feat 希望给出另一种答案。
+
+⭐ 如果你认可这种方向，请给项目点一个 Star。
+
+![](https://smartboot.tech/feat/_astro/performance.CFU-P238.svg)
 
 ### 🚀 Feat 的企业价值
 
