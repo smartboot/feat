@@ -10,14 +10,14 @@ Feat 是一个现代化 Java 服务开发框架。
 
 如果你正在思考：
 
-为什么 Java 服务必须消耗数百 MB 内存？
-为什么修改一行代码需要等待数秒重启？
-为什么 Native Image 仍然如此复杂？
-为什么 Go 正在抢占云原生时代的后端市场？
+- 为什么 Java 服务必须消耗数百 MB 内存？
+- 为什么修改一行代码需要等待数秒重启？
+- 为什么 Native Image 仍然如此复杂？
+- 为什么 Go 正在抢占云原生时代的后端市场？
 
 Feat 希望给出另一种答案。
 
-⭐ 如果你认可这种方向，请给项目点一个 Star。
+> ⭐ 如果你认可这种方向，请给项目点一个 Star。
 
 ![](https://smartboot.tech/feat/_astro/performance.CFU-P238.svg)
 
