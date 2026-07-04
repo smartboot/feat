@@ -2,6 +2,9 @@
 
 Somewhat like Vert.x, and somewhat like Spring Boot, Feat is a Java web service development framework.
 
+> ⭐ Star Feat on GitHub and be instantly notified of new releases.
+
+
 ![](./pages/src/assets/performance.svg)
 
 ### 🚀 Enterprise Value of Feat
