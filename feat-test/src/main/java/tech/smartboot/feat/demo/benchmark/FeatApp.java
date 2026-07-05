@@ -46,7 +46,7 @@ public class FeatApp {
             options
                     .setPackages("tech.smartboot.feat.demo.benchmark");
         });
-        server.options().threadNum(Runtime.getRuntime().availableProcessors() + 1);
+        server.options().threadNum(Runtime.getRuntime().availableProcessors());
         server.listen(8082);
         System.out.println("启动耗时:" + (System.currentTimeMillis() - start));
     }

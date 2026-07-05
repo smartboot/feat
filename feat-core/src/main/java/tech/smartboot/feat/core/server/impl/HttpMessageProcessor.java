@@ -234,6 +234,13 @@ public final class HttpMessageProcessor extends AbstractMessageProcessor<HttpEnd
         AbstractResponse response = request.getResponse();
         try {
             CompletableFuture<Void> future = new CompletableFuture<>();
+            if (request.getProtocol() == HttpProtocol.HTTP_11 && !HeaderValue.Connection.CLOSE.equals(request.getHeader(HeaderName.CONNECTION))) {
+                request.setKeepAlive(true);
+            } else if (request.getProtocol() == HttpProtocol.HTTP_10 && HeaderValue.Connection.KEEPALIVE.equals(request.getHeader(HeaderName.CONNECTION))) {
+                request.setKeepAlive(true);
+                response.setHeader(HeaderName.CONNECTION, HeaderValue.Connection.KEEPALIVE);
+            }
+
             request.getServerHandler().handle(request, future);
             if (request.getUpgrade() == null || request.getInputStream().getReadListener() != null) {
                 finishHttpHandle(request, future);
@@ -241,6 +248,11 @@ public final class HttpMessageProcessor extends AbstractMessageProcessor<HttpEnd
         } catch (Throwable e) {
             HttpMessageProcessor.responseError(response, e);
         }
+    }
+
+    static boolean isKeepAlive(HttpEndpoint request) {
+        return (request.getProtocol() == HttpProtocol.HTTP_11 && !HeaderValue.Connection.CLOSE.equals(request.getHeader(HeaderName.CONNECTION)))
+                || (request.getProtocol() == HttpProtocol.HTTP_10 && HeaderValue.Connection.KEEPALIVE.equals(request.getHeader(HeaderName.CONNECTION)));
     }
 
     private void finishHttpHandle(HttpEndpoint abstractRequest, CompletableFuture<Void> future) throws IOException {
@@ -307,16 +319,11 @@ public final class HttpMessageProcessor extends AbstractMessageProcessor<HttpEnd
         if (request.getResponse().isClosed()) {
             return false;
         }
+        if (request.isKeepAlive() && request.getInputStream().isFinished()) {
+            return true;
+        }
         //非keepAlive或者 body部分未读取完毕,释放连接资源
-        String connection = request.getHeader(HeaderName.CONNECTION);
-        if (HeaderValue.Connection.CLOSE.equals(connection) || !request.getInputStream().isFinished()) {
-            request.getResponse().close();
-            return false;
-        }
-        if (HttpProtocol.HTTP_10.equals(request.getProtocol()) && !HeaderValue.Connection.KEEPALIVE.equalsIgnoreCase(request.getResponse().getHeader(HeaderName.CONNECTION))) {
-            request.getResponse().close();
-            return false;
-        }
-        return true;
+        request.getResponse().close();
+        return false;
     }
 }

@@ -65,6 +65,7 @@ public final class HttpEndpoint extends Endpoint implements HttpRequest, Reset {
 
     private BodyInputStream inputStream;
     private Map<String, String> trailerFields;
+    private boolean keepAlive;
 
     void cancelHttpIdleTask() {
         synchronized (this) {
@@ -288,10 +289,19 @@ public final class HttpEndpoint extends Endpoint implements HttpRequest, Reset {
         this.parts.add(part);
     }
 
+    public boolean isKeepAlive() {
+        return keepAlive;
+    }
+
+    public void setKeepAlive(boolean keepAlive) {
+        this.keepAlive = keepAlive;
+    }
+
     public void reset() {
         super.reset();
         upgrade = null;
         serverHandler = null;
+        keepAlive = false;
         remainingThreshold = options.getMaxRequestSize();
         method = null;
         decodeContext.setState(DecodeContext.STATE_METHOD);
