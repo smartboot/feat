@@ -52,34 +52,42 @@ jobs:
           # 创建测试结果目录
           mkdir -p target/ab-results
       
-      - name: 运行Apache Benchmark测试
+      - name: 创建测试结果目录
+        run: mkdir -p feat-test/target/ab-results
+
+      - name: 测试Feat Hello World接口
         run: |
           cd feat-test
-          
-          # 创建测试结果目录
-          mkdir -p target/ab-results
-          
-          # 测试Feat Hello World接口
           ab -n 1000000 -c 100 -k http://localhost:8082/hello > target/ab-results/feat-hello.txt
           echo "Feat Hello World测试完成"
-          
-          # 测试Feat JSON接口
+
+      - name: 测试Feat JSON接口
+        run: |
+          cd feat-test
           ab -n 1000000 -c 100 -k http://localhost:8082/json > target/ab-results/feat-json.txt
           echo "Feat JSON测试完成"
-          
-          # 测试Vert.x Hello World接口
+
+      - name: 测试Vert.x Hello World接口
+        run: |
+          cd feat-test
           ab -n 1000000 -c 100 -k http://localhost:8081/hello > target/ab-results/vertx-hello.txt
           echo "Vert.x Hello World测试完成"
-          
-          # 测试Vert.x JSON接口
+
+      - name: 测试Vert.x JSON接口
+        run: |
+          cd feat-test
           ab -n 1000000 -c 100 -k http://localhost:8081/json > target/ab-results/vertx-json.txt
           echo "Vert.x JSON测试完成"
-          
-          # 测试Spring Boot Hello World接口
+
+      - name: 测试Spring Boot Hello World接口
+        run: |
+          cd feat-test
           ab -n 1000000 -c 100 -k http://localhost:8080/hello > target/ab-results/springboot-hello.txt
           echo "Spring Boot Hello World测试完成"
-          
-          # 测试Spring Boot JSON接口
+
+      - name: 测试Spring Boot JSON接口
+        run: |
+          cd feat-test
           ab -n 1000000 -c 100 -k http://localhost:8080/json > target/ab-results/springboot-json.txt
           echo "Spring Boot JSON测试完成"
       
