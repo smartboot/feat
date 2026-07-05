@@ -313,7 +313,7 @@ public final class HttpMessageProcessor extends AbstractMessageProcessor<HttpEnd
             request.getResponse().close();
             return false;
         }
-        if (HttpProtocol.HTTP_10.equals(request.getProtocol()) && !HeaderValue.Connection.KEEPALIVE.equalsIgnoreCase(request.getHeader(HeaderName.CONNECTION))) {
+        if (HttpProtocol.HTTP_10.equals(request.getProtocol()) && !HeaderValue.Connection.KEEPALIVE.equalsIgnoreCase(request.getResponse().getHeader(HeaderName.CONNECTION))) {
             request.getResponse().close();
             return false;
         }
