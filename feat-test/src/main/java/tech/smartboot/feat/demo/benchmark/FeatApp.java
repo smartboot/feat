@@ -27,14 +27,14 @@ public class FeatApp {
 
     @RequestMapping("/hello")
     public String plaintext(HttpResponse response) {
-        response.setHeader(HeaderName.CONNECTION, HeaderValue.Connection.KEEPALIVE);
+//        response.setHeader(HeaderName.CONNECTION, HeaderValue.Connection.KEEPALIVE);
         response.setContentType(HeaderValue.ContentType.TEXT_PLAIN_UTF8);
         return "Hello World!";
     }
 
     @RequestMapping("/json")
     public Response json(HttpResponse response) {
-        response.setHeader(HeaderName.CONNECTION, HeaderValue.Connection.KEEPALIVE);
+//        response.setHeader(HeaderName.CONNECTION, HeaderValue.Connection.KEEPALIVE);
         response.setContentType(HeaderValue.ContentType.APPLICATION_JSON_UTF8);
         return new Response("Hello", "World");
     }
