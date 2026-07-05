@@ -72,7 +72,13 @@ final class HttpOutputStream extends FeatOutputStream {
         if (committed) {
             return;
         }
-
+        //处理http1.0长连接
+        if (HttpProtocol.HTTP_10.equals(request.getProtocol())
+                && response.getHeader(HeaderName.CONNECTION) == null
+                && HeaderValue.Connection.KEEPALIVE.equalsIgnoreCase(request.getHeader(HeaderName.CONNECTION))) {
+            request.getResponse().setHeader(HeaderName.CONNECTION, HeaderValue.Connection.KEEPALIVE);
+        }
+        
         boolean hasHeader = response.getHeaders().size() > 0;
         //输出http状态行、contentType,contentLength、Transfer-Encoding、server等信息
         writeHeadPart(hasHeader);
