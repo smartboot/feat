@@ -16,6 +16,7 @@ import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.server.HttpResponse;
+import tech.smartboot.feat.core.server.HttpServer;
 
 /**
  * @author 三刀 zhengjunweimail@163.com
@@ -26,14 +27,14 @@ public class FeatApp {
 
     @RequestMapping("/hello")
     public String plaintext(HttpResponse response) {
-        response.setHeader(HeaderName.CONNECTION,HeaderValue.Connection.KEEPALIVE);
+        response.setHeader(HeaderName.CONNECTION, HeaderValue.Connection.KEEPALIVE);
         response.setContentType(HeaderValue.ContentType.TEXT_PLAIN_UTF8);
         return "Hello World!";
     }
 
     @RequestMapping("/json")
     public Response json(HttpResponse response) {
-        response.setHeader(HeaderName.CONNECTION,HeaderValue.Connection.KEEPALIVE);
+        response.setHeader(HeaderName.CONNECTION, HeaderValue.Connection.KEEPALIVE);
         response.setContentType(HeaderValue.ContentType.APPLICATION_JSON_UTF8);
         return new Response("Hello", "World");
     }
@@ -41,10 +42,12 @@ public class FeatApp {
     public static void main(String[] args) {
         long start = System.currentTimeMillis();
         // 定义服务器接受的消息类型以及各类消息对应的处理器
-        FeatCloud.cloudServer(options -> {
+        HttpServer server = FeatCloud.cloudServer(options -> {
             options
                     .setPackages("tech.smartboot.feat.demo.benchmark");
-        }).listen(8082);
+        });
+        server.options().threadNum(Runtime.getRuntime().availableProcessors() + 1);
+        server.listen(8082);
         System.out.println("启动耗时:" + (System.currentTimeMillis() - start));
     }
 }
