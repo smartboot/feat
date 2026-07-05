@@ -13,6 +13,7 @@ package tech.smartboot.feat.demo.benchmark;
 import tech.smartboot.feat.cloud.FeatCloud;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
+import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.server.HttpResponse;
 
@@ -25,12 +26,14 @@ public class FeatApp {
 
     @RequestMapping("/hello")
     public String plaintext(HttpResponse response) {
+        response.setHeader(HeaderName.CONNECTION,HeaderValue.Connection.KEEPALIVE);
         response.setContentType(HeaderValue.ContentType.TEXT_PLAIN_UTF8);
         return "Hello World!";
     }
 
     @RequestMapping("/json")
     public Response json(HttpResponse response) {
+        response.setHeader(HeaderName.CONNECTION,HeaderValue.Connection.KEEPALIVE);
         response.setContentType(HeaderValue.ContentType.APPLICATION_JSON_UTF8);
         return new Response("Hello", "World");
     }
