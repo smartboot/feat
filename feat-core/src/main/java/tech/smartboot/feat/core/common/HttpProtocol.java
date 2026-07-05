@@ -10,6 +10,10 @@
 
 package tech.smartboot.feat.core.common;
 
+import io.github.smartboot.socket.transport.WriteBuffer;
+
+import java.io.IOException;
+
 /**
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0.0
@@ -20,12 +24,18 @@ public class HttpProtocol {
     public static final HttpProtocol HTTP_2 = new HttpProtocol("HTTP/2.0");
 
     private final String protocol;
+    private final byte[] protocolBytes;
 
     HttpProtocol(String protocol) {
         this.protocol = protocol;
+        this.protocolBytes = (protocol + " ").getBytes();
     }
 
     public String getProtocol() {
         return protocol;
+    }
+
+    public void write(WriteBuffer writeBuffer) throws IOException {
+        writeBuffer.write(protocolBytes);
     }
 }

@@ -122,8 +122,7 @@ final class HttpOutputStream extends FeatOutputStream {
     }
 
     private void writeCommonHeadPart(boolean hasHeader, String contentType, long contentLength) throws IOException {
-        writeString(request.getProtocol().getProtocol());
-        writeBuffer.writeByte(FeatUtils.SP);
+        request.getProtocol().write(writeBuffer);
         response.getHttpStatus().write(writeBuffer);
         // Server
         if (response.getHeader(HeaderName.SERVER) == null) {
