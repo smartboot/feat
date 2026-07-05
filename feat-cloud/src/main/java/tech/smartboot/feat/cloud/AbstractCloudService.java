@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
+import java.nio.charset.Charset;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.concurrent.CompletableFuture;
@@ -48,6 +49,7 @@ import java.util.concurrent.CompletableFuture;
  * @version v1.0.0
  */
 public abstract class AbstractCloudService implements CloudService {
+    protected static final Charset UTF_8 = Charset.forName("UTF-8");
     /**
      * JSON响应中表示success=false的字节序列
      */

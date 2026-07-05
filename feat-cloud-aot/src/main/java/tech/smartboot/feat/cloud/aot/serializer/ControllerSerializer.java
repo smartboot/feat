@@ -290,7 +290,7 @@ public final class ControllerSerializer extends AbstractSerializer {
                     case RETURN_TYPE_VOID:
                         break;
                     case RETURN_TYPE_STRING:
-                        printWriter.println("\t\t\t\tbyte[] bytes = rst.getBytes(\"UTF-8\"); ");
+                        printWriter.println("\t\t\t\tbyte[] bytes = rst.getBytes(UTF_8); ");
                     case RETURN_TYPE_BYTE_ARRAY:
                         if (gzip) {
                             printWriter.println("\t\t\t\tif(bytes.length > " + gzipThreshold + ") {");
