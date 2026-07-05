@@ -25,8 +25,8 @@ jobs:
       - name: 设置Maven
         uses: stCarolas/setup-maven@v5
       
-      - name: 安装Apache Benchmark
-        run: sudo apt-get update && sudo apt-get install -y apache2-utils
+      - name: 安装wrk
+        run: sudo apt-get update && sudo apt-get install -y wrk
       
       - name: 构建项目
         run: mvn -B install --file pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
@@ -50,45 +50,45 @@ jobs:
           sleep 5
           
           # 创建测试结果目录
-          mkdir -p target/ab-results
+          mkdir -p target/wrk-results
       
       - name: 创建测试结果目录
-        run: mkdir -p feat-test/target/ab-results
+        run: mkdir -p feat-test/target/wrk-results
 
       - name: 测试Feat Hello World接口
         run: |
           cd feat-test
-          ab -n 1000000 -c 100 -k http://localhost:8082/hello > target/ab-results/feat-hello.txt
+          wrk -t4 -c100 -d60s --latency http://localhost:8082/hello > target/wrk-results/feat-hello.txt
           echo "Feat Hello World测试完成"
 
       - name: 测试Feat JSON接口
         run: |
           cd feat-test
-          ab -n 1000000 -c 100 -k http://localhost:8082/json > target/ab-results/feat-json.txt
+          wrk -t4 -c100 -d60s --latency http://localhost:8082/json > target/wrk-results/feat-json.txt
           echo "Feat JSON测试完成"
 
       - name: 测试Vert.x Hello World接口
         run: |
           cd feat-test
-          ab -n 1000000 -c 100 -k http://localhost:8081/hello > target/ab-results/vertx-hello.txt
+          wrk -t4 -c100 -d60s --latency http://localhost:8081/hello > target/wrk-results/vertx-hello.txt
           echo "Vert.x Hello World测试完成"
 
       - name: 测试Vert.x JSON接口
         run: |
           cd feat-test
-          ab -n 1000000 -c 100 -k http://localhost:8081/json > target/ab-results/vertx-json.txt
+          wrk -t4 -c100 -d60s --latency http://localhost:8081/json > target/wrk-results/vertx-json.txt
           echo "Vert.x JSON测试完成"
 
       - name: 测试Spring Boot Hello World接口
         run: |
           cd feat-test
-          ab -n 1000000 -c 100 -k http://localhost:8080/hello > target/ab-results/springboot-hello.txt
+          wrk -t4 -c100 -d60s --latency http://localhost:8080/hello > target/wrk-results/springboot-hello.txt
           echo "Spring Boot Hello World测试完成"
 
       - name: 测试Spring Boot JSON接口
         run: |
           cd feat-test
-          ab -n 1000000 -c 100 -k http://localhost:8080/json > target/ab-results/springboot-json.txt
+          wrk -t4 -c100 -d60s --latency http://localhost:8080/json > target/wrk-results/springboot-json.txt
           echo "Spring Boot JSON测试完成"
       
       - name: 安装Python依赖

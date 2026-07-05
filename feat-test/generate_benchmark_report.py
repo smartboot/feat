@@ -4,7 +4,7 @@
 """
 生成基准测试报告的主脚本
 
-此脚本调用parse_benchmark.py解析Apache Benchmark测试结果，
+此脚本调用parse_benchmark.py解析wrk测试结果，
 并生成性能对比报告。
 """
 
@@ -16,7 +16,7 @@ def main():
     print("开始生成基准测试报告...")
     
     # 确保结果目录存在
-    results_dir = 'target/ab-results'
+    results_dir = 'target/wrk-results'
     if not os.path.exists(results_dir):
         os.makedirs(results_dir, exist_ok=True)
         print(f"创建结果目录: {results_dir}")

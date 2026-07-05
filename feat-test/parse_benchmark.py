@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 
 """
-解析Apache Benchmark测试结果并生成性能对比报告
+解析wrk测试结果并生成性能对比报告
 
-此脚本从feat-test/target/ab-results目录读取Apache Benchmark测试结果文件，
+此脚本从feat-test/target/wrk-results目录读取wrk测试结果文件，
 提取关键性能指标，并生成包含图表的HTML报告，用于比较Feat、Vert.x和Spring Boot框架的性能。
 """
 
@@ -14,7 +14,7 @@ import sys
 from datetime import datetime
 
 # 测试结果目录
-RESULTS_DIR = 'target/ab-results'
+RESULTS_DIR = 'target/wrk-results'
 # 输出报告文件
 OUTPUT_FILE = 'target/benchmark-report/index.html'
 
@@ -39,8 +39,29 @@ COLORS = {
 }
 
 
-def parse_ab_result(file_path):
-    """解析Apache Benchmark结果文件，提取关键性能指标"""
+def parse_size_to_kb(value, unit):
+    """将wrk传输速率单位转换为KB/s，便于沿用原有指标字段。"""
+    multipliers = {
+        'B': 1 / 1024,
+        'KB': 1,
+        'MB': 1024,
+        'GB': 1024 * 1024,
+    }
+    return float(value) * multipliers.get(unit, 1)
+
+
+def parse_time_to_ms(value, unit):
+    """将wrk延迟单位转换为毫秒。"""
+    multipliers = {
+        'us': 0.001,
+        'ms': 1,
+        's': 1000,
+    }
+    return float(value) * multipliers.get(unit, 1)
+
+
+def parse_wrk_result(file_path):
+    """解析wrk结果文件，提取关键性能指标"""
     try:
         with open(file_path, 'r') as f:
             content = f.read()
@@ -48,32 +69,45 @@ def parse_ab_result(file_path):
         # 提取关键指标
         metrics = {}
         
-        # 每秒请求数 (Requests per second)
-        rps_match = re.search(r'Requests per second:\s+([\d\.]+)', content)
+        # 每秒请求数 (Requests/sec)
+        rps_match = re.search(r'Requests/sec:\s+([\d\.]+)', content)
         if rps_match:
             metrics['requests_per_second'] = float(rps_match.group(1))
         
-        # 平均响应时间 (Time per request - mean across all concurrent requests)
-        tpr_match = re.search(r'Time per request:\s+([\d\.]+).*\[ms\].*concurrent', content)
-        if tpr_match:
-            metrics['time_per_request'] = float(tpr_match.group(1))
+        # 平均响应时间 (Thread Stats Latency Avg)
+        latency_match = re.search(r'Latency\s+([\d\.]+)(us|ms|s)', content)
+        if latency_match:
+            metrics['time_per_request'] = parse_time_to_ms(
+                latency_match.group(1),
+                latency_match.group(2)
+            )
         
-        # 传输速率 (Transfer rate)
-        tr_match = re.search(r'Transfer rate:\s+([\d\.]+)', content)
+        # 传输速率 (Transfer/sec)
+        tr_match = re.search(r'Transfer/sec:\s+([\d\.]+)(B|KB|MB|GB)', content)
         if tr_match:
-            metrics['transfer_rate'] = float(tr_match.group(1))
+            metrics['transfer_rate'] = parse_size_to_kb(
+                tr_match.group(1),
+                tr_match.group(2)
+            )
         
-        # 完成请求数 (Complete requests)
-        cr_match = re.search(r'Complete requests:\s+(\d+)', content)
+        # 完成请求数
+        cr_match = re.search(r'(\d+)\s+requests in\s+[\d\.]+[smh]', content)
         if cr_match:
             metrics['complete_requests'] = int(cr_match.group(1))
         
-        # 失败请求数 (Failed requests)
-        fr_match = re.search(r'Failed requests:\s+(\d+)', content)
-        if fr_match:
-            metrics['failed_requests'] = int(fr_match.group(1))
-        else:
-            metrics['failed_requests'] = 0
+        failed_requests = 0
+        socket_errors_match = re.search(
+            r'Socket errors:\s+connect\s+(\d+),\s+read\s+(\d+),\s+write\s+(\d+),\s+timeout\s+(\d+)',
+            content
+        )
+        if socket_errors_match:
+            failed_requests += sum(int(value) for value in socket_errors_match.groups())
+
+        non_success_match = re.search(r'Non-2xx or 3xx responses:\s+(\d+)', content)
+        if non_success_match:
+            failed_requests += int(non_success_match.group(1))
+
+        metrics['failed_requests'] = failed_requests
         
         # 计算错误率
         if 'complete_requests' in metrics and metrics['complete_requests'] > 0:
@@ -115,7 +149,7 @@ def collect_results():
             continue
         
         # 解析结果
-        metrics = parse_ab_result(file_path)
+        metrics = parse_wrk_result(file_path)
         if metrics:
             if test_type not in results:
                 results[test_type] = {}
@@ -181,8 +215,8 @@ def generate_html_report(results):
         </div>
 
         <h2>测试概述</h2>
-        <p>本报告比较了三个Java Web框架的性能：Feat、Vert.x和Spring Boot。测试使用Apache Benchmark (ab)工具，针对每个框架的Hello World和JSON响应接口进行了性能测试。</p>
-        <p>测试参数：1,000,000个请求，并发数100，启用HTTP Keep-Alive。</p>
+        <p>本报告比较了三个Java Web框架的性能：Feat、Vert.x和Spring Boot。测试使用wrk工具，针对每个框架的Hello World和JSON响应接口进行了性能测试。</p>
+        <p>测试参数：4个线程，100个连接，持续60秒，开启延迟统计。</p>
 
         <h2>性能对比图表</h2>
 """
