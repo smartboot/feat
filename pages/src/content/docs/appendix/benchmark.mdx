@@ -9,37 +9,25 @@ import bench_hello_world_rps from './img/bench_hello_world_rps.png'
 import bench_hello_world_avg from './img/bench_hello_world_avg.png'
 import bench_json_rps from './img/bench_json_rps.png'
 import bench_json_avg from './img/bench_json_avg.png'
-import performance_comparison from './img/performance_comparison.svg'
 import { Aside } from '@astrojs/starlight/components'
 
 这一页记录的是一组基准测试结果，而不是“永远正确的性能结论”。  
 如果你要引用这些数据，最重要的不是只看数字，而是先理解测试对象、边界条件和它不包含什么。
 
-## 这组测试在测什么
+## 测试概述
 
-这里比较的是三类 Java Web 框架在两个简单接口下的表现：
+本报告比较了三个Java Web框架的性能：Feat、Vert.x和Spring Boot。测试使用wrk工具，针对每个框架的Hello World和JSON响应接口进行了性能测试。
 
-- Hello World
-- JSON 响应
+测试参数：4个线程，100个连接，持续60秒，开启延迟统计。
 
-参与对比的对象：
 
-- Feat
-- Vert.x
-- Spring Boot
 
-测试工具是 Apache Benchmark（`ab`），测试参数为：
+**测试结论**
 
-- 总请求数：`1,000,000`
-- 并发数：`100`
-- 启用 HTTP Keep-Alive
+根据测试结果，可以得出以下结论：
 
-## 先看结果
-
-<img src={performance_comparison.src} alt="性能对比图表" width="80%"/>
-
-从这组测试里可以看到一个非常明确的趋势：  
-在当前测试条件下，Feat 在这两个简单接口上的吞吐和平均响应时间都表现得比较强。
+- 在JSON响应接口测试中，Feat框架表现最佳，每秒处理请求数最多。
+- 在Hello World接口测试中，Feat框架表现最佳，每秒处理请求数最多。
 
 ## 详细图表
 
@@ -57,12 +45,12 @@ import { Aside } from '@astrojs/starlight/components'
 
 | 测试类型 | 框架 | 每秒请求数 | 平均响应时间 (ms) | 错误率 (%) |
 |----------|------|------------|------------------|------------|
-| Hello World | Feat | 88241.10 | 0.01 | 0.00 |
-| Hello World | Spring Boot | 34406.30 | 0.03 | 0.00 |
-| Hello World | Vert.x | 87304.32 | 0.01 | 0.00 |
-| JSON 响应 | Feat | 89489.21 | 0.01 | 0.00 |
-| JSON 响应 | Spring Boot | 10645.22 | 0.09 | 0.00 |
-| JSON 响应 | Vert.x | 84135.96 | 0.01 | 0.00 |
+| Hello World | Feat | 155938.62 | 0.79 | 0.00 |
+| Hello World | Spring Boot | 49905.44 | 3.60 | 0.00 |
+| Hello World | Vert.x | 82268.08 | 1.43 | 0.00 |
+| JSON 响应 | Feat | 155973.10 | 0.82 | 0.00 |
+| JSON 响应 | Spring Boot | 44617.28 | 2.27 | 0.00 |
+| JSON 响应 | Vert.x | 77211.77 | 1.54 | 0.00 |
 
 ## 这组数据应该怎么解读
 
