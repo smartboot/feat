@@ -42,14 +42,11 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
 
     @Override
     public HttpEndpoint decode(ByteBuffer byteBuffer, AioSession session) {
-        if (byteBuffer.hasRemaining()) {
-            HttpEndpoint request = session.getAttachment();
-            int p = byteBuffer.position();
-            boolean flag = decode(byteBuffer, request);
-            request.decodeSize(byteBuffer.position() - p);
-            return flag ? request : null;
-        }
-        return null;
+        HttpEndpoint request = session.getAttachment();
+        int p = byteBuffer.position();
+        boolean flag = decode(byteBuffer, request);
+        request.decodeSize(byteBuffer.position() - p);
+        return flag ? request : null;
     }
 
     private boolean decode(ByteBuffer byteBuffer, HttpEndpoint request) {

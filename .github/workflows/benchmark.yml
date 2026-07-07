@@ -29,7 +29,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y wrk
       
       - name: 构建项目
-        run: mvn -B install --file pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
+        run: FEAT_LICENSE=${{ secrets.FEAT_LICENSE }} mvn -B install --file pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
       
       - name: 启动框架服务
         run: |
