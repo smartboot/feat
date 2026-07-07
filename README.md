@@ -99,14 +99,14 @@ public class HelloWorld {
 <dependency>
     <groupId>tech.smartboot.feat</groupId>
     <artifactId>feat-cloud</artifactId>
-    <version>2.1.0</version>
+    <version>2.2.0</version>
 </dependency>
 
 <!-- Compile-time code generation -->
 <dependency>
     <groupId>tech.smartboot.feat</groupId>
     <artifactId>feat-cloud-starter</artifactId>
-    <version>2.1.0</version>
+    <version>2.2.0</version>
     <scope>provided</scope>
 </dependency>
 ```
