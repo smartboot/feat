@@ -42,7 +42,7 @@ public class Feat {
     /**
      * 当前 Feat 框架版本号
      */
-    public static final String VERSION = "v2.2.0-SNAPSHOT";
+    public static final String VERSION = "v2.2.0";
 
     /**
      * 创建一个HTTP服务器实例，使用默认配置。
