@@ -26,7 +26,7 @@ jobs:
         uses: stCarolas/setup-maven@v5
       
       - name: 安装wrk
-        run: sudo apt-get update && sudo apt-get install -y wrk
+        run: sudo apt-get update && sudo apt-get install -y wrk unzip
       
       - name: 构建项目
         run: FEAT_LICENSE=${{ secrets.FEAT_LICENSE }} mvn -B install --file pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
