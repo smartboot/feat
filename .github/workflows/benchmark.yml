@@ -39,6 +39,8 @@ jobs:
       - name: 启动框架服务
         run: |
           cd feat-test
+          mkdir -p target/wrk-results
+          
           # 启动Feat服务（端口8082）
           nohup mvn exec:java -Dexec.mainClass="tech.smartboot.feat.demo.benchmark.FeatApp" > feat.log 2>&1 &
           echo "Feat服务已启动，等待5秒..."
@@ -55,12 +57,12 @@ jobs:
           sleep 5
           
           # 启动Quarkus服务（端口8083）
+          cd quarkus-app
           nohup java "-Dquarkus.http.port=8083" -jar quarkus-app/quarkus-run.jar > quarkus.log 2>&1 &
           echo "Quarkus服务已启动，等待5秒..."
           sleep 5
           
-          mkdir -p target/wrk-results
-      
+
       - name: 创建测试结果目录
         run: mkdir -p feat-test/target/wrk-results
 
