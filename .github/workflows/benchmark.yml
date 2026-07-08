@@ -30,6 +30,11 @@ jobs:
       
       - name: 构建项目
         run: FEAT_LICENSE=${{ secrets.FEAT_LICENSE }} mvn -B install --file pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
+
+      - name: 解压 Quarkus
+        run: |
+          cd feat-test
+          unzip -xzf quarkus-app.zip
       
       - name: 启动框架服务
         run: |
@@ -49,11 +54,26 @@ jobs:
           echo "Spring Boot服务已启动，等待5秒..."
           sleep 5
           
-          # 创建测试结果目录
+          # 启动Quarkus服务（端口8083）
+          nohup java "-Dquarkus.http.port=8083" -jar quarkus-app/quarkus-run.jar > quarkus.log 2>&1 &
+          echo "Quarkus服务已启动，等待5秒..."
+          sleep 5
+          
           mkdir -p target/wrk-results
       
       - name: 创建测试结果目录
         run: mkdir -p feat-test/target/wrk-results
+
+      - name: 测试Quarkus Hello World接口
+        run: |
+          cd feat-test
+          wrk -t4 -c100 -d60s --latency http://localhost:8083/hello > target/wrk-results/quarkus-hello.txt
+          echo "Quarkus Hello World测试完成"
+      - name: 测试Quarkus JSON接口
+        run: |
+          cd feat-test
+          wrk -t4 -c100 -d60s --latency http://localhost:8083/json > target/wrk-results/quarkus-json.txt
+          echo "Quarkus JSON测试完成"
 
       - name: 测试Feat Hello World接口
         run: |
