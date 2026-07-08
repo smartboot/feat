@@ -217,7 +217,7 @@ def generate_html_report(results):
         </div>
 
         <h2>测试概述</h2>
-        <p>本报告比较了三个Java Web框架的性能：Feat、Vert.x和Spring Boot。测试使用wrk工具，针对每个框架的Hello World和JSON响应接口进行了性能测试。</p>
+        <p>本报告比较了四个Java Web框架的性能：Feat、Vert.x、Quarkus和Spring Boot。测试使用wrk工具，针对每个框架的Hello World和JSON响应接口进行了性能测试。</p>
         <p>测试参数：4个线程，100个连接，持续60秒，开启延迟统计。</p>
 
         <h2>性能对比图表</h2>
