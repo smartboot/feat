@@ -22,7 +22,8 @@ OUTPUT_FILE = 'target/benchmark-report/index.html'
 FRAMEWORK_NAMES = {
     'feat': 'Feat',
     'vertx': 'Vert.x',
-    'springboot': 'Spring Boot'
+    'springboot': 'Spring Boot',
+    'quarkus': 'Quarkus'
 }
 
 # 测试类型映射
@@ -35,7 +36,8 @@ TEST_TYPES = {
 COLORS = {
     'feat': 'rgba(54, 162, 235, 0.8)',
     'vertx': 'rgba(255, 99, 132, 0.8)',
-    'springboot': 'rgba(75, 192, 192, 0.8)'
+    'springboot': 'rgba(75, 192, 192, 0.8)',
+    'quarkus': 'rgba(153, 102, 255, 0.8)'
 }
 
 
