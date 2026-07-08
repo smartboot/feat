@@ -57,8 +57,7 @@ jobs:
           sleep 5
           
           # 启动Quarkus服务（端口8083）
-          cd quarkus-app
-          nohup java "-Dquarkus.http.port=8083" -jar quarkus-app/quarkus-run.jar > quarkus.log 2>&1 &
+          nohup java "-Dquarkus.http.port=8083" -jar quarkus-run.jar > quarkus.log 2>&1 &
           echo "Quarkus服务已启动，等待5秒..."
           sleep 5
           
