@@ -16,11 +16,9 @@ import { Aside } from '@astrojs/starlight/components'
 
 ## 测试概述
 
-本报告比较了三个Java Web框架的性能：Feat、Vert.x和Spring Boot。测试使用wrk工具，针对每个框架的Hello World和JSON响应接口进行了性能测试。
+本报告比较了四个Java Web框架的性能：Feat、Vert.x、Quarkus和Spring Boot。测试使用wrk工具，针对每个框架的Hello World和JSON响应接口进行了性能测试。
 
 测试参数：4个线程，100个连接，持续60秒，开启延迟统计。
-
-
 
 **测试结论**
 
@@ -45,12 +43,14 @@ import { Aside } from '@astrojs/starlight/components'
 
 | 测试类型 | 框架 | 每秒请求数 | 平均响应时间 (ms) | 错误率 (%) |
 |----------|------|------------|------------------|------------|
-| Hello World | Feat | 155938.62 | 0.79 | 0.00 |
-| Hello World | Spring Boot | 49905.44 | 3.60 | 0.00 |
-| Hello World | Vert.x | 82268.08 | 1.43 | 0.00 |
-| JSON 响应 | Feat | 155973.10 | 0.82 | 0.00 |
-| JSON 响应 | Spring Boot | 44617.28 | 2.27 | 0.00 |
-| JSON 响应 | Vert.x | 77211.77 | 1.54 | 0.00 |
+| Hello World | Feat | 158588.49 | 0.83 | 0.00 |
+| Hello World | Quarkus | 80539.40 | 1.55 | 0.00 |
+| Hello World | Spring Boot | 39952.10 | 3.87 | 0.00 |
+| Hello World | Vert.x | 84842.99 | 1.29 | 0.00 |
+| JSON 响应 | Feat | 158186.41 | 0.92 | 0.00 |
+| JSON 响应 | Quarkus | 81771.06 | 1.60 | 0.00 |
+| JSON 响应 | Spring Boot | 40531.54 | 2.47 | 0.00 |
+| JSON 响应 | Vert.x | 77179.81 | 1.40 | 0.00 |
 
 ## 这组数据应该怎么解读
 
