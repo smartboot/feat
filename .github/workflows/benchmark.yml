@@ -34,7 +34,7 @@ jobs:
       - name: 解压 Quarkus
         run: |
           cd feat-test
-          unzip -xzf quarkus-app.zip
+          unzip -q quarkus-app.zip
           ls
       
       - name: 启动框架服务
