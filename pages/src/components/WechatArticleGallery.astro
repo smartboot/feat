@@ -55,7 +55,6 @@ const buildBanner = (index: number, publishedAt: string) => {
   <div class="archive-shell">
     <div class="archive-header">
       <div class="archive-copy">
-        <h1>延伸阅读</h1>
         <p>
           这一页不属于主教程线。你已经完成主线文档后，可以从这里继续看项目在外部传播里是如何被介绍和讨论的。
         </p>
@@ -98,13 +97,17 @@ const buildBanner = (index: number, publishedAt: string) => {
 </section>
 
 <style>
+  :global(main:has(.wechat-archive)) {
+    --sl-content-width: 76rem;
+  }
+
   .wechat-archive {
-    padding: 2rem 0 3rem;
+    padding: 1.5rem 0 3rem;
   }
 
   .archive-shell {
     display: grid;
-    gap: 1.5rem;
+    gap: 1.75rem;
   }
 
   .archive-header {
@@ -115,7 +118,7 @@ const buildBanner = (index: number, publishedAt: string) => {
   .archive-copy {
     display: grid;
     gap: 0.75rem;
-    max-width: 56rem;
+    max-width: 64rem;
   }
 
   .archive-copy h1 {
@@ -132,13 +135,13 @@ const buildBanner = (index: number, publishedAt: string) => {
     color: #475569;
     font-size: 0.98rem;
     line-height: 1.8;
-    max-width: 48rem;
+    max-width: 58rem;
   }
 
   .article-grid {
     display: grid;
     grid-template-columns: repeat(12, minmax(0, 1fr));
-    gap: 1rem;
+    gap: 1.25rem;
     align-items: stretch;
   }
 
@@ -163,8 +166,8 @@ const buildBanner = (index: number, publishedAt: string) => {
 
   .article-card.featured {
     grid-column: span 12;
-    grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr;
+    grid-template-columns: minmax(0, 1.45fr) minmax(18rem, 0.9fr);
+    grid-template-rows: 1fr;
   }
 
   .article-banner {
@@ -174,6 +177,11 @@ const buildBanner = (index: number, publishedAt: string) => {
   .article-card.featured .article-banner,
   .article-card:not(.featured) .article-banner {
     aspect-ratio: 16 / 9;
+  }
+
+  .article-card.featured .article-banner {
+    aspect-ratio: auto;
+    min-height: 22rem;
   }
 
   .article-card:not(.featured) .article-banner {
@@ -239,6 +247,11 @@ const buildBanner = (index: number, publishedAt: string) => {
       grid-column: span 12;
       grid-template-columns: 1fr;
       min-height: auto;
+    }
+
+    .article-card.featured .article-banner {
+      aspect-ratio: 16 / 9;
+      min-height: 0;
     }
   }
 
