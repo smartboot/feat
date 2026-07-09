@@ -1,0 +1,277 @@
+---
+import type { WechatArticle } from '../data/wechatArticles';
+
+interface Props {
+  articles: WechatArticle[];
+}
+
+const { articles } = Astro.props as Props;
+
+const bannerThemes = [
+  ['#0f172a', '#0f766e', '#14b8a6'],
+  ['#111827', '#2563eb', '#38bdf8'],
+  ['#1e1b4b', '#7c3aed', '#c084fc'],
+  ['#7c2d12', '#ea580c', '#f59e0b'],
+];
+
+const dateFormatter = new Intl.DateTimeFormat('zh-CN', {
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+});
+
+const formatDate = (date: string) => dateFormatter.format(new Date(`${date}T00:00:00`));
+
+const buildBanner = (index: number, publishedAt: string) => {
+  const [start, middle, end] = bannerThemes[index % bannerThemes.length];
+  const accent = index % 2 === 0 ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.14)';
+
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" fill="none" role="img" aria-hidden="true">
+      <defs>
+        <linearGradient id="g${index}" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="${start}" />
+          <stop offset="55%" stop-color="${middle}" />
+          <stop offset="100%" stop-color="${end}" />
+        </linearGradient>
+      </defs>
+      <rect width="1200" height="675" fill="url(#g${index})" />
+      <circle cx="1018" cy="130" r="164" fill="${accent}" />
+      <circle cx="1080" cy="492" r="240" fill="rgba(255,255,255,0.08)" />
+      <path d="M0 458C206 405 343 355 506 368C662 381 780 463 1200 412V675H0V458Z" fill="rgba(255,255,255,0.09)" />
+      <path d="M0 516C174 463 371 449 524 486C703 530 849 607 1200 550" stroke="rgba(255,255,255,0.16)" stroke-width="10" stroke-linecap="round" />
+      <path d="M80 102H292" stroke="rgba(255,255,255,0.26)" stroke-width="6" stroke-linecap="round" />
+      <text x="80" y="160" fill="#ffffff" font-size="72" font-weight="800" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">Feat</text>
+      <text x="80" y="228" fill="rgba(255,255,255,0.92)" font-size="34" font-weight="600" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">公众号文章</text>
+      <text x="80" y="548" fill="rgba(255,255,255,0.9)" font-size="30" font-weight="600" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">${publishedAt}</text>
+    </svg>
+  `;
+
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+};
+---
+
+<section class="wechat-archive">
+  <div class="archive-shell">
+    <div class="archive-header">
+      <div class="archive-copy">
+        <h1>延伸阅读</h1>
+        <p>
+          这一页不属于主教程线。你已经完成主线文档后，可以从这里继续看项目在外部传播里是如何被介绍和讨论的。
+        </p>
+      </div>
+    </div>
+
+    {articles.length > 0 && (
+      <div class="article-grid">
+        {articles.map((article, index) => {
+          const bannerSrc = article.imageUrl || buildBanner(index, article.publishedAt);
+          const featured = index === 0;
+
+          return (
+            <a
+              class={`article-card${featured ? ' featured' : ''}`}
+              href={article.href}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <div class="article-banner">
+                <img
+                  src={bannerSrc}
+                  alt={article.imageAlt ?? article.title}
+                  loading={featured ? 'eager' : 'lazy'}
+                  decoding="async"
+                />
+              </div>
+              <div class="article-content">
+                <time datetime={article.publishedAt}>{formatDate(article.publishedAt)}</time>
+                <h2>{article.title}</h2>
+                <p>{article.summary}</p>
+                <span class="article-link">阅读原文</span>
+              </div>
+            </a>
+          );
+        })}
+      </div>
+    )}
+  </div>
+</section>
+
+<style>
+  .wechat-archive {
+    padding: 2rem 0 3rem;
+  }
+
+  .archive-shell {
+    display: grid;
+    gap: 1.5rem;
+  }
+
+  .archive-header {
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .archive-copy {
+    display: grid;
+    gap: 0.75rem;
+    max-width: 56rem;
+  }
+
+  .archive-copy h1 {
+    margin: 0;
+    font-size: 2rem;
+    line-height: 1.2;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.02em;
+  }
+
+  .archive-copy p {
+    margin: 0;
+    color: #475569;
+    font-size: 0.98rem;
+    line-height: 1.8;
+    max-width: 48rem;
+  }
+
+  .article-grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 1rem;
+    align-items: stretch;
+  }
+
+  .article-card {
+    grid-column: span 4;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    overflow: hidden;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  }
+
+  .article-card:hover {
+    transform: translateY(-3px);
+    border-color: #cbd5e1;
+    box-shadow: 0 18px 40px -22px rgba(15, 23, 42, 0.45);
+  }
+
+  .article-card.featured {
+    grid-column: span 12;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
+
+  .article-banner {
+    background: #e2e8f0;
+  }
+
+  .article-card.featured .article-banner,
+  .article-card:not(.featured) .article-banner {
+    aspect-ratio: 16 / 9;
+  }
+
+  .article-card:not(.featured) .article-banner {
+    min-height: 0;
+  }
+
+  .article-banner img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+  }
+
+  .article-content {
+    display: grid;
+    gap: 0.75rem;
+    padding: 1.25rem 1.25rem 1.35rem;
+    align-content: start;
+  }
+
+  .article-content time {
+    color: #0f766e;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  .article-content h2 {
+    margin: 0;
+    color: #0f172a;
+    font-size: 1.2rem;
+    line-height: 1.45;
+    font-weight: 750;
+  }
+
+  .article-card.featured .article-content h2 {
+    font-size: 1.6rem;
+  }
+
+  .article-content p {
+    margin: 0;
+    color: #475569;
+    line-height: 1.75;
+    font-size: 0.92rem;
+  }
+
+  .article-link {
+    margin-top: auto;
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    color: #0f766e;
+    font-size: 0.875rem;
+    font-weight: 700;
+  }
+
+  @media (max-width: 1024px) {
+    .article-card {
+      grid-column: span 6;
+    }
+
+    .article-card.featured {
+      grid-column: span 12;
+      grid-template-columns: 1fr;
+      min-height: auto;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .wechat-archive {
+      padding: 1.5rem 0 2.5rem;
+    }
+
+    .article-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .article-card,
+    .article-card.featured {
+      grid-column: auto;
+    }
+
+    .archive-copy h1 {
+      font-size: 1.75rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .article-content {
+      padding: 1rem;
+    }
+
+    .article-content h2 {
+      font-size: 1.05rem;
+    }
+
+    .article-card.featured .article-content h2 {
+      font-size: 1.25rem;
+    }
+  }
+</style>

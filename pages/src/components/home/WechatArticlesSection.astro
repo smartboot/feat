@@ -1,0 +1,432 @@
+---
+import { sortedWechatArticles } from '../../data/wechatArticles';
+
+const articles = sortedWechatArticles.slice(0, 4);
+const featuredArticle = articles.find((article) => article.featured) ?? articles[0];
+const articleList = articles.filter((article) => article !== featuredArticle);
+const moreArticlesHref = '/feat/appendix/wechat/';
+
+const dateFormatter = new Intl.DateTimeFormat('zh-CN', {
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+});
+
+const formatDate = (date: string) => dateFormatter.format(new Date(`${date}T00:00:00`));
+---
+
+{articles.length > 0 && (
+  <section class="wechat-section" id="articles">
+    <div class="wechat-container">
+      <div class="section-header">
+        <div class="section-heading">
+          <h2 class="section-title">公众号文章</h2>
+          <p class="section-desc">
+            从理念、性能到实践，持续记录 Feat 的演进
+          </p>
+        </div>
+        <a class="more-articles-link" href={moreArticlesHref}>
+          <span>查看全部文章</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M7 17L17 7M17 7H7M17 7V17"></path>
+          </svg>
+        </a>
+      </div>
+
+      <div class="articles-layout">
+        <a
+          class="featured-article article-card"
+          href={featuredArticle.href}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <div class="featured-media">
+            {featuredArticle.imageUrl ? (
+              <img src={featuredArticle.imageUrl} alt={featuredArticle.imageAlt ?? featuredArticle.title} loading="lazy" />
+            ) : (
+              <div class="article-image-placeholder" aria-hidden="true">
+                <span>Feat</span>
+              </div>
+            )}
+          </div>
+          <div class="featured-kicker">
+            <time datetime={featuredArticle.publishedAt}>{formatDate(featuredArticle.publishedAt)}</time>
+          </div>
+          <div class="featured-body">
+            <h3>{featuredArticle.title}</h3>
+            <p>{featuredArticle.summary}</p>
+          </div>
+          <div class="article-link">
+            <span>阅读全文</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M7 17L17 7M17 7H7M17 7V17"></path>
+            </svg>
+          </div>
+        </a>
+
+        <div class="article-list">
+          {articleList.map((article) => (
+            <a
+              class="article-row article-card"
+              href={article.href}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <div class="article-date">
+                <time datetime={article.publishedAt}>{formatDate(article.publishedAt)}</time>
+              </div>
+              <div class="article-content">
+                <h3>{article.title}</h3>
+                <p>{article.summary}</p>
+              </div>
+              <div class="article-thumb">
+                {article.imageUrl ? (
+                  <img src={article.imageUrl} alt={article.imageAlt ?? article.title} loading="lazy" />
+                ) : (
+                  <div class="article-image-placeholder" aria-hidden="true">
+                    <span>Feat</span>
+                  </div>
+                )}
+              </div>
+              <svg class="row-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M9 18L15 12L9 6"></path>
+              </svg>
+            </a>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+)}
+
+<style>
+  .wechat-section {
+    padding: 4rem 2rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    position: relative;
+  }
+
+  .wechat-container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .section-heading {
+    display: grid;
+    gap: 0.375rem;
+  }
+
+  .section-title {
+    font-size: 1.625rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+    background: linear-gradient(135deg, #1e293b 0%, #475569 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .section-desc {
+    color: #64748b;
+    font-size: 0.95rem;
+    margin: 0;
+    font-weight: 500;
+  }
+
+  .articles-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.35fr);
+    gap: 1.25rem;
+    align-items: stretch;
+  }
+
+  .article-card {
+    color: inherit;
+    text-decoration: none;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #ffffff;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  }
+
+  .article-card:hover {
+    transform: translateY(-3px);
+    border-color: #94a3b8;
+    box-shadow: 0 18px 34px -18px rgba(15, 23, 42, 0.3);
+  }
+
+  .featured-article {
+    height: 100%;
+    min-height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background:
+      linear-gradient(135deg, rgba(15, 118, 110, 0.08) 0%, rgba(20, 184, 166, 0.04) 100%),
+      #ffffff;
+  }
+
+  .featured-media {
+    aspect-ratio: 16 / 9;
+    background: #f1f5f9;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .featured-media img,
+  .article-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .article-image-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background:
+      linear-gradient(135deg, rgba(15, 118, 110, 0.16) 0%, rgba(234, 88, 12, 0.12) 100%),
+      #f8fafc;
+    color: #0f766e;
+    font-weight: 800;
+  }
+
+  .featured-kicker,
+  .article-date {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    color: #0f766e;
+    font-size: 0.8125rem;
+    font-weight: 600;
+  }
+
+  .featured-kicker {
+    padding: 1.25rem 1.5rem 0;
+  }
+
+  .featured-body {
+    padding: 1.5rem;
+  }
+
+  .featured-body h3,
+  .article-content h3 {
+    color: #1e293b;
+    margin: 0;
+    line-height: 1.35;
+  }
+
+  .featured-body h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+
+  .featured-body p,
+  .article-content p {
+    color: #64748b;
+    line-height: 1.65;
+    margin: 0;
+  }
+
+  .featured-body p {
+    font-size: 0.95rem;
+    margin-top: 0.875rem;
+  }
+
+  .article-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0 1.5rem 1.5rem;
+    color: #0f766e;
+    font-size: 0.9rem;
+    font-weight: 700;
+  }
+
+  .article-link svg,
+  .row-arrow {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    transition: transform 0.25s ease;
+  }
+
+  .featured-article:hover .article-link svg {
+    transform: translate(3px, -3px);
+  }
+
+  .article-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+    height: 100%;
+  }
+
+  .article-row {
+    min-height: 116px;
+    flex: 1;
+    padding: 1rem 1.125rem;
+    display: grid;
+    grid-template-columns: 6.75rem minmax(0, 1fr) 5.75rem auto;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  .article-content h3 {
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  .article-content p {
+    font-size: 0.875rem;
+    margin-top: 0.375rem;
+  }
+
+  .article-thumb {
+    width: 5.75rem;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    border-radius: 6px;
+    background: #f1f5f9;
+  }
+
+  .article-thumb .article-image-placeholder {
+    font-size: 0.75rem;
+  }
+
+  .row-arrow {
+    color: #94a3b8;
+  }
+
+  .article-row:hover .row-arrow {
+    color: #0f766e;
+    transform: translateX(3px);
+  }
+
+  .more-articles-link {
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0 1rem;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #334155;
+    font-size: 0.875rem;
+    font-weight: 700;
+    transition: all 0.2s ease;
+  }
+
+  .more-articles-link:hover {
+    border-color: #0f766e;
+    color: #0f766e;
+  }
+
+  .more-articles-link svg {
+    width: 16px;
+    height: 16px;
+    transition: transform 0.2s ease;
+  }
+
+  .more-articles-link:hover svg {
+    transform: translate(3px, -3px);
+  }
+
+  @media (max-width: 1024px) {
+    .section-header {
+      flex-direction: column;
+      gap: 0.75rem;
+      align-items: flex-start;
+    }
+
+    .articles-layout {
+      grid-template-columns: 1fr;
+    }
+
+    .featured-article,
+    .article-list {
+      height: auto;
+    }
+
+    .article-row {
+      flex: none;
+    }
+
+    .featured-body {
+      padding: 1.5rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .wechat-section {
+      padding: 3rem 1rem;
+    }
+
+    .section-title {
+      font-size: 1.375rem;
+    }
+
+    .article-row {
+      grid-template-columns: minmax(0, 1fr) 5rem auto;
+      gap: 0.75rem;
+      align-items: start;
+    }
+
+    .article-date {
+      grid-column: 1 / -1;
+    }
+
+    .article-thumb {
+      width: 5rem;
+      grid-row: 2;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .wechat-section {
+      padding: 2.5rem 0.75rem;
+    }
+
+    .article-row {
+      padding: 1rem;
+    }
+
+    .featured-kicker {
+      padding: 1rem 1rem 0;
+    }
+
+    .featured-body {
+      padding: 1rem;
+    }
+
+    .article-link {
+      padding: 0 1rem 1rem;
+    }
+
+    .featured-body h3 {
+      font-size: 1.25rem;
+    }
+
+    .article-content h3 {
+      font-size: 0.95rem;
+    }
+
+    .section-desc {
+      font-size: 0.875rem;
+    }
+  }
+</style>
