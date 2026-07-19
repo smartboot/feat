@@ -10,6 +10,7 @@
 
 package tech.smartboot.feat.cloud;
 
+import tech.smartboot.feat.cloud.interceptor.InvocationContext;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 
@@ -18,6 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
+import java.util.function.Consumer;
 
 /**
  * 应用上下文类，负责管理云应用的生命周期
@@ -52,6 +54,8 @@ public final class ApplicationContext {
      * 云服务列表，存储所有通过ServiceLoader加载的云服务实例
      */
     private final List<CloudService> services = new ArrayList<>();
+
+    private List<Consumer<InvocationContext>> interceptors = new ArrayList<>();
 
     /**
      * 构造函数，创建应用上下文实例

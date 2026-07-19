@@ -20,8 +20,10 @@ import tech.smartboot.feat.cloud.annotation.Bean;
 import tech.smartboot.feat.cloud.annotation.PostConstruct;
 import tech.smartboot.feat.cloud.annotation.PreDestroy;
 import tech.smartboot.feat.cloud.annotation.Value;
+import tech.smartboot.feat.cloud.annotation.interceptor.Interceptors;
 import tech.smartboot.feat.cloud.aot.Serializer;
 import tech.smartboot.feat.cloud.aot.value.FeatValueSerializer;
+import tech.smartboot.feat.cloud.interceptor.InterceptorChain;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.router.Router;
@@ -94,8 +96,76 @@ public abstract class AbstractSerializer implements Serializer {
     }
 
     public void serializeLoadBean() {
-        printWriter.println("\t\tbean = new " + element.getSimpleName() + "(); ");
+        //提取包含拦截器的方法
+        // 提取包含拦截器的方法
+        List<ExecutableElement> methods = new ArrayList<>();
+        for (Element se : element.getEnclosedElements()) {
+            if (!(se instanceof ExecutableElement)) {
+                continue;
+            }
+            for (AnnotationMirror mirror : se.getAnnotationMirrors()) {
+                if (Interceptors.class.getName().equals(mirror.getAnnotationType().toString())) {
+                    methods.add((ExecutableElement) se);
+                    break;
+                }
+            }
+        }
+        if (methods.isEmpty()) {
+            printWriter.println("\t\tbean = new " + element.getSimpleName() + "(); ");
+        } else {
+            printWriter.println("\t\tbean = new " + element.getSimpleName() + "() {");
+            for (ExecutableElement method : methods) {
+                serializeOverrideMethod(method);
+            }
+
+            printWriter.println("\t\t};");
+        }
+
         serializerValueSetter();
+    }
+    private void serializeOverrideMethod(ExecutableElement method) {
+        // 注解
+        printWriter.println("\t\t\t@Override");
+
+        // 返回值
+        String returnType = method.getReturnType().toString();
+
+        // 方法签名
+        printWriter.print("\t\t\tpublic " + returnType + " " + method.getSimpleName() + "(");
+
+        boolean first = true;
+        for (VariableElement param : method.getParameters()) {
+            if (!first) {
+                printWriter.print(", ");
+            }
+            first = false;
+            printWriter.print(param.asType() + " " + param.getSimpleName());
+        }
+        printWriter.println(") {");
+
+        // TODO: Interceptors 调用链将在这里实现
+
+
+        if (!"void".equals(returnType)) {
+            printWriter.println("\t\t\t\treturn super." + method.getSimpleName() + "(" + buildArgs(method) + ");");
+        } else {
+            printWriter.println("\t\t\t\tsuper." + method.getSimpleName() + "(" + buildArgs(method) + ");");
+        }
+
+        printWriter.println("\t\t\t}");
+    }
+
+    private String buildArgs(ExecutableElement method) {
+        StringBuilder sb = new StringBuilder();
+        boolean first = true;
+        for (VariableElement param : method.getParameters()) {
+            if (!first) {
+                sb.append(", ");
+            }
+            first = false;
+            sb.append(param.getSimpleName());
+        }
+        return sb.toString();
     }
 
     @Override
