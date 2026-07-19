@@ -42,9 +42,9 @@ public final class InterceptorSerializer extends AbstractSerializer {
                 method = e;
             }
         }
-        printWriter.println("\t\tapplicationContext.getInterceptors().put(" + element.getSimpleName() + ".class, new Function<InvocationContext, Object>() {");
+        printWriter.println("\t\tapplicationContext.getInterceptors().put(" + element.getSimpleName() + ".class, new InterceptorFunction() {");
         printWriter.println("\t\t\t@Override");
-        printWriter.println("\t\t\tpublic Object apply(InvocationContext invocationContext) {");
+        printWriter.println("\t\t\tpublic Object apply(InvocationContext invocationContext) throws Exception{");
         printWriter.println("\t\t\t\treturn bean." + method.getSimpleName() + "(invocationContext);");
         printWriter.println("\t\t\t}");
         printWriter.println("\t\t});");

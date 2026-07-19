@@ -10,7 +10,7 @@
 
 package tech.smartboot.feat.cloud;
 
-import tech.smartboot.feat.cloud.interceptor.InvocationContext;
+import tech.smartboot.feat.cloud.interceptor.InterceptorFunction;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 
@@ -19,7 +19,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
-import java.util.function.Function;
 
 /**
  * 应用上下文类，负责管理云应用的生命周期
@@ -55,7 +54,7 @@ public final class ApplicationContext {
      */
     private final List<CloudService> services = new ArrayList<>();
 
-    private Map<Class, Function<InvocationContext, Object>> interceptors = new HashMap<>();
+    private final Map<Class, InterceptorFunction> interceptors = new HashMap<>();
 
     /**
      * 构造函数，创建应用上下文实例
@@ -181,7 +180,7 @@ public final class ApplicationContext {
         return (T) namedBeans.get(name);
     }
 
-    public Map<Class, Function<InvocationContext, Object>> getInterceptors() {
+    public Map<Class, InterceptorFunction> getInterceptors() {
         return interceptors;
     }
 }

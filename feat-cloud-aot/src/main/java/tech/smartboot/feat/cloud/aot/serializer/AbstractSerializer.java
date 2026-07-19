@@ -24,6 +24,7 @@ import tech.smartboot.feat.cloud.annotation.interceptor.Interceptors;
 import tech.smartboot.feat.cloud.aot.Serializer;
 import tech.smartboot.feat.cloud.aot.value.FeatValueSerializer;
 import tech.smartboot.feat.cloud.interceptor.InterceptorChain;
+import tech.smartboot.feat.cloud.interceptor.InterceptorFunction;
 import tech.smartboot.feat.cloud.interceptor.InvocationContext;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.exception.FeatException;
@@ -99,7 +100,7 @@ public abstract class AbstractSerializer implements Serializer {
         printWriter.println("import " + InterceptorChain.class.getName() + ";");
         printWriter.println("import " + Arrays.class.getName() + ";");
         printWriter.println("import " + List.class.getName() + ";");
-        printWriter.println("import " + Function.class.getName() + ";");
+        printWriter.println("import " + InterceptorFunction.class.getName() + ";");
         printWriter.println("import " + InvocationContext.class.getName() + ";");
         printWriter.println("import com.alibaba.fastjson2.JSON;");
     }
@@ -144,7 +145,7 @@ public abstract class AbstractSerializer implements Serializer {
                     String field = interceptors.get(key);
                     if (field == null) {
                         field = "interceptors_" + interceptorsIndex++;
-                        printWriter.append("\t\tList<Function<InvocationContext, Object>> " + field + "= Arrays.asList(");
+                        printWriter.append("\t\tList<InterceptorFunction> " + field + "= Arrays.asList(");
 
                         for (int i = 0; i < interceptorClasses.size(); i++) {
                             if (i > 0) {

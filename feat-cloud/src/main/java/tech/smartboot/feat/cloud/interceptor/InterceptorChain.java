@@ -1,18 +1,19 @@
 package tech.smartboot.feat.cloud.interceptor;
 
+import tech.smartboot.feat.core.common.exception.FeatException;
+
 import java.lang.reflect.Method;
 import java.util.List;
-import java.util.function.Function;
 
 public class InterceptorChain implements InvocationContext {
     private final Object target;
     private final Method method;
     private Object[] params;
-    private final List<Function<InvocationContext, Object>> list;
+    private final List<InterceptorFunction> list;
     private int location = 0;
     private boolean done;
 
-    public InterceptorChain(Object target, Method method, Object[] params, List<Function<InvocationContext, Object>> list) {
+    public InterceptorChain(Object target, Method method, Object[] params, List<InterceptorFunction> list) {
         this.target = target;
         this.method = method;
         this.params = params;
@@ -42,11 +43,11 @@ public class InterceptorChain implements InvocationContext {
     public Object proceed() {
         int index = location++;
         if (index < list.size()) {
-            Function<InvocationContext, Object> filterInfo = list.get(index);
+            InterceptorFunction filterInfo = list.get(index);
             try {
                 return filterInfo.apply(this);
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                throw new FeatException(e);
             }
         }
         done = true;
