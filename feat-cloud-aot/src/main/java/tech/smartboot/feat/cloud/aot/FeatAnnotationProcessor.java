@@ -18,12 +18,14 @@ import tech.smartboot.feat.cloud.CloudService;
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Bean;
 import tech.smartboot.feat.cloud.annotation.Controller;
+import tech.smartboot.feat.cloud.annotation.interceptor.Interceptor;
 import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
 import tech.smartboot.feat.cloud.aot.license.LicenseLoader;
 import tech.smartboot.feat.cloud.aot.serializer.BeanSerializer;
 import tech.smartboot.feat.cloud.aot.serializer.CloudOptionsSerializer;
 import tech.smartboot.feat.cloud.aot.serializer.ControllerSerializer;
 import tech.smartboot.feat.cloud.aot.serializer.DefaultMcpServerSerializer;
+import tech.smartboot.feat.cloud.aot.serializer.InterceptorSerializer;
 import tech.smartboot.feat.cloud.aot.serializer.MapperSerializer;
 import tech.smartboot.feat.cloud.aot.serializer.openapi.ApiDocSerializer;
 import tech.smartboot.feat.core.common.FeatUtils;
@@ -72,6 +74,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         types.add(Controller.class.getCanonicalName());
         types.add(Mapper.class.getCanonicalName());
         types.add(McpEndpoint.class.getCanonicalName());
+        types.add(Interceptor.class.getCanonicalName());
         return types;
     }
 
@@ -169,6 +172,17 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         String suffix = environmentSuffix(env);
         List<BeanUnit> services = new java.util.ArrayList<>();
         LicenseLoader licenseLoader = new LicenseLoader(config);
+
+        for (Element element : roundEnv.getElementsAnnotatedWith(Interceptor.class)) {
+            if (element.getKind() == ElementKind.CLASS) {
+                try {
+                    InterceptorSerializer serializer = new InterceptorSerializer(processingEnv, config, element, suffix);
+                    services.add(new BeanUnit(createAptLoader(serializer), serializer.order()));
+                } catch (Throwable e) {
+                    exception = e;
+                }
+            }
+        }
 
         for (Element element : roundEnv.getElementsAnnotatedWith(Bean.class)) {
             if (element.getKind() == ElementKind.CLASS) {

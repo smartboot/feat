@@ -24,15 +24,18 @@ import tech.smartboot.feat.cloud.annotation.interceptor.Interceptors;
 import tech.smartboot.feat.cloud.aot.Serializer;
 import tech.smartboot.feat.cloud.aot.value.FeatValueSerializer;
 import tech.smartboot.feat.cloud.interceptor.InterceptorChain;
+import tech.smartboot.feat.cloud.interceptor.InvocationContext;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.router.Router;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.TypeMirror;
 import javax.tools.FileObject;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
@@ -40,8 +43,13 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 
 /**
  * @author 三刀
@@ -88,6 +96,11 @@ public abstract class AbstractSerializer implements Serializer {
         printWriter.println("import " + ApplicationContext.class.getName() + ";");
         printWriter.println("import " + Router.class.getName() + ";");
         printWriter.println("import " + JSONObject.class.getName() + ";");
+        printWriter.println("import " + InterceptorChain.class.getName() + ";");
+        printWriter.println("import " + Arrays.class.getName() + ";");
+        printWriter.println("import " + List.class.getName() + ";");
+        printWriter.println("import " + Function.class.getName() + ";");
+        printWriter.println("import " + InvocationContext.class.getName() + ";");
         printWriter.println("import com.alibaba.fastjson2.JSON;");
     }
 
@@ -99,6 +112,9 @@ public abstract class AbstractSerializer implements Serializer {
         //提取包含拦截器的方法
         // 提取包含拦截器的方法
         List<ExecutableElement> methods = new ArrayList<>();
+        Map<String, String> interceptors = new HashMap<>();
+        Map<Element, String> mapping = new HashMap<>();
+        int interceptorsIndex = 0;
         for (Element se : element.getEnclosedElements()) {
             if (!(se instanceof ExecutableElement)) {
                 continue;
@@ -106,24 +122,103 @@ public abstract class AbstractSerializer implements Serializer {
             for (AnnotationMirror mirror : se.getAnnotationMirrors()) {
                 if (Interceptors.class.getName().equals(mirror.getAnnotationType().toString())) {
                     methods.add((ExecutableElement) se);
+                    List<String> interceptorClasses = new ArrayList<>();
+                    for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry
+                            : mirror.getElementValues().entrySet()) {
+
+                        if (!"value".contentEquals(entry.getKey().getSimpleName())) {
+                            continue;
+                        }
+
+                        @SuppressWarnings("unchecked")
+                        List<? extends AnnotationValue> values =
+                                (List<? extends AnnotationValue>) entry.getValue().getValue();
+
+                        for (AnnotationValue value : values) {
+                            TypeMirror type = (TypeMirror) value.getValue();
+                            interceptorClasses.add(type.toString());
+                        }
+                    }
+                    // 生成唯一Key
+                    String key = String.join(",", interceptorClasses);
+                    String field = interceptors.get(key);
+                    if (field == null) {
+                        field = "interceptors_" + interceptorsIndex++;
+                        printWriter.append("\t\tList<Function<InvocationContext, Object>> " + field + "= Arrays.asList(");
+
+                        for (int i = 0; i < interceptorClasses.size(); i++) {
+                            if (i > 0) {
+                                printWriter.append(", ");
+                            }
+                            printWriter.append("applicationContext.getInterceptors().get(")
+                                    .append(interceptorClasses.get(i))
+                                    .append(".class)");
+                        }
+
+                        printWriter.println(");");
+                        interceptors.put(key, field);
+                    }
+                    mapping.put(se, field);
                     break;
                 }
             }
         }
         if (methods.isEmpty()) {
             printWriter.println("\t\tbean = new " + element.getSimpleName() + "(); ");
-        } else {
+        } else { // ① Method成员
+            for (ExecutableElement method : methods) {
+                serializeMethodInitializer(method);
+            }
+
             printWriter.println("\t\tbean = new " + element.getSimpleName() + "() {");
             for (ExecutableElement method : methods) {
-                serializeOverrideMethod(method);
+                serializeOverrideMethod(method, mapping.get(method));
             }
+
 
             printWriter.println("\t\t};");
         }
 
         serializerValueSetter();
     }
-    private void serializeOverrideMethod(ExecutableElement method) {
+
+    private void serializeMethodInitializer(ExecutableElement method) {
+        printWriter.print("\t\t");
+        printWriter.print(Method.class.getName() + " ");
+        printWriter.print(method.getSimpleName());
+        printWriter.print("Method = ");
+        printWriter.print(element.getSimpleName());
+        printWriter.print(".class.getDeclaredMethod(\"");
+        printWriter.print(method.getSimpleName());
+        printWriter.print("\"");
+
+        for (VariableElement parameter : method.getParameters()) {
+            printWriter.print(", ");
+            printWriter.print(getClassLiteral(parameter.asType().toString()));
+        }
+
+        printWriter.println(");");
+
+    }
+
+    private String getClassLiteral(String type) {
+        switch (type) {
+            case "byte":
+            case "short":
+            case "int":
+            case "long":
+            case "float":
+            case "double":
+            case "boolean":
+            case "char":
+            case "void":
+                return type + ".class";
+            default:
+                return type + ".class";
+        }
+    }
+
+    private void serializeOverrideMethod(ExecutableElement method, String interceptorsField) {
         // 注解
         printWriter.println("\t\t\t@Override");
 
@@ -144,13 +239,49 @@ public abstract class AbstractSerializer implements Serializer {
         printWriter.println(") {");
 
         // TODO: Interceptors 调用链将在这里实现
+        printWriter.print("\t\t\t\tInterceptorChain chain = new InterceptorChain(this, ");
+        printWriter.print(method.getSimpleName());
+        printWriter.print("Method, new Object[]{");
 
-
-        if (!"void".equals(returnType)) {
-            printWriter.println("\t\t\t\treturn super." + method.getSimpleName() + "(" + buildArgs(method) + ");");
-        } else {
-            printWriter.println("\t\t\t\tsuper." + method.getSimpleName() + "(" + buildArgs(method) + ");");
+        first = true;
+        for (VariableElement param : method.getParameters()) {
+            if (!first) {
+                printWriter.print(", ");
+            }
+            first = false;
+            printWriter.print(param.getSimpleName());
         }
+        printWriter.println("}," + interceptorsField + ");");
+
+// 调用 proceed
+        printWriter.println("\t\t\t\tObject chainResult = chain.proceed();");
+
+// 是否继续执行原方法
+        printWriter.println("\t\t\t\tif (chain.isDone()) {");
+
+        if ("void".equals(method.getReturnType().toString())) {
+            printWriter.print("\t\t\t\t\tsuper.");
+            printWriter.print(method.getSimpleName());
+            printWriter.print("(");
+            printWriter.print(buildArgs(method));
+            printWriter.println(");");
+            printWriter.println("\t\t\t\t\treturn;");
+        } else {
+            printWriter.print("\t\t\t\t\treturn super.");
+            printWriter.print(method.getSimpleName());
+            printWriter.print("(");
+            printWriter.print(buildArgs(method));
+            printWriter.println(");");
+        }
+
+        printWriter.println("\t\t\t\t}");
+
+        if (!"void".equals(method.getReturnType().toString())) {
+            printWriter.print("\t\t\t\treturn (");
+            printWriter.print(method.getReturnType());
+            printWriter.println(") chainResult;");
+        }
+
 
         printWriter.println("\t\t\t}");
     }
