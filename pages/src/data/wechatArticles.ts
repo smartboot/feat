@@ -10,6 +10,14 @@ export interface WechatArticle {
 
 export const wechatArticles: WechatArticle[] = [
   {
+    title: 'Feat 为什么能这么快？答案藏在 2000 行代码里',
+    href: 'https://mp.weixin.qq.com/s/BuJbAGI3q4YLGpF1avWIXQ',
+    publishedAt: '2026-07-19',
+    summary: '真正决定 Feat 性能上限的，并不是 Feat 本身，而是它脚下那个只有约 2000 行核心代码的通信内核——smart-socket。',
+    imageUrl:'https://fastly.jsdelivr.net/gh/bucketio/img19@main/2026/07/19/1784420195384-77f10846-0af8-4cb2-bae1-2f69c989d60c.png',
+    featured: true,
+  },
+  {
     title: 'Feat vs Quarkus：结果比我预想的还要大',
     href: 'https://mp.weixin.qq.com/s/7goVCSPWksdCbm66rKPZWA',
     publishedAt: '2026-07-09',
