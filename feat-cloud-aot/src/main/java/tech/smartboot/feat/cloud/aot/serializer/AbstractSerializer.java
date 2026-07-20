@@ -102,6 +102,7 @@ public abstract class AbstractSerializer implements Serializer {
         printWriter.println("import " + List.class.getName() + ";");
         printWriter.println("import " + InterceptorFunction.class.getName() + ";");
         printWriter.println("import " + InvocationContext.class.getName() + ";");
+        printWriter.println("import " + Method.class.getName() + ";");
         printWriter.println("import com.alibaba.fastjson2.JSON;");
     }
 
@@ -210,7 +211,7 @@ public abstract class AbstractSerializer implements Serializer {
     }
 
     private void serializeMethodInitializer(ExecutableElement method) {
-        printWriter.append("\t\t").append(Method.class.getName() + " ").append(method.getSimpleName()).append("Method").append(String.valueOf(method.hashCode())).append(" = ");
+        printWriter.append("\t\t").append(Method.class.getSimpleName()).append(" ").append(method.getSimpleName()).append("Method").append(String.valueOf(method.hashCode())).append(" = ");
         printWriter.print(element.getSimpleName());
         printWriter.print(".class.getDeclaredMethod(\"");
         printWriter.print(method.getSimpleName());
