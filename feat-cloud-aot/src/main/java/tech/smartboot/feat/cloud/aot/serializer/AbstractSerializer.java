@@ -210,10 +210,7 @@ public abstract class AbstractSerializer implements Serializer {
     }
 
     private void serializeMethodInitializer(ExecutableElement method) {
-        printWriter.print("\t\t");
-        printWriter.print(Method.class.getName() + " ");
-        printWriter.print(method.getSimpleName());
-        printWriter.print("Method = ");
+        printWriter.append("\t\t").append(Method.class.getName() + " ").append(method.getSimpleName()).append("Method").append(String.valueOf(method.hashCode())).append(" = ");
         printWriter.print(element.getSimpleName());
         printWriter.print(".class.getDeclaredMethod(\"");
         printWriter.print(method.getSimpleName());
@@ -246,7 +243,6 @@ public abstract class AbstractSerializer implements Serializer {
     }
 
     private void serializeOverrideMethod(ExecutableElement method, String interceptorsField) {
-        String methodPrefix = "featAoT$";
         boolean returnVoid = "void".equals(method.getReturnType().toString());
         StringBuilder methodDefine = new StringBuilder();
         StringBuilder methodParams = new StringBuilder();
@@ -271,7 +267,7 @@ public abstract class AbstractSerializer implements Serializer {
         printWriter.append("\t\t\tpublic ").append(returnType).append(" ").append(String.valueOf(method.getSimpleName())).append("(").append(methodDefine).println(") {");
 
         // TODO: Interceptors 调用链将在这里实现
-        printWriter.append("\t\t\t\tInterceptorChain chain = new InterceptorChain(this, ").append(method.getSimpleName()).append("Method, new Object[]{").append(methodParams).println("}, " + interceptorsField + "){");
+        printWriter.append("\t\t\t\tInterceptorChain chain = new InterceptorChain(this, ").append(method.getSimpleName()).append("Method").append(String.valueOf(method.hashCode())).append(", new Object[]{").append(methodParams).println("}, " + interceptorsField + "){");
         printWriter.println("\t\t\t\t\t@Override");
         printWriter.println("\t\t\t\t\tpublic Object apply() throws Throwable {");
 
@@ -279,7 +275,7 @@ public abstract class AbstractSerializer implements Serializer {
         if (!returnVoid) {
             printWriter.print("return ");
         }
-        printWriter.append(methodPrefix).append(method.getSimpleName()).append("(").append(methodParams).println(");");
+        printWriter.append(method.getSimpleName()).append(String.valueOf(method.hashCode())).append("(").append(methodParams).println(");");
         if (returnVoid) {
             printWriter.println("\t\t\t\t\t\treturn null;");
         }
@@ -298,7 +294,7 @@ public abstract class AbstractSerializer implements Serializer {
         printWriter.println();
 
         //生成 supper 方法。
-        printWriter.append("\t\t\tpublic ").append(returnType).append(" ").append(methodPrefix).append(String.valueOf(method.getSimpleName())).append("(").append(methodDefine).println(") throws Throwable {");
+        printWriter.append("\t\t\tpublic ").append(returnType).append(" ").append(method.getSimpleName()).append(String.valueOf(method.hashCode())).append("(").append(methodDefine).println(") throws Throwable {");
         printWriter.print("\t\t\t\t");
         if (!returnVoid) {
             printWriter.print("return ");
