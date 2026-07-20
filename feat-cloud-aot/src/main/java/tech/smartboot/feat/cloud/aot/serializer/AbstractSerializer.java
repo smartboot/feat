@@ -35,6 +35,7 @@ import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.FileObject;
@@ -110,7 +111,7 @@ public abstract class AbstractSerializer implements Serializer {
 
     public void serializeLoadBean() {
         //提取包含拦截器的方法
-        // 提取包含拦截器的方法
+        List<String> defaultInterceptors = getInterceptors(element);
         List<ExecutableElement> methods = new ArrayList<>();
         Map<String, String> interceptors = new HashMap<>();
         Map<Element, String> mapping = new HashMap<>();
@@ -119,49 +120,50 @@ public abstract class AbstractSerializer implements Serializer {
             if (!(se instanceof ExecutableElement)) {
                 continue;
             }
-            for (AnnotationMirror mirror : se.getAnnotationMirrors()) {
-                if (Interceptors.class.getName().equals(mirror.getAnnotationType().toString())) {
-                    methods.add((ExecutableElement) se);
-                    List<String> interceptorClasses = new ArrayList<>();
-                    for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry
-                            : mirror.getElementValues().entrySet()) {
-
-                        if (!"value".contentEquals(entry.getKey().getSimpleName())) {
-                            continue;
-                        }
-
-                        @SuppressWarnings("unchecked")
-                        List<? extends AnnotationValue> values =
-                                (List<? extends AnnotationValue>) entry.getValue().getValue();
-
-                        for (AnnotationValue value : values) {
-                            TypeMirror type = (TypeMirror) value.getValue();
-                            interceptorClasses.add(type.toString());
-                        }
-                    }
-                    // 生成唯一Key
-                    String key = String.join(",", interceptorClasses);
-                    String field = interceptors.get(key);
-                    if (field == null) {
-                        field = "interceptors_" + interceptorsIndex++;
-                        printWriter.append("\t\tList<InterceptorFunction> " + field + "= Arrays.asList(");
-
-                        for (int i = 0; i < interceptorClasses.size(); i++) {
-                            if (i > 0) {
-                                printWriter.append(", ");
-                            }
-                            printWriter.append("applicationContext.getInterceptors().get(")
-                                    .append(interceptorClasses.get(i))
-                                    .append(".class)");
-                        }
-
-                        printWriter.println(");");
-                        interceptors.put(key, field);
-                    }
-                    mapping.put(se, field);
-                    break;
-                }
+            //排除 final 和 static 方法
+            if (se.getModifiers().contains(Modifier.FINAL) || se.getModifiers().contains(Modifier.STATIC)) {
+                continue;
             }
+            if (!se.getModifiers().contains(Modifier.PUBLIC)) {
+                continue;
+            }
+            //排除构造方法
+            if (se.getSimpleName().toString().equals("<init>")) {
+                continue;
+            }
+
+            List<String> interceptorClasses;
+            if (defaultInterceptors.isEmpty()) {
+                interceptorClasses = getInterceptors(se);
+            } else {
+                interceptorClasses = new ArrayList<>();
+                interceptorClasses.addAll(defaultInterceptors);
+                interceptorClasses.addAll(getInterceptors(se));
+            }
+            if (interceptorClasses.isEmpty()) {
+                continue;
+            }
+            methods.add((ExecutableElement) se);
+            // 生成唯一Key
+            String key = String.join(",", interceptorClasses);
+            String field = interceptors.get(key);
+            if (field == null) {
+                field = "interceptors_" + interceptorsIndex++;
+                printWriter.append("\t\tList<InterceptorFunction> ").append(field).append("= Arrays.asList(");
+
+                for (int i = 0; i < interceptorClasses.size(); i++) {
+                    if (i > 0) {
+                        printWriter.append(", ");
+                    }
+                    printWriter.append("applicationContext.getInterceptors().get(")
+                            .append(interceptorClasses.get(i))
+                            .append(".class)");
+                }
+
+                printWriter.println(");");
+                interceptors.put(key, field);
+            }
+            mapping.put(se, field);
         }
         if (methods.isEmpty()) {
             printWriter.println("\t\tbean = new " + element.getSimpleName() + "(); ");
@@ -180,6 +182,31 @@ public abstract class AbstractSerializer implements Serializer {
         }
 
         serializerValueSetter();
+    }
+
+    private static List<String> getInterceptors(Element se) {
+        List<String> interceptorClasses = new ArrayList<>();
+        for (AnnotationMirror mirror : se.getAnnotationMirrors()) {
+            if (Interceptors.class.getName().equals(mirror.getAnnotationType().toString())) {
+                for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry
+                        : mirror.getElementValues().entrySet()) {
+
+                    if (!"value".contentEquals(entry.getKey().getSimpleName())) {
+                        continue;
+                    }
+
+                    @SuppressWarnings("unchecked")
+                    List<? extends AnnotationValue> values =
+                            (List<? extends AnnotationValue>) entry.getValue().getValue();
+
+                    for (AnnotationValue value : values) {
+                        TypeMirror type = (TypeMirror) value.getValue();
+                        interceptorClasses.add(type.toString());
+                    }
+                }
+            }
+        }
+        return interceptorClasses;
     }
 
     private void serializeMethodInitializer(ExecutableElement method) {
