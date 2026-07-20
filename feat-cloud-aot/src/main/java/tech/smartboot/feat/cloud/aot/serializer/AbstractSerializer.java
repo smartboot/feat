@@ -273,7 +273,7 @@ public abstract class AbstractSerializer implements Serializer {
         // TODO: Interceptors 调用链将在这里实现
         printWriter.append("\t\t\t\tInterceptorChain chain = new InterceptorChain(this, ").append(method.getSimpleName()).append("Method, new Object[]{").append(methodParams).println("}, " + interceptorsField + "){");
         printWriter.println("\t\t\t\t\t@Override");
-        printWriter.println("\t\t\t\t\tpublic Object apply() {");
+        printWriter.println("\t\t\t\t\tpublic Object apply() throws Throwable {");
 
         printWriter.print("\t\t\t\t\t\t");
         if (!returnVoid) {
@@ -298,7 +298,7 @@ public abstract class AbstractSerializer implements Serializer {
         printWriter.println();
 
         //生成 supper 方法。
-        printWriter.append("\t\t\tpublic ").append(returnType).append(" ").append(methodPrefix).append(String.valueOf(method.getSimpleName())).append("(").append(methodDefine).println(") {");
+        printWriter.append("\t\t\tpublic ").append(returnType).append(" ").append(methodPrefix).append(String.valueOf(method.getSimpleName())).append("(").append(methodDefine).println(") throws Throwable {");
         printWriter.print("\t\t\t\t");
         if (!returnVoid) {
             printWriter.print("return ");

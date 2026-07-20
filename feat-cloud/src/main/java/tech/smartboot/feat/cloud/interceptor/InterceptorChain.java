@@ -30,19 +30,29 @@ import java.util.List;
  * @see InterceptorFunction
  */
 public abstract class InterceptorChain implements InvocationContext {
-    /** 当前方法调用的目标 Bean 或增强实例。 */
+    /**
+     * 当前方法调用的目标 Bean 或增强实例。
+     */
     private final Object target;
 
-    /** 当前被拦截的业务方法。 */
+    /**
+     * 当前被拦截的业务方法。
+     */
     private final Method method;
 
-    /** 创建调用链时记录的业务方法实参。 */
+    /**
+     * 创建调用链时记录的业务方法实参。
+     */
     private final Object[] params;
 
-    /** 按声明顺序排列的拦截器函数。 */
+    /**
+     * 按声明顺序排列的拦截器函数。
+     */
     private final List<InterceptorFunction> list;
 
-    /** 下一个待执行拦截器在 {@link #list} 中的位置。 */
+    /**
+     * 下一个待执行拦截器在 {@link #list} 中的位置。
+     */
     private int location = 0;
 
     /**
@@ -104,7 +114,7 @@ public abstract class InterceptorChain implements InvocationContext {
             return apply();
         } catch (RuntimeException | Error e) {
             throw e;
-        } catch (Exception e) {
+        } catch (Throwable e) {
             throw new FeatException(e);
         }
     }
@@ -119,6 +129,6 @@ public abstract class InterceptorChain implements InvocationContext {
      * @return 目标方法的执行结果；目标方法返回 {@code void} 时返回 {@code null}
      * @throws Exception 目标方法声明的受检异常
      */
-    public abstract Object apply() throws Exception;
+    public abstract Object apply() throws Throwable;
 
 }
