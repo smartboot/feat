@@ -96,15 +96,17 @@ public abstract class InterceptorChain implements InvocationContext {
     @Override
     public Object proceed() {
         int index = location++;
-        if (index < list.size()) {
-            InterceptorFunction filterInfo = list.get(index);
-            try {
+        try {
+            if (index < list.size()) {
+                InterceptorFunction filterInfo = list.get(index);
                 return filterInfo.apply(this);
-            } catch (Exception e) {
-                throw new FeatException(e);
             }
+            return apply();
+        } catch (RuntimeException | Error e) {
+            throw e;
+        } catch (Exception e) {
+            throw new FeatException(e);
         }
-        return apply();
     }
 
     /**
@@ -115,7 +117,8 @@ public abstract class InterceptorChain implements InvocationContext {
      * </p>
      *
      * @return 目标方法的执行结果；目标方法返回 {@code void} 时返回 {@code null}
+     * @throws Exception 目标方法声明的受检异常
      */
-    public abstract Object apply();
+    public abstract Object apply() throws Exception;
 
 }

@@ -17,6 +17,7 @@ package tech.smartboot.feat.cloud.interceptor;
  * @see InvocationContext
  * @see InterceptorChain
  */
+@FunctionalInterface
 public interface InterceptorFunction {
 
     /**
