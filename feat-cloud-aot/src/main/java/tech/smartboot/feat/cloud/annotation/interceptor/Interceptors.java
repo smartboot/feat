@@ -1,14 +1,16 @@
 
 package tech.smartboot.feat.cloud.annotation.interceptor;
 
+import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import static java.lang.annotation.ElementType.*;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.TYPE;
 
 /**
- * 为类、方法或构造方法声明要使用的 Feat 方法拦截器。
+ * 为类或方法声明要使用的 Feat 方法拦截器。
  * <p>
  * 注解值是一个有序的拦截器类型列表。当前 AOT 代码生成流程会为符合条件的公共实例方法
  * 构造拦截器链，并按照数组中的声明顺序进入各拦截器；调用返回时则按照相反顺序退出。
@@ -21,7 +23,7 @@ import static java.lang.annotation.ElementType.*;
  *     <li>标注在方法上：仅应用于当前方法。</li>
  *     <li>类和方法同时标注：方法级列表不会覆盖类级列表，而是追加到类级列表之后。</li>
  *     <li>当前 AOT 实现只为 {@code public}、非 {@code static}、非 {@code final} 的实例方法
- *     生成调用链；构造方法虽然是合法的注解目标，但不会进入当前的方法拦截链。</li>
+ *     生成调用链。</li>
  * </ul>
  *
  * <h2>执行顺序示例</h2>
@@ -47,8 +49,9 @@ import static java.lang.annotation.ElementType.*;
  * @see Interceptor
  * @see AroundInvoke
  */
-@Target({TYPE, METHOD, CONSTRUCTOR})
+@Target({TYPE, METHOD})
 @Retention(RetentionPolicy.SOURCE)
+@Documented
 public @interface Interceptors {
 
     /**
@@ -62,5 +65,5 @@ public @interface Interceptors {
      *
      * @return 有序的拦截器类数组
      */
-    Class[] value();
+    Class<?>[] value();
 }
