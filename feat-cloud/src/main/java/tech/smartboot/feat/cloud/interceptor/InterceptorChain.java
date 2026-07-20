@@ -5,13 +5,12 @@ import tech.smartboot.feat.core.common.exception.FeatException;
 import java.lang.reflect.Method;
 import java.util.List;
 
-public class InterceptorChain implements InvocationContext {
+public abstract class InterceptorChain implements InvocationContext {
     private final Object target;
     private final Method method;
     private Object[] params;
     private final List<InterceptorFunction> list;
     private int location = 0;
-    private boolean done;
 
     public InterceptorChain(Object target, Method method, Object[] params, List<InterceptorFunction> list) {
         this.target = target;
@@ -50,11 +49,9 @@ public class InterceptorChain implements InvocationContext {
                 throw new FeatException(e);
             }
         }
-        done = true;
-        return null;
+        return apply();
     }
 
-    public boolean isDone() {
-        return done;
-    }
+    public abstract Object apply();
+
 }

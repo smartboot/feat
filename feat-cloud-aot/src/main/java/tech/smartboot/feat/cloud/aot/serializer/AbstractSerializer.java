@@ -50,7 +50,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 
 /**
  * @author 三刀
@@ -220,6 +219,8 @@ public abstract class AbstractSerializer implements Serializer {
     }
 
     private void serializeOverrideMethod(ExecutableElement method, String interceptorsField) {
+        String methodPrefix = "featAoT$";
+        boolean returnVoid = "void".equals(method.getReturnType().toString());
         // 注解
         printWriter.println("\t\t\t@Override");
 
@@ -252,38 +253,57 @@ public abstract class AbstractSerializer implements Serializer {
             first = false;
             printWriter.print(param.getSimpleName());
         }
-        printWriter.println("}," + interceptorsField + ");");
+        printWriter.println("}," + interceptorsField + "){");
+        printWriter.println("\t\t\t\t\t@Override");
+        printWriter.println("\t\t\t\t\tpublic Object apply() {");
 
-// 调用 proceed
-        printWriter.println("\t\t\t\tObject chainResult = chain.proceed();");
+        printWriter.print("\t\t\t\t\t\t");
+        if (!returnVoid) {
+            printWriter.print("return ");
+        }
+        printWriter.print(methodPrefix);
+        printWriter.print(method.getSimpleName());
+        printWriter.print("(");
+        printWriter.print(buildArgs(method));
+        printWriter.println(");");
+        if(returnVoid){
+            printWriter.println("\t\t\t\t\t\treturn null;");
+        }
+        printWriter.println("\t\t\t\t\t}");
+        printWriter.println("\t\t\t\t};");
 
-// 是否继续执行原方法
-        printWriter.println("\t\t\t\tif (chain.isDone()) {");
-
-        if ("void".equals(method.getReturnType().toString())) {
-            printWriter.print("\t\t\t\t\tsuper.");
-            printWriter.print(method.getSimpleName());
-            printWriter.print("(");
-            printWriter.print(buildArgs(method));
-            printWriter.println(");");
-            printWriter.println("\t\t\t\t\treturn;");
+        // 调用 proceed
+        if (returnVoid) {
+            printWriter.println("\t\t\t\tchain.proceed();");
         } else {
-            printWriter.print("\t\t\t\t\treturn super.");
-            printWriter.print(method.getSimpleName());
-            printWriter.print("(");
-            printWriter.print(buildArgs(method));
-            printWriter.println(");");
-        }
-
-        printWriter.println("\t\t\t\t}");
-
-        if (!"void".equals(method.getReturnType().toString())) {
-            printWriter.print("\t\t\t\treturn (");
-            printWriter.print(method.getReturnType());
-            printWriter.println(") chainResult;");
+            printWriter.println("\t\t\t\treturn (" + method.getReturnType() + ")chain.proceed();");
         }
 
 
+        printWriter.println("\t\t\t}");
+
+        //生成 supper 方法。
+        // 方法签名
+        printWriter.print("\t\t\tpublic " + returnType + " " + methodPrefix + method.getSimpleName() + "(");
+
+        first = true;
+        for (VariableElement param : method.getParameters()) {
+            if (!first) {
+                printWriter.print(", ");
+            }
+            first = false;
+            printWriter.print(param.asType() + " " + param.getSimpleName());
+        }
+        printWriter.println(") {");
+        printWriter.print("\t\t\t\t");
+        if (!returnVoid) {
+            printWriter.print("return ");
+        }
+        printWriter.print("super.");
+        printWriter.print(method.getSimpleName());
+        printWriter.print("(");
+        printWriter.print(buildArgs(method));
+        printWriter.println(");");
         printWriter.println("\t\t\t}");
     }
 
