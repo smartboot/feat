@@ -221,6 +221,19 @@ public abstract class AbstractSerializer implements Serializer {
     private void serializeOverrideMethod(ExecutableElement method, String interceptorsField) {
         String methodPrefix = "featAoT$";
         boolean returnVoid = "void".equals(method.getReturnType().toString());
+        StringBuilder methodDefine = new StringBuilder();
+        StringBuilder methodParams = new StringBuilder();
+        boolean first = true;
+        for (VariableElement param : method.getParameters()) {
+            if (!first) {
+                methodDefine.append(", ");
+                methodParams.append(", ");
+            }
+            first = false;
+            methodDefine.append(param.asType()).append(" ").append(param.getSimpleName());
+            methodParams.append(param.getSimpleName());
+        }
+
         // 注解
         printWriter.println("\t\t\t@Override");
 
@@ -228,32 +241,10 @@ public abstract class AbstractSerializer implements Serializer {
         String returnType = method.getReturnType().toString();
 
         // 方法签名
-        printWriter.print("\t\t\tpublic " + returnType + " " + method.getSimpleName() + "(");
-
-        boolean first = true;
-        for (VariableElement param : method.getParameters()) {
-            if (!first) {
-                printWriter.print(", ");
-            }
-            first = false;
-            printWriter.print(param.asType() + " " + param.getSimpleName());
-        }
-        printWriter.println(") {");
+        printWriter.append("\t\t\tpublic ").append(returnType).append(" ").append(String.valueOf(method.getSimpleName())).append("(").append(methodDefine).println(") {");
 
         // TODO: Interceptors 调用链将在这里实现
-        printWriter.print("\t\t\t\tInterceptorChain chain = new InterceptorChain(this, ");
-        printWriter.print(method.getSimpleName());
-        printWriter.print("Method, new Object[]{");
-
-        first = true;
-        for (VariableElement param : method.getParameters()) {
-            if (!first) {
-                printWriter.print(", ");
-            }
-            first = false;
-            printWriter.print(param.getSimpleName());
-        }
-        printWriter.println("}," + interceptorsField + "){");
+        printWriter.append("\t\t\t\tInterceptorChain chain = new InterceptorChain(this, ").append(method.getSimpleName()).append("Method, new Object[]{").append(methodParams).println("}, " + interceptorsField + "){");
         printWriter.println("\t\t\t\t\t@Override");
         printWriter.println("\t\t\t\t\tpublic Object apply() {");
 
@@ -261,12 +252,8 @@ public abstract class AbstractSerializer implements Serializer {
         if (!returnVoid) {
             printWriter.print("return ");
         }
-        printWriter.print(methodPrefix);
-        printWriter.print(method.getSimpleName());
-        printWriter.print("(");
-        printWriter.print(buildArgs(method));
-        printWriter.println(");");
-        if(returnVoid){
+        printWriter.append(methodPrefix).append(method.getSimpleName()).append("(").append(methodParams).println(");");
+        if (returnVoid) {
             printWriter.println("\t\t\t\t\t\treturn null;");
         }
         printWriter.println("\t\t\t\t\t}");
@@ -281,43 +268,16 @@ public abstract class AbstractSerializer implements Serializer {
 
 
         printWriter.println("\t\t\t}");
+        printWriter.println();
 
         //生成 supper 方法。
-        // 方法签名
-        printWriter.print("\t\t\tpublic " + returnType + " " + methodPrefix + method.getSimpleName() + "(");
-
-        first = true;
-        for (VariableElement param : method.getParameters()) {
-            if (!first) {
-                printWriter.print(", ");
-            }
-            first = false;
-            printWriter.print(param.asType() + " " + param.getSimpleName());
-        }
-        printWriter.println(") {");
+        printWriter.append("\t\t\tpublic ").append(returnType).append(" ").append(methodPrefix).append(String.valueOf(method.getSimpleName())).append("(").append(methodDefine).println(") {");
         printWriter.print("\t\t\t\t");
         if (!returnVoid) {
             printWriter.print("return ");
         }
-        printWriter.print("super.");
-        printWriter.print(method.getSimpleName());
-        printWriter.print("(");
-        printWriter.print(buildArgs(method));
-        printWriter.println(");");
+        printWriter.append("super.").append(method.getSimpleName()).append("(").append(methodParams).println(");");
         printWriter.println("\t\t\t}");
-    }
-
-    private String buildArgs(ExecutableElement method) {
-        StringBuilder sb = new StringBuilder();
-        boolean first = true;
-        for (VariableElement param : method.getParameters()) {
-            if (!first) {
-                sb.append(", ");
-            }
-            first = false;
-            sb.append(param.getSimpleName());
-        }
-        return sb.toString();
     }
 
     @Override
