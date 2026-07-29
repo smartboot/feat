@@ -10,8 +10,8 @@
 
 package tech.smartboot.feat.core.common.io;
 
-import io.github.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.common.HttpStatus;
+import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.server.impl.HttpEndpoint;
 
@@ -32,7 +32,6 @@ public class PostInputStream extends BodyInputStream {
         this.maxPayload = maxPayload;
     }
 
-    @Override
     public int read(byte[] data, int off, int len) throws IOException {
         if (maxPayload > 0L && remaining > maxPayload) {
             throw new HttpException(HttpStatus.PAYLOAD_TOO_LARGE);
@@ -49,30 +48,48 @@ public class PostInputStream extends BodyInputStream {
             return 0;
         }
 
-        ByteBuffer byteBuffer = session.readBuffer();
+        boolean async = readListener != null;
 
-        if (readListener != null) {
-            if (anyAreClear(state, FLAG_LISTENER_READY)) {
-                throw new IllegalStateException();
+        if (async && anyAreClear(state, FLAG_LISTENER_READY)) {
+            throw new IllegalStateException();
+        }
+
+        int totalRead = 0;
+
+        while (totalRead < len && remaining > 0) {
+
+            ByteBuffer byteBuffer = session.readBuffer();
+
+            if (!byteBuffer.hasRemaining()) {
+                if (async) {
+                    break;
+                }
+
+                int i = session.read();
+
+                if (i == -1) {
+                    return totalRead > 0 ? totalRead : -1;
+                } else if (i < 0) {
+                    throw new FeatException("sync read fail,i =" + i);
+                }
             }
-        } else if (remaining > 0 && !byteBuffer.hasRemaining()) {
-            session.read();
+
+            int readLength = Math.min(len - totalRead, byteBuffer.remaining());
+
+            if (remaining < readLength) {
+                readLength = (int) remaining;
+            }
+
+            byteBuffer.get(data, off + totalRead, readLength);
+
+            remaining -= readLength;
+            totalRead += readLength;
         }
-        int readLength = Math.min(len, byteBuffer.remaining());
-        if (remaining < readLength) {
-            readLength = (int) remaining;
-        }
-        byteBuffer.get(data, off, readLength);
-        remaining = remaining - readLength;
 
         if (remaining == 0) {
             setFlags(FLAG_FINISHED);
-            return readLength;
         }
-        if (readListener == null) {
-            return readLength + read(data, off + readLength, len - readLength);
-        } else {
-            return readLength;
-        }
+
+        return totalRead;
     }
 }
