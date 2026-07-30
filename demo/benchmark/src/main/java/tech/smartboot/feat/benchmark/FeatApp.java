@@ -8,7 +8,7 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.demo.benchmark;
+package tech.smartboot.feat.benchmark;
 
 import tech.smartboot.feat.cloud.FeatCloud;
 import tech.smartboot.feat.cloud.annotation.Controller;

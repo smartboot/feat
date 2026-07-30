@@ -1,4 +1,4 @@
-package tech.smartboot.feat.demo.benchmark;
+package tech.smartboot.feat.benchmark;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

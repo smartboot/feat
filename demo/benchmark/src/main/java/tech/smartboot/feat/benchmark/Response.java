@@ -8,7 +8,7 @@
  *  without special permission from the smartboot organization.
  */
 
-package tech.smartboot.feat.demo.benchmark;
+package tech.smartboot.feat.benchmark;
 
 public class Response {
     private String message;
