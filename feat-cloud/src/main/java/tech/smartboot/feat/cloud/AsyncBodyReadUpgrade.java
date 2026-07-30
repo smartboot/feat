@@ -31,10 +31,6 @@ import java.nio.ByteBuffer;
  * @version v1.0 9/23/25
  */
 public class AsyncBodyReadUpgrade extends Upgrade {
-    /**
-     * HTTP端点请求对象
-     */
-    private final HttpEndpoint request;
 
     /**
      * 用于存储请求体数据的缓冲区
@@ -50,7 +46,7 @@ public class AsyncBodyReadUpgrade extends Upgrade {
     public AsyncBodyReadUpgrade(HttpEndpoint request, int length) {
         this.request = request;
         // 分配指定大小的缓冲区用于存储请求体数据
-        buffer = ByteBuffer.allocate(length);
+        buffer = length <= request.getAioSession().readBuffer().capacity() ? null : ByteBuffer.allocate(length);
     }
 
     /**
@@ -77,6 +73,18 @@ public class AsyncBodyReadUpgrade extends Upgrade {
      */
     @Override
     public void onBodyStream(ByteBuffer readBuffer) {
+        if (buffer == null) {
+            int contentLength = (int) request.getContentLength();
+            if (readBuffer.remaining() >= contentLength) {
+                ByteBuffer bodyBuffer = readBuffer.slice();
+                bodyBuffer.limit(contentLength);//避免超读
+                //原始buffer视为已读
+                readBuffer.position(readBuffer.position() + contentLength);
+                continueProcessing(bodyBuffer);
+            }
+            return;
+        }
+
         // 如果读取缓冲区中的数据量小于等于剩余缓冲区空间
         if (readBuffer.remaining() <= buffer.remaining()) {
             // 直接将数据放入缓冲区
@@ -90,78 +98,85 @@ public class AsyncBodyReadUpgrade extends Upgrade {
         }
 
         // 如果缓冲区还有剩余空间，说明还未读取完成，直接返回
-        if (buffer.hasRemaining()) {
-            return;
+        if (!buffer.hasRemaining()) {
+            // 翻转缓冲区，准备读取数据
+            buffer.flip();
+            continueProcessing(buffer);
         }
+    }
 
+    private void continueProcessing(ByteBuffer buffer) {
         // 缓冲区已满，创建异步输入流并设置到请求对象中
-        request.setInputStream(new AsyncBodyInputStream(request));
+        request.setInputStream(new AsyncBodyInputStream(request, buffer));
         // 更新请求解码状态为异步读取完成
         request.getDecodeContext().setState(DecodeContext.STATE_BODY_ASYNC_READING_DONE);
         // 清除升级处理器
         request.setUpgrade(null);
-        // 翻转缓冲区，准备读取数据
-        buffer.flip();
+    }
+
+
+}
+
+/**
+ * 异步请求体输入流实现类
+ * <p>
+ * 该类继承自BodyInputStream，用于提供对缓冲区中请求体数据的流式访问。
+ * </p>
+ */
+class AsyncBodyInputStream extends BodyInputStream {
+    private final ByteBuffer buffer;
+
+    /**
+     * 构造函数，创建异步请求体输入流
+     *
+     * @param session HTTP端点会话对象
+     */
+    public AsyncBodyInputStream(HttpEndpoint session, ByteBuffer buffer) {
+        super(session);
+        this.buffer = buffer;
+    }
+
+
+    /**
+     * 获取输入流中可读取的字节数
+     *
+     * @return 缓冲区中剩余的字节数
+     */
+    @Override
+    public int available() {
+        return buffer.remaining();
     }
 
     /**
-     * 异步请求体输入流实现类
-     * <p>
-     * 该类继承自BodyInputStream，用于提供对缓冲区中请求体数据的流式访问。
-     * </p>
+     * 判断输入流是否已读取完成
+     *
+     * @return 总是返回true，因为数据已全部读取到缓冲区中
      */
-    private class AsyncBodyInputStream extends BodyInputStream {
-        /**
-         * 构造函数，创建异步请求体输入流
-         *
-         * @param session HTTP端点会话对象
-         */
-        public AsyncBodyInputStream(HttpEndpoint session) {
-            super(session);
-        }
+    @Override
+    public boolean isFinished() {
+        return true;
+    }
 
-
-        /**
-         * 获取输入流中可读取的字节数
-         *
-         * @return 缓冲区中剩余的字节数
-         */
-        @Override
-        public int available() {
-            return buffer.remaining();
+    /**
+     * 从输入流中读取数据到指定的字节数组
+     *
+     * @param b   目标字节数组
+     * @param off 目标数组中的起始偏移量
+     * @param len 要读取的最大字节数
+     * @return 实际读取的字节数，如果已无数据可读则返回-1
+     */
+    @Override
+    public int read(byte[] b, int off, int len) {
+        // 如果请求读取的长度大于缓冲区剩余数据量，则调整为剩余数据量
+        if (len > buffer.remaining()) {
+            len = buffer.remaining();
         }
-
-        /**
-         * 判断输入流是否已读取完成
-         *
-         * @return 总是返回true，因为数据已全部读取到缓冲区中
-         */
-        @Override
-        public boolean isFinished() {
-            return true;
+        // 如果没有数据可读，返回-1
+        if (len == 0) {
+            return -1;
         }
-
-        /**
-         * 从输入流中读取数据到指定的字节数组
-         *
-         * @param b   目标字节数组
-         * @param off 目标数组中的起始偏移量
-         * @param len 要读取的最大字节数
-         * @return 实际读取的字节数，如果已无数据可读则返回-1
-         */
-        @Override
-        public int read(byte[] b, int off, int len) {
-            // 如果请求读取的长度大于缓冲区剩余数据量，则调整为剩余数据量
-            if (len > buffer.remaining()) {
-                len = buffer.remaining();
-            }
-            // 如果没有数据可读，返回-1
-            if (len == 0) {
-                return -1;
-            }
-            // 从缓冲区中读取数据到目标数组
-            buffer.get(b, off, len);
-            return len;
-        }
+        // 从缓冲区中读取数据到目标数组
+        buffer.get(b, off, len);
+        return len;
     }
 }
