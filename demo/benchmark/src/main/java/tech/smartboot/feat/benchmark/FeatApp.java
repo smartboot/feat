@@ -44,7 +44,7 @@ public class FeatApp {
         // 定义服务器接受的消息类型以及各类消息对应的处理器
         HttpServer server = FeatCloud.cloudServer(options -> {
             options
-                    .setPackages("tech.smartboot.feat.demo.benchmark");
+                    .setPackages("tech.smartboot.feat.benchmark");
         });
         server.options().threadNum(Runtime.getRuntime().availableProcessors()+1);
         server.listen(8082);
