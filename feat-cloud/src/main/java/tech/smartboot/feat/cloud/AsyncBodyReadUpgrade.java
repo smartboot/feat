@@ -98,7 +98,7 @@ public class AsyncBodyReadUpgrade extends Upgrade {
         }
 
         // 如果缓冲区还有剩余空间，说明还未读取完成，直接返回
-        if (!buffer.hasRemaining()) {
+        if (buffer.position() == buffer.limit()) {
             // 翻转缓冲区，准备读取数据
             buffer.flip();
             continueProcessing(buffer);
