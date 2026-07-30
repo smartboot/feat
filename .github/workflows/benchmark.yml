@@ -42,17 +42,17 @@ jobs:
           mkdir -p target/wrk-results
           
           # 启动Feat服务（端口8082）
-          nohup mvn exec:java -Dexec.mainClass="tech.smartboot.feat.benchmark.FeatApp" > feat.log 2>&1 &
+          nohup mvn exec:java -Dexec.mainClass="tech.smartboot.feat.benchmark.FeatApp" &
           echo "Feat服务已启动，等待5秒..."
           sleep 5
           
           # 启动Vert.x服务（端口8081）
-          nohup mvn exec:java -Dexec.mainClass="tech.smartboot.feat.benchmark.VertxApp" > vertx.log 2>&1 &
+          nohup mvn exec:java -Dexec.mainClass="tech.smartboot.feat.benchmark.VertxApp" &
           echo "Vert.x服务已启动，等待5秒..."
           sleep 5
           
           # 启动Spring Boot服务（端口8080）
-          nohup mvn exec:java -Dexec.mainClass="tech.smartboot.feat.benchmark.SpringBootApp" > springboot.log 2>&1 &
+          nohup mvn exec:java -Dexec.mainClass="tech.smartboot.feat.benchmark.SpringBootApp" &
           echo "Spring Boot服务已启动，等待5秒..."
           sleep 5
           
@@ -65,17 +65,6 @@ jobs:
       - name: 创建测试结果目录
         run: mkdir -p demo/benchmark/target/wrk-results
 
-      - name: 测试Quarkus Hello World接口
-        run: |
-          cd demo/benchmark
-          wrk -t4 -c100 -d60s --latency http://localhost:8083/hello > target/wrk-results/quarkus-hello.txt
-          echo "Quarkus Hello World测试完成"
-      - name: 测试Quarkus JSON接口
-        run: |
-          cd demo/benchmark
-          wrk -t4 -c100 -d60s --latency http://localhost:8083/json > target/wrk-results/quarkus-json.txt
-          echo "Quarkus JSON测试完成"
-
       - name: 测试Feat Hello World接口
         run: |
           cd demo/benchmark
@@ -87,6 +76,17 @@ jobs:
           cd demo/benchmark
           wrk -t4 -c100 -d60s --latency http://localhost:8082/json > target/wrk-results/feat-json.txt
           echo "Feat JSON测试完成"
+
+      - name: 测试Quarkus Hello World接口
+        run: |
+          cd demo/benchmark
+          wrk -t4 -c100 -d60s --latency http://localhost:8083/hello > target/wrk-results/quarkus-hello.txt
+          echo "Quarkus Hello World测试完成"
+      - name: 测试Quarkus JSON接口
+        run: |
+          cd demo/benchmark
+          wrk -t4 -c100 -d60s --latency http://localhost:8083/json > target/wrk-results/quarkus-json.txt
+          echo "Quarkus JSON测试完成"
 
       - name: 测试Vert.x Hello World接口
         run: |
