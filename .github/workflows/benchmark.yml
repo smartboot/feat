@@ -42,17 +42,17 @@ jobs:
           mkdir -p target/wrk-results
           
           # 启动Feat服务（端口8082）
-          nohup mvn exec:java -Dexec.mainClass="tech.smartboot.feat.demo.benchmark.FeatApp" > feat.log 2>&1 &
+          nohup mvn exec:java -Dexec.mainClass="tech.smartboot.feat.benchmark.FeatApp" > feat.log 2>&1 &
           echo "Feat服务已启动，等待5秒..."
           sleep 5
           
           # 启动Vert.x服务（端口8081）
-          nohup mvn exec:java -Dexec.mainClass="tech.smartboot.feat.demo.benchmark.VertxApp" > vertx.log 2>&1 &
+          nohup mvn exec:java -Dexec.mainClass="tech.smartboot.feat.benchmark.VertxApp" > vertx.log 2>&1 &
           echo "Vert.x服务已启动，等待5秒..."
           sleep 5
           
           # 启动Spring Boot服务（端口8080）
-          nohup mvn exec:java -Dexec.mainClass="tech.smartboot.feat.demo.benchmark.SpringBootApp" > springboot.log 2>&1 &
+          nohup mvn exec:java -Dexec.mainClass="tech.smartboot.feat.benchmark.SpringBootApp" > springboot.log 2>&1 &
           echo "Spring Boot服务已启动，等待5秒..."
           sleep 5
           
