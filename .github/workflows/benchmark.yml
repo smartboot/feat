@@ -33,7 +33,7 @@ jobs:
       - name: 构建benchmark项目
         run: |
           cd demo/benchmark
-          FEAT_LICENSE=${{ secrets.FEAT_LICENSE }} mvn -B install --file pom.xml -DskipTests
+          FEAT_LICENSE=${{ secrets.FEAT_LICENSE }} mvn -B install --file pom.xml -DskipTests -Dmaven.compiler.source=21 -Dmaven.compiler.target=21
       - name: 解压 Quarkus
         run: |
           cd demo/benchmark
