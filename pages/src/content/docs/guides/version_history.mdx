@@ -17,6 +17,28 @@ import { Aside, Steps } from '@astrojs/starlight/components';
 
 ---
 
+## v2.3.0 (孵化中)
+
+### 新特性
+
+#### Feat Core
+
+- 修复`PostInputStream`未能完整处理body读取时可能引发的`StackOverflowError`异常。
+- smart-socket 升级至 `2.1.3`
+
+#### Feat Cloud / AOT
+
+- 新增拦截器特性
+- httpRequest 小 body 的异步读取采用 `zero copy` 策略，
+
+
+### 升级步骤
+无
+### 兼容性说明
+无
+
+---
+
 ## v2.2.0 (2026-07-07)
 
 ### 新特性
