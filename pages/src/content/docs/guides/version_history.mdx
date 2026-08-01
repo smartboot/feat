@@ -24,7 +24,7 @@ import { Aside, Steps } from '@astrojs/starlight/components';
 #### Feat Core
 
 - **HTTP**：优化 `PostInputStream` 读取逻辑，修复完整 body 读取时可能触发的 `StackOverflowError` 异常
-- **HTTP**：修复异步请求体读取缓冲区判断逻辑，提升小 body 场景的读取性能
+- **HTTP**：调整异步请求体读取缓冲区判断逻辑，提升小 body 场景的读取性能
 - **依赖**：`smart-socket` 升级至 `2.1.3`
 
 #### Feat Cloud / AOT
