@@ -11,6 +11,7 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <feat.version>2.2.0</feat.version>
     </properties>
 
     <dependencies>
@@ -18,7 +19,7 @@
         <dependency>
             <groupId>tech.smartboot.feat</groupId>
             <artifactId>feat-ai</artifactId>
-            <version>${project.version}</version>
+            <version>${feat.version}</version>
         </dependency>
     </dependencies>
 

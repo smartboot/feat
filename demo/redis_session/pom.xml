@@ -8,13 +8,14 @@
 
     <artifactId>redis_session</artifactId>
     <properties>
+        <feat.version>2.2.0</feat.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>tech.smartboot.feat</groupId>
             <artifactId>feat-cloud-starter</artifactId>
-            <version>${project.version}</version>
+            <version>${feat.version}</version>
         </dependency>
         <dependency>
             <groupId>tech.smartboot</groupId>

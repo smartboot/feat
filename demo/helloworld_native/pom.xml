@@ -7,12 +7,14 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>helloworld_native</artifactId>
-
+    <properties>
+        <feat.version>2.2.0</feat.version>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>tech.smartboot.feat</groupId>
             <artifactId>feat-cloud-starter</artifactId>
-            <version>${project.version}</version>
+            <version>${feat.version}</version>
         </dependency>
     </dependencies>
 
