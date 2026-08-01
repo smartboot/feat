@@ -19,6 +19,7 @@ export default new Map([
 ["src/content/docs/cloud/interceptor.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fcloud%2Finterceptor.mdx&astroContentModuleFlag=true")],
 ["src/content/docs/cloud/mcp.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fcloud%2Fmcp.mdx&astroContentModuleFlag=true")],
 ["src/content/docs/cloud/mybatis.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fcloud%2Fmybatis.mdx&astroContentModuleFlag=true")],
+["src/content/docs/cloud/nacos.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fcloud%2Fnacos.mdx&astroContentModuleFlag=true")],
 ["src/content/docs/cloud/options.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fcloud%2Foptions.mdx&astroContentModuleFlag=true")],
 ["src/content/docs/cloud/response.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fcloud%2Fresponse.mdx&astroContentModuleFlag=true")],
 ["src/content/docs/cloud/runtime.mdx", () => import("astro:content-layer-deferred-module?astro%3Acontent-layer-deferred-module=&fileName=src%2Fcontent%2Fdocs%2Fcloud%2Fruntime.mdx&astroContentModuleFlag=true")],

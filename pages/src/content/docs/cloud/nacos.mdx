@@ -1,0 +1,274 @@
+---
+title: Nacos 配置中心
+description: 把 Nacos 配置中心接入 Feat Cloud，覆盖生产环境鉴权、多 Namespace、动态刷新和优雅关闭
+sidebar:
+    order: 7.5
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+在单体应用里，配置通常跟着应用一起发布；当应用进入多环境、多实例部署后，数据库地址、功能开关、限流阈值等配置就需要独立管理。配置中心解决的并不只是“把配置放到另一台服务器”，还包括配置的隔离、发布、监听和故障回退。
+
+Nacos 提供了配置存储、长轮询监听和配置发布能力。Feat Cloud 则负责应用生命周期和编译期装配。两者结合时，连接 Nacos 的静态参数由 Feat 在编译期注入，`ConfigService` 在 `@PostConstruct` 阶段初始化，配置变更通过 Nacos `Listener` 推送到应用内存，应用关闭时再由 `@PreDestroy` 释放客户端资源。
+
+Feat Cloud 没有内置 Nacos starter。本文直接使用官方 `nacos-client`，不额外封装一层“自动配置”。这种方式比约定式 starter 多写一些代码，但连接建立、配置拉取、监听回调和刷新策略都清楚地写在业务工程里。排查问题时，可以明确判断故障发生在 Feat 的生命周期、Nacos 客户端，还是配置内容本身；同时也能独立选择和升级 Nacos 客户端版本。
+
+本文不要求读者先阅读其他章节，只需要一个可以正常编译的 Feat Cloud 应用，以及一个可访问的 Nacos 服务端。示例从最小配置中心接入开始，逐步补上生产环境需要关注的细节：
+
+- 启动时从 Nacos 拉取初始配置
+- 配置变更时安全地刷新到内存
+- 多环境与 namespace 的组织方式
+- 鉴权、初始化顺序、优雅关闭和变更校验
+
+最终会涉及这些文件：
+
+```text title="示例结构"
+src/main/resources/
+├── feat.yml
+├── feat-dev.yml
+└── feat-prod.yml
+
+src/main/java/com/example/nacos/
+├── Bootstrap.java
+├── config/NacosConfigService.java
+└── controller/DemoController.java
+```
+
+你可以按这个顺序理解后面的内容：先把 Nacos 连接配置放进 `feat.yml`，再写一个配置服务 Bean 负责拉取和监听，最后在 Controller 里验证读取和动态刷新。
+
+## 准备依赖与基础配置
+
+### 引入 Nacos 客户端
+
+在已有 Feat Cloud 应用基础上，加上 `nacos-client`：
+
+```xml title="pom.xml"
+<dependency>
+    <groupId>com.alibaba.nacos</groupId>
+    <artifactId>nacos-client</artifactId>
+    <version>3.2.3</version>
+</dependency>
+```
+
+`nacos-client` 是运行期依赖，`feat-cloud-starter` 仍然负责编译期生成代码。两者各管各的，互不替代。
+
+### 在 feat.yml 里声明连接信息
+
+Nacos 服务地址、namespace、鉴权信息这类"环境之间会变、但启动后不变"的参数，放进 `feat.yml` 最合适。
+
+```yaml title="feat.yml"
+nacos:
+  serverAddr: 127.0.0.1:8848
+  namespace: public
+  username: nacos
+  password: nacos
+```
+
+这些值会在编译期通过 `@Value` 解析并注入到字段里。因为 `@Value` 只支持 `String`、`int`、`String[]`、`List<String>` 等少量类型，所以 Nacos 连接参数统一用字符串声明最省事。
+
+<Aside type="tip">
+`@Value` 注入依赖字段对应的 setter 方法。字段叫 `serverAddr`，就得有 `setServerAddr(...)`；编译时找不到 setter 会直接报错。具体规则可以回看 [Bean 与依赖注入](/feat/cloud/bean/) 里的「从配置注入值」。
+</Aside>
+
+### 按环境拆分 Nacos 连接
+
+本地开发连本机 Nacos，测试环境连测试集群，生产环境连生产集群。这是典型的 Profile 场景。
+
+```yaml title="feat-dev.yml"
+nacos:
+  serverAddr: dev-nacos.example.com:8848
+  namespace: dev
+```
+
+```yaml title="feat-prod.yml"
+nacos:
+  serverAddr: prod-nacos.example.com:8848
+  namespace: prod
+```
+
+不同环境各有一套 `FeatApplication*` 生成类，启动时通过 `feat.profiles.active` 选择：
+
+```bash title="选择生产环境启动"
+java -Dfeat.profiles.active=prod -jar yourapp.jar
+```
+
+<Aside type="caution">
+生产环境的用户名和口令不要硬编码进 `feat-prod.yml` 提交到代码仓库。更稳的做法是通过 JVM 参数、环境变量或 CI/CD 注入，在 `@PostConstruct` 里读取后再拼进 `Properties`。
+</Aside>
+
+## 配置中心接入
+
+配置中心最核心的需求不是"能读到配置"，而是"配置变更时应用能安全地用上新值"。下面用一个类完成连接、拉取和监听，保持最小结构。
+
+### 一个类搞定配置中心
+
+```java title="NacosConfigService.java"
+package com.example.nacos.config;
+
+import com.alibaba.nacos.api.NacosFactory;
+import com.alibaba.nacos.api.PropertyKeyConst;
+import com.alibaba.nacos.api.config.ConfigService;
+import com.alibaba.nacos.api.config.listener.Listener;
+import tech.smartboot.feat.cloud.annotation.Bean;
+import tech.smartboot.feat.cloud.annotation.PostConstruct;
+import tech.smartboot.feat.cloud.annotation.PreDestroy;
+import tech.smartboot.feat.cloud.annotation.Value;
+
+import java.util.Properties;
+import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicReference;
+
+@Bean(order = 0)
+public class NacosConfigService {
+
+    @Value("${nacos.serverAddr}")
+    private String serverAddr;
+
+    @Value("${nacos.namespace:public}")
+    private String namespace;
+
+    @Value("${nacos.username:}")
+    private String username;
+
+    @Value("${nacos.password:}")
+    private String password;
+
+    private static final String DATA_ID = "demo-config";
+    private static final String GROUP = "feat";
+
+    private ConfigService configService;
+    private final AtomicReference<String> config = new AtomicReference<>();
+
+    @PostConstruct
+    public void init() throws Exception {
+        Properties properties = new Properties();
+        properties.put(PropertyKeyConst.SERVER_ADDR, serverAddr);
+        properties.put(PropertyKeyConst.NAMESPACE, namespace);
+        if (username != null && !username.isEmpty()) {
+            properties.put(PropertyKeyConst.USERNAME, username);
+            properties.put(PropertyKeyConst.PASSWORD, password);
+        }
+        configService = NacosFactory.createConfigService(properties);
+
+        // 启动时先拉一次，拿到初始值
+        config.set(configService.getConfig(DATA_ID, GROUP, 3000));
+
+        // 注册监听器，配置变更时自动更新
+        configService.addListener(DATA_ID, GROUP, new Listener() {
+            @Override
+            public Executor getExecutor() {
+                return null;
+            }
+
+            @Override
+            public void receiveConfigInfo(String configInfo) {
+                if (configInfo != null) {
+                    config.set(configInfo);
+                }
+            }
+        });
+    }
+
+    public String getConfig() {
+        return config.get();
+    }
+
+    @PreDestroy
+    public void close() throws Exception {
+        if (configService != null) {
+            configService.shutDown();
+        }
+    }
+
+    // setter
+    public void setServerAddr(String serverAddr) { this.serverAddr = serverAddr; }
+    public void setNamespace(String namespace) { this.namespace = namespace; }
+    public void setUsername(String username) { this.username = username; }
+    public void setPassword(String password) { this.password = password; }
+}
+```
+
+这段代码做了四件事：
+
+1. **建立连接**：用 `nacos.serverAddr` 等参数创建 `ConfigService`
+2. **启动预拉**：应用启动时先拉一次配置，避免空窗期
+3. **注册监听**：配置变更时自动更新内存里的值
+4. **优雅关闭**：应用停机时断开长连接
+
+<Aside type="tip">
+`@Bean` 的 `order` 默认值是 `Byte.MAX_VALUE`，所以只要把基础设施 Bean 设置成 `0`，它就会排在大多数默认 Bean 前面。其他业务 Bean 保持默认值即可。
+</Aside>
+
+### 在 Controller 里验证
+
+写一个简单的接口，验证配置能读到、刷新也生效。
+
+```java title="DemoController.java"
+package com.example.nacos.controller;
+
+import com.example.nacos.config.NacosConfigService;
+import tech.smartboot.feat.cloud.RestResult;
+import tech.smartboot.feat.cloud.annotation.Autowired;
+import tech.smartboot.feat.cloud.annotation.Controller;
+import tech.smartboot.feat.cloud.annotation.RequestMapping;
+
+@Controller("config")
+public class DemoController {
+
+    @Autowired
+    private NacosConfigService nacosConfigService;
+
+    @RequestMapping("/current")
+    public RestResult<String> current() {
+        return RestResult.ok(nacosConfigService.getConfig());
+    }
+}
+```
+
+启动应用后：
+
+```shell title="验证配置读取"
+curl http://localhost:8080/config/current
+```
+
+然后去 Nacos 控制台修改 `demo-config` / `feat` 这个配置的内容，稍等片刻再请求一次，应该能看到新值。
+
+## 生产环境注意事项
+
+demo 里的示例是最小链路，真的上线之前，下面几件事值得提前想清楚。
+
+### 生产环境注意事项
+
+上线前记住三件事就够了：
+
+- **开鉴权**：Nacos 服务端开启鉴权，口令不要写死在仓库里
+- **先校验再刷新**：监听到新配置后先检查格式和必填字段，坏配置不要覆盖内存值
+- **先初始化基础设施**：`NacosConfigService` 这种 Bean 的 `order` 设为 `0`，让它先于默认 Bean 初始化
+
+这三条基本就覆盖了大多数生产问题。
+
+## 一条可验证的完整链路
+
+把上面的代码拼起来，你应该能验证下面这条链路：
+
+```text
+Nacos 配置中心 -> NacosConfigService -> DemoController -> /config/current
+```
+
+可以用这些命令验证：
+
+```shell title="配置中心验证"
+curl http://localhost:8080/config/current
+# 修改 Nacos 里的 demo-config / feat，等待 1-3 秒后再请求
+curl http://localhost:8080/config/current
+```
+
+如果两次请求分别返回修改前后的配置内容，说明 Nacos 配置中心已经成功接入了。
+
+## Feat 负责接线，Nacos 负责配置管理
+
+Feat 不打算重写一套配置中心，也不打算用一层厚厚的 starter 把 Nacos SDK 包起来。Nacos 该怎么用就怎么用，`ConfigService`、`Listener`、长轮询机制全是官方 SDK 原有的东西。Feat 负责的只是把它接进生命周期：编译期注入静态配置、启动时初始化、停机时优雅关闭。
+
+这种方式相比 Spring starter 多写了几十行代码，但换来的是清晰的边界——你知道配置是在哪一行拉的、监听器是在哪个线程回调的、坏配置为什么没有生效。对于需要维护线上系统的团队来说，这份"可理解性"往往比"少写几行代码"更有价值。
+
+理解这个边界之后，后面要接 Sentinel、Redis、RocketMQ 这类其他基础设施组件，套路都是一样的：依赖 + `@Value` + `@PostConstruct` + `@PreDestroy`，中间的 SDK 用法按官方文档来。
