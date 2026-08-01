@@ -61,6 +61,6 @@ public interface Serializer {
     }
 
     default int order() {
-        return 0;
+        return Byte.MAX_VALUE;
     }
 }

@@ -32,5 +32,5 @@ public @interface Bean {
     /**
      * @return Bean的加载顺序
      */
-    int order() default 0;
+    int order() default Byte.MAX_VALUE;
 }
