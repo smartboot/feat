@@ -32,6 +32,7 @@ public class PostInputStream extends BodyInputStream {
         this.maxPayload = maxPayload;
     }
 
+    @Override
     public int read(byte[] data, int off, int len) throws IOException {
         if (maxPayload > 0L && remaining > maxPayload) {
             throw new HttpException(HttpStatus.PAYLOAD_TOO_LARGE);
@@ -69,8 +70,8 @@ public class PostInputStream extends BodyInputStream {
 
                 if (i == -1) {
                     return totalRead > 0 ? totalRead : -1;
-                } else if (i < 0) {
-                    throw new FeatException("sync read fail,i =" + i);
+                } else if (i <= 0) {
+                    throw new FeatException("sync read returned unexpected result=" + i);
                 }
             }
 
