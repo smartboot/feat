@@ -87,10 +87,7 @@ import com.alibaba.nacos.api.NacosFactory;
 import com.alibaba.nacos.api.PropertyKeyConst;
 import com.alibaba.nacos.api.config.ConfigService;
 import com.alibaba.nacos.api.config.listener.Listener;
-import tech.smartboot.feat.cloud.annotation.Bean;
-import tech.smartboot.feat.cloud.annotation.PostConstruct;
-import tech.smartboot.feat.cloud.annotation.PreDestroy;
-import tech.smartboot.feat.cloud.annotation.Value;
+import tech.smartboot.feat.cloud.annotation.*;
 
 import java.util.Properties;
 import java.util.concurrent.Executor;
@@ -185,9 +182,7 @@ package com.example.nacos.controller;
 
 import com.example.nacos.config.NacosConfigService;
 import tech.smartboot.feat.cloud.RestResult;
-import tech.smartboot.feat.cloud.annotation.Autowired;
-import tech.smartboot.feat.cloud.annotation.Controller;
-import tech.smartboot.feat.cloud.annotation.RequestMapping;
+import tech.smartboot.feat.cloud.annotation.*;
 
 @Controller("config")
 public class DemoController {
