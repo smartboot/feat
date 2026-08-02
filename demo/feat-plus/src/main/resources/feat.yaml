@@ -1,0 +1,15 @@
+server:
+  port: 8080
+  host: 0.0.0.0
+  mcp:
+    server:
+      enable: false
+
+feat:
+  mybatis:
+    path: mybatis/mybatis-config.xml
+    initial-sql: mybatis/ddl/schema.sql
+
+feat-plus:
+  auth:
+    token-ttl-seconds: 7200
