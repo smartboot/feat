@@ -124,11 +124,8 @@ public class NacosConfigService {
         }
         configService = NacosFactory.createConfigService(properties);
 
-        // 启动时先拉一次，拿到初始值
-        config = configService.getConfig(DATA_ID, GROUP, 3000);
-
-        // 注册监听器，配置变更时自动更新
-        configService.addListener(DATA_ID, GROUP, new Listener() {
+        // 一次调用完成"拉取初始配置 + 注册监听器"，避免拉取与注册之间的空窗期
+        config = configService.getConfigAndSignListener(DATA_ID, GROUP, 3000, new Listener() {
             @Override
             public Executor getExecutor() {
                 return null;
@@ -165,9 +162,8 @@ public class NacosConfigService {
 这段代码做了四件事：
 
 1. **建立连接**：用 `nacos.serverAddr` 等参数创建 `ConfigService`
-2. **启动预拉**：应用启动时先拉一次配置，避免空窗期
-3. **注册监听**：配置变更时自动更新内存里的值
-4. **优雅关闭**：应用停机时断开长连接
+2. **拉取 + 监听**：通过 `getConfigAndSignListener` 一次调用拿到初始值并注册监听器，省去先 `getConfig` 再 `addListener` 的两步操作，也避免两者之间的空窗期
+3. **优雅关闭**：应用停机时断开长连接
 
 <Aside type="tip">
 `@Bean` 的 `order` 默认值是 `Byte.MAX_VALUE`，所以只要把基础设施 Bean 设置成 `0`，它就会排在大多数默认 Bean 前面。其他业务 Bean 保持默认值即可。
