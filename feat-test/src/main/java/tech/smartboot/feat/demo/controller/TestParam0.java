@@ -30,7 +30,7 @@ public class TestParam0<T, K> {
     private float param7;
     private double param8;
     private boolean param9;
-    private char param10='"';
+    private char param10 = '"';
     private Integer param11;
     private Byte param12;
     private Short param13;
@@ -48,6 +48,8 @@ public class TestParam0<T, K> {
 
     @JSONField(format = "yyyy-MM-dd HH:mm:ss")
     private Date param23 = new Date();
+
+    private List<Object> param24;
 
     public T getParam1() {
         return param1;
@@ -231,5 +233,13 @@ public class TestParam0<T, K> {
 
     public void setParam23(Date param23) {
         this.param23 = param23;
+    }
+
+    public List<Object> getParam24() {
+        return param24;
+    }
+
+    public void setParam24(List<Object> param24) {
+        this.param24 = param24;
     }
 }
