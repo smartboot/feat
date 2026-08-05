@@ -10,6 +10,14 @@ export interface WechatArticle {
 
 export const wechatArticles: WechatArticle[] = [
   {
+    title: '集成 Nacos，我们拒绝了 Spring Starter',
+    href: 'https://mp.weixin.qq.com/s/aSKwqknJJmQ5sjmsN9MTIg',
+    publishedAt: '2026-08-05',
+    summary: '如果一个库需要别人包一层才能用，那是这个库作者的耻辱，不是使用者的责任。',
+    imageUrl:'https://fastly.jsdelivr.net/gh/bucketio/img17@main/2026/08/04/1785846106367-0a47ca62-9acb-43c0-97b7-74d4478da719.png',
+    featured: true,
+  },
+  {
     title: 'Feat 为什么能这么快？答案藏在 2000 行代码里',
     href: 'https://mp.weixin.qq.com/s/BuJbAGI3q4YLGpF1avWIXQ',
     publishedAt: '2026-07-19',
