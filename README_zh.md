@@ -145,6 +145,8 @@ public class HelloWorld {
 - **[官方文档](https://smartboot.tech/feat)**：详细的使用指南和API参考
 - **[示例项目](https://gitee.com/smartboot/feat/tree/master/feat-test)**：各种场景的实际应用示例
 - **[性能测试报告](https://smartboot.tech/feat/appendix/benchmark/)**：了解Feat的性能优势
+- **[Ruoyi-Feat](https://gitee.com/xcmrfc-thanos/ruoyi-feat)**：社区提供的若依（Ruoyi）框架适配，助力企业级后台管理快速上手
+
 
 ### 💬 获取支持
 
