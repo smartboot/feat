@@ -362,6 +362,14 @@ public abstract class AbstractCloudService implements CloudService {
         out.write(String.valueOf(value).getBytes());
     }
 
+    protected void writeNumber(OutputStream out, Number value) throws IOException {
+        if (value == null) {
+            out.write(b_null);
+        } else {
+            out.write(value.toString().getBytes());
+        }
+    }
+
     /**
      * 将字节值写入输出流
      *
