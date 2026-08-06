@@ -15,14 +15,24 @@ import javax.lang.model.type.TypeMirror;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0 5/13/25
  */
 final class ListSerializer extends AbstractSerializer {
+    private Set<String> NUMBER_SET = new HashSet<>();
+
+    {
+        NUMBER_SET.add(Long.class.getName());
+        NUMBER_SET.add(Integer.class.getName());
+        NUMBER_SET.add(Short.class.getName());
+        NUMBER_SET.add(Byte.class.getName());
+    }
 
     public ListSerializer(JsonSerializer jsonSerializer) {
         super(jsonSerializer);
@@ -75,6 +85,8 @@ final class ListSerializer extends AbstractSerializer {
             printWriter.append(JsonSerializer.headBlank(i + 2)).println("os.write('\"');");
             printWriter.append(JsonSerializer.headBlank(i + 2)).println("os.write(p" + i + ".getBytes());");
             printWriter.append(JsonSerializer.headBlank(i + 2)).println("os.write('\"');");
+        } else if (NUMBER_SET.contains(type.toString())) {
+            printWriter.append(JsonSerializer.headBlank(i + 2)).println("writeNumber(os, p" + i + ");");
         } else {
             jsonSerializer.serialize(type, "p" + i, i + 2, parent);
         }
