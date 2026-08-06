@@ -111,6 +111,19 @@ public class ControllerDemo {
         return RestResult.ok(list);
     }
 
+    @RequestMapping(value = "/testExtendsMap1", method = {RequestMethod.GET, RequestMethod.POST})
+    public DtoExtendsMap helloExtendsMap1(HttpRequest request, HttpResponse response) {
+        return DtoExtendsMap.ok("hello");
+    }
+
+    @RequestMapping(value = "/testExtendsMap2", method = {RequestMethod.GET, RequestMethod.POST})
+    public DtoExtendsMap helloExtendsMap2(HttpRequest request, HttpResponse response) {
+        List<Object> list = new ArrayList<>();
+        list.add("hello1");
+        list.add("hello2");
+        return DtoExtendsMap.ok(list);
+    }
+
     @PostConstruct
     public void init() {
 
