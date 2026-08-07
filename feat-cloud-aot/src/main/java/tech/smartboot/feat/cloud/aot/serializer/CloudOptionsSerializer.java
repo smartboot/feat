@@ -345,7 +345,7 @@ public final class CloudOptionsSerializer implements Serializer {
             printWriter.println("\t\tapplicationContext.getOptions().addPlugin(new Plugin<HttpEndpoint>() {");
             printWriter.println("\t\t\t@Override");
             printWriter.println("\t\t\tpublic boolean preProcess(AioSession session, HttpEndpoint httpEndpoint) {");
-            printWriter.println("\t\t\t\tSystem.out.println(httpEndpoint.getMethod() + \" \" + httpEndpoint.getRequestURI() + \" - [成为赞助商解锁Feat Cloud：https://smartboot.tech/feat/sponsors/ ]\");");
+            printWriter.println("\t\t\t\tSystem.out.println(httpEndpoint.getMethod() + \" \" + httpEndpoint.getUri() + \" - [成为赞助商解锁Feat Cloud：https://smartboot.tech/feat/sponsors/ ]\");");
             printWriter.println("\t\t\t\treturn true;");
             printWriter.println("\t\t\t}");
             printWriter.println("\t\t});");
