@@ -45,7 +45,11 @@ public class HttpServer5Test extends BastTest {
 
     @After
     public void destroy() {
-        httpClient.close();
+        try {
+            httpClient.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         bootstrap.shutdown();
     }
 
