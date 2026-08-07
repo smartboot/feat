@@ -12,7 +12,6 @@ package tech.smartboot.feat.cloud.aot.controller;
 
 import com.alibaba.fastjson2.annotation.JSONField;
 import tech.smartboot.feat.core.common.FeatUtils;
-import tech.smartboot.feat.core.common.exception.FeatException;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -153,7 +152,16 @@ public final class JsonSerializer {
         }
 
         if (elements.isEmpty()) {
-            throw new FeatException("unSupport serialize for " + typeMirror + " now!");
+            // 温馨提示：当前类型未被推荐用于序列化，建议使用带有明确字段的 POJO，或显式指定 Map/List 类型
+            System.err.println("温馨提示：检测到 " + typeMirror + " 未包含可序列化字段，已退化为运行时 fastjson 序列化。该方式不被推荐，建议改用带有明确字段的 POJO 或显式声明为 Map/List 类型。");
+            // 其余类型（如 Map 子类、无字段接口等）退化为运行时 fastjson 序列化
+            printWriter.append(headBlank(i + 1)).println("if (" + obj + " != null) {");
+            printWriter.append(headBlank(i + 2)).println("os.write(JSON.toJSONBytes(" + obj + "));");
+            printWriter.append(headBlank(i + 1)).println("} else {");
+            printWriter.append(headBlank(i + 2));
+            toBytesPool("null");
+            printWriter.append(headBlank(i + 1)).println("}");
+            return;
         }
 
         printWriter.println(headBlank(i + 1) + "os.write('{');");
