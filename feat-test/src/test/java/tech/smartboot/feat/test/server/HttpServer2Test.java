@@ -140,7 +140,11 @@ public class HttpServer2Test extends BastTest {
 
     @After
     public void destroy() {
-        httpClient.close();
+        try {
+            httpClient.close();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
         bootstrap.shutdown();
     }
 }
