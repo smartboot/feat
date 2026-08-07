@@ -606,13 +606,34 @@ public abstract class AbstractCloudService implements CloudService {
      * @throws NoSuchFieldException   当字段不存在时抛出异常
      * @throws IllegalAccessException 当字段不可访问时抛出异常
      */
-    protected void reflectAutowired(Object bean, String fieldName, Object val) throws NoSuchFieldException, IllegalAccessException {
-        // 获取指定字段
-        Field field = bean.getClass().getDeclaredField(fieldName);
-        // 设置字段可访问
-        field.setAccessible(true);
-        // 为字段设置值
-        field.set(bean, val);
+    protected void reflectAutowired(Object bean, String fieldName, Object val) throws IllegalAccessException {
+        reflectAutowired(bean, bean.getClass(), fieldName, val);
+    }
+
+    /**
+     * 对于存在 继承 或 代理 类的情况，需要通过递归遍历来寻找。建议提供 getter/setter 以获得更好的初始化效率
+     *
+     * @param bean
+     * @param clazz
+     * @param fieldName
+     * @param val
+     * @throws IllegalAccessException
+     */
+    private void reflectAutowired(Object bean, Class clazz, String fieldName, Object val) throws IllegalAccessException {
+        if (clazz.getName().startsWith("java.")) {
+            throw new FeatException("can't reflect field [" + fieldName + "] in class [" + bean.getClass().getName() + "]");
+        }
+
+        for (Field field : clazz.getDeclaredFields()) {
+            if (field.getName().equals(fieldName)) {
+                // 设置字段可访问
+                field.setAccessible(true);
+                // 为字段设置值
+                field.set(bean, val);
+                return;
+            }
+        }
+        reflectAutowired(bean, clazz.getSuperclass(), fieldName, val);
     }
 
 
