@@ -25,6 +25,7 @@ import { Aside, Steps } from '@astrojs/starlight/components';
 
 #### Feat Cloud / AOT
 
+- 修复 `feat.yaml` 缺失 `feat.redis.username` 配置解析的问题。
 - Controller 增加返回类型适配： `List<Byte>`、`List<Short>`、`List<Integer>`、`List<Long>` 以及直接继承 Map 的POJO 类。
 - 修复通过反射注入代理 Bean 属性字段报 `NoSuchFieldException` 的问题。
 - 优化 AOT 编译失败的异常提示

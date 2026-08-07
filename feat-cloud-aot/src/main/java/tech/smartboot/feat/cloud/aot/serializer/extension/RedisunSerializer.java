@@ -36,6 +36,12 @@ public class RedisunSerializer extends ExtensionSerializer {
     public void serializeLoadBean() {
         printWriter.append(headBlank(0)).println("applicationContext.addBean(\"redisun\", Redisun.create(opt -> {");
         printWriter.append(headBlank(1)).println("opt.setAddress(\"" + JSONPath.eval(config, "$.feat.redis.address") + "\");");
+
+        Object username = JSONPath.eval(config, "$.feat.redis.username");
+        if (username != null) {
+            printWriter.append(headBlank(1)).println("opt.setUsername(\"" + username + "\");");
+        }
+
         Object password = JSONPath.eval(config, "$.feat.redis.password");
         if (password != null) {
             printWriter.append(headBlank(1)).println("opt.setPassword(\"" + password + "\");");
