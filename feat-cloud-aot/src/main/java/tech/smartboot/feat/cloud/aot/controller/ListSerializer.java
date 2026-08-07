@@ -87,6 +87,8 @@ final class ListSerializer extends AbstractSerializer {
             printWriter.append(JsonSerializer.headBlank(i + 2)).println("os.write('\"');");
         } else if (NUMBER_SET.contains(type.toString())) {
             printWriter.append(JsonSerializer.headBlank(i + 2)).println("writeNumber(os, p" + i + ");");
+        } else if (Boolean.class.getName().equals(type.toString())) {
+            printWriter.append(JsonSerializer.headBlank(i + 2)).println("writeBoolean(os, p" + i + ");");
         } else {
             jsonSerializer.serialize(type, "p" + i, i + 2, parent);
         }
