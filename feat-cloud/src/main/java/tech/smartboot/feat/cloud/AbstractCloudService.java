@@ -312,6 +312,14 @@ public abstract class AbstractCloudService implements CloudService {
         }
     }
 
+    protected void writeBoolean(OutputStream out, Boolean value) throws IOException {
+        if (value == null) {
+            out.write(b_null);
+        } else {
+            writeBool(out, value.booleanValue());
+        }
+    }
+
     /**
      * 将双精度浮点数写入输出流
      *
