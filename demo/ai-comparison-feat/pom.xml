@@ -11,7 +11,7 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <feat.version>2.3.0</feat.version>
+        <feat.version>2.3.1</feat.version>
     </properties>
 
     <dependencies>

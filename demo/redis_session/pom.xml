@@ -8,7 +8,7 @@
 
     <artifactId>redis_session</artifactId>
     <properties>
-        <feat.version>2.3.0</feat.version>
+        <feat.version>2.3.1</feat.version>
     </properties>
 
     <dependencies>
