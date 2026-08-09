@@ -84,6 +84,13 @@ public class HttpRequestProtocol implements Protocol<HttpEndpoint> {
                 return decode(byteBuffer, request);
             }
             case DecodeContext.STATE_URI_QUERY: {
+                // 兼容 /? HTTP/1.1 这类场景
+                if (byteBuffer.hasRemaining() && byteBuffer.get(byteBuffer.position()) == FeatUtils.SP) {
+                    byteBuffer.position(byteBuffer.position() + 1);
+                    request.setQueryString("");
+                    decodeContext.setState(DecodeContext.STATE_PROTOCOL_DECODE);
+                    return decode(byteBuffer, request);
+                }
                 ByteTree<?> query = FeatUtils.scanByteTree(byteBuffer, ByteTree.SP_END_MATCHER, options.getByteCache());
                 if (query == null) {
                     break;
