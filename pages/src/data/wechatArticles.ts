@@ -10,6 +10,14 @@ export interface WechatArticle {
 
 export const wechatArticles: WechatArticle[] = [
   {
+    title: '当所有框架都在拥抱 AI 写代码时，Feat 为什么坚持"人写"？',
+    href: 'https://mp.weixin.qq.com/s/farHoKrrkClJxMaJPSsi6A',
+    publishedAt: '2026-08-15',
+    summary: '代码的终极质量，从来不取决于它能否通过测试，而取决于它是否承载了设计者的思考与审美。',
+    imageUrl:'https://fastly.jsdelivr.net/gh/bucketio/img16@main/2026/08/15/1786790724399-e0581986-ff43-464b-920a-d32b3e7d10f0.png',
+    featured: true,
+  },
+  {
     title: '集成 Nacos，我们拒绝了 Spring Starter',
     href: 'https://mp.weixin.qq.com/s/aSKwqknJJmQ5sjmsN9MTIg',
     publishedAt: '2026-08-05',
