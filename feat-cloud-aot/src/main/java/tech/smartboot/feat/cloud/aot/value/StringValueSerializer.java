@@ -19,7 +19,6 @@ import javax.lang.model.element.Element;
 final class StringValueSerializer extends AbstractSerializer {
     @Override
     public String serialize(Element se, Object paramValue) {
-        String val = resolveProperty(paramValue.toString());
-        return val == null ? toString(paramValue.toString()) : val;
+        return resolveStringProperty(paramValue.toString());
     }
 }

@@ -22,7 +22,7 @@ abstract class AbstractSerializer {
     public abstract String serialize(Element field, Object paramValue);
 
 
-    protected String toString(String str) {
+    private String toString(String str) {
         return "\"" + str.replace("\\", "\\\\").replace("\n", "\\n").replace("\"", "\\\"") + "\"";
     }
 
@@ -47,9 +47,9 @@ abstract class AbstractSerializer {
         return "resolveIntProperty(\"" + name + "\" ,\"" + name.replace('.', '_').toUpperCase() + "\"," + defaultValue + ")";
     }
 
-    protected String resolveProperty(String val) {
+    protected String resolveStringProperty(String val) {
         if (!(val.startsWith("${") && val.endsWith("}"))) {
-            return null;
+            return toString(val);
         }
         int spit = val.indexOf(":");
         String name = val.substring(2, spit > 0 ? spit : val.length() - 1);

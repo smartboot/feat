@@ -24,12 +24,12 @@ public class FeatValueSerializer {
     private static final Map<String, AbstractSerializer> serializers = new HashMap<>();
 
     static {
-        serializers.put(int.class.getName(), new IntegerSerializer());
+        serializers.put(int.class.getName(), new IntegerValueSerializer());
         serializers.put(String.class.getName(), new StringValueSerializer());
-        serializers.put("int[]", new IntegerArraySerializer());
-        serializers.put("java.util.List<java.lang.Integer>", new IntegerListSerializer());
-        serializers.put("java.lang.String[]", new StringArraySerializer());
-        serializers.put("java.util.List<java.lang.String>", new StringListSerializer());
+        serializers.put("int[]", new IntegerValuesSerializer(false));
+        serializers.put("java.util.List<java.lang.Integer>", new IntegerValuesSerializer(true));
+        serializers.put("java.lang.String[]", new StringValuesSerializer(false));
+        serializers.put("java.util.List<java.lang.String>", new StringValuesSerializer(true));
     }
 
     public static String serialize(Element field, Object paramValue) {

@@ -19,27 +19,29 @@ import javax.lang.model.element.Element;
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0 5/27/25
  */
-final class StringListSerializer extends AbstractSerializer {
+final class IntegerValuesSerializer extends AbstractSerializer {
+    private final boolean list;
+
+    public IntegerValuesSerializer(boolean list) {
+        this.list = list;
+    }
+
     @Override
     public String serialize(Element field, Object paramValue) {
         JSONArray array = (JSONArray) paramValue;
-        StringBuilder stringValue = new StringBuilder("java.util.Arrays.asList(");
+        StringBuilder stringValue = new StringBuilder(list ? "java.util.Arrays.asList(" : "new int[]{");
         for (int i = 0; i < array.size(); i++) {
             if (i != 0) {
                 stringValue.append(", ");
             }
             Object o = array.get(i);
-            if (!(o instanceof String)) {
+            String val = resolveIntProperty(o);
+            if (val == null) {
                 throw new FeatException("compiler err: invalid value [ " + o + " ] for field[ " + field.getSimpleName() + " ] in class[ " + field.getEnclosingElement() + " ]");
             }
-            String val = resolveProperty(o.toString());
-            if (val == null) {
-                stringValue.append(toString(o.toString()));
-            } else {
-                stringValue.append(val);
-            }
+            stringValue.append(val);
         }
-        stringValue.append(")");
+        stringValue.append(list ? ")" : "}");
         return stringValue.toString();
     }
 }
