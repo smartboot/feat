@@ -27,6 +27,16 @@ abstract class AbstractSerializer {
     }
 
 
+    protected String resolveIntProperty(String val) {
+        if (!(val.startsWith("${") && val.endsWith("}"))) {
+            return null;
+        }
+        int spit = val.indexOf(":");
+        String name = val.substring(2, spit > 0 ? spit : val.length() - 1);
+        String defaultValue = spit > 0 ? val.substring(spit + 1, val.length() - 1) : null;
+        return "resolveIntProperty(\"" + name + "\" ,\"" + name.replace('.', '_').toUpperCase() + "\"," + (defaultValue == null ? "0" : toString(defaultValue)) + ")";
+    }
+
     protected String resolveProperty(String val) {
         if (!(val.startsWith("${") && val.endsWith("}"))) {
             return null;

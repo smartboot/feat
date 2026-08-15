@@ -19,6 +19,10 @@ import javax.lang.model.element.Element;
 final class IntegerSerializer extends AbstractSerializer {
     @Override
     public String serialize(Element se, Object value) {
-        return String.valueOf(Integer.parseInt(value.toString()));
+        String val = resolveIntProperty(value.toString());
+        if (val == null) {
+            return String.valueOf(Integer.parseInt(value.toString()));
+        }
+        return val;
     }
 }

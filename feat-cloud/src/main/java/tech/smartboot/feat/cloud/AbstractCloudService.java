@@ -800,4 +800,13 @@ public abstract class AbstractCloudService implements CloudService {
         val = System.getenv(envName);
         return val == null ? defaultValue : val;
     }
+
+    protected int resolveIntProperty(String propertyName, String envName, int defaultValue) {
+        String val = System.getProperty(propertyName);
+        if (val != null) {
+            return Integer.parseInt(val, defaultValue);
+        }
+        val = System.getenv(envName);
+        return val == null ? defaultValue : Integer.parseInt(val, defaultValue);
+    }
 }

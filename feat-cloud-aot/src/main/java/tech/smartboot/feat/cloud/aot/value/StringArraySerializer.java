@@ -32,7 +32,12 @@ final class StringArraySerializer extends AbstractSerializer {
             if (!(o instanceof String)) {
                 throw new FeatException("compiler err: invalid value [ " + o + " ] for field[ " + field.getSimpleName() + " ] in class[ " + field.getEnclosingElement() + " ]");
             }
-            stringValue.append(toString(o.toString()));
+            String val = resolveProperty(o.toString());
+            if (val == null) {
+                stringValue.append(toString(o.toString()));
+            } else {
+                stringValue.append(val);
+            }
         }
         stringValue.append("}");
         return stringValue.toString();
