@@ -32,7 +32,7 @@ abstract class AbstractSerializer {
             throw new NullPointerException();
         }
         if (objVal instanceof Integer) {
-            return "resolveIntProperty(null ,null," + objVal + ")";
+            return objVal.toString();
         }
         if (!(objVal instanceof String)) {
             return null;
@@ -43,8 +43,8 @@ abstract class AbstractSerializer {
         }
         int spit = val.indexOf(":");
         String name = val.substring(2, spit > 0 ? spit : val.length() - 1);
-        String defaultValue = spit > 0 ? val.substring(spit + 1, val.length() - 1) : null;
-        return "resolveIntProperty(\"" + name + "\" ,\"" + name.replace('.', '_').toUpperCase() + "\"," + (defaultValue == null ? "0" : toString(defaultValue)) + ")";
+        int defaultValue = spit > 0 ? Integer.parseInt(val.substring(spit + 1, val.length() - 1)) : 0;
+        return "resolveIntProperty(\"" + name + "\" ,\"" + name.replace('.', '_').toUpperCase() + "\"," + defaultValue + ")";
     }
 
     protected String resolveProperty(String val) {
