@@ -1,2 +1,11 @@
 nacos:
   serverAddr: 192.168.5.191:8848
+  config:
+    dataId: config1
+    group: feat
+    timeout: 1000
+  naming:
+    serviceName: feat-nacos-demo
+    group: DEFAULT_GROUP
+    ip: 127.0.0.1
+    port: 8080

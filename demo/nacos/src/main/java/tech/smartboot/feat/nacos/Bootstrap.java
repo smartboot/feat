@@ -7,6 +7,7 @@ import com.alibaba.nacos.api.config.listener.AbstractListener;
 import tech.smartboot.feat.cloud.FeatCloud;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.PostConstruct;
+import tech.smartboot.feat.cloud.annotation.PreDestroy;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.cloud.annotation.Value;
 
@@ -17,21 +18,54 @@ public class Bootstrap {
 
     @Value("${nacos.serverAddr}")
     private String serverAddr;
-    private String config;
+
+    @Value("${nacos.config.dataId}")
+    private String configDataId;
+
+    @Value("${nacos.config.group}")
+    private String configGroup;
+
+    @Value("${nacos.config.timeout}")
+    private int configTimeout;
+
+    private volatile String config = "";
+    private ConfigService configService;
+
+    private final AbstractListener configListener = new AbstractListener() {
+        @Override
+        public void receiveConfigInfo(String configInfo) {
+            config = configInfo == null ? "" : configInfo;
+        }
+    };
 
     @PostConstruct
     public void init() throws Exception {
         Properties properties = new Properties();
         properties.put(PropertyKeyConst.SERVER_ADDR, serverAddr);
-        // 初始化配置中心的Nacos Java SDK
-        ConfigService configService = NacosFactory.createConfigService(properties);
-        config = configService.getConfigAndSignListener("config1", "feat", 1000, new AbstractListener() {
 
-            @Override
-            public void receiveConfigInfo(String configInfo) {
-                config = configInfo;
-            }
-        });
+        try {
+            configService = NacosFactory.createConfigService(properties);
+            String initialConfig = configService.getConfigAndSignListener(
+                    configDataId,
+                    configGroup,
+                    configTimeout,
+                    configListener
+            );
+            config = initialConfig == null ? "" : initialConfig;
+        } catch (Exception e) {
+            destroy();
+            throw e;
+        }
+    }
+
+    @PreDestroy
+    public void destroy() throws Exception {
+        if (configService == null) {
+            return;
+        }
+        configService.removeListener(configDataId, configGroup, configListener);
+        configService.shutDown();
+        configService = null;
     }
 
     @RequestMapping("/nacos")
@@ -40,10 +74,22 @@ public class Bootstrap {
     }
 
     public static void main(String[] args) {
-        FeatCloud.cloudServer().listen();
+        FeatCloud.cloudServer(opt -> opt.setPackages(Bootstrap.class.getName())).listen();
     }
 
     public void setServerAddr(String serverAddr) {
         this.serverAddr = serverAddr;
+    }
+
+    public void setConfigDataId(String configDataId) {
+        this.configDataId = configDataId;
+    }
+
+    public void setConfigGroup(String configGroup) {
+        this.configGroup = configGroup;
+    }
+
+    public void setConfigTimeout(int configTimeout) {
+        this.configTimeout = configTimeout;
     }
 }
