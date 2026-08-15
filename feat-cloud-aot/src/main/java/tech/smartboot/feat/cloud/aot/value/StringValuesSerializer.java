@@ -11,6 +11,7 @@
 package tech.smartboot.feat.cloud.aot.value;
 
 import com.alibaba.fastjson2.JSONArray;
+import tech.smartboot.feat.cloud.aot.SerializerUtils;
 import tech.smartboot.feat.core.common.exception.FeatException;
 
 import javax.lang.model.element.Element;
@@ -38,7 +39,7 @@ final class StringValuesSerializer extends AbstractSerializer {
             if (!(o instanceof String)) {
                 throw new FeatException("compiler err: invalid value [ " + o + " ] for field[ " + field.getSimpleName() + " ] in class[ " + field.getEnclosingElement() + " ]");
             }
-            stringValue.append(resolveStringProperty(o.toString()));
+            stringValue.append(SerializerUtils.resolveStringProperty(o.toString()));
         }
         stringValue.append(list ? ")" : "}");
         return stringValue.toString();

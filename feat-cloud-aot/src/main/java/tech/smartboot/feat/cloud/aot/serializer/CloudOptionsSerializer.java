@@ -19,6 +19,7 @@ import tech.smartboot.feat.cloud.AbstractCloudService;
 import tech.smartboot.feat.cloud.ApplicationContext;
 import tech.smartboot.feat.cloud.CloudService;
 import tech.smartboot.feat.cloud.aot.Serializer;
+import tech.smartboot.feat.cloud.aot.SerializerUtils;
 import tech.smartboot.feat.cloud.aot.license.License;
 import tech.smartboot.feat.cloud.aot.serializer.extension.DataSourceSerializer;
 import tech.smartboot.feat.cloud.aot.serializer.extension.MybatisSerializer;
@@ -275,9 +276,9 @@ public final class CloudOptionsSerializer implements Serializer {
                 continue;
             }
             if (field.getType() == int.class) {
-                printWriter.println("\t\tapplicationContext.getOptions()." + field.getName() + "(" + FeatUtils.class.getName() + ".toInt(System.getenv(\"FEAT_SERVER_" + field.getName().toUpperCase() + "\")," + obj + "));");
+                printWriter.println("\t\tapplicationContext.getOptions()." + field.getName() + "(" + SerializerUtils.resolveIntProperty(obj) + ");");
             } else {
-                printWriter.println("\t\tapplicationContext.getOptions()." + field.getName() + "(" + obj + ");");
+                printWriter.println("\t\tapplicationContext.getOptions()." + field.getName() + "(" + SerializerUtils.resolveStringProperty(obj.toString()) + ");");
             }
         }
 

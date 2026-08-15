@@ -10,6 +10,8 @@
 
 package tech.smartboot.feat.cloud.aot.value;
 
+import tech.smartboot.feat.cloud.aot.SerializerUtils;
+
 import javax.lang.model.element.Element;
 
 /**
@@ -19,6 +21,6 @@ import javax.lang.model.element.Element;
 final class StringValueSerializer extends AbstractSerializer {
     @Override
     public String serialize(Element se, Object paramValue) {
-        return resolveStringProperty(paramValue.toString());
+        return SerializerUtils.resolveStringProperty(paramValue.toString());
     }
 }
