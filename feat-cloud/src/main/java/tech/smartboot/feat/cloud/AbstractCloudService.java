@@ -34,6 +34,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.concurrent.CompletableFuture;
@@ -49,7 +50,7 @@ import java.util.concurrent.CompletableFuture;
  * @version v1.0.0
  */
 public abstract class AbstractCloudService implements CloudService {
-    protected static final Charset UTF_8 = Charset.forName("UTF-8");
+    protected static final Charset UTF_8 = StandardCharsets.UTF_8;
     /**
      * JSON响应中表示success=false的字节序列
      */
@@ -780,5 +781,23 @@ public abstract class AbstractCloudService implements CloudService {
     protected static void printRouter(String router, String controller, String method) {
         // 使用绿色输出路由映射信息
         System.out.println(" \u001B[32m|->\u001B[0m " + router + " ==> " + controller + "@" + method);
+    }
+
+
+    /**
+     * 按优先级解析配置值：系统属性 > 环境变量 > 默认值。
+     *
+     * @param propertyName 系统属性名称
+     * @param envName      环境变量名称
+     * @param defaultValue 默认值
+     * @return 最终解析得到的配置值
+     */
+    protected String resolveProperty(String propertyName, String envName, String defaultValue) {
+        String val = System.getProperty(propertyName);
+        if (val != null) {
+            return val;
+        }
+        val = System.getenv(envName);
+        return val == null ? defaultValue : val;
     }
 }

@@ -25,4 +25,15 @@ abstract class AbstractSerializer {
     protected String toString(String str) {
         return "\"" + str.replace("\\", "\\\\").replace("\n", "\\n").replace("\"", "\\\"") + "\"";
     }
+
+
+    protected String resolveProperty(String val) {
+        if (!(val.startsWith("${") && val.endsWith("}"))) {
+            return null;
+        }
+        int spit = val.indexOf(":");
+        String name = val.substring(2, spit > 0 ? spit : val.length() - 1);
+        String defaultValue = spit > 0 ? val.substring(spit + 1, val.length() - 1) : null;
+        return "resolveProperty(\"" + name + "\" ,\"" + name.replace('.', '_').toUpperCase() + "\"," + (defaultValue == null ? "null" : toString(defaultValue)) + ")";
+    }
 }
