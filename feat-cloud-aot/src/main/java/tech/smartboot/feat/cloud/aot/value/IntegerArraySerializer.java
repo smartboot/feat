@@ -29,15 +29,11 @@ final class IntegerArraySerializer extends AbstractSerializer {
                 stringValue.append(", ");
             }
             Object o = array.get(i);
-            String val = resolveIntProperty(o.toString());
-            if (val != null) {
-                stringValue.append(val);
-                continue;
-            }
-            if (!(o instanceof Integer)) {
+            String val = resolveIntProperty(o);
+            if (val == null) {
                 throw new FeatException("compiler err: invalid value [ " + o + " ] for field[ " + field.getSimpleName() + " ] in class[ " + field.getEnclosingElement() + " ]");
             }
-            stringValue.append(o);
+            stringValue.append(val);
         }
         stringValue.append("}");
         return stringValue.toString();

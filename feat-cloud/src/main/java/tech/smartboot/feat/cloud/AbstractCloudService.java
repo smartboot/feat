@@ -802,6 +802,9 @@ public abstract class AbstractCloudService implements CloudService {
     }
 
     protected int resolveIntProperty(String propertyName, String envName, int defaultValue) {
+        if (propertyName == null || envName == null) {
+            return defaultValue;
+        }
         String val = System.getProperty(propertyName);
         if (val != null) {
             return Integer.parseInt(val, defaultValue);
