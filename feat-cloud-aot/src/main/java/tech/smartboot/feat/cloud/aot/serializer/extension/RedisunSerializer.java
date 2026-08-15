@@ -11,6 +11,7 @@
 package tech.smartboot.feat.cloud.aot.serializer.extension;
 
 import com.alibaba.fastjson2.JSONPath;
+import tech.smartboot.feat.cloud.aot.SerializerUtils;
 import tech.smartboot.redisun.Redisun;
 
 import javax.annotation.processing.ProcessingEnvironment;
@@ -39,16 +40,16 @@ public class RedisunSerializer extends ExtensionSerializer {
 
         Object username = JSONPath.eval(config, "$.feat.redis.username");
         if (username != null) {
-            printWriter.append(headBlank(1)).println("opt.setUsername(\"" + username + "\");");
+            printWriter.append(headBlank(1)).println("opt.setUsername(" + SerializerUtils.resolveStringProperty(username) + ");");
         }
 
         Object password = JSONPath.eval(config, "$.feat.redis.password");
         if (password != null) {
-            printWriter.append(headBlank(1)).println("opt.setPassword(\"" + password + "\");");
+            printWriter.append(headBlank(1)).println("opt.setPassword(" + SerializerUtils.resolveStringProperty(password) + ");");
         }
         Object db = JSONPath.eval(config, "$.feat.redis.database");
         if (db != null) {
-            printWriter.append(headBlank(1)).println("opt.setDatabase(" + db + ");");
+            printWriter.append(headBlank(1)).println("opt.setDatabase(" + SerializerUtils.resolveIntProperty(db) + ");");
         }
         printWriter.append(headBlank(0)).println("}));");
     }

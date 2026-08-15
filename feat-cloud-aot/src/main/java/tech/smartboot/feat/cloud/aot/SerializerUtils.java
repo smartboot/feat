@@ -26,7 +26,11 @@ public class SerializerUtils {
         return "resolveIntProperty(\"" + name + "\" ,\"" + name.replace('.', '_').toUpperCase() + "\"," + defaultValue + ")";
     }
 
-    public static String resolveStringProperty(String val) {
+    public static String resolveStringProperty(Object objVal) {
+        if (objVal == null) {
+            return null;
+        }
+        String val = objVal.toString();
         if (!(val.startsWith("${") && val.endsWith("}"))) {
             return toString(val);
         }

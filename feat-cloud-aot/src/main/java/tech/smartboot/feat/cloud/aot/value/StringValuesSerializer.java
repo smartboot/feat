@@ -39,7 +39,7 @@ final class StringValuesSerializer extends AbstractSerializer {
             if (!(o instanceof String)) {
                 throw new FeatException("compiler err: invalid value [ " + o + " ] for field[ " + field.getSimpleName() + " ] in class[ " + field.getEnclosingElement() + " ]");
             }
-            stringValue.append(SerializerUtils.resolveStringProperty(o.toString()));
+            stringValue.append(SerializerUtils.resolveStringProperty(o));
         }
         stringValue.append(list ? ")" : "}");
         return stringValue.toString();
