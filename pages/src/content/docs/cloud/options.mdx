@@ -7,17 +7,18 @@ sidebar:
 
 import { Aside } from '@astrojs/starlight/components';
 
-Feat Cloud 里有两类配置很容易混在一起：
+Feat Cloud 里有三类配置容易混在一起：
 
 - `CloudOptions`：启动应用时传给 Feat Cloud 的运行时选项
 - `feat.yml` / `feat-{env}.yml`：编译期生成代码时读取的配置输入
+- `${...}` 占位符：写在 `feat.yml` 的值里，运行时从系统属性/环境变量取值
 
-这章分成两段：
+这章分两段展开：
 
 - 前半段讲 `CloudOptions`：启动入口里本次应用怎么跑
-- 后半段讲 Profile：不同环境如何参与编译期生成
+- 后半段讲 `feat.yml`：不同环境如何参与编译期生成，以及值如何在运行时注入
 
-核心判断很简单：**启动入口里本次怎么跑，看 `CloudOptions`；会影响生成代码的环境差异，看 `feat.yml`。**
+核心判断：**启动入口里本次怎么跑，看 `CloudOptions`；会影响生成代码的环境差异，看 `feat.yml`；要在运行时注入密钥等值，用 `${}`。**
 
 ## CloudOptions 启动配置
 
@@ -206,7 +207,6 @@ src/main/resources/
 ```yaml title="feat.yml"
 server:
   port: 8080
-  debug: false
 
 feat:
   datasource:
@@ -228,6 +228,27 @@ feat:
     password: dev
 ```
 
+### `server:` 块支持的配置项
+
+`feat.yml` 的 `server:` 块并不是所有 `ServerOptions` 选项都能配。AOT 只会绑定 `int` 和 `String` 类型的字段，因此 `boolean`、`long` 类字段写在这里不生效。
+
+| 配置项 | 类型 | 说明 |
+|------|------|------|
+| `port` | int | 监听端口 |
+| `host` | String | 绑定地址 |
+| `threadNum` | int | 工作线程数 |
+| `headerLimiter` | int | 请求头数量上限 |
+| `readBufferSize` / `writeBufferSize` | int | 读写缓冲区大小 |
+| `autoSSL` | 特殊 | 设为 `true` 启用自动 HTTPS |
+| `session.store-type` | 特殊 | 设为 `redis` 切换为 Redis 会话存储 |
+| `session.timeout` | 特殊 | 会话超时时间 |
+
+这些值同样支持 `${}` 占位符，例如 `port: ${port}`。
+
+<Aside type="caution">
+`debug` 看起来像 `server:` 的一项，但它不是字段、而是方法，且 `boolean` 不在可绑定类型内，写在 `feat.yml` 里不会生效。调试模式只能通过启动入口的 `options.debug(true)` 打开。
+</Aside>
+
 ### 合并规则
 
 Feat Cloud 会先读取默认配置，再读取环境配置。
@@ -243,7 +264,6 @@ Feat Cloud 会先读取默认配置，再读取环境配置。
 ```yaml title="feat.yml"
 server:
   port: 8080
-  debug: false
   host: 0.0.0.0
 ```
 
@@ -252,16 +272,89 @@ server:
   port: 8081
 ```
 
-合并后，`server.port` 会被覆盖，而 `debug` 和 `host` 会继续保留：
+合并后，`server.port` 会被覆盖，而 `host` 会继续保留：
 
 ```yaml title="dev 环境最终配置"
 server:
   port: 8081
-  debug: false
   host: 0.0.0.0
 ```
 
 如果环境文件里的值是数组，则以环境配置为准，不会和默认数组拼接。
+
+### 用 `${}` 引用系统属性和环境变量
+
+`feat.yml` 里的值不一定要写死。只要把值写成 `${...}` 形式，Feat Cloud 就不会把它当成字面量，而是在运行时从系统属性和环境变量里解析。这正是把敏感信息（数据库口令、Nacos 凭据、第三方 Token）从代码仓库里挪出去的官方做法。
+
+```yaml title="feat.yml"
+feat:
+  datasource:
+    url: jdbc:mysql://localhost:3306/app
+    username: ${db.username}
+    password: ${db.password}
+```
+
+`username`、`password` 整条值都是 `${...}`，运行时会解析。打包后，配置文件本身可以安全提交到仓库；真正的密钥在启动时注入：
+
+```bash title="运行时注入"
+java -Ddb.username=app -Ddb.password=secret -jar yourapp.jar
+# 或者用环境变量
+DB_USERNAME=app DB_PASSWORD=secret java -jar yourapp.jar
+```
+
+<Aside type="warning">
+`${}` 只在**整个值**恰好是 `${...}` 时才解析，不能嵌在更长字符串中间。`url: jdbc:mysql://${db.host}/app` 不会被替换，`db.host` 会原样留在地址里。如果整条地址也要注入，就把它作为一个完整变量：`url: ${db.url}`，再通过 `-Ddb.url=...` 或 `DB_URL` 提供。
+</Aside>
+
+#### 支持的写法
+
+| 写法 | 含义 |
+|------|------|
+| `${name}` | 运行时解析 `name`，找不到则字符串为 `null`、整数为 `0` |
+| `${name:default}` | 找不到时使用 `default` 作为字面默认值，按第一个 `:` 拆分 |
+
+`default` 是一段普通文本，不会被再次解析。`:` 只在第一个出现时作为分隔符，所以含 `:` 的默认值可以放心写，例如 `${db.url:jdbc:mysql://localhost:3306/app}` 的默认值就是整条地址。
+
+<Aside type="caution">
+整数类型的占位符只用 `${name}` 这一种写法，不要带非零默认值。带非零默认值的整数占位，在系统属性/环境变量确实提供值时会解析失败。需要默认端口，直接把数字写进 `feat.yml` 更稳妥。
+</Aside>
+
+#### 解析来源与优先级
+
+`feat.yml` 里的 `${name}` 不是引用另一条配置项，而是去外部取值，顺序是：
+
+1. **JVM 系统属性**：名字原样使用，例如 `-Ddb.password=secret` 匹配 `${db.password}`
+2. **操作系统环境变量**：名字按“点号转下划线、全大写”规则转换，例如 `${db.password}` 对应环境变量 `DB_PASSWORD`
+3. 都没有时，使用 `:default`，没有默认值则字符串为 `null`、整数为 `0`
+
+<Aside type="caution">
+这不是 Spring 那种“配置项之间互相引用”的占位符。`${db.password}` 不会去读 `feat.yml` 里的另一条 `db.password`，它只看系统属性和环境变量。如果你要的是“把 `feat.yml` 里某个值注入到某个 Bean 字段”，那是 `@Value("${...}")` 注解的职责，见 [Bean 注入](/feat/cloud/bean/)，两者名字像但机制不同。
+</Aside>
+
+#### 哪些配置项支持
+
+`${}` 只对 Feat Cloud 在编译期消费的配置值生效，典型包括：
+
+- `server.*` 启动项，例如 `server.port: ${port}`
+- `feat.datasource.*` 的 `url`、`username`、`password`、`driver`
+- `feat.redis.*` 的 `username`、`password`、`database`
+- 被 `@Value("${...}")` 注入的字段所引用的配置值
+
+自己用代码直接从配置里读出来的值不会被替换。所以 `${}` 应该写在 Feat Cloud 已经接管的那几个配置块里，而不是任意 YAML 键上。
+
+#### 和 Profile 的关系
+
+`${}` 解析发生在运行时，而 `feat.profiles.active` 选择环境也发生在运行时，但两者互不依赖：每个环境的 `feat-{env}.yml` 都可以各自使用 `${}`。常见做法是把结构性的环境差异（端口、地址）交给 Profile，把同一份配置里需要保密的值交给 `${}`，配合使用：
+
+```yaml title="feat-prod.yml"
+feat:
+  datasource:
+    url: jdbc:mysql://prod-db.example.com:3306/app
+    username: ${db.username}
+    password: ${db.password}
+```
+
+这样生产环境的地址走 Profile 覆盖，凭据走运行时注入，仓库里既看不到口令，也不必为每个环境硬编码账号。Nacos 凭据的同一种用法可以参考 [Nacos 接入](/feat/cloud/nacos/)。
 
 ### 编译期会生成什么
 
