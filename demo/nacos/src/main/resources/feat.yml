@@ -1,11 +1,14 @@
 nacos:
-  serverAddr: 192.168.5.191:8848
+  serverAddr: 127.0.0.1:8848
   config:
     dataId: config1
     group: feat
     timeout: 1000
-  naming:
+  register:
     serviceName: feat-nacos-demo
     group: DEFAULT_GROUP
     ip: 127.0.0.1
-    port: 8080
+    port: 8082
+  discover:
+    serviceName: feat-nacos-demo
+    group: DEFAULT_GROUP
