@@ -302,7 +302,7 @@ java -Ddb.username=app -Ddb.password=secret -jar yourapp.jar
 DB_USERNAME=app DB_PASSWORD=secret java -jar yourapp.jar
 ```
 
-<Aside type="warning">
+<Aside type="caution">
 `${}` 只在**整个值**恰好是 `${...}` 时才解析，不能嵌在更长字符串中间。`url: jdbc:mysql://${db.host}/app` 不会被替换，`db.host` 会原样留在地址里。如果整条地址也要注入，就把它作为一个完整变量：`url: ${db.url}`，再通过 `-Ddb.url=...` 或 `DB_URL` 提供。
 </Aside>
 
