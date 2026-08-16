@@ -11,6 +11,7 @@ import { Aside } from '@astrojs/starlight/components';
 
 Nacos 把配置管理（Config）和服务管理（Naming）做在了同一个客户端里。本文用一个类对应一个能力：`ConfigBootstrap` 管配置，`RegisterBootstrap` 管注册，`DiscoverBootstrap` 管发现。三个类结构同构，套路一致。
 
+![](./img/nacos.png)
 ## 准备依赖与基础配置
 
 **Feat Cloud 没有内置 Nacos starter。** 本文直接使用官方 `nacos-client`，不额外封装。多写几十行胶水代码，换来的是完全透明的链路——连接在哪建立、配置在哪回调、坏配置为什么被拦截，全部一目了然。
