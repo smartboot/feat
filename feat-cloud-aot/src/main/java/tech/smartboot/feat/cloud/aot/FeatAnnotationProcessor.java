@@ -100,7 +100,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
             serviceWrite = new PrintWriter(serviceFile.openWriter());
             // 初始化 API 文档生成器
             apiDocSerializer = new ApiDocSerializer(processingEnv);
-            System.out.println("processor init: " + this);
+//            System.out.println("processor init: " + this);
         } catch (Throwable e) {
             throw new FeatException(e);
         }
@@ -111,7 +111,7 @@ public class FeatAnnotationProcessor extends AbstractProcessor {
         if (generated || annotations.isEmpty()) {
             return false;
         }
-        System.out.println("annotation process: " + this + " ,annotations: " + annotations);
+//        System.out.println("annotation process: " + this + " ,annotations: " + annotations);
 
         for (Element element : roundEnv.getElementsAnnotatedWith(McpEndpoint.class)) {
             if (element.getAnnotation(Controller.class) == null) {
