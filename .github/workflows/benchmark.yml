@@ -1,12 +1,14 @@
 name: 框架性能基准测试
 
 on:
-  # 在master分支的推送和PR时触发
   push:
-    branches: [ "master" ]
+    branches:
+      - master
+
   pull_request:
-    branches: [ "master" ]
-  # 允许手动触发工作流
+    branches:
+      - master
+
   workflow_dispatch:
 
 jobs:
@@ -14,106 +16,86 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # ============================================================
+      # 基础环境
+      # ============================================================
+
       - name: 检出代码
         uses: actions/checkout@v4
 
-      - name: 设置JDK 21
+      - name: 设置 JDK 21
         uses: actions/setup-java@v4
         with:
-          distribution: 'zulu'
-          java-version: '21'
+          distribution: zulu
+          java-version: "21"
 
-      - name: 设置Maven
+      - name: 设置 Maven
         uses: stCarolas/setup-maven@v5
 
-      - name: 安装wrk
-        run: sudo apt-get update && sudo apt-get install -y wrk unzip
-
-      # ============================================================
-      # 基础项目构建
-      # ============================================================
-
-      - name: 构建项目
+      - name: 安装 wrk
         run: |
-          FEAT_LICENSE=${{ secrets.FEAT_LICENSE }} \
-          mvn -B install \
-          --file pom.xml \
-          -DskipTests \
-          -Dmaven.compiler.source=8 \
-          -Dmaven.compiler.target=8
+          sudo apt-get update
+          sudo apt-get install -y wrk unzip
 
       # ============================================================
-      # 初始化构建耗时记录
+      # 构建 Feat 主项目
+      # ============================================================
+
+      - name: 构建 Feat 主项目
+        run: |
+          FEAT_LICENSE="${{ secrets.FEAT_LICENSE }}" \
+          mvn -B install \
+            --file pom.xml \
+            -DskipTests \
+            -Dmaven.compiler.source=8 \
+            -Dmaven.compiler.target=8
+
+      # ============================================================
+      # 初始化构建耗时文件
       # ============================================================
 
       - name: 初始化构建耗时记录
         run: |
-          mkdir -p demo/benchmark/target/wrk-results
+          mkdir -p "$GITHUB_WORKSPACE/demo/benchmark/target/wrk-results"
 
-          cat > demo/benchmark/target/wrk-results/build-times.txt <<'EOF'
-          # Framework build benchmark
-          # Unit: milliseconds
-          # Quarkus uses a pre-built package and therefore has no compile time.
-          EOF
+          printf '%s\n' \
+            "# Framework build benchmark" \
+            "# Unit: milliseconds" \
+            "# Quarkus uses a pre-built package and therefore has no compile time." \
+            > "$GITHUB_WORKSPACE/demo/benchmark/target/wrk-results/build-times.txt"
 
       # ============================================================
-      # 构建 Feat 并记录耗时
+      # 构建 Feat Benchmark
       # ============================================================
 
-      - name: 构建Feat模板并记录耗时
+      - name: 构建 Feat Benchmark 并记录耗时
+        shell: bash
         run: |
-          cd demo/benchmark/feat
-      #提前编译一次避免下载依赖包耗时
-          mvn -B clean install -DskipTests
+          cd "$GITHUB_WORKSPACE/demo/benchmark/feat"
+
           start_time=$(date +%s%3N)
 
-          export FEAT_LICENSE=${{ secrets.FEAT_LICENSE }}
-          mvn -B clean install -DskipTests
-
-          end_time=$(date +%s%3N)
-          elapsed=$((end_time - start_time))
-
-          echo "feat=$elapsed" >> ../target/wrk-results/build-times.txt
-
-          echo "========================================"
-          echo "Feat 构建完成"
-          echo "构建耗时: ${elapsed} ms"
-          echo "构建耗时: $(awk "BEGIN {printf \"%.2f\", $elapsed / 1000}") s"
-          echo "========================================"
-
-      # ============================================================
-      # 构建 Vert.x 并记录耗时
-      # ============================================================
-
-      - name: 构建Vert.x模板并记录耗时
-        run: |
-          cd demo/benchmark/vertx
-        #提前编译一次避免下载依赖包耗时
-          mvn -B clean install -DskipTests
-          start_time=$(date +%s%3N)
+          export FEAT_LICENSE="${{ secrets.FEAT_LICENSE }}"
 
           mvn -B clean install -DskipTests
 
           end_time=$(date +%s%3N)
           elapsed=$((end_time - start_time))
 
-          echo "vertx=$elapsed" >> ../target/wrk-results/build-times.txt
+          echo "feat=$elapsed" \
+            >> "$GITHUB_WORKSPACE/demo/benchmark/target/wrk-results/build-times.txt"
 
-          echo "========================================"
-          echo "Vert.x 构建完成"
-          echo "构建耗时: ${elapsed} ms"
-          echo "构建耗时: $(awk "BEGIN {printf \"%.2f\", $elapsed / 1000}") s"
-          echo "========================================"
+          echo "Feat build time: ${elapsed} ms"
 
       # ============================================================
-      # 构建 Spring Boot 并记录耗时
+      # 构建 Vert.x Benchmark
       # ============================================================
 
-      - name: 构建Spring Boot模板并记录耗时
+      - name: 构建 Vert.x Benchmark 并记录耗时
+        shell: bash
         run: |
-          cd demo/benchmark/springboot
-        #提前编译一次避免下载依赖包耗时
-          mvn -B clean install -DskipTests
+          cd "$GITHUB_WORKSPACE/demo/benchmark/vertx"
+
           start_time=$(date +%s%3N)
 
           mvn -B clean install -DskipTests
@@ -121,39 +103,55 @@ jobs:
           end_time=$(date +%s%3N)
           elapsed=$((end_time - start_time))
 
-          echo "springboot=$elapsed" >> ../target/wrk-results/build-times.txt
+          echo "vertx=$elapsed" \
+            >> "$GITHUB_WORKSPACE/demo/benchmark/target/wrk-results/build-times.txt"
 
-          echo "========================================"
-          echo "Spring Boot 构建完成"
-          echo "构建耗时: ${elapsed} ms"
-          echo "构建耗时: $(awk "BEGIN {printf \"%.2f\", $elapsed / 1000}") s"
-          echo "========================================"
+          echo "Vert.x build time: ${elapsed} ms"
+
+      # ============================================================
+      # 构建 Spring Boot Benchmark
+      # ============================================================
+
+      - name: 构建 Spring Boot Benchmark 并记录耗时
+        shell: bash
+        run: |
+          cd "$GITHUB_WORKSPACE/demo/benchmark/springboot"
+
+          start_time=$(date +%s%3N)
+
+          mvn -B clean install -DskipTests
+
+          end_time=$(date +%s%3N)
+          elapsed=$((end_time - start_time))
+
+          echo "springboot=$elapsed" \
+            >> "$GITHUB_WORKSPACE/demo/benchmark/target/wrk-results/build-times.txt"
+
+          echo "Spring Boot build time: ${elapsed} ms"
 
       # ============================================================
       # 准备 Quarkus
-      #
-      # 当前仓库使用的是预构建 quarkus-app.zip。
-      # 因此不把解压耗时冒充为编译耗时。
       # ============================================================
 
       - name: 解压 Quarkus
+        shell: bash
         run: |
+          mkdir -p "$GITHUB_WORKSPACE/demo/benchmark/target/quarkus"
+
           start_time=$(date +%s%3N)
 
-          mkdir -p demo/benchmark/target/quarkus
-          unzip -q demo/benchmark/quarkus-app.zip \
-            -d demo/benchmark/target/quarkus
+          unzip -q \
+            "$GITHUB_WORKSPACE/demo/benchmark/quarkus-app.zip" \
+            -d "$GITHUB_WORKSPACE/demo/benchmark/target/quarkus"
 
           end_time=$(date +%s%3N)
           elapsed=$((end_time - start_time))
 
-          echo "quarkus_prepare=$elapsed" >> demo/benchmark/target/wrk-results/build-times.txt
+          echo "quarkus_prepare=$elapsed" \
+            >> "$GITHUB_WORKSPACE/demo/benchmark/target/wrk-results/build-times.txt"
 
-          echo "========================================"
-          echo "Quarkus 预构建包准备完成"
-          echo "准备耗时: ${elapsed} ms"
-          echo "说明: 当前使用预构建 quarkus-app.zip，不计入编译耗时"
-          echo "========================================"
+          echo "Quarkus package preparation time: ${elapsed} ms"
+          echo "Quarkus is using a pre-built package; this is NOT compile time."
 
       # ============================================================
       # 输出构建耗时
@@ -161,39 +159,37 @@ jobs:
 
       - name: 输出构建耗时
         run: |
-          echo ""
           echo "========================================"
           echo "框架构建耗时"
           echo "========================================"
 
-          cat demo/benchmark/target/wrk-results/build-times.txt
+          cat "$GITHUB_WORKSPACE/demo/benchmark/target/wrk-results/build-times.txt"
 
           echo "========================================"
 
       # ============================================================
-      # 启动框架服务
+      # 启动服务
       # ============================================================
 
       - name: 启动框架服务
+        shell: bash
         run: |
-          export FEAT_LICENSE=${{ secrets.FEAT_LICENSE }}
+          export FEAT_LICENSE="${{ secrets.FEAT_LICENSE }}"
 
-          mkdir -p demo/benchmark/target/wrk-results
+          mkdir -p "$GITHUB_WORKSPACE/demo/benchmark/target/wrk-results"
 
           # ----------------------------------------------------------
-          # 启动 Feat 服务（端口8082）
+          # Feat
           # ----------------------------------------------------------
 
-          cd demo/benchmark/feat
+          cd "$GITHUB_WORKSPACE/demo/benchmark/feat"
 
           nohup mvn -B exec:java \
             > target/feat.log 2>&1 &
 
           echo $! > target/feat.pid
 
-          cd ../../..
-
-          echo "Feat服务已启动，等待5秒..."
+          echo "Feat 服务已启动，等待 5 秒..."
           sleep 5
 
           curl --fail --silent \
@@ -201,19 +197,17 @@ jobs:
             > /dev/null
 
           # ----------------------------------------------------------
-          # 启动 Vert.x 服务（端口8081）
+          # Vert.x
           # ----------------------------------------------------------
 
-          cd demo/benchmark/vertx
+          cd "$GITHUB_WORKSPACE/demo/benchmark/vertx"
 
           nohup mvn -B exec:java \
             > target/vertx.log 2>&1 &
 
           echo $! > target/vertx.pid
 
-          cd ../../..
-
-          echo "Vert.x服务已启动，等待5秒..."
+          echo "Vert.x 服务已启动，等待 5 秒..."
           sleep 5
 
           curl --fail --silent \
@@ -221,19 +215,17 @@ jobs:
             > /dev/null
 
           # ----------------------------------------------------------
-          # 启动 Spring Boot 服务（端口8080）
+          # Spring Boot
           # ----------------------------------------------------------
 
-          cd demo/benchmark/springboot
+          cd "$GITHUB_WORKSPACE/demo/benchmark/springboot"
 
           nohup mvn -B exec:java \
             > target/springboot.log 2>&1 &
 
           echo $! > target/springboot.pid
 
-          cd ../../..
-
-          echo "Spring Boot服务已启动，等待5秒..."
+          echo "Spring Boot 服务已启动，等待 5 秒..."
           sleep 5
 
           curl --fail --silent \
@@ -241,21 +233,19 @@ jobs:
             > /dev/null
 
           # ----------------------------------------------------------
-          # 启动 Quarkus 服务（端口8083）
+          # Quarkus
           # ----------------------------------------------------------
 
-          cd demo/benchmark/target/quarkus
+          cd "$GITHUB_WORKSPACE/demo/benchmark/target/quarkus"
 
           nohup java \
             -Dquarkus.http.port=8083 \
             -jar quarkus-run.jar \
-            > ../quarkus.log 2>&1 &
+            > "$GITHUB_WORKSPACE/demo/benchmark/target/quarkus.log" 2>&1 &
 
-          echo $! > ../quarkus.pid
+          echo $! > "$GITHUB_WORKSPACE/demo/benchmark/target/quarkus.pid"
 
-          cd ../../../..
-
-          echo "Quarkus服务已启动，等待5秒..."
+          echo "Quarkus 服务已启动，等待 5 秒..."
           sleep 5
 
           curl --fail --silent \
@@ -263,124 +253,124 @@ jobs:
             > /dev/null
 
       # ============================================================
-      # Feat
+      # Feat Benchmark
       # ============================================================
 
-      - name: 测试Feat Hello World接口
+      - name: 测试 Feat Hello World 接口
         run: |
-          cd demo/benchmark
+          cd "$GITHUB_WORKSPACE/demo/benchmark"
 
           wrk -t4 -c100 -d60s --latency \
             http://localhost:8082/hello \
             > target/wrk-results/feat-hello.txt
 
-          echo "Feat Hello World测试完成"
+          echo "Feat Hello World 测试完成"
 
-      - name: 测试Feat JSON接口
+      - name: 测试 Feat JSON 接口
         run: |
-          cd demo/benchmark
+          cd "$GITHUB_WORKSPACE/demo/benchmark"
 
           wrk -t4 -c100 -d60s --latency \
             http://localhost:8082/json \
             > target/wrk-results/feat-json.txt
 
-          echo "Feat JSON测试完成"
+          echo "Feat JSON 测试完成"
 
       # ============================================================
-      # Quarkus
+      # Quarkus Benchmark
       # ============================================================
 
-      - name: 测试Quarkus Hello World接口
+      - name: 测试 Quarkus Hello World 接口
         run: |
-          cd demo/benchmark
+          cd "$GITHUB_WORKSPACE/demo/benchmark"
 
           wrk -t4 -c100 -d60s --latency \
             http://localhost:8083/hello \
             > target/wrk-results/quarkus-hello.txt
 
-          echo "Quarkus Hello World测试完成"
+          echo "Quarkus Hello World 测试完成"
 
-      - name: 测试Quarkus JSON接口
+      - name: 测试 Quarkus JSON 接口
         run: |
-          cd demo/benchmark
+          cd "$GITHUB_WORKSPACE/demo/benchmark"
 
           wrk -t4 -c100 -d60s --latency \
             http://localhost:8083/json \
             > target/wrk-results/quarkus-json.txt
 
-          echo "Quarkus JSON测试完成"
+          echo "Quarkus JSON 测试完成"
 
       # ============================================================
-      # Vert.x
+      # Vert.x Benchmark
       # ============================================================
 
-      - name: 测试Vert.x Hello World接口
+      - name: 测试 Vert.x Hello World 接口
         run: |
-          cd demo/benchmark
+          cd "$GITHUB_WORKSPACE/demo/benchmark"
 
           wrk -t4 -c100 -d60s --latency \
             http://localhost:8081/hello \
             > target/wrk-results/vertx-hello.txt
 
-          echo "Vert.x Hello World测试完成"
+          echo "Vert.x Hello World 测试完成"
 
-      - name: 测试Vert.x JSON接口
+      - name: 测试 Vert.x JSON 接口
         run: |
-          cd demo/benchmark
+          cd "$GITHUB_WORKSPACE/demo/benchmark"
 
           wrk -t4 -c100 -d60s --latency \
             http://localhost:8081/json \
             > target/wrk-results/vertx-json.txt
 
-          echo "Vert.x JSON测试完成"
+          echo "Vert.x JSON 测试完成"
 
       # ============================================================
-      # Spring Boot
+      # Spring Boot Benchmark
       # ============================================================
 
-      - name: 测试Spring Boot Hello World接口
+      - name: 测试 Spring Boot Hello World 接口
         run: |
-          cd demo/benchmark
+          cd "$GITHUB_WORKSPACE/demo/benchmark"
 
           wrk -t4 -c100 -d60s --latency \
             http://localhost:8080/hello \
             > target/wrk-results/springboot-hello.txt
 
-          echo "Spring Boot Hello World测试完成"
+          echo "Spring Boot Hello World 测试完成"
 
-      - name: 测试Spring Boot JSON接口
+      - name: 测试 Spring Boot JSON 接口
         run: |
-          cd demo/benchmark
+          cd "$GITHUB_WORKSPACE/demo/benchmark"
 
           wrk -t4 -c100 -d60s --latency \
             http://localhost:8080/json \
             > target/wrk-results/springboot-json.txt
 
-          echo "Spring Boot JSON测试完成"
+          echo "Spring Boot JSON 测试完成"
 
       # ============================================================
       # Python
       # ============================================================
 
-      - name: 安装Python依赖
+      - name: 安装 Python 依赖
         run: |
           python -m pip install --upgrade pip
           pip install matplotlib pandas
 
       # ============================================================
-      # 生成性能报告
+      # 生成报告
       # ============================================================
 
       - name: 生成性能报告
         run: |
-          cd demo/benchmark
+          cd "$GITHUB_WORKSPACE/demo/benchmark"
 
           python generate_benchmark_report.py
 
           echo "性能报告生成完成"
 
       # ============================================================
-      # 上传性能报告
+      # 上传报告
       # ============================================================
 
       - name: 上传性能报告
@@ -391,21 +381,20 @@ jobs:
           retention-days: 30
 
       # ============================================================
-      # 输出服务日志
+      # 输出日志
       # ============================================================
 
       - name: 输出服务日志
         if: always()
         run: |
           for log in \
-            demo/benchmark/feat/target/feat.log \
-            demo/benchmark/vertx/target/vertx.log \
-            demo/benchmark/springboot/target/springboot.log \
-            demo/benchmark/target/quarkus.log; do
-
+            "$GITHUB_WORKSPACE/demo/benchmark/feat/target/feat.log" \
+            "$GITHUB_WORKSPACE/demo/benchmark/vertx/target/vertx.log" \
+            "$GITHUB_WORKSPACE/demo/benchmark/springboot/target/springboot.log" \
+            "$GITHUB_WORKSPACE/demo/benchmark/target/quarkus.log"
+          do
             if [ -f "$log" ]; then
               echo "===== $log ====="
               tail -n 40 "$log"
             fi
-
           done
