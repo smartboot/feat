@@ -8,7 +8,7 @@
 
     <artifactId>helloworld</artifactId>
     <properties>
-        <feat.version>2.3.1</feat.version>
+        <feat.version>2.4.0</feat.version>
     </properties>
 
     <dependencies>
