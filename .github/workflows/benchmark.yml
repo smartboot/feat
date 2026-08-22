@@ -15,58 +15,78 @@ jobs:
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
-      
-      - name: 设置JDK 8
+
+      - name: 设置JDK 21
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '21'
-      
+
       - name: 设置Maven
         uses: stCarolas/setup-maven@v5
-      
+
       - name: 安装wrk
         run: sudo apt-get update && sudo apt-get install -y wrk unzip
-      
+
       - name: 构建项目
         run: FEAT_LICENSE=${{ secrets.FEAT_LICENSE }} mvn -B install --file pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
-      - name: 构建benchmark项目
+
+      - name: 构建Feat模板并记录耗时
         run: |
-          cd demo/benchmark
-          FEAT_LICENSE=${{ secrets.FEAT_LICENSE }} mvn -B install --file pom.xml -DskipTests -Dmaven.compiler.source=21 -Dmaven.compiler.target=21
+          export FEAT_LICENSE=${{ secrets.FEAT_LICENSE }}
+          time mvn -B clean install --file demo/benchmark/feat/pom.xml -DskipTests
+
+      - name: 构建Vert.x模板并记录耗时
+        run: time mvn -B clean install --file demo/benchmark/vertx/pom.xml -DskipTests
+
+      - name: 构建Spring Boot模板并记录耗时
+        run: time mvn -B clean install --file demo/benchmark/springboot/pom.xml -DskipTests
+
       - name: 解压 Quarkus
         run: |
-          cd demo/benchmark
-          unzip -q quarkus-app.zip
+          mkdir -p demo/benchmark/target/quarkus
+          unzip -q demo/benchmark/quarkus-app.zip -d demo/benchmark/target/quarkus
 
       - name: 启动框架服务
         run: |
-          cd demo/benchmark
-          mkdir -p target/wrk-results
-          
+          export FEAT_LICENSE=${{ secrets.FEAT_LICENSE }}
+          mkdir -p demo/benchmark/target/wrk-results
+
           # 启动Feat服务（端口8082）
-          nohup mvn exec:java -Dexec.mainClass="tech.smartboot.feat.benchmark.FeatApp" &
+          cd demo/benchmark/feat
+          nohup mvn -B exec:java > target/feat.log 2>&1 &
+          echo $! > target/feat.pid
+          cd ../../..
           echo "Feat服务已启动，等待5秒..."
           sleep 5
-          
+          curl --fail --silent http://localhost:8082/hello > /dev/null
+
           # 启动Vert.x服务（端口8081）
-          nohup mvn exec:java -Dexec.mainClass="tech.smartboot.feat.benchmark.VertxApp" &
+          cd demo/benchmark/vertx
+          nohup mvn -B exec:java > target/vertx.log 2>&1 &
+          echo $! > target/vertx.pid
+          cd ../../..
           echo "Vert.x服务已启动，等待5秒..."
           sleep 5
-          
+          curl --fail --silent http://localhost:8081/hello > /dev/null
+
           # 启动Spring Boot服务（端口8080）
-          nohup mvn exec:java -Dexec.mainClass="tech.smartboot.feat.benchmark.SpringBootApp" &
+          cd demo/benchmark/springboot
+          nohup mvn -B exec:java > target/springboot.log 2>&1 &
+          echo $! > target/springboot.pid
+          cd ../../..
           echo "Spring Boot服务已启动，等待5秒..."
           sleep 5
-          
+          curl --fail --silent http://localhost:8080/hello > /dev/null
+
           # 启动Quarkus服务（端口8083）
-          nohup java -Dquarkus.http.port=8083 -jar quarkus-run.jar > quarkus.log 2>&1 &
+          cd demo/benchmark/target/quarkus
+          nohup java -Dquarkus.http.port=8083 -jar quarkus-run.jar > ../quarkus.log 2>&1 &
+          echo $! > ../quarkus.pid
+          cd ../../../..
           echo "Quarkus服务已启动，等待5秒..."
           sleep 5
-          
-
-      - name: 创建测试结果目录
-        run: mkdir -p demo/benchmark/target/wrk-results
+          curl --fail --silent http://localhost:8083/hello > /dev/null
 
       - name: 测试Feat Hello World接口
         run: |
@@ -85,6 +105,7 @@ jobs:
           cd demo/benchmark
           wrk -t4 -c100 -d60s --latency http://localhost:8083/hello > target/wrk-results/quarkus-hello.txt
           echo "Quarkus Hello World测试完成"
+
       - name: 测试Quarkus JSON接口
         run: |
           cd demo/benchmark
@@ -114,21 +135,35 @@ jobs:
           cd demo/benchmark
           wrk -t4 -c100 -d60s --latency http://localhost:8080/json > target/wrk-results/springboot-json.txt
           echo "Spring Boot JSON测试完成"
-      
+
       - name: 安装Python依赖
         run: |
           python -m pip install --upgrade pip
           pip install matplotlib pandas
-      
+
       - name: 生成性能报告
         run: |
           cd demo/benchmark
           python generate_benchmark_report.py
           echo "性能报告生成完成"
-      
+
       - name: 上传性能报告
         uses: actions/upload-artifact@v4
         with:
           name: benchmark-report
           path: demo/benchmark/target/benchmark-report/
           retention-days: 30
+
+      - name: 输出服务日志
+        if: always()
+        run: |
+          for log in \
+            demo/benchmark/feat/target/feat.log \
+            demo/benchmark/vertx/target/vertx.log \
+            demo/benchmark/springboot/target/springboot.log \
+            demo/benchmark/target/quarkus.log; do
+            if [ -f "$log" ]; then
+              echo "===== $log ====="
+              tail -n 40 "$log"
+            fi
+          done

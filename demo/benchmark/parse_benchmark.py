@@ -4,8 +4,8 @@
 """
 解析wrk测试结果并生成性能对比报告
 
-此脚本从feat-test/target/wrk-results目录读取wrk测试结果文件，
-提取关键性能指标，并生成包含图表的HTML报告，用于比较Feat、Vert.x和Spring Boot框架的性能。
+此脚本从target/wrk-results目录读取wrk测试结果文件，
+提取关键性能指标，并生成包含图表的HTML报告，用于比较Feat、Vert.x、Spring Boot和Quarkus框架的性能。
 """
 
 import os

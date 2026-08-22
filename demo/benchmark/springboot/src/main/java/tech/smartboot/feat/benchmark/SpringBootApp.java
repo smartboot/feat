@@ -25,6 +25,4 @@ public class SpringBootApp {
             return new Response("Hello", "World");
         }
     }
-
-
-} 
+}

@@ -39,4 +39,4 @@ public class VertxApp extends VerticleBase {
                 .requestHandler(router)
                 .listen(8081);
     }
-} 
+}
