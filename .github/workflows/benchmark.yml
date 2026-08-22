@@ -72,7 +72,7 @@ jobs:
         shell: bash
         run: |
           cd "$GITHUB_WORKSPACE/demo/benchmark/feat"
-#          mvn -B clean install -DskipTests
+          mvn -B clean install -DskipTests
           start_time=$(date +%s%3N)
 
           export FEAT_LICENSE="${{ secrets.FEAT_LICENSE }}"
@@ -95,7 +95,7 @@ jobs:
         shell: bash
         run: |
           cd "$GITHUB_WORKSPACE/demo/benchmark/vertx"
-#          mvn -B clean install -DskipTests
+          mvn -B clean install -DskipTests
           start_time=$(date +%s%3N)
 
           mvn -B clean install -DskipTests
@@ -116,7 +116,7 @@ jobs:
         shell: bash
         run: |
           cd "$GITHUB_WORKSPACE/demo/benchmark/springboot"
-#          mvn -B clean install -DskipTests
+          mvn -B clean install -DskipTests
           start_time=$(date +%s%3N)
 
           mvn -B clean install -DskipTests
