@@ -1,0 +1,11 @@
+server:
+  port: 8082
+  threadNum: 100
+  autoSSL: false
+a: a"\"
+#b: |
+#  afa
+#  dfaf
+#  adf
+c:
+  d: ${cc.dd:10}

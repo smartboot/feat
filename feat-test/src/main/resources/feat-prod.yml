@@ -1,0 +1,11 @@
+server:
+  port: ${server.port:8983}
+  threadNum: 100
+  autoSSL: false
+a: a"\"
+#b: |
+#  afa
+#  dfaf
+#  adf
+c:
+  d: ${c.d}
