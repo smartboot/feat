@@ -26,6 +26,23 @@ public class SerializerUtils {
         return "resolveIntProperty(\"" + name + "\" ,\"" + name.replace('.', '_').toUpperCase() + "\"," + defaultValue + ")";
     }
 
+    public static String resolveBoolProperty(Object objVal) {
+        if (objVal instanceof Boolean) {
+            return objVal.toString();
+        }
+        if (!(objVal instanceof String)) {
+            return null;
+        }
+        String val = objVal.toString();
+        if (!(val.startsWith("${") && val.endsWith("}"))) {
+            return String.valueOf(Boolean.parseBoolean(val));
+        }
+        int spit = val.indexOf(":");
+        String name = val.substring(2, spit > 0 ? spit : val.length() - 1);
+        boolean defaultValue = spit > 0 && Boolean.parseBoolean(val.substring(spit + 1, val.length() - 1));
+        return "resolveBoolProperty(\"" + name + "\" ,\"" + name.replace('.', '_').toUpperCase() + "\"," + defaultValue + ")";
+    }
+
     public static String resolveStringProperty(Object objVal) {
         if (objVal == null) {
             return null;

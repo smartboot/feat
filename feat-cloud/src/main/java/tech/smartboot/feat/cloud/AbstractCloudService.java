@@ -809,4 +809,13 @@ public abstract class AbstractCloudService implements CloudService {
         val = System.getenv(envName);
         return val == null ? defaultValue : Integer.parseInt(val, defaultValue);
     }
+
+    protected boolean resolveBoolProperty(String propertyName, String envName, boolean defaultValue) {
+        String val = System.getProperty(propertyName);
+        if (val != null) {
+            return Boolean.parseBoolean(val);
+        }
+        val = System.getenv(envName);
+        return val == null ? defaultValue : Boolean.parseBoolean(val);
+    }
 }

@@ -25,6 +25,7 @@ public class FeatValueSerializer {
 
     static {
         serializers.put(int.class.getName(), new IntegerValueSerializer());
+        serializers.put(boolean.class.getName(), new BoolValueSerializer());
         serializers.put(String.class.getName(), new StringValueSerializer());
         serializers.put("int[]", new IntegerValuesSerializer(false));
         serializers.put("java.util.List<java.lang.Integer>", new IntegerValuesSerializer(true));
