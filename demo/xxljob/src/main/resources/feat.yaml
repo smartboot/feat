@@ -11,13 +11,13 @@ xxl:
 
     executor:
       # 执行器启用开关
-      enabled: true
+      enabled: ${xxljob.enabled:true}
 
       # 执行器 AppName，用于执行器心跳注册分组
       appname: feat-executor
 
       # 调度中心通讯 Token
-      accessToken: default_token
+      accessToken: ${xxljob.accessToken:default_token}
 
       # 执行器 IP，留空时自动获取
       ip:

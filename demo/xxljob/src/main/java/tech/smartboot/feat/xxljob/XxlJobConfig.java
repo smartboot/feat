@@ -18,7 +18,7 @@ public class XxlJobConfig {
     private int timeout;
 
     @Value("${xxl.job.executor.enabled}")
-    private boolean enabled;
+    private Boolean enabled;
 
     @Value("${xxl.job.executor.appname}")
     private String appname;
@@ -50,7 +50,7 @@ public class XxlJobConfig {
         this.timeout = timeout;
     }
 
-    public void setEnabled(boolean enabled) {
+    public void setEnabled(Boolean enabled) {
         this.enabled = enabled;
     }
 

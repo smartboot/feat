@@ -1,5 +1,7 @@
 package tech.smartboot.feat.cloud.aot;
 
+import tech.smartboot.feat.core.common.exception.FeatException;
+
 public class SerializerUtils {
     private static String toString(String str) {
         return "\"" + str.replace("\\", "\\\\").replace("\n", "\\n").replace("\"", "\\\"") + "\"";
@@ -31,7 +33,7 @@ public class SerializerUtils {
             return objVal.toString();
         }
         if (!(objVal instanceof String)) {
-            return null;
+            throw new FeatException("invalid value type for bool field");
         }
         String val = objVal.toString();
         if (!(val.startsWith("${") && val.endsWith("}"))) {
