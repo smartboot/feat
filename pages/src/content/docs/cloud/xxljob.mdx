@@ -11,6 +11,8 @@ import { Aside } from '@astrojs/starlight/components';
 
 Feat Cloud 没有内置 XXL-Job starter，本文直接用官方 `xxl-job-core`，在编译期把配置注入 Bean、在启动期把执行器跑起来、在停机期把它干净地关掉。多写几十行胶水代码，换来的是每一行都看得见——执行器在哪启动、任务怎么注册、停机时怎么反注册。
 
+![](./img/xxljob_1.png)
+
 ## 添加依赖
 
 在 `pom.xml` 中加入 `xxl-job-core`：
@@ -47,7 +49,7 @@ xxl:
 ```
 
 这些值会在编译期通过 `@Value` 注入到字段里。`@Value` 依赖字段对应的 setter 方法，字段叫 `adminAddresses`，就得有 `setAdminAddresses(...)`。嵌套配置用 `xxl.job.admin.addresses` 这种点号路径，自动映射到 `xxl` 下的 `job` 节点。具体规则可以回看 [Bean 与依赖注入](/feat/cloud/bean/)。
-
+![](./img/xxljob_2.png)
 <Aside type="caution">
     生产环境的 `accessToken` 不要硬编码进配置文件提交到仓库。可以用 `${xxl.job.accessToken}` 占位符，运行时通过 JVM 参数 `-Dxxl.job.accessToken=xxx` 或环境变量 `XXL_JOB_ACCESSTOKEN=xxx` 注入。
 </Aside>
@@ -144,7 +146,7 @@ public class SecondJobHandler extends IJobHandler {
 </Aside>
 
 ### 启动类
-
+![](./img/xxljob_3.png)
 `Bootstrap` 负责执行器的完整生命周期：启动时创建 `XxlJobSimpleExecutor`、设置参数、启动服务、注册任务处理器；停机时销毁执行器，断开与 Admin 的心跳。
 
 ```java title="Bootstrap.java"
@@ -216,7 +218,7 @@ public class Bootstrap {
 `registryJobHandler` 里硬编码的字符串 `"feat-first-handler"` 和 `"feat-second-handler"` 是 Admin 配置任务时填写的 `JobHandler` 名称，两边必须一致，否则 Admin 触发任务时执行器找不到对应的处理器。
 
 ## 跑起来验证
-
+![](./img/xxljob_4.png)
 执行器跑起来之前，需要先有一个 Admin。demo 目录下提供了完整的 Docker Compose 配置，可以直接启动：
 
 ```bash title="启动调度中心"
