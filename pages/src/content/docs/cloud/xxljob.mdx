@@ -1,0 +1,442 @@
+---
+title: 生态集成：XXL-Job
+description: 把 XXL-Job 执行器接入 Feat Cloud，完成分布式任务调度的注册、执行与优雅关闭
+sidebar:
+    order: 22
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+单体应用里，定时任务直接写在代码里，用 `@Scheduled` 或 `Timer` 就能跑。进入分布式环境后，同一任务可能在多个实例上同时触发，失败重试、分片执行、动态启停都得靠调度中心统一编排——XXL-Job 就是干这件事的。
+
+XXL-Job 把调度中心（Admin）和执行器（Executor）拆成了两个角色：Admin 负责任务编排、触发和监控，Executor 负责真正执行业务逻辑。本文只关注 Executor 侧：怎么在 Feat Cloud 应用里启动一个 XXL-Job 执行器，注册任务处理器，并让它被 Admin 调度。
+
+## 准备依赖与基础配置
+
+**Feat Cloud 没有内置 XXL-Job starter。** 本文直接使用官方 `xxl-job-core`，不额外封装。多写几十行胶水代码，换来的是完全透明的链路——执行器在哪启动、任务怎么注册、停机时怎么反注册，全部一目了然。
+
+### 引入 XXL-Job 客户端
+
+在已有 Feat Cloud 应用基础上，加上 `xxl-job-core`：
+
+```xml title="pom.xml"
+<dependency>
+    <groupId>com.xuxueli</groupId>
+    <artifactId>xxl-job-core</artifactId>
+    <version>2.4.0</version>
+</dependency>
+```
+
+`xxl-job-core` 是运行期依赖，`feat-cloud-starter` 仍然负责编译期生成代码。两者各管各的，互不替代。
+
+### 在 feat.yml 里声明执行器参数
+
+调度中心地址、执行器名称、通讯端口这类"环境之间会变、但启动后不变"的参数，放进 `feat.yml` 最合适：
+
+```yaml title="feat.yml"
+xxl:
+  job:
+    admin:
+      # 调度中心部署根地址，多个地址使用逗号分隔
+      addresses: http://127.0.0.1:8080
+      # 调度中心通讯超时时间，单位：秒
+      timeout: 3
+    executor:
+      # 执行器启用开关
+      enabled: true
+      # 执行器 AppName，用于执行器心跳注册分组
+      appname: feat-executor
+      # 调度中心通讯 Token
+      accessToken: default_token
+      # 执行器 IP，留空时自动获取
+      ip:
+      # 执行器端口，小于等于 0 时自动获取
+      port: 9999
+      # 执行器注册地址，留空时使用 IP:PORT
+      address: http://host.docker.internal:9999
+      # 执行器运行日志文件存储目录
+      logpath: ./xxl-job/jobhandler
+      # 执行器日志保存天数，>= 3 时启用自动清理，-1 表示关闭自动清理
+      logretentiondays: 30
+```
+
+这些值会在编译期通过 `@Value` 解析并注入到字段里。
+
+<Aside type="tip">
+    `@Value` 注入依赖字段对应的 setter 方法。字段叫 `adminAddresses`，就得有 `setAdminAddresses(...)`；编译时找不到 setter 会直接报错。嵌套配置用 `xxl.job.admin.addresses` 这种点号路径，自动映射到 `xxl` 下的 `job` 节点。具体规则可以回看 [Bean 与依赖注入](/feat/cloud/bean/) 里的「从配置注入值」。
+</Aside>
+
+### 按环境拆分调度中心地址
+
+本地开发连本机 Admin，测试环境连测试集群，生产环境连生产集群。这是典型的 Profile 场景。
+
+```yaml title="feat-dev.yml"
+xxl:
+  job:
+    admin:
+      addresses: http://dev-xxljob.example.com:8080
+    executor:
+      appname: feat-executor-dev
+```
+
+```yaml title="feat-prod.yml"
+xxl:
+  job:
+    admin:
+      addresses: http://prod-xxljob.example.com:8080
+    executor:
+      appname: feat-executor-prod
+      accessToken: ${xxl.job.accessToken}
+```
+
+启动时通过 `feat.profiles.active` 选择当前环境：
+
+```bash title="选择生产环境启动"
+java -Dfeat.profiles.active=prod -jar yourapp.jar
+```
+
+<Aside type="caution">
+    生产环境的 XXL-Job 通讯 Token 不要硬编码进 `feat-prod.yml` 提交到代码仓库。可以用 `${}` 占位符引用，效果类似 Spring：
+
+    ```yaml title="feat-prod.yml"
+    xxl:
+    job:
+    executor:
+    accessToken: ${xxl.job.accessToken}
+    ```
+
+    `${xxl.job.accessToken}` 这种写法会同时兼容两种来源：JVM 参数 `-Dxxl.job.accessToken`，以及系统环境变量 `XXL_JOB_ACCESSTOKEN`（点号转下划线、全大写），解析优先级是系统属性 > 环境变量。配置文件本身可以安全提交到代码仓库，敏感信息运行时注入：
+
+    ```bash
+    # 任选其一
+    java -Dxxl.job.accessToken=your_secret_token -Dfeat.profiles.active=prod -jar yourapp.jar
+    # 或者用环境变量
+    XXL_JOB_ACCESSTOKEN=your_secret_token java -Dfeat.profiles.active=prod -jar yourapp.jar
+    ```
+</Aside>
+
+## 配置对象：把 YAML 接进 Bean 生命周期
+
+`XxlJobConfig` 只做一件事：把 `feat.yml` 里的配置值收拢到一个 Bean 里，供启动类读取。结构和 Nacos 集成里的配置对象完全一致。
+
+```java title="XxlJobConfig.java"
+package tech.smartboot.feat.xxljob;
+
+import tech.smartboot.feat.cloud.annotation.Bean;
+import tech.smartboot.feat.cloud.annotation.Value;
+
+@Bean
+public class XxlJobConfig {
+
+    @Value("${xxl.job.admin.addresses}")
+    private String adminAddresses;
+
+    @Value("${xxl.job.admin.timeout}")
+    private int timeout;
+
+    @Value("${xxl.job.executor.enabled}")
+    private boolean enabled;
+
+    @Value("${xxl.job.executor.appname}")
+    private String appname;
+
+    @Value("${xxl.job.executor.accessToken}")
+    private String accessToken;
+
+    @Value("${xxl.job.executor.ip}")
+    private String ip;
+
+    @Value("${xxl.job.executor.port}")
+    private int port;
+
+    @Value("${xxl.job.executor.address}")
+    private String address;
+
+    @Value("${xxl.job.executor.logpath}")
+    private String logPath;
+
+    @Value("${xxl.job.executor.logretentiondays}")
+    private int logRetentionDays;
+
+    // getter & setter
+   ...
+}
+```
+
+这个类本身不碰 XXL-Job 的 API，只是配置的搬运工。好处是启动类的初始化逻辑只依赖一个配置对象，而不是十几个散落的 `@Value` 字段。
+
+## 任务处理器：编写 JobHandler
+
+XXL-Job 的任务处理器需要继承 `IJobHandler`，重写 `execute()` 方法。Feat Cloud 用 `@Bean` 把它们注册进容器，启动时再手动挂到执行器上。
+
+```java title="FirstJobHandler.java"
+package tech.smartboot.feat.xxljob;
+
+import com.xxl.job.core.handler.IJobHandler;
+import tech.smartboot.feat.cloud.annotation.Bean;
+
+@Bean
+public class FirstJobHandler extends IJobHandler {
+
+    @Override
+    public void execute() throws Exception {
+        System.out.println("execute first job");
+    }
+}
+```
+
+```java title="SecondJobHandler.java"
+package tech.smartboot.feat.xxljob;
+
+import com.xxl.job.core.handler.IJobHandler;
+import tech.smartboot.feat.cloud.annotation.Bean;
+
+@Bean
+public class SecondJobHandler extends IJobHandler {
+
+    @Override
+    public void execute() throws Exception {
+        System.out.println("execute second job");
+    }
+}
+```
+
+每个 `IJobHandler` 都是一个独立的 Bean，可以被 `@Autowired` 注入到启动类里。`execute()` 里写的就是任务被触发时要执行业务逻辑——查数据库、调接口、生成报表，都可以放在这里。
+
+<Aside type="tip">
+    如果任务需要接收参数，可以在 `execute()` 里通过 `XxlJobHelper.getJobParam()` 获取 Admin 下发的任务参数。分片任务则通过 `XxlJobHelper.getShardIndex()` 和 `XxlJobHelper.getShardTotal()` 获取分片信息。这些 API 来自 `xxl-job-core`，和 Feat Cloud 无关。
+</Aside>
+
+## 执行器启动：连接 Admin 并注册任务
+
+`Bootstrap` 是执行器的生命周期管理者：启动时创建 `XxlJobSimpleExecutor`、设置参数、启动服务、注册任务处理器；停机时销毁执行器，断开与 Admin 的心跳。
+
+```java title="Bootstrap.java"
+package tech.smartboot.feat.xxljob;
+
+import com.xxl.job.core.executor.XxlJobExecutor;
+import com.xxl.job.core.executor.impl.XxlJobSimpleExecutor;
+import com.xxl.job.core.handler.IJobHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import tech.smartboot.feat.cloud.FeatCloud;
+import tech.smartboot.feat.cloud.annotation.Autowired;
+import tech.smartboot.feat.cloud.annotation.Bean;
+import tech.smartboot.feat.cloud.annotation.PostConstruct;
+import tech.smartboot.feat.cloud.annotation.PreDestroy;
+
+@Bean
+public class Bootstrap {
+    private static final Logger logger = LoggerFactory.getLogger(XxlJobConfig.class);
+
+    @Autowired
+    private XxlJobConfig xxlJobConfig;
+
+    @Autowired
+    private IJobHandler firstJobHandler;
+
+    @Autowired
+    private IJobHandler secondJobHandler;
+
+    private XxlJobSimpleExecutor xxlJobSpringExecutor;
+
+    @PostConstruct
+    public void init() {
+        logger.info(">>>>>>>>>>> xxl-job config init.");
+        xxlJobSpringExecutor = new XxlJobSimpleExecutor();
+        xxlJobSpringExecutor.setAdminAddresses(xxlJobConfig.getAdminAddresses());
+        xxlJobSpringExecutor.setTimeout(xxlJobConfig.getTimeout());
+        xxlJobSpringExecutor.setEnabled(xxlJobConfig.isEnabled());
+        xxlJobSpringExecutor.setAppname(xxlJobConfig.getAppname());
+        xxlJobSpringExecutor.setAccessToken(xxlJobConfig.getAccessToken());
+        xxlJobSpringExecutor.setIp(xxlJobConfig.getIp());
+        xxlJobSpringExecutor.setPort(xxlJobConfig.getPort());
+        xxlJobSpringExecutor.setAddress(xxlJobConfig.getAddress());
+        xxlJobSpringExecutor.setLogPath(xxlJobConfig.getLogPath());
+        xxlJobSpringExecutor.setLogRetentionDays(xxlJobConfig.getLogRetentionDays());
+        xxlJobSpringExecutor.start();
+
+        XxlJobExecutor.registryJobHandler("feat-first-handler", firstJobHandler);
+        XxlJobExecutor.registryJobHandler("feat-second-handler", secondJobHandler);
+    }
+
+    @PreDestroy
+    public void destroy() {
+        if (xxlJobSpringExecutor != null) {
+            xxlJobSpringExecutor.destroy();
+        }
+    }
+
+    // setter
+    public void setXxlJobConfig(XxlJobConfig xxlJobConfig) {
+        this.xxlJobConfig = xxlJobConfig;
+    }
+
+    public void setFirstJobHandler(IJobHandler firstJobHandler) {
+        this.firstJobHandler = firstJobHandler;
+    }
+
+    public void setSecondJobHandler(IJobHandler secondJobHandler) {
+        this.secondJobHandler = secondJobHandler;
+    }
+
+    public static void main(String[] args) {
+        FeatCloud.cloudServer().listen(8888);
+    }
+}
+```
+
+这段代码做了四件事：
+
+1. **注入依赖**：通过 `@Autowired` 拿到配置对象和两个任务处理器
+2. **创建执行器**：用 `XxlJobSimpleExecutor` 作为执行器实现，把配置对象里的参数全部设置进去
+3. **启动并注册**：`start()` 建立与 Admin 的长连接和心跳，`registryJobHandler` 把任务处理器按名称注册到执行器内部的任务表
+4. **优雅关闭**：`@PreDestroy` 里调用 `destroy()`，反注册实例、关闭端口、清理线程
+
+几个值得注意的细节：
+
+- **`XxlJobSimpleExecutor` 而非 `XxlJobSpringExecutor`**：后者依赖 Spring 的 `ApplicationContext` 做自动扫描，Feat Cloud 没有 Spring 容器，所以用 `XxlJobSimpleExecutor` 手动设置参数并启动。
+- **任务名称是注册时的硬编码字符串**：`"feat-first-handler"` 和 `"feat-second-handler"` 是 Admin 配置任务时填写的 `JobHandler` 名称，两边必须一致，否则 Admin 触发任务时执行器找不到对应的处理器。
+- **端口冲突**：`port: 9999` 是执行器内置的 HTTP 服务端口，Admin 通过它回调触发任务。确保这个端口在容器或宿主机上没有被其他服务占用。
+
+## 调度中心部署与验证
+
+执行器跑起来之前，需要先有一个 Admin。demo 目录下提供了一份 `docker-compose.yaml`，可以一键拉起 MySQL 和 XXL-Job Admin。
+
+### 准备环境变量
+
+```text title=".env"
+XXL_JOB_ADMIN_PORT=8080
+XXL_JOB_ADMIN_CONTEXT_PATH=/
+MYSQL_ROOT_PASSWORD=root_pwd
+```
+
+### 启动调度中心
+
+```yaml title="docker-compose.yaml"
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: xxl-job-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: xxl_job
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./tables_xxl_job.sql:/docker-entrypoint-initdb.d/tables_xxl_job.sql:ro
+    command: >-
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+    networks:
+      - xxl-job-network
+
+  xxl-job-admin:
+    image: xuxueli/xxl-job-admin:3.4.2
+    container_name: xxl-job-admin
+    environment:
+      PARAMS: >-
+        --spring.datasource.url=jdbc:mysql://mysql:3306/xxl_job?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&serverTimezone=Asia/Shanghai
+        --spring.datasource.username=root
+        --spring.datasource.password=${MYSQL_ROOT_PASSWORD}
+        --server.port=${XXL_JOB_ADMIN_PORT}
+        --server.servlet.context-path=${XXL_JOB_ADMIN_CONTEXT_PATH}
+    ports:
+      - "${XXL_JOB_ADMIN_PORT}:${XXL_JOB_ADMIN_PORT}"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - xxl-job-network
+
+networks:
+  xxl-job-network:
+    driver: bridge
+```
+
+```bash title="启动调度中心"
+docker compose up -d
+```
+
+`tables_xxl_job.sql` 是 XXL-Job 官方的数据库初始化脚本，首次启动 MySQL 时会自动执行。Admin 启动后，访问 `http://localhost:8080`，默认账号密码是 `admin / 123456`。
+
+### 在 Admin 里配置并触发任务
+
+1. 进入「执行器管理」，确认 `feat-executor` 已经自动注册上来（如果 `enabled` 为 `true` 且网络互通）
+2. 进入「任务管理」，新增任务：
+- 执行器：`feat-executor`
+- JobHandler：`feat-first-handler`（必须与代码里 `registryJobHandler` 的第一个参数完全一致）
+- 调度类型：CRON，表达式填 `0/5 * * * * ?`（每 5 秒执行一次，仅用于验证）
+3. 保存后点击「执行一次」，观察 Feat Cloud 应用的控制台输出：
+
+```text title="控制台输出"
+execute first job
+```
+
+如果看到这条日志，说明 Admin -> 执行器 -> JobHandler 的整条链路已经打通。
+
+### 验证自动注册
+
+执行器启动后，会在 Admin 的「执行器管理」里看到自动注册的实例。如果看不到，检查以下几点：
+
+- `xxl.job.admin.addresses` 是否能从执行器所在网络访问到 Admin
+- `xxl.job.executor.appname` 是否与 Admin 里配置的执行器名称一致
+- `xxl.job.executor.accessToken` 是否与 Admin 配置的 Token 一致
+- 执行器端口（默认 9999）是否被防火墙或安全组拦截
+
+## 生产环境注意事项
+
+上线前记住几件事就够了：
+
+- **开鉴权**：生产环境的 Admin 必须修改默认密码，并设置独立的 `accessToken`，通过环境变量注入执行器
+- **端口规划**：执行器的 `port` 是 Admin 回调触发任务的入口，容器化部署时要暴露这个端口，并确保与宿主机端口映射正确
+- **日志清理**：`logretentiondays` 建议设置为 7~30 天，避免任务日志无限增长撑爆磁盘
+- **优雅关闭**：`@PreDestroy` 里调用 `xxlJobSpringExecutor.destroy()`，确保停机时先从 Admin 反注册，避免 Admin 继续向已下线的实例发调度请求
+- **任务幂等**：分布式调度下，网络超时或 Admin 重试可能导致同一任务被执行多次。`execute()` 里的业务逻辑必须是幂等的，或者通过数据库唯一索引、分布式锁等手段去重
+
+这几条基本就覆盖了大多数生产问题。
+
+## 一条可验证的完整链路
+
+把上面的类拼起来，你应该能验证下面这条链路：
+
+```text
+Admin 控制台配置任务 -> Admin 触发调度 -> 执行器接收回调 -> FirstJobHandler.execute() -> 控制台输出日志
+```
+
+可以用这些步骤验证：
+
+```bash title="1. 启动调度中心"
+cd demo/xxljob
+docker compose up -d
+```
+
+```bash title="2. 启动 Feat Cloud 执行器"
+mvn clean compile exec:java -Dexec.mainClass="tech.smartboot.feat.xxljob.Bootstrap"
+```
+
+```bash title="3. 在 Admin 控制台手动触发任务"
+# 访问 http://localhost:8080，找到任务，点击「执行一次」
+```
+
+```bash title="4. 观察执行器控制台"
+# 应该出现：execute first job
+```
+
+如果手动触发后控制台出现了对应的日志，说明 XXL-Job 已经完整接入了。
+
+## 边界与套路
+
+Feat 不包一层 starter，也不重写任务调度。XXL-Job 的 `XxlJobSimpleExecutor`、`IJobHandler`、`registryJobHandler`、心跳注册全是官方原生的东西；Feat 只负责把它接进生命周期：编译期注入配置、启动时初始化执行器、停机时释放资源。
+
+三个类放在一起看，套路完全一致：**配置 Bean + `@Value` + 任务处理器 `@Bean` + 启动类 `@Autowired` + `@PostConstruct` + `@PreDestroy`，中间按官方文档来。** 多写几十行胶水代码，换来的是每一行都看得见——执行器在哪启动、任务怎么注册、停机时怎么反注册、为什么 Admin 调不到任务。排查线上问题时，你能立刻定位是 Feat 的生命周期、XXL-Job 客户端，还是 Admin 配置本身出了问题。
+
+接其他调度框架（如 PowerJob、Elastic-Job）时，套路一样。
