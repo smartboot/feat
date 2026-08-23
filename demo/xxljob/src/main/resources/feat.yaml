@@ -1,0 +1,42 @@
+xxl:
+  job:
+    admin:
+      # 调度中心部署根地址，多个地址使用逗号分隔
+      # 为空则关闭执行器自动注册
+      addresses: http://127.0.0.1:8080
+
+      # 调度中心通讯超时时间，单位：秒
+      # 默认：3
+      timeout: 3
+
+    executor:
+      # 执行器启用开关
+      enabled: true
+
+      # 执行器 AppName，用于执行器心跳注册分组
+      appname: xxl-job-executor-sample
+
+      # 调度中心通讯 Token
+      accessToken: default_token
+
+      # 执行器 IP，留空时自动获取
+      ip:
+
+      # 执行器端口，小于等于 0 时自动获取
+      port: 9999
+
+      # 执行器注册地址，留空时使用 IP:PORT
+      address:
+
+      # 执行器运行日志文件存储目录
+      logpath: /data/applogs/xxl-job/jobhandler
+
+      # 执行器日志保存天数
+      # >= 3 时启用自动清理，-1 表示关闭自动清理
+      logretentiondays: 30
+
+      # Bean 模式任务扫描排除包，多个包使用逗号分隔
+      excludedpackage: org.springframework,spring
+
+      # GLUE 模式启用开关
+      glueenabled: true
