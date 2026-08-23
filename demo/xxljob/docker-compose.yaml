@@ -40,6 +40,8 @@ services:
         --server.servlet.context-path=${XXL_JOB_ADMIN_CONTEXT_PATH}
     ports:
       - "${XXL_JOB_ADMIN_PORT}:${XXL_JOB_ADMIN_PORT}"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       mysql:
         condition: service_healthy

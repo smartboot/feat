@@ -2,9 +2,12 @@ package tech.smartboot.feat.xxljob;
 
 import com.xxl.job.core.executor.XxlJobExecutor;
 import com.xxl.job.core.executor.impl.XxlJobSimpleExecutor;
+import com.xxl.job.core.handler.IJobHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Bean;
+import tech.smartboot.feat.cloud.annotation.PostConstruct;
 import tech.smartboot.feat.cloud.annotation.Value;
 
 /**
@@ -23,7 +26,7 @@ public class XxlJobConfig {
     private int timeout;
 
     @Value("${xxl.job.executor.enabled}")
-    private Boolean enabled;
+    private boolean enabled;
 
     @Value("${xxl.job.executor.appname}")
     private String appname;
@@ -46,12 +49,8 @@ public class XxlJobConfig {
     @Value("${xxl.job.executor.logretentiondays}")
     private int logRetentionDays;
 
-    @Value("${xxl.job.executor.excludedpackage}")
-    private String excludedPackage;
-
-    @Value("${xxl.job.executor.glueenabled:true}")
-    private Boolean glueEnabled;
-
+    @Autowired
+    private XxlJobExecutor xxlJobExecutor;
 
     @Bean
     public XxlJobExecutor xxlJobExecutor() {
@@ -67,10 +66,18 @@ public class XxlJobConfig {
         xxlJobSpringExecutor.setAddress(address);
         xxlJobSpringExecutor.setLogPath(logPath);
         xxlJobSpringExecutor.setLogRetentionDays(logRetentionDays);
-//        xxlJobSpringExecutor.setExcludedPackage(excludedPackage);
-//        xxlJobSpringExecutor.setGlueEnabled(glueEnabled);
-
+        xxlJobSpringExecutor.start();
         return xxlJobSpringExecutor;
+    }
+
+    @PostConstruct
+    public void init(){
+        xxlJobExecutor.registryJobHandler("feat-demo-handler", new IJobHandler() {
+            @Override
+            public void execute() throws Exception {
+                System.out.println("execute...");
+            }
+        });
     }
 
     public void setAdminAddresses(String adminAddresses) {
@@ -81,7 +88,7 @@ public class XxlJobConfig {
         this.timeout = timeout;
     }
 
-    public void setEnabled(Boolean enabled) {
+    public void setEnabled(boolean enabled) {
         this.enabled = enabled;
     }
 
@@ -113,11 +120,7 @@ public class XxlJobConfig {
         this.logRetentionDays = logRetentionDays;
     }
 
-    public void setExcludedPackage(String excludedPackage) {
-        this.excludedPackage = excludedPackage;
-    }
-
-    public void setGlueEnabled(Boolean glueEnabled) {
-        this.glueEnabled = glueEnabled;
+    public void setXxlJobExecutor(XxlJobExecutor xxlJobExecutor) {
+        this.xxlJobExecutor = xxlJobExecutor;
     }
 }

@@ -14,7 +14,7 @@ xxl:
       enabled: true
 
       # 执行器 AppName，用于执行器心跳注册分组
-      appname: xxl-job-executor-sample
+      appname: feat-executor
 
       # 调度中心通讯 Token
       accessToken: default_token
@@ -26,17 +26,11 @@ xxl:
       port: 9999
 
       # 执行器注册地址，留空时使用 IP:PORT
-      address:
+      address: http://host.docker.internal:9999
 
       # 执行器运行日志文件存储目录
-      logpath: /data/applogs/xxl-job/jobhandler
+      logpath: ./xxl-job/jobhandler
 
       # 执行器日志保存天数
       # >= 3 时启用自动清理，-1 表示关闭自动清理
       logretentiondays: 30
-
-      # Bean 模式任务扫描排除包，多个包使用逗号分隔
-      excludedpackage: org.springframework,spring
-
-      # GLUE 模式启用开关
-      glueenabled: true
