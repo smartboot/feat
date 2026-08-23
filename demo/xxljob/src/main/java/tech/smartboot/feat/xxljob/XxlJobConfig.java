@@ -1,13 +1,6 @@
 package tech.smartboot.feat.xxljob;
 
-import com.xxl.job.core.executor.XxlJobExecutor;
-import com.xxl.job.core.executor.impl.XxlJobSimpleExecutor;
-import com.xxl.job.core.handler.IJobHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Bean;
-import tech.smartboot.feat.cloud.annotation.PostConstruct;
 import tech.smartboot.feat.cloud.annotation.Value;
 
 /**
@@ -17,7 +10,6 @@ import tech.smartboot.feat.cloud.annotation.Value;
  */
 @Bean
 public class XxlJobConfig {
-    private static final Logger logger = LoggerFactory.getLogger(XxlJobConfig.class);
 
     @Value("${xxl.job.admin.addresses}")
     private String adminAddresses;
@@ -49,36 +41,6 @@ public class XxlJobConfig {
     @Value("${xxl.job.executor.logretentiondays}")
     private int logRetentionDays;
 
-    @Autowired
-    private XxlJobExecutor xxlJobExecutor;
-
-    @Bean
-    public XxlJobExecutor xxlJobExecutor() {
-        logger.info(">>>>>>>>>>> xxl-job config init.");
-        XxlJobSimpleExecutor xxlJobSpringExecutor = new XxlJobSimpleExecutor();
-        xxlJobSpringExecutor.setAdminAddresses(adminAddresses);
-        xxlJobSpringExecutor.setTimeout(timeout);
-        xxlJobSpringExecutor.setEnabled(enabled);
-        xxlJobSpringExecutor.setAppname(appname);
-        xxlJobSpringExecutor.setAccessToken(accessToken);
-        xxlJobSpringExecutor.setIp(ip);
-        xxlJobSpringExecutor.setPort(port);
-        xxlJobSpringExecutor.setAddress(address);
-        xxlJobSpringExecutor.setLogPath(logPath);
-        xxlJobSpringExecutor.setLogRetentionDays(logRetentionDays);
-        xxlJobSpringExecutor.start();
-        return xxlJobSpringExecutor;
-    }
-
-    @PostConstruct
-    public void init(){
-        xxlJobExecutor.registryJobHandler("feat-demo-handler", new IJobHandler() {
-            @Override
-            public void execute() throws Exception {
-                System.out.println("execute...");
-            }
-        });
-    }
 
     public void setAdminAddresses(String adminAddresses) {
         this.adminAddresses = adminAddresses;
@@ -120,7 +82,43 @@ public class XxlJobConfig {
         this.logRetentionDays = logRetentionDays;
     }
 
-    public void setXxlJobExecutor(XxlJobExecutor xxlJobExecutor) {
-        this.xxlJobExecutor = xxlJobExecutor;
+    public String getAdminAddresses() {
+        return adminAddresses;
+    }
+
+    public int getTimeout() {
+        return timeout;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public String getAppname() {
+        return appname;
+    }
+
+    public String getAccessToken() {
+        return accessToken;
+    }
+
+    public String getIp() {
+        return ip;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public String getLogPath() {
+        return logPath;
+    }
+
+    public int getLogRetentionDays() {
+        return logRetentionDays;
     }
 }
