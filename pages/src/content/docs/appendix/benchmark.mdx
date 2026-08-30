@@ -5,6 +5,7 @@ sidebar:
   order: 3
 ---
 
+import bench_build_time from './img/bench_build_time.png'
 import bench_hello_world_rps from './img/bench_hello_world_rps.png'
 import bench_hello_world_avg from './img/bench_hello_world_avg.png'
 import bench_json_rps from './img/bench_json_rps.png'
@@ -28,6 +29,18 @@ import { Aside } from '@astrojs/starlight/components'
 - 在Hello World接口测试中，Feat框架表现最佳，每秒处理请求数最多。
 
 ## 详细图表
+
+### 构建耗时对比
+构建耗时说明： Feat、Vert.x 和 Spring Boot 统计的是各自执行 mvn clean install -DskipTests 的实际时间。 Quarkus 当前使用仓库中已有的 quarkus-app.zip 预构建包，因此不计入编译耗时。
+
+<img src={bench_build_time.src} alt="编译耗时统计" width="80%"/>
+
+|框架|	构建方式	|耗时|
+|---|---|---|
+|Feat	|Maven clean install	|2.82 秒 (2819 ms)|
+|Vert.x	|Maven clean install	|2.59 秒 (2586 ms)|
+|Spring Boot|	Maven clean install	|2.42 秒 (2419 ms)|
+|Quarkus|	预构建 quarkus-app.zip|	未统计编译耗时|
 
 ### Hello World
 
