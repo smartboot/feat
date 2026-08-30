@@ -2,15 +2,13 @@
 # -*- coding: utf-8 -*-
 
 """
-生成基准测试报告的主脚本。
+生成基准测试报告的主脚本
 
-此脚本：
+此脚本调用parse_benchmark.py：
 
-1. 解析 wrk 测试结果
-2. 解析 Maven 第一次构建耗时
-3. 解析 Maven 第二次构建耗时
-4. 计算首次构建额外开销
-5. 生成 HTML 性能对比报告
+1. 解析wrk测试结果
+2. 解析各框架构建耗时
+3. 生成HTML性能对比报告
 """
 
 import os
@@ -19,7 +17,6 @@ import sys
 from parse_benchmark import (
     collect_results,
     parse_build_times,
-    normalize_build_times,
     generate_html_report
 )
 
@@ -47,13 +44,12 @@ def main():
             f"创建结果目录: {results_dir}"
         )
 
-
     # ========================================================
-    # 收集 HTTP 测试结果
+    # 收集HTTP测试结果
     # ========================================================
 
     print(
-        "收集 HTTP 性能测试结果..."
+        "收集HTTP性能测试结果..."
     )
 
     results = collect_results()
@@ -61,68 +57,57 @@ def main():
     if not results:
 
         print(
-            "错误: 没有找到有效的 HTTP 测试结果"
+            "错误: 没有找到有效的HTTP测试结果"
         )
 
         sys.exit(1)
 
-
     # ========================================================
-    # 收集 Maven 构建耗时
+    # 收集构建耗时
     # ========================================================
 
     print(
-        "收集 Maven 构建耗时..."
+        "收集框架构建耗时..."
     )
 
     build_times = parse_build_times()
 
-    build_data = normalize_build_times(
-        build_times
-    )
+    if build_times:
 
-
-    if build_data:
-
-        print("")
         print(
-            "Maven 构建耗时:"
+            "构建耗时:"
         )
 
-        for framework, data in build_data.items():
+        for framework, milliseconds in (
+            build_times.items()
+        ):
 
-            print(
-                f"  {framework}:"
-            )
+            if framework == 'quarkus_prepare':
 
-            print(
-                f"    first : "
-                f"{data['first'] / 1000:.2f}s"
-            )
+                print(
+                    f"  Quarkus 预构建包准备: "
+                    f"{milliseconds / 1000:.2f}s"
+                )
 
-            print(
-                f"    second: "
-                f"{data['second'] / 1000:.2f}s"
-            )
+            else:
 
-            print(
-                f"    extra : "
-                f"{data['overhead'] / 1000:.2f}s"
-            )
+                print(
+                    f"  {framework}: "
+                    f"{milliseconds / 1000:.2f}s"
+                )
 
     else:
 
         print(
-            "警告: 没有找到 Maven 构建耗时数据"
+            "警告: 没有找到构建耗时数据"
         )
 
-
     # ========================================================
-    # 生成 HTML 报告
+    # 生成HTML报告
     # ========================================================
 
     print(
-        "生成 HTML 报告..."
+        "生成HTML报告..."
     )
 
     report_file = generate_html_report(
