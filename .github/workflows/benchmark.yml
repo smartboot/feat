@@ -16,6 +16,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+
       # ============================================================
       # 基础环境
       # ============================================================
@@ -36,136 +37,349 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y wrk unzip
+      
 
       # ============================================================
       # 构建 Feat 主项目
+      #
+      # Benchmark Demo 使用本地 Feat，因此这里先安装 Feat。
+      # 这一步不计入框架构建 Benchmark。
       # ============================================================
 
       - name: 构建 Feat 主项目
+        shell: bash
         run: |
-          FEAT_LICENSE="${{ secrets.FEAT_LICENSE }}" \
+          set -e
+          
+          export FEAT_LICENSE="${{ secrets.FEAT_LICENSE }}"
+          
           mvn -B install \
             --file pom.xml \
             -DskipTests \
             -Dmaven.compiler.source=8 \
             -Dmaven.compiler.target=8
+      
 
       # ============================================================
-      # 初始化构建耗时文件
+      # 初始化 Benchmark 目录
       # ============================================================
 
-      - name: 初始化构建耗时记录
-        run: |
-          mkdir -p "$GITHUB_WORKSPACE/demo/benchmark/target/wrk-results"
-
-          printf '%s\n' \
-            "# Framework build benchmark" \
-            "# Unit: milliseconds" \
-            "# Quarkus uses a pre-built package and therefore has no compile time." \
-            > "$GITHUB_WORKSPACE/demo/benchmark/target/wrk-results/build-times.txt"
-
-      # ============================================================
-      # 构建 Feat Benchmark
-      # ============================================================
-
-      - name: 构建 Feat Benchmark 并记录耗时
+      - name: 初始化 Benchmark
         shell: bash
         run: |
-          cd "$GITHUB_WORKSPACE/demo/benchmark/feat"
-          mvn -B clean install -DskipTests
-          start_time=$(date +%s%3N)
+          set -e
+          
+          RESULTS_DIR="$GITHUB_WORKSPACE/demo/benchmark/target/wrk-results"
+          MAVEN_REPO_DIR="$GITHUB_WORKSPACE/demo/benchmark/target/maven-repo"
+          
+          mkdir -p "$RESULTS_DIR"
+          mkdir -p "$MAVEN_REPO_DIR"
+          
+          rm -f "$RESULTS_DIR/build-times.txt"
+          
+          cat > "$RESULTS_DIR/build-times.txt" <<'EOF'
+          # Framework Maven Build Benchmark
+          # Unit: milliseconds
+          #
+          # first:
+          #   Clean Maven Local Repository.
+          #   Includes dependency/plugin download + compilation + packaging.
+          #
+          # second:
+          #   Reuses the Maven Local Repository from first build.
+          #   Measures cached dependency build performance.
+          #
+          EOF
+          
+          echo "========================================"
+          echo "Benchmark 初始化完成"
+          echo "========================================"
+          
+          echo "Results:"
+          echo "$RESULTS_DIR"
+          
+          echo ""
+          echo "Maven repositories:"
+          echo "$MAVEN_REPO_DIR"
+      
 
+      # ============================================================
+      # Feat Maven Benchmark
+      #
+      # 第一次：
+      #   全新 Maven Repository
+      #
+      # 第二次：
+      #   复用第一次 Maven Repository
+      # ============================================================
+
+      - name: Maven Benchmark - Feat
+        shell: bash
+        run: |
+          set -e
+          
+          PROJECT_DIR="$GITHUB_WORKSPACE/demo/benchmark/feat"
+          MAVEN_REPO="$GITHUB_WORKSPACE/demo/benchmark/target/maven-repo/feat"
+          RESULT_FILE="$GITHUB_WORKSPACE/demo/benchmark/target/wrk-results/build-times.txt"
+          
           export FEAT_LICENSE="${{ secrets.FEAT_LICENSE }}"
-
-          mvn -B clean install -DskipTests
-
-          end_time=$(date +%s%3N)
-          elapsed=$((end_time - start_time))
-
-          echo "feat=$elapsed" \
-            >> "$GITHUB_WORKSPACE/demo/benchmark/target/wrk-results/build-times.txt"
-
-          echo "Feat build time: ${elapsed} ms"
+          
+          rm -rf "$MAVEN_REPO"
+          mkdir -p "$MAVEN_REPO"
+          
+          cd "$PROJECT_DIR"
+          
+          echo ""
+          echo "========================================"
+          echo "Feat - First Build"
+          echo "========================================"
+          
+          START=$(date +%s%3N)
+          
+          mvn -B clean install \
+            -DskipTests \
+            -Dmaven.repo.local="$MAVEN_REPO"
+          
+          END=$(date +%s%3N)
+          
+          FIRST_TIME=$((END - START))
+          
+          echo "feat_first=$FIRST_TIME" >> "$RESULT_FILE"
+          
+          echo ""
+          echo "Feat first build: ${FIRST_TIME} ms"
+          
+          
+          echo ""
+          echo "========================================"
+          echo "Feat - Second Build"
+          echo "========================================"
+          
+          START=$(date +%s%3N)
+          
+          mvn -B clean install \
+            -DskipTests \
+            -Dmaven.repo.local="$MAVEN_REPO"
+          
+          END=$(date +%s%3N)
+          
+          SECOND_TIME=$((END - START))
+          
+          echo "feat_second=$SECOND_TIME" >> "$RESULT_FILE"
+          
+          echo ""
+          echo "Feat second build: ${SECOND_TIME} ms"
+          
+          
+          echo ""
+          echo "========================================"
+          echo "Feat Maven Benchmark Result"
+          echo "========================================"
+          
+          echo "First build : ${FIRST_TIME} ms"
+          echo "Second build: ${SECOND_TIME} ms"
+          echo "First overhead: $((FIRST_TIME - SECOND_TIME)) ms"
+      
 
       # ============================================================
-      # 构建 Vert.x Benchmark
+      # Vert.x Maven Benchmark
       # ============================================================
 
-      - name: 构建 Vert.x Benchmark 并记录耗时
+      - name: Maven Benchmark - Vert.x
         shell: bash
         run: |
-          cd "$GITHUB_WORKSPACE/demo/benchmark/vertx"
-          mvn -B clean install -DskipTests
-          start_time=$(date +%s%3N)
-
-          mvn -B clean install -DskipTests
-
-          end_time=$(date +%s%3N)
-          elapsed=$((end_time - start_time))
-
-          echo "vertx=$elapsed" \
-            >> "$GITHUB_WORKSPACE/demo/benchmark/target/wrk-results/build-times.txt"
-
-          echo "Vert.x build time: ${elapsed} ms"
+          set -e
+          
+          PROJECT_DIR="$GITHUB_WORKSPACE/demo/benchmark/vertx"
+          MAVEN_REPO="$GITHUB_WORKSPACE/demo/benchmark/target/maven-repo/vertx"
+          RESULT_FILE="$GITHUB_WORKSPACE/demo/benchmark/target/wrk-results/build-times.txt"
+          
+          rm -rf "$MAVEN_REPO"
+          mkdir -p "$MAVEN_REPO"
+          
+          cd "$PROJECT_DIR"
+          
+          echo ""
+          echo "========================================"
+          echo "Vert.x - First Build"
+          echo "========================================"
+          
+          START=$(date +%s%3N)
+          
+          mvn -B clean install \
+            -DskipTests \
+            -Dmaven.repo.local="$MAVEN_REPO"
+          
+          END=$(date +%s%3N)
+          
+          FIRST_TIME=$((END - START))
+          
+          echo "vertx_first=$FIRST_TIME" >> "$RESULT_FILE"
+          
+          echo ""
+          echo "Vert.x first build: ${FIRST_TIME} ms"
+          
+          
+          echo ""
+          echo "========================================"
+          echo "Vert.x - Second Build"
+          echo "========================================"
+          
+          START=$(date +%s%3N)
+          
+          mvn -B clean install \
+            -DskipTests \
+            -Dmaven.repo.local="$MAVEN_REPO"
+          
+          END=$(date +%s%3N)
+          
+          SECOND_TIME=$((END - START))
+          
+          echo "vertx_second=$SECOND_TIME" >> "$RESULT_FILE"
+          
+          echo ""
+          echo "Vert.x second build: ${SECOND_TIME} ms"
+          
+          
+          echo ""
+          echo "========================================"
+          echo "Vert.x Maven Benchmark Result"
+          echo "========================================"
+          
+          echo "First build : ${FIRST_TIME} ms"
+          echo "Second build: ${SECOND_TIME} ms"
+          echo "First overhead: $((FIRST_TIME - SECOND_TIME)) ms"
+      
 
       # ============================================================
-      # 构建 Spring Boot Benchmark
+      # Spring Boot Maven Benchmark
       # ============================================================
 
-      - name: 构建 Spring Boot Benchmark 并记录耗时
+      - name: Maven Benchmark - Spring Boot
         shell: bash
         run: |
-          cd "$GITHUB_WORKSPACE/demo/benchmark/springboot"
-          mvn -B clean install -DskipTests
-          start_time=$(date +%s%3N)
-
-          mvn -B clean install -DskipTests
-
-          end_time=$(date +%s%3N)
-          elapsed=$((end_time - start_time))
-
-          echo "springboot=$elapsed" \
-            >> "$GITHUB_WORKSPACE/demo/benchmark/target/wrk-results/build-times.txt"
-
-          echo "Spring Boot build time: ${elapsed} ms"
+          set -e
+          
+          PROJECT_DIR="$GITHUB_WORKSPACE/demo/benchmark/springboot"
+          MAVEN_REPO="$GITHUB_WORKSPACE/demo/benchmark/target/maven-repo/springboot"
+          RESULT_FILE="$GITHUB_WORKSPACE/demo/benchmark/target/wrk-results/build-times.txt"
+          
+          rm -rf "$MAVEN_REPO"
+          mkdir -p "$MAVEN_REPO"
+          
+          cd "$PROJECT_DIR"
+          
+          echo ""
+          echo "========================================"
+          echo "Spring Boot - First Build"
+          echo "========================================"
+          
+          START=$(date +%s%3N)
+          
+          mvn -B clean install \
+            -DskipTests \
+            -Dmaven.repo.local="$MAVEN_REPO"
+          
+          END=$(date +%s%3N)
+          
+          FIRST_TIME=$((END - START))
+          
+          echo "springboot_first=$FIRST_TIME" >> "$RESULT_FILE"
+          
+          echo ""
+          echo "Spring Boot first build: ${FIRST_TIME} ms"
+          
+          
+          echo ""
+          echo "========================================"
+          echo "Spring Boot - Second Build"
+          echo "========================================"
+          
+          START=$(date +%s%3N)
+          
+          mvn -B clean install \
+            -DskipTests \
+            -Dmaven.repo.local="$MAVEN_REPO"
+          
+          END=$(date +%s%3N)
+          
+          SECOND_TIME=$((END - START))
+          
+          echo "springboot_second=$SECOND_TIME" >> "$RESULT_FILE"
+          
+          echo ""
+          echo "Spring Boot second build: ${SECOND_TIME} ms"
+          
+          
+          echo ""
+          echo "========================================"
+          echo "Spring Boot Maven Benchmark Result"
+          echo "========================================"
+          
+          echo "First build : ${FIRST_TIME} ms"
+          echo "Second build: ${SECOND_TIME} ms"
+          echo "First overhead: $((FIRST_TIME - SECOND_TIME)) ms"
+      
 
       # ============================================================
       # 准备 Quarkus
+      #
+      # 当前 Benchmark 使用预构建 quarkus-app.zip。
+      # 因此这里只记录解压时间，不作为 Maven 编译耗时。
       # ============================================================
 
       - name: 解压 Quarkus
         shell: bash
         run: |
-          mkdir -p "$GITHUB_WORKSPACE/demo/benchmark/target/quarkus"
-
-          start_time=$(date +%s%3N)
-
+          set -e
+          
+          QUARKUS_DIR="$GITHUB_WORKSPACE/demo/benchmark/target/quarkus"
+          RESULT_FILE="$GITHUB_WORKSPACE/demo/benchmark/target/wrk-results/build-times.txt"
+          
+          rm -rf "$QUARKUS_DIR"
+          mkdir -p "$QUARKUS_DIR"
+          
+          echo ""
+          echo "========================================"
+          echo "Quarkus - Prepare"
+          echo "========================================"
+          
+          START=$(date +%s%3N)
+          
           unzip -q \
             "$GITHUB_WORKSPACE/demo/benchmark/quarkus-app.zip" \
-            -d "$GITHUB_WORKSPACE/demo/benchmark/target/quarkus"
-
-          end_time=$(date +%s%3N)
-          elapsed=$((end_time - start_time))
-
-          echo "quarkus_prepare=$elapsed" \
-            >> "$GITHUB_WORKSPACE/demo/benchmark/target/wrk-results/build-times.txt"
-
-          echo "Quarkus package preparation time: ${elapsed} ms"
-          echo "Quarkus is using a pre-built package; this is NOT compile time."
+            -d "$QUARKUS_DIR"
+          
+          END=$(date +%s%3N)
+          
+          ELAPSED=$((END - START))
+          
+          echo "quarkus_prepare=$ELAPSED" >> "$RESULT_FILE"
+          
+          echo ""
+          echo "Quarkus package preparation: ${ELAPSED} ms"
+          echo ""
+          echo "Quarkus 使用预构建 quarkus-app.zip。"
+          echo "该时间不是 Quarkus 编译耗时。"
+      
 
       # ============================================================
-      # 输出构建耗时
+      # 输出 Maven Benchmark
       # ============================================================
 
       - name: 输出构建耗时
+        shell: bash
         run: |
+          echo ""
           echo "========================================"
-          echo "框架构建耗时"
+          echo "Maven Build Benchmark Result"
           echo "========================================"
-
+          
           cat "$GITHUB_WORKSPACE/demo/benchmark/target/wrk-results/build-times.txt"
-
+          
+          echo ""
           echo "========================================"
+      
 
       # ============================================================
       # 启动服务
@@ -174,179 +388,204 @@ jobs:
       - name: 启动框架服务
         shell: bash
         run: |
+          set -e
+          
           export FEAT_LICENSE="${{ secrets.FEAT_LICENSE }}"
-
-          mkdir -p "$GITHUB_WORKSPACE/demo/benchmark/target/wrk-results"
-
+          
+          BENCHMARK_DIR="$GITHUB_WORKSPACE/demo/benchmark"
+          
+          mkdir -p "$BENCHMARK_DIR/target/wrk-results"
+          
+          
           # ----------------------------------------------------------
           # Feat
           # ----------------------------------------------------------
-
-          cd "$GITHUB_WORKSPACE/demo/benchmark/feat"
-
+          
+          cd "$BENCHMARK_DIR/feat"
+          
           nohup mvn -B exec:java \
             > target/feat.log 2>&1 &
-
+          
           echo $! > target/feat.pid
-
+          
           echo "Feat 服务已启动，等待 5 秒..."
+          
           sleep 5
-
+          
           curl --fail --silent \
             http://localhost:8082/hello \
             > /dev/null
-
+          
+          echo "Feat 服务检查通过"
+          
+          
           # ----------------------------------------------------------
           # Vert.x
           # ----------------------------------------------------------
-
-          cd "$GITHUB_WORKSPACE/demo/benchmark/vertx"
-
+          
+          cd "$BENCHMARK_DIR/vertx"
+          
           nohup mvn -B exec:java \
             > target/vertx.log 2>&1 &
-
+          
           echo $! > target/vertx.pid
-
+          
           echo "Vert.x 服务已启动，等待 5 秒..."
+          
           sleep 5
-
+          
           curl --fail --silent \
             http://localhost:8081/hello \
             > /dev/null
-
+          
+          echo "Vert.x 服务检查通过"
+          
+          
           # ----------------------------------------------------------
           # Spring Boot
           # ----------------------------------------------------------
-
-          cd "$GITHUB_WORKSPACE/demo/benchmark/springboot"
-
+          
+          cd "$BENCHMARK_DIR/springboot"
+          
           nohup mvn -B exec:java \
             > target/springboot.log 2>&1 &
-
+          
           echo $! > target/springboot.pid
-
+          
           echo "Spring Boot 服务已启动，等待 5 秒..."
+          
           sleep 5
-
+          
           curl --fail --silent \
             http://localhost:8080/hello \
             > /dev/null
-
+          
+          echo "Spring Boot 服务检查通过"
+          
+          
           # ----------------------------------------------------------
           # Quarkus
           # ----------------------------------------------------------
-
-          cd "$GITHUB_WORKSPACE/demo/benchmark/target/quarkus"
-
+          
+          cd "$BENCHMARK_DIR/target/quarkus"
+          
           nohup java \
             -Dquarkus.http.port=8083 \
             -jar quarkus-run.jar \
-            > "$GITHUB_WORKSPACE/demo/benchmark/target/quarkus.log" 2>&1 &
-
-          echo $! > "$GITHUB_WORKSPACE/demo/benchmark/target/quarkus.pid"
-
+            > "$BENCHMARK_DIR/target/quarkus.log" 2>&1 &
+          
+          echo $! > "$BENCHMARK_DIR/target/quarkus.pid"
+          
           echo "Quarkus 服务已启动，等待 5 秒..."
+          
           sleep 5
-
+          
           curl --fail --silent \
             http://localhost:8083/hello \
             > /dev/null
+          
+          echo "Quarkus 服务检查通过"
+      
 
       # ============================================================
-      # Feat Benchmark
+      # Feat HTTP Benchmark
       # ============================================================
 
       - name: 测试 Feat Hello World 接口
         run: |
           cd "$GITHUB_WORKSPACE/demo/benchmark"
-
+          
           wrk -t4 -c100 -d60s --latency \
             http://localhost:8082/hello \
             > target/wrk-results/feat-hello.txt
-
+          
           echo "Feat Hello World 测试完成"
 
       - name: 测试 Feat JSON 接口
         run: |
           cd "$GITHUB_WORKSPACE/demo/benchmark"
-
+          
           wrk -t4 -c100 -d60s --latency \
             http://localhost:8082/json \
             > target/wrk-results/feat-json.txt
-
+          
           echo "Feat JSON 测试完成"
+      
 
       # ============================================================
-      # Quarkus Benchmark
+      # Quarkus HTTP Benchmark
       # ============================================================
 
       - name: 测试 Quarkus Hello World 接口
         run: |
           cd "$GITHUB_WORKSPACE/demo/benchmark"
-
+          
           wrk -t4 -c100 -d60s --latency \
             http://localhost:8083/hello \
             > target/wrk-results/quarkus-hello.txt
-
+          
           echo "Quarkus Hello World 测试完成"
 
       - name: 测试 Quarkus JSON 接口
         run: |
           cd "$GITHUB_WORKSPACE/demo/benchmark"
-
+          
           wrk -t4 -c100 -d60s --latency \
             http://localhost:8083/json \
             > target/wrk-results/quarkus-json.txt
-
+          
           echo "Quarkus JSON 测试完成"
+      
 
       # ============================================================
-      # Vert.x Benchmark
+      # Vert.x HTTP Benchmark
       # ============================================================
 
       - name: 测试 Vert.x Hello World 接口
         run: |
           cd "$GITHUB_WORKSPACE/demo/benchmark"
-
+          
           wrk -t4 -c100 -d60s --latency \
             http://localhost:8081/hello \
             > target/wrk-results/vertx-hello.txt
-
+          
           echo "Vert.x Hello World 测试完成"
 
       - name: 测试 Vert.x JSON 接口
         run: |
           cd "$GITHUB_WORKSPACE/demo/benchmark"
-
+          
           wrk -t4 -c100 -d60s --latency \
             http://localhost:8081/json \
             > target/wrk-results/vertx-json.txt
-
+          
           echo "Vert.x JSON 测试完成"
+      
 
       # ============================================================
-      # Spring Boot Benchmark
+      # Spring Boot HTTP Benchmark
       # ============================================================
 
       - name: 测试 Spring Boot Hello World 接口
         run: |
           cd "$GITHUB_WORKSPACE/demo/benchmark"
-
+          
           wrk -t4 -c100 -d60s --latency \
             http://localhost:8080/hello \
             > target/wrk-results/springboot-hello.txt
-
+          
           echo "Spring Boot Hello World 测试完成"
 
       - name: 测试 Spring Boot JSON 接口
         run: |
           cd "$GITHUB_WORKSPACE/demo/benchmark"
-
+          
           wrk -t4 -c100 -d60s --latency \
             http://localhost:8080/json \
             > target/wrk-results/springboot-json.txt
-
+          
           echo "Spring Boot JSON 测试完成"
+      
 
       # ============================================================
       # Python
@@ -356,18 +595,24 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install matplotlib pandas
+      
 
       # ============================================================
       # 生成报告
       # ============================================================
 
       - name: 生成性能报告
+        shell: bash
         run: |
+          set -e
+          
           cd "$GITHUB_WORKSPACE/demo/benchmark"
-
+          
           python generate_benchmark_report.py
-
+          
+          echo ""
           echo "性能报告生成完成"
+      
 
       # ============================================================
       # 上传报告
@@ -380,12 +625,14 @@ jobs:
           path: demo/benchmark/target/benchmark-report/
           retention-days: 30
 
+
       # ============================================================
-      # 输出日志
+      # 输出服务日志
       # ============================================================
 
       - name: 输出服务日志
         if: always()
+        shell: bash
         run: |
           for log in \
             "$GITHUB_WORKSPACE/demo/benchmark/feat/target/feat.log" \
@@ -393,8 +640,16 @@ jobs:
             "$GITHUB_WORKSPACE/demo/benchmark/springboot/target/springboot.log" \
             "$GITHUB_WORKSPACE/demo/benchmark/target/quarkus.log"
           do
+          
             if [ -f "$log" ]; then
+          
+              echo ""
+              echo "========================================"
               echo "===== $log ====="
+              echo "========================================"
+          
               tail -n 40 "$log"
+          
             fi
+          
           done

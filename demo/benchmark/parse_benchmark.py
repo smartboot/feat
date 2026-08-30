@@ -2,19 +2,34 @@
 # -*- coding: utf-8 -*-
 
 """
-解析wrk测试结果并生成性能对比报告
+解析 wrk 测试结果并生成性能对比报告。
 
-此脚本从target/wrk-results目录读取：
-1. wrk性能测试结果
-2. 各框架构建耗时
+此脚本从 target/wrk-results 目录读取：
+
+1. wrk 性能测试结果
+2. Maven 第一次构建耗时
+3. Maven 第二次构建耗时
+
+Maven 构建测试：
+
+first
+    全新的 Maven Local Repository。
+    包含依赖下载、插件下载、编译、打包。
+
+second
+    复用第一次构建产生的 Maven Local Repository。
+    主要衡量依赖已经缓存后的构建效率。
 
 最终生成包含：
-1. HTTP性能对比
-2. 构建耗时对比
-3. 详细测试数据
-4. 测试结论
 
-的HTML报告。
+1. HTTP 性能对比
+2. Maven 第一次构建耗时
+3. Maven 第二次构建耗时
+4. Maven 首次构建额外开销
+5. 详细测试数据
+6. 测试结论
+
+的 HTML 报告。
 """
 
 import os
@@ -48,7 +63,6 @@ FRAMEWORK_NAMES = {
 }
 
 
-# 构建耗时名称
 BUILD_FRAMEWORK_NAMES = {
     'feat': 'Feat',
     'vertx': 'Vert.x',
@@ -57,7 +71,7 @@ BUILD_FRAMEWORK_NAMES = {
 
 
 # ============================================================
-# 测试类型映射
+# 测试类型
 # ============================================================
 
 TEST_TYPES = {
@@ -67,7 +81,7 @@ TEST_TYPES = {
 
 
 # ============================================================
-# 颜色配置
+# 颜色
 # ============================================================
 
 COLORS = {
@@ -79,39 +93,39 @@ COLORS = {
 
 
 # ============================================================
-# wrk数据解析
+# wrk 数据解析
 # ============================================================
 
 def parse_size_to_kb(value, unit):
-    """将wrk传输速率单位转换为KB/s。"""
+    """将 wrk 传输速率单位转换为 KB/s。"""
 
     multipliers = {
         'B': 1 / 1024,
         'KB': 1,
         'MB': 1024,
-        'GB': 1024 * 1024,
+        'GB': 1024 * 1024
     }
 
     return float(value) * multipliers.get(unit, 1)
 
 
 def parse_time_to_ms(value, unit):
-    """将wrk延迟单位转换为毫秒。"""
+    """将 wrk 延迟单位转换为毫秒。"""
 
     multipliers = {
         'us': 0.001,
         'ms': 1,
-        's': 1000,
+        's': 1000
     }
 
     return float(value) * multipliers.get(unit, 1)
 
 
 def parse_wrk_result(file_path):
-    """解析wrk结果文件，提取关键性能指标。"""
+    """解析 wrk 结果文件，提取关键性能指标。"""
 
     try:
-        with open(file_path, 'r') as f:
+        with open(file_path, 'r', encoding='utf-8') as f:
             content = f.read()
 
         metrics = {}
@@ -224,15 +238,16 @@ def parse_wrk_result(file_path):
         print(
             f"解析文件 {file_path} 时出错: {e}"
         )
+
         return None
 
 
 # ============================================================
-# 收集wrk测试结果
+# 收集 wrk 测试结果
 # ============================================================
 
 def collect_results():
-    """收集所有wrk测试结果。"""
+    """收集所有 wrk 测试结果。"""
 
     results = {}
 
@@ -240,6 +255,7 @@ def collect_results():
         print(
             f"错误: 结果目录 {RESULTS_DIR} 不存在"
         )
+
         return results
 
     for filename in os.listdir(RESULTS_DIR):
@@ -247,7 +263,6 @@ def collect_results():
         if not filename.endswith('.txt'):
             continue
 
-        # build-times.txt不是wrk测试文件
         if filename == 'build-times.txt':
             continue
 
@@ -256,9 +271,6 @@ def collect_results():
             filename
         )
 
-        # 例如：
-        # feat-hello.txt
-        # vertx-json.txt
         parts = filename.replace(
             '.txt',
             ''
@@ -289,19 +301,23 @@ def collect_results():
 
 
 # ============================================================
-# 解析构建耗时
+# 解析 Maven 构建耗时
 # ============================================================
 
 def parse_build_times():
     """
-    解析构建耗时。
+    解析 Maven 构建耗时。
 
-    build-times.txt格式：
+    格式：
 
-    feat=12345
-    vertx=23456
-    springboot=34567
-    quarkus_prepare=100
+    feat_first=12345
+    feat_second=2345
+
+    vertx_first=23456
+    vertx_second=3456
+
+    springboot_first=34567
+    springboot_second=4567
     """
 
     build_times = {}
@@ -311,6 +327,7 @@ def parse_build_times():
             f"警告: 构建耗时文件不存在: "
             f"{BUILD_TIMES_FILE}"
         )
+
         return build_times
 
     try:
@@ -341,6 +358,7 @@ def parse_build_times():
 
                 try:
                     build_times[key] = float(value)
+
                 except ValueError:
                     print(
                         f"警告: 无法解析构建耗时: {line}"
@@ -355,11 +373,70 @@ def parse_build_times():
 
 
 # ============================================================
-# HTML工具
+# 构建耗时整理
+# ============================================================
+
+def normalize_build_times(build_times):
+    """
+    将：
+
+        feat_first
+        feat_second
+
+    整理成：
+
+        {
+            'feat': {
+                'first': xxx,
+                'second': xxx,
+                'overhead': xxx
+            }
+        }
+    """
+
+    result = {}
+
+    for framework in BUILD_FRAMEWORK_NAMES:
+
+        first_key = f'{framework}_first'
+        second_key = f'{framework}_second'
+
+        if (
+            first_key not in build_times
+            and second_key not in build_times
+        ):
+            continue
+
+        first = build_times.get(
+            first_key,
+            0
+        )
+
+        second = build_times.get(
+            second_key,
+            0
+        )
+
+        overhead = max(
+            0,
+            first - second
+        )
+
+        result[framework] = {
+            'first': first,
+            'second': second,
+            'overhead': overhead
+        }
+
+    return result
+
+
+# ============================================================
+# HTML 工具
 # ============================================================
 
 def js_array(values):
-    """将Python列表转换为简单JS数组。"""
+    """将 Python 列表转换为简单 JS 数组。"""
 
     return str(values).replace(
         "'",
@@ -368,17 +445,21 @@ def js_array(values):
 
 
 # ============================================================
-# HTML报告
+# HTML 报告
 # ============================================================
 
 def generate_html_report(
     results,
     build_times=None
 ):
-    """生成HTML性能报告。"""
+    """生成 HTML 性能报告。"""
 
     if build_times is None:
         build_times = parse_build_times()
+
+    build_data = normalize_build_times(
+        build_times
+    )
 
     os.makedirs(
         os.path.dirname(OUTPUT_FILE),
@@ -386,7 +467,7 @@ def generate_html_report(
     )
 
     # ========================================================
-    # HTTP图表数据
+    # HTTP 图表数据
     # ========================================================
 
     chart_data = {}
@@ -435,12 +516,13 @@ def generate_html_report(
             )
 
     # ========================================================
-    # 构建耗时图表数据
+    # Maven 图表数据
     # ========================================================
 
     build_labels = []
-    build_values = []
-    build_colors = []
+    first_build_values = []
+    second_build_values = []
+    overhead_values = []
 
     for framework in (
         'feat',
@@ -448,26 +530,38 @@ def generate_html_report(
         'springboot'
     ):
 
-        if framework not in build_times:
+        if framework not in build_data:
             continue
 
         build_labels.append(
             BUILD_FRAMEWORK_NAMES[framework]
         )
 
-        build_values.append(
+        data = build_data[framework]
+
+        first_build_values.append(
             round(
-                build_times[framework] / 1000,
+                data['first'] / 1000,
                 2
             )
         )
 
-        build_colors.append(
-            COLORS[framework]
+        second_build_values.append(
+            round(
+                data['second'] / 1000,
+                2
+            )
+        )
+
+        overhead_values.append(
+            round(
+                data['overhead'] / 1000,
+                2
+            )
         )
 
     # ========================================================
-    # HTML头
+    # HTML Header
     # ========================================================
 
     html = f"""
@@ -641,6 +735,44 @@ def generate_html_report(
             margin: 15px 0;
         }}
 
+        .metric-card {{
+            display: flex;
+
+            flex-wrap: wrap;
+
+            gap: 15px;
+
+            margin: 20px 0;
+        }}
+
+        .metric {{
+            flex: 1;
+
+            min-width: 200px;
+
+            padding: 18px;
+
+            background: #f8f8f8;
+
+            border-radius: 8px;
+        }}
+
+        .metric-title {{
+            font-size: 14px;
+
+            color: #777;
+
+            margin-bottom: 8px;
+        }}
+
+        .metric-value {{
+            font-size: 26px;
+
+            font-weight: bold;
+
+            color: #333;
+        }}
+
         @media (max-width: 768px) {{
 
             .chart,
@@ -671,6 +803,7 @@ def generate_html_report(
 
     </div>
 
+
     <h2>测试概述</h2>
 
     <p>
@@ -685,50 +818,73 @@ def generate_html_report(
     </p>
 
     <p>
-        测试参数：
+        HTTP 测试参数：
         4 个线程，100 个连接，
         持续 60 秒，开启延迟统计。
     </p>
 
+
     <div class="info">
 
-        <strong>构建耗时说明：</strong>
+        <strong>Maven 构建测试说明：</strong>
 
-        Feat、Vert.x 和 Spring Boot
-        统计的是各自执行
-        <code>mvn clean install -DskipTests</code>
-        的实际墙钟时间。
+        <p>
+            第一次构建使用全新的 Maven Local Repository，
+            因此包含 Maven 插件、第三方依赖下载以及编译、
+            打包等完整开销。
+        </p>
 
-        Quarkus 当前使用仓库中已有的
-        <code>quarkus-app.zip</code>
-        预构建包，因此不计入编译耗时。
+        <p>
+            第二次构建复用第一次构建产生的 Maven Local Repository，
+            主要衡量依赖已经缓存后的日常构建效率。
+        </p>
+
+        <p>
+            每个框架使用独立 Maven Repository，
+            避免框架之间共享依赖缓存。
+        </p>
 
     </div>
 """
 
+
     # ========================================================
-    # 构建耗时
+    # Maven Build
     # ========================================================
 
     html += """
-    <h2>构建耗时对比</h2>
+    <h2>Maven 构建性能</h2>
 
-    <div class="chart-full">
+    <div class="chart-container">
 
-        <canvas id="build-time-chart"></canvas>
+        <div class="chart">
+            <canvas id="maven-first-chart"></canvas>
+        </div>
+
+        <div class="chart">
+            <canvas id="maven-second-chart"></canvas>
+        </div>
 
     </div>
 
-    <h3>构建耗时明细</h3>
+    <div class="chart-full">
+        <canvas id="maven-overhead-chart"></canvas>
+    </div>
+
+
+    <h3>Maven 构建耗时明细</h3>
 
     <table>
 
         <tr>
             <th>框架</th>
-            <th>构建方式</th>
-            <th>耗时</th>
+            <th>第一次构建</th>
+            <th>第二次构建</th>
+            <th>首次额外开销</th>
+            <th>缓存后效率</th>
         </tr>
 """
+
 
     for framework in (
         'feat',
@@ -736,70 +892,119 @@ def generate_html_report(
         'springboot'
     ):
 
-        if framework not in build_times:
+        if framework not in build_data:
             continue
 
-        milliseconds = build_times[
-            framework
-        ]
+        data = build_data[framework]
 
-        seconds = milliseconds / 1000
+        first = data['first']
+        second = data['second']
+        overhead = data['overhead']
+
+        if first > 0:
+            cache_efficiency = (
+                second / first
+            ) * 100
+        else:
+            cache_efficiency = 0
 
         html += f"""
         <tr>
 
             <td>
-                {BUILD_FRAMEWORK_NAMES[framework]}
+                <strong>
+                    {BUILD_FRAMEWORK_NAMES[framework]}
+                </strong>
             </td>
 
             <td>
-                Maven clean install
-            </td>
-
-            <td>
-                <span class="highlight">
-                    {seconds:.2f} 秒
-                </span>
-
+                {first / 1000:.2f} 秒
                 <span class="muted">
-                    ({milliseconds:.0f} ms)
+                    ({first:.0f} ms)
                 </span>
             </td>
 
-        </tr>
-"""
-
-    html += """
-        <tr>
-
-            <td>Quarkus</td>
+            <td>
+                {second / 1000:.2f} 秒
+                <span class="muted">
+                    ({second:.0f} ms)
+                </span>
+            </td>
 
             <td>
-                预构建 quarkus-app.zip
+                {overhead / 1000:.2f} 秒
+                <span class="muted">
+                    ({overhead:.0f} ms)
+                </span>
             </td>
 
-            <td class="muted">
-                未统计编译耗时
+            <td>
+                {cache_efficiency:.1f}%
             </td>
 
         </tr>
-
-    </table>
 """
 
+
+    html += """
+    </table>
+
+    <div class="info">
+
+        <strong>如何理解 Maven 构建数据：</strong>
+
+        <p>
+            <strong>第一次构建</strong>更接近开发者首次
+            clone 项目之后的真实体验。
+        </p>
+
+        <p>
+            <strong>第二次构建</strong>更接近日常开发中
+            Maven 依赖已经存在于本地缓存后的体验。
+        </p>
+
+        <p>
+            <strong>首次额外开销</strong>为第一次构建与第二次构建
+            的耗时差值，可用于观察依赖和插件准备所带来的额外成本。
+        </p>
+
+    </div>
+"""
+
+
     # ========================================================
-    # HTTP性能图表
+    # Quarkus
     # ========================================================
 
     html += """
-    <h2>HTTP 性能对比图表</h2>
+    <div class="info">
+
+        <strong>Quarkus 构建说明：</strong>
+
+        <p>
+            Quarkus 当前使用仓库中的预构建
+            <code>quarkus-app.zip</code>，
+            因此没有纳入 Maven 编译耗时对比。
+        </p>
+
+    </div>
 """
+
+
+    # ========================================================
+    # HTTP 性能
+    # ========================================================
+
+    html += """
+    <h2>HTTP 性能对比</h2>
+"""
+
 
     for test_type, data in chart_data.items():
 
         html += f"""
     <h3>
-        {TEST_TYPES[test_type]}接口测试
+        {TEST_TYPES[test_type]} 接口测试
     </h3>
 
     <div class="chart-container">
@@ -823,8 +1028,9 @@ def generate_html_report(
     </div>
 """
 
+
     # ========================================================
-    # HTTP详细数据
+    # HTTP Detail
     # ========================================================
 
     html += """
@@ -846,6 +1052,7 @@ def generate_html_report(
 
         </tr>
 """
+
 
     for test_type, frameworks in results.items():
 
@@ -888,8 +1095,10 @@ def generate_html_report(
         </tr>
 """
 
+
     html += """
     </table>
+
 
     <div class="summary">
 
@@ -902,8 +1111,9 @@ def generate_html_report(
         <ul>
 """
 
+
     # ========================================================
-    # HTTP结论
+    # HTTP Conclusion
     # ========================================================
 
     for test_type, frameworks in results.items():
@@ -944,116 +1154,142 @@ def generate_html_report(
             </li>
 """
 
+
     # ========================================================
-    # 构建耗时结论
+    # Maven Conclusion
     # ========================================================
 
-    if build_times:
+    if build_data:
 
-        valid_build_times = {
-            key: value
-            for key, value in build_times.items()
-            if key in BUILD_FRAMEWORK_NAMES
-        }
+        fastest_first = min(
+            build_data,
+            key=lambda x:
+                build_data[x]['first']
+        )
 
-        if valid_build_times:
+        fastest_second = min(
+            build_data,
+            key=lambda x:
+                build_data[x]['second']
+        )
 
-            fastest_framework = min(
-                valid_build_times,
-                key=valid_build_times.get
-            )
+        fastest_first_time = (
+            build_data[fastest_first]['first']
+            / 1000
+        )
 
-            fastest_time = (
-                valid_build_times[
-                    fastest_framework
-                ] / 1000
-            )
+        fastest_second_time = (
+            build_data[fastest_second]['second']
+            / 1000
+        )
 
-            html += f"""
+        html += f"""
             <li>
-                在本次构建测试中，
+                在第一次 Maven 构建中，
                 <strong>
-                    {BUILD_FRAMEWORK_NAMES[
-                        fastest_framework
-                    ]}
+                    {BUILD_FRAMEWORK_NAMES[fastest_first]}
                 </strong>
-                构建耗时最低，
+                耗时最低，
                 为
                 <strong>
-                    {fastest_time:.2f}
+                    {fastest_first_time:.2f}
+                </strong>
+                秒。
+            </li>
+
+            <li>
+                在第二次 Maven 构建中，
+                <strong>
+                    {BUILD_FRAMEWORK_NAMES[fastest_second]}
+                </strong>
+                耗时最低，
+                为
+                <strong>
+                    {fastest_second_time:.2f}
                 </strong>
                 秒。
             </li>
 """
 
-            # ------------------------------------------------
-            # Feat相对其他框架的构建耗时
-            # ------------------------------------------------
 
-            if 'feat' in valid_build_times:
+        # ----------------------------------------------------
+        # Feat vs Other
+        # ----------------------------------------------------
 
-                feat_time = valid_build_times[
-                    'feat'
-                ]
+        if 'feat' in build_data:
 
-                for framework in (
-                    'vertx',
-                    'springboot'
-                ):
+            feat_first = build_data['feat']['first']
+            feat_second = build_data['feat']['second']
 
-                    if framework not in valid_build_times:
-                        continue
+            for framework in (
+                'vertx',
+                'springboot'
+            ):
 
-                    other_time = valid_build_times[
-                        framework
-                    ]
+                if framework not in build_data:
+                    continue
 
-                    if feat_time < other_time:
+                other_first = build_data[
+                    framework
+                ]['first']
 
-                        improvement = (
-                            (
-                                other_time
-                                - feat_time
-                            )
-                            / other_time
-                        ) * 100
+                other_second = build_data[
+                    framework
+                ]['second']
 
-                        html += f"""
+
+                # First build
+                if feat_first < other_first:
+
+                    improvement = (
+                        (
+                            other_first
+                            - feat_first
+                        )
+                        / other_first
+                    ) * 100
+
+                    html += f"""
             <li>
+                第一次构建中，
                 Feat 相比
                 {BUILD_FRAMEWORK_NAMES[framework]}
-                构建耗时低
+                快
                 <strong>
                     {improvement:.2f}%
                 </strong>。
             </li>
 """
 
-                    elif feat_time > other_time:
+                # Second build
+                if feat_second < other_second:
 
-                        overhead = (
-                            (
-                                feat_time
-                                - other_time
-                            )
-                            / other_time
-                        ) * 100
+                    improvement = (
+                        (
+                            other_second
+                            - feat_second
+                        )
+                        / other_second
+                    ) * 100
 
-                        html += f"""
+                    html += f"""
             <li>
+                第二次构建中，
                 Feat 相比
                 {BUILD_FRAMEWORK_NAMES[framework]}
-                构建耗时高
+                快
                 <strong>
-                    {overhead:.2f}%
+                    {improvement:.2f}%
                 </strong>。
             </li>
 """
+
 
     html += """
         </ul>
 
     </div>
+
 
     <div class="footer">
 
@@ -1062,8 +1298,13 @@ def generate_html_report(
         </p>
 
         <p>
+            Maven 第一次构建使用独立且全新的 Maven Local Repository，
+            第二次构建复用第一次构建产生的缓存。
+        </p>
+
+        <p>
             构建耗时为 CI 环境中的实际墙钟时间，
-            会受到 Maven 缓存、依赖下载、
+            会受到网络速度、Maven Central 响应速度、
             GitHub Actions Runner 负载等因素影响。
         </p>
 
@@ -1071,17 +1312,19 @@ def generate_html_report(
 
 </div>
 
+
 <script>
 """
 
+
     # ========================================================
-    # 构建耗时Chart
+    # Maven First Build Chart
     # ========================================================
 
     html += f"""
     new Chart(
         document.getElementById(
-            'build-time-chart'
+            'maven-first-chart'
         ),
         {{
 
@@ -1089,28 +1332,19 @@ def generate_html_report(
 
             data: {{
 
-                labels: {js_array(
-                    build_labels
-                )},
+                labels:
+                    {js_array(build_labels)},
 
                 datasets: [{{
 
                     label:
-                        '构建耗时（秒）',
+                        '第一次构建（秒）',
 
-                    data: {js_array(
-                        build_values
-                    )},
+                    data:
+                        {js_array(first_build_values)},
 
                     backgroundColor:
-                        {js_array(
-                            build_colors
-                        )},
-
-                    borderColor:
-                        {js_array(
-                            build_colors
-                        )},
+                        'rgba(54, 162, 235, 0.8)',
 
                     borderWidth: 1
 
@@ -1129,7 +1363,7 @@ def generate_html_report(
                         display: true,
 
                         text:
-                            'Maven 构建耗时（越低越好）'
+                            'Maven 第一次构建 - 越低越好'
 
                     }},
 
@@ -1166,6 +1400,175 @@ def generate_html_report(
     );
 """
 
+
+    # ========================================================
+    # Maven Second Build Chart
+    # ========================================================
+
+    html += f"""
+    new Chart(
+        document.getElementById(
+            'maven-second-chart'
+        ),
+        {{
+
+            type: 'bar',
+
+            data: {{
+
+                labels:
+                    {js_array(build_labels)},
+
+                datasets: [{{
+
+                    label:
+                        '第二次构建（秒）',
+
+                    data:
+                        {js_array(second_build_values)},
+
+                    backgroundColor:
+                        'rgba(75, 192, 192, 0.8)',
+
+                    borderWidth: 1
+
+                }}]
+
+            }},
+
+            options: {{
+
+                responsive: true,
+
+                plugins: {{
+
+                    title: {{
+
+                        display: true,
+
+                        text:
+                            'Maven 第二次构建 - 越低越好'
+
+                    }},
+
+                    legend: {{
+
+                        display: false
+
+                    }}
+
+                }},
+
+                scales: {{
+
+                    y: {{
+
+                        beginAtZero: true,
+
+                        title: {{
+
+                            display: true,
+
+                            text:
+                                '耗时（秒）'
+
+                        }}
+
+                    }}
+
+                }}
+
+            }}
+
+        }}
+    );
+"""
+
+
+    # ========================================================
+    # Maven Download Overhead Chart
+    # ========================================================
+
+    html += f"""
+    new Chart(
+        document.getElementById(
+            'maven-overhead-chart'
+        ),
+        {{
+
+            type: 'bar',
+
+            data: {{
+
+                labels:
+                    {js_array(build_labels)},
+
+                datasets: [{{
+
+                    label:
+                        '首次额外开销（秒）',
+
+                    data:
+                        {js_array(overhead_values)},
+
+                    backgroundColor:
+                        'rgba(255, 159, 64, 0.8)',
+
+                    borderWidth: 1
+
+                }}]
+
+            }},
+
+            options: {{
+
+                responsive: true,
+
+                plugins: {{
+
+                    title: {{
+
+                        display: true,
+
+                        text:
+                            '首次构建额外开销 - 越低越好'
+
+                    }},
+
+                    legend: {{
+
+                        display: false
+
+                    }}
+
+                }},
+
+                scales: {{
+
+                    y: {{
+
+                        beginAtZero: true,
+
+                        title: {{
+
+                            display: true,
+
+                            text:
+                                '额外耗时（秒）'
+
+                        }}
+
+                    }}
+
+                }}
+
+            }}
+
+        }}
+    );
+"""
+
+
     # ========================================================
     # HTTP Charts
     # ========================================================
@@ -1173,10 +1576,6 @@ def generate_html_report(
     for test_type, data in chart_data.items():
 
         html += f"""
-    // ========================================================
-    // {TEST_TYPES[test_type]} RPS
-    // ========================================================
-
     new Chart(
         document.getElementById(
             'rps-chart-{test_type}'
@@ -1188,9 +1587,7 @@ def generate_html_report(
             data: {{
 
                 labels:
-                    {js_array(
-                        data['labels']
-                    )},
+                    {js_array(data['labels'])},
 
                 datasets: [{{
 
@@ -1198,19 +1595,13 @@ def generate_html_report(
                         '每秒请求数',
 
                     data:
-                        {js_array(
-                            data['rps']
-                        )},
+                        {js_array(data['rps'])},
 
                     backgroundColor:
-                        {js_array(
-                            data['colors']
-                        )},
+                        {js_array(data['colors'])},
 
                     borderColor:
-                        {js_array(
-                            data['colors']
-                        )},
+                        {js_array(data['colors'])},
 
                     borderWidth: 1
 
@@ -1257,10 +1648,6 @@ def generate_html_report(
     );
 
 
-    // ========================================================
-    // {TEST_TYPES[test_type]} Latency
-    // ========================================================
-
     new Chart(
         document.getElementById(
             'latency-chart-{test_type}'
@@ -1272,9 +1659,7 @@ def generate_html_report(
             data: {{
 
                 labels:
-                    {js_array(
-                        data['labels']
-                    )},
+                    {js_array(data['labels'])},
 
                 datasets: [{{
 
@@ -1282,19 +1667,13 @@ def generate_html_report(
                         '平均响应时间 (ms)',
 
                     data:
-                        {js_array(
-                            data['latency']
-                        )},
+                        {js_array(data['latency'])},
 
                     backgroundColor:
-                        {js_array(
-                            data['colors']
-                        )},
+                        {js_array(data['colors'])},
 
                     borderColor:
-                        {js_array(
-                            data['colors']
-                        )},
+                        {js_array(data['colors'])},
 
                     borderWidth: 1
 
@@ -1342,8 +1721,9 @@ def generate_html_report(
 
 """
 
+
     # ========================================================
-    # HTML结束
+    # HTML End
     # ========================================================
 
     html += """
@@ -1354,8 +1734,9 @@ def generate_html_report(
 </html>
 """
 
+
     # ========================================================
-    # 写入HTML
+    # Write
     # ========================================================
 
     with open(
