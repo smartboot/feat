@@ -88,6 +88,8 @@ public final class ApplicationContext {
      * @throws Throwable 启动过程中可能出现的异常
      */
     public void start() throws Throwable {
+        // 注册外部Bean
+        options.getExternalBeans().forEach(this::addBean);
         // 通过ServiceLoader加载所有CloudService实现类
         for (CloudService service : ServiceLoader.load(CloudService.class)) {
             services.add(service);

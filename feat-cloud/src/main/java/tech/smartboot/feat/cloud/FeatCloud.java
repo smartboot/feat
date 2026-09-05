@@ -58,8 +58,6 @@ public class FeatCloud {
         options.accept(opt);
         // 创建应用上下文实例
         ApplicationContext application = new ApplicationContext(opt);
-        // 注册外部Bean
-        opt.getExternalBeans().forEach(application::addBean);
         try {
             // 启动应用上下文
             application.start();
