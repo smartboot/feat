@@ -279,7 +279,7 @@ public class HttpStaticResourceHandler implements HttpHandler {
                     if (len == -1) {
                         completableFuture.completeExceptionally(new IOException("EOF"));
                     } else if (readPos.addAndGet(len) >= response.getContentLength()) {
-                        response.getOutputStream().write(buffer, this);
+                        response.getOutputStream().write(buffer, () -> completableFuture.complete(null));
                     } else {
                         response.getOutputStream().write(buffer, this);
                     }
