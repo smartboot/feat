@@ -19,7 +19,6 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
@@ -86,19 +85,19 @@ public abstract class FeatOutputStream extends OutputStream implements Reset {
         }
     }
 
-    public final void write(byte[] b, int off, int len, Consumer<FeatOutputStream> consumer) throws IOException {
+    public final void write(byte[] b, int off, int len, Runnable callback) throws IOException {
         writeHeader(HeaderWriteSource.WRITE);
         if (len == 0) {
-            consumer.accept(this);
+            callback.run();
             return;
         }
         if (chunkedSupport) {
             byte[] start = (Integer.toHexString(len) + "\r\n").getBytes();
             writeBuffer.write(start);
             writeBuffer.write(b, off, len);
-            writeBuffer.write(ByteBuffer.wrap(FeatUtils.CRLF_BYTES), () -> consumer.accept(FeatOutputStream.this));
+            writeBuffer.write(ByteBuffer.wrap(FeatUtils.CRLF_BYTES), callback);
         } else {
-            writeBuffer.write(ByteBuffer.wrap(b, off, len), () -> consumer.accept(FeatOutputStream.this));
+            writeBuffer.write(ByteBuffer.wrap(b, off, len), callback);
         }
     }
 

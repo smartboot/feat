@@ -161,28 +161,28 @@ public class HttpStaticResourceHandler implements HttpHandler {
         }
         response.setHeader(HeaderName.CONTENT_ENCODING, HeaderValue.ContentEncoding.GZIP);
 
-        Consumer<FeatOutputStream> consumer = new Consumer<FeatOutputStream>() {
+        Runnable consumer = new Runnable() {
             final byte[] bytes = new byte[options.writeBufferSize()];
             final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             final GZIPOutputStream outputStream = new GZIPOutputStream(byteArrayOutputStream);
 
             @Override
-            public void accept(FeatOutputStream featOutputStream) {
+            public void run() {
                 int length;
                 try {
                     if ((length = inputStream.read(bytes)) >= 0) {
                         outputStream.write(bytes, 0, length);
                         byte[] gzipBytes = byteArrayOutputStream.toByteArray();
                         byteArrayOutputStream.reset();
-                        featOutputStream.write(gzipBytes, 0, gzipBytes.length, this);
+                        response.getOutputStream().write(gzipBytes, 0, gzipBytes.length, this);
                     } else {
                         outputStream.close();
                         byte[] gzipBytes = byteArrayOutputStream.toByteArray();
                         byteArrayOutputStream.reset();
                         if (gzipBytes.length > 0) {
-                            featOutputStream.write(gzipBytes, 0, gzipBytes.length);
+                            response.getOutputStream().write(gzipBytes, 0, gzipBytes.length);
                         }
-                        featOutputStream.flush();
+                        response.getOutputStream().flush();
                         completableFuture.complete(null);
                     }
                 } catch (Throwable throwable) {
@@ -190,7 +190,7 @@ public class HttpStaticResourceHandler implements HttpHandler {
                 }
             }
         };
-        consumer.accept(response.getOutputStream());
+        consumer.run();
     }
 
     private void handleFilePath(HttpRequest request, CompletableFuture<Void> completableFuture, String fileName) throws Throwable {
