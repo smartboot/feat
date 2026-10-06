@@ -114,10 +114,10 @@ class HttpRestImpl implements HttpRest {
                 }
 
                 @Override
-                public void transferFrom(ByteBuffer buffer, Consumer<RequestBody> consumer) {
+                public void write(ByteBuffer buffer, Runnable callback) {
                     try {
                         willSendRequest();
-                        request.getOutputStream().transferFrom(buffer, bufferOutputStream -> consumer.accept(HttpRestImpl.this.body));
+                        request.getOutputStream().write(buffer, callback);
                     } catch (Throwable e) {
                         logger.error("body stream write error! ", e);
                         completableFuture.completeExceptionally(e);

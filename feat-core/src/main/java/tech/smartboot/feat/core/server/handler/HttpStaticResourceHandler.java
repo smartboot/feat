@@ -267,11 +267,11 @@ public class HttpStaticResourceHandler implements HttpHandler {
 
         ByteBuffer buffer = ByteBuffer.allocate(options.writeBufferSize());
         buffer.position(buffer.limit());
-        Consumer<FeatOutputStream> consumer = new Consumer<FeatOutputStream>() {
+        Runnable callback = new Runnable() {
             final AtomicLong readPos = new AtomicLong(0);
 
             @Override
-            public void accept(FeatOutputStream result) {
+            public void run() {
                 try {
                     buffer.compact();
                     int len = fis.getChannel().read(buffer);
@@ -279,16 +279,16 @@ public class HttpStaticResourceHandler implements HttpHandler {
                     if (len == -1) {
                         completableFuture.completeExceptionally(new IOException("EOF"));
                     } else if (readPos.addAndGet(len) >= response.getContentLength()) {
-                        response.getOutputStream().transferFrom(buffer, bufferOutputStream -> completableFuture.complete(null));
+                        response.getOutputStream().write(buffer, this);
                     } else {
-                        response.getOutputStream().transferFrom(buffer, this);
+                        response.getOutputStream().write(buffer, this);
                     }
                 } catch (Throwable throwable) {
                     completableFuture.completeExceptionally(throwable);
                 }
             }
         };
-        consumer.accept(response.getOutputStream());
+        callback.run();
     }
 
     @Override

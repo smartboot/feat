@@ -26,7 +26,9 @@ public interface RequestBody {
     /**
      * 往缓冲区中写入数据
      */
-    void transferFrom(ByteBuffer buffer, Consumer<RequestBody> consumer);
+    default void write(ByteBuffer buffer, Runnable callback){
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * 往缓冲区中写入数据

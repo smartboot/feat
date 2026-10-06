@@ -20,10 +20,8 @@ import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpProtocol;
 
-import java.nio.ByteBuffer;
 import java.util.Base64;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
 
 /**
  * @author 三刀 zhengjunweimail@163.com
@@ -148,11 +146,6 @@ public final class HttpClient {
                         @Override
                         public RequestBody write(byte[] bytes, int offset, int len) {
                             return this;
-                        }
-
-                        @Override
-                        public void transferFrom(ByteBuffer buffer, Consumer<RequestBody> consumer) {
-
                         }
 
                         @Override

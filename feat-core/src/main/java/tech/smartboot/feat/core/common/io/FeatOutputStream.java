@@ -96,16 +96,16 @@ public abstract class FeatOutputStream extends OutputStream implements Reset {
             byte[] start = (Integer.toHexString(len) + "\r\n").getBytes();
             writeBuffer.write(start);
             writeBuffer.write(b, off, len);
-            writeBuffer.write(FeatUtils.CRLF_BYTES, 0, 2, writeBuffer -> consumer.accept(FeatOutputStream.this));
+            writeBuffer.write(ByteBuffer.wrap(FeatUtils.CRLF_BYTES), () -> consumer.accept(FeatOutputStream.this));
         } else {
-            writeBuffer.write(b, off, len, writeBuffer -> consumer.accept(FeatOutputStream.this));
+            writeBuffer.write(ByteBuffer.wrap(b, off, len), () -> consumer.accept(FeatOutputStream.this));
         }
     }
 
-    public final void transferFrom(ByteBuffer buffer, Consumer<FeatOutputStream> consumer) throws IOException {
+    public final void write(ByteBuffer buffer, Runnable callback) throws IOException {
         writeHeader(HeaderWriteSource.WRITE);
         if (!chunkedSupport) {
-            writeBuffer.transferFrom(buffer, writeBuffer -> consumer.accept(FeatOutputStream.this));
+            writeBuffer.write(buffer, callback);
             return;
         }
         byte[] start = (Integer.toHexString(buffer.remaining()) + "\r\n").getBytes();
@@ -118,11 +118,11 @@ public abstract class FeatOutputStream extends OutputStream implements Reset {
         if (buffer.capacity() - buffer.limit() >= FeatUtils.CRLF_BYTES.length) {
             buffer.put(FeatUtils.CRLF_BYTES, buffer.limit(), FeatUtils.CRLF_BYTES.length);
             buffer.limit(buffer.limit() + FeatUtils.CRLF_BYTES.length);
-            writeBuffer.transferFrom(buffer, writeBuffer -> consumer.accept(FeatOutputStream.this));
+            writeBuffer.write(buffer, callback);
         } else {
-            writeBuffer.transferFrom(buffer, writeBuffer -> {
+            writeBuffer.write(buffer, () -> {
                 try {
-                    writeBuffer.write(FeatUtils.CRLF_BYTES, 0, 2, buffer1 -> consumer.accept(FeatOutputStream.this));
+                    writeBuffer.write(ByteBuffer.wrap(FeatUtils.CRLF_BYTES), callback);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }

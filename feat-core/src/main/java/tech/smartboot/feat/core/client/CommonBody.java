@@ -11,7 +11,6 @@
 package tech.smartboot.feat.core.client;
 
 import java.nio.ByteBuffer;
-import java.util.function.Consumer;
 
 /**
  * @author 三刀 zhengjunweimail@163.com
@@ -32,8 +31,8 @@ class CommonBody implements RequestBody {
     }
 
     @Override
-    public void transferFrom(ByteBuffer buffer, Consumer<RequestBody> consumer) {
-        body.transferFrom(buffer, (b) -> consumer.accept(this));
+    public void write(ByteBuffer buffer, Runnable callback) {
+        body.write(buffer, callback);
     }
 
     @Override
