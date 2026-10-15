@@ -87,7 +87,7 @@ public class ProxyHandler implements RouterHandler {
                 }
                 request.getAioSession().awaitRead();
                 System.out.println("aa");
-                rest.body().transferFrom(buffer, requestBody -> {
+                rest.body().write(buffer, () -> {
                     System.out.println("bb");
 //                    requestBody.flush();
                     request.getAioSession().signalRead();
