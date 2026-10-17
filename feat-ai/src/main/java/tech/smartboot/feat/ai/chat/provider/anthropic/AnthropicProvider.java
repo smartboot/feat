@@ -235,6 +235,7 @@ public class AnthropicProvider extends Provider {
                     chatResponse.setToolCalls(toolCalls);
                     chatResponse.setSuccess(true);
                     context.setStatus(StreamContext.STREAM_STATUS_COMPLETE);
+                    context.setResponse(chatResponse);
                     consumer.onCompletion(chatResponse);
                     break;
                 default:

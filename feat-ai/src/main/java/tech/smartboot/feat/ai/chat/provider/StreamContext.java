@@ -1,5 +1,7 @@
 package tech.smartboot.feat.ai.chat.provider;
 
+import tech.smartboot.feat.ai.chat.entity.ChatResponse;
+
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -50,6 +52,13 @@ public class StreamContext {
     private final AtomicInteger status = new AtomicInteger(STREAM_STATUS_INIT);
 
     /**
+     * 流式终态响应
+     * <p>provider 在终止标记（如 [DONE]/message_stop）处组装完成后写入，
+     * 供上层在流结束后获取完整响应</p>
+     */
+    private volatile ChatResponse response;
+
+    /**
      * 获取当前流式响应状态
      *
      * @return 当前状态值
@@ -89,5 +98,23 @@ public class StreamContext {
 
     public String getReasoning() {
         return reasoningBuilder.toString();
+    }
+
+    /**
+     * 获取流式终态响应
+     *
+     * @return 终态响应，流未结束时为 null
+     */
+    public ChatResponse getResponse() {
+        return response;
+    }
+
+    /**
+     * 设置流式终态响应
+     *
+     * @param response 终态响应
+     */
+    public void setResponse(ChatResponse response) {
+        this.response = response;
     }
 }

@@ -182,6 +182,7 @@ public class OpenAiProvider extends Provider {
             chatResponse.setToolCalls(toolCalls);
             chatResponse.setSuccess(true);
             context.setStatus(StreamContext.STREAM_STATUS_COMPLETE);
+            context.setResponse(chatResponse);
             consumer.onCompletion(chatResponse);
             return;
         }
@@ -196,6 +197,7 @@ public class OpenAiProvider extends Provider {
             chatResponse.setError(error.getString("message"));
             chatResponse.setSuccess(false);
             context.setStatus(StreamContext.STREAM_STATUS_COMPLETE);
+            context.setResponse(chatResponse);
             consumer.onCompletion(chatResponse);
             return;
         }
