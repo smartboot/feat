@@ -15,6 +15,7 @@ import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.Reset;
+import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.io.FeatOutputStream;
 import tech.smartboot.feat.core.server.HttpResponse;
 
@@ -117,6 +118,7 @@ public abstract class AbstractResponse implements HttpResponse, Reset {
      * @param replace true:replace,false:append
      */
     private void setHeader(String name, String value, boolean replace) {
+        checkHeaderNameAndValue(name, value);
         char cc = name.charAt(0);
         if (cc == 'C' || cc == 'c') {
             if (checkSpecialHeader(name, value)) return;
@@ -149,6 +151,30 @@ public abstract class AbstractResponse implements HttpResponse, Reset {
         }
         if (headerValue == null) {
             preHeaderValue.setNextValue(new HeaderValue(null, value));
+        }
+    }
+
+    /**
+     * 校验header名与值，防止CR/LF注入导致的HTTP响应拆分攻击
+     * <p>
+     * 采用单次比较（c &lt; 0x20）覆盖全部控制字符（含CR/LF/NUL），
+     * 避免逐字符多次分支比较带来的额外开销
+     */
+    private static void checkHeaderNameAndValue(String name, String value) {
+        //header name必须是token，不允许空白与控制字符
+        for (int i = 0; i < name.length(); i++) {
+            if (name.charAt(i) <= 0x20) {
+                throw new FeatException("invalid character in header name: " + name);
+            }
+        }
+        if (value != null) {
+            //值中仅放行HTAB，拒绝其余控制字符
+            for (int i = 0; i < value.length(); i++) {
+                char c = value.charAt(i);
+                if (c < 0x20 && c != '\t') {
+                    throw new FeatException("invalid character in header value: " + value);
+                }
+            }
         }
     }
 
