@@ -15,7 +15,6 @@ import io.github.smartboot.socket.timer.TimerTask;
 import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
-import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.Session;
 
 import java.util.Map;
@@ -23,6 +22,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 /**
+ * 基于本地内存的会话管理器
+ * <p>
+ * 仅负责会话的存储与超时调度，Cookie的解析、去重与下发由基类模板方法统一管理
+ * </p>
+ *
  * @author 三刀
  * @version v1.0 12/16/25
  */
@@ -48,26 +52,19 @@ public class LocalSessionManager extends SessionManager {
     }, 1000, 64);
 
 
-    /**
-     * 获取或创建会话单元
-     *
-     * @param request HTTP请求对象
-     * @param create  是否创建新会话的标志
-     * @return 会话单元，如果不存在且不创建则返回null
-     */
-    public Session getSession(HttpRequest request, boolean create) {
-        String sessionId = getSessionId(request);
-        MemorySession session = null;
-        if (FeatUtils.isNotBlank(sessionId)) {
-            session = sessions.get(sessionId);
-        }
+    @Override
+    protected Session getSession(String sessionId) {
+        MemorySession session = sessions.get(sessionId);
         if (session != null) {
+            //刷新最近访问时间
             session.setLatestAccessTime(FeatUtils.currentTime().getTime());
-            return session;
-        } else if (!create) {
-            return null;
         }
-        session = new MemorySession() {
+        return session;
+    }
+
+    @Override
+    protected Session createSession() {
+        MemorySession session = new MemorySession() {
             /**
              * 定时任务实例
              * <p>
@@ -84,7 +81,6 @@ public class LocalSessionManager extends SessionManager {
              */
             synchronized void updateTimeoutTask() {
                 pauseTimeoutTask();
-                //getTimeout为纯读取，不刷新最近访问时间
                 if (getTimeout() <= 0) {
                     return;
                 }
@@ -123,7 +119,6 @@ public class LocalSessionManager extends SessionManager {
                 }
             }
 
-
             @Override
             public void invalidate() {
                 pauseTimeoutTask();
@@ -131,9 +126,7 @@ public class LocalSessionManager extends SessionManager {
                 super.invalidate();
             }
         };
-        //会话创建时刻清理本响应中已存在的会话Cookie，确保仅下发一个有效会话Cookie
-        SessionManager.removeSessionCookie(request);
-        responseSessionCookie(request, session.getSessionId());
+        //设置超时并启动超时调度
         session.setTimeout(sessionOptions.getTimeout());
         sessions.put(session.getSessionId(), session);
         return session;

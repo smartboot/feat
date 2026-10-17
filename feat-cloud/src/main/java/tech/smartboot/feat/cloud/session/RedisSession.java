@@ -10,12 +10,16 @@
 
 package tech.smartboot.feat.cloud.session;
 
-import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.Session;
-import tech.smartboot.feat.router.session.SessionManager;
 import tech.smartboot.redisun.Redisun;
 
 /**
+ * 基于Redis的会话实现
+ * <p>
+ * 注意：会话是长生命周期对象，不持有任何请求/响应引用（其随连接复用），
+ * 失效仅清理Redis中的存储，Cookie清理由客户端携带失效ID再次请求时自愈
+ * </p>
+ *
  * @author 三刀
  * @version v1.0 12/16/25
  */
@@ -23,14 +27,13 @@ public class RedisSession implements Session {
     private final String sessionId;
     private final Redisun redisun;
     private final String sessionKey;
-    private int maxAge = 30 * 60; // 默认30分钟
-    private final HttpRequest request;
+    private int maxAge;
 
-    public RedisSession(String sessionId, String sessionKey, HttpRequest request, Redisun redisun) {
+    public RedisSession(String sessionId, String sessionKey, int maxAge, Redisun redisun) {
         this.sessionId = sessionId;
-        this.redisun = redisun;
         this.sessionKey = sessionKey;
-        this.request = request;
+        this.maxAge = maxAge;
+        this.redisun = redisun;
     }
 
     @Override
@@ -65,7 +68,7 @@ public class RedisSession implements Session {
 
     @Override
     public void invalidate() {
+        //仅清理存储，不操作响应对象（其随连接复用，写入会污染无关请求的响应）
         redisun.del(sessionKey);
-        SessionManager.removeSessionCookie(request);
     }
 }
