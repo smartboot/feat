@@ -60,4 +60,25 @@ public class ByteTreeTest {
         Assert.assertEquals(searchTree.getStringValue(), "Hello");
 
     }
+
+    @Test
+    public void testMaxDepthGuard() {
+        ByteTree<String> byteTree = new ByteTree<>();
+        //超过MAX_DEPTH(32)的序列不入树，避免截断后与32字节前缀路径互相覆盖
+        String longUri = "/01234567890123456789012345678901";
+        Assert.assertEquals(33, longUri.getBytes().length);
+        byteTree.addNode(longUri, "longHandler");
+        ByteBuffer buffer = ByteBuffer.wrap((longUri + " ").getBytes());
+        ByteTree<String> node = byteTree.search(buffer, ByteTree.SP_END_MATCHER);
+        Assert.assertNull(node.getAttach());
+
+        //32字节以内的序列正常缓存命中
+        String shortUri = longUri.substring(0, 32);
+        Assert.assertEquals(32, shortUri.getBytes().length);
+        byteTree.addNode(shortUri, "shortHandler");
+        buffer = ByteBuffer.wrap((shortUri + " ").getBytes());
+        node = byteTree.search(buffer, ByteTree.SP_END_MATCHER);
+        Assert.assertEquals("shortHandler", node.getAttach());
+        Assert.assertEquals(shortUri, node.getStringValue());
+    }
 }
