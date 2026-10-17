@@ -51,8 +51,15 @@ public class ChunkedByteBufferWriteTest extends BastTest {
                     buffer.limit(buffer.position());
                     buffer.position(10);
                     outputStream.write(buffer, () -> future.complete(null));
+                } else if (request.getRequestURI().equals("/flip")) {
+                    //场景2：flip后的部分buffer（position=0），块大小行独立写入、CRLF就地复用尾部空间
+                    //该形态是原始算法必然抛IndexOutOfBoundsException的现实场景（chunked流最后一个分块）
+                    ByteBuffer buffer = ByteBuffer.allocate(64);
+                    buffer.put("Hello".getBytes(StandardCharsets.UTF_8));
+                    buffer.flip();
+                    outputStream.write(buffer, () -> future.complete(null));
                 } else {
-                    //场景2：buffer无前置空间且已满，块大小行与CRLF走独立写入
+                    //场景3：buffer无前置空间且已满，块大小行与CRLF走独立写入
                     ByteBuffer buffer = ByteBuffer.allocate(6);
                     buffer.put("World!".getBytes(StandardCharsets.UTF_8));
                     buffer.flip();
@@ -72,6 +79,11 @@ public class ChunkedByteBufferWriteTest extends BastTest {
     @Test
     public void testInPlace() throws ExecutionException, InterruptedException {
         Assert.assertEquals("Hello", getHttpClient().get("/inplace").submit().get().body());
+    }
+
+    @Test
+    public void testFlippedPartial() throws ExecutionException, InterruptedException {
+        Assert.assertEquals("Hello", getHttpClient().get("/flip").submit().get().body());
     }
 
     @Test
