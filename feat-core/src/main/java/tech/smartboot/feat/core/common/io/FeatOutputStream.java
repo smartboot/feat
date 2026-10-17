@@ -109,14 +109,20 @@ public abstract class FeatOutputStream extends OutputStream implements Reset {
         }
         byte[] start = (Integer.toHexString(buffer.remaining()) + "\r\n").getBytes();
         if (buffer.position() >= start.length) {
-            buffer.put(start, buffer.position() - start.length, start.length);
-            buffer.position(buffer.position() - start.length);
+            int pos = buffer.position() - start.length;
+            buffer.position(pos);
+            buffer.put(start);
+            buffer.position(pos);
         } else {
             writeBuffer.write(start);
         }
         if (buffer.capacity() - buffer.limit() >= FeatUtils.CRLF_BYTES.length) {
-            buffer.put(FeatUtils.CRLF_BYTES, buffer.limit(), FeatUtils.CRLF_BYTES.length);
+            int pos = buffer.position();
+            int limit = buffer.limit();
             buffer.limit(buffer.limit() + FeatUtils.CRLF_BYTES.length);
+            buffer.position(limit);
+            buffer.put(FeatUtils.CRLF_BYTES);
+            buffer.position(pos);
             writeBuffer.write(buffer, callback);
         } else {
             writeBuffer.write(buffer, () -> {
