@@ -67,7 +67,7 @@ public class LocalSessionManager extends SessionManager {
         } else if (!create) {
             return null;
         }
-        session = new MemorySession(request) {
+        session = new MemorySession() {
             /**
              * 定时任务实例
              * <p>
@@ -84,12 +84,15 @@ public class LocalSessionManager extends SessionManager {
              */
             synchronized void updateTimeoutTask() {
                 pauseTimeoutTask();
+                //getTimeout为纯读取，不刷新最近访问时间
                 if (getTimeout() <= 0) {
                     return;
                 }
                 timerTask = timer.schedule(new Runnable() {
                     @Override
                     public void run() {
+                        //getTimeout为纯读取（不刷新最近访问时间），
+                        //若此处刷新访问时间，剩余时间将永远等于完整超时值，会话永不失效
                         long remainingTime = getTimeout() * 1000L - (FeatUtils.currentTime().getTime() - getLatestAccessTime());
                         if (remainingTime > 0) {
                             timerTask = timer.schedule(this, remainingTime, TimeUnit.MILLISECONDS);
@@ -128,6 +131,8 @@ public class LocalSessionManager extends SessionManager {
                 super.invalidate();
             }
         };
+        //会话创建时刻清理本响应中已存在的会话Cookie，确保仅下发一个有效会话Cookie
+        SessionManager.removeSessionCookie(request);
         responseSessionCookie(request, session.getSessionId());
         session.setTimeout(sessionOptions.getTimeout());
         sessions.put(session.getSessionId(), session);
