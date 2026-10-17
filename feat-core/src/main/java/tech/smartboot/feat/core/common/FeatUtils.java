@@ -33,7 +33,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Random;
+import java.security.SecureRandom;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
@@ -699,27 +699,34 @@ public class FeatUtils {
         }
     }
 
-    private final static byte[] DEFAULT_BYTES = ("feat:" + Feat.VERSION).getBytes();
-    private final static int maskLength = 4;
     private final static String MAGIC_NUMBER = "feat-";
 
+    /**
+     * 埋入会话ID中的版本特征（前缀"feat-"已表明产品，仅需版本号）
+     */
+    private final static byte[] VERSION_BYTES = Feat.VERSION.getBytes(StandardCharsets.UTF_8);
+
+    /**
+     * 掩码长度
+     */
+    private final static int maskLength = 4;
+
+    /**
+     * 尾部随机数字节长度，掩码与尾部随机数均取自SecureRandom，合计128位随机熵
+     */
+    private final static int RANDOM_BYTES = 12;
+
+    /**
+     * 加密安全的随机数生成器
+     */
+    private final static SecureRandom SECURE_RANDOM = new SecureRandom();
+
     public static String createSessionId() {
-        Random random = new Random();
-        //掩码+固定前缀+时间戳
-        byte[] bytes = new byte[maskLength + DEFAULT_BYTES.length + Integer.BYTES];
-
-        for (int i = 0; i < maskLength; ) {
-            for (int rnd = random.nextInt(), n = Math.min(maskLength - i, Integer.SIZE / Byte.SIZE); n-- > 0; rnd >>= Byte.SIZE)
-                bytes[i++] = (byte) rnd;
-        }
-        System.arraycopy(DEFAULT_BYTES, 0, bytes, maskLength, DEFAULT_BYTES.length);
-        //将System.nanoTime()填充至bytes后四字节
-        int time = (int) System.nanoTime();
-        bytes[maskLength + DEFAULT_BYTES.length] = (byte) (time >>> 24);
-        bytes[maskLength + DEFAULT_BYTES.length + 1] = (byte) (time >>> 16);
-        bytes[maskLength + DEFAULT_BYTES.length + 2] = (byte) (time >>> 8);
-        bytes[maskLength + DEFAULT_BYTES.length + 3] = (byte) (time);
-
+        //掩码+版本特征+随机数：掩码与尾部随机数均取自SecureRandom，保证会话ID不可预测
+        byte[] bytes = new byte[maskLength + VERSION_BYTES.length + RANDOM_BYTES];
+        SECURE_RANDOM.nextBytes(bytes);
+        //埋入版本特征：采用掩码异或混淆，掩码明文存放于前4字节，异或即可还原版本号
+        System.arraycopy(VERSION_BYTES, 0, bytes, maskLength, VERSION_BYTES.length);
         for (int i = maskLength; i < bytes.length; i++) {
             bytes[i] = (byte) (bytes[i] ^ bytes[i % maskLength]);
         }
