@@ -121,8 +121,6 @@ public final class Router implements HttpHandler {
     public void onHeaderComplete(HttpEndpoint request) throws IOException {
         HttpHandler httpServerHandler = matchHandler(request.getRequestURI());
 //        System.out.println("match: " + request.getRequestURI() + " : " + httpServerHandler);
-        //注册 URI 与 Handler 的映射关系
-        request.getOptions().getUriByteTree().addNode(request.getUri(), httpServerHandler);
         //更新本次请求的实际 Handler
         request.setServerHandler(httpServerHandler);
         httpServerHandler.onHeaderComplete(request);

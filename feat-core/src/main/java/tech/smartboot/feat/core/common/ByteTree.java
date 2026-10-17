@@ -205,6 +205,10 @@ public class ByteTree<T> {
      */
     public void addNode(String value, T attach) {
         byte[] bytes = value.getBytes();
+        //超过最大深度的序列在树中无法唯一表示，截断入树会导致同前缀节点互相覆盖，放弃缓存
+        if (bytes.length > MAX_DEPTH) {
+            return;
+        }
         // 获取根节点，无论当前节点在树的哪个位置，都从根节点开始添加
         ByteTree<T> tree = this;
         while (tree.depth > 0) {
