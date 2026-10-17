@@ -11,12 +11,16 @@
 package tech.smartboot.feat.cloud.session;
 
 import tech.smartboot.feat.core.common.FeatUtils;
-import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.Session;
 import tech.smartboot.feat.router.session.SessionManager;
 import tech.smartboot.redisun.Redisun;
 
 /**
+ * 基于Redis的集群会话管理器
+ * <p>
+ * 仅负责会话的存储，Cookie的解析、去重与下发由基类模板方法统一管理
+ * </p>
+ *
  * @author 三刀
  * @version v1.0 12/16/25
  */
@@ -29,33 +33,20 @@ public class ClusterSessionManager extends SessionManager {
     }
 
     @Override
-    public Session getSession(HttpRequest request, boolean create) {
-        String sessionId = getSessionId(request);
-
-        // 如果存在sessionId，则尝试从Redis获取会话
-        if (sessionId != null) {
-            String sessionKey = SESSION_KEY_PREFIX + sessionId;
-            // 更新过期时间
-            int count = redisun.expire(sessionKey, sessionOptions.getTimeout());
-            // 更新成功，说明存在该会话，返回RedisSession
-            if (count == 1) {
-                return new RedisSession(sessionId, sessionKey, request, redisun);
-            }
+    protected Session getSession(String sessionId) {
+        String sessionKey = SESSION_KEY_PREFIX + sessionId;
+        // 更新过期时间，更新成功说明该会话存在
+        int count = redisun.expire(sessionKey, sessionOptions.getTimeout());
+        if (count == 1) {
+            return new RedisSession(sessionId, sessionKey, sessionOptions.getTimeout(), redisun);
         }
-
-        // 如果不允许创建新会话，则返回null
-        if (!create) {
-            return null;
-        }
-
-        // 创建新的会话
-        String newSessionId = FeatUtils.createSessionId();
-        String sessionKey = SESSION_KEY_PREFIX + newSessionId;
-
-        RedisSession redisSession = new RedisSession(newSessionId, sessionKey, request, redisun);
-        removeSessionCookie(request);
-        responseSessionCookie(request, newSessionId);
-        return redisSession;
+        return null;
     }
 
+    @Override
+    protected Session createSession() {
+        String sessionId = FeatUtils.createSessionId();
+        String sessionKey = SESSION_KEY_PREFIX + sessionId;
+        return new RedisSession(sessionId, sessionKey, sessionOptions.getTimeout(), redisun);
+    }
 }

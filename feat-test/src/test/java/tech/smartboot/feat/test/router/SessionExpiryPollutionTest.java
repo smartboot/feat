@@ -91,6 +91,10 @@ public class SessionExpiryPollutionTest extends BastTest {
             out.write(("GET /check HTTP/1.1\r\nHost: localhost\r\nCookie: " + sessionCookie + "\r\nConnection: keep-alive\r\n\r\n").getBytes(StandardCharsets.UTF_8));
             String response3 = readResponse(in);
             Assert.assertFalse("会话应当已过期（旧实现永不失效）, resp: " + response3, response3.contains("flag:aa"));
+            //过期后携带旧会话ID请求应自愈：模板方法走创建分支，下发新的会话Cookie
+            String newSessionCookie = extractSessionCookie(response3);
+            Assert.assertFalse("失效会话ID请求应下发新的会话Cookie: " + response3, newSessionCookie.isEmpty());
+            Assert.assertNotEquals("新会话Cookie应不同于已过期的旧Cookie: " + response3, sessionCookie, newSessionCookie);
         }
     }
 
