@@ -24,6 +24,8 @@ import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.server.HttpHandler;
 import tech.smartboot.feat.core.server.HttpRequest;
 import tech.smartboot.feat.core.server.HttpResponse;
+import tech.smartboot.feat.core.server.waf.WafException;
+import tech.smartboot.feat.core.server.waf.WafOptions;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -83,6 +85,11 @@ public class HttpStaticResourceHandler implements HttpHandler {
             fileName += "index.html";
         }
         fileName = URLDecoder.decode(fileName, StandardCharsets.UTF_8.name());
+
+        //防止路径穿越攻击
+        if (fileName.contains("../") || fileName.contains("..\\")) {
+            throw new WafException(HttpStatus.FORBIDDEN, WafOptions.DESC);
+        }
 
         if (classPath == null) {
             handleFilePath(request, completableFuture, fileName);
