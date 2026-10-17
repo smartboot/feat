@@ -20,6 +20,7 @@ import tech.smartboot.feat.core.server.impl.HttpEndpoint;
 
 import java.io.IOException;
 import java.util.Base64;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Basic认证服务处理器
@@ -82,6 +83,12 @@ public final class BasicAuthServerHandler implements HttpHandler {
     @Override
     public void handle(HttpRequest request) throws Throwable {
         httpServerHandler.handle(request);
+    }
+
+    @Override
+    public void handle(HttpRequest request, CompletableFuture<Void> completableFuture) throws Throwable {
+        //转发异步处理方法，确保被包装的异步Handler（如HttpStaticResourceHandler）正常工作
+        httpServerHandler.handle(request, completableFuture);
     }
 
 }
