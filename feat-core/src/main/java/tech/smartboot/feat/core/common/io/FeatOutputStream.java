@@ -175,6 +175,9 @@ public abstract class FeatOutputStream extends OutputStream implements Reset {
     public final void reset() {
         committed = closed = false;
         chunkedSupport = true;
+        //清理跨请求残留状态，防止上一响应的trailer与remaining计数泄漏到当前响应
+        remaining = -1;
+        trailerSupplier = null;
     }
 
 
