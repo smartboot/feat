@@ -18,7 +18,6 @@ import tech.smartboot.feat.core.common.HttpStatus;
 import tech.smartboot.feat.core.common.Mimetypes;
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.exception.HttpException;
-import tech.smartboot.feat.core.common.io.FeatOutputStream;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
 import tech.smartboot.feat.core.server.HttpHandler;
@@ -261,7 +260,11 @@ public class HttpStaticResourceHandler implements HttpHandler {
             return;
         }
 
-        response.setContentLength((int) file.length());
+        response.setContentLength(file.length());
+        if (file.length() == 0) {
+            completableFuture.complete(null);
+            return;
+        }
 
         FileInputStream fis = new FileInputStream(file);
         completableFuture.whenComplete((o, throwable) -> {
