@@ -21,14 +21,45 @@ import { Aside, Steps } from '@astrojs/starlight/components';
 
 #### Feat Core
 
-无
+- **安全**：防止 HTTP 响应头 CR/LF 注入攻击，`setHeader` 校验 header 名值中的非法控制字符，异常时抛出 `FeatException`
+- **安全**：静态资源处理器新增路径穿越攻击防护，覆盖明文、URL 编码及部分编码等攻击向量，命中时返回 403
+- **安全**：会话 ID 生成改用 `SecureRandom`，移除时间戳依赖，提升不可预测性
+- **Session**：重构会话管理器，采用模板方法模式，`SessionManager#getSession` 统一编排 Cookie 解析、会话查找、创建与下发流程
+- **Session**：修复会话过期污染无关请求响应的问题，会话对象不再持有请求/响应引用
+- **IO**：修复输出流 `reset` 未清理跨请求残留状态的问题（remaining 计数、chunked trailer）
+- **IO**：修复 chunked 编码下 ByteBuffer 就地写入越界问题
+- **IO**：优化输出流回调机制，回调参数由 `Consumer` 简化为 `Runnable`
+- **Client**：重构客户端请求体传输接口，`RequestBody` 的 `transferFrom` 方法替换为 `write` 方法
+- **Router**：修复 `ByteTree` 超过最大深度时节点互相覆盖的问题
+- **静态资源**：修复异步写入问题，补充空文件请求的提前返回处理
+- **认证**：补充 BasicAuth 处理器的异步处理方法，确保被包装的异步 Handler 正常工作
+- **依赖**：升级 smart-socket 至 `2.2.0`
 
 #### Feat Cloud / AOT
 
 - `feat.yaml` 新增 bool 类型的配置值
+- 优化 Feat Cloud 启动流程，外部 Bean 统一由 `ApplicationContext` 管理
+
+#### Feat AI
+
+- **Chat**：`chatStream` 返回类型由 `void` 调整为 `CompletableFuture<ChatResponse>`，支持获取流式终态响应
 
 ### 升级步骤
-无
+
+<Steps>
+1. 更新版本号：`<feat.version>2.5.0</feat.version>`
+2. 若自定义了 `RequestBody` 实现，将 `transferFrom` 方法改为 `write`
+3. 若继承了 `SessionManager`，适配新增的 `getSession(String)` 与 `createSession()` 抽象方法
+</Steps>
+
+### 兼容性说明
+
+| 变更项 | 影响 | 处理方式 |
+|--------|------|----------|
+| smart-socket 版本 | 默认依赖升级至 `2.2.0` | 如项目显式锁定版本，建议同步升级 |
+| `RequestBody` 接口 | `transferFrom` 替换为 `write` | 自定义请求体实现需同步调整 |
+| `SessionManager` 接口 | 采用模板方法重构 | 自定义会话管理器需适配新抽象方法 |
+| `chatStream` 返回类型 | 由 `void` 变为 `CompletableFuture<ChatResponse>` | 可选接收返回值，原调用方式不受影响 |
 ---
 
 ## v2.4.0 (2026-08-22)
