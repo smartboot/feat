@@ -1,27 +1,20 @@
 package tech.smartboot.feat.gateway;
 
-import tech.smartboot.feat.Feat;
-import tech.smartboot.feat.core.server.HttpHandler;
-import tech.smartboot.feat.core.server.HttpRequest;
-import tech.smartboot.feat.core.server.HttpServer;
-import tech.smartboot.feat.core.server.ServerOptions;
-import tech.smartboot.feat.core.server.impl.HttpEndpoint;
+import tech.smartboot.feat.cloud.CloudOptions;
+import tech.smartboot.feat.cloud.FeatCloud;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
-import tech.smartboot.feat.gateway.admin.AdminApi;
+import tech.smartboot.feat.core.server.HttpServer;
 import tech.smartboot.feat.gateway.config.ConfigException;
 import tech.smartboot.feat.gateway.config.ConfigLoader;
 import tech.smartboot.feat.gateway.config.ConfigStore;
 import tech.smartboot.feat.gateway.config.GatewayConfig;
 import tech.smartboot.feat.gateway.config.KeyHash;
-import tech.smartboot.feat.gateway.config.KeyPolicy;
 import tech.smartboot.feat.gateway.config.ModelRoute;
 import tech.smartboot.feat.gateway.metric.GatewayMetrics;
 import tech.smartboot.feat.gateway.metric.UsageLog;
-import tech.smartboot.feat.gateway.policy.AuthPolicy;
 import tech.smartboot.feat.gateway.policy.QuotaGuard;
 import tech.smartboot.feat.gateway.proxy.ChatProxy;
-import tech.smartboot.feat.gateway.proxy.Responder;
 import tech.smartboot.feat.gateway.proxy.UpstreamPool;
 
 import java.nio.file.Files;
@@ -29,7 +22,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * 装配入口。数据面只有一个进程、一个 jar，没有数据库、没有外部依赖。
@@ -39,15 +31,25 @@ import java.util.concurrent.CompletableFuture;
  *   java -jar feat-ai-gateway.jar gateway.yaml
  *   java -jar feat-ai-gateway.jar hash sk-your-key     # 生成配置里的 keyHash
  * </pre>
+ * <p>
+ * 装配分三块：
+ * <ul>
+ *   <li>{@code controller.GatewayController} —— AI 网关的自定义路由（含转发端点）；</li>
+ *   <li>{@code controller.AdminController} —— 管理接口，纯请求-响应；</li>
+ *   <li>这里只负责生命周期：读配置、建对象、注册成 Bean、挂关闭钩子。</li>
+ * </ul>
+ * 路由一行都不在这个类里。
  */
 public final class GatewayServer {
     private static final Logger LOGGER = LoggerFactory.getLogger(GatewayServer.class);
+    /**
+     * 与 {@code ChatRoute#MAX_ASYNC_BODY} 对齐：超过这个大小直接 413，不进内存。
+     */
+    private static final long MAX_REQUEST_SIZE = 16L * 1024 * 1024;
 
     private ConfigStore store;
     private UpstreamPool pool;
     private UsageLog usageLog;
-    private ChatProxy proxy;
-    private AdminApi admin;
     private HttpServer server;
 
     public static void main(String[] args) {
@@ -74,11 +76,11 @@ public final class GatewayServer {
     }
 
     public void start(String[] args) throws Exception {
-        Path configPath = resolveConfigPath(args);
+        final Path configPath = resolveConfigPath(args);
         if (!Files.exists(configPath)) {
             throw new ConfigException("配置文件不存在: " + configPath.toAbsolutePath());
         }
-        GatewayConfig config = ConfigLoader.loadFile(configPath);
+        final GatewayConfig config = ConfigLoader.loadFile(configPath);
 
         store = new ConfigStore(configPath, config);
         pool = new UpstreamPool();
@@ -89,78 +91,52 @@ public final class GatewayServer {
             }
         });
 
-        QuotaGuard quota = new QuotaGuard();
-        GatewayMetrics metrics = new GatewayMetrics();
+        final QuotaGuard quota = new QuotaGuard();
+        final GatewayMetrics metrics = new GatewayMetrics();
         usageLog = new UsageLog(config.logDir(), config.usageEnabled());
-        proxy = new ChatProxy(store, pool, quota, metrics, usageLog);
-        admin = new AdminApi(store, metrics, quota, usageLog, pool);
+        final ChatProxy proxy = new ChatProxy(store, pool, quota, metrics, usageLog);
 
-        ServerOptions options = new ServerOptions();
-        options.port(config.port());
-        if (config.idleTimeoutMs() > 0) {
-            options.setIdleTimeout(config.idleTimeoutMs());
-        }
-        options.setMaxRequestSize(16L * 1024 * 1024);
-        options.shutdownHook(new Runnable() {
+        server = FeatCloud.cloudServer(new java.util.function.Consumer<CloudOptions>() {
+            @Override
+            public void accept(CloudOptions opt) {
+                opt.setPackages("tech.smartboot.feat.gateway");
+                opt.setMaxRequestSize(MAX_REQUEST_SIZE);
+                if (config.idleTimeoutMs() > 0) {
+                    opt.setIdleTimeout(config.idleTimeoutMs());
+                }
+
+                // 运行时对象以外部 Bean 的形式交给 Feat Cloud，
+                // @Autowired 按字段名取（生成代码用 loadBean(字段名) 查找）
+                opt.registerBean("configStore", store);
+                opt.registerBean("chatProxy", proxy);
+                opt.registerBean("gatewayMetrics", metrics);
+                opt.registerBean("quotaGuard", quota);
+                opt.registerBean("usageLog", usageLog);
+                opt.registerBean("upstreamPool", pool);
+                // 自定义路由由 GatewayController#dataPlaneRoutes 注册，它需要拿到这棵路由树
+                opt.registerBean("router", opt.getRouter());
+            }
+        });
+
+        // FeatCloud 已经挂了一个 application.destroy() 的钩子，这里追加不能覆盖它
+        final Runnable cloudHook = server.options().shutdownHook();
+        server.options().shutdownHook(new Runnable() {
             @Override
             public void run() {
+                if (cloudHook != null) {
+                    try {
+                        cloudHook.run();
+                    } catch (Throwable t) {
+                        LOGGER.error("应用上下文销毁失败: {}", t.getMessage(), t);
+                    }
+                }
                 shutdown();
             }
         });
 
-        server = Feat.httpServer(options).httpHandler(new HttpHandler() {
-            @Override
-            public void handle(HttpRequest request) {
-                dispatch(request, new CompletableFuture<Void>());
-            }
-
-            @Override
-            public void handle(HttpRequest request, CompletableFuture<Void> future) {
-                dispatch(request, future);
-            }
-
-            @Override
-            public void onClose(HttpEndpoint endpoint) {
-                // 连接断开 = 调用方放弃了这个回答，立刻取消上游，别继续烧 token
-                proxy.onConnectionClose(endpoint);
-            }
-        });
         server.listen(config.port());
         store.startWatch(1000);
         printSummary(config, configPath);
-    }
-
-    private void dispatch(HttpRequest request, CompletableFuture<Void> future) {
-        try {
-            if (admin.handle(request)) {
-                future.complete(null);
-                return;
-            }
-            String path = request.getRequestURI();
-            if (!ChatProxy.isProxyPath(path) && !ChatProxy.PATH_MODELS.equals(path)) {
-                Responder.error(request, 404, "unknown endpoint: " + path, "invalid_request_error", "unknown_endpoint");
-                future.complete(null);
-                return;
-            }
-            KeyPolicy key = AuthPolicy.authenticate(store.current(), request.getHeader("Authorization"));
-            if (key == null) {
-                request.getResponse().setHeader("WWW-Authenticate", "Bearer");
-                Responder.error(request, 401, "invalid or missing api key", "authentication_error", "invalid_api_key");
-                future.complete(null);
-                return;
-            }
-            proxy.handle(request, key, future);
-        } catch (Throwable t) {
-            LOGGER.error("请求处理异常: {}", t.getMessage(), t);
-            try {
-                Responder.error(request, 500, "gateway internal error: " + t.getMessage(),
-                        "server_error", "internal_error");
-            } catch (Throwable ignored) {
-                // 响应可能已经提交，这里只能忽略
-            } finally {
-                future.complete(null);
-            }
-        }
     }
 
     private static Path resolveConfigPath(String[] args) {
@@ -173,7 +149,7 @@ public final class GatewayServer {
 
     private void printSummary(GatewayConfig config, Path configPath) {
         System.out.println();
-        System.out.println("  feat-ai-gateway 0.1.0  (data plane)");
+        System.out.println("  feat-ai-gateway 0.1.0  (data plane, feat-cloud)");
         System.out.println("  config   : " + configPath.toAbsolutePath());
         System.out.println("  listen   : http://0.0.0.0:" + config.port());
         System.out.println("  providers: " + config.providers().size() + "  models: " + config.allRoutes().size()

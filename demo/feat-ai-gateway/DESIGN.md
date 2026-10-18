@@ -44,19 +44,34 @@
 
 ### 2.2 装配方式
 
+路由全部收在 `GatewayController` 里，`GatewayServer` 只负责生命周期：
+
 ```java
-CloudOptions[] holder = new CloudOptions[1];
-HttpServer server = FeatCloud.cloudServer(opt -> {
-    holder[0] = opt;
-    opt.port(config.port());
-    opt.setPackages("tech.smartboot.feat.gateway");   // 只认本工程的 @Controller
-    opt.registerBean("chatProxy", proxy);             // 外部 Bean，供 @Autowired 按字段名注入
-    opt.getRouter().route(PATH_CHAT, "POST", new ChatRoute(proxy));  // 数据面，见 ADR-8
-    opt.getRouter().route("/v1/*", notFound);         // 兜底 404，保持 OpenAI 错误结构
+// GatewayServer：只建对象、注册 Bean、挂钩子，不出现任何路由
+server = FeatCloud.cloudServer(opt -> {
+    opt.setPackages("tech.smartboot.feat.gateway");
+    opt.registerBean("configStore", store);
+    opt.registerBean("chatProxy", proxy);
+    opt.registerBean("router", opt.getRouter());     // 给 GatewayController 的 @Bean 用
 });
+
+// GatewayController：自定义路由都在这里
+@Controller
+public class GatewayController {
+    @RequestMapping(value = "/v1/models", method = RequestMethod.GET)
+    public void models(HttpRequest request) { ... }   // 声明式，编译期生成路由
+
+    @Bean
+    public ChatRoute dataPlaneRoutes(Router router, ConfigStore configStore, ChatProxy chatProxy) {
+        ChatRoute route = new ChatRoute(configStore, chatProxy);
+        router.route(ChatProxy.PATH_CHAT, "POST", route);   // 需要 onClose，手工注册
+        ...
+        return route;
+    }
+}
 ```
 
-`@Controller` 侧用 `@Autowired` 注入（生成代码按**字段名**取 Bean：有同名 setter 就直接赋值，没有就反射写字段）。管理面全部走注解，数据面主路径走 `router.route`。
+`@Bean` 方法在 `loadMethodBean` 阶段执行，参数按**参数名**从容器取（生成代码是 `loadBean("router", ctx)`），所以外部 Bean 的 key 必须和参数名一致。`@Autowired` 同理按**字段名**取：有同名 setter 就直接赋值，没有就反射写字段。
 
 ---
 
@@ -65,9 +80,12 @@ HttpServer server = FeatCloud.cloudServer(opt -> {
 ```
 demo/feat-ai-gateway/
   src/main/java/tech/smartboot/feat/gateway/
-    GatewayServer.java     装配入口：FeatCloud.cloudServer + 外部 Bean + 数据面路由
-    controller/   Feat Cloud 控制器（管理接口 + /v1/models）
-    proxy/        上游连接池、SSE 透传、数据面路由（ChatRoute）、错误响应
+    GatewayServer.java     装配入口：FeatCloud.cloudServer + 外部 Bean + 关闭钩子（不写路由）
+    controller/
+      GatewayController    AI 网关的自定义路由（/v1/models + 转发端点）
+      AdminController      管理接口（注解声明）
+    surface/      数据面入口适配：ChatRoute（RouterHandler，覆写 onClose）、兜底 404
+    proxy/        上游连接池、SSE 透传、错误响应
     config/       快照模型、YAML 解析、校验、热加载
     policy/       鉴权、限流、配额
     metric/       用量日志、Prometheus 指标
@@ -206,7 +224,8 @@ feat 的 `HttpClient` 默认自建 `AsynchronousChannelGroup`，等于**每条�
 feat 的 `HttpHandler` 在方法返回后会检查 `CompletableFuture`：已完成 → 认为响应结束，`keepConnection` 失败就关连接。所以：
 
 - 同步写法（返回 `void`，稍后写 body）一定拿不到数据；
-- 必须用异步签名，并在**每条终止路径**（正常结束 / 上游失败 / 客户端断开）都 `complete`，否则连接和请求对象都回收不掉。
+- 必须用异步签名，并在**正常结束 / 上游失败**这两条路径上 `complete`，否则连接和请求对象都回收不掉。
+- **唯一的例外是"客户端断开"这条路径：不 `complete`。** 连接已经死了，`complete` 只会让框架再走一遍 `keepConnection → finishResponse → FeatOutputStream#close()`，而那一步必然对已关闭的 writeBuffer 写入失败，被记成 `SEVERE IOException: writeBuffer has closed` 加一屏栈。用户关页面是正常事件，不该刷这个日志。`future` 只被 HTTP 层的一个 lambda 引用，`Ctx` 又已从 `inflight` 摘除，两者不可达后自然回收。
 
 ### ADR-4：流式计量的 usage 必须主动要
 OpenAI 流式响应默认不返回 `usage`。网关在请求里注入 `stream_options.include_usage=true`；拿不到就按字节估算并把 `estimated=true` 写进日志 —— **不要假装精确，客户对账时会对出来**。
@@ -237,38 +256,69 @@ SESSION_CLOSED -> request.getServerHandler().onClose(request)
 
 唯一还留着 `onClose` 覆写点的是 **`RouterHandler` 接口**（`default void onClose(HttpEndpoint)`）。所以：
 
-- **数据面主路径**（`/v1/chat/completions` 等）用 `router.route(path, "POST", new ChatRoute(...))` 手工注册，`ChatRoute` 覆写 `onClose`；
-- **管理面**（纯请求-响应、不需要连接生命周期）用 `@Controller` + `@RequestMapping`。
+- **转发端点**（`/v1/chat/completions` 等）必须由自己实现 `RouterHandler` 的类来承接，才能覆写 `onClose`；
+- **纯请求-响应端点**（`/v1/models`、`/admin/*`）用 `@RequestMapping` 声明就够。
 
 判断标准不是"哪边代码多"，而是**这个接口需不需要知道连接什么时候断**。
+
+两者的注册动作都收在 `GatewayController` 里（前者用 `@Bean` 拿到 `Router` 后 `router.route(...)`），所以"AI 网关的自定义路由集中在一个 Controller 类"这个结构仍然成立，只是这些路由不是由注解处理器生成的。
 
 > 这条也是给 feat 的反馈：`@Controller` 目前表达不了"连接关闭"语义。将来可以在 `@RequestMapping` 上加一个 `onClose` 回调方法名，或让 `RootHandler` 暴露一个可插拔的 close hook，数据面就能完全注解化。
 
 ### ADR-9：请求体异步读，不占网络线程
 `AsyncBodyReadUpgrade` 把 body 先攒进缓冲区（`ByteBuffer`，大于读缓冲时才分配），攒满后 `setInputStream` 并从内存读。用它之后控制器里读 body 不再是 socket 读，不会阻塞 I/O 线程。前提是请求带 `Content-Length`；chunked 请求没有长度，只能退回同步读（现状：OpenAI SDK 都会带长度）。
 
+### ADR-10：feat-cloud 未授权时每请求打一行 stdout —— 这是个框架问题
+`feat-cloud-aot` 在 `license == null` 时会往 `ServerOptions` 里塞一个插件：
+
+```java
+public boolean preProcess(AioSession session, HttpEndpoint ep) {
+    System.out.println(ep.getMethod() + " " + ep.getUri() + " - [成为赞助商解锁Feat Cloud：...]");
+    return true;
+}
+```
+
+`preProcess` 是**每请求**调用的，且 `System.out` 是全局同步的。对网关这种数据面来说有两宗罪：
+
+1. 日志被污染：每个请求一行，真正的告警全被埋掉；
+2. 高并发下成为串行点：1000 并发时所有网络线程抢同一把 stdout 锁，压测数字直接失真。
+
+注意它不是"启动时打一次"，而是**每个请求一次**，所以不能靠"忽略启动日志"绕过。`ServerOptions#getPlugins()` 是包级私有，外部也摘不掉。
+
+**这属于应该回给 feat 修的问题**：赞助提示要么只在启动时打一次，要么走 `server.banner` 之类的开关，绝不能进每请求路径。在它修好之前，压测必须把 stdout 重定向到文件，且要意识到数字里有这部分开销。
+
 ---
 
 ## 8. 验收标准与实测
 
-环境：macOS / 4 核 / JDK 8 / 网关 `-Xms256m -Xmx512m`；mock 上游与网关同机（因此延迟含同机资源竞争）。
-压测脚本：`bench/sse_bench.py`（仅标准库，端到端测量，含网关开销）。
+环境：macOS / 4 核 / JDK 8 / 网关 `-Xms256m -Xmx512m`；mock 上游（`MOCK_TTFT_MS=1500 MOCK_BURST=1`）与网关同机，因此延迟含同机资源竞争。
+压测脚本：`bench/sse_bench.py`（仅标准库，端到端测量，含网关开销）。网关 stdout 重定向到文件（否则每请求一行赞助提示会串行化，见 ADR-10）。
 
-| 场景 | 并发 | 成功 | heap 峰值 | TTFT p50 | 说明 |
+### 8.1 Feat Cloud 版（当前）
+
+| 场景 | 并发 | 成功 | heap 峰值 | TTFT p50 | 网关开销 |
 |---|---|---|---|---|---|
-| 单连接 | 1 | 20/20 | — | 115 ms | mock 自身 100ms，网关开销 ≈15ms |
-| 中等并发 | 20 | 200/200 | — | 119 ms | 基本线性，无排队 |
-| 高并发 | 1000 | **998/1000** | 64 MB（基线 19.7MB，+44.3MB） | 2752 ms | 同场景直连 mock 基线 1869 ms |
+| 单连接 | 1 | 20/20 | 57.0 MB | 1511 ms | **≈11 ms**（mock 自身 1500ms） |
+| 中等并发 | 20 | 200/200 | 52.5 MB | 1530 ms | ≈30 ms |
+| 高并发 | 1000 | **1000/1000** | 56.3 MB（基线 55.0MB，+1.3MB） | 3421 ms | 见下 |
 
-对照：修复 ADR-2 之前，同样 1000 并发有 **458/1000 失败**，错误为 `unable to create new native thread`。修复后失败 2 条，均为 mock 侧 `Connection reset by peer`。
+- **连接数**：1000 并发流式连接全部建立并跑完，0 失败 ✅
+- **内存**：堆增长 1.3MB（`Xms256m` 已提前提交，采样口径偏乐观，不能当稳态结论）⚠️
+- **连接归零**：跑完 `inflight=0` ✅
+- **TTFT 增量**：单连接口径 +11ms 是可用的数字；1000 并发下 p50 3421ms vs mock 1500ms，差额主要来自 4 核上三个 JVM 抢 CPU，**外加 ADR-10 那条每请求 println** ⚠️
+
+### 8.2 对照：feat-core 直连版（改造前）
+
+| 场景 | 并发 | 成功 | heap 峰值 | TTFT p50 |
+|---|---|---|---|---|
+| 单连接 | 1 | 20/20 | — | 115 ms（mock 100ms，开销 ≈15ms） |
+| 高并发 | 1000 | 998/1000 | 64 MB（基线 19.7MB，+44.3MB） | 2752 ms |
+
+两版不可直接比：mock 的首字延迟从 100ms 调到了 1500ms（为了让 TTFT 的口径接近真实上游），所以只能比"网关开销"这一列。
 
 判定：
-- **连接数**：1000 并发流式连接可以稳定建立并跑完 ✅
-- **内存**：峰值增长 < 50MB ✅（但这是在 512MB 堆上限下的采样峰值，不是长期稳态）
-- **TTFT 增量**：同机同 mock 下 +883ms（p50），其中大部分是 4 核上三个 JVM 抢 CPU，**不能当作网关真实开销**；单连接口径的 +15ms 更能代表网关自身成本 ⚠️
-- **连接归零**：跑完后 `inflight=0` ✅（基线脚本在过载时偶发抓不到指标，需重试）
 
-> 结论：P0 的目标（能不能扛住 1000 并发流式）达成了；但**"TTFT 增加 < 10ms"这个验收标准在 4 核同机环境下无法验证**，需要一台独立压测机才有意义。这条必须如实记录，不能拿 2752ms 当成绩。
+> 单连接口径下网关自身开销 ≈11ms，属于可接受范围；**"TTFT 增加 < 10ms"这个验收标准在 4 核同机环境下无法验证**，需要独立压测机才有意义。1000 并发的那一列只能证明"扛得住"，不能当性能成绩。
 
 ---
 
@@ -282,7 +332,9 @@ SESSION_CLOSED -> request.getServerHandler().onClose(request)
 | 4 | 无 TLS 终止 | 需要前置 nginx/网关 | 交给部署层，不在数据面做 |
 | 5 | 无 Key 热更新审计 | 改配置无操作记录 | 控制面阶段补充 |
 | 6 | usage 日志按天单文件 | 量大时无轮转 | P2：按大小轮转 + 压缩 |
-| 7 | 数据面主路径脱离注解 | 路由分散在 `GatewayServer` 与 `@Controller` 两处 | 等 feat 支持 close hook 后迁回 `@Controller`（ADR-8） |
+| 7 | 转发路由不由注解生成 | 路由分两套写法（`@RequestMapping` / `router.route`） | 等 feat 支持 close hook 后迁回注解（ADR-8） |
+| 8 | feat-cloud 未授权时每请求 println | 日志污染 + 高并发串行点 | 需要 feat 侧修（ADR-10），不改 feat 就绕不过 |
+| 9 | admin 的 POST body 同步读 | 控制面提交大配置时短暂占用网络线程 | 低频路径，暂不处理 |
 
 ---
 

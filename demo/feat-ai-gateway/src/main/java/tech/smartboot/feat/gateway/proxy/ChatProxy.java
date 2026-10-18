@@ -79,6 +79,9 @@ public final class ChatProxy {
         return PATH_CHAT.equals(path) || PATH_COMPLETIONS.equals(path) || PATH_EMBEDDINGS.equals(path);
     }
 
+    /**
+     * {@code GET /v1/models}：只暴露配置里声明过的模型名，不透出上游清单。
+     */
     public void handle(HttpRequest request, KeyPolicy key, CompletableFuture<Void> future) {
         String path = request.getRequestURI();
         if (PATH_MODELS.equals(path)) {
@@ -433,7 +436,12 @@ public final class ChatProxy {
                 prompt, completion, true, ctx.provider, true);
         writeUsage(ctx, 499, prompt, completion, true, "client_closed");
         releaseLease(ctx);
-        finishFuture(ctx);
+        // 这里故意不 finishFuture。
+        // 连接已经断了，feat 在 future 完成回调里还会走一遍 keepConnection -> finishResponse ->
+        // FeatOutputStream#close()，而这一步必然对已关闭的 writeBuffer 写入失败，被框架记成
+        // "SEVERE IOException: writeBuffer has closed" + 40 行栈。客户端中途关页面是正常事件，
+        // 不该在日志里长这样。future 只被 HTTP 层的一个 lambda 引用，Ctx 又已从 inflight 摘除，
+        // 两者都不可达后由 GC 回收，不会泄漏。
     }
 
     /**
@@ -560,7 +568,10 @@ public final class ChatProxy {
 
     // ------------------------------------------------------------------ 其它
 
-    private void listModels(HttpRequest request) {
+    /**
+     * {@code GET /v1/models}：只暴露配置里声明过的模型名，不透出上游清单。
+     */
+    public void listModels(HttpRequest request) {
         GatewayConfig config = store.current();
         StringBuilder sb = new StringBuilder(256);
         sb.append("{\"object\":\"list\",\"data\":[");
