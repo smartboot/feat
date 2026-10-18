@@ -139,7 +139,7 @@ Compared to other mainstream Java frameworks, Feat excels in the following areas
 
 - **[GitHub Issues](https://github.com/smartboot/feat/issues)**: Report issues or suggest new features
 - **[Gitee Issues](https://gitee.com/smartboot/feat/issues)**: Domestic user feedback channel
-- **[Enterprise Licensing Solutions](https://smartboot.tech/feat/auth/)**: Empowering efficient development and enterprise growth
+- **[Enterprise Licensing Solutions](https://smartboot.tech/feat/sponsors/)**: Empowering efficient development and enterprise growth
 
 ### 🤝 Contributing
 

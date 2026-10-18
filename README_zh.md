@@ -152,7 +152,7 @@ public class HelloWorld {
 
 - **[GitHub Issues](https://github.com/smartboot/feat/issues)**：报告问题或提出功能建议
 - **[Gitee Issues](https://gitee.com/smartboot/feat/issues)**：国内用户的问题反馈渠道
-- **[企业授权方案](https://smartboot.tech/feat/auth/)**：助力高效开发，赋能企业成长
+- **[企业授权方案](https://smartboot.tech/feat/sponsors/)**：助力高效开发，赋能企业成长
 
 ### 🤝 参与贡献
 
