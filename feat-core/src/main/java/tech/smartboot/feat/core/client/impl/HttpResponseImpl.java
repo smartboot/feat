@@ -216,6 +216,9 @@ public class HttpResponseImpl extends AbstractResponse implements HttpResponse {
             } finally {
                 future.complete(this);
             }
+        } else if ((state & ~STATE_INFLATER) != STATE_FINISH) {
+            //连接关闭时响应尚未接收完成（响应头未到达或响应体传输中断），异常结束以避免调用方无限等待
+            future.completeExceptionally(new IOException("connection closed unexpectedly"));
         }
     }
 }
