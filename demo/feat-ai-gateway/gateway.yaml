@@ -1,0 +1,41 @@
+# 本地联调配置：网关 -> 假上游（demo/feat-ai-gateway 里的 MockUpstream）
+# 启动方式见 README。默认 key: sk-feat-dev-123456
+version: 1
+
+server:
+  port: 8080
+  # 上游长时间不出字时允许的最长静默。流式回答里两次 token 之间可能间隔很久，
+  # 这个值低于上游的最长静默时间，长回答会被切断。
+  idleTimeoutMs: 300000
+
+admin:
+  # 留空表示只允许本机访问 /admin/* 与 /metrics
+  token: ""
+
+log:
+  dir: logs
+  usageEnabled: true
+
+providers:
+  - name: mock
+    baseUrl: http://127.0.0.1:18081
+    apiKey: ""
+    # 必须 >= 目标并发：feat 的客户端在连接池耗尽时会阻塞申请方，
+    # 而这个申请发生在网络线程上，配小了会在高并发下变成假死。
+    maxConnections: 1000
+    connectTimeoutMs: 3000
+    idleTimeoutMs: 300000
+
+models:
+  - name: mock-chat
+    provider: mock
+    upstream: mock-model
+
+keys:
+  - id: dev
+    # sha256("sk-feat-dev-123456") 的前 16 位
+    keyHash: sha256:6a97dd8567ce4d7a
+    models: []
+    rpm: 0
+    tpm: 0
+    monthlyTokens: 0
