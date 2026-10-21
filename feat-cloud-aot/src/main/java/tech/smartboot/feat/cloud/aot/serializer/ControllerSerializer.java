@@ -54,6 +54,7 @@ public final class ControllerSerializer extends AbstractSerializer {
     private static final int RETURN_TYPE_STRING = 1;
     private static final int RETURN_TYPE_OBJECT = 2;
     private static final int RETURN_TYPE_BYTE_ARRAY = 3;
+    private static final int RETURN_TYPE_ROUTER_HANDLER = 4;
     private final Map<String, String> bytesCache = new HashMap<>();
     private final McpEndpointSerializer mcpEndpointSerializer;
     private final McpEndpointSerializer.McpServerOption mcpServerOption;
@@ -155,6 +156,8 @@ public final class ControllerSerializer extends AbstractSerializer {
                     returnTypeInt = RETURN_TYPE_STRING;
                 } else if ("byte[]".equals(returnType.toString())) {
                     returnTypeInt = RETURN_TYPE_BYTE_ARRAY;
+                } else if (RouterHandler.class.getName().equals(returnType.toString())) {
+                    returnTypeInt = RETURN_TYPE_ROUTER_HANDLER;
                 } else {
                     returnTypeInt = RETURN_TYPE_OBJECT;
                 }
@@ -164,6 +167,10 @@ public final class ControllerSerializer extends AbstractSerializer {
 //                printWriter.println("\t\t}");
                 if (!requestURL.contains(":") && !requestURL.contains("*") && requestURL.length() < ByteTree.MAX_DEPTH) {
                     printWriter.println("\t\tapplicationContext.getOptions().getUriByteTree().addNode(\"" + requestURL + "\");");
+                }
+                if (returnTypeInt == RETURN_TYPE_ROUTER_HANDLER) {
+                    serializeRouterHandlerRoute(se, requestURL, routeMethods.toString());
+                    continue;
                 }
                 boolean async = returnTypeInt == RETURN_TYPE_OBJECT && AsyncResponse.class.getName().equals(returnType.toString());
                 if (async) {
@@ -368,6 +375,24 @@ public final class ControllerSerializer extends AbstractSerializer {
             mcpEndpointSerializer.serializeRouter();
         }
         addInterceptor();
+    }
+
+    /**
+     * 返回 {@link RouterHandler} 的控制器方法：工厂方法模式。
+     * <p>
+     * 生成的代码在路由注册阶段（autowired/postConstruct 之后）调用工厂方法一次，
+     * 返回值直接注册进 Router。由此，注解路由也能拿到完整的连接生命周期：
+     * onHeaderComplete/handle/onClose 直接派发到返回的实例（在途断开时
+     * SESSION_CLOSED 回调 onClose）。
+     * <p>
+     * 工厂方法签名约束：无参数（编译期校验）；返回值必须是无状态单例，所有连接共享。
+     */
+    private void serializeRouterHandlerRoute(Element se, String requestURL, String routeMethods) {
+        List<? extends VariableElement> parameters = ((ExecutableElement) se).getParameters();
+        if (!parameters.isEmpty()) {
+            throw new FeatException("the RouterHandler factory method " + element.getSimpleName() + "@" + se.getSimpleName() + " must have no parameters.");
+        }
+        printWriter.println("\t\trouter.route(\"" + requestURL + "\"" + routeMethods + ", bean." + se.getSimpleName() + "());");
     }
 
     private void addInterceptor() {
