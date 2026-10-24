@@ -1,6 +1,7 @@
 package tech.smartboot.feat.ai.chat.provider;
 
 import tech.smartboot.feat.ai.chat.entity.ChatResponse;
+import tech.smartboot.feat.ai.chat.entity.Usage;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -57,6 +58,26 @@ public class StreamContext {
      * 供上层在流结束后获取完整响应</p>
      */
     private volatile ChatResponse response;
+
+    /**
+     * 响应标识，同一流式响应内保持不变
+     */
+    private volatile String id;
+
+    /**
+     * 模型名称
+     */
+    private volatile String model;
+
+    /**
+     * 结束原因（如 stop、tool_calls）
+     */
+    private volatile String finishReason;
+
+    /**
+     * Token 用量统计，上游在流末尾返回
+     */
+    private volatile Usage usage;
 
     /**
      * 获取当前流式响应状态
@@ -116,5 +137,85 @@ public class StreamContext {
      */
     public void setResponse(ChatResponse response) {
         this.response = response;
+    }
+
+    /**
+     * 获取响应标识
+     *
+     * @return 响应标识，未收到时为 null
+     */
+    public String getId() {
+        return id;
+    }
+
+    /**
+     * 设置响应标识
+     *
+     * @param id 响应标识
+     */
+    public void setId(String id) {
+        if (id != null) {
+            this.id = id;
+        }
+    }
+
+    /**
+     * 获取模型名称
+     *
+     * @return 模型名称，未收到时为 null
+     */
+    public String getModel() {
+        return model;
+    }
+
+    /**
+     * 设置模型名称
+     *
+     * @param model 模型名称
+     */
+    public void setModel(String model) {
+        if (model != null) {
+            this.model = model;
+        }
+    }
+
+    /**
+     * 获取结束原因
+     *
+     * @return 结束原因，未收到时为 null
+     */
+    public String getFinishReason() {
+        return finishReason;
+    }
+
+    /**
+     * 设置结束原因
+     *
+     * @param finishReason 结束原因
+     */
+    public void setFinishReason(String finishReason) {
+        if (finishReason != null) {
+            this.finishReason = finishReason;
+        }
+    }
+
+    /**
+     * 获取Token用量统计
+     *
+     * @return Token用量统计，未收到时为 null
+     */
+    public Usage getUsage() {
+        return usage;
+    }
+
+    /**
+     * 设置Token用量统计
+     *
+     * @param usage Token用量统计
+     */
+    public void setUsage(Usage usage) {
+        if (usage != null) {
+            this.usage = usage;
+        }
     }
 }

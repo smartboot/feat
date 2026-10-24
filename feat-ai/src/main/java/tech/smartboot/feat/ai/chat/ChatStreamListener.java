@@ -10,6 +10,7 @@
 
 package tech.smartboot.feat.ai.chat;
 
+import tech.smartboot.feat.ai.chat.entity.ChatChunk;
 import tech.smartboot.feat.ai.chat.entity.ChatResponse;
 
 /**
@@ -74,6 +75,22 @@ public interface ChatStreamListener {
      */
     default void onReasoning(String content) {
 
+    }
+
+    /**
+     * 处理流式响应中的结构化数据块
+     * <p>
+     * 每解析出一个上游数据帧时调用，与 {@link #onStreamResponse(String)}、
+     * {@link #onReasoning(String)} 的文本回调相比，携带完整元数据
+     * （id、model、finish_reason、tool_calls 增量、usage 等）。
+     * 网关、代理等需要原样转发上游 chunk 的场景应实现此方法，
+     * 仅消费文本的场景继续使用文本回调即可。
+     * </p>
+     * <p>默认实现为空，不影响既有实现类。</p>
+     *
+     * @param chunk 当前数据块，字段为上游实际携带的内容，未携带的字段为 null
+     */
+    default void onChunk(ChatChunk chunk) {
     }
 
     /**

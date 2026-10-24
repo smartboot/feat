@@ -43,6 +43,12 @@ public class ChatOptions extends Options {
     private String model;
 
     /**
+     * 流式请求是否注入 stream_options.include_usage，开启后上游会在流末尾返回 usage 帧。
+     * 默认关闭以保持与既有上游的兼容性
+     */
+    private boolean includeUsage;
+
+    /**
      * API 规范类型，默认为 OPENAI
      */
     private Function<ChatOptions, Provider> provider = OpenAiProvider::new;
@@ -165,6 +171,27 @@ public class ChatOptions extends Options {
 
     public ChatOptions httpOptions(Consumer<HttpOptions> httpOptions) {
         super.httpOptions(httpOptions);
+        return this;
+    }
+
+    /**
+     * 获取流式请求是否注入 stream_options.include_usage
+     *
+     * @return 是否注入 include_usage
+     */
+    public boolean isIncludeUsage() {
+        return includeUsage;
+    }
+
+    /**
+     * 设置流式请求是否注入 stream_options.include_usage。
+     * 开启后上游会在流末尾返回 usage 帧，可通过 onChunk/onCompletion 拿到用量统计
+     *
+     * @param includeUsage 是否注入 include_usage
+     * @return 当前ChatOptions实例，用于链式调用
+     */
+    public ChatOptions includeUsage(boolean includeUsage) {
+        this.includeUsage = includeUsage;
         return this;
     }
 }

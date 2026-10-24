@@ -22,6 +22,14 @@ import java.util.List;
  */
 public class ChatResponse {
     /**
+     * 响应标识，来自上游响应的 id 字段
+     */
+    private String id;
+    /**
+     * 模型名称，来自上游响应的 model 字段
+     */
+    private String model;
+    /**
      * 请求是否成功
      */
     private boolean success;
@@ -56,6 +64,48 @@ public class ChatResponse {
      * 消息内容
      */
     private String content;
+
+    /**
+     * 结束原因（如 stop、tool_calls、length），Anthropic 的 stop_reason 会映射为同名语义
+     */
+    @JSONField(name = "finish_reason")
+    private String finishReason;
+
+    /**
+     * 获取响应标识
+     *
+     * @return 响应标识
+     */
+    public String getId() {
+        return id;
+    }
+
+    /**
+     * 设置响应标识
+     *
+     * @param id 响应标识
+     */
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    /**
+     * 获取模型名称
+     *
+     * @return 模型名称
+     */
+    public String getModel() {
+        return model;
+    }
+
+    /**
+     * 设置模型名称
+     *
+     * @param model 模型名称
+     */
+    public void setModel(String model) {
+        this.model = model;
+    }
 
     /**
      * 获取工具调用列表
@@ -161,5 +211,23 @@ public class ChatResponse {
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    /**
+     * 获取结束原因
+     *
+     * @return 结束原因
+     */
+    public String getFinishReason() {
+        return finishReason;
+    }
+
+    /**
+     * 设置结束原因
+     *
+     * @param finishReason 结束原因
+     */
+    public void setFinishReason(String finishReason) {
+        this.finishReason = finishReason;
     }
 }

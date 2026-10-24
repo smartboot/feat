@@ -20,7 +20,9 @@ import tech.smartboot.feat.core.common.exception.FeatException;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * ChatModel - 聊天模型客户端
@@ -121,16 +123,23 @@ public class ChatModel {
      * 流式已启动但服务端未发终止标记即断连时，以已累积的内容补齐完成并触发 onCompletion；
      * 网络异常、HTTP 成功但流式未启动（如 401、429）时 future 异常完成并触发 onError。</p>
      *
+     * <h3>取消上游请求：</h3>
+     * <p>调用 {@code future.cancel(true)} 会关闭底层连接并中止上游请求（对网关场景即客户端断连止损），
+     * 之后不再触发任何回调（onStreamResponse/onCompletion/onError 均静默），future 保持取消终态。</p>
+     *
      * @param messages 消息列表，包含对话历史
      * @param tools    工具函数列表，可为 null
      * @param consumer 流式响应回调，AI每生成一个响应块时调用
-     * @return 终态 future：流正常结束时以完整 ChatResponse 完成，传输层失败时异常完成
+     * @return 终态 future：流正常结束时以完整 ChatResponse 完成，传输层失败时异常完成；
+     * cancel(true) 时中止上游请求并以取消状态结束
      */
     public CompletableFuture<ChatResponse> chatStream(List<Message> messages, List<Tool> tools, ChatStreamListener consumer) {
         Provider provider = options.getProvider().apply(options);
         HttpRest rest = provider.createRequest(messages, true, tools);
         StreamContext context = new StreamContext();
-        return rest.onSSE(sse -> sse.onData(event -> {
+        // 取消联动标志：主动取消触发的底层断连不再回调 onError（用户已放弃本次请求）
+        AtomicBoolean cancelled = new AtomicBoolean(false);
+        CompletableFuture<ChatResponse> future = rest.onSSE(sse -> sse.onData(event -> {
                     // 首次收到数据，标记为 UPGRADE 状态
                     if (context.getStatus() == StreamContext.STREAM_STATUS_INIT) {
                         context.setStatus(StreamContext.STREAM_STATUS_UPGRADE);
@@ -143,8 +152,12 @@ public class ChatModel {
                         consumer.onError(new FeatException(response.body()));
                     }
                 })
-                // 网络异常或连接失败
-                .onFailure(throwable -> consumer.onError(throwable))
+                // 网络异常或连接失败（主动取消触发的断连除外）
+                .onFailure(throwable -> {
+                    if (!cancelled.get()) {
+                        consumer.onError(throwable);
+                    }
+                })
                 // 提交请求，在底层 HTTP future 的基础上转换出流式终态
                 .submit()
                 .thenApply(response -> {
@@ -171,6 +184,24 @@ public class ChatModel {
                     }
                     throw new FeatException(response.body());
                 });
+        return cancellable(future, rest, cancelled);
+    }
+    /**
+     * 为请求 future 挂接取消联动：检测到取消时关闭底层连接，中止上游请求
+     * <p>
+     * future 被取消后，其派生阶段（thenApply 转换等）不会再执行；底层连接关闭
+     * 引发的异常也由 cancelled 标志抑制（用户已放弃本次请求，不再回调 onError）。
+     * 对已完成或异常完成的 future 无副作用。
+     * </p>
+     */
+    private static <T> CompletableFuture<T> cancellable(CompletableFuture<T> future, HttpRest rest, AtomicBoolean cancelled) {
+        future.whenComplete((response, throwable) -> {
+            if (throwable instanceof CancellationException) {
+                cancelled.set(true);
+                rest.close();
+            }
+        });
+        return future;
     }
 
     /**
@@ -238,13 +269,13 @@ public class ChatModel {
     public CompletableFuture<ChatResponse> chat(List<Message> messages, List<Tool> tools) {
         Provider provider = options.getProvider().apply(options);
         HttpRest rest = provider.createRequest(messages, false, tools);
-        return rest.submit().thenApply(response -> {
+        return cancellable(rest.submit().thenApply(response -> {
             // 检查 HTTP 状态码
             if (response.statusCode() != 200) {
                 return Provider.error(response.body());
             }
             return provider.parseResponse(response);
-        });
+        }), rest, new AtomicBoolean(false));
     }
 
 }

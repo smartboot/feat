@@ -10,6 +10,10 @@
 
 package tech.smartboot.feat.ai.chat.entity;
 
+import com.alibaba.fastjson2.annotation.JSONField;
+
+import java.util.List;
+
 /**
  * 消息类，表示聊天过程中的一条消息
  *
@@ -29,11 +33,28 @@ public class Message {
      * 助手角色，表示 AI 的回答，可以用来模拟多轮对话。
      */
     public static final String ROLE_ASSISTANT = "assistant";
+    /**
+     * 工具角色，表示工具函数的执行结果，需与 {@link #ROLE_ASSISTANT} 消息的
+     * {@code tool_calls} 配对使用（tool_call_id 对应）。
+     */
+    public static final String ROLE_TOOL = "tool";
 
     /**
-     * 消息角色，可以是用户、系统或助手
+     * 消息角色，可以是用户、系统、助手或工具
      */
     private String role;
+
+    /**
+     * 工具调用列表，携带在 assistant 消息上，表示模型发起的工具调用
+     */
+    @JSONField(name = "tool_calls")
+    private List<ToolCall> toolCalls;
+
+    /**
+     * 工具调用标识，携带在 tool 消息上，与 assistant 消息中 tool_calls 的 id 对应
+     */
+    @JSONField(name = "tool_call_id")
+    private String toolCallId;
 
 
     /**
@@ -75,6 +96,37 @@ public class Message {
         return message;
     }
 
+    /**
+     * 创建一条携带工具调用的助手消息，用于多轮工具对话的上下文回传
+     *
+     * @param content   消息内容，可为 null（纯工具调用场景）
+     * @param toolCalls 模型发起的工具调用列表（通常来自上一轮 {@code ChatResponse#getToolCalls()}）
+     * @return Message实例
+     */
+    public static Message ofAssistant(String content, List<ToolCall> toolCalls) {
+        TextMessage message = new TextMessage();
+        message.setRole(ROLE_ASSISTANT);
+        message.setContent(content);
+        message.setToolCalls(toolCalls);
+        return message;
+    }
+
+    /**
+     * 创建一条工具结果消息，用于将工具执行结果回传给模型，
+     * 需与对应 assistant 消息中 tool_calls 的 id 匹配
+     *
+     * @param toolCallId 对应的工具调用标识
+     * @param content    工具执行结果
+     * @return Message实例
+     */
+    public static Message ofTool(String toolCallId, String content) {
+        TextMessage message = new TextMessage();
+        message.setRole(ROLE_TOOL);
+        message.setToolCallId(toolCallId);
+        message.setContent(content);
+        return message;
+    }
+
 //    public static Message ofImage()
 
     /**
@@ -93,6 +145,42 @@ public class Message {
      */
     public void setRole(String role) {
         this.role = role;
+    }
+
+    /**
+     * 获取工具调用列表
+     *
+     * @return 工具调用列表，非 assistant 消息为 null
+     */
+    public List<ToolCall> getToolCalls() {
+        return toolCalls;
+    }
+
+    /**
+     * 设置工具调用列表
+     *
+     * @param toolCalls 工具调用列表
+     */
+    public void setToolCalls(List<ToolCall> toolCalls) {
+        this.toolCalls = toolCalls;
+    }
+
+    /**
+     * 获取工具调用标识
+     *
+     * @return 工具调用标识，非 tool 消息为 null
+     */
+    public String getToolCallId() {
+        return toolCallId;
+    }
+
+    /**
+     * 设置工具调用标识
+     *
+     * @param toolCallId 工具调用标识
+     */
+    public void setToolCallId(String toolCallId) {
+        this.toolCallId = toolCallId;
     }
 
 }
