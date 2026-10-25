@@ -1,0 +1,121 @@
+---
+title: Agent 记忆
+description: 用 Memory 为 Agent 增加会话记忆：内存实现快速上手，向量记忆支撑长期记忆与语义检索
+sidebar:
+  order: 5
+---
+
+import { Aside, TabItem, Tabs } from '@astrojs/starlight/components';
+
+默认情况下，[Agent](/feat/ai/agent/) 每次调用都是独立的——它不记得上一轮你说过什么。`Memory` 机制让 Agent 具备跨轮次的记忆能力：自动存下交互历史，并在后续调用时检索相关记忆注入上下文。
+
+## 最小用法：内存记忆
+
+```java title="MemoryDemo.java"
+import tech.smartboot.feat.ai.FeatAI;
+import tech.smartboot.feat.ai.agent.FeatAgent;
+
+public class MemoryDemo {
+    public static void main(String[] args) throws Exception {
+        FeatAgent agent = FeatAI.agent(opts -> {
+            opts.chatOptions().model(/* 你的模型配置 */);
+            // 启用内存记忆
+            opts.memory(memoryOpts -> memoryOpts
+                    .maxMessages(100)        // 最多保留 100 条
+                    .defaultTopK(5));        // 每次检索 5 条注入上下文
+            opts.sessionId("user-session-123");
+        });
+
+        agent.execute("你好，我是张三").get();
+        agent.execute("请问我叫什么名字？").get();  // Agent 能答上来
+    }
+}
+```
+
+三件事各自的作用：
+
+- `opts.memory(...)`：启用记忆并配置策略
+- `opts.sessionId(...)`：会话隔离——不同用户的记忆互不可见
+- `opts.memoryTopK(n)`：每次调用检索多少条历史记忆注入提示词
+
+内存实现（`InMemoryMemory`）数据存在 JVM 里，**重启即失**，适合开发测试和单机会话场景。
+
+## 记忆的工作机制
+
+理解这两点，可以避免对记忆系统的误解：
+
+1. **检索是按相关性注入，不是全量回放**。每次调用 Agent 时，会用当前输入检索最相关的 topK 条历史记忆注入上下文——`maxMessages` 只是存储上限，不是上下文长度
+2. **会话隔离默认开启**（`sessionIsolation=true`），检索范围限定在当前 `sessionId` 内；跨会话共享知识请关闭隔离或使用向量记忆的全局集合
+
+其他常用配置：
+
+| 配置 | 默认值 | 说明 |
+|---|---|---|
+| `similarityThreshold` | 0.5 | 相似度低于阈值的记忆不参与检索 |
+| `enableDeduplication` | false | 合并内容高度相似的消息（阈值 0.95） |
+| `importanceThreshold` | 0.0 | 按消息重要性过滤，低价值记忆不检索 |
+| `includeThoughts` | false | 是否把 Agent 的思考过程也存入记忆 |
+
+## 长期记忆：向量记忆
+
+内存记忆按时间窗口保留，适合"本次会话内记得住"。要让 Agent 跨会话长期记住用户偏好、历史结论，用向量记忆——它把记忆交给向量库，检索按语义相似度进行：
+
+```java title="VectorMemoryDemo.java"
+import tech.smartboot.feat.ai.FeatAI;
+import tech.smartboot.feat.ai.agent.FeatAgent;
+import tech.smartboot.feat.ai.agent.memory.Memory;
+import tech.smartboot.feat.ai.vector.ChromaVectorOptions;
+import tech.smartboot.feat.ai.vector.ChromaVectorStore;
+
+public class VectorMemoryDemo {
+    public static void main(String[] args) {
+        FeatAgent agent = FeatAI.agent(opts -> {
+            opts.chatOptions().model(/* 你的模型配置 */);
+            opts.memory(Memory.vector(vectorOpts -> {
+                vectorOpts.vectorStore(new ChromaVectorStore(new ChromaVectorOptions()
+                        .setUrl("http://localhost:8000")));
+                vectorOpts.embeddingModel(/* EmbeddingModel 实例，见 Embedding 章节 */);
+                vectorOpts.collectionName("agent_memory");
+            }));
+            opts.memoryTopK(5);
+        });
+        // ...
+    }
+}
+```
+
+向量记忆需要两个外部依赖：一个 **EmbeddingModel**（把文本转向量，见 [Embedding](/feat/ai/embedding/)）和一个 **VectorStore**。内置支持 Chroma 和 Milvus（`ChromaVectorStore` / `MilvusVectorStore`）。
+
+<Aside type="tip">
+选型判断很简单：会话内记忆用 `Memory.inMemory(...)`，跨会话/海量历史用 `Memory.vector(...)`。不要一开始就上向量库——先确认"记住上次说过什么"对你的产品是真的需求。
+</Aside>
+
+## 直接操作 Memory API
+
+不经过 Agent 也可以独立使用记忆存取：
+
+```java title="MemoryApiDemo.java"
+import tech.smartboot.feat.ai.agent.memory.Memory;
+import tech.smartboot.feat.ai.agent.memory.MemoryMessage;
+
+Memory memory = Memory.inMemory(opts -> opts.maxMessages(50));
+
+memory.add(MemoryMessage.ofUser("用户喜欢简洁的回答"));
+memory.add(MemoryMessage.ofAssistant("好的，已记住"));
+
+// 按相关性检索
+List<MemoryMessage> related = memory.search("回答风格", 3);
+// 取最近 N 条
+List<MemoryMessage> recent = memory.getRecent(5);
+// 清除当前会话
+memory.clear();
+```
+
+适合把记忆能力嵌入自己的编排逻辑，而不是完全交给 ReAct 循环。
+
+## 生产注意事项
+
+- **多实例部署**时，内存记忆各节点独立，用户一轮在 A 节点、下一轮到 B 节点就"失忆"。多实例必须用向量记忆 + 外部向量库
+- **隐私合规**：记忆内容是用户交互原文，落地向量库前确认保留策略与用户知情机制
+- **成本控制**：每次调用都会做一次向量检索，记忆规模大时关注向量库的查询延迟
+

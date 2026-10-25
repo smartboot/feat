@@ -13,7 +13,7 @@ Feat AI 适合已经会写 Java 服务，现在想把模型能力接进来的开
 
 你将构建一个最小的 AI 对话应用，让模型返回一段关于 Feat 框架的介绍文本。
 
-**前置要求**：JDK 8+、Maven 3.0+、以下二选一：
+**前置要求**：JDK 8+、Maven 3.6+、以下二选一：
 - **本地 Ollama**：已安装并运行，且本地拉取了可用模型
 - **云端模型**：已准备好环境变量 `FEAT_AI_API_KEY`
 
@@ -122,7 +122,7 @@ Feat AI 提供两种与模型交互的方式，选择取决于你的场景：
 | 方法 | 返回值 | 适用场景 |
 |------|--------|----------|
 | `chat(...)` | `CompletableFuture<ChatResponse>`| 需要完整结果后再处理，如后端任务、数据提取 |
-| `chatStream(...)` | `void`（通过 `ChatStreamListener` 回调） | 需要实时消费片段，如终端输出、前端打字机效果 |
+| `chatStream(...)` | `void`（通过 `ChatStreamListener` 回调；v2.5.0 起返回 `CompletableFuture<ChatResponse>`） | 需要实时消费片段，如终端输出、前端打字机效果 |
 
 ## 继续学习
 
@@ -143,6 +143,11 @@ Feat AI 提供两种与模型交互的方式，选择取决于你的场景：
     title="Embedding"
     href="/feat/ai/embedding/"
     description="当你开始做检索增强、RAG 或语义搜索时，再进入这一页。"
+  />
+  <LinkCard
+    title="Agent 记忆"
+    href="/feat/ai/memory/"
+    description="当 Agent 需要记住上一轮对话、跨会话记住用户偏好时，从这里继续。"
   />
 </CardGrid>
 

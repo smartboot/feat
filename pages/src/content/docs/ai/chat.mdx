@@ -2,7 +2,7 @@
 title: 对话模型
 description: 掌握 ChatModel 的完整配置、两种调用模式、多轮对话与错误处理
 sidebar:
-    order: 2
+    order: 1
 ---
 
 import { Aside } from '@astrojs/starlight/components';
@@ -108,6 +108,10 @@ chatModel.chat("你好").thenAccept(rsp -> {
 ## 流式调用：chatStream(...)
 
 `chatStream(...)` 通过 `ChatStreamListener` 回调实时接收模型生成的片段，适合需要逐字展示的场景。
+
+<Aside type="note">
+自 v2.5.0 起，`chatStream(...)` 的返回值由 `void` 变为 `CompletableFuture<ChatResponse>`，可用于等待流式调用完成。回调用法不变，现有代码无需调整。
+</Aside>
 
 ### 基础用法
 
