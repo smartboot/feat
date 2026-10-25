@@ -3,7 +3,7 @@ title: 异步处理
 description: 掌握 Feat 服务端异步处理模型：将耗时操作移出主线程，提升并发处理能力
 toc: true
 sidebar:
-    order: 4
+    order: 3
 ---
 
 import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
@@ -86,9 +86,9 @@ public class AsyncDemo {
 }
 ```
 
-### 使用 Lambda 简化
+### 简化写法
 
-如果不需要复杂的线程池管理，可以用 Lambda 快速创建异步处理器：
+如果不需要复杂的线程池管理，可以按同样的模式组织异步处理器：
 
 ```java
 Feat.httpServer()

@@ -3,7 +3,7 @@ title: Router 路由
 description: 掌握 Feat Router 的完整功能：路由注册、路径参数、Session 管理和拦截器机制
 toc: true
 sidebar:
-  order: 3
+  order: 2
 ---
 
 import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
@@ -124,7 +124,7 @@ router.route("/async", (ctx, future) -> {
 </Tabs>
 
 <Aside type="tip">
-异步模式不会阻塞线程，适合高并发场景。同步模式代码更简洁，适合简单接口。
+异步模式不会阻塞线程，适合高并发场景。同步模式代码更简洁，适合简单接口。异步处理的完整模型（线程池管理、回调触发流程、常见陷阱）见[异步处理](/feat/server/async/)。
 </Aside>
 
 ## 中间件机制
