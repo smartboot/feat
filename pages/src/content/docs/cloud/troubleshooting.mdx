@@ -5,6 +5,11 @@ sidebar:
     order: 10
 ---
 
+import SponsorAside from '../../../components/SponsorAside.astro';
+
+<SponsorAside />
+
+
 Feat Cloud 的很多行为发生在编译期。排查问题时，不要只盯着“应用有没有重启”，还要确认“生成代码有没有更新、打包有没有保留、运行时有没有选中正确环境”。
 
 这一页按现象组织。遇到问题时，先找最接近的症状，再顺着检查项缩小范围。
@@ -48,7 +53,7 @@ mvn clean package
 
 ### Profile 没有按预期生效
 
-运行时通过 `feat.profiles.active` 选择环境：
+运行时通过 `feat.profiles.active` 选择环境（Profile 合并规则的完整说明见[启动配置与环境配置](/feat/cloud/options/)）：
 
 ```bash title="JVM 参数"
 java -Dfeat.profiles.active=dev -jar yourapp.jar
@@ -128,7 +133,7 @@ Feat Cloud 依赖 `ServiceLoader` 加载生成的 `CloudService`。Fat Jar 打�
 META-INF/services/tech.smartboot.feat.cloud.CloudService
 ```
 
-使用 `maven-shade-plugin` 时，需要配置 `AppendingTransformer`。如果这个文件被覆盖，应用仍可能启动，但 Controller 路由不会注册。
+使用 `maven-shade-plugin` 时，需要配置 `AppendingTransformer`（完整配置见[部署与交付](/feat/cloud/deployment/)）。如果这个文件被覆盖，应用仍可能启动，但 Controller 路由不会注册。
 
 可以用下面的命令检查 jar 内文件：
 
@@ -138,7 +143,7 @@ jar tf target/yourapp-1.0.jar | grep 'META-INF/services/tech.smartboot.feat.clou
 
 ### Redis Session 没有共享
 
-先确认当前环境真的启用了 Redis Session：
+先确认当前环境真的启用了 Redis Session（配置项含义见 [Session 与请求状态](/feat/cloud/session/)）：
 
 ```yaml title="feat-prod.yml"
 server:

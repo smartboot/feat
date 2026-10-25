@@ -2,8 +2,13 @@
 title: 生态集成：XXL-Job
 description: 把 XXL-Job 执行器接入 Feat Cloud，完成分布式任务调度的注册、执行与优雅关闭
 sidebar:
-    order: 22
+    order: 13
 ---
+
+import SponsorAside from '../../../components/SponsorAside.astro';
+
+<SponsorAside />
+
 
 import { Aside } from '@astrojs/starlight/components';
 
@@ -56,7 +61,7 @@ xxl:
 
 ## 写代码
 
-整个集成只需要三个类：一个配置对象收拢 YAML 参数，两个任务处理器执行业务逻辑，一个启动类把它们串起来。
+整个集成只需要四个类：一个配置对象收拢 YAML 参数，两个任务处理器执行业务逻辑，一个启动类把它们串起来。
 
 ### 配置对象
 

@@ -5,6 +5,11 @@ sidebar:
     order: 9
 ---
 
+import SponsorAside from '../../../components/SponsorAside.astro';
+
+<SponsorAside />
+
+
 import { Aside } from "@astrojs/starlight/components";
 
 ![](./img/deployment_1.png)
@@ -120,7 +125,7 @@ docker run -p 8080:8080 yourapp:latest
 
 只有当 JRE 版本已经稳定，且启动速度、内存或镜像体积真的成为问题时，再进入 Native Image。
 
-![简笔手绘卡通风格，左边是普通 JRE 运行箱，右边是更小的 native executable 小火箭形态，二者通过验证清单连接，表达 Native 是稳定后的优化路线，不夸张，900x383](./img/native_image_1.png)
+![普通 JRE 交付与更小的 Native Image 交付对比示意图](./img/native_image_1.png)
 
 ### 先稳定 JRE 版本
 

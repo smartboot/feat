@@ -2,8 +2,13 @@
 title: 生态集成：MyBatis
 description: 把 MyBatis Mapper 接入 Feat Cloud 的 Bean 生命周期，完成一条可验证的 CRUD 数据访问链路
 sidebar:
-    order: 20
+    order: 11
 ---
+
+import SponsorAside from '../../../components/SponsorAside.astro';
+
+<SponsorAside />
+
 
 这一章用 MyBatis 给 Feat Cloud 应用搭一条数据访问链路：建表、Mapper、Service、Controller，跑通一组 CRUD 接口。Mapper 仍按 MyBatis 的方式写 SQL，Feat Cloud 只在编译期把它接进 Bean 生命周期——Controller 用 `@Autowired` 就能拿到，不用手写装配。
 

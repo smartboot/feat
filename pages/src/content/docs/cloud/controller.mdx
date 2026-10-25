@@ -5,6 +5,11 @@ sidebar:
     order: 2
 ---
 
+import SponsorAside from '../../../components/SponsorAside.astro';
+
+<SponsorAside />
+
+
 import { Aside, Tabs, TabItem } from '@astrojs/starlight/components'
 
 Feat Cloud 的控制器写起来和 Spring Boot 很像：一个类加 `@Controller`，方法加 `@RequestMapping`。但底层实现不同：路由映射在编译期生成，运行时不再反射扫描。
@@ -15,7 +20,7 @@ Feat Cloud 的控制器写起来和 Spring Boot 很像：一个类加 `@Controll
 - 再处理查询参数、路径参数和 JSON 请求体
 - 最后补充少数需要直接接触运行时上下文的能力
 
-![简笔手绘卡通风格，一个 Controller 小屋接收 HTTP 请求箭头，门口写着 GET 图标，里面伸出一条响应纸带，表现 URL 映射到方法，黑色手绘线稿，柔和绿色和蓝色，900x383](./img/controller_1.png)
+![Controller 将 URL 映射到处理方法的示意图](./img/controller_1.png)
 
 ## 第一个控制器
 
@@ -74,7 +79,7 @@ Controller 最常见的输入来源有三种：查询字符串、路径变量和
 
 从这里开始，示例代码默认写在前面的 `UserController` 里，只展示当前接口方法和必要的局部类型。
 
-![简笔手绘卡通风格，一条 HTTP 路径像手绘路线图，路线上有 query 参数、path 参数、GET POST PUT DELETE 小路牌，最终到达 Controller，画面轻松但专业，900x383，无复杂文字](./img/request_mapping_1.png)
+![HTTP 路径中的 query 参数与 path 参数如何到达 Controller 的示意图](./img/request_mapping_1.png)
 
 ### 查询参数
 
@@ -90,12 +95,12 @@ public String search(@Param("keyword") String keyword,
 ```
 
 <Tabs>
-  <TabItem label="请求">
+  <TabItem value="request" label="请求">
     ```shell title="curl 请求"
     curl "http://localhost:8080/users/search?keyword=feat&page=1"
     ```
   </TabItem>
-  <TabItem label="响应">
+  <TabItem value="response" label="响应">
     ```text title="响应结果"
     搜索: feat, 页码: 1
     ```
@@ -211,7 +216,7 @@ public String delete(@PathParam("id") String id) {
 
 这部分不是日常接口的起点，更像工具箱：只有当普通参数绑定不够用时，再取对应能力。
 
-![简笔手绘卡通风格，一个 Controller 工具箱打开，里面有 Context 放大镜、Async 小沙漏、Gzip 压缩夹，表现高级能力按需取用，线稿清楚，少量强调色，900x383](./img/controller_advanced_1.png)
+![Controller 高级能力（Context、异步处理、Gzip 压缩）按需取用的示意图](./img/controller_advanced_1.png)
 
 ### 注入 Context
 

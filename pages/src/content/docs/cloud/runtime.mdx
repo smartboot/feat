@@ -5,11 +5,16 @@ sidebar:
     order: 1
 ---
 
+import SponsorAside from '../../../components/SponsorAside.astro';
+
+<SponsorAside />
+
+
 快速开始里，一个 `@Controller` 方法变成了可访问的 HTTP 路由。
 这背后最重要的不是某个 API，而是 Feat Cloud 的工作模型：开发时用注解表达意图，编译期生成普通 Java 代码，运行时加载这些生成结果。
 
 理解这一点之后，后面的 Controller、Bean、Profile、MyBatis、MCP 和部署问题都会更容易判断。
-![简笔手绘卡通风格，左侧是带注解的小代码卡片，中间是编译器齿轮，右侧生成一个 CloudService 模块并连接到 Router，表现“编译期生成、运行期加载”，线条清晰，少量绿色高亮路径，900x383，无大段文字](./img/runtime_1.png)
+![注解代码经编译期处理生成 CloudService 并注册到 Router 的示意图](./img/runtime_1.png)
 ## 从注解到 `CloudService`
 
 当项目执行 `mvn compile` 时，`feat-cloud-starter` 中的注解处理器会读取 `@Controller`、`@Bean`、`@Autowired`、`@RequestMapping` 等注解，并生成 `CloudService` 实现类。

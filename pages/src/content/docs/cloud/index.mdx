@@ -1,4 +1,3 @@
-
 ---
 title: 快速开始
 description: 用 Feat Cloud 写出第一个注解式 Web 应用，理解整体学习路径
@@ -13,7 +12,7 @@ import idea_setting from './img/idea_setting.png';
 <Aside type="caution">
 Feat 主线仓库采用 Apache 2.0；其中 Feat Cloud 通过赞助支持模式开放。如需使用 Feat Cloud，请先[成为赞助者](/feat/sponsors/)获取授权。
 </Aside>
-![简笔手绘卡通风格，一个开发者把一个小小的 Java 文件放进轻量服务器，右侧浏览器窗口显示成功响应，周围有 Maven、Controller、Route 的小图标，黑色线稿，少量绿色和蓝色点缀，干净留白，技术教程插画，900x383，无复杂文字](./img/index_1.png)
+![最小 Feat Cloud 应用从编写到浏览器成功响应的流程插画](./img/index_1.png)
 
 Feat Cloud 面向这样一种场景：你已经接受 Feat Core 的轻量、高性能路线，但在业务项目里仍然希望保留 Controller、Bean、自动装配这些更熟悉的组织方式。
 
@@ -26,7 +25,7 @@ Feat Cloud 面向这样一种场景：你已经接受 Feat Core 的轻量、高�
 最终效果很小：访问 `http://localhost:8080/hello` 返回 `hello Feat Cloud`。  
 但这条链路会经过 Feat Cloud 最重要的机制：编译期扫描注解、生成服务代码、启动时注册路由。
 
-开始前确认本地已经有 JDK 8+、Maven 3.0+ 和一个能正常运行 Maven 项目的 IDE。
+开始前确认本地已经有 JDK 8+、Maven 3.6+ 和一个能正常运行 Maven 项目的 IDE，详见[系统要求](/feat/guides/system-requirements/)。
 
 ### 添加依赖
 
@@ -121,3 +120,5 @@ http://0.0.0.0:8080/
 </Tabs>
 
 到这里，你已经跑通了 Feat Cloud 的基本闭环。后面的章节会把这个最小应用拆开：先理解编译期生成的工作模型，再进入 Controller 请求处理、返回响应、Bean 装配、配置与环境、数据库集成和最终部署。
+
+如果你来自 Spring Boot，[从 Spring Boot 迁移](/feat/guides/from-spring/)提供了一张注解与配置的对照地图，可以和主线教程并行阅读。

@@ -5,6 +5,11 @@ sidebar:
     order: 4
 ---
 
+import SponsorAside from '../../../components/SponsorAside.astro';
+
+<SponsorAside />
+
+
 import { Aside } from '@astrojs/starlight/components';
 
 Controller 负责接住 HTTP 请求，但真实业务不会只写在 Controller 里。你通常会把规则、数据库访问、第三方客户端和配置对象拆成不同的 Bean，再由 Feat Cloud 在编译期生成装配代码。
@@ -58,7 +63,7 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    @RequestMapping("/{username}")
+    @RequestMapping("/:username")
     public RestResult<String> getName(@PathParam("username") String username) {
         return RestResult.ok(userService.findDisplayName(username));
     }
@@ -75,7 +80,7 @@ public class UserController {
 
 ### 从配置注入值
 
-`@Value` 可以把配置值注入字段。配置来自 `feat.yml` 或当前激活环境合并后的配置。
+`@Value` 可以把配置值注入字段。写法上必须使用 `${}` 占位符，配置来自 `feat.yml` 或当前激活环境合并后的配置；还支持 `${key:默认值}` 在配置缺失时提供兜底值。
 
 ```yaml title="feat.yml"
 app:
@@ -90,10 +95,10 @@ import tech.smartboot.feat.cloud.annotation.Value;
 @Bean
 public class AppConfig {
 
-    @Value("app.name")
+    @Value("${app.name}")
     private String appName;
 
-    @Value("app.max-users")
+    @Value("${app.max-users:50}")
     private int maxUsers;
 
     public String getAppName() {
@@ -113,6 +118,8 @@ public class AppConfig {
     }
 }
 ```
+
+注意不要省略 `${}`：`@Value("app.name")` 注入的是字面量字符串 `"app.name"`，而不是从配置解析出的值。`${}` 占位符的完整解析规则（优先级、环境变量命名等）见 [启动配置与环境配置](/feat/cloud/options/)。
 
 `@Value` 注入会调用字段对应的 setter。配置参与编译期生成，修改 `feat.yml`、`feat-dev.yml` 或 `feat-prod.yml` 后，需要重新构建应用，生成代码才会更新。
 

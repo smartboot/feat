@@ -2,8 +2,13 @@
 title: 启动配置与环境配置
 description: 区分 CloudOptions 与 feat.yml 的职责，理解启动选项、Profile 合并和多环境生成方式
 sidebar:
-    order: 5
+    order: 6
 ---
+
+import SponsorAside from '../../../components/SponsorAside.astro';
+
+<SponsorAside />
+
 
 import { Aside } from '@astrojs/starlight/components';
 
@@ -167,7 +172,7 @@ public class CloudOptionsDemo {
 
 从这里开始，关注点从“本次启动怎么跑”切到“不同环境如何生成代码”。
 
-![简笔手绘卡通风格，中央是默认 feat.yml 配置卡片，分叉到 dev、test、prod 三张环境卡片，环境卡片与默认卡片像透明纸叠加，表现深度合并和环境覆盖，900x383，绿色高亮合并路径](./img/profiles_1.png)
+![Profile 环境配置与默认 feat.yml 深度合并的示意图](./img/profiles_1.png)
 
 ### 文件命名
 
