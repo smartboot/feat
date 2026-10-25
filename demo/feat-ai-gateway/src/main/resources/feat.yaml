@@ -1,6 +1,0 @@
-# Feat 框架自身的配置，编译期被 feat-cloud-aot 的注解处理器读取，运行时由 CloudOptions 应用。
-# 网关的业务配置（provider / model / key）在 gateway.yaml —— 两者不合并：
-# 业务配置必须走 applyConfig(snapshot) 这一个入口，不能被框架的配置加载器绕过。
-server:
-  # 网关自己接管响应输出，不需要框架再做压缩
-  gzip: false
