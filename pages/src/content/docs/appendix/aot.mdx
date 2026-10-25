@@ -1,8 +1,8 @@
 ---
 title: AOT 机制
-description: 从编译期代码生成、CloudService 加载到 AOT VM 模式，理解 Feat Cloud 的 AOT 机制到底在做什么
+description: 从编译期代码生成到 CloudService 运行期加载，理解 Feat Cloud 的 AOT 机制到底在做什么
 sidebar:
-    order: 4
+    order: 1
 ---
 
 import { Aside } from "@astrojs/starlight/components";
@@ -41,14 +41,14 @@ Feat Cloud 选择把其中很大一部分提前到编译期完成。
 从仓库结构可以直接看出这套机制的几个关键模块：
 
 - `feat-cloud-aot`
-- `feat-cloud-aot-vm`
+- `feat-cloud-starter`
 - `feat-cloud`
 
 其中：
 
-- `feat-cloud-aot` 负责编译期生成代码
+- `feat-cloud-aot` 提供编译期的注解处理器（APT）和代码生成逻辑
+- `feat-cloud-starter` 是你在工程里引入的编译期依赖，内部包装了 `feat-cloud-aot`
 - `feat-cloud` 负责运行期加载和执行这些服务
-- `feat-cloud-aot-vm` 提供一种更适合开发期的 AOT VM 运行模式
 
 编译期最关键的入口是：
 
@@ -141,28 +141,11 @@ FeatCloud.cloudServer().listen();
 
 但内部真正工作的，是一套已经在编译期准备好的服务装配流程。
 
-## AOT VM 是什么
+## 和 Native Image 的关系
 
-如果说 AOT 模式更偏向“编译期把事情做完”，那 AOT VM 更像是：
+AOT 编译期生成带来的另一个好处，是让 Native Image 变得可行：生成代码把反射和动态代理的使用压到了最低，静态分析更容易收敛。
 
-> 在开发期尽量保留 AOT 的使用体验，同时让调试和变更成本更低。
-
-仓库里对应的模块是：
-
-- `feat-cloud-aot-vm`
-
-从源码可以看到它提供了 `AotVMCloudService` 和对应的处理器实现。  
-它的价值不在于和 AOT 完全一样，而在于让你在开发阶段不用一直围绕最终部署形态去思考。
-
-## 什么时候应该关心 AOT VM
-
-你通常在下面这些情况下才需要认真看它：
-
-- 你已经在使用 Feat Cloud
-- 你开始关注开发期与部署期的差异
-- 你希望在调试体验和最终性能之间做平衡
-
-如果你还在 quickstart 阶段，这一层完全可以先跳过。
+但 AOT 编译期机制和 Native Image 是两件事：前者是 Feat Cloud 自己的编译期代码生成，后者是 GraalVM 对整个应用的提前编译。如果你关心的是交付形态，请直接阅读[部署与交付](/feat/cloud/deployment/)中的 Native 优化路线。
 
 ## 这套机制对你意味着什么
 
@@ -180,8 +163,8 @@ FeatCloud.cloudServer().listen();
 
 - 你已经用过 Feat Cloud，但想理解它的底层机制
 - 你在看 `target/generated-sources/annotations`，想知道这些类为什么存在
-- 你准备继续研究 Native Image 或 AOT VM 相关内容
+- 你准备继续研究 Native Image 相关内容
 
 <Aside type="tip">
-如果你现在还在学习主线教程，这页可以先略过。等你已经完成 [Feat Cloud 导览](/feat/cloud/)、[快速入门](/feat/cloud/quickstart/) 和 [CloudOptions 配置](/feat/cloud/options/) 之后，再回来读它会更顺。
+如果你现在还在学习主线教程，这页可以先略过。等你已经完成 [Feat Cloud 导览](/feat/cloud/)、[编译期工作模型](/feat/cloud/runtime/) 和 [CloudOptions 配置](/feat/cloud/options/) 之后，再回来读它会更顺。
 </Aside>
