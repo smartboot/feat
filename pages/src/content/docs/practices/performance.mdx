@@ -1,0 +1,75 @@
+---
+title: 性能调优
+description: 基于 ServerOptions 的线程、缓冲区与缓存机制，按负载特征给 Feat 服务做针对性调优
+sidebar:
+  order: 4
+---
+
+import { Aside, TabItem, Tabs } from '@astrojs/starlight/components';
+
+Feat 的性能基线很高（基准数据见[性能测试](/feat/appendix/benchmark/)），大多数服务不需要调优。这一页的目标不是"把参数调大"，而是帮你理解 Feat 的执行模型，知道**什么症状该动哪个参数**。
+
+## 先理解线程模型
+
+Feat 基于 smart-socket 的异步 IO（AIO）构建，`threadNum` 指定的是**处理业务回调的线程数**：
+
+- 请求解析在 IO 线程完成，你的 `HttpHandler.handle()` 也在这些线程上被调用
+- 默认值 = CPU 核心数（至少 2）
+- **同步处理器里执行耗时操作会直接占住业务线程**，拖慢整个服务的吞吐
+
+所以第一条调优原则不是调参数，而是分清负载类型：
+
+| 负载特征 | 做法 |
+|---|---|
+| 纯内存操作（少于 1ms） | 同步处理器即可，线程数保持默认 |
+| 外部调用、数据库、文件 IO（大于 10ms） | 用[异步处理](/feat/server/async/)把耗时操作移出主线程，业务自管线程池 |
+| 既有快接口又有慢接口 | 快接口同步、慢接口异步，避免相互拖累 |
+
+`threadNum` 只在同步处理占主导、且确认瓶颈在 CPU 时才值得调大。异步模型下线程数与业务线程池解耦，调 `threadNum` 基本无感。
+
+## 缓冲区：吞吐与大请求的权衡
+
+读、写缓冲区默认都是 8KB：
+
+```java title="缓冲区配置"
+Feat.httpServer(options -> {
+    options.readBufferSize(16 * 1024);   // 读：请求解析用
+    options.writeBufferSize(16 * 1024);  // 写：响应输出用
+})
+```
+
+- `readBufferSize` 必须**至少能容纳一个完整的 URL 或 Header 值**，否则解析直接报错。带超大 Cookie 或长 URL 的服务需要调大
+- `writeBufferSize` 影响响应写盘的网络批次。大文件响应场景适当调大可以减少系统调用次数
+- 两个缓冲区都按 `threadNum` 相关的池化方式分配，盲目调大**直接放大内存占用**
+
+症状对照：日志里出现解析异常（URL/Header 被截断）→ 调 `readBufferSize`；大量小响应场景 CPU 高在 write 系统调用 → 试着调 `writeBufferSize`。没有对应症状就不要动。
+
+## 内存受限环境
+
+`setLowMemory(true)` 关闭读缓冲区的保留策略，用吞吐换内存。适合嵌入式设备、Sidecar 这类内存紧张的场景；常规服务器不要开。
+
+## gzip 的收益边界
+
+gzip 压缩对 JSON/HTML 这类文本收益明显，但要留意两点：
+
+1. **压缩阈值**：小于阈值的内容不压缩（压缩后可能更大）。Cloud 侧在 `feat.yml` 的 `server.gzip` / `server.gzipThreshold` 配置（见[启动配置与环境配置](/feat/cloud/options/)）
+2. **静态资源 classpath 模式**输出固定走 gzip（`Content-Encoding: gzip`），压缩在内存中逐块完成，这是为"jar 内小资源"设计的路径，不适合当大文件下载服务器用
+
+CPU 紧张的服务可以关掉 gzip，把压缩交给前置的 nginx——它有专门的压缩优化和缓存。
+
+## 缓存树：被低估的解析加速
+
+`ServerOptions` 内部维护三棵字节缓存树（`ByteTree`），把 HTTP 报文里高频出现的字符串（方法名、协议版本、Header 名、常见 Header 值）缓存在树里，解析时按字节匹配而不是反复 new String。这是 Feat 基准成绩的重要来源之一。
+
+对使用者的含义：
+
+- 自定义 Header 的名称种类有限且稳定的服务，可以预热：`options.getByteCache().addNode(...)`
+- 请求 URL 高度随机（如带随机 token 路径）的服务，URI 缓存命中率低，不要期望这部分收益
+
+## 调优流程建议
+
+1. **先测基线**：用 wrk 之类工具压出当前 RPS 和延迟，改任何参数前先有数字
+2. **看线程栈**：`jstack` 确认业务线程在忙什么——大量 `Thread.sleep`、锁等待、外部调用等待，走异步化而不是加线程
+3. **一次只改一个参数**：改完复测，没有可复现的改善就回滚
+4. **对比基准时注意边界**：固定硬件、JDK、并发与网络环境（详见[性能测试](/feat/appendix/benchmark/)的解读说明）
+

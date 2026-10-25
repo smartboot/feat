@@ -1,0 +1,149 @@
+---
+title: 安全实践
+description: 用 WAF、BasicAuth、请求限制和错误处理，把 Feat 服务的安全面收拢到可控范围
+sidebar:
+  order: 0
+---
+
+import { Aside, TabItem, Tabs } from '@astrojs/starlight/components';
+
+Feat 没有提供"一键安全"的开关，但把安全所需的原语都放在了正确的位置。这一页按请求进入的顺序，逐层说明每个原语解决什么问题、怎么用、边界在哪。
+
+| 层 | 能力 | 解决的问题 |
+|---|---|---|
+| 传输层 | SslPlugin（HTTPS） | 链路加密，防窃听与篡改 |
+| 接入层 | WAF | 请求方法与 URI 白名单，拦截明显非法流量 |
+| 认证层 | BasicAuthServerHandler | 最小成本的接口认证 |
+| 限制层 | ServerOptions 各项上限 | 大请求、畸形 Header、慢连接攻击 |
+| 应用层 | HttpException / 拦截器 | 业务内的鉴权与错误响应 |
+
+## WAF：方法与 URI 白名单
+
+`ServerOptions` 内置了一个轻量 WAF（`tech.smartboot.feat.core.server.waf`），在 HTTP 报文解析阶段就完成校验，不消耗业务线程：
+
+```java title="WafDemo.java"
+import tech.smartboot.feat.Feat;
+
+Feat.httpServer(options -> {
+    // 方法白名单：不在名单内的方法返回 405
+    options.getWafOptions()
+            .addAllowMethod("GET")
+            .addAllowMethod("POST");
+})
+.httpHandler(ctx -> ctx.Response.write("ok"))
+.listen(8080);
+```
+
+<Aside type="tip">
+调用任何一个 `addAllowMethod` / `addAllowUriPrefix` / `addAllowUriSuffix` 都会自动启用 WAF，不需要单独的开关。全部不配置时 WAF 不生效，行为与之前完全一致。
+</Aside>
+
+除了方法，还可以限制 URI 的形状。下面的配置表示：只放行以 `/api/` 开头、或以 `.json` 结尾的请求，其余一律返回 400：
+
+```java
+options.getWafOptions()
+        .addAllowUriPrefix("/api/")
+        .addAllowUriSuffix(".json");
+```
+
+WAF 触发时抛出 `WafException`（`HttpException` 的子类），由框架统一渲染错误页：方法不匹配返回 `405 Method Not Allowed`，URI 不匹配返回 `400 Bad Request`。
+
+两点使用建议：
+
+- 方法校验和 URI 校验是相互独立的，可以只用其中一个
+- URI 白名单适合"API 网关收口"型服务；面向浏览器的页面服务通常不该开 URI 白名单，否则静态资源会被误拦
+
+## BasicAuth：最小成本的接口认证
+
+`BasicAuthServerHandler` 是一个装饰器：包装真正的业务处理器，只有请求头里的 Basic 凭据匹配时才放行，否则返回 `401` 并携带 `WWW-Authenticate: Basic realm="feat"`：
+
+```java title="BasicAuthDemo.java"
+import tech.smartboot.feat.Feat;
+import tech.smartboot.feat.core.server.handler.BasicAuthServerHandler;
+import tech.smartboot.feat.router.Router;
+
+Router router = new Router();
+router.route("/admin/dashboard", ctx -> ctx.write("secret data"));
+
+Feat.httpServer()
+    .httpHandler(new BasicAuthServerHandler("admin", "s3cret", router))
+    .listen(8080);
+```
+
+验证一下：
+
+```shell
+curl -i http://localhost:8080/admin/dashboard
+# HTTP/1.1 401 Unauthorized
+# WWW-Authenticate: Basic realm="feat"
+
+curl -i -u admin:s3cret http://localhost:8080/admin/dashboard
+# HTTP/1.1 200 OK
+```
+
+<Aside type="caution">
+Basic Auth 的凭据只是 Base64 编码，**不是加密**。明文链路上任何中间节点都能读到用户名和密码，所以 BasicAuth 必须搭配 HTTPS 使用，只适合内网工具、管理后台这类低敏感场景。面向终端用户的产品请使用 Token 方案，BasicAuth 最多用来保护 Token 的颁发入口。
+</Aside>
+
+## 请求限制：给恶意流量设置上限
+
+`ServerOptions` 提供了三组与安全直接相关的上限，默认值对大多数服务够用，但**对外暴露的服务应该显式检查一遍**：
+
+| 选项 | 默认值 | 作用 |
+|---|---|---|
+| `setMaxRequestSize(long)` | `Integer.MAX_VALUE` | 请求报文大小上限，超限返回 `413`；文件上传场景调大，纯 API 服务建议压到实际需要的值 |
+| `headerLimiter(int)` | `100` | 请求头数量上限，超出部分被忽略，用于抵御头部注入类攻击 |
+| `setIdleTimeout(long)` | `60000` 毫秒 | 连接闲置超时，回收慢连接，防止连接被占满 |
+
+```java title="HardenedOptions.java"
+Feat.httpServer(options -> {
+    options.setMaxRequestSize(2 * 1024 * 1024);   // 2MB
+    options.headerLimiter(50);
+    options.setIdleTimeout(30_000);
+})
+```
+
+这三项在[ServerOptions 配置](/feat/server/serveroptions/)里有更完整的参数说明。
+
+## 路径穿越：静态资源已内置防护
+
+静态资源处理器会对请求路径做规范化检查，包含 `../` 或 `..\` 的请求直接返回 `403`，不会落到文件系统：
+
+```text title="内置防护"
+GET /static/../../etc/passwd  →  403 Forbidden
+```
+
+自研文件下载类接口时不能依赖这层保护——那是在静态资源处理器里做的，不在通用请求管道里。自己拼接文件路径时，务必先 `getCanonicalFile()` 再校验规范化结果是否仍在预期目录内。详见[静态资源服务](/feat/practices/static-files/)。
+
+## 错误响应与信息泄露
+
+Feat 对错误响应的处理是统一的：处理器抛出的 `HttpException`（含 `WafException`）会由框架渲染成带状态码的错误页，`desc` 部分显示在页面上。
+
+这对安全设计的含义是：
+
+- **想给客户端看的错误**，用 `HttpException(HttpStatus.XXX, "给客户端的描述")` 表达，状态码和文案都可控
+- **不想给客户端看的错误**，抛普通 `RuntimeException` 即可，框架返回 500；但注意默认错误页会带上异常的 `toString()`，生产环境自定义兜底逻辑时避免把异常细节拼进响应
+
+另外 `options.debug(true)` 会把请求和响应的原始字节流打印到控制台（红蓝两色），**只能用于本地排查，生产环境必须关闭**——它输出的不是日志，是完整的报文内容。
+
+## Session 安全要点
+
+使用 [Session 与请求状态](/feat/cloud/session/)时记住三条底线：
+
+1. Session Cookie 承载的是会话凭据，全站 HTTPS 是前提
+2. Session 里只放与当前 HTTP 会话相关的临时状态，用户资料和权限放数据库/缓存，降低泄露后的爆炸半径
+3. 部署多实例时用 Redis 存储，单机内存 Session 重启即失效（详见[故障排查](/feat/cloud/troubleshooting/)）
+
+## 上线前安全检查清单
+
+- [ ] HTTPS 已启用（SslPlugin 配置见 [HTTPS 配置](/feat/server/https/)），BasicAuth 未在明文链路上使用
+- [ ] WAF 方法白名单已配置，或确认服务需要接受所有方法
+- [ ] `maxRequestSize` 已压到业务实际需要的值
+- [ ] `debug(true)` 已关闭
+- [ ] 错误响应中不包含堆栈与内部实现细节
+- [ ] 静态资源目录不含敏感文件，且没有把整个磁盘目录配成 `baseDir`
+
+## 下一步
+
+- 静态资源的安全配置细节：[静态资源服务](/feat/practices/static-files/)
+- 生产环境的日志与排查手段：[日志与可观测性](/feat/practices/logging/)

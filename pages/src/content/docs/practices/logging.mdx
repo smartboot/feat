@@ -1,0 +1,98 @@
+---
+title: 日志与可观测性
+description: 掌握 Feat 的日志门面、feat.log.level 配置和调试手段，让服务在生产环境可观察、可排查
+sidebar:
+  order: 2
+---
+
+import { Aside, TabItem, Tabs } from '@astrojs/starlight/components';
+
+Feat 框架自身不带重量级日志依赖，内置了一套轻量日志门面（`tech.smartboot.feat.core.common.logging`），默认基于 JDK 内置的 `java.util.logging` 输出。理解它的工作方式，才能在生产环境里正确地调整日志级别、接入自己的日志体系。
+
+## 日志门面的工作方式
+
+框架内部所有日志都通过 `LoggerFactory.getLogger(...)` 获取 `Logger` 实例，接口与 SLF4J 风格一致，支持 `{}` 占位符：
+
+```java
+import tech.smartboot.feat.core.common.logging.Logger;
+import tech.smartboot.feat.core.common.logging.LoggerFactory;
+
+Logger LOGGER = LoggerFactory.getLogger(MyService.class);
+
+LOGGER.info("user {} login from {}", userId, ip);
+LOGGER.error("process failed", throwable);
+```
+
+底层实现是 `RunLogger`，要点有四个：
+
+1. **级别映射到 JUL**：`trace → FINE`、`debug → CONFIG`、`info → INFO`、`warn → WARNING`、`error → SEVERE`
+2. **默认级别 INFO**：未配置时自动设为 `INFO`
+3. **级别可动态调整**：`RunLogger` 每 5 秒检查一次系统属性，改级别不需要重启进程
+4. **输出到控制台**：默认使用 ConsoleHandler + 自定义 `LogFormatter`，UTF-8 编码
+
+## 配置日志级别
+
+通过系统属性 `feat.log.level` 控制，启动时传入：
+
+```bash title="设置全局日志级别"
+java -Dfeat.log.level=INFO -jar app.jar
+```
+
+<Aside type="caution">
+`feat.log.level` 的合法取值是 JUL 的级别名：`SEVERE`、`WARNING`、`INFO`、`CONFIG`、`FINE`、`FINER`、`FINEST`（也接受整数值）。注意 **`DEBUG`、`TRACE` 不是合法值**——想打开 debug 日志要写 `CONFIG`，想打开 trace 日志要写 `FINE`。
+</Aside>
+
+级别判断对性能友好：`isInfoEnabled()` 不通过时，占位符格式化不会发生。所以业务代码里可以放心打 debug 日志。
+
+## 按模块单独设置级别
+
+排障时通常只想打开某个类的日志。`feat.log.level.<loggerName>` 可以覆盖全局级别，loggerName 就是类全名：
+
+```bash title="单独打开某个类的 debug 日志"
+java -Dfeat.log.level=INFO \
+     -Dfeat.log.level.tech.smartboot.feat.core.server.impl.HttpMessageProcessor=CONFIG \
+     -jar app.jar
+```
+
+因为是每 5 秒轮询一次系统属性，运行期通过 JMX、Arthas 之类工具改这个属性，级别也会随之生效，**无需重启**。
+
+## debug(true) 不是日志
+
+`ServerOptions.debug(true)` 很容易被误解成"打开 debug 日志"。它做的是另一件事：给服务器挂上 `StreamMonitorPlugin`，把**经过连接的原始字节流**（请求红色、响应蓝色）直接打印到控制台。
+
+```java title="报文级调试"
+Feat.httpServer(options -> options.debug(true))
+    .httpHandler(ctx -> ctx.write("hello"))
+    .listen(8080);
+```
+
+| 手段 | 看到什么 | 适用场景 |
+|---|---|---|
+| `feat.log.level=CONFIG` | 框架的结构化日志 | 排查路由注册、加载失败等框架行为 |
+| `debug(true)` | 原始 HTTP 报文字节流 | 排查协议问题：Header 异常、编码问题、流式边界 |
+
+<Aside type="caution">
+`debug(true)` 输出的是完整报文内容，包含 Header 里的鉴权信息和 Cookie，**严禁在生产环境开启**。它也不走日志级别控制，只能通过代码配置关闭。
+</Aside>
+
+## 生产环境接入自有日志体系
+
+内置实现输出到控制台，没有文件滚动、没有对接 ELK。生产环境的推荐做法：
+
+1. **保持 Feat 日志输出到控制台**，用 Docker / systemd / 重定向统一收集 stdout——容器化部署下这是最省事的路
+2. 如果必须接入 Logback/Log4j2，注意 `LoggerFactory` 目前没有提供实现替换的公开接口（内部是固定的 `RunLogger` + 私有缓存）。框架日志量不大，通常不必强行对接；业务代码请直接使用 SLF4J 等门面，把 Feat 内置日志当"框架行为输出"看待
+3. 有强需求时，可以在仓库提 issue，或自行 fork 改造——`Logger` 接口很小，只有级别判断加各级别输出方法
+
+## 排查问题的观察点
+
+出问题时按这个顺序收集信息：
+
+1. **启动日志**：路由是否注册成功（`Feat Router: |-> /hello ==> ...`）、启动耗时
+2. **错误页内容**：框架错误页会带状态码和描述，`WafException` 触发说明请求在接入层就被拦了
+3. **日志级别**：临时把 `feat.log.level` 调到 `CONFIG` 观察 5 秒轮询是否生效
+4. **报文层**：本地复现时开 `debug(true)` 对比客户端实际发出的字节
+
+## 下一步
+
+- 用故障现象反查原因：[故障排查](/feat/cloud/troubleshooting/)
+- 交付形态与容器化：[部署 Feat Core 应用](/feat/practices/deploy-core/)

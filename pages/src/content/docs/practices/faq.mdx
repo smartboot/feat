@@ -1,0 +1,119 @@
+---
+title: FAQ
+description: 按场景汇总 Feat 使用中最常见的问题与答案，每条附权威章节链接
+sidebar:
+
+  order: 7
+---
+
+import { Aside, TabItem, Tabs } from '@astrojs/starlight/components';
+
+这一页按"你想干什么"组织，每条只给结论和入口，细节在对应章节。没找到答案时，先看[故障排查](/feat/cloud/troubleshooting/)。
+
+## 快速上手
+
+### Feat 和 Spring Boot 是什么关系？
+
+没有关系，也不是包装层。Feat 从底层网络能力自建（基于 smart-socket 的 AIO），不走 Servlet 规范。Feat Cloud 提供类似 Spring Boot 的注解式开发体验，但装配发生在编译期而不是运行期反射。选型参考见 [Feat 简介](/feat/guides/)。
+
+### 该从 Core 还是 Cloud 学起？
+
+习惯注解式开发（Controller/Bean）从 [Feat Cloud](/feat/cloud/) 开始；想理解底层模型或做极致性能优化从 [服务端](/feat/server/) 开始。两边共享同一套路由与会话模型。
+
+### 支持哪些 JDK 和服务器环境？
+
+JDK 8+，主线以 Java 8 编译目标构建，8/11/17/21 均可运行。完整清单见[系统要求](/feat/guides/system-requirements/)。
+
+## 请求与路由
+
+### Controller 写了，访问却是 404？
+
+按顺序查五件事，完整排查清单见[故障排查](/feat/cloud/troubleshooting/)：
+
+1. 类上有 `@Controller`、方法上有 `@RequestMapping`
+2. 引入了 `feat-cloud-starter`（编译期生成依赖）
+3. 包在 `setPackages(...)` 扫描范围内
+4. 改代码后重新执行过 Maven 编译（IDE 直接 Run 不会触发 APT）
+5. 启动日志里有 `Feat Router:` 输出
+
+### 路径参数怎么写？
+
+冒号形式：`/:userId`，通过 `@PathParam("userId")` 注入。**花括号形式 `{userId}` 不支持**——曾经支持过但已移除，不要从 Spring 的习惯直接照搬。
+
+### 怎么接收 JSON 请求体？
+
+Controller 方法直接声明 POJO 参数，不需要注解，框架按字段名绑定。调用方必须带 `Content-Type: application/json`。常见坑（setter 缺失、基本类型拆箱 NPE）见[Controller 与请求处理](/feat/cloud/controller/)。
+
+### 怎么统一返回结构？
+
+用 `RestResult<T>` 封装 success/code/message/data 四要素，见[返回值与错误响应](/feat/cloud/response/)。
+
+### 想在方法前后做鉴权/日志怎么办？
+
+用方法拦截器 `@Interceptor` + `@AroundInvoke`，调用 `proceed()` 继续链路、不调用即短路，见[方法拦截器](/feat/cloud/interceptor/)。
+
+## 配置与部署
+
+### 改了 feat.yml 不生效？
+
+`feat.yml` 是**编译期输入**，只重启不重新构建不会重新生成代码。执行 `mvn clean package` 后再启动，原理见[编译期工作模型](/feat/cloud/runtime/)。
+
+### 配置里的 ${} 占位符怎么用？
+
+`@Value("${key}")` 从配置解析，同时兼容 JVM 参数 `-Dkey` 和环境变量 `KEY`（点号转下划线、全大写），优先级：系统属性 > 环境变量。支持 `${key:默认值}`。完整规则见[启动配置与环境配置](/feat/cloud/options/)。
+
+注意：`@Value("key")` 不带 `${}` 注入的是字面量字符串，见 [Bean 与依赖注入](/feat/cloud/bean/)。
+
+### Fat Jar 启动后路由全部丢失？
+
+服务发现文件 `META-INF/services/...CloudService` 被 shade 覆盖了，需要 `AppendingTransformer`，配置见[部署与交付](/feat/cloud/deployment/)。
+
+### 怎么选择 dev/prod 环境？
+
+`java -Dfeat.profiles.active=prod -jar app.jar`，环境文件命名 `feat-prod.yml`，合并规则与排查见[启动配置与环境配置](/feat/cloud/options/)。
+
+## 网络与协议
+
+### 怎么开 HTTPS？
+
+用 `SslPlugin`，证书加载与 SSLEngine 高级用法见 [HTTPS 配置](/feat/server/https/)。同一个服务还想跑 WebSocket/SSE/HTTP/2 见[协议升级](/feat/server/upgrade/)。
+
+### 大文件上传报 413 或内存暴涨？
+
+默认 `maxRequestSize` 很大但内存缓冲策略保守。文件上传用 Multipart 处理并调好上限，见[ServerOptions 配置](/feat/server/serveroptions/)与[Controller 与请求处理](/feat/cloud/controller/)。
+
+### 接口耗时高、并发上不去？
+
+先分清负载类型：外部调用和数据库访问必须走[异步处理](/feat/server/async/)，调线程数解决不了 IO 等待。完整调优思路见[性能调优](/feat/practices/performance/)。
+
+### 服务器在 Nginx 后面拿不到真实 IP？
+
+启用代理协议支持：`options.proxyProtocolSupport()`（PROXY protocol）。前提是前置代理配置了对应协议转发，见[ServerOptions 配置](/feat/server/serveroptions/)。
+
+## AI 能力
+
+### 接模型前需要准备什么？
+
+一个可用的模型服务（OpenAI 兼容接口或 DashScope 等）及其 API Key，其余见 [Feat AI 快速开始](/feat/ai/)。
+
+### 流式输出怎么实现？
+
+`chatStream(...)` + `ChatStreamListener` 回调逐段接收，见[对话模型](/feat/ai/chat/)。注意 v2.5.0 起返回值变为 `CompletableFuture<ChatResponse>`。
+
+### 工具调用（Function Calling）怎么做？
+
+用 Agent 机制组织模型与工具，`@Tool` 注册业务能力，见 [Agent 工具](/feat/ai/agent/)。把业务系统暴露为 MCP 服务见 [MCP 能力暴露](/feat/cloud/mcp/)。
+
+## 安全
+
+### 有内置的请求过滤吗？
+
+有，WAF 支持方法白名单/黑名单和 URI 前后缀白名单，解析阶段即拦截，见[安全实践](/feat/practices/security/)。
+
+### BasicAuth 怎么加？
+
+`new BasicAuthServerHandler(user, pass, realHandler)` 包装业务处理器。必须配 HTTPS 使用，见[安全实践](/feat/practices/security/)。
+
+### 静态资源会被路径穿越攻击吗？
+
+内置处理器已拦截 `../`/`..\`。自研文件下载接口不受这层保护，需自行校验，见[静态资源服务](/feat/practices/static-files/)。

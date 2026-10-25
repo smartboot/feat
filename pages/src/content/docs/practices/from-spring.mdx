@@ -1,0 +1,114 @@
+---
+title: 从 Spring Boot 迁移
+description: 给 Spring 背景开发者的对照地图：注解、配置、拦截器、返回值逐项对应，以及不能照搬的地方
+sidebar:
+  order: 6
+---
+
+import { Aside, TabItem, Tabs } from '@astrojs/starlight/components';
+
+Feat 的目标用户很多来自 Spring Boot。好消息是 Feat Cloud 的开发模型刻意保持了熟悉的形状：Controller、Bean、依赖注入、配置文件都在。这一页给你一张逐项对照的地图，并标出**不能照搬**的差异点——这些才是迁移时的真实成本所在。
+
+## 注解对照表
+
+| Spring Boot | Feat Cloud | 说明 |
+|---|---|---|
+| `@RestController` | `@Controller` | Feat 不区分两类，返回值按类型自动处理（POJO 转 JSON） |
+| `@RequestMapping("/path")` | `@RequestMapping("/path")` | 方法级路径写法一致；类级基准路径直接写在 `@Controller("users")` 的值里 |
+| `@GetMapping` / `@PostMapping` 等 | `@RequestMapping(value = "/path", method = RequestMethod.GET)` | 没有 HTTP 方法专用的简化注解，方法限定写在 `method` 属性里 |
+| `@PathVariable` | `@PathParam` | 名字变了，用法一致；路径参数只支持 `:param` 形式 |
+| `@RequestParam` | `@Param` | 查询参数绑定 |
+| `@Autowired` | `@Autowired` | 字段注入，用法一致 |
+| `@Component` / `@Service` | `@Bean` | 一个注解覆盖组件分层；见 [Bean 与依赖注入](/feat/cloud/bean/) |
+| `@Value("${key}")` | `@Value("${key}")` | 写法一致，支持 `${key:默认值}`；**不带 `${}` 是字面量** |
+| `@PostConstruct` / `@PreDestroy` | `@PostConstruct` / `@PreDestroy` | 用法一致 |
+| `@CrossOrigin` 等 CORS | 无内置 | 见[安全实践](/feat/practices/security/)的自定义方案 |
+
+一个最小对照示例：
+
+<Tabs>
+<TabItem value="spring" label="Spring Boot">
+
+```java
+@RestController
+@RequestMapping("/users")
+public class UserController {
+
+    @Autowired
+    private UserService userService;
+
+    @GetMapping("/{id}")
+    public ResponseEntity<User> get(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.find(id));
+    }
+}
+```
+
+</TabItem>
+<TabItem value="feat" label="Feat Cloud">
+
+```java
+@Controller("users")
+public class UserController {
+
+    @Autowired
+    private UserService userService;
+
+    @RequestMapping("/:id")
+    public RestResult<User> get(@PathParam("id") Long id) {
+        return RestResult.ok(userService.find(id));
+    }
+}
+```
+
+</TabItem>
+</Tabs>
+
+## 配置体系对照
+
+| Spring Boot | Feat Cloud |
+|---|---|
+| `application.yml` | `feat.yml` |
+| `application-prod.yml` + `spring.profiles.active` | `feat-prod.yml` + `feat.profiles.active` |
+| `@ConfigurationProperties` | 配置对象 Bean + `@Value("${...}")` 逐字段绑定（参考 [XXL-Job 集成](/feat/cloud/xxljob/)的 `XxlJobConfig` 写法） |
+| 环境变量 `MY_KEY` | `${my.key}` 自动兼容环境变量 `MY_KEY`，规则一致 |
+
+核心差异：**`feat.yml` 是编译期输入**。修改配置文件后必须重新构建（`mvn clean package`），而不是像 Spring 那样重启即可。这是 Feat 把装配提前到编译期的代价，换来的是启动时零扫描、零反射。机制见[编译期工作模型](/feat/cloud/runtime/)。
+
+## 横切能力对照
+
+| Spring Boot | Feat Cloud | 备注 |
+|---|---|---|
+| AOP / `@Aspect` | `@Interceptor` + `@AroundInvoke` | 方法级拦截，调用 `proceed()` 继续、不调用即短路；无切点表达式，按注解标注目标 |
+| `@ControllerAdvice` 统一异常 | 抛 `HttpException` 或返回 `RestResult.fail(...)` | 框架级错误统一渲染；业务级错误建议在方法内捕获后转 `RestResult` |
+| Spring Session / Redis | 内置 Redis Session（`store-type: redis`） | 见 [Session 与请求状态](/feat/cloud/session/) |
+| `DispatcherServlet` | 无 Servlet | 请求直接进入 AIO 管道，没有过滤器链概念 |
+| BeanFactory 后置处理 | 无 | 装配在编译期生成，运行期无容器扩展点 |
+
+## 生态缺位的部分
+
+Spring 的"全家桶"在 Feat 里没有一一对应物，按现状规划：
+
+- **ORM**：无内置 JPA，集成 MyBatis 有官方文档（[生态集成：MyBatis](/feat/cloud/mybatis/)）
+- **配置中心/注册中心**：Nacos 官方集成（[生态集成：Nacos](/feat/cloud/nacos/)）
+- **任务调度**：XXL-Job 官方集成（[生态集成：XXL-Job](/feat/cloud/xxljob/)）
+- **安全框架**：无 Spring Security 对应物，内置 BasicAuth + WAF 覆盖基础场景（[安全实践](/feat/practices/security/)），复杂鉴权需要自建
+- **测试切片**：无 `@SpringBootTest` 等价物，集成测试思路见[测试实践](/feat/practices/testing/)
+
+## 迁移步骤建议
+
+1. **先用 Feat Cloud 写一个新接口**，跑通[快速开始](/feat/cloud/)的最小闭环，建立直观感受
+2. **按模块迁移而不是整体迁移**：把一个内聚的业务模块（Controller + Service）搬过来，验证注解对照表中的每一项
+3. **配置逐项翻译**：`application.yml` → `feat.yml`，注意每改一次就要重新构建
+4. **拦截器重写**：Spring AOP 的切点表达式需要换成显式注解标注，逻辑本身平移
+5. **性能回归**：迁移完成的模块用[性能调优](/feat/practices/performance/)的流程确认收益
+
+## 什么时候不建议迁移
+
+坦率地说，以下情况 Spring Boot 仍是更好的选择：
+
+- 深度依赖 Spring Security 的鉴权体系
+- 项目大量使用 Spring 生态的 starter（消息队列、监控、Sleuth 链路追踪等）
+- 团队没有意愿维护"非全家桶"的生态组合
+
+Feat 的甜点区是：接口服务、高性能网关类应用、资源敏感的容器化部署、需要把 AI 能力直接嵌入 Java 后端的场景。

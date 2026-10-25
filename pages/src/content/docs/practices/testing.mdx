@@ -1,0 +1,122 @@
+---
+title: 测试实践
+description: 不依赖 Servlet 与容器，用真实端口加 Feat httpClient 给服务写可靠的集成测试
+sidebar:
+
+  order: 5
+---
+
+import { Aside, TabItem, Tabs } from '@astrojs/starlight/components';
+
+Feat 不走 Servlet 规范，所以 MockMvc、`@SpringBootTest` 这类基于 Servlet 体系的测试设施都不适用。但这不构成测试劣势——Feat 应用启动快（毫秒级）、无外部容器，**直接起真实服务做集成测试**反而是最可靠的路径。
+
+## 测试策略分层
+
+| 层 | 测什么 | 手段 |
+|---|---|---|
+| 业务逻辑 | Service/工具类的纯逻辑 | JUnit 普通单元测试，与 Web 层解耦 |
+| 接口行为 | 路由、参数绑定、状态码、响应体 | 起真实服务 + Feat httpClient 请求断言 |
+| 编译期装配 | Bean 装配、路由注册是否生成 | 集成测试自然覆盖（启动失败即红） |
+
+Feat Cloud 的装配发生在编译期，"装配正确性"本身就该被测试覆盖——这也是为什么推荐集成测试优先：`main` 启动失败、路由缺失、Bean 注入异常，都会在测试阶段直接暴露。
+
+## 集成测试模板
+
+用 JUnit 5 写一个可复用的基座：`@BeforeAll` 起服务，测试用例里用 Feat 自带的 httpClient 发请求断言。
+
+```java title="ApiTestBase.java"
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import tech.smartboot.feat.Feat;
+import tech.smartboot.feat.core.server.HttpServer;
+
+public class ApiTestBase {
+    static final int PORT = 18080;
+    static HttpServer server;
+
+    @BeforeAll
+    static void setUp() {
+        server = Feat.httpServer(options -> {
+            options.port(PORT);
+        }).httpHandler(ctx -> ctx.write("ok"));
+        server.listen(PORT);
+    }
+
+    @AfterAll
+    static void tearDown() {
+        if (server != null) {
+            server.shutdown();
+        }
+    }
+}
+```
+
+```java title="HelloApiTest.java"
+import org.junit.jupiter.api.Test;
+import tech.smartboot.feat.Feat;
+import tech.smartboot.feat.core.client.HttpResponse;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+public class HelloApiTest extends ApiTestBase {
+
+    @Test
+    public void shouldReturnOk() {
+        // submit() 返回 CompletableFuture<HttpResponse>，测试里用 join() 同步等待
+        HttpResponse response = Feat.httpClient("http://localhost:" + PORT)
+                .get("/hello")
+                .submit()
+                .join();
+
+        assertEquals(200, response.statusCode());
+        assertEquals("ok", response.body());
+    }
+}
+```
+
+写法要点：
+
+- **端口避开 8080**，防止与本机其他服务冲突；用固定端口即可，Feat 启动是毫秒级，不需要端口复用技巧
+- `submit()` 返回 `CompletableFuture<HttpResponse>`，测试里 `join()` 同步等待后在主线程断言，避免异步回调里做断言的时序坑
+- 每个 `@BeforeAll` 起一个服务、`@AfterAll` 里 `shutdown()`——`shutdown()` 会先执行 `shutdownHook` 再关连接，测试间互不干扰
+
+## Feat Cloud 应用的测试
+
+Cloud 应用入口是 `FeatCloud.cloudServer(...)`，测试基座把启动逻辑抽成方法：
+
+```java title="CloudTestBase.java 片段"
+@BeforeAll
+static void setUp() {
+    Thread serverThread = new Thread(() ->
+        FeatCloud.cloudServer(options -> {
+            options.port(18080);
+            options.setPackages("com.example");
+        }).listen());
+    serverThread.setName("feat-test-server");
+    serverThread.setDaemon(true);   // 守护线程：测试异常退出不悬挂 CI
+    serverThread.start();
+
+    // 轮询等待端口就绪，再开始跑用例
+    awaitPort(18080, 5000);
+}
+```
+
+两个 Cloud 特有的注意点：
+
+- `feat.yml` 是编译期输入，测试环境想用不同配置时，写独立的 `feat-test.yml` 并在测试启动参数里指定 `-Dfeat.profiles.active=test`（或用 Maven 的 surefire 系统属性）
+- 装配相关的测试失败通常表现为**启动抛异常**（Bean 冲突、`@Value` 无法解析），而不是某个用例失败——看到这类错误先查[故障排查](/feat/cloud/troubleshooting/)
+
+## 什么值得测
+
+结合 Feat 的机制，集成测试优先覆盖这些点：
+
+1. **路由与状态码**：每个接口的 Happy path 和主要错误分支（404、400、401）
+2. **参数绑定边界**：缺失参数、类型不匹配、`@Param` 缺失时基本类型的拆箱问题
+3. **配置装配**：`@Value` 占位符能否在测试 Profile 下解析
+4. **拦截器行为**：鉴权拦截器的放行/短路两个分支
+5. **异步接口**：确认 `future.complete` 一定被调用，否则响应会悬挂到超时
+
+## 下一步
+
+- 异步接口的陷阱与正确写法：[异步处理](/feat/server/async/)
+- CI 里的容器化运行：[部署 Feat Core 应用](/feat/practices/deploy-core/)

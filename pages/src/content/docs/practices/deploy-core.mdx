@@ -1,0 +1,131 @@
+---
+title: 部署 Feat Core 应用
+description: 把 Feat Core 应用从本地运行推进到 Fat Jar、Docker 容器和优雅关闭的生产形态
+sidebar:
+  order: 3
+---
+
+import { Aside, TabItem, Tabs } from '@astrojs/starlight/components';
+
+[Feat Cloud 的部署与交付](/feat/cloud/deployment/)覆盖了注解式应用的完整交付链路。这一页聚焦 **Feat Core**：不依赖编译期生成的纯代码式应用，怎么从 `main` 方法走到生产环境。
+
+## 打包方式
+
+<Tabs>
+<TabItem value="fatjar" label="Fat Jar">
+
+用 `maven-shade-plugin` 打可执行 jar。Core 应用没有 `CloudService` 服务发现文件需要合并，配置比 Cloud 应用更简单：
+
+```xml title="pom.xml 关键配置"
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-shade-plugin</artifactId>
+    <configuration>
+        <transformers>
+            <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                <mainClass>com.example.Application</mainClass>
+            </transformer>
+        </transformers>
+    </configuration>
+    <executions>
+        <execution>
+            <phase>package</phase>
+            <goals><goal>shade</goal></goals>
+        </execution>
+    </executions>
+</plugin>
+```
+
+```bash
+mvn clean package
+java -jar target/app.jar
+```
+
+<Aside type="tip">
+如果应用同时引入了依赖 `META-INF/services` 的库（如 Nacos 客户端），仍需按[部署与交付](/feat/cloud/deployment/)的方式为对应服务发现文件加 `AppendingTransformer`。纯 Core 应用没有这条负担。
+</Aside>
+
+</TabItem>
+<TabItem value="thinjar" label="普通 jar + classpath">
+
+开发期直接在 IDE 运行 `main` 方法即可。也可以用 `mvn dependency:copy-dependencies` 把依赖拷出来，用 `java -cp` 启动，适合不想打 Fat Jar 的场景：
+
+```bash
+mvn dependency:copy-dependencies -DoutputDirectory=lib
+java -cp "target/classes:lib/*" com.example.Application
+```
+
+</TabItem>
+</Tabs>
+
+## Docker 交付
+
+Feat 应用是普通 Java 进程，容器化没有任何特殊要求：
+
+```dockerfile title="Dockerfile"
+FROM eclipse-temurin:8-jre-alpine
+
+WORKDIR /app
+COPY target/app.jar app.jar
+
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "app.jar"]
+```
+
+几个与 Feat 相关的容器实践：
+
+- **监听地址保持默认** `0.0.0.0`，改成 `127.0.0.1` 会容器网络不通
+- **端口参数化**：端口默认 8080，代码里用 `System.getenv("SERVER_PORT")` 之类的环境变量读取后传给 `listen(port)`，即可同一镜像多环境复用
+- **日志走 stdout**：内置日志输出到控制台，容器运行时自动收集，见[日志与可观测性](/feat/practices/logging/)
+- **不需要 JRE 之外的基础镜像层**：Feat 只依赖 JDK 标准 API 和少量第三方库（如 fastjson2）
+
+基镜像选择 JRE 8 还是更高版本都可以，Feat 主线以 Java 8 编译目标运行，见[系统要求](/feat/guides/system-requirements/)。
+
+## 优雅关闭
+
+`HttpServer.shutdown()` 的执行顺序是固定的，理解它才能写出正确的关闭逻辑：
+
+1. 先执行 `shutdownHook` 里注册的清理动作
+2. 然后关闭监听端口、断开连接
+3. 最后释放缓冲区池
+
+```java title="GracefulShutdownDemo.java"
+import tech.smartboot.feat.Feat;
+import tech.smartboot.feat.core.server.HttpServer;
+
+public class GracefulShutdownDemo {
+    public static void main(String[] args) {
+        HttpServer server = Feat.httpServer(options -> {
+            // 进程收到 SIGTERM（如 docker stop）后，JVM shutdown 钩子触发这里
+            options.shutdownHook(() -> {
+                System.out.println("flush pending tasks, release resources...");
+                // 在这里完成：停止接收新任务、刷写缓冲、关闭连接池等
+            });
+        }).httpHandler(ctx -> ctx.write("ok"));
+
+        server.listen(8080);
+
+        Runtime.getRuntime().addShutdownHook(new Thread(server::shutdown));
+    }
+}
+```
+
+使用要点：
+
+- **业务清理放 `shutdownHook`**，不要放 JVM 钩子里重复写；`shutdownHook` 在连接关闭前执行，还能访问正在处理的请求上下文
+- 容器场景下记得把 JVM 钩子挂上 `server::shutdown`，`docker stop` 默认给 10 秒宽限期
+- `shutdown()` 可重入，多次调用安全（内部会防止重复关闭）
+
+## 生产检查清单
+
+- [ ] 监听地址 `0.0.0.0`，端口未与其他服务冲突
+- [ ] `debug(true)` 已关闭，`feat.log.level` 按环境设置
+- [ ] `maxRequestSize`、`headerLimiter`、`setIdleTimeout` 按业务压过默认值（见[安全实践](/feat/practices/security/)）
+- [ ] 优雅关闭链路验证过：`docker stop` 后日志里能看到 hook 执行
+- [ ] 健康检查接口就位（最简实现：一个返回 200 的路由）
+- [ ] 配置通过环境变量或启动参数注入，镜像内不含环境敏感信息
+
+## 下一步
+
+- 容器内的日志收集与级别管理：[日志与可观测性](/feat/practices/logging/)
+- 注解式应用的 Fat Jar / Native Image 交付：[部署与交付](/feat/cloud/deployment/)

@@ -1,0 +1,123 @@
+---
+title: 静态资源服务
+description: 用内置的静态资源处理器提供文件服务：文件目录与 classpath 两种模式、目录列表、缓存与安全
+sidebar:
+  order: 1
+---
+
+import { Aside, TabItem, Tabs } from '@astrojs/starlight/components';
+
+Feat 内置了一个静态资源处理器 `HttpStaticResourceHandler`，对标 nginx 的静态文件能力：支持文件目录和 classpath 两种资源来源、`If-Modified-Since` 缓存协商、目录列表、内置路径穿越防护。Feat Cloud 的静态资源能力也是基于它实现的。
+
+## 两种资源来源
+
+创建处理器时通过 `baseDir` 指定资源位置，支持两种前缀：
+
+<Tabs>
+<TabItem value="file" label="文件目录">
+
+```java title="FileServerDemo.java"
+import tech.smartboot.feat.Feat;
+import tech.smartboot.feat.core.server.handler.HttpStaticResourceHandler;
+
+Feat.httpServer()
+    .httpHandler(new HttpStaticResourceHandler(opt -> opt.baseDir("./static")))
+    .listen(8080);
+```
+
+从磁盘目录读取文件。启动时会校验目录存在性，不存在直接启动失败，避免带病上线。
+
+</TabItem>
+<TabItem value="classpath" label="classpath">
+
+```java title="ClassPathServerDemo.java"
+import tech.smartboot.feat.Feat;
+import tech.smartboot.feat.core.server.handler.HttpStaticResourceHandler;
+
+Feat.httpServer()
+    .httpHandler(new HttpStaticResourceHandler(opt -> opt.baseDir("classpath:static")))
+    .listen(8080);
+```
+
+从 classpath 读取资源，`classpath:` 后面是资源根路径。适合把前端构建产物打进 Fat Jar 的单文件交付场景。
+
+</TabItem>
+</Tabs>
+
+两种模式下的请求规则一致：
+
+- `GET /` → 返回根目录下的 `index.html`
+- `GET /docs/` → 返回 `docs/index.html`
+- `GET /about`（无扩展名）→ 依次尝试 `/about`、`/about/index.html`、`/about.html`，适配"目录和同名 html 并存"的站点结构
+
+## 目录列表
+
+默认情况下访问目录返回 `index.html`（不存在则 404）。开发期想浏览目录内容，可以打开 `autoIndex`：
+
+```java
+new HttpStaticResourceHandler(opt -> opt
+        .baseDir("./static")
+        .autoIndex(true))
+```
+
+打开后会渲染一个简单的目录列表页。**生产环境保持默认关闭**——目录列表会把服务器上的文件名全部暴露给访问者。
+
+## 缓存协商
+
+处理器实现了基于 `Last-Modified` / `If-Modified-Since` 的缓存协商：
+
+- 首次响应携带 `Last-Modified` 头
+- 浏览器再次请求时带上 `If-Modified-Since`，资源未变化则返回 `304 Not Modified`，不传文件体
+
+注意 classpath 模式下资源来自 jar 包，`Last-Modified` 取的是**服务启动时间**——jar 内容在运行期不会变，这是合理的简化。文件目录模式取的是文件真实的修改时间。
+
+## 内置安全防护
+
+路径穿越攻击在处理器内被直接拦截：
+
+```text title="内置防护"
+GET /../../etc/passwd   →  403 Forbidden
+```
+
+`../` 与 `..\` 两种写法都会被拒绝，请求不会触达文件系统。这是处理器自带的兜底，但不要因此放松对自己代码的要求：自研的文件下载接口不走这条管道，需要自己校验（见[安全实践](/feat/practices/security/)）。
+
+其他两个细节也和资源安全有关：
+
+- `favicon.ico` 缺失时会尝试从 classpath 提供内置图标，避免大量 404 噪音
+- 404 时优先渲染内置的 `feat-404.html` 错误页
+
+## Feat Cloud 中的静态资源
+
+Feat Cloud 默认就启用了静态资源处理，指向 `classpath:static`。你可以在 `CloudOptions` 里改：
+
+```java title="CloudOptions 定制静态资源"
+import tech.smartboot.feat.cloud.FeatCloud;
+
+FeatCloud.cloudServer(options -> {
+    // 改成磁盘目录
+    options.setStaticLocations("./static");
+    // 或换成 jar 内其他资源目录
+    // options.setStaticLocations("classpath:webapp");
+}).listen();
+```
+
+<Aside type="caution">
+`setStaticLocations(...)` 不只是记住一个路径——它会**创建一个新的 `Router`** 来挂载静态资源处理器。如果你的应用还依赖自定义的底层路由，请注意最终生效的是哪一个 Router，必要时在 `setStaticLocations` 之后再设置路由。
+</Aside>
+
+静态资源配置只能通过 `CloudOptions` 的 Java API 完成（不走 `feat.yml`），编译期即确定。
+
+## 什么时候不适用
+
+静态资源处理器覆盖的是"文件映射"场景。以下需求需要自己扩展：
+
+- 带 ETag、`Cache-Control: max-age` 等更精细的缓存策略
+- 断点续传（Range 请求）
+- 上传（上传请用 Multipart 处理，见 [HTTP 请求处理](/feat/cloud/controller/)）
+
+这些场景可以在处理器外再包一层 `HttpHandler` 自行实现。
+
+## 下一步
+
+- 给静态资源加访问控制：[安全实践](/feat/practices/security/)
+- 把静态资源打进 Fat Jar 交付：[部署 Feat Core 应用](/feat/practices/deploy-core/)
