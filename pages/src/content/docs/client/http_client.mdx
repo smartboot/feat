@@ -41,6 +41,7 @@ HttpClient client = Feat.httpClient("https://api.example.com", options -> {
     options.debug(true)                    // 开启调试日志
            .connectTimeout(5000)           // 连接超时（毫秒）
            .idleTimeout(30000)             // 空闲超时（毫秒）
+           .maxConnections(64)             // 连接池上限，高并发调用方按需调整
            .readBufferSize(8192)           // 读缓冲区大小
            .setWriteBufferSize(8192);      // 写缓冲区大小
 });
@@ -89,9 +90,12 @@ client.get("/users")
 POST 请求支持多种数据格式：
 
 <Tabs>
-<TabItem label="JSON">
+<TabItem value="json" label="JSON">
 
 ```java
+import java.util.HashMap;
+import java.util.Map;
+
 Map<String, Object> payload = new HashMap<>();
 payload.put("name", "feat");
 
@@ -331,13 +335,21 @@ client.get("/large-file.zip")
 使用流式 API 处理大文件，避免内存溢出：
 
 ```java
+import java.io.FileOutputStream;
+
 FileOutputStream fos = new FileOutputStream("download.zip");
 
 client.get("/large-file.zip")
         .onResponseBody((response, bytes, end) -> {
-            fos.write(bytes);
+            try {
+                fos.write(bytes);
+            } catch (Exception e) {
+                // 处理写入异常
+            }
             if (end) {
-                fos.close();
+                try {
+                    fos.close();
+                } catch (Exception ignore) {}
             }
         })
         .submit();

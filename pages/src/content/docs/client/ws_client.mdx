@@ -18,7 +18,9 @@ WebSocket 客户端用于建立双向实时通信连接，支持文本和二进�
 
 ```java
 import tech.smartboot.feat.Feat;
+import tech.smartboot.feat.core.client.WebSocketClient;
 import tech.smartboot.feat.core.client.WebSocketListener;
+import tech.smartboot.feat.core.client.WebSocketResponse;
 
 Feat.websocket("ws://localhost:8080/chat", new WebSocketListener() {
     @Override

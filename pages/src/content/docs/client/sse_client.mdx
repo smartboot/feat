@@ -168,9 +168,28 @@ Feat.httpClient("http://localhost:8080")
 SSE 是长连接，程序不会自动退出，需要显式关闭。
 
 ```java
+import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.core.client.HttpRest;
 
 HttpRest rest = Feat.httpClient("http://localhost:8080")
+        .get("/events")
+        .onSSE(sse -> sse.onData(event -> System.out.println("收到: " + event.getData())))
+        .onFailure(Throwable::printStackTrace);
+
+rest.submit();
+
+// 需要时手动关闭
+// rest.close();
+```
+
+如果你想在收到某条特定消息后自动关闭，可以先声明变量再赋值，避免在 lambda 里引用尚未初始化的局部变量：
+
+```java
+import tech.smartboot.feat.Feat;
+import tech.smartboot.feat.core.client.HttpRest;
+
+HttpRest rest;
+rest = Feat.httpClient("http://localhost:8080")
         .get("/events")
         .onSSE(sse -> sse.onData(event -> {
             System.out.println("收到: " + event.getData());
@@ -182,10 +201,16 @@ HttpRest rest = Feat.httpClient("http://localhost:8080")
         .onFailure(Throwable::printStackTrace);
 
 rest.submit();
+```
 
-// 或者定时关闭
-// Thread.sleep(30000);
-// rest.close();
+也可以用定时器在指定时间后关闭连接：
+
+```java
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+Executors.newSingleThreadScheduledExecutor()
+        .schedule(rest::close, 30, TimeUnit.SECONDS);
 ```
 
 
