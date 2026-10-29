@@ -17,12 +17,12 @@ import io.github.smartboot.socket.transport.AioQuickClient;
 import io.github.smartboot.socket.transport.AioSession;
 import tech.smartboot.feat.core.client.impl.WebSocketRequestImpl;
 import tech.smartboot.feat.core.client.impl.WebSocketResponseImpl;
-import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpMethod;
 import tech.smartboot.feat.core.common.HttpProtocol;
 import tech.smartboot.feat.core.common.HttpStatus;
+import tech.smartboot.feat.core.common.HttpUrl;
 import tech.smartboot.feat.core.common.codec.websocket.CloseReason;
 import tech.smartboot.feat.core.common.codec.websocket.Decoder;
 import tech.smartboot.feat.core.common.codec.websocket.WebSocket;
@@ -110,39 +110,14 @@ public class WebSocketClient {
     }
 
     public WebSocketClient(String url) {
-        int schemaIndex = url.indexOf("://");
-        if (schemaIndex == -1) {
+        HttpUrl httpUrl = HttpUrl.parse(url);
+        if (!SCHEMA_WS.equals(httpUrl.getScheme()) && !SCHEMA_WSS.equals(httpUrl.getScheme())) {
             throw new IllegalArgumentException("invalid url:" + url);
         }
-        String schema = url.substring(0, schemaIndex);
-        int uriIndex = url.indexOf("/", schemaIndex + 3);
-        int portIndex = url.indexOf(":", schemaIndex + 3);
-        boolean ws = SCHEMA_WS.equals(schema);
-        boolean wss = !ws && SCHEMA_WSS.equals(schema);
-
-        if (!ws && !wss) {
-            throw new IllegalArgumentException("invalid url:" + url);
-        }
-        String host;
-        int port;
-        if (portIndex > 0) {
-            host = url.substring(schemaIndex + 3, portIndex);
-            port = FeatUtils.toInt(uriIndex > 0 ? url.substring(portIndex + 1, uriIndex) : url.substring(portIndex + 1), -1);
-        } else if (uriIndex > 0) {
-            host = url.substring(schemaIndex + 3, uriIndex);
-            port = wss ? 443 : 80;
-        } else {
-            host = url.substring(schemaIndex + 3);
-            port = wss ? 443 : 80;
-        }
-        if (port == -1) {
-            throw new IllegalArgumentException("invalid url:" + url);
-        }
-        this.options = new WebSocketOptions(host, port);
-        options.setWss(wss);
-        hostHeader = options.getHost() + ":" + options.getPort();
-        this.uri = uriIndex > 0 ? url.substring(uriIndex) : "/";
-
+        this.options = new WebSocketOptions(httpUrl.getHost(), httpUrl.getPort());
+        options.setWss(httpUrl.isSecure());
+        hostHeader = httpUrl.getHostHeader();
+        this.uri = httpUrl.getPath();
     }
 
     public WebSocketOptions options() {

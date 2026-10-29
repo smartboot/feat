@@ -33,7 +33,7 @@ public class HttpClientUrlTest {
                     socket.setSoTimeout(5000);
                     BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.US_ASCII));
                     String line = reader.readLine();
-                    while (!reader.readLine().isEmpty()) {
+                    for (String header = reader.readLine(); header != null && !header.isEmpty(); header = reader.readLine()) {
                         // Consume the remaining headers.
                     }
                     socket.getOutputStream().write("HTTP/1.1 200 OK\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII));

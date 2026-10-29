@@ -19,6 +19,7 @@ import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpProtocol;
+import tech.smartboot.feat.core.common.HttpUrl;
 
 import java.util.Base64;
 import java.util.concurrent.CompletableFuture;
@@ -51,46 +52,14 @@ public final class HttpClient {
     private final String uri;
 
     public HttpClient(final String url) {
-        int schemaIndex = url.indexOf("://");
-        if (schemaIndex == -1) {
+        HttpUrl httpUrl = HttpUrl.parse(url);
+        if (!FeatUtils.SCHEMA_HTTP.equals(httpUrl.getScheme()) && !FeatUtils.SCHEMA_HTTPS.equals(httpUrl.getScheme())) {
             throw new IllegalArgumentException("invalid url:" + url);
         }
-        String schema = url.substring(0, schemaIndex);
-        int uriIndex = url.indexOf("/", schemaIndex + 3);
-        int queryIndex = url.indexOf("?", schemaIndex + 3);
-        if (queryIndex >= 0 && (uriIndex < 0 || queryIndex < uriIndex)) {
-            uriIndex = queryIndex;
-        }
-        int portIndex = url.indexOf(":", schemaIndex + 3);
-        // 避免对于 https://r.jina.ai/https://smartboot.tech 这种情况的误判
-        if (uriIndex > 0 && uriIndex < portIndex) {
-            portIndex = -1;
-        }
-        boolean http = FeatUtils.SCHEMA_HTTP.equals(schema);
-        boolean https = !http && FeatUtils.SCHEMA_HTTPS.equals(schema);
-
-        if (!http && !https) {
-            throw new IllegalArgumentException("invalid url:" + url);
-        }
-        String host;
-        int port;
-        if (portIndex > 0) {
-            host = url.substring(schemaIndex + 3, portIndex);
-            port = FeatUtils.toInt(uriIndex > 0 ? url.substring(portIndex + 1, uriIndex) : url.substring(portIndex + 1), -1);
-        } else if (uriIndex > 0) {
-            host = url.substring(schemaIndex + 3, uriIndex);
-            port = https ? 443 : 80;
-        } else {
-            host = url.substring(schemaIndex + 3);
-            port = https ? 443 : 80;
-        }
-        if (port == -1) {
-            throw new IllegalArgumentException("invalid url:" + url);
-        }
-        this.options = new HttpOptions(multiplexClient.getMultiplexOptions(), host, port);
-        options.setHttps(https);
-        hostHeader = options.getHost() + ":" + options.getPort();
-        this.uri = uriIndex > 0 ? (url.charAt(uriIndex) == '?' ? "/" : "") + url.substring(uriIndex) : "/";
+        this.options = new HttpOptions(multiplexClient.getMultiplexOptions(), httpUrl.getHost(), httpUrl.getPort());
+        options.setHttps(httpUrl.isSecure());
+        hostHeader = httpUrl.getHostHeader();
+        this.uri = httpUrl.getPath();
     }
 
     public HttpClient(String host, int port) {
