@@ -57,6 +57,10 @@ public final class HttpClient {
         }
         String schema = url.substring(0, schemaIndex);
         int uriIndex = url.indexOf("/", schemaIndex + 3);
+        int queryIndex = url.indexOf("?", schemaIndex + 3);
+        if (queryIndex >= 0 && (uriIndex < 0 || queryIndex < uriIndex)) {
+            uriIndex = queryIndex;
+        }
         int portIndex = url.indexOf(":", schemaIndex + 3);
         // 避免对于 https://r.jina.ai/https://smartboot.tech 这种情况的误判
         if (uriIndex > 0 && uriIndex < portIndex) {
@@ -86,7 +90,7 @@ public final class HttpClient {
         this.options = new HttpOptions(multiplexClient.getMultiplexOptions(), host, port);
         options.setHttps(https);
         hostHeader = options.getHost() + ":" + options.getPort();
-        this.uri = uriIndex > 0 ? url.substring(uriIndex) : "/";
+        this.uri = uriIndex > 0 ? (url.charAt(uriIndex) == '?' ? "/" : "") + url.substring(uriIndex) : "/";
     }
 
     public HttpClient(String host, int port) {
