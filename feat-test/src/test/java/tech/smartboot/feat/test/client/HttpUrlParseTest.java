@@ -105,6 +105,14 @@ public class HttpUrlParseTest {
     }
 
     @Test
+    public void schemeIsCaseInsensitive() {
+        // RFC 3986：scheme 大小写不敏感
+        assertUrl("HTTP://example.com/path", "http", "example.com", 80, "/path");
+        assertUrl("HTTPS://example.com", "https", "example.com", 443, "/");
+        assertUrl("WS://example.com/socket", "ws", "example.com", 80, "/socket");
+    }
+
+    @Test
     public void invalidUrl() {
         assertThrows(IllegalArgumentException.class, () -> HttpUrl.parse(null));
         assertThrows(IllegalArgumentException.class, () -> HttpUrl.parse("example.com/path"));

@@ -10,6 +10,8 @@
 
 package tech.smartboot.feat.core.common;
 
+import java.util.Locale;
+
 /**
  * 连接地址的解析结果，由 {@link #parse(String)} 一次性拆分出 scheme、host、port 与请求路径。
  * <p>
@@ -72,7 +74,8 @@ public final class HttpUrl {
         if (schemaIndex <= 0) {
             throw new IllegalArgumentException("invalid url:" + url);
         }
-        String scheme = source.substring(0, schemaIndex);
+        // RFC 3986：scheme 大小写不敏感，统一归一化为小写
+        String scheme = source.substring(0, schemaIndex).toLowerCase(Locale.ROOT);
         int length = source.length();
         int index = schemaIndex + 3;
 
