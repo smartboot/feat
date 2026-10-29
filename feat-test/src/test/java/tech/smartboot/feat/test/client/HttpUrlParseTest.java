@@ -91,8 +91,17 @@ public class HttpUrlParseTest {
 
     @Test
     public void hostHeader() {
-        assertEquals("example.com:80", HttpUrl.parse("http://example.com").getHostHeader());
+        // 协议缺省端口不写入 Host 头
+        assertEquals("example.com", HttpUrl.parse("http://example.com").getHostHeader());
+        assertEquals("example.com", HttpUrl.parse("http://example.com:80/p").getHostHeader());
+        assertEquals("example.com", HttpUrl.parse("https://example.com").getHostHeader());
+        assertEquals("example.com", HttpUrl.parse("https://example.com:443").getHostHeader());
+        assertEquals("example.com", HttpUrl.parse("ws://example.com/socket").getHostHeader());
+        assertEquals("example.com", HttpUrl.parse("wss://example.com/socket").getHostHeader());
+        // 非缺省端口必须写入
         assertEquals("example.com:8080", HttpUrl.parse("http://example.com:8080/p").getHostHeader());
+        assertEquals("example.com:443", HttpUrl.parse("http://example.com:443/p").getHostHeader());
+        assertEquals("example.com:80", HttpUrl.parse("https://example.com:80/p").getHostHeader());
     }
 
     @Test

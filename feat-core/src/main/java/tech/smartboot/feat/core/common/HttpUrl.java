@@ -190,10 +190,18 @@ public final class HttpUrl {
     }
 
     /**
-     * Host 请求头的值，形如 {@code host:port}，IPv6 会补回方括号
+     * Host 请求头的值。
+     * <p>
+     * 端口为协议缺省值（http/ws 的 80、https/wss 的 443）时省略，与 curl、OkHttp 等主流客户端保持一致；
+     * 非缺省端口必须带上。IPv6 字面量会补回方括号。
      */
     public String getHostHeader() {
-        return (host.indexOf(':') >= 0 ? "[" + host + "]" : host) + ":" + port;
+        return formatHost(port == defaultPort(scheme) ? -1 : port);
+    }
+
+    private String formatHost(int port) {
+        String formattedHost = host.indexOf(':') >= 0 ? "[" + host + "]" : host;
+        return port > 0 ? formattedHost + ":" + port : formattedHost;
     }
 
     @Override
