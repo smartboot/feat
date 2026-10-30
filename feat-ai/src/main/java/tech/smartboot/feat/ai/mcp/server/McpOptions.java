@@ -24,6 +24,22 @@ public class McpOptions {
     private boolean promptsEnable;
     private boolean resourceEnable;
     private boolean toolEnable;
+    /**
+     * list 类方法单页返回条数。默认不分页，避免升级后工具列表被截断；需要控制响应大小时显式设置。
+     */
+    private int pageSize = Integer.MAX_VALUE;
+
+    public int getPageSize() {
+        return pageSize;
+    }
+
+    public McpOptions setPageSize(int pageSize) {
+        if (pageSize <= 0) {
+            throw new IllegalArgumentException("pageSize must be positive");
+        }
+        this.pageSize = pageSize;
+        return this;
+    }
 
     public String getMcpEndpoint() {
         return mcpEndpoint;

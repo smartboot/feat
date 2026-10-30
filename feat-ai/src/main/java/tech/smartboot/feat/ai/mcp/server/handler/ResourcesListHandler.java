@@ -13,9 +13,11 @@ package tech.smartboot.feat.ai.mcp.server.handler;
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.ai.mcp.model.ResourceListResponse;
 import tech.smartboot.feat.ai.mcp.server.McpServer;
+import tech.smartboot.feat.ai.mcp.server.model.ServerResource;
 import tech.smartboot.feat.core.server.HttpRequest;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author 三刀 zhengjunweimail@163.com
@@ -25,8 +27,13 @@ public class ResourcesListHandler implements ServerHandler {
 
     @Override
     public JSONObject handle(McpServer mcp, HttpRequest request, JSONObject jsonObject) {
+        List<ServerResource> all = mcp.getResources();
+        int offset = Pagination.offset(jsonObject, all.size());
+        int end = Pagination.end(offset, mcp.getOptions().getPageSize(), all.size());
+
         ResourceListResponse response = new ResourceListResponse();
-        response.setResources(new ArrayList<>(mcp.getResources()));
+        response.setResources(new ArrayList<>(all.subList(offset, end)));
+        response.setNextCursor(Pagination.nextCursor(end, all.size()));
         return JSONObject.from(response);
     }
 }

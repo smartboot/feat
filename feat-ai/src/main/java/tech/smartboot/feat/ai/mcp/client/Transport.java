@@ -12,6 +12,7 @@ package tech.smartboot.feat.ai.mcp.client;
 
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.ai.mcp.model.JsonRpc;
+import tech.smartboot.feat.ai.mcp.model.McpInitializeRequest;
 import tech.smartboot.feat.ai.mcp.model.Request;
 import tech.smartboot.feat.ai.mcp.model.Response;
 import tech.smartboot.feat.core.client.HttpResponse;
@@ -30,10 +31,18 @@ import java.util.concurrent.atomic.AtomicInteger;
 abstract class Transport {
     protected final McpOptions options;
     protected String sessionId;
+    /**
+     * 与服务端协商后的协议版本，用于 initialize 之后各请求的 MCP-Protocol-Version 头。
+     */
+    protected String protocolVersion = McpInitializeRequest.PROTOCOL_VERSION;
     private final AtomicInteger requestId = new AtomicInteger(0);
 
     public Transport(McpOptions options) {
         this.options = options;
+    }
+
+    public void setProtocolVersion(String protocolVersion) {
+        this.protocolVersion = protocolVersion;
     }
 
     public <T> CompletableFuture<T> asyncRequest(String method, JSONObject param, Class<T> clazz) {
@@ -41,10 +50,7 @@ abstract class Transport {
         request.setMethod(method);
         request.setParams(param);
         request.setId(requestId.incrementAndGet());
-        return doRequest(request).thenApply(response -> response.getResult().to(clazz)).exceptionally(throwable -> {
-            throwable.printStackTrace();
-            return null;
-        });
+        return doRequest(request).thenApply(response -> response.getResult().to(clazz));
     }
 
     abstract void initialized();
@@ -59,6 +65,9 @@ abstract class Transport {
             header.setContentType(HeaderValue.ContentType.APPLICATION_JSON).setContentLength(body.length);
             if (FeatUtils.isNotBlank(sessionId)) {
                 header.set(Request.HEADER_SESSION_ID, sessionId);
+                if (FeatUtils.isNotBlank(protocolVersion)) {
+                    header.set(Request.HEADER_PROTOCOL_VERSION, protocolVersion);
+                }
             }
             header.set(HeaderName.ACCEPT, "application/json,text/event-stream");
         }).body(b -> b.write(body)).onSuccess(future::complete).onFailure(future::completeExceptionally).submit();
@@ -71,7 +80,7 @@ abstract class Transport {
         String method = request.getString("method");
         if ("roots/list".equals(method)) {
             Response<JSONObject> response = new Response<>();
-            response.setId(request.getInteger("id"));
+            response.setId(request.get("id"));
             JSONObject json = new JSONObject();
             json.put("roots", options.getRootsList());
             response.setResult(json);

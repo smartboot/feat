@@ -27,7 +27,9 @@ import tech.smartboot.feat.ai.mcp.server.handler.PingHandler;
 import tech.smartboot.feat.ai.mcp.server.handler.PromptsGetHandler;
 import tech.smartboot.feat.ai.mcp.server.handler.ResourcesListHandler;
 import tech.smartboot.feat.ai.mcp.server.handler.ResourcesReadHandler;
+import tech.smartboot.feat.ai.mcp.server.handler.ResourcesSubscribeHandler;
 import tech.smartboot.feat.ai.mcp.server.handler.ResourcesTemplateListHandler;
+import tech.smartboot.feat.ai.mcp.server.handler.ResourcesUnsubscribeHandler;
 import tech.smartboot.feat.ai.mcp.server.handler.ServerHandler;
 import tech.smartboot.feat.ai.mcp.server.handler.ToolsCallHandler;
 import tech.smartboot.feat.ai.mcp.server.handler.ToolsListHandler;
@@ -51,6 +53,8 @@ import tech.smartboot.feat.router.RouterHandler;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,6 +68,13 @@ import java.util.function.Consumer;
  */
 public class McpServer {
     private static final Logger logger = LoggerFactory.getLogger(McpServer.class);
+
+    /**
+     * 服务端支持的协议版本，按由新到旧排列。升级协议时只需在此登记新版本。
+     */
+    private static final List<String> SUPPORTED_PROTOCOL_VERSIONS = Collections.unmodifiableList(
+            Arrays.asList(McpInitializeRequest.PROTOCOL_VERSION));
+
     private final McpOptions options = new McpOptions();
     private final Map<String, ServerHandler> handlers = new HashMap<>();
 
@@ -75,6 +86,8 @@ public class McpServer {
         handlers.put("resources/list", new ResourcesListHandler());
         handlers.put("resources/read", new ResourcesReadHandler());
         handlers.put("resources/templates/list", new ResourcesTemplateListHandler());
+        handlers.put("resources/subscribe", new ResourcesSubscribeHandler());
+        handlers.put("resources/unsubscribe", new ResourcesUnsubscribeHandler());
         handlers.put("completion/complete", new CompletionCompleteHandler());
         handlers.put("logging/setLevel", new LoggingSetLevelHandler());
         handlers.put("ping", new PingHandler());
@@ -184,6 +197,19 @@ public class McpServer {
         return sseEmitters;
     }
 
+    /**
+     * 按规范协商协议版本：客户端请求的版本受支持时原样返回；否则返回服务端支持的最新版本，
+     * 由客户端自行决定是否终止连接。旧实现无条件回写自身版本，会让客户端误判版本已对齐。
+     */
+    private static String negotiateProtocolVersion(String requested) {
+        if (SUPPORTED_PROTOCOL_VERSIONS.contains(requested)) {
+            return requested;
+        }
+        String latest = SUPPORTED_PROTOCOL_VERSIONS.get(0);
+        logger.warn("unsupported protocol version [" + requested + "], fallback to [" + latest + "]");
+        return latest;
+    }
+
     public CompletableFuture<Response> jsonRpcHandle(StreamSession session, HttpRequest request) throws Throwable {
         if (session == null) {
             throw new HttpException(HttpStatus.UNAUTHORIZED);
@@ -195,10 +221,19 @@ public class McpServer {
                 if (req == null) {
                     throw new HttpException(HttpStatus.BAD_REQUEST);
                 }
+                if (req.getParams() == null || FeatUtils.isBlank(req.getParams().getProtocolVersion())) {
+                    Response<JSONObject> err = new Response<>();
+                    err.setId(req.getId());
+                    err.setError(JSONObject.of("code", McpException.INVALID_PARAMS, "message", "protocolVersion is required"));
+                    CompletableFuture<Response> failed = new CompletableFuture<>();
+                    failed.complete(err);
+                    return failed;
+                }
                 session.setInitializeRequest(req.getParams());
                 Response<McpInitializeResponse> rsp = new Response<>();
                 rsp.setId(req.getId());
                 McpInitializeResponse initializeResponse = new McpInitializeResponse();
+                initializeResponse.setProtocolVersion(negotiateProtocolVersion(req.getParams().getProtocolVersion()));
                 ServerCapabilities capabilities = initializeResponse.getCapabilities();
                 if (options.isLoggingEnable()) {
                     capabilities.setLogging(new JSONObject());
@@ -227,15 +262,26 @@ public class McpServer {
                 return response;
             }
             case StreamSession.STATE_INITIALIZED: {
-                String json1 = FeatUtils.asString(request.getInputStream());
-                System.out.println(json1);
+                String body = FeatUtils.asString(request.getInputStream());
+                JSONObject notification = FeatUtils.isBlank(body) ? null : JSON.parseObject(body);
+                String method = notification == null ? null : notification.getString("method");
+                if (!"notifications/initialized".equals(method)) {
+                    logger.warn("expected notifications/initialized but received: " + method);
+                    request.getResponse().setHttpStatus(HttpStatus.BAD_REQUEST);
+                    return null;
+                }
                 session.setState(StreamSession.STATE_READY);
                 request.getResponse().setHttpStatus(HttpStatus.ACCEPTED);
                 return null;
             }
 
             case StreamSession.STATE_READY: {
-                System.out.println("ready: " + request);
+                String headerVersion = request.getHeader(Request.HEADER_PROTOCOL_VERSION);
+                if (FeatUtils.isNotBlank(headerVersion) && !SUPPORTED_PROTOCOL_VERSIONS.contains(headerVersion)) {
+                    logger.warn("unsupported " + Request.HEADER_PROTOCOL_VERSION + " header: " + headerVersion);
+                    request.getResponse().setHttpStatus(HttpStatus.BAD_REQUEST);
+                    return null;
+                }
                 if (HeaderValue.ContentType.APPLICATION_JSON.equals(request.getContentType())) {
                     JSONObject jsonObject = JSON.parseObject(request.getInputStream());
                     String method = jsonObject.getString("method");
@@ -257,6 +303,15 @@ public class McpServer {
 
 
                     ServerHandler handler = handlers.get(method);
+                    if (handler == null) {
+                        Response<JSONObject> notFound = new Response<>();
+                        notFound.setId(jsonObject.get("id"));
+                        notFound.setError(JSONObject.of("code", McpException.METHOD_NOT_FOUND,
+                                "message", "Method not found: " + method));
+                        CompletableFuture<Response> failed = new CompletableFuture<>();
+                        failed.complete(notFound);
+                        return failed;
+                    }
                     CompletableFuture<Response> future = new CompletableFuture<>();
                     Response<JSONObject> response = new Response<>();
 
@@ -288,7 +343,7 @@ public class McpServer {
                         response.setError(error);
                         future.complete(response);
                     }
-                    response.setId(jsonObject.getInteger("id"));
+                    response.setId(jsonObject.get("id"));
                     return future;
                 }
                 break;

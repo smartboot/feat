@@ -16,6 +16,10 @@ package tech.smartboot.feat.ai.mcp.model;
  */
 public class Request<T> extends JsonRpc {
     public static final String HEADER_SESSION_ID = "mcp-session-id";
+    /**
+     * 2025-06-18 起，Streamable HTTP 传输要求客户端在 initialize 之后的每个请求中携带该头。
+     */
+    public static final String HEADER_PROTOCOL_VERSION = "MCP-Protocol-Version";
     private String method;
 
     private T params;

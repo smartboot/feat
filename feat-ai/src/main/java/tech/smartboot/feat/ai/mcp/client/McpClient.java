@@ -12,6 +12,7 @@ package tech.smartboot.feat.ai.mcp.client;
 
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
+import tech.smartboot.feat.ai.mcp.McpException;
 import tech.smartboot.feat.ai.mcp.enums.LoggerLevel;
 import tech.smartboot.feat.ai.mcp.enums.RoleEnum;
 import tech.smartboot.feat.ai.mcp.model.McpInitializeRequest;
@@ -134,6 +135,14 @@ public class McpClient {
 
         CompletableFuture<McpInitializeResponse> f = transport.asyncRequest("initialize", JSONObject.from(request), McpInitializeResponse.class);
         f.thenAccept(response -> {
+            // 服务端可能返回它自己支持的版本，客户端只接受自己能够处理的版本，否则必须断开
+            String negotiated = response.getProtocolVersion();
+            if (!McpInitializeRequest.PROTOCOL_VERSION.equals(negotiated)) {
+                future.completeExceptionally(new McpException(McpException.INVALID_REQUEST,
+                        "server negotiated unsupported protocol version: " + negotiated));
+                return;
+            }
+            transport.setProtocolVersion(negotiated);
             //After successful initialization, the client MUST send an initialized notification to indicate it is ready to begin normal operations
             CompletableFuture<HttpResponse> notification = transport.sendNotification("notifications/initialized");
             notification.whenComplete((r, e) -> {

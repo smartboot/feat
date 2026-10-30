@@ -17,11 +17,21 @@ import com.alibaba.fastjson2.JSONObject;
  * @version v1.0 7/4/25
  */
 public class McpException extends RuntimeException {
-    public static final int RESOURCE_NOT_FOUND = -32002;
+    /**
+     * 资源不存在。2026-07-28 起改用 JSON-RPC 标准错误码 INVALID_PARAMS（-32602），见 SEP-2164。
+     *
+     * @deprecated 请使用 {@link #INVALID_PARAMS}
+     */
+    @Deprecated
+    public static final int RESOURCE_NOT_FOUND = -32602;
+    public static final int PARSE_ERROR = -32700;
+    public static final int INVALID_REQUEST = -32600;
+    public static final int METHOD_NOT_FOUND = -32601;
     /**
      * Invalid Parameters
      */
-    public static final int INTERNAL_ERROR = -32602;
+    public static final int INVALID_PARAMS = -32602;
+    public static final int INTERNAL_ERROR = -32603;
     private int code;
     private JSONObject data;
 

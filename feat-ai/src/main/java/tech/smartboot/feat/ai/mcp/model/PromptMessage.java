@@ -54,7 +54,7 @@ public final class PromptMessage<T extends PromptMessage.PromptContent> {
 
     public static PromptMessage<PromptMessage.AudioPromptContent> ofAudio(RoleEnum roleEnum, String data, String mimeType) {
         if (FeatUtils.isBlank(data)) {
-            throw new McpException(McpException.INTERNAL_ERROR, "Audio data cannot be empty");
+            throw new McpException(McpException.INVALID_PARAMS, "Audio data cannot be empty");
         }
         return new PromptMessage<>(roleEnum, new PromptMessage.AudioPromptContent(data, mimeType));
     }

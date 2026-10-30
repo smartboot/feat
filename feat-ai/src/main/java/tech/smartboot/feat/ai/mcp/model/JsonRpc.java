@@ -17,7 +17,10 @@ package tech.smartboot.feat.ai.mcp.model;
 public class JsonRpc {
     private String jsonrpc = "2.0";
 
-    private Integer id;
+    /**
+     * JSON-RPC 2.0 允许 id 为字符串或数字，原样透传，不得强制转换为 int。
+     */
+    private Object id;
 
     public String getJsonrpc() {
         return jsonrpc;
@@ -27,11 +30,11 @@ public class JsonRpc {
         this.jsonrpc = jsonrpc;
     }
 
-    public Integer getId() {
+    public Object getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(Object id) {
         this.id = id;
     }
 }

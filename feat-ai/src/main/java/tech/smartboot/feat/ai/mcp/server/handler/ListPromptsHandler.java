@@ -13,9 +13,11 @@ package tech.smartboot.feat.ai.mcp.server.handler;
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.ai.mcp.model.PromptListResponse;
 import tech.smartboot.feat.ai.mcp.server.McpServer;
+import tech.smartboot.feat.ai.mcp.server.model.ServerPrompt;
 import tech.smartboot.feat.core.server.HttpRequest;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author 三刀 zhengjunweimail@163.com
@@ -25,8 +27,13 @@ public class ListPromptsHandler implements ServerHandler {
 
     @Override
     public JSONObject handle(McpServer mcp, HttpRequest request, JSONObject jsonObject) {
+        List<ServerPrompt> all = mcp.getPrompts();
+        int offset = Pagination.offset(jsonObject, all.size());
+        int end = Pagination.end(offset, mcp.getOptions().getPageSize(), all.size());
+
         PromptListResponse listResponse = new PromptListResponse();
-        listResponse.setPrompts(new ArrayList<>(mcp.getPrompts()));
+        listResponse.setPrompts(new ArrayList<>(all.subList(offset, end)));
+        listResponse.setNextCursor(Pagination.nextCursor(end, all.size()));
         return JSONObject.from(listResponse);
     }
 }

@@ -32,7 +32,7 @@ public class ResourcesReadHandler implements ServerHandler {
         ServerResource serverResource = mcp.getResources().stream().filter(r -> r.getUri().equals(uri)).findFirst().orElse(null);
 
         if (serverResource == null) {
-            throw new McpException(McpException.RESOURCE_NOT_FOUND, "Resource not found ", JSONObject.of("uri", uri));
+            throw new McpException(McpException.INVALID_PARAMS, "Resource not found ", JSONObject.of("uri", uri));
         }
         ResourceContext promptContext = new ResourceContext(request, serverResource);
         String data = serverResource.getAction().apply(promptContext);

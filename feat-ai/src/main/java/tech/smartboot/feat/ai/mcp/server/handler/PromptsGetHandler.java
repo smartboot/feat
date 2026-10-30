@@ -37,7 +37,7 @@ public class PromptsGetHandler implements ServerHandler {
 
         ServerPrompt prompt = mcp.getPrompts().stream().filter(t -> t.getName().equals(promptName)).findFirst().orElse(null);
         if (prompt == null) {
-            throw new McpException(McpException.INTERNAL_ERROR, "Unknown prompt: " + promptName);
+            throw new McpException(McpException.INVALID_PARAMS, "Unknown prompt: " + promptName);
         }
         JSONObject result = new JSONObject();
         PromptMessage<?> promptMessage = prompt.getAction().apply(promptContext);

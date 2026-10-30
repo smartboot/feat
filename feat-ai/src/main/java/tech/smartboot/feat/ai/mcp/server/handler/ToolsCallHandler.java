@@ -18,6 +18,7 @@ import tech.smartboot.feat.ai.mcp.model.ToolResult;
 import tech.smartboot.feat.ai.mcp.server.McpServer;
 import tech.smartboot.feat.ai.mcp.server.model.ServerTool;
 import tech.smartboot.feat.ai.mcp.server.model.ToolContext;
+import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.server.HttpRequest;
 
 import java.util.concurrent.CompletableFuture;
@@ -30,6 +31,9 @@ public class ToolsCallHandler implements ServerHandler {
     @Override
     public CompletableFuture<JSONObject> asyncHandle(McpServer mcp, HttpRequest request, JSONObject jsonObject) {
         JSONObject params = jsonObject.getJSONObject("params");
+        if (params == null || FeatUtils.isBlank(params.getString("name"))) {
+            throw new McpException(McpException.INVALID_PARAMS, "tool name is required");
+        }
         String toolName = params.getString("name");
         JSONObject toolParams = params.getJSONObject("arguments");
 
@@ -37,7 +41,7 @@ public class ToolsCallHandler implements ServerHandler {
 
         ServerTool tool = mcp.getTools().stream().filter(t -> t.getName().equals(toolName)).findFirst().orElse(null);
         if (tool == null) {
-            throw new McpException(McpException.INTERNAL_ERROR, "Unknown tool: " + toolName);
+            throw new McpException(McpException.INVALID_PARAMS, "Unknown tool: " + toolName);
         }
         CompletableFuture<JSONObject> future = new CompletableFuture<>();
 

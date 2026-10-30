@@ -20,8 +20,10 @@ import tech.smartboot.feat.core.server.upgrade.sse.SseEmitter;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -41,6 +43,22 @@ public class StreamSession {
     private final AtomicInteger id = new AtomicInteger(0);
     private final Map<Integer, Consumer<JSONObject>> responseCallbacks = new ConcurrentHashMap<>();
     private final List<Roots> roots = new ArrayList<>();
+    private final Set<String> subscribedResources = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
+
+    /**
+     * 记录该会话订阅的资源 uri，resources/subscribe 使用。
+     */
+    public boolean subscribeResource(String uri) {
+        return subscribedResources.add(uri);
+    }
+
+    public boolean unsubscribeResource(String uri) {
+        return subscribedResources.remove(uri);
+    }
+
+    public boolean isSubscribed(String uri) {
+        return subscribedResources.contains(uri);
+    }
 
     public int getState() {
         return state;
@@ -86,6 +104,9 @@ public class StreamSession {
     }
 
     void rootsList() throws IOException {
+        if (initializeRequest == null) {
+            return;
+        }
         JSONObject capabilities = initializeRequest.getCapabilities();
         if (capabilities == null) {
             return;
@@ -107,9 +128,9 @@ public class StreamSession {
                 System.out.println("root:" + root);
             }
         });
-//        if (sseEmitter != null) {
-        sseEmitter.send(SseEmitter.event().data(jsonObject.toString()));
-//        }
+        if (sseEmitter != null) {
+            sseEmitter.send(SseEmitter.event().data(jsonObject.toString()));
+        }
     }
 
     void sampling() {
