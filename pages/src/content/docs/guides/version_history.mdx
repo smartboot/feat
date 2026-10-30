@@ -30,6 +30,10 @@ import { Aside, Steps } from '@astrojs/starlight/components';
 - **IO**：修复 chunked 编码下 ByteBuffer 就地写入越界问题
 - **IO**：优化输出流回调机制，回调参数由 `Consumer` 简化为 `Runnable`
 - **Client**：重构客户端请求体传输接口，`RequestBody` 的 `transferFrom` 方法替换为 `write` 方法
+- **Client**：抽取 `HttpUrl` 统一解析连接地址，`HttpClient` 与 `WebSocketClient` 复用同一套解析逻辑
+- **Client**：修复无路径 URL 的查询参数解析（如 `http://host?a=1`）
+- **Client**：Host 头省略协议默认端口，scheme 统一归一化为小写
+- **Client**：修复连接异常关闭时请求 `future` 永久挂起的问题，改为以 `IOException` 结束
 - **Router**：修复 `ByteTree` 超过最大深度时节点互相覆盖的问题
 - **静态资源**：修复异步写入问题，补充空文件请求的提前返回处理
 - **认证**：补充 BasicAuth 处理器的异步处理方法，确保被包装的异步 Handler 正常工作
@@ -43,6 +47,29 @@ import { Aside, Steps } from '@astrojs/starlight/components';
 #### Feat AI
 
 - **Chat**：`chatStream` 返回类型由 `void` 调整为 `CompletableFuture<ChatResponse>`，支持获取流式终态响应
+- **Chat**：`ChatStreamListener` 新增 `onChunk(ChatChunk)` 回调，暴露上游数据帧的完整元数据（`id`、`model`、`finish_reason`、`tool_calls` 增量、`usage`），网关与代理类场景可原样转发
+- **Chat**：新增 `ChatOptions#includeUsage`，流式响应末尾返回 token 用量
+- **MCP**：协议版本对齐至 `2025-11-25`，同时保留对 `2025-06-18` 的兼容，客户端与服务端按对方声明协商，不再绑定单一版本。最新规范 `2026-07-28` **尚未支持**（见下方说明）
+- **MCP**：新增 `Icon` 图标元数据，覆盖 Tool、Resource、ResourceTemplate、Prompt 与 Implementation（SEP-973），服务端侧提供 `icons(...)` 链式方法
+- **MCP**：新增 URL 模式 elicitation 与枚举 Schema 支持，覆盖 `enum`、`oneOf`、多选等形态，新增错误码 `-32042`
+- **MCP**：Sampling 支持工具调用，新增 `ToolChoice`、`ToolUseContent`、`ToolResultContent` 与 `CreateMessageRequest` / `CreateMessageResult`
+- **MCP**：`tools/list`、`prompts/list`、`resources/list`、`resources/templates/list` 支持 `cursor` / `nextCursor` 分页
+- **MCP**：补齐 `resources/subscribe` / `resources/unsubscribe`，与服务端能力声明保持一致
+- **MCP**：修正 JSON-RPC 错误码归属，`INTERNAL_ERROR` 由错误的 `-32602` 改为 `-32603`，未注册方法返回 `-32601`，`RESOURCE_NOT_FOUND` 改为标准 `-32602`
+- **MCP**：`JsonRpc#id` 支持字符串类型并原样回传；客户端请求自动携带 `MCP-Protocol-Version` 头
+
+<Aside type="caution">
+**MCP 协议尚未对齐最新规范。** 本版本对齐到 `2025-11-25`，当前最新的 `2026-07-28` 未纳入。
+
+`2026-07-28` 是一次破坏性重构，核心是**无状态化**：
+
+- 移除 `initialize` 握手与 `Mcp-Session-Id`，改由 `server/discover` 与请求级 `_meta` 协商版本
+- 通知改为 `subscriptions/listen`，服务端反向请求改为 MRTR（`input_required`）
+- 新增 `resultType`、`ttlMs` / `cacheScope`、`Mcp-Method` / `Mcp-Name` 路由头
+- `inputSchema` 升级至 JSON Schema 2020-12，移除 `ping` 与 `logging/setLevel`
+
+该改造需重写会话状态机与传输层，本版本未包含。目前主流客户端也仍以 `2025-11-25` 及更早版本为主，短期内不影响互操作性。后续计划以双世代（dual-era）方式引入：legacy 路径保持不变，modern 路径单独接入。
+</Aside>
 
 ### 升级步骤
 
@@ -50,6 +77,8 @@ import { Aside, Steps } from '@astrojs/starlight/components';
 1. 更新版本号：`<feat.version>2.5.0</feat.version>`
 2. 若自定义了 `RequestBody` 实现，将 `transferFrom` 方法改为 `write`
 3. 若继承了 `SessionManager`，适配新增的 `getSession(String)` 与 `createSession()` 抽象方法
+4. 若使用 MCP，检查 `JsonRpc#getId()` 的返回值使用处，按需显式转换类型
+5. MCP 列表默认不分页，行为与旧版一致；如需分页，通过服务端 `McpOptions#setPageSize` 开启
 </Steps>
 
 ### 兼容性说明
@@ -60,6 +89,12 @@ import { Aside, Steps } from '@astrojs/starlight/components';
 | `RequestBody` 接口 | `transferFrom` 替换为 `write` | 自定义请求体实现需同步调整 |
 | `SessionManager` 接口 | 采用模板方法重构 | 自定义会话管理器需适配新抽象方法 |
 | `chatStream` 返回类型 | 由 `void` 变为 `CompletableFuture<ChatResponse>` | 可选接收返回值，原调用方式不受影响 |
+| MCP 协议版本 | 默认声明 `2025-11-25`，同时兼容 `2025-06-18` | 无需处理，旧版本客户端仍可正常协商 |
+| `JsonRpc#getId()` | 返回类型由 `Integer` 变为 `Object` | 赋值处显式转换，如 `(Integer) request.getId()` |
+| `McpException.INTERNAL_ERROR` | 数值由 `-32602` 修正为 `-32603` | 按字面量匹配错误码的代码需同步调整，建议改用常量 |
+| `Transport#asyncRequest` | 失败时抛出异常，不再返回 `null` | 依赖 `null` 判断的分支改用 `exceptionally` 或 `handle` |
+| MCP 列表分页 | 默认关闭（服务端 `pageSize` 为 `Integer.MAX_VALUE`） | 需要分页时调用服务端 `McpOptions#setPageSize` 开启 |
+
 ---
 
 ## v2.4.0 (2026-08-22)
