@@ -31,7 +31,9 @@ public class McpOptions {
     private final Implementation implementation = Implementation.of("feat-mcp-client", "Feat MCP", Feat.VERSION);
     private boolean roots;
     private boolean sampling;
+    private boolean samplingTools;
     private boolean elicitation;
+    private boolean elicitationUrl;
     private JSONObject experimental;
     private List<Roots> rootsList;
     private Map<String, String> headers = Collections.emptyMap();
@@ -72,8 +74,26 @@ public class McpOptions {
         return this;
     }
 
+    /**
+     * 声明支持采样中的工具调用，服务端才会下发带 tools 的 sampling 请求。
+     */
+    public McpOptions samplingToolsEnable() {
+        this.sampling = true;
+        this.samplingTools = true;
+        return this;
+    }
+
     public McpOptions elicitationEnable() {
         this.elicitation = true;
+        return this;
+    }
+
+    /**
+     * 声明支持 url 模式的 elicitation，用于凭据收集等敏感交互。
+     */
+    public McpOptions elicitationUrlEnable() {
+        this.elicitation = true;
+        this.elicitationUrl = true;
         return this;
     }
 
@@ -85,8 +105,16 @@ public class McpOptions {
         return sampling;
     }
 
+    boolean isSamplingTools() {
+        return samplingTools;
+    }
+
     boolean isElicitation() {
         return elicitation;
+    }
+
+    boolean isElicitationUrl() {
+        return elicitationUrl;
     }
 
     JSONObject getExperimental() {

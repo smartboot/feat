@@ -12,6 +12,7 @@ package tech.smartboot.feat.ai.mcp.model;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -22,6 +23,7 @@ public class Prompt {
     private String name;
     private String title;
     private String description;
+    private List<Icon> icons;
     private final List<Argument> arguments = new ArrayList<>();
 
 
@@ -69,6 +71,15 @@ public class Prompt {
 
     public List<Argument> getArguments() {
         return arguments;
+    }
+
+    public List<Icon> getIcons() {
+        return icons;
+    }
+
+    public Prompt icons(Icon... icons) {
+        this.icons = icons == null ? Collections.<Icon>emptyList() : Arrays.asList(icons);
+        return this;
     }
 
     public Prompt arguments(Argument... arguments) {

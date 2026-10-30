@@ -10,10 +10,13 @@
 
 package tech.smartboot.feat.ai.mcp.server.model;
 
+import tech.smartboot.feat.ai.mcp.model.Icon;
 import tech.smartboot.feat.ai.mcp.model.Tool;
 import tech.smartboot.feat.ai.mcp.model.ToolResult;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -84,6 +87,11 @@ public class ServerTool extends Tool {
 
     public ServerTool description(String description) {
         super.setDescription(description);
+        return this;
+    }
+
+    public ServerTool icons(Icon... icons) {
+        setIcons(icons == null ? Collections.<Icon>emptyList() : Arrays.asList(icons));
         return this;
     }
 }

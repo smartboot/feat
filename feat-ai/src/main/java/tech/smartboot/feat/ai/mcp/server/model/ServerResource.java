@@ -10,6 +10,7 @@
 
 package tech.smartboot.feat.ai.mcp.server.model;
 
+import tech.smartboot.feat.ai.mcp.model.Icon;
 import tech.smartboot.feat.ai.mcp.model.Resource;
 
 import java.util.function.Function;
@@ -39,6 +40,12 @@ public class ServerResource extends Resource {
     @Override
     public ServerResource description(String description) {
         super.description(description);
+        return this;
+    }
+
+    @Override
+    public ServerResource icons(Icon... icons) {
+        super.icons(icons);
         return this;
     }
 

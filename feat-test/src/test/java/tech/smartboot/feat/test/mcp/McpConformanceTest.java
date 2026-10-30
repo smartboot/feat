@@ -17,6 +17,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import tech.smartboot.feat.Feat;
+import tech.smartboot.feat.ai.mcp.McpProtocol;
+import tech.smartboot.feat.ai.mcp.model.Icon;
 import tech.smartboot.feat.ai.mcp.model.Tool;
 import tech.smartboot.feat.ai.mcp.model.ToolResult;
 import tech.smartboot.feat.ai.mcp.server.McpServer;
@@ -43,7 +45,7 @@ import java.nio.charset.StandardCharsets;
 public class McpConformanceTest {
     private static final int PORT = 3003;
     private static final String ENDPOINT = "http://localhost:" + PORT + "/mcp";
-    private static final String PROTOCOL_VERSION = "2025-06-18";
+    private static final String PROTOCOL_VERSION = McpProtocol.LATEST;
 
     private HttpServer httpServer;
     private String sessionId;
@@ -51,7 +53,12 @@ public class McpConformanceTest {
     @Before
     public void init() throws Exception {
         McpServer mcp = new McpServer(opt -> opt.toolEnable().resourceEnable().setPageSize(2));
-        for (int i = 0; i < 3; i++) {
+        mcp.addTool(ServerTool.of("tool0").description("测试工具").inputSchema(Tool.stringProperty("a", "参数"))
+                .icons(Icon.of("https://example.com/icon.png").mimeType("image/png").sizes("48x48").theme(Icon.THEME_LIGHT))
+                .doAction(context -> {
+                    return ToolResult.ofText("ok");
+                }));
+        for (int i = 1; i < 3; i++) {
             mcp.addTool(ServerTool.of("tool" + i).description("测试工具").inputSchema(Tool.stringProperty("a", "参数"))
                     .doAction(context -> {
                         return ToolResult.ofText("ok");
@@ -63,8 +70,7 @@ public class McpConformanceTest {
         mcp.enableStreamable(router);
         httpServer = Feat.httpServer(opt -> opt.debug(false)).httpHandler(router).listen(PORT);
 
-        sessionId = initialize(PROTOCOL_VERSION);
-        // 握手第二步：服务端只接受 notifications/initialized
+        sessionId = initialize(PROTOCOL_VERSION);        // 握手第二步：服务端只接受 notifications/initialized
         JSONObject handshake = post(JSONObject.of("jsonrpc", "2.0", "method", "notifications/initialized"), sessionId);
         Assert.assertEquals(202, handshake.getIntValue("_status"));
     }
@@ -86,6 +92,15 @@ public class McpConformanceTest {
                         "capabilities", new JSONObject(),
                         "clientInfo", JSONObject.of("name", "test", "version", "1.0"))), null);
         Assert.assertEquals(PROTOCOL_VERSION, response.getJSONObject("result").getString("protocolVersion"));
+    }
+
+    /**
+     * 旧版本客户端仍可正常协商，升级不会强制对端跟进。
+     */
+    @Test
+    public void testLegacyProtocolVersionSupported() throws Exception {
+        JSONObject response = post(initializeBody(McpProtocol.V2025_06_18), null);
+        Assert.assertEquals(McpProtocol.V2025_06_18, response.getJSONObject("result").getString("protocolVersion"));
     }
 
     /**
@@ -136,6 +151,27 @@ public class McpConformanceTest {
     }
 
     /**
+     * icons 元数据必须出现在 tools/list 结果中（2025-11-25 新增），未设置时不输出空数组。
+     */
+    @Test
+    public void testIconsSerialized() throws Exception {
+        JSONArray tools = post(JSONObject.of("jsonrpc", "2.0", "id", 10, "method", "tools/list"), sessionId)
+                .getJSONObject("result").getJSONArray("tools");
+        JSONObject first = tools.getJSONObject(0);
+        Assert.assertEquals("tool0", first.getString("name"));
+        JSONArray icons = first.getJSONArray("icons");
+        Assert.assertNotNull(icons);
+        Assert.assertEquals(1, icons.size());
+        JSONObject icon = icons.getJSONObject(0);
+        Assert.assertEquals("https://example.com/icon.png", icon.getString("src"));
+        Assert.assertEquals("image/png", icon.getString("mimeType"));
+        Assert.assertEquals("48x48", icon.getJSONArray("sizes").getString(0));
+        Assert.assertEquals("light", icon.getString("theme"));
+
+        Assert.assertNull(tools.getJSONObject(1).get("icons"));
+    }
+
+    /**
      * 非法 cursor 应返回 -32602。
      */
     @Test
@@ -179,13 +215,16 @@ public class McpConformanceTest {
         Assert.assertEquals("req-abc", response.getString("id"));
     }
 
-    private String initialize(String protocolVersion) throws Exception {
-        JSONObject request = JSONObject.of("jsonrpc", "2.0", "id", 0, "method", "initialize",
+    private JSONObject initializeBody(String protocolVersion) {
+        return JSONObject.of("jsonrpc", "2.0", "id", 0, "method", "initialize",
                 "params", JSONObject.of("protocolVersion", protocolVersion,
                         "capabilities", new JSONObject(),
                         "clientInfo", JSONObject.of("name", "test", "version", "1.0")));
-        JSONObject response = post(request, null);
-        Assert.assertEquals(PROTOCOL_VERSION, response.getJSONObject("result").getString("protocolVersion"));
+    }
+
+    private String initialize(String protocolVersion) throws Exception {
+        JSONObject response = post(initializeBody(protocolVersion), null);
+        Assert.assertEquals(protocolVersion, response.getJSONObject("result").getString("protocolVersion"));
         String session = response.getString("_sessionId");
         Assert.assertNotNull(session);
         return session;

@@ -32,6 +32,10 @@ public class McpException extends RuntimeException {
      */
     public static final int INVALID_PARAMS = -32602;
     public static final int INTERNAL_ERROR = -32603;
+    /**
+     * 服务端需要用户提供额外信息才能继续，携带 url 模式的 elicitation 列表。
+     */
+    public static final int URL_ELICITATION_REQUIRED = -32042;
     private int code;
     private JSONObject data;
 

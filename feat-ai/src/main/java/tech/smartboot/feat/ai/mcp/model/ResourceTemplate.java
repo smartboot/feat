@@ -10,6 +10,10 @@
 
 package tech.smartboot.feat.ai.mcp.model;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 /**
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0 6/28/25
@@ -20,6 +24,7 @@ public class ResourceTemplate {
     private String title;
     private String mimeType;
     private String description;
+    private List<Icon> icons;
 
     ResourceTemplate(String uriTemplate, String name) {
         this.uriTemplate = uriTemplate;
@@ -67,5 +72,13 @@ public class ResourceTemplate {
         return this;
     }
 
+    public List<Icon> getIcons() {
+        return icons;
+    }
+
+    public ResourceTemplate icons(Icon... icons) {
+        this.icons = icons == null ? Collections.<Icon>emptyList() : Arrays.asList(icons);
+        return this;
+    }
 
 }

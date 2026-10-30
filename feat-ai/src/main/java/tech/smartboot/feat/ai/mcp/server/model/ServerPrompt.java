@@ -10,6 +10,7 @@
 
 package tech.smartboot.feat.ai.mcp.server.model;
 
+import tech.smartboot.feat.ai.mcp.model.Icon;
 import tech.smartboot.feat.ai.mcp.model.Prompt;
 import tech.smartboot.feat.ai.mcp.model.PromptMessage;
 
@@ -45,6 +46,12 @@ public class ServerPrompt extends Prompt {
     @Override
     public ServerPrompt arguments(Argument... arguments) {
         super.arguments(arguments);
+        return this;
+    }
+
+    @Override
+    public ServerPrompt icons(Icon... icons) {
+        super.icons(icons);
         return this;
     }
 

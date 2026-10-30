@@ -14,6 +14,7 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.TypeReference;
 import tech.smartboot.feat.ai.mcp.McpException;
+import tech.smartboot.feat.ai.mcp.McpProtocol;
 import tech.smartboot.feat.ai.mcp.model.McpInitializeRequest;
 import tech.smartboot.feat.ai.mcp.model.McpInitializeResponse;
 import tech.smartboot.feat.ai.mcp.model.Request;
@@ -53,8 +54,6 @@ import tech.smartboot.feat.router.RouterHandler;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -70,10 +69,9 @@ public class McpServer {
     private static final Logger logger = LoggerFactory.getLogger(McpServer.class);
 
     /**
-     * 服务端支持的协议版本，按由新到旧排列。升级协议时只需在此登记新版本。
+     * 服务端支持的协议版本，按由新到旧排列，见 {@link McpProtocol}。
      */
-    private static final List<String> SUPPORTED_PROTOCOL_VERSIONS = Collections.unmodifiableList(
-            Arrays.asList(McpInitializeRequest.PROTOCOL_VERSION));
+    private static final List<String> SUPPORTED_PROTOCOL_VERSIONS = McpProtocol.SUPPORTED;
 
     private final McpOptions options = new McpOptions();
     private final Map<String, ServerHandler> handlers = new HashMap<>();

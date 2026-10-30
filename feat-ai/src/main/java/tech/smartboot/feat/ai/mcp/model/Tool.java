@@ -24,6 +24,15 @@ public class Tool {
     private String description;
     protected Schema inputSchema;
     protected Schema outputSchema;
+    private List<Icon> icons;
+
+    public List<Icon> getIcons() {
+        return icons;
+    }
+
+    public void setIcons(List<Icon> icons) {
+        this.icons = icons;
+    }
 
     public void setName(String name) {
         this.name = name;

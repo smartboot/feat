@@ -10,6 +10,10 @@
 
 package tech.smartboot.feat.ai.mcp.model;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 /**
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0 6/28/25
@@ -39,6 +43,7 @@ public class Resource {
      * Optional size in bytes
      */
     private String size;
+    private List<Icon> icons;
     private String text;
     private String blob;
 
@@ -118,6 +123,19 @@ public class Resource {
 
     public void setSize(String size) {
         this.size = size;
+    }
+
+    public List<Icon> getIcons() {
+        return icons;
+    }
+
+    public void setIcons(List<Icon> icons) {
+        this.icons = icons;
+    }
+
+    public Resource icons(Icon... icons) {
+        this.icons = icons == null ? Collections.<Icon>emptyList() : Arrays.asList(icons);
+        return this;
     }
 
     public String getText() {

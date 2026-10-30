@@ -13,6 +13,7 @@ package tech.smartboot.feat.ai.mcp.client;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import tech.smartboot.feat.ai.mcp.McpException;
+import tech.smartboot.feat.ai.mcp.McpProtocol;
 import tech.smartboot.feat.ai.mcp.enums.LoggerLevel;
 import tech.smartboot.feat.ai.mcp.enums.RoleEnum;
 import tech.smartboot.feat.ai.mcp.model.McpInitializeRequest;
@@ -122,10 +123,20 @@ public class McpClient {
             capabilitiesJson.put("roots", JSONObject.of("listChanged", true));
         }
         if (options.isSampling()) {
-            capabilitiesJson.put("sampling", new JSONObject());
+            JSONObject sampling = new JSONObject();
+            if (options.isSamplingTools()) {
+                sampling.put("tools", new JSONObject());
+            }
+            capabilitiesJson.put("sampling", sampling);
         }
         if (options.isElicitation()) {
-            capabilitiesJson.put("elicitation", new JSONObject());
+            JSONObject elicitation = new JSONObject();
+            // 空对象等价于仅支持 form，这里显式声明支持的模式，便于服务端判断能否下发 url 模式
+            elicitation.put("form", new JSONObject());
+            if (options.isElicitationUrl()) {
+                elicitation.put("url", new JSONObject());
+            }
+            capabilitiesJson.put("elicitation", elicitation);
         }
         if (options.getExperimental() != null) {
             capabilitiesJson.put("experimental", options.getExperimental());
@@ -135,9 +146,9 @@ public class McpClient {
 
         CompletableFuture<McpInitializeResponse> f = transport.asyncRequest("initialize", JSONObject.from(request), McpInitializeResponse.class);
         f.thenAccept(response -> {
-            // 服务端可能返回它自己支持的版本，客户端只接受自己能够处理的版本，否则必须断开
+            // 服务端可能返回它自己支持的版本，只要在本地支持列表内即可继续通信，否则必须断开
             String negotiated = response.getProtocolVersion();
-            if (!McpInitializeRequest.PROTOCOL_VERSION.equals(negotiated)) {
+            if (!McpProtocol.isSupported(negotiated)) {
                 future.completeExceptionally(new McpException(McpException.INVALID_REQUEST,
                         "server negotiated unsupported protocol version: " + negotiated));
                 return;

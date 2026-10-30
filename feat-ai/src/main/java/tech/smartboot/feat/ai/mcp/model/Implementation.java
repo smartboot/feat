@@ -10,10 +10,19 @@
 
 package tech.smartboot.feat.ai.mcp.model;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 public class Implementation {
     private String name;
     private String title;
     private String version;
+    /**
+     * 人类可读的实现说明，2025-11-25 起为可选字段。
+     */
+    private String description;
+    private List<Icon> icons;
 
     private Implementation(String name, String title, String version) {
         this.name = name;
@@ -49,6 +58,24 @@ public class Implementation {
 
     public Implementation setVersion(String version) {
         this.version = version;
+        return this;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public Implementation description(String description) {
+        this.description = description;
+        return this;
+    }
+
+    public List<Icon> getIcons() {
+        return icons;
+    }
+
+    public Implementation icons(Icon... icons) {
+        this.icons = icons == null ? Collections.<Icon>emptyList() : Arrays.asList(icons);
         return this;
     }
 }
