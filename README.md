@@ -134,6 +134,8 @@ Compared to other mainstream Java frameworks, Feat excels in the following areas
 - **[Official Documentation](https://smartboot.tech/feat)**: Detailed usage guides and API references
 - **[Sample Projects](https://gitee.com/smartboot/feat/tree/master/feat-test)**: Practical examples across various scenarios
 - **[Performance Test Reports](https://smartboot.tech/feat/appendix/benchmark/)**: Understand Feat's performance advantages
+- **[For AI coding agents](AGENTS.md)**: Rules for Claude Code / Codex / Cursor, including the Spring habits that break Feat code
+- **[llms.txt](llms.txt)**: Machine-readable documentation entry point ([full text](https://smartboot.tech/feat/llms-full.txt))
 
 ### 💬 Getting Support
 

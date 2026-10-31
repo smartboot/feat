@@ -1,0 +1,36 @@
+# Feat
+
+> Feat 是一个 Java Web 服务框架（JDK 8+）。它以编译期代码生成、零反射、无 Servlet 容器的方式，提供接近 Spring Boot 的开发体验，同时保持低启动耗时与低内存占用。核心模块 Apache 2.0，Feat Cloud 的使用需赞助授权。
+
+本文件只做**入口索引**，不复制正文。文档正文以站点的 llms-full.txt 为唯一来源，避免同一份内容在仓库里出现第二份副本。
+
+## 机器可读文档
+
+- [文档索引](https://smartboot.tech/feat/llms.txt): 按主题分组的全部文档目录
+- [全量文档](https://smartboot.tech/feat/llms-full.txt): 完整正文，适合直接作为上下文
+- [精简文档](https://smartboot.tech/feat/llms-small.txt): 去掉示例细节的压缩版
+
+## 仓库内
+
+- [AGENTS.md](./AGENTS.md): 用 Feat 写代码的规则，含 Spring 习惯会踩的 12 个坑、最小可运行工程、校验清单
+- [demo/helloworld](./demo/helloworld): 最小 Feat Cloud 工程
+- [demo/mybatis](./demo/mybatis): 数据库访问示例
+- [demo/feat-plus](./demo/feat-plus): 前后端一体的完整示例
+- [pages/src/content/docs](./pages/src/content/docs): 文档源文件（Astro MDX）
+
+## 按任务找文档
+
+- 写 HTTP 接口：https://smartboot.tech/feat/cloud/controller/
+- 依赖注入与生命周期：https://smartboot.tech/feat/cloud/bean/
+- 日志、鉴权、事务边界：https://smartboot.tech/feat/cloud/interceptor/
+- 配置与环境：https://smartboot.tech/feat/cloud/options/
+- 数据库：https://smartboot.tech/feat/cloud/mybatis/
+- 从 Spring Boot 迁移：https://smartboot.tech/feat/practices/from-spring/
+- 报错排查：https://smartboot.tech/feat/cloud/troubleshooting/
+- 不用注解、直接写路由：https://smartboot.tech/feat/server/router/
+- AOT 与编译期生成原理：https://smartboot.tech/feat/appendix/aot/
+
+## 版本
+
+- 最新发布版：2.4.2（Maven Central：`tech.smartboot.feat:feat-cloud`）
+- 仓库内开发版：见 `pom.xml`

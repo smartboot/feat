@@ -146,6 +146,8 @@ public class HelloWorld {
 - **[示例项目](https://gitee.com/smartboot/feat/tree/master/feat-test)**：各种场景的实际应用示例
 - **[性能测试报告](https://smartboot.tech/feat/appendix/benchmark/)**：了解Feat的性能优势
 - **[Ruoyi-Feat](https://gitee.com/xcmrfc-thanos/ruoyi-feat)**：社区提供的若依（Ruoyi）框架适配，助力企业级后台管理快速上手
+- **[给 AI 编程助手用的约定](AGENTS.md)**：Claude Code / Codex / Cursor 生成 Feat 代码时的规则，以及照搬 Spring 会踩的坑
+- **[llms.txt](llms.txt)**：机器可读文档入口（[全量文本](https://smartboot.tech/feat/llms-full.txt)）
 
 
 ### 💬 获取支持
