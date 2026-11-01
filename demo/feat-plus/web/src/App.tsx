@@ -4,7 +4,7 @@ import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-
 import type { CurrentUser } from "@/api/types"
 import { AppLayout } from "@/app/AppLayout"
 import { clearToken, getToken, setToken } from "@/auth/token"
-import { adminService } from "@/services/mock-admin-service"
+import { adminService } from "@/services/http-admin-service"
 import { DashboardPage } from "@/pages/DashboardPage"
 import { LoginPage } from "@/pages/LoginPage"
 import { UserListPage } from "@/pages/UserListPage"

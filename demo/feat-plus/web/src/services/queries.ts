@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import type { UserInput, UserQuery, UserStatus } from "@/api/types"
-import { adminService } from "@/services/mock-admin-service"
+import { adminService } from "@/services/http-admin-service"
 
 export const queryKeys = {
   users: (query: UserQuery) => ["users", query] as const,
