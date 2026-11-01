@@ -24,6 +24,11 @@ export interface CurrentUser {
   scopeDescription: string
   /** 这个账号能看到的菜单，后端按 permissions 过滤后给出。侧边栏与页面标题都只认它。 */
   menus: MenuItem[]
+  /**
+   * 配置了菜单、但本账号没有对应权限点的页面路径。直达这些地址时前端直接弹回概览页，
+   * 而不是让人面对一屏 403。这仍是体验层——真正的拦截在后端每个接口的权限校验里。
+   */
+  restrictedPaths: string[]
 }
 
 /**
@@ -85,6 +90,8 @@ export interface PermissionItem {
   label: string
   description: string
   sort: number
+  /** 该权限点当前挂在多少条菜单上；0 表示只影响接口，不控制任何侧栏入口。 */
+  menuCount: number
 }
 
 /** 「我的资料」。比 CurrentUser 多出邮箱、部门名、创建时间，少掉权限点。 */

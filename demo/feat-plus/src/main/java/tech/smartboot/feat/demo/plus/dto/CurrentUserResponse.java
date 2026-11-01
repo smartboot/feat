@@ -17,6 +17,10 @@ import java.util.List;
  * <p>
  * menus 是这个人能看到哪些菜单，由 {@code MenuService} 从 sys_menu 读出、按 permissions 过滤后给出。
  * 菜单跟着登录响应一起下发，不单独开接口——单独一个接口意味着它挂掉就白屏，首屏还要多等一次。
+ * <p>
+ * restrictedPaths 是「配置过菜单、且当前人没有对应权限点」的页面路径，供前端做直达拦截：
+ * 菜单只过滤侧栏的话，知道地址的人仍能在地址栏打开页面，然后面对一屏 403。
+ * 空列表（而不是 null）表示没有要拦的页面——管理员走这条路径时就是空的。
  */
 public class CurrentUserResponse {
     private long id;
@@ -28,13 +32,15 @@ public class CurrentUserResponse {
     private int dataScope;
     private String scopeDescription;
     private List<MenuItemResponse> menus;
+    private List<String> restrictedPaths;
 
     public CurrentUserResponse() {
     }
 
     public CurrentUserResponse(long id, String username, String displayName, List<String> roleCodes,
                                List<String> roleNames, List<String> permissions, int dataScope,
-                               String scopeDescription, List<MenuItemResponse> menus) {
+                               String scopeDescription, List<MenuItemResponse> menus,
+                               List<String> restrictedPaths) {
         this.id = id;
         this.username = username;
         this.displayName = displayName;
@@ -44,6 +50,7 @@ public class CurrentUserResponse {
         this.dataScope = dataScope;
         this.scopeDescription = scopeDescription;
         this.menus = menus;
+        this.restrictedPaths = restrictedPaths;
     }
 
     public long getId() {
@@ -116,5 +123,13 @@ public class CurrentUserResponse {
 
     public void setMenus(List<MenuItemResponse> menus) {
         this.menus = menus;
+    }
+
+    public List<String> getRestrictedPaths() {
+        return restrictedPaths;
+    }
+
+    public void setRestrictedPaths(List<String> restrictedPaths) {
+        this.restrictedPaths = restrictedPaths;
     }
 }

@@ -444,7 +444,13 @@ function RoleFormDialog({
                           </span>
                           <span className="grid gap-0.5">
                             <span className="text-sm font-medium">{item.label}</span>
-                            <span className="text-xs text-muted-foreground">{item.description}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {item.description}
+                              {/* menuCount 由后端按 sys_menu 统计：勾上这个点，哪些侧栏入口会随之出现。 */}
+                              {item.menuCount > 0 && (
+                                <span className="text-muted-foreground/70">（控制 {item.menuCount} 个菜单入口）</span>
+                              )}
+                            </span>
                           </span>
                         </button>
                       )

@@ -9,7 +9,10 @@
 3. **改完必须立刻生效**。菜单有 10 分钟缓存，靠写操作后的主动失效保证；漏了失效的表现是
    「改完标题刷新还是旧的」，所以每条写操作后都回查 /me，而不是只查管理接口；
 4. **菜单按权限过滤，而且是服务端过滤**。前端藏起来的东西，改 localStorage 就能看见；
-5. **权限点字典仍由代码定义**。它是「接口校验了什么」的镜像，不是可运营的数据。
+5. **无权页面随 /me 点名（restrictedPaths）**。侧栏过滤只藏入口，直达仍能打开页面；
+   前端据此在进入前拦住。它必须与侧栏过滤同源同权，否则两边各说各话；
+6. **权限点字典仍由代码定义**。它是「接口校验了什么」的镜像，不是可运营的数据；
+   每个权限点带 menuCount，说明它控制着几个菜单入口。
 
 运行前需先启动服务（默认 8080）。脚本会重置演示数据，并在结尾再重置一次。
 """
@@ -98,6 +101,8 @@ me_menus = me(admin).get("menus", [])
 # 逐字段比对而不是只比路径：这两个接口的嵌套深度不同（login 是 RestResult→LoginResponse→User→Menu，
 # 比 /me 多一层），AOT 生成器在深度超限时会退化成 fastjson2 序列化，字段集合可能因此漂移。
 check("登录响应与 /me 的菜单逐字段一致", me_menus, login_menus)
+check("登录响应与 /me 的 restrictedPaths 一致",
+      me(admin).get("restrictedPaths"), body.get("data", {}).get("user", {}).get("restrictedPaths"))
 check("菜单条数", 7, len(me_menus))
 check("首个菜单是数据概览", "/dashboard", paths({"menus": me_menus})[0])
 check("分组顺序", ["workspace", "system", "account"],
@@ -121,6 +126,12 @@ catalog = body.get("data", [])
 check("字典接口状态", 200, status)
 check("字典条数", 11, len(catalog))
 check("字典 key 集合与管理员权限一致", sorted(admin_permissions), sorted(item.get("key") for item in catalog))
+counts = {item.get("key"): item.get("menuCount") for item in catalog}
+check("dashboard:read 挂在 1 条菜单上", 1, counts.get("dashboard:read"))
+check("audit:read 挂在 1 条菜单上", 1, counts.get("audit:read"))
+check("menu:write 只管接口、不控制菜单入口", 0, counts.get("menu:write"))
+check("system:write 只管接口、不控制菜单入口", 0, counts.get("system:write"))
+check_true("每条都带 menuCount 键（int，不要缺字段）", all("menuCount" in item for item in catalog))
 check("字典分组", ["dashboard", "user", "role", "dept", "audit", "system"],
       list(dict.fromkeys([item.get("groupKey") for item in catalog])))
 check_true("每条都有中文名与说明", all(item.get("label") and item.get("description") for item in catalog))
@@ -144,6 +155,17 @@ for name, token in (("bob", bob), ("alice", alice)):
     expected = [item.get("path") for item in me_menus
                 if not item.get("permission") or item.get("permission") in owned]
     check("%s 的菜单 = 按权限过滤全量菜单" % name, expected, paths(user))
+
+print("--- 直达拦截：无权页面随 /me 点名 ---")
+# 侧栏过滤只藏入口：知道地址的人仍能在地址栏打开 /users，然后面对一屏 403。
+# restrictedPaths 把「配置了菜单且当前人无权」的页面点名下发，前端据此在进入前拦住并说明原因。
+# 它必须与 visibleFor 读同一份数据、同一次权限合并，否则侧栏和直达拦截会各说各话。
+check("普通成员的 restrictedPaths", ["/users", "/roles", "/departments", "/activities", "/menus"],
+      bob_user.get("restrictedPaths"))
+check("部门主管少了 /users", ["/roles", "/departments", "/activities", "/menus"],
+      me(alice).get("restrictedPaths"))
+check("审计员只被拦菜单管理", ["/menus"], me(carol_token).get("restrictedPaths"))
+check("管理员无拦截（空列表，不是 null）", [], me(admin).get("restrictedPaths"))
 
 print("--- 管理接口的权限边界 ---")
 check("没有 menu:read 的人读不到菜单配置", 403, call("GET", "/api/menus", bob)[0])
@@ -206,6 +228,8 @@ menu_after = me(admin).get("menus", [])
 check("/me 里立刻是新名字", "审计轨迹",
       [item.get("name") for item in menu_after if item.get("path") == "/activities"][0])
 check("改成登录可见后普通成员也能看到", True, "/activities" in paths(me(bob)))
+check("权限点清空后 restrictedPaths 不再点名 /activities",
+      False, "/activities" in me(bob).get("restrictedPaths", []))
 check("隐藏后不进侧栏但仍是标题来源", False,
       [item.get("visible") for item in menu_after if item.get("path") == "/activities"][0])
 
@@ -230,6 +254,9 @@ print("--- 删除的影响面 ---")
 status, _ = call("DELETE", "/api/menus/%d" % created["id"], admin)
 check("删除测试菜单", 200, status)
 check("侧栏少一条", 6, len(me(admin).get("menus", [])))
+# 菜单删掉后就不是「配置了但无权」了，从 restrictedPaths 里消失——它拦的是配置，不是页面本身。
+check("删除后 restrictedPaths 也不再点名该页面",
+      ["/users", "/roles", "/departments", "/menus"], me(bob).get("restrictedPaths"))
 check("删不存在的菜单返回 404", 404, call("DELETE", "/api/menus/%d" % created["id"], admin)[0])
 check("改不存在的菜单返回 404", 404, call("PUT", "/api/menus/999999", admin, {
     "groupKey": "system", "groupLabel": "系统管理", "path": "/roles", "name": "x"})[0])

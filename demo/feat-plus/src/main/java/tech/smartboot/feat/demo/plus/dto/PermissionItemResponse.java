@@ -9,6 +9,9 @@ package tech.smartboot.feat.demo.plus.dto;
  * <p>
  * 注意这里返回的是<b>字典</b>而不是「当前登录人拥有的权限」：角色页要能给角色授予自己都没有的权限点，
  * 所以不能从 {@code CurrentUserResponse.permissions} 推导。
+ * <p>
+ * menuCount 是该权限点当前挂在多少条菜单上（一条都没有则为 0）。角色页勾选权限时，
+ * 管理员需要知道的不只是「这个点能调哪些接口」——它还决定了哪些侧栏入口会随之出现或消失。
  */
 public class PermissionItemResponse {
     private String groupKey;
@@ -17,18 +20,20 @@ public class PermissionItemResponse {
     private String label;
     private String description;
     private int sort;
+    private int menuCount;
 
     public PermissionItemResponse() {
     }
 
     public PermissionItemResponse(String groupKey, String groupLabel, String key, String label,
-                                  String description, int sort) {
+                                  String description, int sort, int menuCount) {
         this.groupKey = groupKey;
         this.groupLabel = groupLabel;
         this.key = key;
         this.label = label;
         this.description = description;
         this.sort = sort;
+        this.menuCount = menuCount;
     }
 
     public String getGroupKey() {
@@ -77,5 +82,13 @@ public class PermissionItemResponse {
 
     public void setSort(int sort) {
         this.sort = sort;
+    }
+
+    public int getMenuCount() {
+        return menuCount;
+    }
+
+    public void setMenuCount(int menuCount) {
+        this.menuCount = menuCount;
     }
 }

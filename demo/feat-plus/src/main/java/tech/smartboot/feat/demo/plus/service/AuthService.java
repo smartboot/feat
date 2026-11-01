@@ -98,9 +98,11 @@ public class AuthService {
 
     private CurrentUserResponse toCurrentUser(AuthAccount account) {
         AccessContext access = dataScopeResolver.resolve(account);
+        // menus 与 restrictedPaths 读的是同一份缓存、同一次权限合并，保证侧栏与直达拦截不会各说各话。
         return new CurrentUserResponse(account.getId(), account.getUsername(), account.getDisplayName(),
                 account.roleCodes(), account.roleNames(), access.getPermissions(),
-                access.getDataScope(), access.describeScope(), menuService.visibleFor(access.getPermissions()));
+                access.getDataScope(), access.describeScope(), menuService.visibleFor(access.getPermissions()),
+                menuService.restrictedFor(access.getPermissions()));
     }
 
     private static String trim(String value) {

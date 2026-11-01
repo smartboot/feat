@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { Bell, ChevronDown, Command, LogOut, Menu, Moon, PanelLeftClose, PanelLeftOpen, Search, Sun, UserRound, UsersRound, X } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
-import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom"
+import { Link, NavLink, Navigate, Outlet, useLocation, useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 
 import type { CurrentUser, NotificationItem } from "@/api/types"
@@ -15,7 +15,7 @@ import { Separator } from "@/components/ui/separator"
 import { useAllUsers, useNotificationMutations, useNotifications, useResetDemo } from "@/services/queries"
 import { FALLBACK_ICON, NAV_ICONS } from "@/lib/icons"
 import { hasPermission } from "@/lib/permissions"
-import { findMenuName, navGroups } from "@/lib/menus"
+import { findMenuName, findRestrictedPath, navGroups } from "@/lib/menus"
 import { cn } from "@/lib/utils"
 
 /**
@@ -75,6 +75,9 @@ export function AppLayout({ currentUser, onLogout, onRefreshUser }: { currentUse
   }))
   const flatNav = navSections.flatMap((section) => section.items)
   const activeLabel = findMenuName(menuItems, location.pathname) ?? "Feat Plus"
+  // 直达拦截：侧栏过滤只藏入口，地址栏仍能进去。命中无权页面时在渲染前弹回概览，
+  // 而不是让页面里的五六个接口各自 403，看起来像系统坏了。
+  const blockedPath = findRestrictedPath(currentUser.restrictedPaths ?? [], location.pathname)
   const navigateAndClose = (path: string) => { navigate(path); setMobileOpen(false); setCommandOpen(false) }
   const handleReset = async () => { await resetDemo.mutateAsync(); toast.success("演示数据已恢复"); navigate("/dashboard") }
 
@@ -137,11 +140,29 @@ export function AppLayout({ currentUser, onLogout, onRefreshUser }: { currentUse
             <DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" className="gap-2 px-2"><Avatar className="size-7"><AvatarFallback>{currentUser.displayName.slice(0, 1)}</AvatarFallback></Avatar><span className="hidden text-left sm:grid"><strong className="text-xs">{currentUser.displayName}</strong><span className="truncate text-[10px] text-muted-foreground">{currentUser.roleNames.join(" / ") || "无角色"}</span></span><ChevronDown className="hidden size-3.5 text-muted-foreground sm:block" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuLabel><span className="block">{currentUser.username}</span><span className="mt-1 block text-[11px] font-normal text-muted-foreground">数据范围：{currentUser.scopeDescription}</span></DropdownMenuLabel><DropdownMenuSeparator /><DropdownMenuItem onClick={() => navigate(`/users/${currentUser.id}`)}>查看我的账号</DropdownMenuItem><DropdownMenuItem onClick={() => setCommandOpen(true)}>打开命令面板</DropdownMenuItem><DropdownMenuSeparator /><DropdownMenuItem destructive onClick={onLogout}><LogOut /> 退出登录</DropdownMenuItem></DropdownMenuContent></DropdownMenu>
           </div>
         </header>
-        <main className="mx-auto w-full max-w-[1600px] p-4 md:p-6 lg:p-8"><SessionProvider user={currentUser} onRefresh={onRefreshUser}><Outlet /></SessionProvider></main>
+        <main className="mx-auto w-full max-w-[1600px] p-4 md:p-6 lg:p-8">
+          {blockedPath
+            ? <NoAccessRedirect path={blockedPath} />
+            : <SessionProvider user={currentUser} onRefresh={onRefreshUser}><Outlet /></SessionProvider>}
+        </main>
       </div>
       <CommandDialog open={commandOpen} onOpenChange={setCommandOpen}><CommandInput placeholder="输入命令或搜索用户..." /><CommandList><CommandEmpty>没有找到匹配结果</CommandEmpty><CommandGroup heading="导航">{flatNav.map((item, index) => { const Icon = item.icon; return <CommandItem key={item.to} onSelect={() => navigateAndClose(item.to)}><Icon className="size-4" />{item.label}<CommandShortcut>⌘ {index + 1}</CommandShortcut></CommandItem> })}</CommandGroup><CommandSeparator />{canReadUsers && <><CommandGroup heading="用户"><CommandItem onSelect={() => navigateAndClose("/users")}><UsersRound className="size-4" />查看全部用户</CommandItem>{users.slice(0, 5).map((user) => <CommandItem key={user.id} value={`${user.displayName} ${user.username} ${user.email}`} onSelect={() => navigateAndClose(`/users/${user.id}`)}><Avatar className="size-6"><AvatarFallback>{user.displayName.slice(0, 1)}</AvatarFallback></Avatar>{user.displayName}<span className="text-xs text-muted-foreground">{user.username}</span></CommandItem>)}</CommandGroup><CommandSeparator /></>}<CommandGroup heading="操作"><CommandItem onSelect={() => { navigateAndClose("/users"); toast.info("请使用用户管理页面的新建用户按钮") }}><Command className="size-4" />新建用户</CommandItem></CommandGroup></CommandList></CommandDialog>
     </div>
   )
+}
+
+/**
+ * 直达拦截。菜单按权限过滤后，被藏起来的页面不在 currentUser.menus 里，
+ * 但侧栏不出现不等于页面打不开——知道地址的人仍可在地址栏直接输入。
+ * 原来的表现是页面框架照常渲染、里面的接口一个个 403，看起来像故障。
+ * 这里在下发数据里命中无权路径时立刻弹回概览页，并说明原因。
+ * 它仍然只是体验层：真正的安全边界是后端接口上的权限校验，前端永远拦不住改请求的人。
+ */
+function NoAccessRedirect({ path }: { path: string }) {
+  useEffect(() => {
+    toast.error("没有访问该页面的权限", { description: `页面地址：${path}` })
+  }, [path])
+  return <Navigate to="/dashboard" replace />
 }
 
 function NotificationButton({ notifications, unread, onRead, onReadAll }: { notifications: NotificationItem[]; unread: number; onRead: (id: number) => void; onReadAll: () => void }) {

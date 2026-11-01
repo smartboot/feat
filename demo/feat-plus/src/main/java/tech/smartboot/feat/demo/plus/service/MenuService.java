@@ -92,6 +92,26 @@ public class MenuService {
         return items;
     }
 
+    /**
+     * 当前登录人「无权直达」的页面路径，供前端做路由级拦截。
+     * <p>
+     * {@link #visibleFor(List)} 只过滤侧栏：知道地址的人仍可以在地址栏输入 /users 打开页面，
+     * 然后面对一屏 403——报错来自五六个接口，看起来像系统坏了，其实只是没有权限。
+     * 把这些路径随登录响应一起下发，前端就能在进入页面前拦住并说明原因。
+     * 仍然只是体验层：拦的依据还是权限点，接口的 {@code require(...)} 才是安全边界。
+     */
+    public List<String> restrictedFor(List<String> permissions) {
+        List<MenuRecord> rows = menuSnapshot.all();
+        List<String> paths = new ArrayList<>(rows.size());
+        for (MenuRecord row : rows) {
+            String permission = row.getPermission();
+            if (!permission.isEmpty() && !Permission.contains(permissions, permission)) {
+                paths.add(row.getPath());
+            }
+        }
+        return paths;
+    }
+
     /** 可选的页面路径，供管理页的「路径」下拉使用。 */
     public List<String> routeOptions() {
         return MenuRoutes.ALL;

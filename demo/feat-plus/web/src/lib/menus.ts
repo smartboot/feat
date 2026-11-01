@@ -63,3 +63,18 @@ export function findMenuName(menus: MenuItem[], pathname: string): string | unde
   }
   return best?.name
 }
+
+/**
+ * 直达拦截：当前地址是否落在「无权进入的页面」里。
+ *
+ * restrictedPaths 是页面根路径（/users），详情路由（/users/12）也该被拦——
+ * 它们属于同一个入口。每条路径全局唯一，所以命中第一条即可返回，不用挑最长前缀。
+ * 拦的只是体验：权限点不够时后端接口本来就会 403，这里只是把「一屏报错」
+ * 换成「进入前的一句话」。
+ */
+export function findRestrictedPath(restricted: string[], pathname: string): string | undefined {
+  for (const path of restricted) {
+    if (pathname === path || pathname.startsWith(`${path}/`)) return path
+  }
+  return undefined
+}
