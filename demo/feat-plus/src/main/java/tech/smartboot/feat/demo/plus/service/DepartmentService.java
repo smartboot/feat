@@ -18,6 +18,7 @@ import tech.smartboot.feat.demo.plus.dto.DepartmentNodeResponse;
 import tech.smartboot.feat.demo.plus.mapper.DepartmentMapper;
 import tech.smartboot.feat.demo.plus.model.DepartmentRecord;
 import tech.smartboot.feat.demo.plus.model.DepartmentUserCount;
+import tech.smartboot.feat.demo.plus.security.DepartmentSnapshot;
 import tech.smartboot.feat.demo.plus.security.DepartmentTree;
 
 /**
@@ -41,11 +42,14 @@ public class DepartmentService {
     @Autowired
     private ActivityRecorder activityRecorder;
 
+    @Autowired
+    private DepartmentSnapshot departmentSnapshot;
+
     /**
      * 组装成树返回。节点顺序按 sortOrder、id 升序，前端不需要再排。
      */
     public List<DepartmentNodeResponse> tree() {
-        List<DepartmentRecord> rows = departmentMapper.selectAll();
+        List<DepartmentRecord> rows = departmentSnapshot.all();
         Map<Long, Long> userCounts = userCounts();
         Map<Long, DepartmentNodeResponse> nodes = new LinkedHashMap<>();
         for (DepartmentRecord row : rows) {
@@ -71,7 +75,7 @@ public class DepartmentService {
      * 算法在 {@link DepartmentTree}：数据范围解析也要用它，而机制层不能依赖业务层。
      */
     public List<Long> subtreeIds(long rootId) {
-        return DepartmentTree.subtreeIds(departmentMapper.selectAll(), rootId);
+        return DepartmentTree.subtreeIds(departmentSnapshot.all(), rootId);
     }
 
     /**
@@ -115,6 +119,9 @@ public class DepartmentService {
         record.setCreator(operatorId);
         record.setEditor(operatorId);
         departmentMapper.insert(record);
+        // 先失效再读回：requireByName 走的是 mapper 直读，不受缓存影响；
+        // 但下一次 tree() 必须看到新部门，所以失效要在这里而不是方法末尾。
+        departmentSnapshot.invalidate();
 
         activityRecorder.record("create", "创建了部门 " + name,
                 parentId == ROOT ? "顶级部门" : "归属于 " + nameOf(parentId), null, operatorId);
@@ -143,6 +150,7 @@ public class DepartmentService {
         current.setEditTime(new Date());
         current.setEditor(operatorId);
         departmentMapper.update(current);
+        departmentSnapshot.invalidate();
 
         activityRecorder.record("update", "更新了部门 " + name,
                 parentId == ROOT ? "调整为顶级部门" : "上级调整为 " + nameOf(parentId), null, operatorId);
@@ -161,6 +169,7 @@ public class DepartmentService {
             throw new DomainException("该部门下还有 " + users + " 位成员，请先调整成员归属");
         }
         departmentMapper.softDelete(id, operatorId);
+        departmentSnapshot.invalidate();
         activityRecorder.record("delete", "删除了部门 " + record.getName(),
                 record.getCode().isEmpty() ? "部门已移除" : record.getCode() + " 已移除", null, operatorId);
     }

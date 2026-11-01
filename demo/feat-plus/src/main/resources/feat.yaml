@@ -13,3 +13,17 @@ feat:
 feat-plus:
   auth:
     token-ttl-seconds: 7200
+
+  cache:
+    # memory（默认）| redis。改这里就切全局缓存后端，业务代码不用动。
+    # 注意：feat.yaml 是编译期输入，改完必须重新构建，只重启旧包不生效。
+    provider: memory
+    default-ttl-seconds: 300
+    key-prefix: "plus:cache:"
+    # 启用 redis 时反注释下面一段，并把 provider 改成 redis；
+    # 缺 address 会在启动时直接失败，不会静默退回内存。
+    # redis:
+    #   address: 127.0.0.1:6379
+    #   username: ""
+    #   password: ""
+    #   database: 0

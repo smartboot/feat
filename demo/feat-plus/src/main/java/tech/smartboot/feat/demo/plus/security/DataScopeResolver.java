@@ -8,7 +8,6 @@ import java.util.Set;
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Bean;
 import tech.smartboot.feat.demo.plus.mapper.AuthMapper;
-import tech.smartboot.feat.demo.plus.mapper.DepartmentMapper;
 import tech.smartboot.feat.demo.plus.model.AuthAccount;
 import tech.smartboot.feat.demo.plus.model.AuthRole;
 
@@ -33,7 +32,7 @@ public class DataScopeResolver {
     private AuthMapper authMapper;
 
     @Autowired
-    private DepartmentMapper departmentMapper;
+    private DepartmentSnapshot departmentSnapshot;
 
     public AccessContext resolve(AuthAccount account) {
         List<String> permissions = Permission.effective(account);
@@ -84,7 +83,7 @@ public class DataScopeResolver {
                 if (scope == DataScope.DEPARTMENT) {
                     departmentIds.add(ownDepartmentId);
                 } else if (scope == DataScope.DEPARTMENT_AND_CHILD) {
-                    departmentIds.addAll(DepartmentTree.subtreeIds(departmentMapper.selectAll(), ownDepartmentId));
+                    departmentIds.addAll(DepartmentTree.subtreeIds(departmentSnapshot.all(), ownDepartmentId));
                 }
             }
         }

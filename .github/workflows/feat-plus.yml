@@ -1,6 +1,6 @@
 # feat-plus 的端到端回归。
 #
-# 为什么不是 mvn test：feat-plus 没有单元测试，218 项断言全部是打真实 HTTP 接口的脚本
+# 为什么不是 mvn test：feat-plus 没有单元测试，232 项断言全部是打真实 HTTP 接口的脚本
 # （scripts/regress_*.py）。它们验证的是「注解处理器生成的路由 + MyBatis 动态 SQL +
 # 权限与数据范围」三者合起来的行为，用 JUnit 反而要重新搭一套容器。
 #
@@ -103,6 +103,7 @@ jobs:
           python3 scripts/regress_scope.py
           python3 scripts/regress_audit.py
           python3 scripts/regress_profile.py
+          python3 scripts/regress_cache.py
 
       - name: 失败时输出服务日志
         if: failure()

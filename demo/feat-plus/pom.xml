@@ -28,6 +28,12 @@
             <version>${feat.version}</version>
             <scope>provided</scope>
         </dependency>
+        <!-- Feat 生态自带的 Redis 客户端，feat-cloud 里是 optional，用到需显式声明 -->
+        <dependency>
+            <groupId>tech.smartboot</groupId>
+            <artifactId>redisun</artifactId>
+            <version>1.4.0</version>
+        </dependency>
         <dependency>
             <groupId>org.mybatis</groupId>
             <artifactId>mybatis</artifactId>

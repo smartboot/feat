@@ -5,10 +5,11 @@
 规则（白名单，未列出即违规）：
     model      -> 不允许依赖本项目任何包（纯表结构）
     mapper     -> model
-    security   -> model, mapper, token, common
+    cache      -> 不允许依赖本项目任何包（基础设施，只有 redisun）
+    security   -> model, mapper, token, common, cache
     dto        -> model, security, common
-    service    -> dto, model, mapper, security, token, common
-    controller -> dto, service, security, token, common, seed
+    service    -> dto, model, mapper, security, token, common, cache
+    controller -> dto, service, security, token, common, cache, seed
     common     -> 不允许
     token      -> 不允许
     seed       -> 不限制（演示设施，接入真实项目时整包删除）
@@ -27,10 +28,11 @@ ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)),
 ALLOWED = {
     "model": set(),
     "mapper": {"model"},
-    "security": {"model", "mapper", "token", "common"},
+    "cache": set(),
+    "security": {"model", "mapper", "token", "common", "cache"},
     "dto": {"model", "security", "common"},
-    "service": {"dto", "model", "mapper", "security", "token", "common"},
-    "controller": {"dto", "service", "security", "token", "common", "seed"},
+    "service": {"dto", "model", "mapper", "security", "token", "common", "cache"},
+    "controller": {"dto", "service", "security", "token", "common", "cache", "seed"},
     "common": set(),
     "token": set(),
     "seed": None,
