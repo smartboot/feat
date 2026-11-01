@@ -173,18 +173,20 @@ CI 在 `.github/workflows/feat-plus.yml`：分层检查 → 装框架 → 建前
 ```text
 src/main/java/tech/smartboot/feat/demo/plus/
 ├── Bootstrap.java        入口，挂载 SPA 回退
-├── controller/           9 个 Controller：收参数、验权限点、调 Service
+├── controller/          10 个 Controller：收参数、验权限点、调 Service
 ├── service/              8 个业务服务：业务规则与校验在这里，不允许直接拼 SQL
 ├── mapper/               8 个 MyBatis 接口 + SqlFragments（SQL 片段常量）
 ├── model/               11 个表结构映射，含 passwordHash / isDeleted 等不外露字段
 ├── dto/                 20 个请求与响应契约，OpenAPI 从这里导出
 ├── security/             认证与授权的机制层：AccessContext / AccessGuard /
-│                         DataScopeResolver / Permission / DataScope / DepartmentTree
+│                         DataScopeResolver / Permission / DataScope / DepartmentTree /
+│                         DepartmentSnapshot（部门全表读缓存）
+├── cache/                缓存后端：CacheStore 契约 + 内存 / Redis 两实现 + 按配置选择
 ├── token/                令牌与会话（内存实现，可替换成 Redis）
 ├── common/               统一响应、异常、ApiController、SPA 回退
 └── seed/                 演示数据，接入真实项目时整包删除
 
-scripts/                  回归断言（crud / scope / audit / profile）+ 分层检查
+scripts/                  回归断言（crud / scope / audit / profile / cache）+ 分层检查
 web/src/
 ├── services/admin-service.ts   前后端共同遵守的接口契约
 ├── services/http-admin-service.ts  唯一实现，页面只从这里取 adminService
@@ -202,10 +204,11 @@ web/src/
 |---|---|
 | `model` | 无（纯表结构，连 security 都不依赖） |
 | `mapper` | `model` |
-| `security` | `model` `mapper` `token` `common` |
+| `cache` | 无（只有 redisun） |
+| `security` | `model` `mapper` `token` `common` `cache` |
 | `dto` | `model` `security` `common` |
-| `service` | `dto` `model` `mapper` `security` `token` `common` |
-| `controller` | `dto` `service` `security` `token` `common` `seed` |
+| `service` | `dto` `model` `mapper` `security` `token` `common` `cache` |
+| `controller` | `dto` `service` `security` `token` `common` `cache` `seed` |
 | `common` `token` | 无 |
 | `seed` | 不限制（演示设施，接入时整包删） |
 
@@ -226,6 +229,36 @@ web/src/
 > 后端从未发过这个令牌，登录页误引用它时表现为「登录成功但后续每个接口都 401」。
 > 现已整层删除，只留一份真实实现——契约变了 TS 会直接报错，不会静默漂移。
 
+## 缓存
+
+默认进程内（`MemoryCacheStore`），把 `feat.yaml` 的 `feat-plus.cache.provider` 改成 `redis` 即切换后端，
+业务代码不动。目前接在「部门全表读」上（`security/DepartmentSnapshot`）：数据范围解析每请求都要
+整表算一次子树，而部门数据一个月改不了几次。
+
+```yaml
+feat-plus:
+  cache:
+    provider: memory        # memory | redis
+    default-ttl-seconds: 300
+    key-prefix: "plus:cache:"
+    redis:
+      address: 127.0.0.1:6379
+```
+
+三条规则，都是踩过之后写死的：
+
+- **TTL 和主动失效同时存在**，不是二选一。TTL 兜住漏失效的路径，主动失效保证改完立刻生效。
+- **写方法内部的读不走缓存**。否则看不到自己刚插入的行，或者更糟——拿已删除的部门当有效数据，
+  让数据权限的范围悄悄放宽。
+- **配置写错就启动失败**，不静默降级到内存。缓存降级后应用照常工作、只是慢，没人会发现配置
+  根本没生效；多实例下它的表现是「偶发读到旧数据」，比启动失败难查得多。
+
+`feat.yaml` 是编译期输入，改完要 `mvn clean compile`。只跑 `mvn compile` 时 Maven 可能判定为增量构建，
+注解处理器不重新执行，跑起来还是上一套配置。
+
+运维侧有一个只读接口：`GET /api/system/cache`（要求 `system:write`），返回当前后端与本次启动以来的
+命中计数。它的用途是回答「现在到底在用哪个后端」——这个信息无法从部署包推断。
+
 ## 换成真实数据库
 
 `src/main/resources/mybatis/mybatis-config.xml` 里改掉 H2 的 `jdbc:h2:mem:...` 即可。
@@ -241,3 +274,8 @@ web/src/
 4. **`HttpStaticResourceHandler` 的同步 `handle(HttpRequest)` 是空实现**，直接抛 `UnsupportedOperationException`，只能在异步链路里调用。
 5. **SPA 路由没有内置回退。** 默认静态处理器找不到 `/users` 会去试 `users.html`，因此刷新前端路由会 404，需要自己挂 `SpaFallbackHandler`。
 6. **没有全局异常处理。** 401/404 这类状态码要在 Controller 里显式 `setHttpStatus`，见 `common/ApiController`。
+7. **返回值序列化在编译期完成**，逐字段调 getter，没有对应字段的计算属性会被整条丢掉。
+   `CacheStats` 的 `hitRate` 原本只在 getter 里算，接口返回里就少了这个键——必须落成真实字段。
+8. **启动异常的中间层 message 会消失**。`new FeatException(msg, e)` 会把 cause 解包到最底层，
+   所以 `new IllegalStateException(msg, e)` 里的提示打不出来，控制台只剩 `Connection refused`。
+   要让提示可见，把信息拼进自己的 message 并且不设 cause。

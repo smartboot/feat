@@ -153,9 +153,11 @@ server:
 
 feat:
   redis:
-    host: redis.example.com
-    port: 6379
+    address: redis.example.com:6379
 ```
+
+`feat.redis` 块不能省（`store-type` 只负责生成 `getBean("redisun")`，Bean 本身要靠这个块注册），
+地址写在 `address` 里，`host` / `port` 两个键不存在，写了也不会生效。
 
 再检查：
 

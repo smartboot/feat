@@ -12,7 +12,8 @@
 
 ## 仓库内
 
-- [AGENTS.md](./AGENTS.md): 用 Feat 写代码的规则，含 Spring 习惯会踩的 12 个坑、最小可运行工程、校验清单
+- [AGENTS.md](./AGENTS.md): 用 Feat 写代码的规则，含 Spring 习惯会踩的 12 个坑、最小可运行工程、校验清单、文档优先的取证顺序
+- [pages/DOCS_GAPS.md](./pages/DOCS_GAPS.md): 文档缺口台账。动工前先查，收工前回写
 - [demo/helloworld](./demo/helloworld): 最小 Feat Cloud 工程
 - [demo/mybatis](./demo/mybatis): 数据库访问示例
 - [demo/feat-plus](./demo/feat-plus): 前后端一体的完整示例

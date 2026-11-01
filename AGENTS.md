@@ -29,13 +29,15 @@ Feat Cloud 的注解长得很像 Spring Boot，但**工作方式不同**：没�
 | 9 | `@Value("app.name")` | 必须带占位符：`@Value("${app.name}")`。不带 `${}` 注入的是字面量 |
 | 10 | `application.yml` / `application-prod.yml` | `feat.yml` / `feat-dev.yml` / `feat-prod.yml`，位于 `src/main/resources` |
 | 11 | 类上 `@RequestMapping("/users")` + 方法 `@RequestMapping("/hello")` | 类级前缀写在 `@Controller("users")` 的值里，方法上只写 `@RequestMapping("/hello")` |
-| 12 | 改完代码重跑 jar 就能生效 | **编译期生成**：改了 `@Controller` / `@Bean` / `@Autowired` / `@Value` / `feat.yml` 之后必须重新 `mvn compile` 或 `mvn package`。只重启旧 jar 不会生效 |
+| 12 | 改完代码重跑 jar 就能生效 | **编译期生成**：改了 `@Controller` / `@Bean` / `@Autowired` / `@Value` / `feat.yml` 之后必须重新构建。只重启旧 jar 不会生效；只改 `feat.yml` 时 `mvn compile` 也可能被判为增量而跳过注解处理器，用 `mvn clean compile` 最稳 |
 
-补充两个容易忽略的边界：
+补充几个容易忽略的边界：
 
 - `feat.yml` 的 `server:` 块只绑定 `int` 和 `String` 字段，`boolean` / `long` 写进去不生效。
 - 环境名只能包含字母和数字（`dev`、`prod`、`gray1`），`feat-prod-us.yml` 不会被识别。
 - 用 `maven-shade-plugin` 打 fat jar 时，必须用 `AppendingTransformer` 合并 `META-INF/services/tech.smartboot.feat.cloud.CloudService`，否则应用能启动但所有路由 404。
+- **返回值序列化在编译期完成**，逐字段调 getter：没有对应字段的计算属性（如只在 `getHitRate()` 里算的值）不会被输出，接口里静默少一个键。要输出就落成真实字段。
+- **启动失败的异常会被解包到最底层 cause**（`FeatException#getRootCause`）。`new IllegalStateException(msg, e)` 里的 msg 不会出现在控制台，只剩 `Connection refused` 之类。要让提示可见，就把信息拼进自己的 message 且不设 cause。
 
 ## 最小可运行工程（Feat Cloud）
 
@@ -132,6 +134,7 @@ curl http://localhost:8080/users/42      # {"success":true,"code":200,...,"data"
 3. 必要参数用了包装类型还是基本类型？
 4. 启动日志里出现了目标路由吗？没有就是没编译或包扫描没覆盖。
 5. 改完注解或 `feat.yml` 后，重新跑了 `mvn compile` 吗？
+6. 本次有没有遇到"文档没写清、得读源码才知道"的地方？有就去 `pages/DOCS_GAPS.md` 登记并回写文档——这是交付的一部分。
 
 ## 仓库结构与构建
 
@@ -149,17 +152,56 @@ pages/                文档站（Astro + Starlight），文档源在 pages/src/
 - `feat-core` 没有单元测试，行为验证靠 `demo/` 下的工程端到端跑。
 - 文档不是 `docs/`，是 `pages/src/content/docs/**/*.mdx`。新增文档页要带 frontmatter（`title`、`description`、`sidebar.order`）。
 
-## 文档
+## 工作方式：文档优先，缺口回写
 
-站点已提供机器可读文档，需要细节时直接读，不要凭印象编 API：
+用 Feat 开发时按这个顺序取证，不要跳步，也不要凭 Spring 印象猜：
+
+1. **先查文档**。本地 `pages/src/content/docs/**/*.mdx` 与线上 `llms-full.txt` 是同一份内容。文档怎么写就怎么用。
+2. **文档没覆盖、或对不上源码，再读源码**。以源码为准，不要以文档为准。
+3. **把结论写回文档**。和代码改动放在同一次提交里，并在 [`pages/DOCS_GAPS.md`](./pages/DOCS_GAPS.md) 销账。
+
+第 3 步是硬要求，不是"有空再补"。文档缺口出现过一次就不会只坑一个人——下一个人（或下一次的你自己）还会踩同一个。**只读源码不写回去，等于把这次的理解一次性消耗掉。**
+
+需要回写的三种情形，都算「文档不满足」：
+
+| 情形 | 实例 |
+|---|---|
+| 完全没讲 | 业务缓存、MyBatis 会话与事务 |
+| 讲了但和源码不一致 | `feat.redis.host` / `port` —— 这两个键没有任何代码读取，实际只认 `feat.redis.address` |
+| 讲了但漏了前提 | `session.store-type: redis` 要求同时存在 `feat.redis` 块，否则生成 `getBean("redisun")` 但 bean 没注册：编译通过、启动失败 |
+
+### 三条最高杠杆的取证命令
+
+比通读源码快，先跑这三个再决定要不要深入：
+
+```bash
+# 1. feat.yml 里哪些键真的生效（没出现在结果里的键写了也不报错、也不生效）
+grep -rnE 'JSONPath\.eval\(config' feat-cloud-aot/src/main/java \
+  | sed 's/.*JSONPath.eval(config, //' | sed 's/).*//' | sort -u
+
+# 2. 某个注解在编译期被翻译成什么（改完跑一次 mvn compile 再读）
+find target/generated-sources -name "FeatApplication*.java"
+
+# 3. 某个特性有没有实现（先确认存在，再读实现）
+grep -rlnE "关键词" --include=*.java feat-core/src feat-cloud/src feat-cloud-aot/src
+```
+
+### 工具坑
+
+- **macOS 的 grep 是 BSD 版，`\|` 不支持**。要交替匹配必须加 `-E`，否则返回空结果——空结果会被误读成"框架没这个功能"。这条已经骗过一次（搜"缓存"零命中，实际文档里就有）。
+- 搜文档正文用 `grep -rniE`，别用 `grep "a\|b"`。
+
+### 文档索引
 
 - 文档索引（llms.txt）：https://smartboot.tech/feat/llms.txt
 - 全量文档（llms-full.txt）：https://smartboot.tech/feat/llms-full.txt
 - Controller：https://smartboot.tech/feat/cloud/controller/
 - Bean 与依赖注入：https://smartboot.tech/feat/cloud/bean/
 - 方法拦截器：https://smartboot.tech/feat/cloud/interceptor/
-- Spring 迁移对照：https://smartboot.tech/feat/practices/from-spring/
-- 故障排查：https://smartboot.tech/feat/cloud/troubleshooting/
+- Session 与 Redis 会话：https://smartboot.tech/feat/cloud/session/
+- 业务缓存：https://smartboot.tech/feat/cloud/cache/
+- 从 Spring Boot 迁移：https://smartboot.tech/feat/practices/from-spring/
+- 报错排查：https://smartboot.tech/feat/cloud/troubleshooting/
 - Feat Core 路由：https://smartboot.tech/feat/server/router/
 
 ## 修改 Feat 本身时的约束
