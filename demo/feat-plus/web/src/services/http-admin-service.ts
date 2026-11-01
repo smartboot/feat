@@ -1,10 +1,13 @@
 import type {
+  ActivityItem,
+  ActivityQuery,
   CurrentUser,
   DashboardSummary,
   DepartmentInput,
   DepartmentNode,
   LoginResponse,
   NotificationItem,
+  OperatorOption,
   PageResult,
   RoleInput,
   RoleItem,
@@ -24,6 +27,17 @@ function buildQuery(query: UserQuery): string {
   if (query.status !== "all") params.set("status", query.status)
   if (query.roleCode !== "all") params.set("roleCode", query.roleCode)
   if (query.departmentId !== "all") params.set("departmentId", String(query.departmentId))
+  return params.toString()
+}
+
+function buildActivityQuery(query: ActivityQuery): string {
+  const params = new URLSearchParams()
+  params.set("page", String(query.page))
+  params.set("pageSize", String(query.pageSize))
+  if (query.kind !== "all") params.set("kind", query.kind)
+  if (query.operatorId !== "all") params.set("operatorId", String(query.operatorId))
+  if (query.from) params.set("from", query.from)
+  if (query.to) params.set("to", query.to)
   return params.toString()
 }
 
@@ -93,6 +107,12 @@ export const adminService: AdminService = {
   },
   getDashboardSummary(): Promise<DashboardSummary> {
     return request<DashboardSummary>("/api/dashboard")
+  },
+  listActivities(query: ActivityQuery): Promise<PageResult<ActivityItem>> {
+    return request<PageResult<ActivityItem>>(`/api/activities?${buildActivityQuery(query)}`)
+  },
+  listActivityOperators(): Promise<OperatorOption[]> {
+    return request<OperatorOption[]>("/api/activities/operators")
   },
   listNotifications(): Promise<NotificationItem[]> {
     return request<NotificationItem[]>("/api/notifications")

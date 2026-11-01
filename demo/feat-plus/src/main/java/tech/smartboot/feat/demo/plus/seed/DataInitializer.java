@@ -58,6 +58,8 @@ public class DataInitializer {
 
     public void reset() {
         activityMapper.truncate();
+        // 已读状态是通知的从属数据，必须先清，否则重置后旧 id 的已读记录会串到新通知上。
+        notificationMapper.truncateReads();
         notificationMapper.truncate();
         loginStatMapper.truncate();
         userMapper.truncate();
@@ -161,8 +163,8 @@ public class DataInitializer {
             NotificationRecord record = new NotificationRecord();
             record.setTitle(seed.title);
             record.setDescription(seed.description);
-            record.setUserId(null);
-            record.setReadFlag(seed.readFlag);
+            // 0 表示广播，落库时统一存 NULL，查询里 NULL 与 0 都按广播处理。
+            record.setUserId(seed.recipientUserId == 0 ? null : Long.valueOf(seed.recipientUserId));
             record.setIsDeleted(0);
             record.setCreatedTime(SeedData.parseTime(seed.createdTime));
             record.setEditTime(SeedData.parseTime(seed.createdTime));

@@ -38,9 +38,9 @@ public final class SeedData {
         return Arrays.asList(
                 new SeedRole("ADMIN", "系统管理员", "拥有全部权限，内置角色不可删除、不可停用",
                         Permission.join(Permission.ALL), 1, 1),
-                new SeedRole("AUDITOR", "审计员", "只读查看成员、角色与部门，不能做任何变更",
+                new SeedRole("AUDITOR", "审计员", "只读查看成员、角色、部门与审计日志，不能做任何变更",
                         Permission.join(Arrays.asList(Permission.DASHBOARD_READ, Permission.USER_READ,
-                                Permission.ROLE_READ, Permission.DEPT_READ)), 1, 1),
+                                Permission.ROLE_READ, Permission.DEPT_READ, Permission.AUDIT_READ)), 1, 1),
                 new SeedRole("USER", "普通成员", "登录后可访问数据概览，看不到管理菜单",
                         Permission.join(Collections.singletonList(Permission.DASHBOARD_READ)), 1, 1)
         );
@@ -90,11 +90,19 @@ public final class SeedData {
         return list;
     }
 
+    /**
+     * 站内通知。第三个参数是接收人：0 表示广播（所有人都能收到），大于 0 表示只投递给这个人。
+     * <p>
+     * 这里刻意把两类混着放，用来演示「广播 + 定向」并存时，每个人的列表与未读数都各自独立。
+     * 已读状态不在这张表里，而是每人一行记在 sys_notification_read。
+     */
     public static List<SeedNotification> notifications() {
         List<SeedNotification> list = new ArrayList<>();
         list.add(new SeedNotification("2 个账号处于停用状态", "可前往用户管理查看并处理", 0, "2026-08-02 09:15:00"));
         list.add(new SeedNotification("每日备份已完成", "演示数据快照创建成功", 0, "2026-08-02 07:10:00"));
         list.add(new SeedNotification("欢迎使用 Feat Plus", "命令面板和用户管理功能现已可用", 1, "2026-08-01 18:00:00"));
+        list.add(new SeedNotification("你的资料待完善", "请补充手机号，便于接收安全提醒", 2, "2026-08-01 16:20:00"));
+        list.add(new SeedNotification("本季度审计任务已分配", "请在审计日志中核对 7 月的账号变更", 4, "2026-08-01 11:05:00"));
         return Collections.unmodifiableList(list);
     }
 
@@ -182,13 +190,14 @@ public final class SeedData {
     public static final class SeedNotification {
         public final String title;
         public final String description;
-        public final int readFlag;
+        /** 接收人的 sys_user.id；0 表示广播，所有人可见。 */
+        public final int recipientUserId;
         public final String createdTime;
 
-        SeedNotification(String title, String description, int readFlag, String createdTime) {
+        SeedNotification(String title, String description, int recipientUserId, String createdTime) {
             this.title = title;
             this.description = description;
-            this.readFlag = readFlag;
+            this.recipientUserId = recipientUserId;
             this.createdTime = createdTime;
         }
     }

@@ -41,13 +41,16 @@ public class ActivityRecorder {
         NotificationRecord notification = new NotificationRecord();
         notification.setTitle(title);
         notification.setDescription(description);
-        notification.setUserId(userId);
-        notification.setReadFlag(0);
-        notification.setIsDeleted(0);
-        notification.setCreatedTime(now);
-        notification.setEditTime(now);
-        notification.setCreator(operatorId);
-        notification.setEditor(operatorId);
-        notificationMapper.insert(notification);
+        // 通知发给「被操作的人」。user_id 为 NULL 在查询里被当作广播，
+        // 所以没有明确接收人（例如删除账号）时干脆不发通知，避免悄悄退化成全员广播。
+        if (userId != null) {
+            notification.setUserId(userId);
+            notification.setIsDeleted(0);
+            notification.setCreatedTime(now);
+            notification.setEditTime(now);
+            notification.setCreator(operatorId);
+            notification.setEditor(operatorId);
+            notificationMapper.insert(notification);
+        }
     }
 }

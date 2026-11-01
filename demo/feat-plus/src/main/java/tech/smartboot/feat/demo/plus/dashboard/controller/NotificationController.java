@@ -30,16 +30,16 @@ public class NotificationController extends ApiController {
     @RequestMapping(value = "", method = RequestMethod.GET)
     public RestResult<List<NotificationItemResponse>> list(Context context) {
         return execute(context, () -> {
-            accessGuard.requireLogin(context);
-            return dashboardService.notifications();
+            long userId = accessGuard.requireLogin(context).getUserId();
+            return dashboardService.notifications(userId);
         });
     }
 
     @RequestMapping(value = "/read-all", method = RequestMethod.POST)
     public RestResult<Void> markAllRead(Context context) {
         return execute(context, () -> {
-            long operatorId = accessGuard.requireLogin(context).getUserId();
-            dashboardService.markAllRead(operatorId);
+            long userId = accessGuard.requireLogin(context).getUserId();
+            dashboardService.markAllRead(userId);
             return (Void) null;
         });
     }
@@ -47,8 +47,8 @@ public class NotificationController extends ApiController {
     @RequestMapping(value = "/{id}/read", method = RequestMethod.POST)
     public RestResult<Void> markRead(Context context, @PathParam("id") String id) {
         return execute(context, () -> {
-            long operatorId = accessGuard.requireLogin(context).getUserId();
-            dashboardService.markRead(parseId(id), operatorId);
+            long userId = accessGuard.requireLogin(context).getUserId();
+            dashboardService.markRead(parseId(id), userId);
             return (Void) null;
         });
     }

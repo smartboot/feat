@@ -133,7 +133,29 @@ export interface ActivityItem {
   title: string
   description: string
   createdTime: string
-  userId?: number
+  /** 动态发生在谁身上；系统事件为 null */
+  userId?: number | null
+  /** 执行操作的人，系统事件为 null */
+  creator?: number | null
+  /** 操作人姓名，由后端联表得到；操作人已被删除时为 null */
+  operatorName?: string | null
+}
+
+export interface ActivityQuery {
+  page: number
+  pageSize: number
+  kind: "all" | ActivityKind
+  operatorId: "all" | number
+  /** yyyy-MM-dd，空串表示不限 */
+  from: string
+  /** yyyy-MM-dd，含当天 */
+  to: string
+}
+
+/** 日志筛选下拉的操作人选项，来自日志表本身而不是用户表。 */
+export interface OperatorOption {
+  id: number
+  name: string
 }
 
 export interface NotificationItem {

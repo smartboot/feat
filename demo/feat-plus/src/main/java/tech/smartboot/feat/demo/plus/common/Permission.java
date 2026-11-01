@@ -29,6 +29,9 @@ public final class Permission {
     public static final String DEPT_READ = "dept:read";
     public static final String DEPT_WRITE = "dept:write";
 
+    /** 审计日志：只读，能看谁在什么时候改了什么。刻意不给写权限——日志只能由系统写。 */
+    public static final String AUDIT_READ = "audit:read";
+
     /** 重置演示数据这类系统级动作。 */
     public static final String SYSTEM_WRITE = "system:write";
 
@@ -37,6 +40,7 @@ public final class Permission {
             USER_READ, USER_WRITE,
             ROLE_READ, ROLE_WRITE,
             DEPT_READ, DEPT_WRITE,
+            AUDIT_READ,
             SYSTEM_WRITE));
 
     private Permission() {

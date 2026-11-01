@@ -1,5 +1,6 @@
 package tech.smartboot.feat.demo.plus.dashboard.mapper;
 
+import java.util.Date;
 import java.util.List;
 
 import org.apache.ibatis.annotations.Delete;
@@ -7,11 +8,14 @@ import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.Update;
+
 import tech.smartboot.feat.demo.plus.dashboard.model.ActivityRecord;
 
 /**
- * 操作动态读写，软删除约定与 sys_user 一致。
+ * 操作日志读写，软删除约定与 sys_user 一致。
+ * <p>
+ * 分页查询会联 sys_user 取操作人姓名：表里只存 creator 这个 id，
+ * 日志页要显示「谁做的」，每次再单独查一遍用户太浪费。
  */
 @Mapper
 public interface ActivityMapper {
@@ -25,6 +29,53 @@ public interface ActivityMapper {
     @Select("SELECT id, kind, title, description, user_id, is_deleted, created_time, edit_time, creator, editor "
             + "FROM sys_activity WHERE is_deleted = 0 ORDER BY id DESC LIMIT #{limit}")
     List<ActivityRecord> selectRecent(@Param("limit") int limit);
+
+    /**
+     * 操作日志分页。kind / operatorId / from / to 都是可选条件，为 null 表示不限。
+     * to 是「小于」，由上层把结束日期 +1 天传进来，这样结束当天是包含的。
+     */
+    @Select("<script>"
+            + "SELECT a.id, a.kind, a.title, a.description, a.user_id, a.is_deleted, a.created_time, "
+            + "a.edit_time, a.creator, a.editor, u.display_name AS operator_name "
+            + "FROM sys_activity a LEFT JOIN sys_user u ON u.id = a.creator "
+            + "<where> a.is_deleted = 0 "
+            + "<if test='kind != null'> AND a.kind = #{kind} </if>"
+            + "<if test='operatorId != null'> AND a.creator = #{operatorId} </if>"
+            + "<if test='from != null'> AND a.created_time &gt;= #{from} </if>"
+            + "<if test='to != null'> AND a.created_time &lt; #{to} </if>"
+            + "</where>"
+            + " ORDER BY a.id DESC LIMIT #{limit} OFFSET #{offset}"
+            + "</script>")
+    List<ActivityRecord> selectPage(@Param("kind") String kind,
+                                    @Param("operatorId") Long operatorId,
+                                    @Param("from") Date from,
+                                    @Param("to") Date to,
+                                    @Param("limit") int limit,
+                                    @Param("offset") int offset);
+
+    @Select("<script>"
+            + "SELECT COUNT(*) FROM sys_activity a "
+            + "<where> a.is_deleted = 0 "
+            + "<if test='kind != null'> AND a.kind = #{kind} </if>"
+            + "<if test='operatorId != null'> AND a.creator = #{operatorId} </if>"
+            + "<if test='from != null'> AND a.created_time &gt;= #{from} </if>"
+            + "<if test='to != null'> AND a.created_time &lt; #{to} </if>"
+            + "</where>"
+            + "</script>")
+    long countPage(@Param("kind") String kind,
+                   @Param("operatorId") Long operatorId,
+                   @Param("from") Date from,
+                   @Param("to") Date to);
+
+    /**
+     * 日志里实际出现过的操作人，供筛选下拉使用。
+     * 不用 sys_user 全量：被删掉的人也可能留下日志，这些历史记录同样要能按人筛。
+     */
+    @Select("SELECT DISTINCT a.creator, u.display_name AS operator_name "
+            + "FROM sys_activity a LEFT JOIN sys_user u ON u.id = a.creator "
+            + "WHERE a.is_deleted = 0 AND a.creator IS NOT NULL "
+            + "ORDER BY u.display_name")
+    List<ActivityRecord> selectOperators();
 
     /**
      * 演示数据重置用，真清空并重置自增。

@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
-import type { DepartmentInput, RoleInput, UserInput, UserQuery, UserStatus } from "@/api/types"
+import type { ActivityQuery, DepartmentInput, RoleInput, UserInput, UserQuery, UserStatus } from "@/api/types"
 import { adminService } from "@/services/http-admin-service"
 
 export const queryKeys = {
@@ -11,6 +11,8 @@ export const queryKeys = {
   departments: ["departments"] as const,
   dashboard: ["dashboard"] as const,
   notifications: ["notifications"] as const,
+  activities: (query: ActivityQuery) => ["activities", query] as const,
+  activityOperators: ["activities", "operators"] as const,
 }
 
 export function useUsers(query: UserQuery, enabled = true) {
@@ -50,6 +52,25 @@ export function useNotifications(enabled = true) {
   return useQuery({ queryKey: queryKeys.notifications, queryFn: () => adminService.listNotifications(), enabled })
 }
 
+/** 操作日志：翻页时保留上一页数据，避免表格闪白。 */
+export function useActivities(query: ActivityQuery, enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.activities(query),
+    queryFn: () => adminService.listActivities(query),
+    placeholderData: (previous) => previous,
+    enabled,
+  })
+}
+
+export function useActivityOperators(enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.activityOperators,
+    queryFn: () => adminService.listActivityOperators(),
+    enabled,
+    staleTime: 30_000,
+  })
+}
+
 export function useUserMutations() {
   const client = useQueryClient()
   const invalidate = async () => {
@@ -59,6 +80,8 @@ export function useUserMutations() {
       client.invalidateQueries({ queryKey: queryKeys.departments }),
       client.invalidateQueries({ queryKey: queryKeys.dashboard }),
       client.invalidateQueries({ queryKey: queryKeys.notifications }),
+      // 任何写操作都会新增一条日志，日志列表与操作人下拉都要跟着刷新。
+      client.invalidateQueries({ queryKey: ["activities"] }),
     ])
   }
   return {
@@ -76,6 +99,7 @@ export function useRoleMutations() {
     await Promise.all([
       client.invalidateQueries({ queryKey: queryKeys.roles }),
       client.invalidateQueries({ queryKey: ["users"] }),
+      client.invalidateQueries({ queryKey: ["activities"] }),
     ])
   }
   return {
@@ -92,6 +116,7 @@ export function useDepartmentMutations() {
     await Promise.all([
       client.invalidateQueries({ queryKey: queryKeys.departments }),
       client.invalidateQueries({ queryKey: ["users"] }),
+      client.invalidateQueries({ queryKey: ["activities"] }),
     ])
   }
   return {

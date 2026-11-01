@@ -13,6 +13,11 @@ public class ActivityRecord {
     private String title;
     private String description;
     private Long userId;
+    /**
+     * 操作人姓名，不是 sys_activity 的列，而是查询时联 sys_user 得到的别名。
+     * 日志页要显示「谁做的」，而表里只有 creator 这个 id。
+     */
+    private String operatorName;
 
     private int isDeleted;
     private Date createdTime;
@@ -54,6 +59,14 @@ public class ActivityRecord {
 
     public Long getUserId() {
         return userId;
+    }
+
+    public String getOperatorName() {
+        return operatorName;
+    }
+
+    public void setOperatorName(String operatorName) {
+        this.operatorName = operatorName;
     }
 
     public void setUserId(Long userId) {

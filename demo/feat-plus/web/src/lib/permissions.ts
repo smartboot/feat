@@ -12,6 +12,7 @@ export type PermissionKey =
   | "role:write"
   | "dept:read"
   | "dept:write"
+  | "audit:read"
   | "system:write"
 
 export interface PermissionSpec {
@@ -55,6 +56,11 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
       { key: "dept:read", label: "查看部门", description: "查看部门树与成员数" },
       { key: "dept:write", label: "管理部门", description: "新建、调整层级与删除部门" },
     ],
+  },
+  {
+    key: "audit",
+    label: "审计日志",
+    items: [{ key: "audit:read", label: "查看审计日志", description: "查看谁在什么时候改了谁，只读" }],
   },
   {
     key: "system",

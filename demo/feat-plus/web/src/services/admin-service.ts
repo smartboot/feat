@@ -1,10 +1,13 @@
 import type {
+  ActivityItem,
+  ActivityQuery,
   CurrentUser,
   DashboardSummary,
   DepartmentInput,
   DepartmentNode,
   LoginResponse,
   NotificationItem,
+  OperatorOption,
   PageResult,
   RoleInput,
   RoleItem,
@@ -38,6 +41,8 @@ export interface AdminService {
   updateDepartment(id: number, input: DepartmentInput): Promise<DepartmentNode>
   deleteDepartment(id: number): Promise<void>
   getDashboardSummary(): Promise<DashboardSummary>
+  listActivities(query: ActivityQuery): Promise<PageResult<ActivityItem>>
+  listActivityOperators(): Promise<OperatorOption[]>
   listNotifications(): Promise<NotificationItem[]>
   markNotificationRead(id: number): Promise<void>
   markAllNotificationsRead(): Promise<void>

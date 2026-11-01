@@ -16,6 +16,8 @@ public class ActivityItemResponse {
     private final String createdTime;
     private final Long userId;
     private final Long creator;
+    /** 操作人姓名，由查询联 sys_user 得到；操作人已被删除时为 null。 */
+    private final String operatorName;
 
     public ActivityItemResponse(ActivityRecord record) {
         this.id = record.getId();
@@ -25,6 +27,7 @@ public class ActivityItemResponse {
         this.createdTime = DateFormats.format(record.getCreatedTime());
         this.userId = record.getUserId();
         this.creator = record.getCreator();
+        this.operatorName = record.getOperatorName();
     }
 
     public long getId() {
@@ -53,5 +56,9 @@ public class ActivityItemResponse {
 
     public Long getCreator() {
         return creator;
+    }
+
+    public String getOperatorName() {
+        return operatorName;
     }
 }

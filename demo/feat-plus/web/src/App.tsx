@@ -6,6 +6,7 @@ import { setUnauthorizedHandler } from "@/api/client"
 import { AppLayout } from "@/app/AppLayout"
 import { clearToken, getToken, setToken } from "@/auth/token"
 import { adminService } from "@/services/http-admin-service"
+import { ActivityLogPage } from "@/pages/ActivityLogPage"
 import { DashboardPage } from "@/pages/DashboardPage"
 import { DepartmentPage } from "@/pages/DepartmentPage"
 import { LoginPage } from "@/pages/LoginPage"
@@ -26,6 +27,7 @@ function AuthenticatedApp({ currentUser, onLogout }: { currentUser: CurrentUser;
         <Route path="/users/:userId" element={<UserListPage />} />
         <Route path="/roles" element={<RoleListPage />} />
         <Route path="/departments" element={<DepartmentPage />} />
+        <Route path="/activities" element={<ActivityLogPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>

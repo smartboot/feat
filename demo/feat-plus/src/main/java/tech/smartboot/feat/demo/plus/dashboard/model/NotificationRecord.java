@@ -5,7 +5,10 @@ import java.util.Date;
 /**
  * 站内通知，对应 sys_notification 表。
  * <p>
- * 列名是 read_flag（read 是 SQL 关键字），字段名与下划线转驼峰规则保持一致。
+ * userId 是接收人：NULL 或 0 表示广播，大于 0 表示只投递给该用户。
+ * <p>
+ * readFlag 不是表里的列，而是查询时联 sys_notification_read 算出来的别名（1 表示当前用户已读）。
+ * 保留它的 getter/setter 是因为 MyBatis 按属性名做映射，删掉 setter 就读不出这个别名了。
  */
 public class NotificationRecord {
     private long id;

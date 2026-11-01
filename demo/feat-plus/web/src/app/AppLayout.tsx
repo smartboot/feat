@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { Bell, Building2, ChevronDown, Command, LayoutDashboard, LogOut, Menu, Moon, PanelLeftClose, PanelLeftOpen, Search, Settings, ShieldCheck, Sun, UsersRound, X } from "lucide-react"
+import { Bell, Building2, ChevronDown, Command, LayoutDashboard, LogOut, Menu, Moon, PanelLeftClose, PanelLeftOpen, ScrollText, Search, Settings, ShieldCheck, Sun, UsersRound, X } from "lucide-react"
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 
@@ -30,6 +30,7 @@ const primaryNav: NavItem[] = [
 const systemNav: NavItem[] = [
   { to: "/roles", label: "角色权限", icon: ShieldCheck, permission: "role:read" },
   { to: "/departments", label: "部门管理", icon: Building2, permission: "dept:read" },
+  { to: "/activities", label: "审计日志", icon: ScrollText, permission: "audit:read" },
 ]
 
 const comingSoon = [
@@ -41,6 +42,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/users": "用户管理",
   "/roles": "角色权限",
   "/departments": "部门管理",
+  "/activities": "审计日志",
 }
 
 export function AppLayout({ currentUser, onLogout }: { currentUser: CurrentUser; onLogout: () => void }) {

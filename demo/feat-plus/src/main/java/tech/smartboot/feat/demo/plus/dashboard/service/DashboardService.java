@@ -9,6 +9,7 @@ import java.util.Map;
 
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Bean;
+import tech.smartboot.feat.demo.plus.common.DomainException;
 import tech.smartboot.feat.demo.plus.dashboard.dto.ActivityItemResponse;
 import tech.smartboot.feat.demo.plus.dashboard.dto.DashboardSummaryResponse;
 import tech.smartboot.feat.demo.plus.dashboard.dto.NotificationItemResponse;
@@ -47,7 +48,7 @@ public class DashboardService {
     @Autowired
     private DataInitializer dataInitializer;
 
-    public DashboardSummaryResponse summary() {
+    public DashboardSummaryResponse summary(long userId) {
         long total = userMapper.countAll();
         long enabled = userMapper.countPage(null, 1, null, null);
         long disabled = userMapper.countPage(null, 0, null, null);
@@ -58,12 +59,13 @@ public class DashboardService {
             activities.add(new ActivityItemResponse(record));
         }
 
-        return new DashboardSummaryResponse(total, enabled, disabled, notificationMapper.countUnread(),
+        // 未读数按当前登录人算：广播通知对所有人生效，定向通知只算给自己的。
+        return new DashboardSummaryResponse(total, enabled, disabled, notificationMapper.countUnread(userId),
                 buildTrend(TREND_SHORT), buildTrend(TREND_LONG), activities);
     }
 
-    public List<NotificationItemResponse> notifications() {
-        List<NotificationRecord> rows = notificationMapper.selectAll();
+    public List<NotificationItemResponse> notifications(long userId) {
+        List<NotificationRecord> rows = notificationMapper.selectVisible(userId);
         List<NotificationItemResponse> items = new ArrayList<>(rows.size());
         for (NotificationRecord row : rows) {
             items.add(new NotificationItemResponse(row));
@@ -71,12 +73,16 @@ public class DashboardService {
         return items;
     }
 
-    public void markRead(long id, long operatorId) {
-        notificationMapper.markRead(id, operatorId);
+    public void markRead(long id, long userId) {
+        // 先确认这条通知对该用户可见，避免用别人的通知 id 探测数据是否存在。
+        if (notificationMapper.countVisibleById(id, userId) == 0) {
+            throw DomainException.notFound("通知不存在");
+        }
+        notificationMapper.markRead(id, userId);
     }
 
-    public void markAllRead(long operatorId) {
-        notificationMapper.markAllRead(operatorId);
+    public void markAllRead(long userId) {
+        notificationMapper.markAllRead(userId);
     }
 
     public void resetDemo() {

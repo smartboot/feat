@@ -5,6 +5,7 @@ import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.cloud.annotation.RequestMethod;
+import tech.smartboot.feat.demo.plus.auth.service.AccessContext;
 import tech.smartboot.feat.demo.plus.auth.service.AccessGuard;
 import tech.smartboot.feat.demo.plus.common.ApiController;
 import tech.smartboot.feat.demo.plus.common.Permission;
@@ -24,8 +25,8 @@ public class DashboardController extends ApiController {
     @RequestMapping(value = "", method = RequestMethod.GET)
     public RestResult<DashboardSummaryResponse> summary(Context context) {
         return execute(context, () -> {
-            accessGuard.require(context, Permission.DASHBOARD_READ);
-            return dashboardService.summary();
+            AccessContext access = accessGuard.require(context, Permission.DASHBOARD_READ);
+            return dashboardService.summary(access.getUserId());
         });
     }
 }
