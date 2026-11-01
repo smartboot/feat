@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
-import { Bell, Building2, ChevronDown, Command, LayoutDashboard, LogOut, Menu, Moon, PanelLeftClose, PanelLeftOpen, ScrollText, Search, Settings, ShieldCheck, Sun, UserRound, UsersRound, X } from "lucide-react"
+import { Bell, Boxes, Building2, ChevronDown, Command, LayoutDashboard, LogOut, Menu, Moon, PanelLeftClose, PanelLeftOpen, ScrollText, Search, ShieldCheck, Sun, UserRound, UsersRound, X } from "lucide-react"
+import type { LucideIcon } from "lucide-react"
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 
@@ -12,38 +13,37 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Separator } from "@/components/ui/separator"
 import { useAllUsers, useNotificationMutations, useNotifications, useResetDemo } from "@/services/queries"
-import { hasPermission, type PermissionKey } from "@/lib/permissions"
+import { hasPermission } from "@/lib/permissions"
+import { findMenuName, navGroups } from "@/lib/menus"
 import { cn } from "@/lib/utils"
 
+/**
+ * 菜单的几何形状只剩两样：路径、标题、图标。分组与顺序由后端下发。
+ *
+ * 不再有 primaryNav / systemNav / PAGE_TITLES 三份硬编码——它们曾让「加一个模块」要在前端改三处，
+ * 而且漏一处不报错：菜单不出现但 URL 能打开，或者点进去被 catch-all 弹回首页。
+ */
 interface NavItem {
   to: string
   label: string
-  icon: typeof LayoutDashboard
-  permission: PermissionKey
+  icon: LucideIcon
 }
 
-const primaryNav: NavItem[] = [
-  { to: "/dashboard", label: "数据概览", icon: LayoutDashboard, permission: "dashboard:read" },
-  { to: "/users", label: "用户管理", icon: UsersRound, permission: "user:read" },
-]
+/**
+ * 图标是唯一必须留在前端的菜单属性：后端只能下发一个 key，组件必须在编译期存在。
+ * 新增菜单时如果忘了在这里加一项，会退化成默认图标而不是白屏——由 check_menu.py 在 CI 里提示。
+ */
+const NavIcons: Record<string, LucideIcon> = {
+  dashboard: LayoutDashboard,
+  users: UsersRound,
+  shield: ShieldCheck,
+  building: Building2,
+  scroll: ScrollText,
+  user: UserRound,
+}
 
-const systemNav: NavItem[] = [
-  { to: "/roles", label: "角色权限", icon: ShieldCheck, permission: "role:read" },
-  { to: "/departments", label: "部门管理", icon: Building2, permission: "dept:read" },
-  { to: "/activities", label: "审计日志", icon: ScrollText, permission: "audit:read" },
-]
-
-const comingSoon = [
-  { label: "系统设置", icon: Settings },
-]
-
-const PAGE_TITLES: Record<string, string> = {
-  "/dashboard": "数据概览",
-  "/users": "用户管理",
-  "/roles": "角色权限",
-  "/departments": "部门管理",
-  "/activities": "审计日志",
-  "/profile": "个人中心",
+function toNavItem(item: { path: string; name: string; icon: string }): NavItem {
+  return { to: item.path, label: item.name, icon: NavIcons[item.icon] ?? Boxes }
 }
 
 export function AppLayout({ currentUser, onLogout }: { currentUser: CurrentUser; onLogout: () => void }) {
@@ -74,9 +74,15 @@ export function AppLayout({ currentUser, onLogout }: { currentUser: CurrentUser;
   }, [])
 
   const unread = notifications.filter((item) => !item.read).length
-  const activeLabel = PAGE_TITLES[location.pathname.startsWith("/users") ? "/users" : location.pathname] || "数据概览"
-  const visiblePrimary = primaryNav.filter((item) => hasPermission(currentUser, item.permission))
-  const visibleSystem = systemNav.filter((item) => hasPermission(currentUser, item.permission))
+  // 菜单只有一个来源：后端按权限过滤后随登录/me 下发。这里只负责分组和图标映射。
+  const menuItems = currentUser.menus ?? []
+  const navSections = navGroups(menuItems).map((group) => ({
+    key: group.key,
+    label: group.label,
+    items: group.items.map(toNavItem),
+  }))
+  const flatNav = navSections.flatMap((section) => section.items)
+  const activeLabel = findMenuName(menuItems, location.pathname) ?? "Feat Plus"
   const navigateAndClose = (path: string) => { navigate(path); setMobileOpen(false); setCommandOpen(false) }
   const handleReset = async () => { await resetDemo.mutateAsync(); toast.success("演示数据已恢复"); navigate("/dashboard") }
 
@@ -97,19 +103,12 @@ export function AppLayout({ currentUser, onLogout }: { currentUser: CurrentUser;
           <Button className="ml-auto md:hidden" variant="ghost" size="icon" onClick={() => setMobileOpen(false)}><X className="size-4" /></Button>
         </div>
         <nav className="flex-1 space-y-6 overflow-y-auto p-3">
-          {visiblePrimary.length > 0 && (
-            <div className="space-y-1">
-              {!collapsed && <p className="px-2 pb-2 text-[10px] font-semibold uppercase tracking-[.14em] text-muted-foreground">工作台</p>}
-              {visiblePrimary.map((item) => <NavEntry key={item.to} item={item} collapsed={collapsed} onNavigate={() => setMobileOpen(false)} />)}
+          {navSections.map((section) => (
+            <div key={section.key} className="space-y-1">
+              {!collapsed && <p className="px-2 pb-2 text-[10px] font-semibold uppercase tracking-[.14em] text-muted-foreground">{section.label}</p>}
+              {section.items.map((item) => <NavEntry key={item.to} item={item} collapsed={collapsed} onNavigate={() => setMobileOpen(false)} />)}
             </div>
-          )}
-          {(visibleSystem.length > 0 || comingSoon.length > 0) && (
-            <div className="space-y-1">
-              {!collapsed && <p className="px-2 pb-2 text-[10px] font-semibold uppercase tracking-[.14em] text-muted-foreground">系统管理</p>}
-              {visibleSystem.map((item) => <NavEntry key={item.to} item={item} collapsed={collapsed} onNavigate={() => setMobileOpen(false)} />)}
-              {comingSoon.map(({ label, icon: Icon }) => <button key={label} disabled title={collapsed ? label : undefined} className={cn("flex h-9 w-full items-center gap-3 rounded-md px-3 text-sm text-muted-foreground/50", collapsed && "justify-center px-0")}><Icon className="size-4 shrink-0" /><span className={cn(collapsed && "sr-only")}>{label}{!collapsed && <small className="ml-auto text-[10px]">即将推出</small>}</span></button>)}
-            </div>
-          )}
+          ))}
         </nav>
         <div className="border-t p-3">
           <DropdownMenu>
@@ -148,7 +147,7 @@ export function AppLayout({ currentUser, onLogout }: { currentUser: CurrentUser;
         </header>
         <main className="mx-auto w-full max-w-[1600px] p-4 md:p-6 lg:p-8"><SessionProvider user={currentUser}><Outlet /></SessionProvider></main>
       </div>
-      <CommandDialog open={commandOpen} onOpenChange={setCommandOpen}><CommandInput placeholder="输入命令或搜索用户..." /><CommandList><CommandEmpty>没有找到匹配结果</CommandEmpty><CommandGroup heading="导航">{visiblePrimary.map((item, index) => { const Icon = item.icon; return <CommandItem key={item.to} onSelect={() => navigateAndClose(item.to)}><Icon className="size-4" />{item.label}<CommandShortcut>⌘ {index + 1}</CommandShortcut></CommandItem> })}{visibleSystem.map((item) => { const Icon = item.icon; return <CommandItem key={item.to} onSelect={() => navigateAndClose(item.to)}><Icon className="size-4" />{item.label}</CommandItem> })}</CommandGroup><CommandSeparator />{canReadUsers && <><CommandGroup heading="用户"><CommandItem onSelect={() => navigateAndClose("/users")}><UsersRound className="size-4" />查看全部用户</CommandItem>{users.slice(0, 5).map((user) => <CommandItem key={user.id} value={`${user.displayName} ${user.username} ${user.email}`} onSelect={() => navigateAndClose(`/users/${user.id}`)}><Avatar className="size-6"><AvatarFallback>{user.displayName.slice(0, 1)}</AvatarFallback></Avatar>{user.displayName}<span className="text-xs text-muted-foreground">{user.username}</span></CommandItem>)}</CommandGroup><CommandSeparator /></>}<CommandGroup heading="操作"><CommandItem onSelect={() => { navigateAndClose("/users"); toast.info("请使用用户管理页面的新建用户按钮") }}><Command className="size-4" />新建用户</CommandItem></CommandGroup></CommandList></CommandDialog>
+      <CommandDialog open={commandOpen} onOpenChange={setCommandOpen}><CommandInput placeholder="输入命令或搜索用户..." /><CommandList><CommandEmpty>没有找到匹配结果</CommandEmpty><CommandGroup heading="导航">{flatNav.map((item, index) => { const Icon = item.icon; return <CommandItem key={item.to} onSelect={() => navigateAndClose(item.to)}><Icon className="size-4" />{item.label}<CommandShortcut>⌘ {index + 1}</CommandShortcut></CommandItem> })}</CommandGroup><CommandSeparator />{canReadUsers && <><CommandGroup heading="用户"><CommandItem onSelect={() => navigateAndClose("/users")}><UsersRound className="size-4" />查看全部用户</CommandItem>{users.slice(0, 5).map((user) => <CommandItem key={user.id} value={`${user.displayName} ${user.username} ${user.email}`} onSelect={() => navigateAndClose(`/users/${user.id}`)}><Avatar className="size-6"><AvatarFallback>{user.displayName.slice(0, 1)}</AvatarFallback></Avatar>{user.displayName}<span className="text-xs text-muted-foreground">{user.username}</span></CommandItem>)}</CommandGroup><CommandSeparator /></>}<CommandGroup heading="操作"><CommandItem onSelect={() => { navigateAndClose("/users"); toast.info("请使用用户管理页面的新建用户按钮") }}><Command className="size-4" />新建用户</CommandItem></CommandGroup></CommandList></CommandDialog>
     </div>
   )
 }

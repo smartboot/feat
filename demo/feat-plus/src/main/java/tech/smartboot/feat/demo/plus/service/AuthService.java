@@ -1,16 +1,22 @@
 package tech.smartboot.feat.demo.plus.service;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Bean;
 import tech.smartboot.feat.demo.plus.common.DomainException;
 import tech.smartboot.feat.demo.plus.dto.CurrentUserResponse;
 import tech.smartboot.feat.demo.plus.dto.LoginRequest;
 import tech.smartboot.feat.demo.plus.dto.LoginResponse;
+import tech.smartboot.feat.demo.plus.dto.MenuItemResponse;
 import tech.smartboot.feat.demo.plus.mapper.AuthMapper;
 import tech.smartboot.feat.demo.plus.mapper.LoginStatMapper;
 import tech.smartboot.feat.demo.plus.model.AuthAccount;
 import tech.smartboot.feat.demo.plus.security.AccessContext;
 import tech.smartboot.feat.demo.plus.security.DataScopeResolver;
+import tech.smartboot.feat.demo.plus.security.MenuItem;
+import tech.smartboot.feat.demo.plus.security.MenuRegistry;
 import tech.smartboot.feat.demo.plus.security.PasswordHasher;
 import tech.smartboot.feat.demo.plus.token.IssuedToken;
 import tech.smartboot.feat.demo.plus.token.TokenStore;
@@ -95,7 +101,23 @@ public class AuthService {
         AccessContext access = dataScopeResolver.resolve(account);
         return new CurrentUserResponse(account.getId(), account.getUsername(), account.getDisplayName(),
                 account.roleCodes(), account.roleNames(), access.getPermissions(),
-                access.getDataScope(), access.describeScope());
+                access.getDataScope(), access.describeScope(), toMenus(access.getPermissions()));
+    }
+
+    /**
+     * 菜单按实际生效的权限点过滤后下发。
+     * <p>
+     * 这是「显示层」的过滤，不是安全边界：漏了最多是侧栏多一条，点进去仍然被 {@code AccessGuard} 拦住。
+     * 反过来也成立——菜单能看见不等于接口放行，两者各自独立校验。
+     */
+    private static List<MenuItemResponse> toMenus(List<String> permissions) {
+        List<MenuItem> items = MenuRegistry.visibleFor(permissions);
+        List<MenuItemResponse> menus = new ArrayList<>(items.size());
+        for (MenuItem item : items) {
+            menus.add(new MenuItemResponse(item.groupKey, item.groupLabel, item.path, item.name,
+                    item.icon, item.permission, item.sort, item.visible));
+        }
+        return menus;
     }
 
     private static String trim(String value) {

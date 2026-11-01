@@ -39,8 +39,9 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Switch } from "@/components/ui/switch"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { flattenDepartments } from "@/lib/departments"
-import { PERMISSION_GROUPS, hasPermission, permissionLabel } from "@/lib/permissions"
-import { useDepartments, useRoleMutations, useRoles } from "@/services/queries"
+import { groupByKey } from "@/lib/menus"
+import { hasPermission } from "@/lib/permissions"
+import { useDepartments, usePermissionCatalog, useRoleMutations, useRoles } from "@/services/queries"
 import { cn } from "@/lib/utils"
 
 const emptyDraft: RoleInput = {
@@ -59,6 +60,13 @@ export function RoleListPage() {
   const { data: roles = [], isLoading, isError, refetch } = useRoles()
   // 数据范围选「自定义」时要选部门，这里只要扁平化的选项，不需要树。
   const { data: departmentTree = [] } = useDepartments()
+  // 权限点字典由后端下发，前端不再维护常量：新增权限点只改后端 Permission.CATALOG 一处。
+  // 这里拿到的是「字典」不是「本人拥有的权限」——给角色授予自己没有的权限点是合法操作。
+  const { data: permissionCatalog = [] } = usePermissionCatalog()
+  const permissionLabels = useMemo(
+    () => new Map(permissionCatalog.map((item) => [item.key, item.label])),
+    [permissionCatalog],
+  )
   // 用 useMemo 固定引用：否则每次渲染都会生成新数组，把表单里的选择冲掉。
   const departmentOptions = useMemo(() => flattenDepartments(departmentTree), [departmentTree])
   const mutations = useRoleMutations()
@@ -182,7 +190,7 @@ export function RoleListPage() {
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
                           {role.permissions.slice(0, 4).map((key) => (
-                            <Badge key={key} variant="secondary" className="text-[10px]">{permissionLabel(key)}</Badge>
+                            <Badge key={key} variant="secondary" className="text-[10px]">{permissionLabels.get(key) ?? key}</Badge>
                           ))}
                           {role.permissions.length > 4 && (
                             <Badge variant="outline" className="text-[10px]">+{role.permissions.length - 4}</Badge>
@@ -292,6 +300,9 @@ function RoleFormDialog({
 }) {
   const [draft, setDraft] = useState<RoleInput>(emptyDraft)
   const [error, setError] = useState("")
+  // 权限点字典由后端下发。与列表页共用同一个 queryKey，只会发一次请求。
+  const { data: permissionCatalog = [] } = usePermissionCatalog()
+  const permissionGroups = useMemo(() => groupByKey(permissionCatalog), [permissionCatalog])
   const lockedPermissions = Boolean(role?.builtin && role.code === "ADMIN")
   // ADMIN 的数据范围固定为全部：把它改成「仅本人」会让所有管理员看不到任何数据。
   const lockedScope = lockedPermissions
@@ -405,7 +416,7 @@ function RoleFormDialog({
               )}
             </div>
             <div className={cn("grid gap-4 rounded-lg border p-4", lockedPermissions && "opacity-70")}>
-              {PERMISSION_GROUPS.map((group) => (
+              {permissionGroups.map((group) => (
                 <div key={group.key} className="grid gap-2">
                   <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{group.label}</p>
                   <div className="grid gap-2 sm:grid-cols-2">

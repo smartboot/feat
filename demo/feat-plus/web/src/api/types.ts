@@ -16,12 +16,50 @@ export interface CurrentUser {
   /** 一个人可以挂多个角色，权限取并集、数据范围取最宽。 */
   roleCodes: RoleCode[]
   roleNames: string[]
-  /** 全部角色合并后的权限点，用来决定菜单与按钮是否出现；后端仍会独立校验。 */
+  /** 全部角色合并后的权限点，用来决定按钮是否出现；后端仍会独立校验。 */
   permissions: string[]
   /** 数据范围档位：1 全部 / 2 自定义 / 3 本部门 / 4 本部门及以下 / 5 仅本人 */
   dataScope: number
   /** 数据范围的中文说明，例如「本部门及以下（1 个部门）」 */
   scopeDescription: string
+  /** 这个账号能看到的菜单，后端按 permissions 过滤后给出。侧边栏与页面标题都只认它。 */
+  menus: MenuItem[]
+}
+
+/**
+ * 一条菜单。定义在后端 security/MenuRegistry，前端只负责「path 渲染哪个组件」。
+ *
+ * 只有元数据下发得下来：Feat 的路由在编译期确定，组件必须先存在于构建产物里，
+ * 所以 App.tsx 仍然要为新页面登记一条 Route——那不是菜单，是组件映射。
+ */
+export interface MenuItem {
+  groupKey: string
+  groupLabel: string
+  path: string
+  /** 菜单名，同时是浏览器标签页标题 */
+  name: string
+  /** 图标 key，按 NavIcons 取组件；缺映射时退化为默认图标 */
+  icon: string
+  /** 需要的权限点；空串表示只要登录就能看到（不用 null：登录响应走 fastjson2，null 字段会被省略） */
+  permission: string
+  sort: number
+  /** false 表示不进侧栏，只贡献「路径 → 标题」，例如个人中心 */
+  visible: boolean
+}
+
+/**
+ * 一个权限点及其展示信息，来自 GET /api/permissions。
+ *
+ * 这是「字典」不是「当前登录人拥有的权限」：角色页要能给角色授予自己没有的权限点。
+ * 前端不再维护权限点常量，加权限点只改后端 Permission.CATALOG 一处。
+ */
+export interface PermissionItem {
+  groupKey: string
+  groupLabel: string
+  key: string
+  label: string
+  description: string
+  sort: number
 }
 
 /** 「我的资料」。比 CurrentUser 多出邮箱、部门名、创建时间，少掉权限点。 */

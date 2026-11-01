@@ -14,9 +14,12 @@ import tech.smartboot.feat.demo.plus.model.AuthRole;
 /**
  * 权限点字典。
  * <p>
- * 角色的 permissions 列存的是这些 key 的逗号拼接，后端每个写接口用 require(permission) 校验，
- * 前端用同一份 key 决定菜单和按钮是否可见。
- * 新增功能时先在这里登记，否则无法在角色页勾选、也无法被校验。
+ * 角色的 permissions 列存的是这些 key 的逗号拼接，后端每个写接口用 require(permission) 校验。
+ * <p>
+ * <b>这里是权限点的唯一真相。</b> 分组、中文名、说明都写在 {@link #CATALOG} 里，
+ * {@link #ALL} 由它派生，前端通过 {@code GET /api/permissions} 取同一份字典来渲染角色页的勾选项。
+ * 之前这套信息在 Java 与前端 {@code permissions.ts} 各维护一份，加一个权限点要改两处，
+ * 而漏改前端的表现是「角色页里配不出这个点，接口永远 403」——不报错，只报障。
  * <p>
  * 注意：这里必须写成普通类的常量，不能放进 @Mapper 接口（会触发 AOT 处理的类型转换异常）。
  */
@@ -39,13 +42,47 @@ public final class Permission {
     /** 重置演示数据这类系统级动作。 */
     public static final String SYSTEM_WRITE = "system:write";
 
-    public static final List<String> ALL = Collections.unmodifiableList(Arrays.asList(
-            DASHBOARD_READ,
-            USER_READ, USER_WRITE,
-            ROLE_READ, ROLE_WRITE,
-            DEPT_READ, DEPT_WRITE,
-            AUDIT_READ,
-            SYSTEM_WRITE));
+    /**
+     * 权限点全集，声明顺序即展示顺序。
+     * <p>
+     * 每条的 groupKey 同时被前端用来分组渲染，因此新增权限点时只需在这里加一行——
+     * 前端不再有任何需要同步的常量。
+     */
+    public static final List<Entry> CATALOG = Collections.unmodifiableList(Arrays.asList(
+            new Entry("dashboard", "数据概览", DASHBOARD_READ,
+                    "查看概览", "访问首页仪表盘与登录趋势"),
+
+            new Entry("user", "成员管理", USER_READ,
+                    "查看成员", "查看成员列表与详情"),
+            new Entry("user", "成员管理", USER_WRITE,
+                    "管理成员", "新建、编辑、停用、删除与重置密码"),
+
+            new Entry("role", "角色权限", ROLE_READ,
+                    "查看角色", "查看角色列表与权限点"),
+            new Entry("role", "角色权限", ROLE_WRITE,
+                    "管理角色", "新建、编辑、停用与删除角色"),
+
+            new Entry("dept", "部门管理", DEPT_READ,
+                    "查看部门", "查看部门树与成员数"),
+            new Entry("dept", "部门管理", DEPT_WRITE,
+                    "管理部门", "新建、调整层级与删除部门"),
+
+            new Entry("audit", "审计日志", AUDIT_READ,
+                    "查看审计日志", "查看谁在什么时候改了谁，只读"),
+
+            new Entry("system", "系统", SYSTEM_WRITE,
+                    "重置演示数据", "清空并重建全部演示数据")));
+
+    /** 全部权限点的 key，顺序与 {@link #CATALOG} 一致。由 CATALOG 派生，不要单独维护。 */
+    public static final List<String> ALL;
+
+    static {
+        List<String> keys = new ArrayList<>(CATALOG.size());
+        for (Entry entry : CATALOG) {
+            keys.add(entry.key);
+        }
+        ALL = Collections.unmodifiableList(keys);
+    }
 
     private Permission() {
     }
@@ -137,5 +174,47 @@ public final class Permission {
             }
         }
         return ordered;
+    }
+
+    /**
+     * 权限点的展示元数据。
+     * <p>
+     * 不是 DTO：不会被 AOT 序列化器处理，只在 security 与 service 之间传递，所以用 getter 而不用公开字段，
+     * 与项目里其它值对象的写法保持一致。真正下发到前端的是 {@code dto.PermissionItemResponse}。
+     */
+    public static final class Entry {
+        private final String groupKey;
+        private final String groupLabel;
+        private final String key;
+        private final String label;
+        private final String description;
+
+        Entry(String groupKey, String groupLabel, String key, String label, String description) {
+            this.groupKey = groupKey;
+            this.groupLabel = groupLabel;
+            this.key = key;
+            this.label = label;
+            this.description = description;
+        }
+
+        public String getGroupKey() {
+            return groupKey;
+        }
+
+        public String getGroupLabel() {
+            return groupLabel;
+        }
+
+        public String getKey() {
+            return key;
+        }
+
+        public String getLabel() {
+            return label;
+        }
+
+        public String getDescription() {
+            return description;
+        }
     }
 }

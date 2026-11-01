@@ -9,6 +9,7 @@ import type {
   NotificationItem,
   OperatorOption,
   PageResult,
+  PermissionItem,
   Profile,
   ProfileUpdate,
   ChangePasswordInput,
@@ -92,6 +93,9 @@ export const adminService: AdminService = {
   },
   listRoles(): Promise<RoleItem[]> {
     return request<RoleItem[]>("/api/roles")
+  },
+  listPermissionCatalog(): Promise<PermissionItem[]> {
+    return request<PermissionItem[]>("/api/permissions")
   },
   createRole(input: RoleInput): Promise<RoleItem> {
     return request<RoleItem>("/api/roles", { method: "POST", body: jsonBody(input) })

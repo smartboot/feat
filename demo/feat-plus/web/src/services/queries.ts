@@ -8,6 +8,7 @@ export const queryKeys = {
   allUsers: ["users", "all"] as const,
   user: (id: number) => ["users", id] as const,
   roles: ["roles"] as const,
+  permissionCatalog: ["permissions", "catalog"] as const,
   departments: ["departments"] as const,
   dashboard: ["dashboard"] as const,
   notifications: ["notifications"] as const,
@@ -43,6 +44,19 @@ export function useRoles(enabled = true) {
 
 export function useDepartments(enabled = true) {
   return useQuery({ queryKey: queryKeys.departments, queryFn: () => adminService.listDepartments(), enabled, staleTime: 30_000 })
+}
+
+/**
+ * 权限点字典：随发版才变，缓存久一点（5 分钟）。
+ * 它只在角色页用到，所以不放进 /me——菜单里已经带了各自需要的权限点。
+ */
+export function usePermissionCatalog(enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.permissionCatalog,
+    queryFn: () => adminService.listPermissionCatalog(),
+    enabled,
+    staleTime: 5 * 60_000,
+  })
 }
 
 export function useDashboard() {

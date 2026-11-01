@@ -14,6 +14,9 @@ import java.util.List;
  * dataScope 是数据范围档位（1 全部 / 2 自定义 / 3 本部门 / 4 本部门及以下 / 5 仅本人），
  * scopeDescription 是给用户看的说明，例如「本部门及以下（3 个部门）」。
  * 前端拿它解释「为什么我只看到这些人」，而不是让用户以为是 bug。
+ * <p>
+ * menus 是这个人能看到哪些菜单，由 {@code security.MenuRegistry} 按 permissions 过滤后给出。
+ * 菜单跟着登录响应一起下发，不单独开接口——单独一个接口意味着它挂掉就白屏，首屏还要多等一次。
  */
 public class CurrentUserResponse {
     private long id;
@@ -24,13 +27,14 @@ public class CurrentUserResponse {
     private List<String> permissions;
     private int dataScope;
     private String scopeDescription;
+    private List<MenuItemResponse> menus;
 
     public CurrentUserResponse() {
     }
 
     public CurrentUserResponse(long id, String username, String displayName, List<String> roleCodes,
                                List<String> roleNames, List<String> permissions, int dataScope,
-                               String scopeDescription) {
+                               String scopeDescription, List<MenuItemResponse> menus) {
         this.id = id;
         this.username = username;
         this.displayName = displayName;
@@ -39,6 +43,7 @@ public class CurrentUserResponse {
         this.permissions = permissions;
         this.dataScope = dataScope;
         this.scopeDescription = scopeDescription;
+        this.menus = menus;
     }
 
     public long getId() {
@@ -103,5 +108,13 @@ public class CurrentUserResponse {
 
     public void setScopeDescription(String scopeDescription) {
         this.scopeDescription = scopeDescription;
+    }
+
+    public List<MenuItemResponse> getMenus() {
+        return menus;
+    }
+
+    public void setMenus(List<MenuItemResponse> menus) {
+        this.menus = menus;
     }
 }

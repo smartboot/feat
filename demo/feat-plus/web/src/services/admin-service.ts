@@ -9,6 +9,7 @@ import type {
   NotificationItem,
   OperatorOption,
   PageResult,
+  PermissionItem,
   Profile,
   ProfileUpdate,
   ChangePasswordInput,
@@ -35,6 +36,8 @@ export interface AdminService {
   resetUserPassword(id: number): Promise<{ temporaryPassword: string }>
   deleteUser(id: number): Promise<void>
   listRoles(): Promise<RoleItem[]>
+  /** 权限点字典（含分组与说明），由后端下发；前端不再维护常量 */
+  listPermissionCatalog(): Promise<PermissionItem[]>
   createRole(input: RoleInput): Promise<RoleItem>
   updateRole(id: number, input: RoleInput): Promise<RoleItem>
   setRoleStatus(id: number, status: UserStatus): Promise<RoleItem>
