@@ -18,34 +18,36 @@ import tech.smartboot.feat.demo.plus.user.model.UserAccount;
  * 注意：Feat 的注解处理器不支持 @Mapper 接口里出现常量字段，SQL 片段统一放在 SqlFragments。
  * <p>
  * 软删除约定：每条读写 SQL 都显式带 is_deleted = 0，删除只置位不物理删行。
+ * 部门名称通过 LEFT JOIN sys_department 带出，因此按部门筛选传的是 id 集合（含下级）。
  */
 @Mapper
 public interface UserMapper {
 
-    @Select("<script>SELECT " + SqlFragments.USER_COLUMNS + " FROM sys_user" + SqlFragments.USER_FILTER
-            + " ORDER BY id DESC LIMIT #{limit} OFFSET #{offset}</script>")
+    @Select("<script>SELECT " + SqlFragments.USER_COLUMNS + SqlFragments.USER_FROM + SqlFragments.USER_FILTER
+            + " ORDER BY u.id DESC LIMIT #{limit} OFFSET #{offset}</script>")
     List<UserAccount> selectPage(@Param("keywordLike") String keywordLike,
                                  @Param("status") Integer status,
                                  @Param("roleCode") String roleCode,
-                                 @Param("department") String department,
+                                 @Param("departmentIds") List<Long> departmentIds,
                                  @Param("limit") int limit,
                                  @Param("offset") int offset);
 
-    @Select("<script>SELECT COUNT(*) FROM sys_user" + SqlFragments.USER_FILTER + "</script>")
+    @Select("<script>SELECT COUNT(*)" + SqlFragments.USER_FROM + SqlFragments.USER_FILTER + "</script>")
     long countPage(@Param("keywordLike") String keywordLike,
                    @Param("status") Integer status,
                    @Param("roleCode") String roleCode,
-                   @Param("department") String department);
+                   @Param("departmentIds") List<Long> departmentIds);
 
-    @Select("SELECT " + SqlFragments.USER_COLUMNS + " FROM sys_user WHERE is_deleted = 0 ORDER BY id DESC")
+    @Select("SELECT " + SqlFragments.USER_COLUMNS + SqlFragments.USER_FROM
+            + " WHERE u.is_deleted = 0 ORDER BY u.id DESC")
     List<UserAccount> selectAll();
 
-    @Select("SELECT " + SqlFragments.USER_COLUMNS + ", password_hash FROM sys_user "
-            + "WHERE id = #{id} AND is_deleted = 0")
+    @Select("SELECT " + SqlFragments.USER_COLUMNS + ", u.password_hash" + SqlFragments.USER_FROM
+            + " WHERE u.id = #{id} AND u.is_deleted = 0")
     UserAccount selectById(@Param("id") long id);
 
-    @Select("SELECT " + SqlFragments.USER_COLUMNS + ", password_hash FROM sys_user "
-            + "WHERE username = #{username} AND is_deleted = 0")
+    @Select("SELECT " + SqlFragments.USER_COLUMNS + ", u.password_hash" + SqlFragments.USER_FROM
+            + " WHERE u.username = #{username} AND u.is_deleted = 0")
     UserAccount selectByUsername(@Param("username") String username);
 
     @Select("SELECT COUNT(*) FROM sys_user WHERE LOWER(username) = LOWER(#{username}) "
@@ -62,14 +64,14 @@ public interface UserMapper {
     @Select("SELECT COUNT(*) FROM sys_user WHERE is_deleted = 0")
     long countAll();
 
-    @Insert("INSERT INTO sys_user (username, password_hash, display_name, role_code, department, email, status, "
+    @Insert("INSERT INTO sys_user (username, password_hash, display_name, role_code, department_id, email, status, "
             + "is_deleted, created_time, edit_time, creator, editor) "
-            + "VALUES (#{username}, #{passwordHash}, #{displayName}, #{roleCode}, #{department}, #{email}, #{status}, "
-            + "#{isDeleted}, #{createdTime}, #{editTime}, #{creator}, #{editor})")
+            + "VALUES (#{username}, #{passwordHash}, #{displayName}, #{roleCode}, #{departmentId}, #{email}, "
+            + "#{status}, #{isDeleted}, #{createdTime}, #{editTime}, #{creator}, #{editor})")
     int insert(UserAccount user);
 
     @Update("UPDATE sys_user SET username = #{username}, display_name = #{displayName}, role_code = #{roleCode}, "
-            + "department = #{department}, email = #{email}, status = #{status}, "
+            + "department_id = #{departmentId}, email = #{email}, status = #{status}, "
             + "edit_time = #{editTime}, editor = #{editor} "
             + "WHERE id = #{id} AND is_deleted = 0")
     int updateProfile(UserAccount user);

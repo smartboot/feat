@@ -1,6 +1,9 @@
 package tech.smartboot.feat.demo.plus.seed;
 
 import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Bean;
@@ -10,6 +13,10 @@ import tech.smartboot.feat.demo.plus.dashboard.mapper.LoginStatMapper;
 import tech.smartboot.feat.demo.plus.dashboard.mapper.NotificationMapper;
 import tech.smartboot.feat.demo.plus.dashboard.model.ActivityRecord;
 import tech.smartboot.feat.demo.plus.dashboard.model.NotificationRecord;
+import tech.smartboot.feat.demo.plus.department.mapper.DepartmentMapper;
+import tech.smartboot.feat.demo.plus.department.model.DepartmentRecord;
+import tech.smartboot.feat.demo.plus.role.mapper.RoleMapper;
+import tech.smartboot.feat.demo.plus.role.model.RoleRecord;
 import tech.smartboot.feat.demo.plus.user.mapper.UserMapper;
 import tech.smartboot.feat.demo.plus.user.model.UserAccount;
 
@@ -18,12 +25,20 @@ import tech.smartboot.feat.demo.plus.user.model.UserAccount;
  * <p>
  * 首次启动时写入种子数据；reset-demo 复用同一个 reset() 方法，两条路径的数据完全一致。
  * 种子数据由系统写入，creator / editor 一律留 NULL，表示不是任何登录用户操作的。
+ * <p>
+ * 写入顺序由外键关系决定：角色 → 部门（先父后子）→ 用户 → 动态 / 通知 / 登录统计。
  */
 @Bean
 public class DataInitializer {
 
     @Autowired
     private UserMapper userMapper;
+
+    @Autowired
+    private RoleMapper roleMapper;
+
+    @Autowired
+    private DepartmentMapper departmentMapper;
 
     @Autowired
     private ActivityMapper activityMapper;
@@ -46,14 +61,78 @@ public class DataInitializer {
         notificationMapper.truncate();
         loginStatMapper.truncate();
         userMapper.truncate();
+        roleMapper.truncate();
+        departmentMapper.truncate();
 
+        seedRoles();
+        Map<String, Long> departmentIds = seedDepartments();
+        seedUsers(departmentIds);
+        seedActivities();
+        seedNotifications();
+        seedLoginStats();
+    }
+
+    private void seedRoles() {
+        Date now = new Date();
+        for (SeedData.SeedRole seed : SeedData.roles()) {
+            RoleRecord role = new RoleRecord();
+            role.setCode(seed.code);
+            role.setName(seed.name);
+            role.setDescription(seed.description);
+            role.setPermissions(seed.permissions);
+            role.setBuiltin(seed.builtin);
+            role.setStatus(seed.status);
+            role.setIsDeleted(0);
+            role.setCreatedTime(now);
+            role.setEditTime(now);
+            roleMapper.insert(role);
+        }
+    }
+
+    /**
+     * 先按先父后子的顺序插入，再从库里回读 id 回填 parent_id。
+     * 不依赖自增序列的具体取值，避免以后调整种子顺序时层级错乱。
+     */
+    private Map<String, Long> seedDepartments() {
+        Date now = new Date();
+        for (SeedData.SeedDepartment seed : SeedData.departments()) {
+            DepartmentRecord record = new DepartmentRecord();
+            record.setParentId(0L);
+            record.setCode(seed.code);
+            record.setName(seed.name);
+            record.setSortOrder(seed.sortOrder);
+            record.setDescription(seed.description);
+            record.setStatus(1);
+            record.setIsDeleted(0);
+            record.setCreatedTime(now);
+            record.setEditTime(now);
+            departmentMapper.insert(record);
+        }
+
+        Map<String, Long> ids = new HashMap<>();
+        for (DepartmentRecord record : departmentMapper.selectAll()) {
+            ids.put(record.getCode(), record.getId());
+        }
+        for (SeedData.SeedDepartment seed : SeedData.departments()) {
+            if (seed.parentCode.isEmpty()) {
+                continue;
+            }
+            Long parentId = ids.get(seed.parentCode);
+            if (parentId != null) {
+                departmentMapper.updateParent(ids.get(seed.code), parentId);
+            }
+        }
+        return ids;
+    }
+
+    private void seedUsers(Map<String, Long> departmentIds) {
         for (SeedData.SeedUser seed : SeedData.users()) {
             UserAccount user = new UserAccount();
             user.setUsername(seed.username);
             user.setPasswordHash(SeedData.PASSWORD_HASH);
             user.setDisplayName(seed.displayName);
             user.setRoleCode(seed.roleCode);
-            user.setDepartment(seed.department);
+            user.setDepartmentId(departmentIds.get(seed.departmentCode));
             user.setEmail(seed.email);
             user.setStatus(seed.status);
             user.setIsDeleted(0);
@@ -61,7 +140,9 @@ public class DataInitializer {
             user.setEditTime(SeedData.parseTime(seed.editTime));
             userMapper.insert(user);
         }
+    }
 
+    private void seedActivities() {
         for (SeedData.SeedActivity seed : SeedData.activities()) {
             ActivityRecord record = new ActivityRecord();
             record.setKind(seed.kind);
@@ -73,7 +154,9 @@ public class DataInitializer {
             record.setEditTime(SeedData.parseTime(seed.createdTime));
             activityMapper.insert(record);
         }
+    }
 
+    private void seedNotifications() {
         for (SeedData.SeedNotification seed : SeedData.notifications()) {
             NotificationRecord record = new NotificationRecord();
             record.setTitle(seed.title);
@@ -85,8 +168,6 @@ public class DataInitializer {
             record.setEditTime(SeedData.parseTime(seed.createdTime));
             notificationMapper.insert(record);
         }
-
-        seedLoginStats();
     }
 
     /**

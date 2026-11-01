@@ -1,15 +1,22 @@
 import type {
   CurrentUser,
   DashboardSummary,
+  DepartmentInput,
+  DepartmentNode,
   LoginResponse,
   NotificationItem,
   PageResult,
+  RoleInput,
+  RoleItem,
   UserInput,
   UserListItem,
   UserQuery,
   UserStatus,
 } from "@/api/types"
 
+/**
+ * 前后端共同遵守的契约。真实实现在 http-admin-service，页面只依赖这个接口。
+ */
 export interface AdminService {
   login(username: string, password: string): Promise<LoginResponse>
   currentUser(): Promise<CurrentUser>
@@ -21,6 +28,15 @@ export interface AdminService {
   setUserStatus(id: number, status: UserStatus): Promise<UserListItem>
   resetUserPassword(id: number): Promise<{ temporaryPassword: string }>
   deleteUser(id: number): Promise<void>
+  listRoles(): Promise<RoleItem[]>
+  createRole(input: RoleInput): Promise<RoleItem>
+  updateRole(id: number, input: RoleInput): Promise<RoleItem>
+  setRoleStatus(id: number, status: UserStatus): Promise<RoleItem>
+  deleteRole(id: number): Promise<void>
+  listDepartments(): Promise<DepartmentNode[]>
+  createDepartment(input: DepartmentInput): Promise<DepartmentNode>
+  updateDepartment(id: number, input: DepartmentInput): Promise<DepartmentNode>
+  deleteDepartment(id: number): Promise<void>
   getDashboardSummary(): Promise<DashboardSummary>
   listNotifications(): Promise<NotificationItem[]>
   markNotificationRead(id: number): Promise<void>

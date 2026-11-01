@@ -19,6 +19,8 @@ public abstract class ApiController {
         } catch (DomainException e) {
             if (e.isUnauthorized()) {
                 context.Response.setHttpStatus(401, "Unauthorized");
+            } else if (e.isForbidden()) {
+                context.Response.setHttpStatus(403, "Forbidden");
             } else if (e.isNotFound()) {
                 context.Response.setHttpStatus(404, "Not Found");
             } else {

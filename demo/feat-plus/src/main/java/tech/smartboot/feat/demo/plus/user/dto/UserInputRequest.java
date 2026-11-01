@@ -2,12 +2,15 @@ package tech.smartboot.feat.demo.plus.user.dto;
 
 /**
  * 创建/更新用户的请求体，字段与前端 UserInput 对齐。
+ * <p>
+ * 部门传的是 sys_department.id，不再传部门名称文本：
+ * 名称只是展示用的副本，改名后不该留在用户表里变成历史遗留。
  */
 public class UserInputRequest {
     private String username;
     private String displayName;
     private String roleCode;
-    private String department;
+    private Long departmentId;
     private String email;
     private Integer status;
 
@@ -35,12 +38,12 @@ public class UserInputRequest {
         this.roleCode = roleCode;
     }
 
-    public String getDepartment() {
-        return department;
+    public Long getDepartmentId() {
+        return departmentId;
     }
 
-    public void setDepartment(String department) {
-        this.department = department;
+    public void setDepartmentId(Long departmentId) {
+        this.departmentId = departmentId;
     }
 
     public String getEmail() {

@@ -7,7 +7,9 @@ import { AppLayout } from "@/app/AppLayout"
 import { clearToken, getToken, setToken } from "@/auth/token"
 import { adminService } from "@/services/http-admin-service"
 import { DashboardPage } from "@/pages/DashboardPage"
+import { DepartmentPage } from "@/pages/DepartmentPage"
 import { LoginPage } from "@/pages/LoginPage"
+import { RoleListPage } from "@/pages/RoleListPage"
 import { UserListPage } from "@/pages/UserListPage"
 
 function ProtectedLayout({ currentUser, onLogout }: { currentUser: CurrentUser; onLogout: () => void }) {
@@ -22,6 +24,8 @@ function AuthenticatedApp({ currentUser, onLogout }: { currentUser: CurrentUser;
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/users" element={<UserListPage />} />
         <Route path="/users/:userId" element={<UserListPage />} />
+        <Route path="/roles" element={<RoleListPage />} />
+        <Route path="/departments" element={<DepartmentPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>

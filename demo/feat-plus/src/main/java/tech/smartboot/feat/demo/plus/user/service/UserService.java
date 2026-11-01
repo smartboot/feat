@@ -10,14 +10,21 @@ import tech.smartboot.feat.demo.plus.auth.service.PasswordHasher;
 import tech.smartboot.feat.demo.plus.common.DomainException;
 import tech.smartboot.feat.demo.plus.common.page.PageResult;
 import tech.smartboot.feat.demo.plus.dashboard.service.ActivityRecorder;
+import tech.smartboot.feat.demo.plus.department.model.DepartmentRecord;
+import tech.smartboot.feat.demo.plus.department.service.DepartmentService;
+import tech.smartboot.feat.demo.plus.role.model.RoleRecord;
+import tech.smartboot.feat.demo.plus.role.service.RoleService;
 import tech.smartboot.feat.demo.plus.user.dto.UserInputRequest;
 import tech.smartboot.feat.demo.plus.user.dto.UserItemResponse;
 import tech.smartboot.feat.demo.plus.user.mapper.UserMapper;
 import tech.smartboot.feat.demo.plus.user.model.UserAccount;
 
 /**
- * 用户管理业务规则，与前端 mock repository 保持一致：
+ * 用户管理业务规则：
  * 字段必填、用户名/邮箱唯一、不能停用或删除当前登录账号、必须保留至少一个已启用管理员。
+ * <p>
+ * 角色与部门都必须是「已存在且启用」的记录：角色决定权限点，部门决定组织归属，
+ * 两者都通过各自的 Service 校验，避免用户表里出现指向不存在记录的引用。
  * <p>
  * 审计字段：operatorId 是当前登录人，创建时写入 creator + editor，之后每次变更只更新 editTime + editor。
  * 删除是软删除（is_deleted = 1），因此唯一性校验只在未删除的范围内比较。
@@ -31,18 +38,27 @@ public class UserService {
     private UserMapper userMapper;
 
     @Autowired
+    private RoleService roleService;
+
+    @Autowired
+    private DepartmentService departmentService;
+
+    @Autowired
     private ActivityRecorder activityRecorder;
 
     public PageResult<UserItemResponse> list(String keyword, Integer status, String roleCode,
-                                             String department, int page, int pageSize) {
+                                             Long departmentId, int page, int pageSize) {
         String like = toLike(keyword);
         String role = emptyToNull(roleCode);
-        String dept = emptyToNull(department);
+        // 按部门筛选时默认包含全部下级：勾「技术中心」应该能看到平台研发部里的人。
+        List<Long> departmentIds = departmentId == null || departmentId <= 0
+                ? null : departmentService.subtreeIds(departmentId);
         int safePage = page < 1 ? 1 : page;
         int safeSize = pageSize < 1 ? 10 : Math.min(pageSize, MAX_PAGE_SIZE);
 
-        long total = userMapper.countPage(like, status, role, dept);
-        List<UserAccount> rows = userMapper.selectPage(like, status, role, dept, safeSize, (safePage - 1) * safeSize);
+        long total = userMapper.countPage(like, status, role, departmentIds);
+        List<UserAccount> rows = userMapper.selectPage(like, status, role, departmentIds,
+                safeSize, (safePage - 1) * safeSize);
         List<UserItemResponse> items = new ArrayList<>(rows.size());
         for (UserAccount row : rows) {
             items.add(UserItemResponse.from(row));
@@ -66,14 +82,16 @@ public class UserService {
     public UserItemResponse create(UserInputRequest input, long operatorId) {
         validate(input);
         assertUnique(input.getUsername(), input.getEmail(), 0L);
+        RoleRecord role = roleService.requireAssignable(input.getRoleCode().trim());
+        DepartmentRecord department = departmentService.requireAssignable(input.getDepartmentId());
 
         Date now = new Date();
         UserAccount user = new UserAccount();
         user.setUsername(input.getUsername().trim());
         user.setPasswordHash(PasswordHasher.hash("Feat@" + System.currentTimeMillis()));
         user.setDisplayName(input.getDisplayName().trim());
-        user.setRoleCode(input.getRoleCode().trim());
-        user.setDepartment(input.getDepartment().trim());
+        user.setRoleCode(role.getCode());
+        user.setDepartmentId(department.getId());
         user.setEmail(input.getEmail().trim());
         user.setStatus(input.getStatus() == null ? 1 : input.getStatus());
         user.setIsDeleted(0);
@@ -85,7 +103,7 @@ public class UserService {
 
         UserAccount saved = userMapper.selectByUsername(user.getUsername());
         activityRecorder.record("create", "创建了用户 " + saved.getDisplayName(),
-                saved.getUsername() + " · " + roleLabel(saved.getRoleCode()), saved.getId(), operatorId);
+                saved.getUsername() + " · " + role.getName(), saved.getId(), operatorId);
         return UserItemResponse.from(saved);
     }
 
@@ -93,8 +111,10 @@ public class UserService {
         UserAccount current = require(id);
         validate(input);
         assertUnique(input.getUsername(), input.getEmail(), id);
+        RoleRecord role = roleService.requireAssignable(input.getRoleCode().trim());
+        DepartmentRecord department = departmentService.requireAssignable(input.getDepartmentId());
 
-        boolean losingAdmin = "ADMIN".equals(current.getRoleCode()) && !"ADMIN".equals(input.getRoleCode());
+        boolean losingAdmin = "ADMIN".equals(current.getRoleCode()) && !"ADMIN".equals(role.getCode());
         if (losingAdmin) {
             assertNotLastEnabledAdmin(current);
         }
@@ -105,8 +125,8 @@ public class UserService {
 
         current.setUsername(input.getUsername().trim());
         current.setDisplayName(input.getDisplayName().trim());
-        current.setRoleCode(input.getRoleCode().trim());
-        current.setDepartment(input.getDepartment().trim());
+        current.setRoleCode(role.getCode());
+        current.setDepartmentId(department.getId());
         current.setEmail(input.getEmail().trim());
         if (input.getStatus() != null) {
             current.setStatus(input.getStatus());
@@ -191,17 +211,12 @@ public class UserService {
                 || isBlank(input.getUsername())
                 || isBlank(input.getDisplayName())
                 || isBlank(input.getRoleCode())
-                || isBlank(input.getDepartment())
                 || isBlank(input.getEmail())) {
             throw new DomainException("请完整填写用户信息");
         }
-    }
-
-    private static String roleLabel(String roleCode) {
-        if ("ADMIN".equals(roleCode)) {
-            return "管理员";
+        if (input.getDepartmentId() == null) {
+            throw new DomainException("请选择所属部门");
         }
-        return "AUDITOR".equals(roleCode) ? "审计员" : "普通用户";
     }
 
     private static String toLike(String keyword) {

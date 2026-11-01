@@ -17,7 +17,8 @@ public class UserItemResponse {
     private String username;
     private String displayName;
     private String roleCode;
-    private String department;
+    private Long departmentId;
+    private String departmentName;
     private String email;
     private int status;
     private String createdTime;
@@ -31,7 +32,8 @@ public class UserItemResponse {
         item.username = account.getUsername();
         item.displayName = account.getDisplayName();
         item.roleCode = account.getRoleCode();
-        item.department = account.getDepartment();
+        item.departmentId = account.getDepartmentId();
+        item.departmentName = account.getDepartmentName();
         item.email = account.getEmail();
         item.status = account.getStatus();
         item.createdTime = DateFormats.format(account.getCreatedTime());
@@ -57,8 +59,12 @@ public class UserItemResponse {
         return roleCode;
     }
 
-    public String getDepartment() {
-        return department;
+    public Long getDepartmentId() {
+        return departmentId;
+    }
+
+    public String getDepartmentName() {
+        return departmentName;
     }
 
     public String getEmail() {

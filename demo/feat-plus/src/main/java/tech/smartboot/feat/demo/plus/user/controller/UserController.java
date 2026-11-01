@@ -9,10 +9,10 @@ import tech.smartboot.feat.cloud.annotation.Param;
 import tech.smartboot.feat.cloud.annotation.PathParam;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.cloud.annotation.RequestMethod;
-import tech.smartboot.feat.demo.plus.auth.service.AuthGuard;
-import tech.smartboot.feat.demo.plus.auth.token.TokenStore;
+import tech.smartboot.feat.demo.plus.auth.service.AccessGuard;
 import tech.smartboot.feat.demo.plus.common.ApiController;
 import tech.smartboot.feat.demo.plus.common.DomainException;
+import tech.smartboot.feat.demo.plus.common.Permission;
 import tech.smartboot.feat.demo.plus.common.page.PageResult;
 import tech.smartboot.feat.demo.plus.user.dto.TemporaryPasswordResponse;
 import tech.smartboot.feat.demo.plus.user.dto.UserInputRequest;
@@ -28,7 +28,7 @@ public class UserController extends ApiController {
     private UserService userService;
 
     @Autowired
-    private TokenStore tokenStore;
+    private AccessGuard accessGuard;
 
     @RequestMapping(value = "", method = RequestMethod.GET)
     public RestResult<PageResult<UserItemResponse>> list(
@@ -38,10 +38,10 @@ public class UserController extends ApiController {
             @Param("keyword") String keyword,
             @Param("status") String status,
             @Param("roleCode") String roleCode,
-            @Param("department") String department) {
+            @Param("departmentId") String departmentId) {
         return execute(context, () -> {
-            AuthGuard.require(context, tokenStore);
-            return userService.list(keyword, parseStatus(status), roleCode, department,
+            accessGuard.require(context, Permission.USER_READ);
+            return userService.list(keyword, parseStatus(status), roleCode, parseDepartmentId(departmentId),
                     page == null ? 1 : page, pageSize == null ? 10 : pageSize);
         });
     }
@@ -49,7 +49,7 @@ public class UserController extends ApiController {
     @RequestMapping(value = "/all", method = RequestMethod.GET)
     public RestResult<List<UserItemResponse>> listAll(Context context) {
         return execute(context, () -> {
-            AuthGuard.require(context, tokenStore);
+            accessGuard.require(context, Permission.USER_READ);
             return userService.listAll();
         });
     }
@@ -57,7 +57,7 @@ public class UserController extends ApiController {
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     public RestResult<UserItemResponse> detail(Context context, @PathParam("id") String id) {
         return execute(context, () -> {
-            AuthGuard.require(context, tokenStore);
+            accessGuard.require(context, Permission.USER_READ);
             return userService.get(parseId(id));
         });
     }
@@ -65,7 +65,7 @@ public class UserController extends ApiController {
     @RequestMapping(value = "", method = RequestMethod.POST)
     public RestResult<UserItemResponse> create(Context context, UserInputRequest request) {
         return execute(context, () -> {
-            long operatorId = AuthGuard.require(context, tokenStore);
+            long operatorId = accessGuard.require(context, Permission.USER_WRITE).getUserId();
             return userService.create(request, operatorId);
         });
     }
@@ -73,7 +73,7 @@ public class UserController extends ApiController {
     @RequestMapping(value = "/{id}", method = RequestMethod.PUT)
     public RestResult<UserItemResponse> update(Context context, @PathParam("id") String id, UserInputRequest request) {
         return execute(context, () -> {
-            long operatorId = AuthGuard.require(context, tokenStore);
+            long operatorId = accessGuard.require(context, Permission.USER_WRITE).getUserId();
             return userService.update(parseId(id), request, operatorId);
         });
     }
@@ -81,7 +81,7 @@ public class UserController extends ApiController {
     @RequestMapping(value = "/{id}/status", method = RequestMethod.POST)
     public RestResult<UserItemResponse> updateStatus(Context context, @PathParam("id") String id, UserStatusRequest request) {
         return execute(context, () -> {
-            long operatorId = AuthGuard.require(context, tokenStore);
+            long operatorId = accessGuard.require(context, Permission.USER_WRITE).getUserId();
             if (request == null || request.getStatus() == null) {
                 throw new DomainException("缺少目标状态");
             }
@@ -92,7 +92,7 @@ public class UserController extends ApiController {
     @RequestMapping(value = "/{id}/reset-password", method = RequestMethod.POST)
     public RestResult<TemporaryPasswordResponse> resetPassword(Context context, @PathParam("id") String id) {
         return execute(context, () -> {
-            long operatorId = AuthGuard.require(context, tokenStore);
+            long operatorId = accessGuard.require(context, Permission.USER_WRITE).getUserId();
             return new TemporaryPasswordResponse(userService.resetPassword(parseId(id), operatorId));
         });
     }
@@ -100,7 +100,7 @@ public class UserController extends ApiController {
     @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
     public RestResult<Void> delete(Context context, @PathParam("id") String id) {
         return execute(context, () -> {
-            long operatorId = AuthGuard.require(context, tokenStore);
+            long operatorId = accessGuard.require(context, Permission.USER_WRITE).getUserId();
             userService.delete(parseId(id), operatorId);
             return (Void) null;
         });
@@ -122,6 +122,20 @@ public class UserController extends ApiController {
             return Integer.valueOf(status.trim());
         } catch (NumberFormatException e) {
             return null;
+        }
+    }
+
+    /**
+     * 空串与 all 都表示「全部部门」，其余必须是数字 id。
+     */
+    private static Long parseDepartmentId(String departmentId) {
+        if (departmentId == null || departmentId.trim().isEmpty() || "all".equalsIgnoreCase(departmentId.trim())) {
+            return null;
+        }
+        try {
+            return Long.valueOf(departmentId.trim());
+        } catch (NumberFormatException e) {
+            throw new DomainException("部门参数不合法");
         }
     }
 }

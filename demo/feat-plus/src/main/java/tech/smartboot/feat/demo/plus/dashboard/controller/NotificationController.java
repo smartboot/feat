@@ -8,8 +8,7 @@ import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.PathParam;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.cloud.annotation.RequestMethod;
-import tech.smartboot.feat.demo.plus.auth.service.AuthGuard;
-import tech.smartboot.feat.demo.plus.auth.token.TokenStore;
+import tech.smartboot.feat.demo.plus.auth.service.AccessGuard;
 import tech.smartboot.feat.demo.plus.common.ApiController;
 import tech.smartboot.feat.demo.plus.common.DomainException;
 import tech.smartboot.feat.demo.plus.dashboard.dto.NotificationItemResponse;
@@ -23,12 +22,15 @@ public class NotificationController extends ApiController {
     private DashboardService dashboardService;
 
     @Autowired
-    private TokenStore tokenStore;
+    private AccessGuard accessGuard;
 
+    /**
+     * 通知是「自己的」数据，只要求登录，不要求额外权限点。
+     */
     @RequestMapping(value = "", method = RequestMethod.GET)
     public RestResult<List<NotificationItemResponse>> list(Context context) {
         return execute(context, () -> {
-            AuthGuard.require(context, tokenStore);
+            accessGuard.requireLogin(context);
             return dashboardService.notifications();
         });
     }
@@ -36,7 +38,7 @@ public class NotificationController extends ApiController {
     @RequestMapping(value = "/read-all", method = RequestMethod.POST)
     public RestResult<Void> markAllRead(Context context) {
         return execute(context, () -> {
-            long operatorId = AuthGuard.require(context, tokenStore);
+            long operatorId = accessGuard.requireLogin(context).getUserId();
             dashboardService.markAllRead(operatorId);
             return (Void) null;
         });
@@ -45,7 +47,7 @@ public class NotificationController extends ApiController {
     @RequestMapping(value = "/{id}/read", method = RequestMethod.POST)
     public RestResult<Void> markRead(Context context, @PathParam("id") String id) {
         return execute(context, () -> {
-            long operatorId = AuthGuard.require(context, tokenStore);
+            long operatorId = accessGuard.requireLogin(context).getUserId();
             dashboardService.markRead(parseId(id), operatorId);
             return (Void) null;
         });

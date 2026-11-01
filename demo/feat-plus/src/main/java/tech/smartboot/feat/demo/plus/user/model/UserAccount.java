@@ -6,6 +6,8 @@ import java.util.Date;
  * 用户账号档案，对应 sys_user 表。
  * <p>
  * 列表查询不会查 password_hash，此时该字段为 null，序列化时会被自动忽略。
+ * departmentId 是外键，departmentName 来自 sys_department 的左连接，
+ * 只用于展示与关键字搜索，写库时只认 departmentId。
  * isDeleted / createdTime / editTime / creator / editor 是四张表统一要求的审计字段：
  * 删除只置 isDeleted，实体本身保留在表里，因此所有查询都必须带 is_deleted = 0 过滤。
  */
@@ -15,7 +17,8 @@ public class UserAccount {
     private String passwordHash;
     private String displayName;
     private String roleCode;
-    private String department;
+    private Long departmentId;
+    private String departmentName;
     private String email;
     private int status;
 
@@ -65,12 +68,20 @@ public class UserAccount {
         this.roleCode = roleCode;
     }
 
-    public String getDepartment() {
-        return department;
+    public Long getDepartmentId() {
+        return departmentId;
     }
 
-    public void setDepartment(String department) {
-        this.department = department;
+    public void setDepartmentId(Long departmentId) {
+        this.departmentId = departmentId;
+    }
+
+    public String getDepartmentName() {
+        return departmentName;
+    }
+
+    public void setDepartmentName(String departmentName) {
+        this.departmentName = departmentName;
     }
 
     public String getEmail() {

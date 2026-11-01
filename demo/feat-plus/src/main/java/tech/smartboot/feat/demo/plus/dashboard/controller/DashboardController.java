@@ -5,9 +5,9 @@ import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.cloud.annotation.RequestMethod;
-import tech.smartboot.feat.demo.plus.auth.service.AuthGuard;
-import tech.smartboot.feat.demo.plus.auth.token.TokenStore;
+import tech.smartboot.feat.demo.plus.auth.service.AccessGuard;
 import tech.smartboot.feat.demo.plus.common.ApiController;
+import tech.smartboot.feat.demo.plus.common.Permission;
 import tech.smartboot.feat.demo.plus.dashboard.dto.DashboardSummaryResponse;
 import tech.smartboot.feat.demo.plus.dashboard.service.DashboardService;
 import tech.smartboot.feat.router.Context;
@@ -19,12 +19,12 @@ public class DashboardController extends ApiController {
     private DashboardService dashboardService;
 
     @Autowired
-    private TokenStore tokenStore;
+    private AccessGuard accessGuard;
 
     @RequestMapping(value = "", method = RequestMethod.GET)
     public RestResult<DashboardSummaryResponse> summary(Context context) {
         return execute(context, () -> {
-            AuthGuard.require(context, tokenStore);
+            accessGuard.require(context, Permission.DASHBOARD_READ);
             return dashboardService.summary();
         });
     }

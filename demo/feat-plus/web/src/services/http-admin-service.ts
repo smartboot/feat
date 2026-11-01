@@ -1,9 +1,13 @@
 import type {
   CurrentUser,
   DashboardSummary,
+  DepartmentInput,
+  DepartmentNode,
   LoginResponse,
   NotificationItem,
   PageResult,
+  RoleInput,
+  RoleItem,
   UserInput,
   UserListItem,
   UserQuery,
@@ -19,7 +23,7 @@ function buildQuery(query: UserQuery): string {
   if (query.keyword.trim()) params.set("keyword", query.keyword.trim())
   if (query.status !== "all") params.set("status", query.status)
   if (query.roleCode !== "all") params.set("roleCode", query.roleCode)
-  if (query.department.trim()) params.set("department", query.department.trim())
+  if (query.departmentId !== "all") params.set("departmentId", String(query.departmentId))
   return params.toString()
 }
 
@@ -27,7 +31,7 @@ const jsonBody = (payload: unknown) => JSON.stringify(payload)
 
 /**
  * 真实后端实现，对应 feat-plus 的 Feat Cloud 接口。
- * 与 mock-admin-service 实现同一个 AdminService 契约，页面代码不需要改动。
+ * 页面代码一律从这里取 adminService——不要在页面里引用任何 mock 实现。
  */
 export const adminService: AdminService = {
   login(username: string, password: string): Promise<LoginResponse> {
@@ -59,6 +63,33 @@ export const adminService: AdminService = {
   },
   deleteUser(id: number): Promise<void> {
     return request<void>(`/api/users/${id}`, { method: "DELETE" })
+  },
+  listRoles(): Promise<RoleItem[]> {
+    return request<RoleItem[]>("/api/roles")
+  },
+  createRole(input: RoleInput): Promise<RoleItem> {
+    return request<RoleItem>("/api/roles", { method: "POST", body: jsonBody(input) })
+  },
+  updateRole(id: number, input: RoleInput): Promise<RoleItem> {
+    return request<RoleItem>(`/api/roles/${id}`, { method: "PUT", body: jsonBody(input) })
+  },
+  setRoleStatus(id: number, status: UserStatus): Promise<RoleItem> {
+    return request<RoleItem>(`/api/roles/${id}/status`, { method: "POST", body: jsonBody({ status }) })
+  },
+  deleteRole(id: number): Promise<void> {
+    return request<void>(`/api/roles/${id}`, { method: "DELETE" })
+  },
+  listDepartments(): Promise<DepartmentNode[]> {
+    return request<DepartmentNode[]>("/api/departments")
+  },
+  createDepartment(input: DepartmentInput): Promise<DepartmentNode> {
+    return request<DepartmentNode>("/api/departments", { method: "POST", body: jsonBody(input) })
+  },
+  updateDepartment(id: number, input: DepartmentInput): Promise<DepartmentNode> {
+    return request<DepartmentNode>(`/api/departments/${id}`, { method: "PUT", body: jsonBody(input) })
+  },
+  deleteDepartment(id: number): Promise<void> {
+    return request<void>(`/api/departments/${id}`, { method: "DELETE" })
   },
   getDashboardSummary(): Promise<DashboardSummary> {
     return request<DashboardSummary>("/api/dashboard")

@@ -77,7 +77,8 @@ public class AuthService {
 
     private CurrentUserResponse toCurrentUser(AuthAccount account) {
         return new CurrentUserResponse(account.getId(), account.getUsername(),
-                account.getDisplayName(), account.getRoleCode());
+                account.getDisplayName(), account.getRoleCode(), account.getRoleName(),
+                account.effectivePermissions());
     }
 
     private static String trim(String value) {
