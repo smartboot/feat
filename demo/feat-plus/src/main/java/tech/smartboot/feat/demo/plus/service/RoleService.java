@@ -14,6 +14,7 @@ import tech.smartboot.feat.demo.plus.mapper.RoleMapper;
 import tech.smartboot.feat.demo.plus.model.RoleRecord;
 import tech.smartboot.feat.demo.plus.security.DataScope;
 import tech.smartboot.feat.demo.plus.security.Permission;
+import tech.smartboot.feat.demo.plus.tx.TxTemplate;
 
 /**
  * 角色管理业务规则：
@@ -25,6 +26,9 @@ import tech.smartboot.feat.demo.plus.security.Permission;
  *   <li>权限点必须是 Permission 里登记过的 key，未知 key 直接拒绝；</li>
  *   <li>数据范围取「自定义」时，配置的部门必须真实存在。</li>
  * </ul>
+ * <p>
+ * 写路径同 {@link UserService}：角色本体、角色部门、审计动态三张表的写入放在一个事务里，
+ * 否则「角色建好了但数据范围没配上」会让这个角色看到全部数据或什么都看不到，而接口返回成功。
  */
 @Bean
 public class RoleService {
@@ -39,6 +43,9 @@ public class RoleService {
 
     @Autowired
     private ActivityRecorder activityRecorder;
+
+    @Autowired
+    private TxTemplate txTemplate;
 
     public List<RoleItemResponse> list() {
         List<RoleRecord> rows = roleMapper.selectAll();
@@ -63,28 +70,31 @@ public class RoleService {
                 ? normalizeDepartmentIds(input.getDepartmentIds()) : new ArrayList<Long>();
         departmentService.assertAllExist(departmentIds);
 
-        Date now = new Date();
-        RoleRecord role = new RoleRecord();
-        role.setCode(code);
-        role.setName(name);
-        role.setDescription(trimToEmpty(input.getDescription()));
-        role.setPermissions(Permission.join(input.getPermissions()));
-        role.setDepartmentScope(scope);
-        role.setBuiltin(0);
-        role.setStatus(input.getStatus() == null ? 1 : input.getStatus());
-        role.setIsDeleted(0);
-        role.setCreatedTime(now);
-        role.setEditTime(now);
-        role.setCreator(operatorId);
-        role.setEditor(operatorId);
-        roleMapper.insert(role);
-        saveScopeDepartments(code, scope, departmentIds, operatorId);
+        txTemplate.run(session -> {
+            RoleMapper roles = session.getMapper(RoleMapper.class);
+            Date now = new Date();
+            RoleRecord role = new RoleRecord();
+            role.setCode(code);
+            role.setName(name);
+            role.setDescription(trimToEmpty(input.getDescription()));
+            role.setPermissions(Permission.join(input.getPermissions()));
+            role.setDepartmentScope(scope);
+            role.setBuiltin(0);
+            role.setStatus(input.getStatus() == null ? 1 : input.getStatus());
+            role.setIsDeleted(0);
+            role.setCreatedTime(now);
+            role.setEditTime(now);
+            role.setCreator(operatorId);
+            role.setEditor(operatorId);
+            roles.insert(role);
+            saveScopeDepartments(roles, code, scope, departmentIds, operatorId);
 
-        RoleRecord saved = requireByCode(code);
-        activityRecorder.record("create", "创建了角色 " + saved.getName(),
-                saved.getCode() + " · " + describeCount(saved.getPermissions())
-                        + " · " + DataScope.label(scope), null, operatorId);
-        return RoleItemResponse.from(saved, 0, roleMapper.selectDepartmentIds(code));
+            RoleRecord saved = requireByCode(roles, code);
+            activityRecorder.record("create", "创建了角色 " + saved.getName(),
+                    saved.getCode() + " · " + describeCount(saved.getPermissions())
+                            + " · " + DataScope.label(scope), null, operatorId);
+        });
+        return get(requireByCode(roleMapper, code).getId());
     }
 
     public RoleItemResponse update(long id, RoleInputRequest input, long operatorId) {
@@ -133,15 +143,23 @@ public class RoleService {
         }
         current.setEditTime(new Date());
         current.setEditor(operatorId);
-        roleMapper.update(current);
-        if (!admin) {
-            saveScopeDepartments(current.getCode(), scope, departmentIds, operatorId);
-        }
 
-        activityRecorder.record("update", "更新了角色 " + current.getName(),
-                current.getCode() + " · " + describeCount(current.getPermissions())
-                        + " · " + DataScope.label(scope), null, operatorId);
-        return toItem(require(id));
+        // lambda 只能捕获 effectively final，这里把解析结果定下来：
+        // scope / departmentIds 在上面按「是否超管」分支重新赋值过。
+        final int resolvedScope = scope;
+        final List<Long> resolvedDepartments = departmentIds;
+
+        txTemplate.run(session -> {
+            RoleMapper roles = session.getMapper(RoleMapper.class);
+            roles.update(current);
+            if (!admin) {
+                saveScopeDepartments(roles, current.getCode(), resolvedScope, resolvedDepartments, operatorId);
+            }
+            activityRecorder.record("update", "更新了角色 " + current.getName(),
+                    current.getCode() + " · " + describeCount(current.getPermissions())
+                            + " · " + DataScope.label(resolvedScope), null, operatorId);
+        });
+        return get(id);
     }
 
     public RoleItemResponse setStatus(long id, int status, long operatorId) {
@@ -149,11 +167,13 @@ public class RoleService {
         if (role.getBuiltin() == 1) {
             throw new DomainException("内置角色不允许停用");
         }
-        roleMapper.updateStatus(id, status, operatorId);
-        activityRecorder.record(status == 1 ? "enable" : "disable",
-                (status == 1 ? "启用了" : "停用了") + "角色 " + role.getName(),
-                "该角色下的账号权限随之" + (status == 1 ? "恢复" : "失效"), null, operatorId);
-        return toItem(require(id));
+        txTemplate.run(session -> {
+            session.getMapper(RoleMapper.class).updateStatus(id, status, operatorId);
+            activityRecorder.record(status == 1 ? "enable" : "disable",
+                    (status == 1 ? "启用了" : "停用了") + "角色 " + role.getName(),
+                    "该角色下的账号权限随之" + (status == 1 ? "恢复" : "失效"), null, operatorId);
+        });
+        return get(id);
     }
 
     public void delete(long id, long operatorId) {
@@ -165,10 +185,14 @@ public class RoleService {
         if (users > 0) {
             throw new DomainException("该角色下还有 " + users + " 个账号，请先改派角色");
         }
-        roleMapper.softDelete(id, operatorId);
-        roleMapper.softDeleteRoleDepts(role.getCode(), operatorId);
-        activityRecorder.record("delete", "删除了角色 " + role.getName(),
-                role.getCode() + " 已从角色列表移除", null, operatorId);
+        txTemplate.run(session -> {
+            RoleMapper roles = session.getMapper(RoleMapper.class);
+            roles.softDelete(id, operatorId);
+            // 数据范围配置跟着失效，否则「删掉的角色」在 sys_role_dept 里还留着部门引用。
+            roles.softDeleteRoleDepts(role.getCode(), operatorId);
+            activityRecorder.record("delete", "删除了角色 " + role.getName(),
+                    role.getCode() + " 已从角色列表移除", null, operatorId);
+        });
     }
 
     /**
@@ -234,14 +258,15 @@ public class RoleService {
      * 不能直接 INSERT：sys_role_dept 的主键是 (role_code, department_id)，
      * 上一次编辑留下的软删除行还在表里，重复插入会撞主键。
      */
-    private void saveScopeDepartments(String roleCode, int scope, List<Long> departmentIds, long operatorId) {
-        roleMapper.softDeleteRoleDepts(roleCode, operatorId);
+    private void saveScopeDepartments(RoleMapper roles, String roleCode, int scope,
+                                      List<Long> departmentIds, long operatorId) {
+        roles.softDeleteRoleDepts(roleCode, operatorId);
         if (scope != DataScope.CUSTOM || departmentIds == null) {
             return;
         }
         for (Long departmentId : departmentIds) {
-            if (roleMapper.restoreRoleDept(roleCode, departmentId, operatorId) == 0) {
-                roleMapper.insertRoleDept(roleCode, departmentId, operatorId);
+            if (roles.restoreRoleDept(roleCode, departmentId, operatorId) == 0) {
+                roles.insertRoleDept(roleCode, departmentId, operatorId);
             }
         }
     }
@@ -254,8 +279,8 @@ public class RoleService {
         return role;
     }
 
-    private RoleRecord requireByCode(String code) {
-        RoleRecord role = roleMapper.selectByCode(code);
+    private RoleRecord requireByCode(RoleMapper roles, String code) {
+        RoleRecord role = roles.selectByCode(code);
         if (role == null) {
             throw new DomainException("角色保存失败");
         }

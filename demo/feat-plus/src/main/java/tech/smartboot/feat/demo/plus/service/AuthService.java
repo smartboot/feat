@@ -14,6 +14,7 @@ import tech.smartboot.feat.demo.plus.security.DataScopeResolver;
 import tech.smartboot.feat.demo.plus.security.PasswordHasher;
 import tech.smartboot.feat.demo.plus.token.IssuedToken;
 import tech.smartboot.feat.demo.plus.token.TokenStore;
+import tech.smartboot.feat.demo.plus.tx.TxTemplate;
 
 /**
  * 登录与当前用户信息。
@@ -30,10 +31,10 @@ public class AuthService {
     private TokenStore tokenStore;
 
     @Autowired
-    private LoginStatMapper loginStatMapper;
+    private DataScopeResolver dataScopeResolver;
 
     @Autowired
-    private DataScopeResolver dataScopeResolver;
+    private TxTemplate txTemplate;
 
     public LoginResponse login(LoginRequest request) {
         String username = request == null ? null : trim(request.getUsername());
@@ -58,13 +59,20 @@ public class AuthService {
 
     /**
      * 登录成功后在当天统计上累加，驱动仪表盘趋势。
-     * 当天首条记录需要插入，并发登录时可能撞主键，忽略即可。
+     * <p>
+     * 「累加，没有就插入」是两条语句，必须在同一个事务里：否则并发登录时可能累加落空，
+     * 紧接着的插入又撞主键，当天的登录数就这么少了一次，且没有任何报错。
+     * <p>
+     * 统计失败一律吞掉——不能因为趋势图写不进去就让人登不进来。
      */
     private void recordLogin() {
         try {
-            if (loginStatMapper.increaseToday() == 0) {
-                loginStatMapper.insertToday();
-            }
+            txTemplate.run(session -> {
+                LoginStatMapper stats = session.getMapper(LoginStatMapper.class);
+                if (stats.increaseToday() == 0) {
+                    stats.insertToday();
+                }
+            });
         } catch (RuntimeException ignored) {
             // 统计失败不应影响登录本身
         }

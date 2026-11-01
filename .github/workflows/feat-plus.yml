@@ -32,10 +32,12 @@ jobs:
       - uses: actions/checkout@v4
 
       # 目录结构只有配了检查才算架构，否则只是标签。
-      # 放在最前面：不依赖 JDK 与编译产物，违反分层时几秒内就失败，
+      # 放在最前面：不依赖 JDK 与编译产物，违反分层或事务约束时几秒内就失败，
       # 不用等前端构建和三个模块编译跑完。
-      - name: 检查分层依赖
-        run: python3 demo/feat-plus/scripts/check_layers.py
+      - name: 检查分层与事务约束
+        run: |
+          python3 demo/feat-plus/scripts/check_layers.py
+          python3 demo/feat-plus/scripts/check_tx.py
 
       - name: 安装 JDK 8
         uses: actions/setup-java@v4
@@ -104,6 +106,7 @@ jobs:
           python3 scripts/regress_audit.py
           python3 scripts/regress_profile.py
           python3 scripts/regress_cache.py
+          python3 scripts/regress_tx.py
 
       - name: 失败时输出服务日志
         if: failure()

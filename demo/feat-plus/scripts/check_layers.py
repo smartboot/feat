@@ -6,9 +6,10 @@
     model      -> 不允许依赖本项目任何包（纯表结构）
     mapper     -> model
     cache      -> 不允许依赖本项目任何包（基础设施，只有 redisun）
+    tx         -> 不允许依赖本项目任何包（基础设施，只有 mybatis）
     security   -> model, mapper, token, common, cache
     dto        -> model, security, common
-    service    -> dto, model, mapper, security, token, common, cache
+    service    -> dto, model, mapper, security, token, common, cache, tx
     controller -> dto, service, security, token, common, cache, seed
     common     -> 不允许
     token      -> 不允许
@@ -29,9 +30,10 @@ ALLOWED = {
     "model": set(),
     "mapper": {"model"},
     "cache": set(),
+    "tx": set(),
     "security": {"model", "mapper", "token", "common", "cache"},
     "dto": {"model", "security", "common"},
-    "service": {"dto", "model", "mapper", "security", "token", "common", "cache"},
+    "service": {"dto", "model", "mapper", "security", "token", "common", "cache", "tx"},
     "controller": {"dto", "service", "security", "token", "common", "cache", "seed"},
     "common": set(),
     "token": set(),

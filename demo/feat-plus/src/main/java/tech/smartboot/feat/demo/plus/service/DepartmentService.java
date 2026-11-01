@@ -20,6 +20,7 @@ import tech.smartboot.feat.demo.plus.model.DepartmentRecord;
 import tech.smartboot.feat.demo.plus.model.DepartmentUserCount;
 import tech.smartboot.feat.demo.plus.security.DepartmentSnapshot;
 import tech.smartboot.feat.demo.plus.security.DepartmentTree;
+import tech.smartboot.feat.demo.plus.tx.TxTemplate;
 
 /**
  * 部门树业务规则：
@@ -29,6 +30,9 @@ import tech.smartboot.feat.demo.plus.security.DepartmentTree;
  *   <li>删除前必须没有子部门、没有成员，避免出现挂在空部门上的账号；</li>
  *   <li>按部门筛选用户时默认包含全部下级，由 {@link #subtreeIds(long)} 提供 id 集合。</li>
  * </ul>
+ * <p>
+ * <b>缓存失效必须在事务提交之后</b>：提交前清缓存，下一个请求会用提交前的数据把缓存重新填满，
+ * 于是「改完立刻生效」变成「改完十分钟才生效」——而且只在有并发时出现，本地单线程测不出来。
  */
 @Bean
 public class DepartmentService {
@@ -44,6 +48,9 @@ public class DepartmentService {
 
     @Autowired
     private DepartmentSnapshot departmentSnapshot;
+
+    @Autowired
+    private TxTemplate txTemplate;
 
     /**
      * 组装成树返回。节点顺序按 sortOrder、id 升序，前端不需要再排。
@@ -104,28 +111,31 @@ public class DepartmentService {
         assertParentExists(parentId);
         String name = requireName(input == null ? null : input.getName());
         assertSiblingNameUnique(parentId, name, 0L);
+        String parentLabel = parentId == ROOT ? "顶级部门" : "归属于 " + nameOf(parentId);
 
-        Date now = new Date();
-        DepartmentRecord record = new DepartmentRecord();
-        record.setParentId(parentId);
-        record.setCode(validateCode(input.getCode()));
-        record.setName(name);
-        record.setSortOrder(input.getSortOrder() == null ? 0 : input.getSortOrder());
-        record.setDescription(trimToEmpty(input.getDescription()));
-        record.setStatus(input.getStatus() == null ? 1 : input.getStatus());
-        record.setIsDeleted(0);
-        record.setCreatedTime(now);
-        record.setEditTime(now);
-        record.setCreator(operatorId);
-        record.setEditor(operatorId);
-        departmentMapper.insert(record);
-        // 先失效再读回：requireByName 走的是 mapper 直读，不受缓存影响；
-        // 但下一次 tree() 必须看到新部门，所以失效要在这里而不是方法末尾。
+        DepartmentRecord saved = txTemplate.call(session -> {
+            DepartmentMapper departments = session.getMapper(DepartmentMapper.class);
+            Date now = new Date();
+            DepartmentRecord record = new DepartmentRecord();
+            record.setParentId(parentId);
+            record.setCode(validateCode(input.getCode()));
+            record.setName(name);
+            record.setSortOrder(input.getSortOrder() == null ? 0 : input.getSortOrder());
+            record.setDescription(trimToEmpty(input.getDescription()));
+            record.setStatus(input.getStatus() == null ? 1 : input.getStatus());
+            record.setIsDeleted(0);
+            record.setCreatedTime(now);
+            record.setEditTime(now);
+            record.setCreator(operatorId);
+            record.setEditor(operatorId);
+            departments.insert(record);
+
+            activityRecorder.record("create", "创建了部门 " + name, parentLabel, null, operatorId);
+            // 读回走事务会话：注入的 Mapper 是另一条连接，看不到本事务尚未提交的行。
+            return requireByName(departments, name, parentId);
+        });
         departmentSnapshot.invalidate();
-
-        activityRecorder.record("create", "创建了部门 " + name,
-                parentId == ROOT ? "顶级部门" : "归属于 " + nameOf(parentId), null, operatorId);
-        return DepartmentNodeResponse.from(requireByName(name, parentId), 0);
+        return DepartmentNodeResponse.from(saved, 0);
     }
 
     public DepartmentNodeResponse update(long id, DepartmentInputRequest input, long operatorId) {
@@ -138,6 +148,7 @@ public class DepartmentService {
         assertNoCycle(id, parentId);
         String name = requireName(input == null ? null : input.getName());
         assertSiblingNameUnique(parentId, name, id);
+        String parentLabel = parentId == ROOT ? "调整为顶级部门" : "上级调整为 " + nameOf(parentId);
 
         current.setParentId(parentId);
         current.setCode(validateCode(input.getCode()));
@@ -149,11 +160,13 @@ public class DepartmentService {
         }
         current.setEditTime(new Date());
         current.setEditor(operatorId);
-        departmentMapper.update(current);
+
+        txTemplate.run(session -> {
+            session.getMapper(DepartmentMapper.class).update(current);
+            activityRecorder.record("update", "更新了部门 " + name, parentLabel, null, operatorId);
+        });
         departmentSnapshot.invalidate();
 
-        activityRecorder.record("update", "更新了部门 " + name,
-                parentId == ROOT ? "调整为顶级部门" : "上级调整为 " + nameOf(parentId), null, operatorId);
         DepartmentRecord saved = require(id);
         Long count = userCounts().get(id);
         return DepartmentNodeResponse.from(saved, count == null ? 0L : count);
@@ -168,10 +181,12 @@ public class DepartmentService {
         if (users > 0) {
             throw new DomainException("该部门下还有 " + users + " 位成员，请先调整成员归属");
         }
-        departmentMapper.softDelete(id, operatorId);
+        txTemplate.run(session -> {
+            session.getMapper(DepartmentMapper.class).softDelete(id, operatorId);
+            activityRecorder.record("delete", "删除了部门 " + record.getName(),
+                    record.getCode().isEmpty() ? "部门已移除" : record.getCode() + " 已移除", null, operatorId);
+        });
         departmentSnapshot.invalidate();
-        activityRecorder.record("delete", "删除了部门 " + record.getName(),
-                record.getCode().isEmpty() ? "部门已移除" : record.getCode() + " 已移除", null, operatorId);
     }
 
     /**
@@ -209,8 +224,8 @@ public class DepartmentService {
         return record;
     }
 
-    private DepartmentRecord requireByName(String name, long parentId) {
-        for (DepartmentRecord row : departmentMapper.selectAll()) {
+    private DepartmentRecord requireByName(DepartmentMapper departments, String name, long parentId) {
+        for (DepartmentRecord row : departments.selectAll()) {
             if (row.getParentId() == parentId && name.equals(row.getName())) {
                 return row;
             }
