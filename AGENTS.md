@@ -39,7 +39,7 @@ Feat Cloud 的注解长得很像 Spring Boot，但**工作方式不同**：没�
 
 ## 最小可运行工程（Feat Cloud）
 
-`pom.xml`——两个依赖分工不同，缺 `feat-cloud-starter` 会导致 Controller 不被转成可加载的 `CloudService`：
+`pom.xml`——**一个依赖就够**。`feat-cloud-starter` 会传递引入运行期的 `feat-cloud` 与编译期的 `feat-cloud-aot`（注解处理器），缺了它 Controller 不会被转成可加载的 `CloudService`：
 
 ```xml
 <properties>
@@ -49,21 +49,17 @@ Feat Cloud 的注解长得很像 Spring Boot，但**工作方式不同**：没�
 </properties>
 
 <dependencies>
-    <!-- 运行期 -->
-    <dependency>
-        <groupId>tech.smartboot.feat</groupId>
-        <artifactId>feat-cloud</artifactId>
-        <version>${feat.version}</version>
-    </dependency>
-    <!-- 编译期生成代码 -->
     <dependency>
         <groupId>tech.smartboot.feat</groupId>
         <artifactId>feat-cloud-starter</artifactId>
         <version>${feat.version}</version>
-        <scope>provided</scope>
     </dependency>
 </dependencies>
 ```
+
+> 想让运行产物更小，可以把 starter 标成 `provided`、再单独加一个运行期的 `feat-cloud`，
+> 这样注解处理器的 jar 不会进最终包。代价是多一个依赖，且漏写 `provided` 或漏加 `feat-cloud` 都会出问题。
+> 两种写法都能跑。`demo/helloworld` 用的是上面这种，新项目照抄上面这种即可。
 
 `src/main/java/demo/Bootstrap.java`：
 
@@ -175,4 +171,7 @@ pages/                文档站（Astro + Starlight），文档源在 pages/src/
 
 ## 授权
 
-`feat-core` 与 `feat-cloud` 的代码走 Apache 2.0；**Feat Cloud 的使用需要赞助授权**，商业项目采用前确认授权状态：https://smartboot.tech/feat/sponsors/
+仓库 LICENSE 为 Apache 2.0，全部模块代码均可自由用于商业场景；各模块 pom 的头部注释也是这个口径（"未经特别许可，需遵循 Apache-2.0 合理合法使用"）。
+Feat Cloud 的持续演进依赖赞助者支持，商业项目采用前可了解当前支持模式：https://smartboot.tech/feat/sponsors/
+
+**不要在任何材料里写出"需要授权才能使用""需获取赞助授权"这类结论。** 它与 LICENSE 冲突，且会让企业评估者当场放弃。对外口径以文档站 `pages/src/content/docs/sponsors.mdx` 为准。
