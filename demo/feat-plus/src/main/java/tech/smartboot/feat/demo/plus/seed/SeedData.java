@@ -92,10 +92,17 @@ public final class SeedData {
 
     public static List<SeedActivity> activities() {
         List<SeedActivity> list = new ArrayList<>();
-        list.add(new SeedActivity("enable", "管理员启用了用户 jason", "账号已恢复访问工作空间", "jason", "2026-08-02 09:06:00"));
-        list.add(new SeedActivity("update", "陈晓雨更新了个人信息", "邮箱和所属部门已同步", "alice", "2026-08-02 08:48:00"));
-        list.add(new SeedActivity("system", "审计员导出了登录日志", "导出范围为最近 30 天", "carol", "2026-08-02 08:02:00"));
-        list.add(new SeedActivity("system", "系统完成每日数据备份", "演示环境状态正常", null, "2026-08-02 07:10:00"));
+        // 第 4 个参数是被操作对象（userId），第 5 个是操作人（creator）。
+        // 两者必须分开：数据范围按操作人过滤，如果只填对象，受限账号的日志页会全空。
+        list.add(new SeedActivity("enable", "管理员启用了用户 jason", "账号已恢复访问工作空间",
+                "jason", "admin", "2026-08-02 09:06:00"));
+        list.add(new SeedActivity("update", "陈晓雨更新了个人信息", "邮箱和所属部门已同步",
+                "alice", "alice", "2026-08-02 08:48:00"));
+        list.add(new SeedActivity("system", "审计员导出了登录日志", "导出范围为最近 30 天",
+                "carol", "carol", "2026-08-02 08:02:00"));
+        // 系统任务没有操作人，creator 留空：受限视图里它不可归因到任何部门，因此不出现。
+        list.add(new SeedActivity("system", "系统完成每日数据备份", "演示环境状态正常",
+                null, null, "2026-08-02 07:10:00"));
         return list;
     }
 
@@ -189,14 +196,19 @@ public final class SeedData {
         public final String kind;
         public final String title;
         public final String description;
+        /** 被操作对象。登录、备份这类记录没有对象，为 null。 */
         public final String username;
+        /** 操作人。数据范围按它过滤，为 null 表示系统行为。 */
+        public final String operator;
         public final String createdTime;
 
-        SeedActivity(String kind, String title, String description, String username, String createdTime) {
+        SeedActivity(String kind, String title, String description, String username, String operator,
+                     String createdTime) {
             this.kind = kind;
             this.title = title;
             this.description = description;
             this.username = username;
+            this.operator = operator;
             this.createdTime = createdTime;
         }
     }

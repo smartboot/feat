@@ -8,6 +8,7 @@ import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.Param;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.cloud.annotation.RequestMethod;
+import tech.smartboot.feat.demo.plus.auth.service.AccessContext;
 import tech.smartboot.feat.demo.plus.auth.service.AccessGuard;
 import tech.smartboot.feat.demo.plus.common.ApiController;
 import tech.smartboot.feat.demo.plus.common.DomainException;
@@ -42,17 +43,19 @@ public class ActivityController extends ApiController {
             @Param("from") String from,
             @Param("to") String to) {
         return execute(context, () -> {
-            accessGuard.require(context, Permission.AUDIT_READ);
+            // 返回值必须接住：权限点只回答「能不能看审计日志」，
+            // 数据范围才回答「能看哪些部门的人留下的日志」。丢掉它等于范围配置静默失效。
+            AccessContext access = accessGuard.require(context, Permission.AUDIT_READ);
             return activityService.list(kind, parseId(operatorId), from, to,
-                    page == null ? 1 : page, pageSize == null ? 20 : pageSize);
+                    page == null ? 1 : page, pageSize == null ? 20 : pageSize, access);
         });
     }
 
     @RequestMapping(value = "/operators", method = RequestMethod.GET)
     public RestResult<List<OperatorOptionResponse>> operators(Context context) {
         return execute(context, () -> {
-            accessGuard.require(context, Permission.AUDIT_READ);
-            return activityService.operators();
+            AccessContext access = accessGuard.require(context, Permission.AUDIT_READ);
+            return activityService.operators(access);
         });
     }
 

@@ -61,7 +61,8 @@ public class DashboardService {
         long disabled = userMapper.countPage(null, 0, null, null, scope, selfOnly);
         long total = enabled + disabled;
 
-        List<ActivityRecord> recent = activityMapper.selectRecent(RECENT_ACTIVITY);
+        List<ActivityRecord> recent = activityMapper.selectRecent(RECENT_ACTIVITY,
+                access.queryDepartmentIds(), access.selfOnlyUserId());
         List<ActivityItemResponse> activities = new ArrayList<>(recent.size());
         for (ActivityRecord record : recent) {
             activities.add(new ActivityItemResponse(record));

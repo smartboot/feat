@@ -67,6 +67,30 @@ public final class SqlFragments {
             + "<if test=\"selfOnlyUserId != null\"> AND u.id = #{selfOnlyUserId}</if>"
             + "</where>";
 
+    /**
+     * 操作日志的数据范围条件，供审计列表、计数、近期动态、操作人下拉共用。
+     * <p>
+     * 过滤维度是**操作人所属部门**（a.creator → u.department_id），不是被操作对象。
+     * 选操作人而不是目标，理由有三条：
+     * <ol>
+     *   <li>每条日志必然有 creator，而目标是可空的（登录、导出这类记录没有目标用户），
+     *       按目标过滤会让这些记录在受限视图里凭空消失；</li>
+     *   <li>一条日志只属于一个部门，不存在「同时归属两个部门」的歧义；</li>
+     *   <li>与「仅本人」档天然对齐：只看自己做过的事。</li>
+     * </ol>
+     * 代价要说清楚：部门主管看不到「别的部门改了我的人」这类日志。
+     * 这是范围模型的固有取舍，不是实现缺陷。
+     * <p>
+     * 片段不自带 WHERE，由外层 &lt;where&gt; 吸收前导 AND。
+     * 使用方必须保证 scopeDepartmentIds / selfOnlyUserId 两个参数都存在，
+     * 否则 MyBatis 会抛 no getter for property。
+     */
+    public static final String ACTIVITY_SCOPE_FILTER = "<if test=\"scopeDepartmentIds != null\">"
+            + " AND u.department_id IN "
+            + "<foreach collection=\"scopeDepartmentIds\" item=\"scopeDeptId\" open=\"(\" separator=\",\" close=\")\">"
+            + "#{scopeDeptId}</foreach></if>"
+            + "<if test=\"selfOnlyUserId != null\"> AND a.creator = #{selfOnlyUserId}</if>";
+
     public static final String ROLE_COLUMNS = "id, code, name, description, permissions, department_scope, "
             + "builtin, status, is_deleted, created_time, edit_time, creator, editor";
 

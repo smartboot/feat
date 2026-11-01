@@ -65,6 +65,24 @@ public class InMemoryTokenStore implements TokenStore {
         }
     }
 
+    @Override
+    public int removeOthers(long userId, String keepToken) {
+        int removed = 0;
+        for (Map.Entry<String, TokenSession> entry : sessions.entrySet()) {
+            if (entry.getValue().getUserId() != userId) {
+                continue;
+            }
+            if (entry.getKey().equals(keepToken)) {
+                continue;
+            }
+            // 先判 null 再用 equals：keepToken 为空时不能反向调用 keepToken.equals(...)
+            if (sessions.remove(entry.getKey()) != null) {
+                removed++;
+            }
+        }
+        return removed;
+    }
+
     private long ttlSeconds() {
         if (ttlSecondsText == null || ttlSecondsText.trim().isEmpty()) {
             return DEFAULT_TTL_SECONDS;

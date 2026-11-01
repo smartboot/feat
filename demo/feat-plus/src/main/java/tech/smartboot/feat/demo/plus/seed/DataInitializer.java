@@ -160,6 +160,9 @@ public class DataInitializer {
             record.setTitle(seed.title);
             record.setDescription(seed.description);
             record.setUserId(resolveUserId(seed.username));
+            Long operator = resolveUserId(seed.operator);
+            record.setCreator(operator);
+            record.setEditor(operator);
             record.setIsDeleted(0);
             record.setCreatedTime(SeedData.parseTime(seed.createdTime));
             record.setEditTime(SeedData.parseTime(seed.createdTime));

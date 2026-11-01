@@ -9,6 +9,7 @@ import java.util.List;
 
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Bean;
+import tech.smartboot.feat.demo.plus.auth.service.AccessContext;
 import tech.smartboot.feat.demo.plus.common.DomainException;
 import tech.smartboot.feat.demo.plus.common.page.PageResult;
 import tech.smartboot.feat.demo.plus.dashboard.dto.ActivityItemResponse;
@@ -31,16 +32,22 @@ public class ActivityService {
     @Autowired
     private ActivityMapper activityMapper;
 
+    /**
+     * 审计列表。access 不是可选项——日志里写清了「谁改了谁」，能看用户列表不等于能看全公司的操作记录，
+     * 所以这条查询必须和用户列表走同一套数据范围。
+     */
     public PageResult<ActivityItemResponse> list(String kind, Long operatorId, String from, String to,
-                                                 int page, int pageSize) {
+                                                 int page, int pageSize, AccessContext access) {
         Date fromDate = parseDay(from, 0);
         Date toDate = parseDay(to, 1);
         int safePage = page < 1 ? 1 : page;
         int safeSize = pageSize < 1 ? 10 : Math.min(pageSize, MAX_PAGE_SIZE);
+        List<Long> scope = access.queryDepartmentIds();
+        Long selfOnly = access.selfOnlyUserId();
 
-        long total = activityMapper.countPage(emptyToNull(kind), operatorId, fromDate, toDate);
+        long total = activityMapper.countPage(emptyToNull(kind), operatorId, fromDate, toDate, scope, selfOnly);
         List<ActivityRecord> rows = activityMapper.selectPage(emptyToNull(kind), operatorId, fromDate, toDate,
-                safeSize, (safePage - 1) * safeSize);
+                safeSize, (safePage - 1) * safeSize, scope, selfOnly);
         List<ActivityItemResponse> items = new ArrayList<>(rows.size());
         for (ActivityRecord row : rows) {
             items.add(new ActivityItemResponse(row));
@@ -48,8 +55,9 @@ public class ActivityService {
         return new PageResult<>(items, total, safePage, safeSize);
     }
 
-    public List<OperatorOptionResponse> operators() {
-        List<ActivityRecord> rows = activityMapper.selectOperators();
+    public List<OperatorOptionResponse> operators(AccessContext access) {
+        List<ActivityRecord> rows = activityMapper.selectOperators(access.queryDepartmentIds(),
+                access.selfOnlyUserId());
         List<OperatorOptionResponse> options = new ArrayList<>(rows.size());
         for (ActivityRecord row : rows) {
             String name = row.getOperatorName() == null ? "已删除用户 #" + row.getCreator() : row.getOperatorName();
