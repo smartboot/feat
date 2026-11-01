@@ -20,8 +20,8 @@
 | 4 | 计算属性不输出 | `CacheStats.getHitRate()` 没有对应字段，接口返回里静默少了 `hitRate` | 生成的 `XxxControllerCloudService` 把返回值拼成 JSON 字节，逐字段调 getter；`@PostConstruct` 的返回值不经过运行时序列化 | `cloud/cache.mdx`、`AGENTS.md` | 已回写 |
 | 5 | 启动异常被解包 | 启动期 `new IllegalStateException(msg, e)` 的 msg 在控制台看不到，只剩 `Connection refused` | `FeatException(String, Throwable)` 调用 `getRootCause(cause)`，一路解包到最底层 | `cloud/cache.mdx`、`AGENTS.md` | 已回写 |
 | 6 | 改 `feat.yml` 后 `mvn compile` 不重新生成 | 只改 yaml 后跑 `mvn compile`，装配代码仍是旧的 `setProvider("memory")`，`clean` 后才变成新值 | Maven 增量构建未触发注解处理器 | `AGENTS.md` 第 12 条、`cloud/cache.mdx` | 已回写 |
-| 7 | MyBatis 会话与事务 | `mybatis.mdx` 全文无 `sessionFactory` / `SqlSession` / 事务；末尾只写"后面继续扩展权限、事务、校验时结构不会乱" | `MybatisSerializer` 在 `loadBean` 末尾 `addBean("sessionFactory", ...)`，`@Autowired` 在之后的 `autowired` 阶段，所以可直接注入 | `cloud/mybatis.mdx` 增「会话与事务」一节 | 待回写 |
-| 8 | MyBatis 示例教反了 | `demo/mybatis` 的 Service 用 `catch (Exception e) { e.printStackTrace(); return false; }`，正是会让事务失效的写法 | `demo/mybatis/src/main/java/.../service/` | 改示例 + 在 `mybatis.mdx` 点明为什么不catch | 待回写 |
+| 7 | MyBatis 会话与事务 | `mybatis.mdx` 全文无 `sessionFactory` / `SqlSession` / 事务；末尾只写"后面继续扩展权限、事务、校验时结构不会乱" | `MybatisSerializer` 在 `loadBean` 末尾 `addBean("sessionFactory", ...)`，`@Autowired` 在之后的 `autowired` 阶段，所以可直接注入 | `cloud/mybatis.mdx` 增「会话与事务」一节 | 已回写 |
+| 8 | MyBatis 示例教反了 | `demo/mybatis` 的 Service 用 `catch (Exception e) { e.printStackTrace(); return false; }`，正是会让事务失效的写法 | `demo/mybatis/src/main/java/.../service/` | 改示例 + 在 `mybatis.mdx` 点明为什么不 catch | 已回写（示例已去掉 try/catch） |
 | 9 | `@Value` 写法 | `bean.mdx` 写 `@Value("app.name")`，`nacos.mdx` / `xxljob.mdx` 写 `@Value("${...}")`，`options.mdx` 说必须带 `${}` | 以 AOT 生成代码为准：不带 `${}` 注入的是字面量 | `cloud/bean.mdx` | 待复核（`bean.mdx` L122 已明确说明，H2 可能已修） |
 | 10 | `appendix/aot.mdx` | 整页约一半在讲已删除的 `feat-cloud-aot-vm` 模块 | 仓库无此模块，`version_history` 记 v2.1.0 已移除 | 重写该页 | 待回写（见 DOCS_REVIEW H1） |
 

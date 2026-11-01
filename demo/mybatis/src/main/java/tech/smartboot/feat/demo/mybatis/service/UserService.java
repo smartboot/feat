@@ -25,30 +25,21 @@ public class UserService {
         return userMapper.selectByRole(role);
     }
 
+    /**
+     * 写方法不要 try/catch 吞掉异常。
+     * <p>
+     * 吞掉之后调用方拿到 false，以为「这次没成功，重试一次就好」，而实际上事务早就该回滚了。
+     * 回滚的唯一触发条件是异常穿出事务边界；要返回业务错误，让异常抛到 Controller 层翻译成状态码。
+     */
     public boolean insert(User user) {
-        try {
-            return userMapper.insert(user) > 0;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
+        return userMapper.insert(user) > 0;
     }
 
     public boolean update(User user) {
-        try {
-            return userMapper.update(user) > 0;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
+        return userMapper.update(user) > 0;
     }
 
     public boolean deleteByUsername(String username) {
-        try {
-            return userMapper.deleteByUsername(username) > 0;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
+        return userMapper.deleteByUsername(username) > 0;
     }
 }

@@ -52,9 +52,9 @@ feat-plus 的立足点是 Feat 的技术模型：
 | 2 | **错误要尽早暴露** | AI 写得快，人工 review 跟不上。能在编译期、启动期失败的东西，不要留到运行期静默失效——「主管看到了不该看的数据」这种 bug 没有报错，只有后果 |
 | 3 | **单次改动的可读面要小** | AI 上下文有限。改一个功能要读 3 个文件是合理的，要读 30 个就不合理。这条决定模块边界按「变更原因」切，而不是按「技术层」切 |
 | 4 | **同构性优先于灵活性** | 同类东西只允许一种写法。两个变种会生出第三个；三个变种之后 AI 每次都在猜 |
-| 5 | **约束要可验证** | 每条约定都要有断言。AI 能自己跑断言，读不懂「请注意」。218 项回归断言在 AI 时代的价值比手写时代更高——它是让 AI 放手改的安全网 |
+| 5 | **约束要可验证** | 每条约定都要有断言。AI 能自己跑断言，读不懂「请注意」。255 项回归断言在 AI 时代的价值比手写时代更高——它是让 AI 放手改的安全网 |
 
-按这五条对照现在的 feat-plus，缺的东西很清楚：事务没有（判据 2 的反面）、数据权限靠人拼字符串（判据 1 的反面）、加一个字段要动八个文件（判据 3）、列表页 857 行且每页写法不一（判据 4）、错误码缺失只能字符串匹配（判据 5）。
+按这五条对照现在的 feat-plus，缺的东西很清楚：数据权限靠人拼字符串（判据 1 的反面）、加一个字段要动八个文件（判据 3）、列表页 857 行且每页写法不一（判据 4）、错误码缺失只能字符串匹配（判据 5）。
 
 下面的梯队按这个顺序重排。
 
@@ -68,8 +68,10 @@ feat-plus 的立足点是 Feat 的技术模型：
 - **多角色 + 数据权限**：`sys_user_role` 多对多，权限并集 / 范围取最宽，列表与按 id 读写双重校验
 - **数据范围覆盖审计日志与首页动态**：按操作人所属部门过滤
 - **个人中心**：任何登录用户可改自己的昵称、邮箱、密码；改密码后其它会话立即失效
-- **CI 回归**：218 项断言在 GitHub Actions 里跑（装框架 → 建前端 → 编译 → 起服务 → 打接口）
-- **按层分包 + 依赖可检查**：`controller / service / mapper / model / dto / security / token / common / seed`，
+- **事务模板**：`tx/TxTemplate` 是写操作的唯一入口，多语句写全部包在里面；`scripts/check_tx.py` 校验「写两次以上必须包模板、事务体不许混用注入 Mapper、有模板时写必须全在模板内」
+- **缓存后端可切**：`CacheStore` + 内存 / Redis 两实现，`feat.yaml` 一处配置切换，已接在部门全表读上
+- **CI 回归**：255 项断言在 GitHub Actions 里跑（静态检查 → 装框架 → 建前端 → 编译 → 起服务 → 打接口）
+- **按层分包 + 依赖可检查**：`controller / service / mapper / model / dto / security / token / common / cache / tx / seed`，
   `scripts/check_layers.py` 按白名单校验跨层 import，违反即 CI 失败；`security` 已与 `service` 解环
 - 部门树：环路校验、删除前检查、按部门筛选含下级
 - 审计日志：类型/操作人/时间范围筛选，操作人姓名联表
@@ -84,43 +86,36 @@ feat-plus 的立足点是 Feat 的技术模型：
 
 这一层的共同点：**不做，后面写的每一行业务代码都是「演示级正确」。** 它们不产生新功能，只决定已有功能在真实数据下是否成立。
 
-### 1. 事务边界（最高优先）
+### 1. 事务边界（已完成 · 2026-11-01）
 
-**不做 `@Transactional` 注解。** Feat 的装配在编译期完成，为一个注解在注解处理器里维护事务语义（传播行为、只读、回滚规则、内层回滚外层不复位），等于把 Spring 最重的那部分搬过来，与「一眼看得见」相反。
+**没有做 `@Transactional`。** Feat 的装配在编译期完成，为一个注解在注解处理器里维护事务语义
+（传播行为、只读、回滚规则、内层回滚外层不复位），等于把 Spring 最重的那部分搬过来，与「一眼看得见」相反。
 
-Feat 本身已经够用：`sessionFactory` 是命名 Bean，业务 Bean 直接注入即可——
+落地形态是 `tx/TxTemplate`：`txTemplate.run(session -> ...)` / `txTemplate.call(session -> ...)`。
+边界显式、可 grep，业务代码不碰 close 与 rollback。内层通过线程绑定加入外层会话，
+所以「A 调 B，B 里也走模板」是同生共死，不需要把 session 一路当参数传。
 
-```java
-@Autowired
-private SqlSessionFactory sessionFactory;
+四条判断写进了代码注释，因为它们都是「做错了不报错」的类型：
 
-SqlSession session = sessionFactory.openSession(false);   // false = 手动提交
-UserMapper mapper = session.getMapper(UserMapper.class);
-```
+1. **事务体里只能用 `session.getMapper(...)`。** 注入的 Mapper 每个方法 `openSession(true)` 独立提交，
+   混用一个，那一笔写就落在事务外，接口照常返回成功。
+2. **跨 Service 只有对方也走模板时才传播。** 对方直接用手上的注入 Mapper 写，仍然是独立提交。
+3. **缓存失效放在提交之后。** 提交前清缓存，别的线程会用提交前的数据把它填回去。
+4. **审计与被审计的变更同一个事务。** 否则业务回滚了、日志还在，审计就在说谎。
 
-不需要注解，不需要代理，不需要 ThreadLocal。注入之所以成立，是因为生成的装配分阶段：`loadBean` 阶段创建 Bean 并在末尾 `addBean("sessionFactory", ...)`，`autowired` 阶段才做注入，所以取得到。
+**约束变成了机制**：`scripts/check_tx.py` 在 CI 第一步执行，三条规则——对注入 Mapper 写两次以上必须包模板 /
+模板体内不许出现注入 Mapper / 方法里已有模板时写必须全在模板内。已用临时违规类验证过它真的会失败。
 
-问题不在于能不能写，而在于**漏写不会有任何提示**。下面三个坑必须写进规范：
+**顺带交付的自检**：`GET /api/system/selftest` 在一个事务里写一行再抛异常，事务外回查确认没有残留。
+这条接口的用处不是演示，是换库、换驱动、上容器之后先确认「事务在这个环境里真的成立」——
+事务的错法全都表现为 200。
 
-1. **注入的 Mapper 与手开的 session 是两套。** `@Autowired UserMapper` 是生成代码包过的版本，每个方法 `openSession(true)` 独立提交。事务方法体里必须全部换成 `session.getMapper(...)`——混用一个，那一笔写就落在事务外，接口照常返回成功。
-2. **跨 Service 不传播。** A 方法开了 session 调 B，B 里注入的 Mapper 自己开会话并提交。要么把 session 传下去，要么用模板把整段调用包住。
-3. **必须 close。** 数据源是 MyBatis 的 `PooledDataSource`，漏 close 会耗尽连接池，表现是服务假死而不是报错。
+**文档欠账已还**：`pages/src/content/docs/cloud/mybatis.mdx` 补了「会话与事务」一节，
+写清 `sessionFactory` 是命名 Bean、注入的 Mapper 与手开会话是两套、必须 close。
+`demo/mybatis` 里那个 `catch (Exception e) { return false; }` 的例子也标注了为什么它会毁掉事务。
 
-所以目标形态是**一个显式事务模板**，不是每个方法手写 try / finally：
-
-```java
-txManager.execute(session -> {
-    UserMapper mapper = session.getMapper(UserMapper.class);
-    ...
-    return saved;
-});
-```
-
-边界显式、可读、可 grep，业务代码不碰 close 与 rollback；`ActivityRecorder` 这类「无论成败都要记」的旁路写，在模板里单独开会话即可（对应 REQUIRES_NEW）。这比注解更符合判据 1——不是靠「记得开事务」，而是靠一个只有一种入口的入口。
-
-如果连模板也不引入，那就退化成纯约定：每个写方法自己开 session，靠 review 和断言兜底。代价要认：判据 1 说的「人能记住、AI 记不住」，在事务上会以「某次上线少提交一笔」的形式出现。
-
-**文档欠账要一起还。** `mybatis.mdx` 通篇没有 `sessionFactory`、`SqlSession`、事务，只有一句「后面扩展权限、事务、校验时结构不会乱」；`demo/mybatis` 的 Service 又示范了 `catch (Exception e) { return false; }`——吞掉异常恰好让事务失去意义。补一节「会话与事务」是这件的必要部分。
+**仍未做**：`SqlSession` 目前只能从模板拿到，跨 Service 的写仍然要靠人把 session 传下去。
+真正机制化需要「Mapper 方法必填 AccessContext / Session」这类编译期约束，见第 2 项的方向。
 
 ### 2. 数据权限从「约定」变成「机制」
 
@@ -172,7 +167,7 @@ AOT 处理期手里已经有全部路由、方法、参数、返回类型。导�
 
 原来两套混着：外层按 feature（`user/` `role/`），里层按层（`controller/` `service/`），`common/` 是杂物间——`Permission`、`DataScope`、`SqlFragments`、`ApiController` 全塞一起，`SqlFragments` 里同时躺着用户和日志两个模块的 SQL。
 
-现在统一按层：`controller / service / mapper / model / dto / security / token / common / seed`，共 76 个类。
+现在统一按层：`controller / service / mapper / model / dto / security / token / common / cache / tx / seed`，共 89 个类。
 
 三个判断写在 `README.md` 的「结构」一节：
 
@@ -180,7 +175,7 @@ AOT 处理期手里已经有全部路由、方法、参数、返回类型。导�
 - **`SqlFragments` 跟 `mapper` 走**，不留在 `security`。否则 `mapper` 用它的常量、它又反过来引用 `mapper` 接口，两层成环。
 - **部门子树算法抽到 `security/DepartmentTree`**（纯函数，入参是部门行）。原来放在 `DepartmentService`，导致 `security → service`，而 `service → security` 本来就存在，成环。
 
-**约束变成机制**：`scripts/check_layers.py` 白名单校验 76 个类的 import，CI 第一步执行。三条硬规则——`controller` 不得直接用 `mapper`（绕过 Service 就等于绕过数据范围校验）、`security` 不得依赖 `service`/`controller`、`model` 不依赖本项目任何包。
+**约束变成机制**：`scripts/check_layers.py` 白名单校验 89 个类的 import，CI 第一步执行。三条硬规则——`controller` 不得直接用 `mapper`（绕过 Service 就等于绕过数据范围校验）、`security` 不得依赖 `service`/`controller`、`model` 不依赖本项目任何包。
 
 **未完成**：框架层与业务层仍是同一个 module，`feat-plus-core` 独立发包还没做（见「分发形态」缺口）。
 
@@ -352,6 +347,7 @@ AI 会读这个文件。把 feat-plus 的约定（软删五字段、权限点登
 3. 有对应的回归断言（不是手工点一遍）
 4. README 的接口表同步更新
 5. **横切能力不可绕过**：鉴权、数据范围、软删过滤、审计记录，漏接必须让编译失败或启动失败，不能靠「记得调一下」
+6. **多语句写在一个事务里**：由 `TxTemplate` 承载，`check_tx.py` 校验，不靠「记得开事务」
 
 ---
 
@@ -359,7 +355,7 @@ AI 会读这个文件。把 feat-plus 的约定（软删五字段、权限点登
 
 一条主线：**先把「写错会炸」的部分变成机制，再补「已经宣称有但走不通」的部分，最后才加新功能。**
 
-事务排第一，因为它是所有多语句写的正确性前提，也是判据 2 最直接的违反——现在的代码是「看起来对、跑起来脏」，这种 bug 没有报错，只有后果。
+事务排在第一位，因为它是所有多语句写的正确性前提，也是判据 2 最直接的违反——曾经的代码是「看起来对、跑起来脏」，这种 bug 没有报错，只有后果。现在它变成了 `TxTemplate` 加一条 CI 检查：不再依赖「记得开事务」。
 
 数据权限机制化排第二，因为它是判据 1 的样板：已经出过一次静默失效，而 AI 写新模块时百分之百会再犯一次。
 

@@ -30,6 +30,7 @@ Feat Cloud 的注解长得很像 Spring Boot，但**工作方式不同**：没�
 | 10 | `application.yml` / `application-prod.yml` | `feat.yml` / `feat-dev.yml` / `feat-prod.yml`，位于 `src/main/resources` |
 | 11 | 类上 `@RequestMapping("/users")` + 方法 `@RequestMapping("/hello")` | 类级前缀写在 `@Controller("users")` 的值里，方法上只写 `@RequestMapping("/hello")` |
 | 12 | 改完代码重跑 jar 就能生效 | **编译期生成**：改了 `@Controller` / `@Bean` / `@Autowired` / `@Value` / `feat.yml` 之后必须重新构建。只重启旧 jar 不会生效；只改 `feat.yml` 时 `mvn compile` 也可能被判为增量而跳过注解处理器，用 `mvn clean compile` 最稳 |
+| 13 | `@Autowired private SqlSessionFactory sessionFactory;` 里字段随便起名 | **`@Autowired` 按字段名取 Bean，不看类型**。名字对不上不会注入成 null，而是启动时抛 `bean[xxx] not ready`。字段名必须是类名首字母小写，或者类上显式写 `@Bean("想要的name")`。典型翻车：`TxTemplate` 注入成 `tx` |
 
 补充几个容易忽略的边界：
 
@@ -38,6 +39,7 @@ Feat Cloud 的注解长得很像 Spring Boot，但**工作方式不同**：没�
 - 用 `maven-shade-plugin` 打 fat jar 时，必须用 `AppendingTransformer` 合并 `META-INF/services/tech.smartboot.feat.cloud.CloudService`，否则应用能启动但所有路由 404。
 - **返回值序列化在编译期完成**，逐字段调 getter：没有对应字段的计算属性（如只在 `getHitRate()` 里算的值）不会被输出，接口里静默少一个键。要输出就落成真实字段。
 - **启动失败的异常会被解包到最底层 cause**（`FeatException#getRootCause`）。`new IllegalStateException(msg, e)` 里的 msg 不会出现在控制台，只剩 `Connection refused` 之类。要让提示可见，就把信息拼进自己的 message 且不设 cause。
+- **注入的 Mapper 会自动提交事务。** 生成的 Mapper 包装类每个方法都 `openSession(true)`：一次业务动作要写两张表时，第一张已经提交、第二张失败，脏数据就留下了。要事务就在 `@Autowired SqlSessionFactory` 上 `openSession(false)`，事务体里全部改用 `session.getMapper(...)`（混用注入的 Mapper 等于把那一笔写扔出事务），最后必须 close。可运行的模板见 `demo/feat-plus/tx/TxTemplate`，文档见 `cloud/mybatis.mdx` 的「会话与事务」。
 
 ## 最小可运行工程（Feat Cloud）
 

@@ -73,6 +73,8 @@ mvn -q exec:java
 | POST | `/api/notifications/{id}/read` | 单条已读 | — |
 | POST | `/api/notifications/read-all` | 全部已读 | — |
 | POST | `/api/admin/reset-demo` | 恢复演示数据 | `system:write` |
+| GET | `/api/system/cache` | 当前缓存后端与命中计数 | `system:write` |
+| GET | `/api/system/selftest` | 地基自检（事务回滚是否真的生效） | `system:write` |
 
 「权限」一栏为 `—` 的接口只要求登录。个人中心的三个接口刻意不挂权限点：
 改自己的昵称和密码是基本权利，要求 `user:write` 会让普通成员永远改不了密码，
@@ -140,7 +142,7 @@ mvn -q exec:java
 
 ## 回归脚本与 CI
 
-`scripts/` 下四份用 urllib 写的断言脚本，覆盖 218 项。用 urllib 而不是 curl，是为了对 JSON 做精确断言——
+`scripts/` 下六份用 urllib 写的断言脚本，覆盖 255 项。用 urllib 而不是 curl，是为了对 JSON 做精确断言——
 用 `grep -o '"code"'` 数条数会把 `RestResult` 信封里的 `code: 200` 也数进去。
 
 ```bash
@@ -149,20 +151,23 @@ python3 scripts/regress_crud.py     # 54 项：用户 / 角色 / 部门的基础
 python3 scripts/regress_scope.py    # 80 项：多角色并集、范围过滤、按 id 越权、审计日志的范围收窄
 python3 scripts/regress_audit.py    # 44 项：审计日志筛选、通知按人投递与已读隔离
 python3 scripts/regress_profile.py  # 40 项：个人中心改资料 / 改密码 / 其它会话失效
+python3 scripts/regress_cache.py    # 14 项：默认后端、读路径命中、写路径失效、权限边界
+python3 scripts/regress_tx.py       # 23 项：回滚真的发生、多语句写「成功三处都在 / 失败一处不留」
 ```
 
-四份脚本都会在开头或结尾调用 `reset-demo`，可以任意顺序重复执行——
+六份脚本都会在开头或结尾调用 `reset-demo`，可以任意顺序重复执行——
 唯一的例外是「被踢掉的会话数」这类断言不写死条数：令牌存在进程内存里，跨多次运行会累积。
 
-另有一份不需要启动服务的静态检查：
+另有两份不需要启动服务的静态检查：
 
 ```bash
-python3 scripts/check_layers.py     # 76 个类的跨层依赖，按白名单校验
+python3 scripts/check_layers.py     # 89 个类的跨层依赖，按白名单校验
+python3 scripts/check_tx.py         # 9 个 Service：多语句写必须包在事务里、事务体不许混用注入 Mapper
 ```
 
-CI 在 `.github/workflows/feat-plus.yml`：分层检查 → 装框架 → 建前端 → 编译 → 起服务 → 打接口，
-失败时自动打印服务日志。分层检查放在最前面，因为它不需要 JDK 和编译产物，
-违反依赖方向时几秒内就失败。
+CI 在 `.github/workflows/feat-plus.yml`：两项静态检查 → 装框架 → 建前端 → 编译 → 起服务 → 打接口，
+失败时自动打印服务日志。静态检查放在最前面，因为它不需要 JDK 和编译产物，
+违反依赖方向或事务约束时几秒内就失败。
 
 ## 结构
 
@@ -173,20 +178,22 @@ CI 在 `.github/workflows/feat-plus.yml`：分层检查 → 装框架 → 建前
 ```text
 src/main/java/tech/smartboot/feat/demo/plus/
 ├── Bootstrap.java        入口，挂载 SPA 回退
-├── controller/          10 个 Controller：收参数、验权限点、调 Service
-├── service/              8 个业务服务：业务规则与校验在这里，不允许直接拼 SQL
+├── controller/          11 个 Controller：收参数、验权限点、调 Service
+├── service/              9 个业务服务：业务规则与校验在这里，不允许直接拼 SQL
 ├── mapper/               8 个 MyBatis 接口 + SqlFragments（SQL 片段常量）
 ├── model/               11 个表结构映射，含 passwordHash / isDeleted 等不外露字段
-├── dto/                 20 个请求与响应契约，OpenAPI 从这里导出
+├── dto/                 21 个请求与响应契约，OpenAPI 从这里导出
 ├── security/             认证与授权的机制层：AccessContext / AccessGuard /
 │                         DataScopeResolver / Permission / DataScope / DepartmentTree /
 │                         DepartmentSnapshot（部门全表读缓存）
 ├── cache/                缓存后端：CacheStore 契约 + 内存 / Redis 两实现 + 按配置选择
+├── tx/                   事务模板：写操作的唯一入口（TxTemplate / TxWork / TxAction）
 ├── token/                令牌与会话（内存实现，可替换成 Redis）
 ├── common/               统一响应、异常、ApiController、SPA 回退
 └── seed/                 演示数据，接入真实项目时整包删除
 
-scripts/                  回归断言（crud / scope / audit / profile / cache）+ 分层检查
+scripts/                  回归断言（crud / scope / audit / profile / cache / tx）
+                          + 静态检查（check_layers / check_tx）
 web/src/
 ├── services/admin-service.ts   前后端共同遵守的接口契约
 ├── services/http-admin-service.ts  唯一实现，页面只从这里取 adminService
@@ -205,9 +212,10 @@ web/src/
 | `model` | 无（纯表结构，连 security 都不依赖） |
 | `mapper` | `model` |
 | `cache` | 无（只有 redisun） |
+| `tx` | 无（只有 mybatis） |
 | `security` | `model` `mapper` `token` `common` `cache` |
 | `dto` | `model` `security` `common` |
-| `service` | `dto` `model` `mapper` `security` `token` `common` `cache` |
+| `service` | `dto` `model` `mapper` `security` `token` `common` `cache` `tx` |
 | `controller` | `dto` `service` `security` `token` `common` `cache` `seed` |
 | `common` `token` | 无 |
 | `seed` | 不限制（演示设施，接入时整包删） |
@@ -228,6 +236,48 @@ web/src/
 > 之前保留过一份 `mock-admin-service`，它的 `login()` 返回写死的 `feat-plus-demo-token`，
 > 后端从未发过这个令牌，登录页误引用它时表现为「登录成功但后续每个接口都 401」。
 > 现已整层删除，只留一份真实实现——契约变了 TS 会直接报错，不会静默漂移。
+
+## 事务
+
+没有 `@Transactional`。Feat 的装配在编译期完成，为一个注解在注解处理器里实现「传播行为、只读、
+回滚规则、内层回滚外层不复位」等于把 Spring 最重的那部分搬过来，和「生成的代码人能读懂」相反。
+
+写操作的唯一入口是 `tx/TxTemplate`：
+
+```java
+txTemplate.run(session -> {
+    UserMapper users = session.getMapper(UserMapper.class);
+    users.insert(user);
+    users.insertUserRole(user.getId(), "ADMIN", operatorId);
+});
+```
+
+边界显式、可读、可 grep；业务代码不碰 `close()`，也不需要自己 try/catch 回滚。
+
+**为什么必须有它。**建一个用户要写三张表（`sys_user`、`sys_user_role`、`sys_activity`）。
+三次自动提交意味着中途任何一步失败都会留下半截数据——「有账号没角色」的账号登不进去但列表里有，
+「有账号没日志」的变更查不到是谁做的——而接口返回的是 200，没有人会知道。
+
+三条规则，都是「做错了不报错」的类型：
+
+- **事务体里只能用 `session.getMapper(...)`。** 注入进来的 Mapper 是生成代码包过的版本，
+  每个方法自己 `openSession(true)` 独立提交。混用一个，那一笔写就落在事务外。
+- **跨 Service 调用方也走模板时才传播。** 内层 `txTemplate` 会加入外层会话（线程绑定），
+  同生共死；对方若直接用手上的注入 Mapper 写，仍然是独立提交——所以上一条对每一层都成立。
+- **缓存失效放在事务之外。** 提交前清缓存，别的线程会立刻用提交前的数据把缓存填回去，
+  「改完已生效」就变成「改完十分钟后才生效」，而且只在有并发时出现。
+
+审计记录 `ActivityRecorder` 也走模板，因此**和被审计的变更同生共死**：回滚时日志一起消失，
+不会出现「日志说建了、账号却不在」。失败的操作不留痕是对的——审计记的是「谁改了什么」，
+没改成的操作属于访问日志的范畴。
+
+`scripts/check_tx.py` 把上面这些东西变成可验证的约束：一个方法里对注入 Mapper 写两次以上
+必须包模板、模板体内不许出现注入 Mapper、方法里有模板时写必须全在模板内。**跑一次就知道有没有
+人绕过去了**——这类问题的特点是人能记住、写代码的那个东西记不住。
+
+部署到新环境后可以打一次 `GET /api/system/selftest`（要求 `system:write`）：它在一个事务里写一行、
+故意抛异常，再在事务外回查，确认提交真的没发生。换库、换驱动、上容器之后先跑这一下，
+比等某次上线少提交一笔便宜得多。
 
 ## 缓存
 
@@ -270,7 +320,7 @@ feat-plus:
 
 1. **`@Mapper` 接口里不能有常量字段，也不能有内部类。** 注解处理器会把接口内所有元素当作方法强转 `ExecutableElement`，字段是 `VarSymbol`，直接抛 `cannot be cast to ExecutableElement`。SQL 片段已挪到 `mapper/SqlFragments`。
 2. **`@Value` 需要 setter 方法**，字段注入会编译失败：`no setter method for field[...]`。
-3. **`@Autowired` 按字段名匹配 Bean。** `TokenStore` 的实现类默认注册名是 `inMemoryTokenStore`，必须写成 `@Bean("tokenStore")` 才能与字段名对上。
+3. **`@Autowired` 按字段名匹配 Bean。** `TokenStore` 的实现类默认注册名是 `inMemoryTokenStore`，必须写成 `@Bean("tokenStore")` 才能与字段名对上。同理 `TxTemplate` 的注入字段必须叫 `txTemplate`——写成 `tx` 不会退化成空值，而是启动时抛 `bean[tx] not ready`。
 4. **`HttpStaticResourceHandler` 的同步 `handle(HttpRequest)` 是空实现**，直接抛 `UnsupportedOperationException`，只能在异步链路里调用。
 5. **SPA 路由没有内置回退。** 默认静态处理器找不到 `/users` 会去试 `users.html`，因此刷新前端路由会 404，需要自己挂 `SpaFallbackHandler`。
 6. **没有全局异常处理。** 401/404 这类状态码要在 Controller 里显式 `setHttpStatus`，见 `common/ApiController`。

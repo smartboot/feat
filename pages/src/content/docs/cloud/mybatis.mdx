@@ -254,30 +254,18 @@ public class UserService {
     }
 
     public boolean insert(User user) {
-        try {
-            return userMapper.insert(user) > 0;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
+        // 不要 try/catch 吞掉异常：吞掉之后调用方拿到 false，
+        // 以为「这次没插进去，重试一次就好」，而实际上事务早就该回滚了。
+        // 想让接口返回业务错误，就在 Controller 层把异常翻译成状态码。
+        return userMapper.insert(user) > 0;
     }
 
     public boolean update(User user) {
-        try {
-            return userMapper.update(user) > 0;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
+        return userMapper.update(user) > 0;
     }
 
     public boolean deleteByUsername(String username) {
-        try {
-            return userMapper.deleteByUsername(username) > 0;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
+        return userMapper.deleteByUsername(username) > 0;
     }
 }
 ```
@@ -288,7 +276,7 @@ public class UserService {
 - Service 负责业务动作
 - Mapper 负责数据库访问
 
-这样后面继续扩展权限、事务、校验时，结构不会乱。
+这样后面继续扩展权限、校验时，结构不会乱。事务相关的注意事项单独放在下一节，它不是「扩展」，而是这条链路本身就有的东西。
 
 ## 暴露并验证 HTTP 接口
 
@@ -393,6 +381,84 @@ curl -X DELETE http://localhost:8080/users/new_user
 - MyBatis 配置被正确读取
 - 初始化 SQL 生效
 - Mapper / Service / Controller 整条链路都打通了
+
+## 会话与事务
+
+`@Autowired` 注入进来的 Mapper 看起来是个普通对象，其实是编译期生成的包装类：**每个方法都自己
+`openSession(true)`**，也就是「开一条会话 → 执行 SQL → 自动提交 → 关闭」。
+
+只有一条语句时这没有问题，一条语句本身就是一个事务。一旦一次业务动作要写两张表，
+这个默认行为就会出事——第一张表已经提交、第二张表失败，接口返回错误，但脏数据留下了。
+
+### sessionFactory 是一个命名 Bean
+
+生成的装配代码在 `loadBean` 阶段创建 `SqlSessionFactory` 并以 `"sessionFactory"` 注册，
+`autowired` 阶段才做字段注入，因此业务 Bean 里可以直接声明它：
+
+```java
+@Autowired
+private SqlSessionFactory sessionFactory;
+
+public void moveUser(long fromDept, long toDept, long userId) {
+    try (SqlSession session = sessionFactory.openSession(false)) {   // false = 手动提交
+        UserMapper users = session.getMapper(UserMapper.class);
+        users.updateDepartment(userId, toDept);
+        users.decreaseDeptCount(fromDept);
+        session.commit();
+    }
+}
+```
+
+不需要注解，不需要代理，也不需要额外的容器支持。`openSession()` 的默认值本来就是手动提交，
+显式写 `false` 只是为了让读代码的人一眼看到边界在哪。
+
+### 三个必须知道的坑
+
+1. **注入的 Mapper 与手开的会话是两套东西。** 事务体里必须全部换成 `session.getMapper(...)`。
+   混用一个，那一笔写就落在事务外，接口照常返回成功，回滚时也不会被收回。
+2. **跨 Service 不传播。** A 里开了会话去调 B，B 里注入的 Mapper 会自己再开一条会话并提交。
+   要么把 `SqlSession` 当参数传下去，要么用模板把整段调用包住。
+3. **必须 close。** 默认数据源是 MyBatis 的 `PooledDataSource`，漏 close 会耗尽连接池，
+   表现是服务慢慢假死，而不是抛异常——所以用 try-with-resources，别手动配对。
+
+### 建议包成模板
+
+每个写方法都手写 try / commit / catch / rollback / close，迟早会漏一个 `close()`，
+或者漏掉 catch 里的 rollback。更稳的做法是把这段固定逻辑收敛成一个模板：
+
+```java
+@Bean
+public class TxTemplate {
+    @Autowired
+    private SqlSessionFactory sessionFactory;
+
+    public <T> T call(Function<SqlSession, T> work) {
+        try (SqlSession session = sessionFactory.openSession(false)) {
+            T result = work.apply(session);
+            session.commit();
+            return result;
+        }
+    }
+}
+```
+
+业务代码只剩一行边界，rollback 与 close 只写一次。`demo/feat-plus` 里的 `tx/TxTemplate`
+就是这个形状的完整版，多了「内层加入外层」和「回滚失败不盖掉业务异常」两件事。
+
+### 不要在事务体里吞异常
+
+```java
+// 反例：事务失去意义
+try {
+    userMapper.insert(user);
+} catch (Exception e) {
+    e.printStackTrace();
+    return false;
+}
+```
+
+吞掉异常等于告诉框架「一切正常，请提交」。要返回业务错误，让异常抛到 Controller 层再翻译成状态码；
+要记录日志，记完继续抛。**回滚的唯一触发条件是异常穿出事务边界。**
 
 ## Feat Cloud 负责接线，MyBatis 仍负责访问数据
 
