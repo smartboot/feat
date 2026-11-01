@@ -117,6 +117,10 @@ mvn -q exec:java
 他看到的日志也只有本部门那些。**只做列表过滤、忘了按 id 校验或忘了日志这类旁路接口，
 等于这道门只装了一半。**
 
+`GET /api/permissions` 的每条字典项还带 `menuCount`——该权限点当前挂在多少条菜单上
+（按 `sys_menu` 统计，走菜单缓存）。角色页勾选权限时会显示「控制 N 个菜单入口」：
+权限点是接口校验和菜单入口两条链路共用的那颗螺丝，只看接口列表猜不出它会开关哪些侧栏项。
+
 演示账号里 `alice` 挂了 `USER` + `DEPT_MANAGER`，登录后只能看到「产品设计部」的 2 个人，
 侧边栏头像下拉会显示她当前的数据范围。
 
@@ -163,6 +167,13 @@ mvn -q exec:java
 
 **`visible=false`** 的项（个人中心）不进侧栏，但仍然是标题来源——否则「当前页叫什么」又会出现第二个来源。
 
+**直达拦截（`restrictedPaths`）。** 侧栏过滤只藏入口：知道地址的人仍能在地址栏输入 `/users` 打开页面，
+然后面对一屏来自五六个接口的 403，看起来像系统坏了。所以 `/me` 与登录响应还下发一份
+`CurrentUserResponse.restrictedPaths`——「配置了菜单、且当前人没有对应权限点」的页面路径，
+前端在渲染前命中就弹回概览页并说明原因。它必须与 `visibleFor` 读同一份缓存、同一次权限合并
+（都由 `MenuService` 出），否则侧栏和直达拦截会各说各话。**它仍然是显示层**：拦的依据是权限点，
+真正的安全边界始终是接口上的 `AccessGuard.require`。
+
 **读路径走缓存**（`security/MenuSnapshot`，与 `DepartmentSnapshot` 同一套取舍）：键是 `menu:all`，
 TTL 十分钟兜底，任何写操作后主动失效，且**失效在事务提交之后**（提交前清，下一个请求会用旧数据填回去）。
 `reset-demo` 也算一次写操作——忘了它的话，「恢复演示数据」之后侧栏还是改过的样子，要等 TTL 到期才回来。
@@ -195,7 +206,7 @@ TTL 十分钟兜底，任何写操作后主动失效，且**失效在事务提�
 
 ## 回归脚本与 CI
 
-`scripts/` 下七份用 urllib 写的断言脚本，覆盖 312 项。用 urllib 而不是 curl，是为了对 JSON 做精确断言——
+`scripts/` 下七份用 urllib 写的断言脚本，覆盖 324 项。用 urllib 而不是 curl，是为了对 JSON 做精确断言——
 用 `grep -o '"code"'` 数条数会把 `RestResult` 信封里的 `code: 200` 也数进去。
 
 ```bash
@@ -206,7 +217,7 @@ python3 scripts/regress_audit.py    # 44 项：审计日志筛选、通知按人
 python3 scripts/regress_profile.py  # 40 项：个人中心改资料 / 改密码 / 其它会话失效
 python3 scripts/regress_cache.py    # 14 项：默认后端、读路径命中、写路径失效、权限边界
 python3 scripts/regress_tx.py       # 23 项：回滚真的发生、多语句写「成功三处都在 / 失败一处不留」
-python3 scripts/regress_menu.py     # 57 项：路径白名单、增删改后立刻生效、按权限过滤、分组同步、审计留痕
+python3 scripts/regress_menu.py     # 69 项：路径白名单、增删改后立刻生效、按权限过滤、直达拦截、分组同步、审计留痕
 ```
 
 七份脚本都会在开头或结尾调用 `reset-demo`，可以任意顺序重复执行——
