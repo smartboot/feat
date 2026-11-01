@@ -30,8 +30,11 @@ export interface UserListItem {
   department: string
   email: string
   status: UserStatus
-  createdAt: string
-  updatedAt: string
+  createdTime: string
+  editTime: string
+  /** 创建人 / 最后编辑人的用户 id，系统初始化的种子数据为 null */
+  creator?: number | null
+  editor?: number | null
 }
 
 export interface UserInput {
@@ -66,7 +69,7 @@ export interface ActivityItem {
   kind: ActivityKind
   title: string
   description: string
-  createdAt: string
+  createdTime: string
   userId?: number
 }
 
@@ -74,7 +77,7 @@ export interface NotificationItem {
   id: number
   title: string
   description: string
-  createdAt: string
+  createdTime: string
   read: boolean
   userId?: number
 }

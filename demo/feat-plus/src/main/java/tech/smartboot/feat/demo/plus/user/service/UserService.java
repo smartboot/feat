@@ -18,6 +18,9 @@ import tech.smartboot.feat.demo.plus.user.model.UserAccount;
 /**
  * 用户管理业务规则，与前端 mock repository 保持一致：
  * 字段必填、用户名/邮箱唯一、不能停用或删除当前登录账号、必须保留至少一个已启用管理员。
+ * <p>
+ * 审计字段：operatorId 是当前登录人，创建时写入 creator + editor，之后每次变更只更新 editTime + editor。
+ * 删除是软删除（is_deleted = 1），因此唯一性校验只在未删除的范围内比较。
  */
 @Bean
 public class UserService {
@@ -60,7 +63,7 @@ public class UserService {
         return UserItemResponse.from(require(id));
     }
 
-    public UserItemResponse create(UserInputRequest input) {
+    public UserItemResponse create(UserInputRequest input, long operatorId) {
         validate(input);
         assertUnique(input.getUsername(), input.getEmail(), 0L);
 
@@ -73,13 +76,16 @@ public class UserService {
         user.setDepartment(input.getDepartment().trim());
         user.setEmail(input.getEmail().trim());
         user.setStatus(input.getStatus() == null ? 1 : input.getStatus());
-        user.setCreatedAt(now);
-        user.setUpdatedAt(now);
+        user.setIsDeleted(0);
+        user.setCreatedTime(now);
+        user.setEditTime(now);
+        user.setCreator(operatorId);
+        user.setEditor(operatorId);
         userMapper.insert(user);
 
         UserAccount saved = userMapper.selectByUsername(user.getUsername());
         activityRecorder.record("create", "创建了用户 " + saved.getDisplayName(),
-                saved.getUsername() + " · " + roleLabel(saved.getRoleCode()), saved.getId());
+                saved.getUsername() + " · " + roleLabel(saved.getRoleCode()), saved.getId(), operatorId);
         return UserItemResponse.from(saved);
     }
 
@@ -105,11 +111,12 @@ public class UserService {
         if (input.getStatus() != null) {
             current.setStatus(input.getStatus());
         }
-        current.setUpdatedAt(new Date());
+        current.setEditTime(new Date());
+        current.setEditor(operatorId);
         userMapper.updateProfile(current);
 
         activityRecorder.record("update", "更新了用户 " + current.getDisplayName(),
-                current.getUsername() + " 的账号资料已变更", current.getId());
+                current.getUsername() + " 的账号资料已变更", current.getId(), operatorId);
         return UserItemResponse.from(require(id));
     }
 
@@ -118,19 +125,19 @@ public class UserService {
         if (status == 0) {
             assertCanDisable(user, operatorId);
         }
-        userMapper.updateStatus(id, status);
+        userMapper.updateStatus(id, status, operatorId);
         activityRecorder.record(status == 1 ? "enable" : "disable",
                 (status == 1 ? "启用了" : "停用了") + "用户 " + user.getDisplayName(),
-                user.getUsername() + " 的账号状态已更新", id);
+                user.getUsername() + " 的账号状态已更新", id, operatorId);
         return UserItemResponse.from(require(id));
     }
 
-    public String resetPassword(long id) {
+    public String resetPassword(long id, long operatorId) {
         UserAccount user = require(id);
         String temporaryPassword = "Feat@" + String.format("%03d", id) + "8X";
-        userMapper.updatePassword(id, PasswordHasher.hash(temporaryPassword));
+        userMapper.updatePassword(id, PasswordHasher.hash(temporaryPassword), operatorId);
         activityRecorder.record("password", "重置了用户 " + user.getDisplayName() + " 的密码",
-                "临时密码已生成并等待安全交付", id);
+                "临时密码已生成并等待安全交付", id, operatorId);
         return temporaryPassword;
     }
 
@@ -142,9 +149,9 @@ public class UserService {
         if ("ADMIN".equals(user.getRoleCode()) && user.getStatus() == 1) {
             assertNotLastEnabledAdmin(user);
         }
-        userMapper.deleteById(id);
+        userMapper.softDelete(id, operatorId);
         activityRecorder.record("delete", "删除了用户 " + user.getDisplayName(),
-                user.getUsername() + " 已从演示工作空间移除", null);
+                user.getUsername() + " 已从演示工作空间移除", null, operatorId);
     }
 
     private UserAccount require(long id) {

@@ -11,27 +11,35 @@ import org.apache.ibatis.annotations.Update;
 import tech.smartboot.feat.demo.plus.dashboard.model.NotificationRecord;
 
 /**
- * 站内通知读写。
+ * 站内通知读写，软删除约定与 sys_user 一致：读带 is_deleted = 0，删只置位。
  */
 @Mapper
 public interface NotificationMapper {
 
-    @Insert("INSERT INTO sys_notification (title, description, user_id, read_flag, created_at) "
-            + "VALUES (#{title}, #{description}, #{userId}, #{readFlag}, #{createdAt})")
+    @Insert("INSERT INTO sys_notification (title, description, user_id, read_flag, "
+            + "is_deleted, created_time, edit_time, creator, editor) "
+            + "VALUES (#{title}, #{description}, #{userId}, #{readFlag}, "
+            + "#{isDeleted}, #{createdTime}, #{editTime}, #{creator}, #{editor})")
     int insert(NotificationRecord record);
 
-    @Select("SELECT id, title, description, user_id, read_flag, created_at FROM sys_notification ORDER BY id DESC")
+    @Select("SELECT id, title, description, user_id, read_flag, is_deleted, created_time, edit_time, creator, editor "
+            + "FROM sys_notification WHERE is_deleted = 0 ORDER BY id DESC")
     List<NotificationRecord> selectAll();
 
-    @Select("SELECT COUNT(*) FROM sys_notification WHERE read_flag = 0")
+    @Select("SELECT COUNT(*) FROM sys_notification WHERE read_flag = 0 AND is_deleted = 0")
     long countUnread();
 
-    @Update("UPDATE sys_notification SET read_flag = 1 WHERE id = #{id}")
-    int markRead(@Param("id") long id);
+    @Update("UPDATE sys_notification SET read_flag = 1, edit_time = CURRENT_TIMESTAMP, editor = #{editor} "
+            + "WHERE id = #{id} AND is_deleted = 0")
+    int markRead(@Param("id") long id, @Param("editor") long editor);
 
-    @Update("UPDATE sys_notification SET read_flag = 1 WHERE read_flag = 0")
-    int markAllRead();
+    @Update("UPDATE sys_notification SET read_flag = 1, edit_time = CURRENT_TIMESTAMP, editor = #{editor} "
+            + "WHERE read_flag = 0 AND is_deleted = 0")
+    int markAllRead(@Param("editor") long editor);
 
+    /**
+     * 演示数据重置用，真清空并重置自增。
+     */
     @Delete("TRUNCATE TABLE sys_notification RESTART IDENTITY")
-    int deleteAll();
+    int truncate();
 }

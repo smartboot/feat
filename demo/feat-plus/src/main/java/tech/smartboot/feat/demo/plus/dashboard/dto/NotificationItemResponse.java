@@ -10,7 +10,7 @@ public class NotificationItemResponse {
     private final long id;
     private final String title;
     private final String description;
-    private final String createdAt;
+    private final String createdTime;
     private final boolean read;
     private final Long userId;
 
@@ -18,7 +18,7 @@ public class NotificationItemResponse {
         this.id = record.getId();
         this.title = record.getTitle();
         this.description = record.getDescription();
-        this.createdAt = DateFormats.format(record.getCreatedAt());
+        this.createdTime = DateFormats.format(record.getCreatedTime());
         this.read = record.getReadFlag() != 0;
         this.userId = record.getUserId();
     }
@@ -35,8 +35,8 @@ public class NotificationItemResponse {
         return description;
     }
 
-    public String getCreatedAt() {
-        return createdAt;
+    public String getCreatedTime() {
+        return createdTime;
     }
 
     public boolean isRead() {

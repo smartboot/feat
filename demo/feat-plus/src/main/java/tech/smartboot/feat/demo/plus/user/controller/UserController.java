@@ -65,8 +65,8 @@ public class UserController extends ApiController {
     @RequestMapping(value = "", method = RequestMethod.POST)
     public RestResult<UserItemResponse> create(Context context, UserInputRequest request) {
         return execute(context, () -> {
-            AuthGuard.require(context, tokenStore);
-            return userService.create(request);
+            long operatorId = AuthGuard.require(context, tokenStore);
+            return userService.create(request, operatorId);
         });
     }
 
@@ -92,8 +92,8 @@ public class UserController extends ApiController {
     @RequestMapping(value = "/{id}/reset-password", method = RequestMethod.POST)
     public RestResult<TemporaryPasswordResponse> resetPassword(Context context, @PathParam("id") String id) {
         return execute(context, () -> {
-            AuthGuard.require(context, tokenStore);
-            return new TemporaryPasswordResponse(userService.resetPassword(parseId(id)));
+            long operatorId = AuthGuard.require(context, tokenStore);
+            return new TemporaryPasswordResponse(userService.resetPassword(parseId(id), operatorId));
         });
     }
 

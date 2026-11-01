@@ -75,19 +75,19 @@ public final class SeedData {
         public final String department;
         public final String email;
         public final int status;
-        public final String createdAt;
-        public final String updatedAt;
+        public final String createdTime;
+        public final String editTime;
 
         SeedUser(String username, String displayName, String roleCode, String department, String email,
-                 int status, String createdAt, String updatedAt) {
+                 int status, String createdTime, String editTime) {
             this.username = username;
             this.displayName = displayName;
             this.roleCode = roleCode;
             this.department = department;
             this.email = email;
             this.status = status;
-            this.createdAt = createdAt;
-            this.updatedAt = updatedAt;
+            this.createdTime = createdTime;
+            this.editTime = editTime;
         }
     }
 
@@ -96,14 +96,14 @@ public final class SeedData {
         public final String title;
         public final String description;
         public final String username;
-        public final String createdAt;
+        public final String createdTime;
 
-        SeedActivity(String kind, String title, String description, String username, String createdAt) {
+        SeedActivity(String kind, String title, String description, String username, String createdTime) {
             this.kind = kind;
             this.title = title;
             this.description = description;
             this.username = username;
-            this.createdAt = createdAt;
+            this.createdTime = createdTime;
         }
     }
 
@@ -111,13 +111,13 @@ public final class SeedData {
         public final String title;
         public final String description;
         public final int readFlag;
-        public final String createdAt;
+        public final String createdTime;
 
-        SeedNotification(String title, String description, int readFlag, String createdAt) {
+        SeedNotification(String title, String description, int readFlag, String createdTime) {
             this.title = title;
             this.description = description;
             this.readFlag = readFlag;
-            this.createdAt = createdAt;
+            this.createdTime = createdTime;
         }
     }
 }

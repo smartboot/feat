@@ -11,6 +11,8 @@ import tech.smartboot.feat.demo.plus.dashboard.model.NotificationRecord;
 
 /**
  * 用户变更同时写入操作动态与站内通知，对应前端 mock 的 recordEvent。
+ * <p>
+ * operatorId 是执行这次操作的人（creator / editor），userId 是被操作的对象，两者语义不同。
  */
 @Bean
 public class ActivityRecorder {
@@ -21,7 +23,7 @@ public class ActivityRecorder {
     @Autowired
     private NotificationMapper notificationMapper;
 
-    public void record(String kind, String title, String description, Long userId) {
+    public void record(String kind, String title, String description, Long userId, long operatorId) {
         Date now = new Date();
 
         ActivityRecord activity = new ActivityRecord();
@@ -29,7 +31,11 @@ public class ActivityRecorder {
         activity.setTitle("管理员" + title);
         activity.setDescription(description);
         activity.setUserId(userId);
-        activity.setCreatedAt(now);
+        activity.setIsDeleted(0);
+        activity.setCreatedTime(now);
+        activity.setEditTime(now);
+        activity.setCreator(operatorId);
+        activity.setEditor(operatorId);
         activityMapper.insert(activity);
 
         NotificationRecord notification = new NotificationRecord();
@@ -37,7 +43,11 @@ public class ActivityRecorder {
         notification.setDescription(description);
         notification.setUserId(userId);
         notification.setReadFlag(0);
-        notification.setCreatedAt(now);
+        notification.setIsDeleted(0);
+        notification.setCreatedTime(now);
+        notification.setEditTime(now);
+        notification.setCreator(operatorId);
+        notification.setEditor(operatorId);
         notificationMapper.insert(notification);
     }
 }

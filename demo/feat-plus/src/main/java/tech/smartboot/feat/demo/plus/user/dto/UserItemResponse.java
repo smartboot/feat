@@ -8,6 +8,9 @@ import tech.smartboot.feat.demo.plus.user.model.UserAccount;
 /**
  * 用户列表项，字段与前端 UserListItem 对齐。
  * 时间以文本形式返回，格式与前端 mock 一致（yyyy-MM-dd HH:mm）。
+ * <p>
+ * creator / editor 是操作人的用户 id（系统初始化数据为 null），isDeleted 不出现在响应里：
+ * 被删除的行已被查询过滤掉，暴露这个字段只会让前端多一个恒为 false 的分支。
  */
 public class UserItemResponse {
     private long id;
@@ -17,8 +20,10 @@ public class UserItemResponse {
     private String department;
     private String email;
     private int status;
-    private String createdAt;
-    private String updatedAt;
+    private String createdTime;
+    private String editTime;
+    private Long creator;
+    private Long editor;
 
     public static UserItemResponse from(UserAccount account) {
         UserItemResponse item = new UserItemResponse();
@@ -29,8 +34,10 @@ public class UserItemResponse {
         item.department = account.getDepartment();
         item.email = account.getEmail();
         item.status = account.getStatus();
-        item.createdAt = DateFormats.format(account.getCreatedAt());
-        item.updatedAt = DateFormats.format(account.getUpdatedAt());
+        item.createdTime = DateFormats.format(account.getCreatedTime());
+        item.editTime = DateFormats.format(account.getEditTime());
+        item.creator = account.getCreator();
+        item.editor = account.getEditor();
         return item;
     }
 
@@ -62,12 +69,20 @@ public class UserItemResponse {
         return status;
     }
 
-    public String getCreatedAt() {
-        return createdAt;
+    public String getCreatedTime() {
+        return createdTime;
     }
 
-    public String getUpdatedAt() {
-        return updatedAt;
+    public String getEditTime() {
+        return editTime;
+    }
+
+    public Long getCreator() {
+        return creator;
+    }
+
+    public Long getEditor() {
+        return editor;
     }
 
     /**

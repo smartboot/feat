@@ -6,6 +6,8 @@ import java.util.Date;
  * 用户账号档案，对应 sys_user 表。
  * <p>
  * 列表查询不会查 password_hash，此时该字段为 null，序列化时会被自动忽略。
+ * isDeleted / createdTime / editTime / creator / editor 是四张表统一要求的审计字段：
+ * 删除只置 isDeleted，实体本身保留在表里，因此所有查询都必须带 is_deleted = 0 过滤。
  */
 public class UserAccount {
     private long id;
@@ -16,8 +18,12 @@ public class UserAccount {
     private String department;
     private String email;
     private int status;
-    private Date createdAt;
-    private Date updatedAt;
+
+    private int isDeleted;
+    private Date createdTime;
+    private Date editTime;
+    private Long creator;
+    private Long editor;
 
     public long getId() {
         return id;
@@ -83,19 +89,43 @@ public class UserAccount {
         this.status = status;
     }
 
-    public Date getCreatedAt() {
-        return createdAt;
+    public int getIsDeleted() {
+        return isDeleted;
     }
 
-    public void setCreatedAt(Date createdAt) {
-        this.createdAt = createdAt;
+    public void setIsDeleted(int isDeleted) {
+        this.isDeleted = isDeleted;
     }
 
-    public Date getUpdatedAt() {
-        return updatedAt;
+    public Date getCreatedTime() {
+        return createdTime;
     }
 
-    public void setUpdatedAt(Date updatedAt) {
-        this.updatedAt = updatedAt;
+    public void setCreatedTime(Date createdTime) {
+        this.createdTime = createdTime;
+    }
+
+    public Date getEditTime() {
+        return editTime;
+    }
+
+    public void setEditTime(Date editTime) {
+        this.editTime = editTime;
+    }
+
+    public Long getCreator() {
+        return creator;
+    }
+
+    public void setCreator(Long creator) {
+        this.creator = creator;
+    }
+
+    public Long getEditor() {
+        return editor;
+    }
+
+    public void setEditor(Long editor) {
+        this.editor = editor;
     }
 }

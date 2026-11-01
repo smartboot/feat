@@ -67,8 +67,8 @@ export function createUser(input: UserInput) {
   const user: UserListItem = {
     ...input,
     id: database.nextUserId++,
-    createdAt: now,
-    updatedAt: now,
+    createdTime: now,
+    editTime: now,
   }
   database.users.push(user)
   recordEvent("create", `创建了用户 ${user.displayName}`, `${user.username} · ${roleLabel(user.roleCode)}`, user.id)
@@ -82,7 +82,7 @@ export function updateUser(id: number, input: UserInput) {
   assertUnique(input.username, input.email, id)
   if (current.roleCode === "ADMIN" && input.roleCode !== "ADMIN") assertNotLastEnabledAdmin(current)
   if (current.status === 1 && input.status === 0) assertCanDisable(current)
-  Object.assign(current, input, { updatedAt: nowText() })
+  Object.assign(current, input, { editTime: nowText() })
   recordEvent("update", `更新了用户 ${current.displayName}`, `${current.username} 的账号资料已变更`, current.id)
   persist()
   return clone(current)
@@ -92,7 +92,7 @@ export function setUserStatus(id: number, status: UserStatus) {
   const user = requireUser(id)
   if (status === 0) assertCanDisable(user)
   user.status = status
-  user.updatedAt = nowText()
+  user.editTime = nowText()
   recordEvent(status ? "enable" : "disable", `${status ? "启用" : "停用"}了用户 ${user.displayName}`, `${user.username} 的账号状态已更新`, user.id)
   persist()
   return clone(user)
@@ -183,9 +183,9 @@ function requireUser(id: number) {
 }
 
 function recordEvent(kind: ActivityItem["kind"], title: string, description: string, userId?: number) {
-  const createdAt = nowText()
-  database.activities.unshift({ id: database.nextActivityId++, kind, title: `管理员${title}`, description, createdAt, userId })
-  database.notifications.unshift({ id: database.nextNotificationId++, title, description, createdAt, read: false, userId })
+  const createdTime = nowText()
+  database.activities.unshift({ id: database.nextActivityId++, kind, title: `管理员${title}`, description, createdTime, userId })
+  database.notifications.unshift({ id: database.nextNotificationId++, title, description, createdTime, read: false, userId })
 }
 
 function roleLabel(roleCode: UserListItem["roleCode"]) {

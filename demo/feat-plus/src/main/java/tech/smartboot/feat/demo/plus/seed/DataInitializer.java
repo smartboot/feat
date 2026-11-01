@@ -1,6 +1,5 @@
 package tech.smartboot.feat.demo.plus.seed;
 
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
 import tech.smartboot.feat.cloud.annotation.Autowired;
@@ -18,6 +17,7 @@ import tech.smartboot.feat.demo.plus.user.model.UserAccount;
  * 演示数据初始化器。
  * <p>
  * 首次启动时写入种子数据；reset-demo 复用同一个 reset() 方法，两条路径的数据完全一致。
+ * 种子数据由系统写入，creator / editor 一律留 NULL，表示不是任何登录用户操作的。
  */
 @Bean
 public class DataInitializer {
@@ -42,10 +42,10 @@ public class DataInitializer {
     }
 
     public void reset() {
-        activityMapper.deleteAll();
-        notificationMapper.deleteAll();
-        loginStatMapper.deleteAll();
-        userMapper.deleteAll();
+        activityMapper.truncate();
+        notificationMapper.truncate();
+        loginStatMapper.truncate();
+        userMapper.truncate();
 
         for (SeedData.SeedUser seed : SeedData.users()) {
             UserAccount user = new UserAccount();
@@ -56,8 +56,9 @@ public class DataInitializer {
             user.setDepartment(seed.department);
             user.setEmail(seed.email);
             user.setStatus(seed.status);
-            user.setCreatedAt(SeedData.parseTime(seed.createdAt));
-            user.setUpdatedAt(SeedData.parseTime(seed.updatedAt));
+            user.setIsDeleted(0);
+            user.setCreatedTime(SeedData.parseTime(seed.createdTime));
+            user.setEditTime(SeedData.parseTime(seed.editTime));
             userMapper.insert(user);
         }
 
@@ -67,7 +68,9 @@ public class DataInitializer {
             record.setTitle(seed.title);
             record.setDescription(seed.description);
             record.setUserId(resolveUserId(seed.username));
-            record.setCreatedAt(SeedData.parseTime(seed.createdAt));
+            record.setIsDeleted(0);
+            record.setCreatedTime(SeedData.parseTime(seed.createdTime));
+            record.setEditTime(SeedData.parseTime(seed.createdTime));
             activityMapper.insert(record);
         }
 
@@ -77,7 +80,9 @@ public class DataInitializer {
             record.setDescription(seed.description);
             record.setUserId(null);
             record.setReadFlag(seed.readFlag);
-            record.setCreatedAt(SeedData.parseTime(seed.createdAt));
+            record.setIsDeleted(0);
+            record.setCreatedTime(SeedData.parseTime(seed.createdTime));
+            record.setEditTime(SeedData.parseTime(seed.createdTime));
             notificationMapper.insert(record);
         }
 

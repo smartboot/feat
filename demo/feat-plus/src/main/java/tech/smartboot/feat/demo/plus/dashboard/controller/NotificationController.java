@@ -36,8 +36,8 @@ public class NotificationController extends ApiController {
     @RequestMapping(value = "/read-all", method = RequestMethod.POST)
     public RestResult<Void> markAllRead(Context context) {
         return execute(context, () -> {
-            AuthGuard.require(context, tokenStore);
-            dashboardService.markAllRead();
+            long operatorId = AuthGuard.require(context, tokenStore);
+            dashboardService.markAllRead(operatorId);
             return (Void) null;
         });
     }
@@ -45,8 +45,8 @@ public class NotificationController extends ApiController {
     @RequestMapping(value = "/{id}/read", method = RequestMethod.POST)
     public RestResult<Void> markRead(Context context, @PathParam("id") String id) {
         return execute(context, () -> {
-            AuthGuard.require(context, tokenStore);
-            dashboardService.markRead(parseId(id));
+            long operatorId = AuthGuard.require(context, tokenStore);
+            dashboardService.markRead(parseId(id), operatorId);
             return (Void) null;
         });
     }

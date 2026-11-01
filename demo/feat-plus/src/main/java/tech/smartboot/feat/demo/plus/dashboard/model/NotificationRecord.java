@@ -13,7 +13,12 @@ public class NotificationRecord {
     private String description;
     private Long userId;
     private int readFlag;
-    private Date createdAt;
+
+    private int isDeleted;
+    private Date createdTime;
+    private Date editTime;
+    private Long creator;
+    private Long editor;
 
     public long getId() {
         return id;
@@ -55,11 +60,43 @@ public class NotificationRecord {
         this.readFlag = readFlag;
     }
 
-    public Date getCreatedAt() {
-        return createdAt;
+    public int getIsDeleted() {
+        return isDeleted;
     }
 
-    public void setCreatedAt(Date createdAt) {
-        this.createdAt = createdAt;
+    public void setIsDeleted(int isDeleted) {
+        this.isDeleted = isDeleted;
+    }
+
+    public Date getCreatedTime() {
+        return createdTime;
+    }
+
+    public void setCreatedTime(Date createdTime) {
+        this.createdTime = createdTime;
+    }
+
+    public Date getEditTime() {
+        return editTime;
+    }
+
+    public void setEditTime(Date editTime) {
+        this.editTime = editTime;
+    }
+
+    public Long getCreator() {
+        return creator;
+    }
+
+    public void setCreator(Long creator) {
+        this.creator = creator;
+    }
+
+    public Long getEditor() {
+        return editor;
+    }
+
+    public void setEditor(Long editor) {
+        this.editor = editor;
     }
 }

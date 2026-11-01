@@ -71,12 +71,12 @@ public class DashboardService {
         return items;
     }
 
-    public void markRead(long id) {
-        notificationMapper.markRead(id);
+    public void markRead(long id, long operatorId) {
+        notificationMapper.markRead(id, operatorId);
     }
 
-    public void markAllRead() {
-        notificationMapper.markAllRead();
+    public void markAllRead(long operatorId) {
+        notificationMapper.markAllRead(operatorId);
     }
 
     public void resetDemo() {
