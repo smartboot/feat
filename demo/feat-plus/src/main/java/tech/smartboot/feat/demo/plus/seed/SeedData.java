@@ -8,8 +8,8 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
-import tech.smartboot.feat.demo.plus.common.DataScope;
-import tech.smartboot.feat.demo.plus.common.Permission;
+import tech.smartboot.feat.demo.plus.security.DataScope;
+import tech.smartboot.feat.demo.plus.security.Permission;
 
 /**
  * 演示数据的唯一来源。

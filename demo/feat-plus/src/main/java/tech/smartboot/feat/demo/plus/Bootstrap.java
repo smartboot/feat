@@ -1,11 +1,11 @@
 package tech.smartboot.feat.demo.plus;
 
+import java.io.IOException;
+
 import tech.smartboot.feat.cloud.FeatCloud;
 import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.demo.plus.common.SpaFallbackHandler;
 import tech.smartboot.feat.router.Router;
-
-import java.io.IOException;
 
 public final class Bootstrap {
     private Bootstrap() {

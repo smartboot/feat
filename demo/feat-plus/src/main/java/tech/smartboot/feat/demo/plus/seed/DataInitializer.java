@@ -8,17 +8,17 @@ import java.util.Map;
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Bean;
 import tech.smartboot.feat.cloud.annotation.PostConstruct;
-import tech.smartboot.feat.demo.plus.dashboard.mapper.ActivityMapper;
-import tech.smartboot.feat.demo.plus.dashboard.mapper.LoginStatMapper;
-import tech.smartboot.feat.demo.plus.dashboard.mapper.NotificationMapper;
-import tech.smartboot.feat.demo.plus.dashboard.model.ActivityRecord;
-import tech.smartboot.feat.demo.plus.dashboard.model.NotificationRecord;
-import tech.smartboot.feat.demo.plus.department.mapper.DepartmentMapper;
-import tech.smartboot.feat.demo.plus.department.model.DepartmentRecord;
-import tech.smartboot.feat.demo.plus.role.mapper.RoleMapper;
-import tech.smartboot.feat.demo.plus.role.model.RoleRecord;
-import tech.smartboot.feat.demo.plus.user.mapper.UserMapper;
-import tech.smartboot.feat.demo.plus.user.model.UserAccount;
+import tech.smartboot.feat.demo.plus.mapper.ActivityMapper;
+import tech.smartboot.feat.demo.plus.mapper.DepartmentMapper;
+import tech.smartboot.feat.demo.plus.mapper.LoginStatMapper;
+import tech.smartboot.feat.demo.plus.mapper.NotificationMapper;
+import tech.smartboot.feat.demo.plus.mapper.RoleMapper;
+import tech.smartboot.feat.demo.plus.mapper.UserMapper;
+import tech.smartboot.feat.demo.plus.model.ActivityRecord;
+import tech.smartboot.feat.demo.plus.model.DepartmentRecord;
+import tech.smartboot.feat.demo.plus.model.NotificationRecord;
+import tech.smartboot.feat.demo.plus.model.RoleRecord;
+import tech.smartboot.feat.demo.plus.model.UserAccount;
 
 /**
  * 演示数据初始化器。
