@@ -39,6 +39,16 @@ public final class Permission {
     /** 审计日志：只读，能看谁在什么时候改了什么。刻意不给写权限——日志只能由系统写。 */
     public static final String AUDIT_READ = "audit:read";
 
+    /**
+     * 菜单配置。
+     * <p>
+     * 权限点本身仍然留在代码里，不进数据库：每个接口的 {@code require(...)} 是编译期写死的，
+     * 允许运行时新增权限点只会造出「字典里有、接口从不校验」的空权限。可变的是「菜单挂哪个权限点」，
+     * 不是「有哪些权限点」。
+     */
+    public static final String MENU_READ = "menu:read";
+    public static final String MENU_WRITE = "menu:write";
+
     /** 重置演示数据这类系统级动作。 */
     public static final String SYSTEM_WRITE = "system:write";
 
@@ -69,6 +79,11 @@ public final class Permission {
 
             new Entry("audit", "审计日志", AUDIT_READ,
                     "查看审计日志", "查看谁在什么时候改了谁，只读"),
+
+            new Entry("system", "系统", MENU_READ,
+                    "查看菜单", "查看侧边栏菜单配置"),
+            new Entry("system", "系统", MENU_WRITE,
+                    "管理菜单", "新增、修改、删除菜单项，调整分组与顺序"),
 
             new Entry("system", "系统", SYSTEM_WRITE,
                     "重置演示数据", "清空并重建全部演示数据")));

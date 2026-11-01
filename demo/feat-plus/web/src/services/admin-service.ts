@@ -6,6 +6,8 @@ import type {
   DepartmentInput,
   DepartmentNode,
   LoginResponse,
+  MenuAdminItem,
+  MenuInput,
   NotificationItem,
   OperatorOption,
   PageResult,
@@ -42,6 +44,13 @@ export interface AdminService {
   updateRole(id: number, input: RoleInput): Promise<RoleItem>
   setRoleStatus(id: number, status: UserStatus): Promise<RoleItem>
   deleteRole(id: number): Promise<void>
+  /** 菜单配置：全量（含不进侧栏的项），只有 menu:read 能读 */
+  listMenus(): Promise<MenuAdminItem[]>
+  /** 可选的页面路径白名单，用来把「路径」渲染成下拉框而不是自由输入 */
+  listMenuRoutes(): Promise<string[]>
+  createMenu(input: MenuInput): Promise<MenuAdminItem>
+  updateMenu(id: number, input: MenuInput): Promise<MenuAdminItem>
+  deleteMenu(id: number): Promise<void>
   listDepartments(): Promise<DepartmentNode[]>
   createDepartment(input: DepartmentInput): Promise<DepartmentNode>
   updateDepartment(id: number, input: DepartmentInput): Promise<DepartmentNode>

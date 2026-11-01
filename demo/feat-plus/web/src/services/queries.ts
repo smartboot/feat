@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
-import type { ActivityQuery, ChangePasswordInput, DepartmentInput, ProfileUpdate, RoleInput, UserInput, UserQuery, UserStatus } from "@/api/types"
+import type { ActivityQuery, ChangePasswordInput, DepartmentInput, MenuInput, ProfileUpdate, RoleInput, UserInput, UserQuery, UserStatus } from "@/api/types"
 import { adminService } from "@/services/http-admin-service"
 
 export const queryKeys = {
@@ -9,6 +9,8 @@ export const queryKeys = {
   user: (id: number) => ["users", id] as const,
   roles: ["roles"] as const,
   permissionCatalog: ["permissions", "catalog"] as const,
+  menus: ["menus"] as const,
+  menuRoutes: ["menus", "routes"] as const,
   departments: ["departments"] as const,
   dashboard: ["dashboard"] as const,
   notifications: ["notifications"] as const,
@@ -138,6 +140,44 @@ export function useDepartmentMutations() {
     create: useMutation({ mutationFn: (input: DepartmentInput) => adminService.createDepartment(input), onSuccess: invalidate }),
     update: useMutation({ mutationFn: ({ id, input }: { id: number; input: DepartmentInput }) => adminService.updateDepartment(id, input), onSuccess: invalidate }),
     remove: useMutation({ mutationFn: (id: number) => adminService.deleteDepartment(id), onSuccess: invalidate }),
+  }
+}
+
+/**
+ * 菜单配置列表。与侧边栏用的是同一份数据（后端同一个缓存），
+ * 所以改完菜单要连当前登录人一起刷新，否则管理页显示新值、左边侧栏还是旧的。
+ */
+export function useMenus(enabled = true) {
+  return useQuery({ queryKey: queryKeys.menus, queryFn: () => adminService.listMenus(), enabled })
+}
+
+/**
+ * 可选页面路径。随发版才变（MenuRoutes 是代码常量），缓存久一点。
+ */
+export function useMenuRoutes(enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.menuRoutes,
+    queryFn: () => adminService.listMenuRoutes(),
+    enabled,
+    staleTime: 5 * 60_000,
+  })
+}
+
+export function useMenuMutations(onChanged?: () => void) {
+  const client = useQueryClient()
+  const invalidate = async () => {
+    await Promise.all([
+      client.invalidateQueries({ queryKey: queryKeys.menus }),
+      client.invalidateQueries({ queryKey: ["activities"] }),
+    ])
+    // 侧边栏的菜单来自 /api/auth/me 的响应，不在 react-query 缓存里，
+    // 必须由调用方重新拉一次当前登录人——否则改完标题，管理页变了、左边还是旧的。
+    onChanged?.()
+  }
+  return {
+    create: useMutation({ mutationFn: (input: MenuInput) => adminService.createMenu(input), onSuccess: invalidate }),
+    update: useMutation({ mutationFn: ({ id, input }: { id: number; input: MenuInput }) => adminService.updateMenu(id, input), onSuccess: invalidate }),
+    remove: useMutation({ mutationFn: (id: number) => adminService.deleteMenu(id), onSuccess: invalidate }),
   }
 }
 

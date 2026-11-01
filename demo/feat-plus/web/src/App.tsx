@@ -10,18 +10,19 @@ import { ActivityLogPage } from "@/pages/ActivityLogPage"
 import { DashboardPage } from "@/pages/DashboardPage"
 import { DepartmentPage } from "@/pages/DepartmentPage"
 import { LoginPage } from "@/pages/LoginPage"
+import { MenuManagePage } from "@/pages/MenuManagePage"
 import { ProfilePage } from "@/pages/ProfilePage"
 import { RoleListPage } from "@/pages/RoleListPage"
 import { UserListPage } from "@/pages/UserListPage"
 
-function ProtectedLayout({ currentUser, onLogout }: { currentUser: CurrentUser; onLogout: () => void }) {
-  return <AppLayout currentUser={currentUser} onLogout={onLogout} />
+function ProtectedLayout({ currentUser, onLogout, onRefreshUser }: { currentUser: CurrentUser; onLogout: () => void; onRefreshUser: () => void }) {
+  return <AppLayout currentUser={currentUser} onLogout={onLogout} onRefreshUser={onRefreshUser} />
 }
 
 function AuthenticatedApp({ currentUser, onLogout, onRefreshUser }: { currentUser: CurrentUser; onLogout: () => void; onRefreshUser: () => void }) {
   return (
     <Routes>
-      <Route element={<ProtectedLayout currentUser={currentUser} onLogout={onLogout} />}>
+      <Route element={<ProtectedLayout currentUser={currentUser} onLogout={onLogout} onRefreshUser={onRefreshUser} />}>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/users" element={<UserListPage />} />
@@ -29,6 +30,7 @@ function AuthenticatedApp({ currentUser, onLogout, onRefreshUser }: { currentUse
         <Route path="/roles" element={<RoleListPage />} />
         <Route path="/departments" element={<DepartmentPage />} />
         <Route path="/activities" element={<ActivityLogPage />} />
+        <Route path="/menus" element={<MenuManagePage />} />
         <Route path="/profile" element={<ProfilePage onProfileUpdated={onRefreshUser} />} />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />

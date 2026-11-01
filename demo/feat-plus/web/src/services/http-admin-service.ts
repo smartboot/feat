@@ -6,6 +6,8 @@ import type {
   DepartmentInput,
   DepartmentNode,
   LoginResponse,
+  MenuAdminItem,
+  MenuInput,
   NotificationItem,
   OperatorOption,
   PageResult,
@@ -108,6 +110,21 @@ export const adminService: AdminService = {
   },
   deleteRole(id: number): Promise<void> {
     return request<void>(`/api/roles/${id}`, { method: "DELETE" })
+  },
+  listMenus(): Promise<MenuAdminItem[]> {
+    return request<MenuAdminItem[]>("/api/menus")
+  },
+  listMenuRoutes(): Promise<string[]> {
+    return request<string[]>("/api/menus/routes")
+  },
+  createMenu(input: MenuInput): Promise<MenuAdminItem> {
+    return request<MenuAdminItem>("/api/menus", { method: "POST", body: jsonBody(input) })
+  },
+  updateMenu(id: number, input: MenuInput): Promise<MenuAdminItem> {
+    return request<MenuAdminItem>(`/api/menus/${id}`, { method: "PUT", body: jsonBody(input) })
+  },
+  deleteMenu(id: number): Promise<void> {
+    return request<void>(`/api/menus/${id}`, { method: "DELETE" })
   },
   listDepartments(): Promise<DepartmentNode[]> {
     return request<DepartmentNode[]>("/api/departments")

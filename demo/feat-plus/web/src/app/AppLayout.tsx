@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { Bell, Boxes, Building2, ChevronDown, Command, LayoutDashboard, LogOut, Menu, Moon, PanelLeftClose, PanelLeftOpen, ScrollText, Search, ShieldCheck, Sun, UserRound, UsersRound, X } from "lucide-react"
+import { Bell, ChevronDown, Command, LogOut, Menu, Moon, PanelLeftClose, PanelLeftOpen, Search, Sun, UserRound, UsersRound, X } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom"
 import { toast } from "sonner"
@@ -13,6 +13,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Separator } from "@/components/ui/separator"
 import { useAllUsers, useNotificationMutations, useNotifications, useResetDemo } from "@/services/queries"
+import { FALLBACK_ICON, NAV_ICONS } from "@/lib/icons"
 import { hasPermission } from "@/lib/permissions"
 import { findMenuName, navGroups } from "@/lib/menus"
 import { cn } from "@/lib/utils"
@@ -30,23 +31,14 @@ interface NavItem {
 }
 
 /**
- * 图标是唯一必须留在前端的菜单属性：后端只能下发一个 key，组件必须在编译期存在。
- * 新增菜单时如果忘了在这里加一项，会退化成默认图标而不是白屏——由 check_menu.py 在 CI 里提示。
+ * 图标映射在 lib/icons：菜单管理页的「图标」下拉与这里渲染用的是同一份字典，
+ * 否则会出现「下拉里能选、渲染时找不到」的漂移。
  */
-const NavIcons: Record<string, LucideIcon> = {
-  dashboard: LayoutDashboard,
-  users: UsersRound,
-  shield: ShieldCheck,
-  building: Building2,
-  scroll: ScrollText,
-  user: UserRound,
-}
-
 function toNavItem(item: { path: string; name: string; icon: string }): NavItem {
-  return { to: item.path, label: item.name, icon: NavIcons[item.icon] ?? Boxes }
+  return { to: item.path, label: item.name, icon: NAV_ICONS[item.icon] ?? FALLBACK_ICON }
 }
 
-export function AppLayout({ currentUser, onLogout }: { currentUser: CurrentUser; onLogout: () => void }) {
+export function AppLayout({ currentUser, onLogout, onRefreshUser }: { currentUser: CurrentUser; onLogout: () => void; onRefreshUser: () => void }) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(() => window.localStorage.getItem("feat-plus-sidebar") === "collapsed")
   const [dark, setDark] = useState(() => window.localStorage.getItem("feat-plus-theme") === "dark")
@@ -145,7 +137,7 @@ export function AppLayout({ currentUser, onLogout }: { currentUser: CurrentUser;
             <DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" className="gap-2 px-2"><Avatar className="size-7"><AvatarFallback>{currentUser.displayName.slice(0, 1)}</AvatarFallback></Avatar><span className="hidden text-left sm:grid"><strong className="text-xs">{currentUser.displayName}</strong><span className="truncate text-[10px] text-muted-foreground">{currentUser.roleNames.join(" / ") || "无角色"}</span></span><ChevronDown className="hidden size-3.5 text-muted-foreground sm:block" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuLabel><span className="block">{currentUser.username}</span><span className="mt-1 block text-[11px] font-normal text-muted-foreground">数据范围：{currentUser.scopeDescription}</span></DropdownMenuLabel><DropdownMenuSeparator /><DropdownMenuItem onClick={() => navigate(`/users/${currentUser.id}`)}>查看我的账号</DropdownMenuItem><DropdownMenuItem onClick={() => setCommandOpen(true)}>打开命令面板</DropdownMenuItem><DropdownMenuSeparator /><DropdownMenuItem destructive onClick={onLogout}><LogOut /> 退出登录</DropdownMenuItem></DropdownMenuContent></DropdownMenu>
           </div>
         </header>
-        <main className="mx-auto w-full max-w-[1600px] p-4 md:p-6 lg:p-8"><SessionProvider user={currentUser}><Outlet /></SessionProvider></main>
+        <main className="mx-auto w-full max-w-[1600px] p-4 md:p-6 lg:p-8"><SessionProvider user={currentUser} onRefresh={onRefreshUser}><Outlet /></SessionProvider></main>
       </div>
       <CommandDialog open={commandOpen} onOpenChange={setCommandOpen}><CommandInput placeholder="输入命令或搜索用户..." /><CommandList><CommandEmpty>没有找到匹配结果</CommandEmpty><CommandGroup heading="导航">{flatNav.map((item, index) => { const Icon = item.icon; return <CommandItem key={item.to} onSelect={() => navigateAndClose(item.to)}><Icon className="size-4" />{item.label}<CommandShortcut>⌘ {index + 1}</CommandShortcut></CommandItem> })}</CommandGroup><CommandSeparator />{canReadUsers && <><CommandGroup heading="用户"><CommandItem onSelect={() => navigateAndClose("/users")}><UsersRound className="size-4" />查看全部用户</CommandItem>{users.slice(0, 5).map((user) => <CommandItem key={user.id} value={`${user.displayName} ${user.username} ${user.email}`} onSelect={() => navigateAndClose(`/users/${user.id}`)}><Avatar className="size-6"><AvatarFallback>{user.displayName.slice(0, 1)}</AvatarFallback></Avatar>{user.displayName}<span className="text-xs text-muted-foreground">{user.username}</span></CommandItem>)}</CommandGroup><CommandSeparator /></>}<CommandGroup heading="操作"><CommandItem onSelect={() => { navigateAndClose("/users"); toast.info("请使用用户管理页面的新建用户按钮") }}><Command className="size-4" />新建用户</CommandItem></CommandGroup></CommandList></CommandDialog>
     </div>

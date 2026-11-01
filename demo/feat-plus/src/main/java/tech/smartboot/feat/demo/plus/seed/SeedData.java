@@ -9,6 +9,7 @@ import java.util.Date;
 import java.util.List;
 
 import tech.smartboot.feat.demo.plus.security.DataScope;
+import tech.smartboot.feat.demo.plus.security.MenuRoutes;
 import tech.smartboot.feat.demo.plus.security.Permission;
 
 /**
@@ -53,6 +54,42 @@ public final class SeedData {
                         Permission.join(Collections.singletonList(Permission.DASHBOARD_READ)),
                         DataScope.SELF, 1, 1)
         );
+    }
+
+    /**
+     * 侧边栏菜单的初始数据。
+     * <p>
+     * 菜单本身走数据库（{@code sys_menu}），这里只是「第一次启动时装什么」。上线后客户在
+     * 「菜单管理」页改标题、调顺序、隐藏入口都不会回到这份常量——它是种子，不是真相。
+     * <p>
+     * {@code path} 必须出现在 {@link tech.smartboot.feat.demo.plus.security.MenuRoutes} 的白名单里，
+     * {@code icon} 必须在前端 {@code NAV_ICONS} 里，{@code permission} 必须是已登记的权限点：
+     * 三条都由 {@code scripts/check_menu.py} 静态校验，不需要起服务。
+     * <p>
+     * 「菜单管理」自己也是一条菜单。删掉它不会把系统锁死（知道地址仍可直接访问 /menus 恢复），
+     * 但侧栏就再也没有入口了——这是把菜单交给数据库之后的固有代价，写在 README 里。
+     */
+    public static List<SeedMenu> menus() {
+        return Arrays.asList(
+                // 工作台
+                new SeedMenu("workspace", "工作台", 10, MenuRoutes.DASHBOARD, "数据概览", "dashboard",
+                        Permission.DASHBOARD_READ, 10, true),
+                new SeedMenu("workspace", "工作台", 10, MenuRoutes.USERS, "用户管理", "users",
+                        Permission.USER_READ, 20, true),
+
+                // 系统管理
+                new SeedMenu("system", "系统管理", 20, MenuRoutes.ROLES, "角色权限", "shield",
+                        Permission.ROLE_READ, 10, true),
+                new SeedMenu("system", "系统管理", 20, MenuRoutes.DEPARTMENTS, "部门管理", "building",
+                        Permission.DEPT_READ, 20, true),
+                new SeedMenu("system", "系统管理", 20, MenuRoutes.ACTIVITIES, "审计日志", "scroll",
+                        Permission.AUDIT_READ, 30, true),
+                new SeedMenu("system", "系统管理", 20, MenuRoutes.MENUS, "菜单管理", "menu",
+                        Permission.MENU_READ, 40, true),
+
+                // 账号：不进侧栏，但标题仍要从同一份数据来，否则「当前页叫什么」又会出现第二个来源
+                new SeedMenu("account", "账号", 90, MenuRoutes.PROFILE, "个人中心", "user",
+                        "", 10, false));
     }
 
     /**
@@ -149,6 +186,32 @@ public final class SeedData {
             this.departmentScope = departmentScope;
             this.builtin = builtin;
             this.status = status;
+        }
+    }
+
+    public static final class SeedMenu {
+        public final String groupKey;
+        public final String groupLabel;
+        public final int groupSort;
+        public final String path;
+        public final String name;
+        public final String icon;
+        /** 空串表示登录即可见。 */
+        public final String permission;
+        public final int sort;
+        public final boolean visible;
+
+        SeedMenu(String groupKey, String groupLabel, int groupSort, String path, String name, String icon,
+                 String permission, int sort, boolean visible) {
+            this.groupKey = groupKey;
+            this.groupLabel = groupLabel;
+            this.groupSort = groupSort;
+            this.path = path;
+            this.name = name;
+            this.icon = icon;
+            this.permission = permission;
+            this.sort = sort;
+            this.visible = visible;
         }
     }
 

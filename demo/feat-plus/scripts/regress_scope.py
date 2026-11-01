@@ -88,7 +88,7 @@ print("--- 身份：多角色并集 ---")
 a = me(admin)
 check("admin 角色", ["ADMIN"], a["roleCodes"])
 check("admin 数据范围", 1, a["dataScope"])
-check("admin 权限数（全部 9 项）", 9, len(a["permissions"]))
+check("admin 权限数（全部 11 项）", 11, len(a["permissions"]))
 
 al = me(alice)
 check("alice 挂两个角色", ["DEPT_MANAGER", "USER"], sorted(al["roleCodes"]))
@@ -139,7 +139,7 @@ check("内置角色 4 个", 4, len(roles))
 check("ADMIN=全部", 1, roles["ADMIN"]["departmentScope"])
 check("DEPT_MANAGER=本部门及以下", 4, roles["DEPT_MANAGER"]["departmentScope"])
 check("USER=仅本人", 5, roles["USER"]["departmentScope"])
-check("ADMIN 权限固定 9 项", 9, len(roles["ADMIN"]["permissions"]))
+check("ADMIN 权限固定 11 项", 11, len(roles["ADMIN"]["permissions"]))
 
 print("--- 角色：自定义部门往返 ---")
 status, created = call("POST", "/api/roles", admin, {

@@ -27,7 +27,7 @@ export interface CurrentUser {
 }
 
 /**
- * 一条菜单。定义在后端 security/MenuRegistry，前端只负责「path 渲染哪个组件」。
+ * 一条菜单。定义在数据库 sys_menu，前端只负责「path 渲染哪个组件」。
  *
  * 只有元数据下发得下来：Feat 的路由在编译期确定，组件必须先存在于构建产物里，
  * 所以 App.tsx 仍然要为新页面登记一条 Route——那不是菜单，是组件映射。
@@ -44,6 +44,31 @@ export interface MenuItem {
   permission: string
   sort: number
   /** false 表示不进侧栏，只贡献「路径 → 标题」，例如个人中心 */
+  visible: boolean
+}
+
+/**
+ * 菜单管理页的一行，来自 GET /api/menus。
+ *
+ * 比 MenuItem 多 id 与 groupSort：改删要用 id，调分组先后要用 groupSort，
+ * 而这两样对渲染侧栏毫无用处，所以不塞进每请求一次的下发结构里。
+ */
+export interface MenuAdminItem extends MenuItem {
+  id: number
+  groupSort: number
+}
+
+/** 创建 / 更新菜单的请求体。path 必须取自 GET /api/menus/routes 的白名单。 */
+export interface MenuInput {
+  groupKey: string
+  groupLabel: string
+  groupSort: number
+  path: string
+  name: string
+  icon: string
+  /** 空串表示登录即可见；非空必须是已登记的权限点 */
+  permission: string
+  sort: number
   visible: boolean
 }
 

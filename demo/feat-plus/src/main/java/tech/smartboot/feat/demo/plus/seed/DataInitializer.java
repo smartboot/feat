@@ -11,14 +11,17 @@ import tech.smartboot.feat.cloud.annotation.PostConstruct;
 import tech.smartboot.feat.demo.plus.mapper.ActivityMapper;
 import tech.smartboot.feat.demo.plus.mapper.DepartmentMapper;
 import tech.smartboot.feat.demo.plus.mapper.LoginStatMapper;
+import tech.smartboot.feat.demo.plus.mapper.MenuMapper;
 import tech.smartboot.feat.demo.plus.mapper.NotificationMapper;
 import tech.smartboot.feat.demo.plus.mapper.RoleMapper;
 import tech.smartboot.feat.demo.plus.mapper.UserMapper;
 import tech.smartboot.feat.demo.plus.model.ActivityRecord;
 import tech.smartboot.feat.demo.plus.model.DepartmentRecord;
+import tech.smartboot.feat.demo.plus.model.MenuRecord;
 import tech.smartboot.feat.demo.plus.model.NotificationRecord;
 import tech.smartboot.feat.demo.plus.model.RoleRecord;
 import tech.smartboot.feat.demo.plus.model.UserAccount;
+import tech.smartboot.feat.demo.plus.security.MenuSnapshot;
 
 /**
  * 演示数据初始化器。
@@ -49,10 +52,25 @@ public class DataInitializer {
     @Autowired
     private LoginStatMapper loginStatMapper;
 
+    @Autowired
+    private MenuMapper menuMapper;
+
+    @Autowired
+    private MenuSnapshot menuSnapshot;
+
+    /**
+     * 首次启动装种子数据；存量库补菜单。
+     * <p>
+     * 两条分支不能合并：{@link #reset()} 会清空全部业务数据，而「菜单表是新加的」这件事只发生在
+     * 已经有数据的库上——那种库升级上来时，用户表非空、菜单表为空，需要的只是补一份菜单，
+     * 不是把客户的数据清掉重来。这个分支就是「给存量库加表」的最小迁移路径。
+     */
     @PostConstruct
     public void init() {
         if (userMapper.countAll() == 0) {
             reset();
+        } else if (menuMapper.countAll() == 0) {
+            seedMenus();
         }
     }
 
@@ -69,6 +87,7 @@ public class DataInitializer {
         userMapper.truncate();
         roleMapper.truncate();
         departmentMapper.truncate();
+        menuMapper.truncate();
 
         seedRoles();
         Map<String, Long> departmentIds = seedDepartments();
@@ -76,6 +95,34 @@ public class DataInitializer {
         seedActivities();
         seedNotifications();
         seedLoginStats();
+        seedMenus();
+        // 重置换了菜单行的 id，缓存里还是上一批。不清的话「恢复演示数据」之后侧栏还是改过的样子，
+        // 要等十分钟 TTL 到期才恢复——这正是「缓存忘了失效」最典型的现场。
+        menuSnapshot.invalidate();
+    }
+
+    /**
+     * 菜单表初始化。菜单是配置数据，落库之后由「菜单管理」页维护，
+     * 这里只负责给出第一份可用的侧边栏——包括「菜单管理」自己那一条。
+     */
+    private void seedMenus() {
+        Date now = new Date();
+        for (SeedData.SeedMenu seed : SeedData.menus()) {
+            MenuRecord record = new MenuRecord();
+            record.setGroupKey(seed.groupKey);
+            record.setGroupLabel(seed.groupLabel);
+            record.setGroupSort(seed.groupSort);
+            record.setPath(seed.path);
+            record.setName(seed.name);
+            record.setIcon(seed.icon);
+            record.setPermission(seed.permission);
+            record.setSortOrder(seed.sort);
+            record.setVisible(seed.visible ? 1 : 0);
+            record.setIsDeleted(0);
+            record.setCreatedTime(now);
+            record.setEditTime(now);
+            menuMapper.insert(record);
+        }
     }
 
     private void seedRoles() {

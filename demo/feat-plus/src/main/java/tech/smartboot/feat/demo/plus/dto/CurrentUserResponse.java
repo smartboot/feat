@@ -15,7 +15,7 @@ import java.util.List;
  * scopeDescription 是给用户看的说明，例如「本部门及以下（3 个部门）」。
  * 前端拿它解释「为什么我只看到这些人」，而不是让用户以为是 bug。
  * <p>
- * menus 是这个人能看到哪些菜单，由 {@code security.MenuRegistry} 按 permissions 过滤后给出。
+ * menus 是这个人能看到哪些菜单，由 {@code MenuService} 从 sys_menu 读出、按 permissions 过滤后给出。
  * 菜单跟着登录响应一起下发，不单独开接口——单独一个接口意味着它挂掉就白屏，首屏还要多等一次。
  */
 public class CurrentUserResponse {
