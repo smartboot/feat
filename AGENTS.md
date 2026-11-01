@@ -38,6 +38,7 @@ Feat Cloud 的注解长得很像 Spring Boot，但**工作方式不同**：没�
 - 环境名只能包含字母和数字（`dev`、`prod`、`gray1`），`feat-prod-us.yml` 不会被识别。
 - 用 `maven-shade-plugin` 打 fat jar 时，必须用 `AppendingTransformer` 合并 `META-INF/services/tech.smartboot.feat.cloud.CloudService`，否则应用能启动但所有路由 404。
 - **返回值序列化在编译期完成**，逐字段调 getter：没有对应字段的计算属性（如只在 `getHitRate()` 里算的值）不会被输出，接口里静默少一个键。要输出就落成真实字段。
+- **DTO 嵌套超过两层会退化成 FastJSON2 序列化**：`RestResult → A → B → List<C>` 里的 `C` 走运行期序列化，而 `RestResult → A → List<C>` 里是逐字段写出。两条路径的字段集合可能不同——FastJSON2 默认省略值为 `null` 的字段，生成的代码会写出 `null`。表现是同一个 DTO 在两个接口上 JSON 形状不一致，客户端只对着其中一个写解析就出错。DTO 嵌套别超过两层；表达「没有值」用空串或空集合，别用 `null`。文档见 `cloud/response.mdx` 的同名 caution。
 - **启动失败的异常会被解包到最底层 cause**（`FeatException#getRootCause`）。`new IllegalStateException(msg, e)` 里的 msg 不会出现在控制台，只剩 `Connection refused` 之类。要让提示可见，就把信息拼进自己的 message 且不设 cause。
 - **注入的 Mapper 会自动提交事务。** 生成的 Mapper 包装类每个方法都 `openSession(true)`：一次业务动作要写两张表时，第一张已经提交、第二张失败，脏数据就留下了。要事务就在 `@Autowired SqlSessionFactory` 上 `openSession(false)`，事务体里全部改用 `session.getMapper(...)`（混用注入的 Mapper 等于把那一笔写扔出事务），最后必须 close。可运行的模板见 `demo/feat-plus/tx/TxTemplate`，文档见 `cloud/mybatis.mdx` 的「会话与事务」。
 

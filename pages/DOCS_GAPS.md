@@ -24,6 +24,7 @@
 | 8 | MyBatis 示例教反了 | `demo/mybatis` 的 Service 用 `catch (Exception e) { e.printStackTrace(); return false; }`，正是会让事务失效的写法 | `demo/mybatis/src/main/java/.../service/` | 改示例 + 在 `mybatis.mdx` 点明为什么不 catch | 已回写（示例已去掉 try/catch） |
 | 9 | `@Value` 写法 | `bean.mdx` 写 `@Value("app.name")`，`nacos.mdx` / `xxljob.mdx` 写 `@Value("${...}")`，`options.mdx` 说必须带 `${}` | 以 AOT 生成代码为准：不带 `${}` 注入的是字面量 | `cloud/bean.mdx` | 待复核（`bean.mdx` L122 已明确说明，H2 可能已修） |
 | 10 | `appendix/aot.mdx` | 整页约一半在讲已删除的 `feat-cloud-aot-vm` 模块 | 仓库无此模块，`version_history` 记 v2.1.0 已移除 | 重写该页 | 待回写（见 DOCS_REVIEW H1） |
+| 11 | 嵌套层数决定序列化路径 | `response.mdx` 的表格只写「数组、`Object`、嵌套过深对象 → 回退到 FastJSON2」，没说「深一层」的判据，更没说回退后**字段集合会变**。实测 `RestResult → LoginResponse → CurrentUserResponse → List<MenuItem>` 里的元素省略了值为 `null` 的字段，而同样这些元素在 `RestResult → CurrentUserResponse → List<MenuItem>` 里是逐字段写出、包含 `"permission": null` | 生成的 `AuthControllerCloudService`：`/api/auth/login` 用 `os.write(JSON.toJSONBytes(p3))`，`/api/auth/me` 展开成 `p2.getXxx()` | `cloud/response.mdx` 加 caution | 已回写 |
 
 ## 已确认「不补」的
 

@@ -202,6 +202,17 @@ writeJsonValue(os, rst.getMessage());
 os.write(b_data);
 ```
 
+<Aside type="caution">
+“嵌套过深”按**已经展开的 DTO 层数**算，不是按字段数量。实际踩到的分界线是三层：
+
+- `RestResult → LoginResponse → CurrentUserResponse → List<MenuItem>`：元素回退到 FastJSON2；
+- `RestResult → CurrentUserResponse → List<MenuItem>`：同一批元素逐字段写出。
+
+回退不只是“慢一点”，两种路径的**字段集合可能不同**——FastJSON2 默认省略值为 `null` 的字段，而生成的代码会老老实实写出 `"permission": null`。结果是同一个 DTO 在两个接口上的 JSON 形状不一致，客户端往往只对着其中一个写解析。
+
+两条建议：**DTO 嵌套不要超过两层**；需要表达“没有值”时用空串或空集合，别用 `null`。
+</Aside>
+
 这也是 Feat Cloud 性能模型的一部分：框架尽量在编译期确定响应结构，运行时少做反射和动态判断。对读者来说，真正能感受到的不是术语，而是“我写的一个返回值，最后会被展开成一段具体的写出逻辑”。
 
 <Aside type="caution">

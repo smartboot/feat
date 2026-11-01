@@ -62,6 +62,7 @@ mvn -q exec:java
 | PUT | `/api/roles/{id}` | 更新角色 | `role:write` |
 | POST | `/api/roles/{id}/status` | 启用 / 停用角色 | `role:write` |
 | DELETE | `/api/roles/{id}` | 删除角色（在用 / 内置不可删） | `role:write` |
+| GET | `/api/permissions` | 权限点字典（分组 / 中文名 / 说明），角色页渲染勾选项用 | `role:read` |
 | GET | `/api/departments` | 部门树（每级带直属成员数） | `dept:read` |
 | POST | `/api/departments` | 新建部门 | `dept:write` |
 | PUT | `/api/departments/{id}` | 更新部门 / 调整上级 | `dept:write` |
@@ -80,9 +81,11 @@ mvn -q exec:java
 改自己的昵称和密码是基本权利，要求 `user:write` 会让普通成员永远改不了密码，
 只能找管理员重置——那正是这组接口要修掉的缺陷。
 
-权限点是固定的 9 个，定义在 `common/Permission` 与前端 `lib/permissions.ts`，两边必须一致：
-`dashboard:read`、`user:read`、`user:write`、`role:read`、`role:write`、`dept:read`、`dept:write`、
-`audit:read`、`system:write`。
+权限点固定在 `security/Permission.CATALOG` 这一处：`dashboard:read`、`user:read`、`user:write`、
+`role:read`、`role:write`、`dept:read`、`dept:write`、`audit:read`、`system:write`。
+分组、中文名、说明都写在那里，`ALL` 由它派生，前端通过 `GET /api/permissions` 取同一份字典。
+**新增权限点只改这一处**；以前前端 `lib/permissions.ts` 还维护一份，漏改的表现是
+「角色页里没有这个勾选项，接口却在校验它」——不报错，只报障。
 角色就是把一组权限点打包；内置的 `ADMIN` 拥有全部权限且不可停用、不可改权限，是系统的兜底通道，
 `AUDITOR` 是只读角色（含 `audit:read`），`DEPT_MANAGER` 是数据范围受限的角色（见下一节）。
 
@@ -121,6 +124,32 @@ mvn -q exec:java
 已读状态不在通知表上，而是每人一行记在 `sys_notification_read` ——放在通知表里用单列 `read_flag` 时，
 广播通知只有一行，两个管理员谁点了已读，另一个人那边也会变成已读。
 
+## 菜单由后端下发
+
+侧边栏与页面标题的唯一来源是 `security/MenuRegistry`，随登录响应和 `GET /api/auth/me` 一起下发
+（`CurrentUserResponse.menus`）。不单独开菜单接口：多一次请求意味着它挂掉就白屏，首屏还要多等一次往返。
+
+**为什么搬过来。** 原来菜单是前端三份硬编码（`primaryNav`、`systemNav`、`PAGE_TITLES`），加一个模块要改三处，
+漏一处不报错：菜单不出现但 URL 能打开，或者点进去被 catch-all 弹回首页。这类故障会被当成框架 bug。
+
+**边界在哪。** Feat 的路由在编译期确定，所以只有元数据下发得下来：
+
+| 归后端 | 归前端（编译期） |
+|---|---|
+| 路径、标题、分组、排序、可见性、需要的权限点 | 该路径渲染哪个组件（`App.tsx` 的 `Route`）、图标组件（`AppLayout` 的 `NavIcons`） |
+
+新增一个模块时，前端要动的只剩两个文件：`App.tsx` 加一条 `Route`；用了新图标才需要在 `NavIcons` 加一项
+（不加会退化成默认图标，`check_menu.py` 会提示）。菜单本身只改 `MenuRegistry` 一行。
+
+`visible=false` 的项（个人中心）不进侧栏，但仍然是标题的来源——否则「当前页叫什么」又会出现第二个来源。
+
+**两侧一致性是可验证的**：`scripts/check_menu.py` 检查四条——注册表里的 path 必须在 `App.tsx` 有对应 Route
+（`/users/:userId` 归到 `/users`）、每条 Route 都得有菜单登记、icon 必须在 `NavIcons` 里、
+权限点必须存在于 `Permission.CATALOG`。它不需要 JDK 和编译产物，几秒内跑完。
+
+> **菜单能看见不等于接口放行。** 下发的是「显示层」，`AccessGuard.require` 仍然逐接口校验，
+> 数据范围仍然逐查询生效。两者各自独立，删掉任何一边都不会被另一边兜住。
+
 ## 表结构约定
 
 九张表（`sys_user`、`sys_role`、`sys_department`、`sys_user_role`、`sys_role_dept`、`sys_activity`、`sys_notification`、`sys_notification_read`、`sys_login_stat`）都带同一组审计字段：
@@ -142,7 +171,7 @@ mvn -q exec:java
 
 ## 回归脚本与 CI
 
-`scripts/` 下六份用 urllib 写的断言脚本，覆盖 255 项。用 urllib 而不是 curl，是为了对 JSON 做精确断言——
+`scripts/` 下七份用 urllib 写的断言脚本，覆盖 279 项。用 urllib 而不是 curl，是为了对 JSON 做精确断言——
 用 `grep -o '"code"'` 数条数会把 `RestResult` 信封里的 `code: 200` 也数进去。
 
 ```bash
@@ -153,21 +182,23 @@ python3 scripts/regress_audit.py    # 44 项：审计日志筛选、通知按人
 python3 scripts/regress_profile.py  # 40 项：个人中心改资料 / 改密码 / 其它会话失效
 python3 scripts/regress_cache.py    # 14 项：默认后端、读路径命中、写路径失效、权限边界
 python3 scripts/regress_tx.py       # 23 项：回滚真的发生、多语句写「成功三处都在 / 失败一处不留」
+python3 scripts/regress_menu.py     # 24 项：菜单随权限过滤、字典与权限同源、登录与 /me 字段一致
 ```
 
-六份脚本都会在开头或结尾调用 `reset-demo`，可以任意顺序重复执行——
+七份脚本都会在开头或结尾调用 `reset-demo`，可以任意顺序重复执行——
 唯一的例外是「被踢掉的会话数」这类断言不写死条数：令牌存在进程内存里，跨多次运行会累积。
 
-另有两份不需要启动服务的静态检查：
+另有三份不需要启动服务的静态检查：
 
 ```bash
-python3 scripts/check_layers.py     # 89 个类的跨层依赖，按白名单校验
-python3 scripts/check_tx.py         # 9 个 Service：多语句写必须包在事务里、事务体不许混用注入 Mapper
+python3 scripts/check_layers.py     # 95 个类的跨层依赖，按白名单校验
+python3 scripts/check_tx.py         # 10 个 Service：多语句写必须包在事务里、事务体不许混用注入 Mapper
+python3 scripts/check_menu.py       # 菜单注册表 ↔ 前端路由 / 图标 / 权限点 的一致性
 ```
 
-流水线顺序建议照这个来：两项静态检查 → 装框架 → 建前端 → 编译 → 起服务 → 打接口，
+流水线顺序建议照这个来：三项静态检查 → 装框架 → 建前端 → 编译 → 起服务 → 打接口，
 失败时打印服务日志。静态检查放在最前面，因为它不需要 JDK 和编译产物，
-违反依赖方向或事务约束时几秒内就失败。
+违反依赖方向、事务约束或菜单一致性时几秒内就失败。
 
 > 仓库不在 `.github/workflows/` 下放这套流水线。本仓库的代码从 Gitee 同步到 GitHub，
 > 推送含 workflow 文件变更的提交会被 GitHub 以权限不足拒掉，整个同步随之失败。
@@ -182,27 +213,29 @@ python3 scripts/check_tx.py         # 9 个 Service：多语句写必须包在�
 ```text
 src/main/java/tech/smartboot/feat/demo/plus/
 ├── Bootstrap.java        入口，挂载 SPA 回退
-├── controller/          11 个 Controller：收参数、验权限点、调 Service
-├── service/              9 个业务服务：业务规则与校验在这里，不允许直接拼 SQL
-├── mapper/               8 个 MyBatis 接口 + SqlFragments（SQL 片段常量）
+├── controller/          12 个 Controller：收参数、验权限点、调 Service
+├── service/             10 个业务服务：业务规则与校验在这里，不允许直接拼 SQL
+├── mapper/               9 个 MyBatis 接口 + SqlFragments（SQL 片段常量）
 ├── model/               11 个表结构映射，含 passwordHash / isDeleted 等不外露字段
-├── dto/                 21 个请求与响应契约，OpenAPI 从这里导出
+├── dto/                 23 个请求与响应契约，OpenAPI 从这里导出
 ├── security/             认证与授权的机制层：AccessContext / AccessGuard /
-│                         DataScopeResolver / Permission / DataScope / DepartmentTree /
-│                         DepartmentSnapshot（部门全表读缓存）
+│                         DataScopeResolver / Permission（权限点字典，唯一真相）/
+│                         MenuRegistry + MenuItem（菜单注册表）/ DataScope /
+│                         DepartmentTree / DepartmentSnapshot（部门全表读缓存）
 ├── cache/                缓存后端：CacheStore 契约 + 内存 / Redis 两实现 + 按配置选择
 ├── tx/                   事务模板：写操作的唯一入口（TxTemplate / TxWork / TxAction）
 ├── token/                令牌与会话（内存实现，可替换成 Redis）
 ├── common/               统一响应、异常、ApiController、SPA 回退
 └── seed/                 演示数据，接入真实项目时整包删除
 
-scripts/                  回归断言（crud / scope / audit / profile / cache / tx）
-                          + 静态检查（check_layers / check_tx）
+scripts/                  回归断言（crud / scope / audit / profile / cache / tx / menu）
+                          + 静态检查（check_layers / check_tx / check_menu）
 web/src/
 ├── services/admin-service.ts   前后端共同遵守的接口契约
 ├── services/http-admin-service.ts  唯一实现，页面只从这里取 adminService
 ├── auth/session.tsx            把当前登录人下发给页面（useSession）
-├── lib/permissions.ts          权限点字典 + hasPermission
+├── lib/menus.ts                菜单分组、按路径找标题（菜单本身来自后端）
+├── lib/permissions.ts          只有 hasPermission；权限点字典从 /api/permissions 取
 ├── lib/departments.ts          部门树拍平、层级判断
 └── pages/                      登录 / 概览 / 用户 / 角色 / 部门 / 审计日志 / 个人中心
 ```
@@ -333,3 +366,9 @@ feat-plus:
 8. **启动异常的中间层 message 会消失**。`new FeatException(msg, e)` 会把 cause 解包到最底层，
    所以 `new IllegalStateException(msg, e)` 里的提示打不出来，控制台只剩 `Connection refused`。
    要让提示可见，把信息拼进自己的 message 并且不设 cause。
+9. **DTO 嵌套超过两层时，元素序列化退化成 FastJSON2**。`RestResult → LoginResponse → CurrentUser → List<Menu>`
+   里的 `Menu` 走运行期序列化，而 `RestResult → CurrentUser → List<Menu>` 里是逐字段写出。
+   两条路径的字段集合会不同：FastJSON2 默认省略值为 `null` 的字段，生成的代码会写出 `null`。
+   实测症状是登录响应里 `menus[].permission` 整个键消失、`/me` 里却是 `null`——
+   由 `regress_menu.py` 的「登录响应与 /me 的菜单逐字段一致」断言兜住。
+   规避方式：DTO 嵌套不超过两层；表达「没有值」用空串或空集合，不用 `null`。
