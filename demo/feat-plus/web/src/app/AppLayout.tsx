@@ -77,6 +77,11 @@ export function AppLayout({ currentUser, onLogout }: { currentUser: CurrentUser;
   const navigateAndClose = (path: string) => { navigate(path); setMobileOpen(false); setCommandOpen(false) }
   const handleReset = async () => { await resetDemo.mutateAsync(); toast.success("演示数据已恢复"); navigate("/dashboard") }
 
+  // 标题由各页面自己渲染，布局里只同步浏览器标签页标题，避免屏幕上出现两个同名大标题。
+  useEffect(() => {
+    document.title = `${activeLabel} · Feat Plus`
+  }, [activeLabel])
+
   return (
     <div className="min-h-screen bg-background">
       {mobileOpen && <button className="fixed inset-0 z-40 bg-black/50 md:hidden" aria-label="关闭菜单" onClick={() => setMobileOpen(false)} />}
@@ -122,7 +127,7 @@ export function AppLayout({ currentUser, onLogout }: { currentUser: CurrentUser;
             <DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" className="gap-2 px-2"><Avatar className="size-7"><AvatarFallback>{currentUser.displayName.slice(0, 1)}</AvatarFallback></Avatar><span className="hidden text-left sm:grid"><strong className="text-xs">{currentUser.displayName}</strong><span className="text-[10px] text-muted-foreground">{currentUser.roleName}</span></span><ChevronDown className="hidden size-3.5 text-muted-foreground sm:block" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuLabel>{currentUser.username}</DropdownMenuLabel><DropdownMenuSeparator /><DropdownMenuItem onClick={() => navigate(`/users/${currentUser.id}`)}>查看我的账号</DropdownMenuItem><DropdownMenuItem onClick={() => setCommandOpen(true)}>打开命令面板</DropdownMenuItem><DropdownMenuSeparator /><DropdownMenuItem destructive onClick={onLogout}><LogOut /> 退出登录</DropdownMenuItem></DropdownMenuContent></DropdownMenu>
           </div>
         </header>
-        <main className="mx-auto w-full max-w-[1600px] p-4 md:p-6 lg:p-8"><div className="mb-6 flex items-end justify-between"><div><p className="text-xs font-medium text-primary">{activeLabel}</p><h1 className="mt-1 text-2xl font-semibold tracking-tight">{activeLabel}</h1></div></div><SessionProvider user={currentUser}><Outlet /></SessionProvider></main>
+        <main className="mx-auto w-full max-w-[1600px] p-4 md:p-6 lg:p-8"><SessionProvider user={currentUser}><Outlet /></SessionProvider></main>
       </div>
       <CommandDialog open={commandOpen} onOpenChange={setCommandOpen}><CommandInput placeholder="输入命令或搜索用户..." /><CommandList><CommandEmpty>没有找到匹配结果</CommandEmpty><CommandGroup heading="导航">{visiblePrimary.map((item, index) => { const Icon = item.icon; return <CommandItem key={item.to} onSelect={() => navigateAndClose(item.to)}><Icon className="size-4" />{item.label}<CommandShortcut>⌘ {index + 1}</CommandShortcut></CommandItem> })}{visibleSystem.map((item) => { const Icon = item.icon; return <CommandItem key={item.to} onSelect={() => navigateAndClose(item.to)}><Icon className="size-4" />{item.label}</CommandItem> })}</CommandGroup><CommandSeparator />{canReadUsers && <><CommandGroup heading="用户"><CommandItem onSelect={() => navigateAndClose("/users")}><UsersRound className="size-4" />查看全部用户</CommandItem>{users.slice(0, 5).map((user) => <CommandItem key={user.id} value={`${user.displayName} ${user.username} ${user.email}`} onSelect={() => navigateAndClose(`/users/${user.id}`)}><Avatar className="size-6"><AvatarFallback>{user.displayName.slice(0, 1)}</AvatarFallback></Avatar>{user.displayName}<span className="text-xs text-muted-foreground">{user.username}</span></CommandItem>)}</CommandGroup><CommandSeparator /></>}<CommandGroup heading="操作"><CommandItem onSelect={() => { navigateAndClose("/users"); toast.info("请使用用户管理页面的新建用户按钮") }}><Command className="size-4" />新建用户</CommandItem></CommandGroup></CommandList></CommandDialog>
     </div>
