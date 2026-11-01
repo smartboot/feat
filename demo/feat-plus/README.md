@@ -73,6 +73,11 @@ mvn -q exec:java
 | GET | `/api/notifications` | 通知列表（按当前登录人过滤） | — |
 | POST | `/api/notifications/{id}/read` | 单条已读 | — |
 | POST | `/api/notifications/read-all` | 全部已读 | — |
+| GET | `/api/menus` | 菜单配置全量列表（含不进侧栏的项） | `menu:read` |
+| GET | `/api/menus/routes` | 可选的页面路径白名单（渲染成下拉框） | `menu:write` |
+| POST | `/api/menus` | 新增菜单 | `menu:write` |
+| PUT | `/api/menus/{id}` | 修改菜单（名称 / 分组 / 排序 / 图标 / 权限点 / 可见性） | `menu:write` |
+| DELETE | `/api/menus/{id}` | 删除菜单 | `menu:write` |
 | POST | `/api/admin/reset-demo` | 恢复演示数据 | `system:write` |
 | GET | `/api/system/cache` | 当前缓存后端与命中计数 | `system:write` |
 | GET | `/api/system/selftest` | 地基自检（事务回滚是否真的生效） | `system:write` |
@@ -82,7 +87,9 @@ mvn -q exec:java
 只能找管理员重置——那正是这组接口要修掉的缺陷。
 
 权限点固定在 `security/Permission.CATALOG` 这一处：`dashboard:read`、`user:read`、`user:write`、
-`role:read`、`role:write`、`dept:read`、`dept:write`、`audit:read`、`system:write`。
+`role:read`、`role:write`、`dept:read`、`dept:write`、`audit:read`、`menu:read`、`menu:write`、`system:write`。
+**权限点不进数据库**，只有菜单（谁挂在哪个权限点上）可以配：每个接口的 `require(...)` 是编译期写死的，
+允许运行时新增权限点只会造出「字典里有、接口从不校验」的空权限。
 分组、中文名、说明都写在那里，`ALL` 由它派生，前端通过 `GET /api/permissions` 取同一份字典。
 **新增权限点只改这一处**；以前前端 `lib/permissions.ts` 还维护一份，漏改的表现是
 「角色页里没有这个勾选项，接口却在校验它」——不报错，只报障。
@@ -124,35 +131,52 @@ mvn -q exec:java
 已读状态不在通知表上，而是每人一行记在 `sys_notification_read` ——放在通知表里用单列 `read_flag` 时，
 广播通知只有一行，两个管理员谁点了已读，另一个人那边也会变成已读。
 
-## 菜单由后端下发
+## 菜单存在数据库里
 
-侧边栏与页面标题的唯一来源是 `security/MenuRegistry`，随登录响应和 `GET /api/auth/me` 一起下发
+侧边栏与页面标题的唯一来源是 `sys_menu` 表，随登录响应和 `GET /api/auth/me` 一起下发
 （`CurrentUserResponse.menus`）。不单独开菜单接口：多一次请求意味着它挂掉就白屏，首屏还要多等一次往返。
 
-**为什么搬过来。** 原来菜单是前端三份硬编码（`primaryNav`、`systemNav`、`PAGE_TITLES`），加一个模块要改三处，
-漏一处不报错：菜单不出现但 URL 能打开，或者点进去被 catch-all 弹回首页。这类故障会被当成框架 bug。
+**为什么入库。** 菜单先是从前端三份硬编码（`primaryNav`、`systemNav`、`PAGE_TITLES`）搬到后端常量类，
+再搬进数据库。每一步换掉的是同一类问题：改一个菜单标题要发一次版。ToB 交付里「这个菜单别叫用户、叫员工」
+「把审计日志挪到工作台」是最常见的需求，它们不该占用一次构建与发布。改完刷新即生效。
 
-**边界在哪。** Feat 的路由在编译期确定，所以只有元数据下发得下来：
+**边界是 Feat 画的，不是偏好。** 路由在编译期确定，后端最多下发一个 path 字符串，拿不到要渲染的组件：
 
-| 归后端 | 归前端（编译期） |
+| 归数据库（可运营） | 归代码（编译期） |
 |---|---|
-| 路径、标题、分组、排序、可见性、需要的权限点 | 该路径渲染哪个组件（`App.tsx` 的 `Route`）、图标组件（`AppLayout` 的 `NavIcons`） |
+| 路径、标题、分组、排序、可见性、图标 key、挂哪个权限点 | 该路径渲染哪个组件（`App.tsx` 的 `Route`）、图标组件（`lib/icons.ts`）、有哪些页面（`security/MenuRoutes`）、有哪些权限点（`Permission.CATALOG`） |
 
-新增一个模块时，前端要动的只剩两个文件：`App.tsx` 加一条 `Route`；用了新图标才需要在 `NavIcons` 加一项
-（不加会退化成默认图标，`check_menu.py` 会提示）。菜单本身只改 `MenuRegistry` 一行。
+**入库之后最需要防的是「配出一个不存在的页面」。** 路径从字面量变成界面上可填的数据，填错不会报错，
+表现是「侧栏有这一条，点进去被 catch-all 弹回首页」——数据看起来完全正常，排查成本极高。所以有三道闸：
 
-`visible=false` 的项（个人中心）不进侧栏，但仍然是标题的来源——否则「当前页叫什么」又会出现第二个来源。
+1. 菜单管理页的「路径」是下拉框，选项来自 `GET /api/menus/routes`，只列 `MenuRoutes` 里的页面；
+2. `MenuService` 拒绝白名单外的路径，也拒绝给同一个页面配第二个菜单（侧栏会出现两个同目标入口）；
+3. `scripts/check_menu.py` 双向校验 `MenuRoutes` ↔ `App.tsx`，并在提交前拦住「有页面没菜单」与「图标 key 未登记」。
 
-**两侧一致性是可验证的**：`scripts/check_menu.py` 检查四条——注册表里的 path 必须在 `App.tsx` 有对应 Route
-（`/users/:userId` 归到 `/users`）、每条 Route 都得有菜单登记、icon 必须在 `NavIcons` 里、
-权限点必须存在于 `Permission.CATALOG`。它不需要 JDK 和编译产物，几秒内跑完。
+新增页面时的完整动作因此是三步：`App.tsx` 加 `Route` → `MenuRoutes` 加一行 → 菜单管理页里加一条菜单。
+前两步漏了任何一步脚本都会失败；第三步漏了的表现是「页面能打开但没有入口」，脚本也会提示。
+
+**分组信息冗余在每一行上**（`group_key` / `group_label` / `group_sort`），没有单独的分组表：
+分组只有两三个，拆表换来的是每次读菜单多一次 join，而读菜单发生在每个请求的 `/me` 上。
+代价是「改组名」要落到整组——`MenuService.update` 里对同组行做一次 `updateGroupMeta`，
+否则前端取「该组第一条的 label」，会出现「改了名字但侧栏没变」。
+
+**`visible=false`** 的项（个人中心）不进侧栏，但仍然是标题来源——否则「当前页叫什么」又会出现第二个来源。
+
+**读路径走缓存**（`security/MenuSnapshot`，与 `DepartmentSnapshot` 同一套取舍）：键是 `menu:all`，
+TTL 十分钟兜底，任何写操作后主动失效，且**失效在事务提交之后**（提交前清，下一个请求会用旧数据填回去）。
+`reset-demo` 也算一次写操作——忘了它的话，「恢复演示数据」之后侧栏还是改过的样子，要等 TTL 到期才回来。
+
+> **删得掉「菜单管理」自己。** 它也是一条普通菜单，删掉后侧栏没有入口，但直接访问 `/menus` 仍然能进
+> （前端路由与接口权限都不读菜单表），可以把自己放回去。不加「不许删自己」的特例，是因为特例会让规则
+> 变得不可预测；代价写在这里。
 
 > **菜单能看见不等于接口放行。** 下发的是「显示层」，`AccessGuard.require` 仍然逐接口校验，
 > 数据范围仍然逐查询生效。两者各自独立，删掉任何一边都不会被另一边兜住。
 
 ## 表结构约定
 
-九张表（`sys_user`、`sys_role`、`sys_department`、`sys_user_role`、`sys_role_dept`、`sys_activity`、`sys_notification`、`sys_notification_read`、`sys_login_stat`）都带同一组审计字段：
+十张表（`sys_user`、`sys_role`、`sys_department`、`sys_user_role`、`sys_role_dept`、`sys_activity`、`sys_notification`、`sys_notification_read`、`sys_login_stat`、`sys_menu`）都带同一组审计字段：
 
 | 列 | 类型 | 说明 |
 |---|---|---|
@@ -171,7 +195,7 @@ mvn -q exec:java
 
 ## 回归脚本与 CI
 
-`scripts/` 下七份用 urllib 写的断言脚本，覆盖 279 项。用 urllib 而不是 curl，是为了对 JSON 做精确断言——
+`scripts/` 下七份用 urllib 写的断言脚本，覆盖 312 项。用 urllib 而不是 curl，是为了对 JSON 做精确断言——
 用 `grep -o '"code"'` 数条数会把 `RestResult` 信封里的 `code: 200` 也数进去。
 
 ```bash
@@ -182,7 +206,7 @@ python3 scripts/regress_audit.py    # 44 项：审计日志筛选、通知按人
 python3 scripts/regress_profile.py  # 40 项：个人中心改资料 / 改密码 / 其它会话失效
 python3 scripts/regress_cache.py    # 14 项：默认后端、读路径命中、写路径失效、权限边界
 python3 scripts/regress_tx.py       # 23 项：回滚真的发生、多语句写「成功三处都在 / 失败一处不留」
-python3 scripts/regress_menu.py     # 24 项：菜单随权限过滤、字典与权限同源、登录与 /me 字段一致
+python3 scripts/regress_menu.py     # 57 项：路径白名单、增删改后立刻生效、按权限过滤、分组同步、审计留痕
 ```
 
 七份脚本都会在开头或结尾调用 `reset-demo`，可以任意顺序重复执行——
@@ -191,9 +215,9 @@ python3 scripts/regress_menu.py     # 24 项：菜单随权限过滤、字典与
 另有三份不需要启动服务的静态检查：
 
 ```bash
-python3 scripts/check_layers.py     # 95 个类的跨层依赖，按白名单校验
-python3 scripts/check_tx.py         # 10 个 Service：多语句写必须包在事务里、事务体不许混用注入 Mapper
-python3 scripts/check_menu.py       # 菜单注册表 ↔ 前端路由 / 图标 / 权限点 的一致性
+python3 scripts/check_layers.py     # 101 个类的跨层依赖，按白名单校验
+python3 scripts/check_tx.py         # 11 个 Service：多语句写必须包在事务里、事务体不许混用注入 Mapper
+python3 scripts/check_menu.py       # MenuRoutes ↔ 前端路由 / 种子菜单 / 图标 / 权限点 的一致性
 ```
 
 流水线顺序建议照这个来：三项静态检查 → 装框架 → 建前端 → 编译 → 起服务 → 打接口，
@@ -213,15 +237,15 @@ python3 scripts/check_menu.py       # 菜单注册表 ↔ 前端路由 / 图标 
 ```text
 src/main/java/tech/smartboot/feat/demo/plus/
 ├── Bootstrap.java        入口，挂载 SPA 回退
-├── controller/          12 个 Controller：收参数、验权限点、调 Service
-├── service/             10 个业务服务：业务规则与校验在这里，不允许直接拼 SQL
-├── mapper/               9 个 MyBatis 接口 + SqlFragments（SQL 片段常量）
-├── model/               11 个表结构映射，含 passwordHash / isDeleted 等不外露字段
-├── dto/                 23 个请求与响应契约，OpenAPI 从这里导出
+├── controller/          13 个 Controller：收参数、验权限点、调 Service
+├── service/             11 个业务服务：业务规则与校验在这里，不允许直接拼 SQL
+├── mapper/              10 个 MyBatis 接口 + SqlFragments（SQL 片段常量）
+├── model/               12 个表结构映射，含 passwordHash / isDeleted 等不外露字段
+├── dto/                 25 个请求与响应契约，OpenAPI 从这里导出
 ├── security/             认证与授权的机制层：AccessContext / AccessGuard /
 │                         DataScopeResolver / Permission（权限点字典，唯一真相）/
-│                         MenuRegistry + MenuItem（菜单注册表）/ DataScope /
-│                         DepartmentTree / DepartmentSnapshot（部门全表读缓存）
+│                         MenuRoutes（页面白名单）/ MenuSnapshot（菜单全表读缓存）/
+│                         DataScope / DepartmentTree / DepartmentSnapshot（部门读缓存）
 ├── cache/                缓存后端：CacheStore 契约 + 内存 / Redis 两实现 + 按配置选择
 ├── tx/                   事务模板：写操作的唯一入口（TxTemplate / TxWork / TxAction）
 ├── token/                令牌与会话（内存实现，可替换成 Redis）
@@ -234,10 +258,11 @@ web/src/
 ├── services/admin-service.ts   前后端共同遵守的接口契约
 ├── services/http-admin-service.ts  唯一实现，页面只从这里取 adminService
 ├── auth/session.tsx            把当前登录人下发给页面（useSession）
-├── lib/menus.ts                菜单分组、按路径找标题（菜单本身来自后端）
+├── lib/menus.ts                菜单分组、按路径找标题（菜单来自 sys_menu）
+├── lib/icons.ts                菜单图标 key -> 组件，菜单管理页的下拉也用它
 ├── lib/permissions.ts          只有 hasPermission；权限点字典从 /api/permissions 取
 ├── lib/departments.ts          部门树拍平、层级判断
-└── pages/                      登录 / 概览 / 用户 / 角色 / 部门 / 审计日志 / 个人中心
+└── pages/                      登录 / 概览 / 用户 / 角色 / 部门 / 审计日志 / 菜单 / 个人中心
 ```
 
 ### 依赖方向
