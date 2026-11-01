@@ -9,6 +9,7 @@ import tech.smartboot.feat.cloud.annotation.Param;
 import tech.smartboot.feat.cloud.annotation.PathParam;
 import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.cloud.annotation.RequestMethod;
+import tech.smartboot.feat.demo.plus.auth.service.AccessContext;
 import tech.smartboot.feat.demo.plus.auth.service.AccessGuard;
 import tech.smartboot.feat.demo.plus.common.ApiController;
 import tech.smartboot.feat.demo.plus.common.DomainException;
@@ -40,68 +41,68 @@ public class UserController extends ApiController {
             @Param("roleCode") String roleCode,
             @Param("departmentId") String departmentId) {
         return execute(context, () -> {
-            accessGuard.require(context, Permission.USER_READ);
+            AccessContext access = accessGuard.require(context, Permission.USER_READ);
             return userService.list(keyword, parseStatus(status), roleCode, parseDepartmentId(departmentId),
-                    page == null ? 1 : page, pageSize == null ? 10 : pageSize);
+                    page == null ? 1 : page, pageSize == null ? 10 : pageSize, access);
         });
     }
 
     @RequestMapping(value = "/all", method = RequestMethod.GET)
     public RestResult<List<UserItemResponse>> listAll(Context context) {
         return execute(context, () -> {
-            accessGuard.require(context, Permission.USER_READ);
-            return userService.listAll();
+            AccessContext access = accessGuard.require(context, Permission.USER_READ);
+            return userService.listAll(access);
         });
     }
 
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     public RestResult<UserItemResponse> detail(Context context, @PathParam("id") String id) {
         return execute(context, () -> {
-            accessGuard.require(context, Permission.USER_READ);
-            return userService.get(parseId(id));
+            AccessContext access = accessGuard.require(context, Permission.USER_READ);
+            return userService.get(parseId(id), access);
         });
     }
 
     @RequestMapping(value = "", method = RequestMethod.POST)
     public RestResult<UserItemResponse> create(Context context, UserInputRequest request) {
         return execute(context, () -> {
-            long operatorId = accessGuard.require(context, Permission.USER_WRITE).getUserId();
-            return userService.create(request, operatorId);
+            AccessContext access = accessGuard.require(context, Permission.USER_WRITE);
+            return userService.create(request, access);
         });
     }
 
     @RequestMapping(value = "/{id}", method = RequestMethod.PUT)
     public RestResult<UserItemResponse> update(Context context, @PathParam("id") String id, UserInputRequest request) {
         return execute(context, () -> {
-            long operatorId = accessGuard.require(context, Permission.USER_WRITE).getUserId();
-            return userService.update(parseId(id), request, operatorId);
+            AccessContext access = accessGuard.require(context, Permission.USER_WRITE);
+            return userService.update(parseId(id), request, access);
         });
     }
 
     @RequestMapping(value = "/{id}/status", method = RequestMethod.POST)
     public RestResult<UserItemResponse> updateStatus(Context context, @PathParam("id") String id, UserStatusRequest request) {
         return execute(context, () -> {
-            long operatorId = accessGuard.require(context, Permission.USER_WRITE).getUserId();
+            AccessContext access = accessGuard.require(context, Permission.USER_WRITE);
             if (request == null || request.getStatus() == null) {
                 throw new DomainException("缺少目标状态");
             }
-            return userService.setStatus(parseId(id), request.getStatus(), operatorId);
+            return userService.setStatus(parseId(id), request.getStatus(), access);
         });
     }
 
     @RequestMapping(value = "/{id}/reset-password", method = RequestMethod.POST)
     public RestResult<TemporaryPasswordResponse> resetPassword(Context context, @PathParam("id") String id) {
         return execute(context, () -> {
-            long operatorId = accessGuard.require(context, Permission.USER_WRITE).getUserId();
-            return new TemporaryPasswordResponse(userService.resetPassword(parseId(id), operatorId));
+            AccessContext access = accessGuard.require(context, Permission.USER_WRITE);
+            return new TemporaryPasswordResponse(userService.resetPassword(parseId(id), access));
         });
     }
 
     @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
     public RestResult<Void> delete(Context context, @PathParam("id") String id) {
         return execute(context, () -> {
-            long operatorId = accessGuard.require(context, Permission.USER_WRITE).getUserId();
-            userService.delete(parseId(id), operatorId);
+            AccessContext access = accessGuard.require(context, Permission.USER_WRITE);
+            userService.delete(parseId(id), access);
             return (Void) null;
         });
     }

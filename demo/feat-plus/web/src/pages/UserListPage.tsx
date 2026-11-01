@@ -72,7 +72,7 @@ const emptyDraft: UserInput = {
   displayName: "",
   email: "",
   departmentId: null,
-  roleCode: "",
+  roleCodes: [],
   status: 1,
 }
 
@@ -414,7 +414,11 @@ export function UserListPage() {
                           {user.departmentName || <span className="text-muted-foreground">未分配</span>}
                         </TableCell>
                         <TableCell>
-                          <Badge variant="secondary">{roleLabel(roles, user.roleCode)}</Badge>
+                          <span className="flex flex-wrap gap-1">
+                            {user.roleNames.length === 0
+                              ? <Badge variant="secondary">{user.roleCodes.join(", ") || "无角色"}</Badge>
+                              : user.roleNames.map((name) => <Badge key={name} variant="secondary">{name}</Badge>)}
+                          </span>
                         </TableCell>
                         <TableCell>
                           <Badge variant={user.status ? "success" : "warning"}>{user.status ? "已启用" : "已停用"}</Badge>
@@ -604,8 +608,8 @@ function UserFormDialog({
 
   useEffect(() => {
     if (!open) return
-    // 角色下拉的默认值取第一个可用角色，避免新建时提交空编码被后端拒绝。
-    const fallbackRole = roles.find((role) => role.status === 1)?.code || ""
+    // 新建时默认勾选第一个可用角色，避免提交空角色被后端拒绝。
+    const fallbackRole = roles.find((role) => role.status === 1)?.code
     setDraft(
       user
         ? {
@@ -613,10 +617,14 @@ function UserFormDialog({
             displayName: user.displayName,
             email: user.email,
             departmentId: user.departmentId,
-            roleCode: user.roleCode,
+            roleCodes: user.roleCodes,
             status: user.status,
           }
-        : { ...emptyDraft, roleCode: fallbackRole, departmentId: departmentOptions[0]?.id ?? null },
+        : {
+            ...emptyDraft,
+            roleCodes: fallbackRole ? [fallbackRole] : [],
+            departmentId: departmentOptions[0]?.id ?? null,
+          },
     )
     setError("")
   }, [open, user, roles, departmentOptions])
@@ -630,8 +638,8 @@ function UserFormDialog({
       setError("请完整填写必填字段")
       return
     }
-    if (!draft.roleCode) {
-      setError("请选择角色")
+    if (draft.roleCodes.length === 0) {
+      setError("请至少选择一个角色")
       return
     }
     if (draft.departmentId === null) {
@@ -704,22 +712,41 @@ function UserFormDialog({
             </Select>
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="user-role">角色 *</Label>
-            <Select value={draft.roleCode} onValueChange={(value) => update("roleCode", value)}>
-              <SelectTrigger id="user-role">
-                <SelectValue placeholder="选择角色" />
-              </SelectTrigger>
-              <SelectContent>
-                {roles
-                  .filter((role) => role.status === 1 || role.code === draft.roleCode)
-                  .map((role) => (
-                    <SelectItem key={role.id} value={role.code}>
+            <Label>角色 *</Label>
+            <div className="flex flex-wrap gap-2">
+              {roles
+                .filter((role) => role.status === 1 || draft.roleCodes.includes(role.code))
+                .map((role) => {
+                  const active = draft.roleCodes.includes(role.code)
+                  return (
+                    <button
+                      key={role.id}
+                      type="button"
+                      aria-pressed={active}
+                      onClick={() =>
+                        update(
+                          "roleCodes",
+                          active
+                            ? draft.roleCodes.filter((code) => code !== role.code)
+                            : [...draft.roleCodes, role.code],
+                        )
+                      }
+                      className={[
+                        "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition-colors",
+                        active
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground",
+                      ].join(" ")}
+                    >
+                      {active && <Check className="size-3" />}
                       {role.name}
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">角色决定该成员可以访问的菜单与可执行的操作</p>
+                    </button>
+                  )
+                })}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              可以多选：权限点取并集，数据范围取最宽的一档
+            </p>
           </div>
           <div className="flex items-center justify-between rounded-lg border p-3">
             <div>
@@ -791,7 +818,7 @@ function UserDetailSheet({
           </div>
           <div className="grid gap-4 rounded-lg border p-4 text-sm">
             <DetailRow icon={<Mail />} label="邮箱" value={user.email} />
-            <DetailRow icon={<ShieldCheck />} label="角色" value={roleLabel(roles, user.roleCode)} />
+            <DetailRow icon={<ShieldCheck />} label="角色" value={user.roleNames.join(" / ") || "未分配"} />
             <DetailRow icon={<UserRound />} label="部门" value={user.departmentName || "未分配"} />
             <DetailRow icon={<Ellipsis />} label="加入时间" value={user.createdTime} />
             <DetailRow icon={<Ellipsis />} label="最后修改" value={user.editTime} />
@@ -828,7 +855,3 @@ function DetailRow({ icon, label, value }: { icon: React.ReactNode; label: strin
   )
 }
 
-/** 角色名从接口数据里取，取不到时退回编码，这样自定义角色也能正常显示。 */
-function roleLabel(roles: RoleItem[], code: string) {
-  return roles.find((role) => role.code === code)?.name || code
-}

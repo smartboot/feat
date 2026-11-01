@@ -102,6 +102,27 @@ public class DepartmentService {
         return new ArrayList<>(result);
     }
 
+    /**
+     * 校验一组部门 id 都真实存在（未软删）。
+     * <p>
+     * 角色配置「自定义数据范围」时用它把关：允许保存指向已删除部门的引用，
+     * 会让数据权限的范围悄悄缩小，排查起来非常费劲。
+     */
+    public void assertAllExist(List<Long> departmentIds) {
+        if (departmentIds == null || departmentIds.isEmpty()) {
+            return;
+        }
+        Set<Long> existing = new LinkedHashSet<>();
+        for (DepartmentRecord row : departmentMapper.selectAll()) {
+            existing.add(row.getId());
+        }
+        for (Long id : departmentIds) {
+            if (id == null || !existing.contains(id)) {
+                throw new DomainException("部门不存在：" + id);
+            }
+        }
+    }
+
     public DepartmentNodeResponse create(DepartmentInputRequest input, long operatorId) {
         long parentId = input == null || input.getParentId() == null ? ROOT : input.getParentId();
         assertParentExists(parentId);

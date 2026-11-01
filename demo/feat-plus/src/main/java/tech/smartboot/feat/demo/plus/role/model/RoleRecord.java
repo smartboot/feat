@@ -15,6 +15,11 @@ public class RoleRecord {
     private String name;
     private String description;
     private String permissions;
+    /**
+     * 数据范围档位，取值见 {@link tech.smartboot.feat.demo.plus.common.DataScope}。
+     * 只影响「能看到谁」，不影响「能不能做」——后者由 permissions 决定。
+     */
+    private int departmentScope;
     private int builtin;
     private int status;
     private int isDeleted;
@@ -61,6 +66,14 @@ public class RoleRecord {
 
     public void setPermissions(String permissions) {
         this.permissions = permissions;
+    }
+
+    public int getDepartmentScope() {
+        return departmentScope;
+    }
+
+    public void setDepartmentScope(int departmentScope) {
+        this.departmentScope = departmentScope;
     }
 
     public int getBuiltin() {

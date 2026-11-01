@@ -9,6 +9,7 @@ import java.util.Map;
 
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Bean;
+import tech.smartboot.feat.demo.plus.auth.service.AccessContext;
 import tech.smartboot.feat.demo.plus.common.DomainException;
 import tech.smartboot.feat.demo.plus.dashboard.dto.ActivityItemResponse;
 import tech.smartboot.feat.demo.plus.dashboard.dto.DashboardSummaryResponse;
@@ -48,10 +49,17 @@ public class DashboardService {
     @Autowired
     private DataInitializer dataInitializer;
 
-    public DashboardSummaryResponse summary(long userId) {
-        long total = userMapper.countAll();
-        long enabled = userMapper.countPage(null, 1, null, null);
-        long disabled = userMapper.countPage(null, 0, null, null);
+    /**
+     * 首页统计同样受数据范围约束：只能看本部门的账号登录后，
+     * 首页却显示全公司 12 个人，用户第一反应是「权限坏了」。
+     */
+    public DashboardSummaryResponse summary(AccessContext access) {
+        long userId = access.getUserId();
+        List<Long> scope = access.queryDepartmentIds();
+        Long selfOnly = access.selfOnlyUserId();
+        long enabled = userMapper.countPage(null, 1, null, null, scope, selfOnly);
+        long disabled = userMapper.countPage(null, 0, null, null, scope, selfOnly);
+        long total = enabled + disabled;
 
         List<ActivityRecord> recent = activityMapper.selectRecent(RECENT_ACTIVITY);
         List<ActivityItemResponse> activities = new ArrayList<>(recent.size());

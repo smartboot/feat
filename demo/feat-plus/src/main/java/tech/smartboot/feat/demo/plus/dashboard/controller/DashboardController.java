@@ -26,7 +26,7 @@ public class DashboardController extends ApiController {
     public RestResult<DashboardSummaryResponse> summary(Context context) {
         return execute(context, () -> {
             AccessContext access = accessGuard.require(context, Permission.DASHBOARD_READ);
-            return dashboardService.summary(access.getUserId());
+            return dashboardService.summary(access);
         });
     }
 }

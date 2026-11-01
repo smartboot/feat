@@ -26,7 +26,7 @@ import tech.smartboot.feat.demo.plus.user.model.UserAccount;
  * 首次启动时写入种子数据；reset-demo 复用同一个 reset() 方法，两条路径的数据完全一致。
  * 种子数据由系统写入，creator / editor 一律留 NULL，表示不是任何登录用户操作的。
  * <p>
- * 写入顺序由外键关系决定：角色 → 部门（先父后子）→ 用户 → 动态 / 通知 / 登录统计。
+ * 写入顺序由外键关系决定：角色 → 部门（先父后子）→ 用户 → 用户角色关联 → 动态 / 通知 / 登录统计。
  */
 @Bean
 public class DataInitializer {
@@ -62,6 +62,10 @@ public class DataInitializer {
         notificationMapper.truncateReads();
         notificationMapper.truncate();
         loginStatMapper.truncate();
+        // 关联表先清：sys_user_role / sys_role_dept 的主键是业务组合键，不自增，
+        // 但顺序上仍应先清关联再清主表，避免以后加外键时返工。
+        userMapper.truncateUserRoles();
+        roleMapper.truncateRoleDepts();
         userMapper.truncate();
         roleMapper.truncate();
         departmentMapper.truncate();
@@ -82,6 +86,7 @@ public class DataInitializer {
             role.setName(seed.name);
             role.setDescription(seed.description);
             role.setPermissions(seed.permissions);
+            role.setDepartmentScope(seed.departmentScope);
             role.setBuiltin(seed.builtin);
             role.setStatus(seed.status);
             role.setIsDeleted(0);
@@ -133,7 +138,6 @@ public class DataInitializer {
             user.setUsername(seed.username);
             user.setPasswordHash(SeedData.PASSWORD_HASH);
             user.setDisplayName(seed.displayName);
-            user.setRoleCode(seed.roleCode);
             user.setDepartmentId(departmentIds.get(seed.departmentCode));
             user.setEmail(seed.email);
             user.setStatus(seed.status);
@@ -141,6 +145,11 @@ public class DataInitializer {
             user.setCreatedTime(SeedData.parseTime(seed.createdTime));
             user.setEditTime(SeedData.parseTime(seed.editTime));
             userMapper.insert(user);
+
+            UserAccount saved = userMapper.selectByUsername(seed.username);
+            for (String roleCode : seed.roleCodes) {
+                userMapper.insertUserRole(saved.getId(), roleCode, 0L);
+            }
         }
     }
 

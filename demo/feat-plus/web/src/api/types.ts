@@ -13,11 +13,37 @@ export interface CurrentUser {
   id: number
   username: string
   displayName: string
-  roleCode: RoleCode
-  roleName: string
-  /** 角色生效的权限点，用来决定菜单与按钮是否出现；后端仍会独立校验。 */
+  /** 一个人可以挂多个角色，权限取并集、数据范围取最宽。 */
+  roleCodes: RoleCode[]
+  roleNames: string[]
+  /** 全部角色合并后的权限点，用来决定菜单与按钮是否出现；后端仍会独立校验。 */
   permissions: string[]
+  /** 数据范围档位：1 全部 / 2 自定义 / 3 本部门 / 4 本部门及以下 / 5 仅本人 */
+  dataScope: number
+  /** 数据范围的中文说明，例如「本部门及以下（1 个部门）」 */
+  scopeDescription: string
 }
+
+/** 数据范围档位与名称，与后端 DataScope 一一对应。 */
+export const DATA_SCOPE_ALL = 1
+export const DATA_SCOPE_CUSTOM = 2
+export const DATA_SCOPE_DEPARTMENT = 3
+export const DATA_SCOPE_DEPARTMENT_AND_CHILD = 4
+export const DATA_SCOPE_SELF = 5
+
+export interface DataScopeOption {
+  value: number
+  label: string
+  description: string
+}
+
+export const DATA_SCOPE_OPTIONS: DataScopeOption[] = [
+  { value: DATA_SCOPE_ALL, label: "全部数据", description: "不做任何过滤" },
+  { value: DATA_SCOPE_CUSTOM, label: "自定义部门", description: "只看选中的部门" },
+  { value: DATA_SCOPE_DEPARTMENT, label: "本部门", description: "只看自己所在部门" },
+  { value: DATA_SCOPE_DEPARTMENT_AND_CHILD, label: "本部门及以下", description: "自己所在部门及其全部下级" },
+  { value: DATA_SCOPE_SELF, label: "仅本人", description: "只看自己" },
+]
 
 export interface LoginResponse {
   accessToken: string
@@ -30,7 +56,10 @@ export interface UserListItem {
   id: number
   username: string
   displayName: string
-  roleCode: RoleCode
+  /** 角色编码，用于提交与筛选 */
+  roleCodes: RoleCode[]
+  /** 角色名称，用于展示，与 roleCodes 顺序一致 */
+  roleNames: string[]
   /** 所属部门主键；历史数据可能为空。 */
   departmentId: number | null
   /** 部门名称来自后端联表查询，只用于展示与搜索。 */
@@ -47,7 +76,8 @@ export interface UserListItem {
 export interface UserInput {
   username: string
   displayName: string
-  roleCode: RoleCode
+  /** 多角色：权限取并集、数据范围取最宽 */
+  roleCodes: RoleCode[]
   departmentId: number | null
   email: string
   status: UserStatus
@@ -76,7 +106,12 @@ export interface RoleItem {
   name: string
   description: string
   permissions: string[]
-  /** 内置角色：编码不可改、不可删除；ADMIN 的权限也不可改。 */
+  /** 数据范围档位，取值见 DATA_SCOPE_OPTIONS */
+  departmentScope: number
+  scopeLabel: string
+  /** 只在 departmentScope 为「自定义」时有值 */
+  departmentIds: number[]
+  /** 内置角色：编码不可改、不可删除；ADMIN 的权限与数据范围也不可改。 */
   builtin: boolean
   status: UserStatus
   /** 该角色下的账号数，用于删除前提示。 */
@@ -90,6 +125,9 @@ export interface RoleInput {
   name: string
   description: string
   permissions: string[]
+  departmentScope: number
+  /** 仅当 departmentScope 为「自定义」时提交 */
+  departmentIds: number[]
   status: UserStatus
 }
 

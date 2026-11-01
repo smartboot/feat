@@ -29,6 +29,9 @@ public class AuthService {
     @Autowired
     private LoginStatMapper loginStatMapper;
 
+    @Autowired
+    private DataScopeResolver dataScopeResolver;
+
     public LoginResponse login(LoginRequest request) {
         String username = request == null ? null : trim(request.getUsername());
         String password = request == null ? null : request.getPassword();
@@ -44,6 +47,7 @@ public class AuthService {
             throw new DomainException("该账号已被停用，请联系管理员");
         }
 
+        account.setRoles(authMapper.selectRolesByUserId(account.getId()));
         IssuedToken token = tokenStore.issue(account.getId());
         recordLogin();
         return new LoginResponse(token.getValue(), token.getExpiresIn(), toCurrentUser(account));
@@ -68,6 +72,7 @@ public class AuthService {
         if (account == null) {
             throw DomainException.unauthorized();
         }
+        account.setRoles(authMapper.selectRolesByUserId(userId));
         return toCurrentUser(account);
     }
 
@@ -76,9 +81,10 @@ public class AuthService {
     }
 
     private CurrentUserResponse toCurrentUser(AuthAccount account) {
-        return new CurrentUserResponse(account.getId(), account.getUsername(),
-                account.getDisplayName(), account.getRoleCode(), account.getRoleName(),
-                account.effectivePermissions());
+        AccessContext access = dataScopeResolver.resolve(account);
+        return new CurrentUserResponse(account.getId(), account.getUsername(), account.getDisplayName(),
+                account.roleCodes(), account.roleNames(), access.getPermissions(),
+                access.getDataScope(), access.describeScope());
     }
 
     private static String trim(String value) {

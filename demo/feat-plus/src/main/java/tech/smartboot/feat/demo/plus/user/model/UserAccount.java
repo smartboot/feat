@@ -8,6 +8,9 @@ import java.util.Date;
  * 列表查询不会查 password_hash，此时该字段为 null，序列化时会被自动忽略。
  * departmentId 是外键，departmentName 来自 sys_department 的左连接，
  * 只用于展示与关键字搜索，写库时只认 departmentId。
+ * <p>
+ * 角色不在这张表里：一个人可以挂多个角色，关系存在 sys_user_role，
+ * 由 UserService 在拿到用户行之后批量补齐（见 UserItemResponse）。
  * isDeleted / createdTime / editTime / creator / editor 是四张表统一要求的审计字段：
  * 删除只置 isDeleted，实体本身保留在表里，因此所有查询都必须带 is_deleted = 0 过滤。
  */
@@ -16,7 +19,6 @@ public class UserAccount {
     private String username;
     private String passwordHash;
     private String displayName;
-    private String roleCode;
     private Long departmentId;
     private String departmentName;
     private String email;
@@ -58,14 +60,6 @@ public class UserAccount {
 
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
-    }
-
-    public String getRoleCode() {
-        return roleCode;
-    }
-
-    public void setRoleCode(String roleCode) {
-        this.roleCode = roleCode;
     }
 
     public Long getDepartmentId() {

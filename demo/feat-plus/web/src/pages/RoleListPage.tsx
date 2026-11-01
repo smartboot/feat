@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Check, Lock, Pencil, Plus, ShieldCheck, Trash2, Users } from "lucide-react"
 import { toast } from "sonner"
 
-import type { RoleInput, RoleItem } from "@/api/types"
+import type { DepartmentOption, RoleInput, RoleItem } from "@/api/types"
+import { DATA_SCOPE_ALL, DATA_SCOPE_CUSTOM, DATA_SCOPE_OPTIONS } from "@/api/types"
 import { useSession } from "@/auth/session"
 import {
   AlertDialog,
@@ -37,16 +38,29 @@ import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Switch } from "@/components/ui/switch"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { flattenDepartments } from "@/lib/departments"
 import { PERMISSION_GROUPS, hasPermission, permissionLabel } from "@/lib/permissions"
-import { useRoleMutations, useRoles } from "@/services/queries"
+import { useDepartments, useRoleMutations, useRoles } from "@/services/queries"
 import { cn } from "@/lib/utils"
 
-const emptyDraft: RoleInput = { code: "", name: "", description: "", permissions: [], status: 1 }
+const emptyDraft: RoleInput = {
+  code: "",
+  name: "",
+  description: "",
+  permissions: [],
+  departmentScope: DATA_SCOPE_ALL,
+  departmentIds: [],
+  status: 1,
+}
 
 export function RoleListPage() {
   const session = useSession()
   const canWrite = hasPermission(session, "role:write")
   const { data: roles = [], isLoading, isError, refetch } = useRoles()
+  // 数据范围选「自定义」时要选部门，这里只要扁平化的选项，不需要树。
+  const { data: departmentTree = [] } = useDepartments()
+  // 用 useMemo 固定引用：否则每次渲染都会生成新数组，把表单里的选择冲掉。
+  const departmentOptions = useMemo(() => flattenDepartments(departmentTree), [departmentTree])
   const mutations = useRoleMutations()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editing, setEditing] = useState<RoleItem | null>(null)
@@ -127,6 +141,7 @@ export function RoleListPage() {
               <TableRow>
                 <TableHead className="min-w-[220px]">角色</TableHead>
                 <TableHead>权限</TableHead>
+                <TableHead className="w-36 whitespace-nowrap">数据范围</TableHead>
                 <TableHead className="w-24 whitespace-nowrap">成员数</TableHead>
                 <TableHead className="w-24">状态</TableHead>
                 <TableHead className="w-16">
@@ -176,6 +191,14 @@ export function RoleListPage() {
                             <span className="text-xs text-muted-foreground">无业务权限</span>
                           )}
                         </div>
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap">
+                        <span className="text-sm">{role.scopeLabel}</span>
+                        {role.departmentScope === DATA_SCOPE_CUSTOM && (
+                          <span className="ml-1 text-xs text-muted-foreground">
+                            {role.departmentIds.length} 个部门
+                          </span>
+                        )}
                       </TableCell>
                       <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
                         <span className="inline-flex items-center gap-1">
@@ -227,6 +250,7 @@ export function RoleListPage() {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         role={editing}
+        departmentOptions={departmentOptions}
         onSubmit={submit}
         pending={mutations.create.isPending || mutations.update.isPending}
       />
@@ -255,18 +279,22 @@ function RoleFormDialog({
   open,
   onOpenChange,
   role,
+  departmentOptions,
   onSubmit,
   pending,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   role: RoleItem | null
+  departmentOptions: DepartmentOption[]
   onSubmit: (input: RoleInput) => Promise<void>
   pending: boolean
 }) {
   const [draft, setDraft] = useState<RoleInput>(emptyDraft)
   const [error, setError] = useState("")
   const lockedPermissions = Boolean(role?.builtin && role.code === "ADMIN")
+  // ADMIN 的数据范围固定为全部：把它改成「仅本人」会让所有管理员看不到任何数据。
+  const lockedScope = lockedPermissions
   const lockedCode = Boolean(role)
 
   useEffect(() => {
@@ -278,6 +306,8 @@ function RoleFormDialog({
             name: role.name,
             description: role.description,
             permissions: role.permissions,
+            departmentScope: role.departmentScope,
+            departmentIds: role.departmentIds,
             status: role.status,
           }
         : emptyDraft,
@@ -287,6 +317,15 @@ function RoleFormDialog({
 
   function update<K extends keyof RoleInput>(key: K, value: RoleInput[K]) {
     setDraft((current) => ({ ...current, [key]: value }))
+  }
+
+  function toggleScopeDepartment(id: number) {
+    setDraft((current) => ({
+      ...current,
+      departmentIds: current.departmentIds.includes(id)
+        ? current.departmentIds.filter((item) => item !== id)
+        : [...current.departmentIds, id],
+    }))
   }
 
   function togglePermission(key: string) {
@@ -306,8 +345,18 @@ function RoleFormDialog({
       setError("角色编码需以字母开头，只能包含字母、数字和下划线")
       return
     }
+    if (draft.departmentScope === DATA_SCOPE_CUSTOM && draft.departmentIds.length === 0) {
+      setError("选择「自定义部门」时至少要勾选一个部门")
+      return
+    }
     setError("")
-    await onSubmit({ ...draft, code: draft.code.trim().toUpperCase(), name: draft.name.trim() })
+    await onSubmit({
+      ...draft,
+      code: draft.code.trim().toUpperCase(),
+      name: draft.name.trim(),
+      // 非自定义档位不提交部门，避免切换档位后残留上一次的选择。
+      departmentIds: draft.departmentScope === DATA_SCOPE_CUSTOM ? draft.departmentIds : [],
+    })
   }
 
   return (
@@ -393,6 +442,82 @@ function RoleFormDialog({
                 </div>
               ))}
             </div>
+          </div>
+
+          <div className="grid gap-3">
+            <div className="flex items-center justify-between">
+              <Label>数据范围</Label>
+              {lockedScope && (
+                <span className="text-xs text-muted-foreground">管理员角色固定为全部数据</span>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              权限点决定「能不能做」，数据范围决定「能对谁做」。一个人挂多个角色时取最宽的一档。
+            </p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {DATA_SCOPE_OPTIONS.map((option) => {
+                const checked = draft.departmentScope === option.value
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    disabled={lockedScope}
+                    onClick={() => update("departmentScope", option.value)}
+                    className={cn(
+                      "flex items-start gap-3 rounded-md border p-3 text-left transition-colors",
+                      checked ? "border-primary/40 bg-primary/5" : "hover:bg-muted/60",
+                      lockedScope && "cursor-not-allowed",
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border",
+                        checked ? "border-primary" : "border-input",
+                      )}
+                    >
+                      {checked && <span className="size-2 rounded-full bg-primary" />}
+                    </span>
+                    <span className="grid gap-0.5">
+                      <span className="text-sm font-medium">{option.label}</span>
+                      <span className="text-xs text-muted-foreground">{option.description}</span>
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+            {draft.departmentScope === DATA_SCOPE_CUSTOM && (
+              <div className="grid gap-2 rounded-lg border p-3">
+                <span className="text-xs text-muted-foreground">
+                  勾选这个角色可以查看的部门（共 {draft.departmentIds.length} 个）
+                </span>
+                <div className="grid max-h-56 gap-1 overflow-y-auto sm:grid-cols-2">
+                  {departmentOptions.map((item) => {
+                    const checked = draft.departmentIds.includes(item.id)
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => toggleScopeDepartment(item.id)}
+                        className={cn(
+                          "flex items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:bg-muted/60",
+                          checked && "bg-primary/5",
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            "flex size-4 shrink-0 items-center justify-center rounded border",
+                            checked ? "border-primary bg-primary text-primary-foreground" : "border-input",
+                          )}
+                        >
+                          {checked && <Check className="size-3" />}
+                        </span>
+                        <span style={{ paddingLeft: item.depth * 12 }}>{item.name}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center justify-between rounded-lg border p-3">

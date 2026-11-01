@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+import tech.smartboot.feat.demo.plus.common.DataScope;
 import tech.smartboot.feat.demo.plus.common.Permission;
 
 /**
@@ -16,7 +17,10 @@ import tech.smartboot.feat.demo.plus.common.Permission;
  * 应用首次启动和调用 reset-demo 都从这里取数，避免种子数据散落在 SQL 与 Java 两处。
  * 所有账号的初始密码都是 admin123。
  * <p>
- * 三张表有引用关系，写入顺序固定：角色 → 部门（先父后子）→ 用户。
+ * 写入顺序由引用关系决定：角色 → 部门（先父后子）→ 用户 → 用户角色关联。
+ * <p>
+ * alice 刻意挂了两个角色（USER + DEPT_MANAGER），用来同时演示权限并集与数据范围取最宽：
+ * 她只能看到「产品设计部」的人，而不是全公司。
  */
 public final class SeedData {
 
@@ -37,12 +41,17 @@ public final class SeedData {
     public static List<SeedRole> roles() {
         return Arrays.asList(
                 new SeedRole("ADMIN", "系统管理员", "拥有全部权限，内置角色不可删除、不可停用",
-                        Permission.join(Permission.ALL), 1, 1),
+                        Permission.join(Permission.ALL), DataScope.ALL, 1, 1),
+                new SeedRole("DEPT_MANAGER", "部门主管", "只能看到本部门及以下成员的账号，用于演示数据权限",
+                        Permission.join(Arrays.asList(Permission.DASHBOARD_READ, Permission.USER_READ)),
+                        DataScope.DEPARTMENT_AND_CHILD, 1, 1),
                 new SeedRole("AUDITOR", "审计员", "只读查看成员、角色、部门与审计日志，不能做任何变更",
                         Permission.join(Arrays.asList(Permission.DASHBOARD_READ, Permission.USER_READ,
-                                Permission.ROLE_READ, Permission.DEPT_READ, Permission.AUDIT_READ)), 1, 1),
+                                Permission.ROLE_READ, Permission.DEPT_READ, Permission.AUDIT_READ)),
+                        DataScope.ALL, 1, 1),
                 new SeedRole("USER", "普通成员", "登录后可访问数据概览，看不到管理菜单",
-                        Permission.join(Collections.singletonList(Permission.DASHBOARD_READ)), 1, 1)
+                        Permission.join(Collections.singletonList(Permission.DASHBOARD_READ)),
+                        DataScope.SELF, 1, 1)
         );
     }
 
@@ -66,18 +75,18 @@ public final class SeedData {
 
     public static List<SeedUser> users() {
         return Arrays.asList(
-                new SeedUser("admin", "系统管理员", "ADMIN", "TECH_RD", "admin@feat.plus", 1, "2026-07-18 09:12:00", "2026-08-02 09:20:00"),
-                new SeedUser("alice", "陈晓雨", "USER", "PMC_DESIGN", "alice@feat.plus", 1, "2026-07-22 11:30:00", "2026-08-01 16:15:00"),
-                new SeedUser("bob", "周明远", "USER", "CS", "bob@feat.plus", 1, "2026-07-23 14:02:00", "2026-07-30 10:42:00"),
-                new SeedUser("carol", "林书雅", "AUDITOR", "FIN", "carol@feat.plus", 1, "2026-07-24 16:48:00", "2026-08-01 11:08:00"),
-                new SeedUser("david", "郑可为", "USER", "TECH_RD_FE", "david@feat.plus", 0, "2026-07-25 10:20:00", "2026-08-02 08:32:00"),
-                new SeedUser("ella", "苏婉宁", "USER", "PMC_MARKET", "ella@feat.plus", 1, "2026-07-26 17:35:00", "2026-07-31 15:46:00"),
-                new SeedUser("frank", "王逸飞", "USER", "CS", "frank@feat.plus", 1, "2026-07-27 13:15:00", "2026-08-01 09:18:00"),
-                new SeedUser("grace", "许清和", "AUDITOR", "FIN", "grace@feat.plus", 0, "2026-07-28 08:46:00", "2026-08-01 17:22:00"),
-                new SeedUser("henry", "赵嘉树", "USER", "PMC_MARKET", "henry@feat.plus", 1, "2026-07-29 15:12:00", "2026-08-02 08:55:00"),
-                new SeedUser("iris", "唐语汐", "USER", "PMC_DESIGN", "iris@feat.plus", 1, "2026-07-30 12:06:00", "2026-08-01 14:03:00"),
-                new SeedUser("jason", "蒋文博", "USER", "TECH_RD_FE", "jason@feat.plus", 1, "2026-08-01 09:40:00", "2026-08-02 09:06:00"),
-                new SeedUser("kelly", "陆安然", "USER", "TECH_RD_BE", "kelly@feat.plus", 1, "2026-08-02 08:18:00", "2026-08-02 08:18:00")
+                new SeedUser("admin", "系统管理员", Arrays.asList("ADMIN"), "TECH_RD", "admin@feat.plus", 1, "2026-07-18 09:12:00", "2026-08-02 09:20:00"),
+                new SeedUser("alice", "陈晓雨", Arrays.asList("USER", "DEPT_MANAGER"), "PMC_DESIGN", "alice@feat.plus", 1, "2026-07-22 11:30:00", "2026-08-01 16:15:00"),
+                new SeedUser("bob", "周明远", Arrays.asList("USER"), "CS", "bob@feat.plus", 1, "2026-07-23 14:02:00", "2026-07-30 10:42:00"),
+                new SeedUser("carol", "林书雅", Arrays.asList("AUDITOR"), "FIN", "carol@feat.plus", 1, "2026-07-24 16:48:00", "2026-08-01 11:08:00"),
+                new SeedUser("david", "郑可为", Arrays.asList("USER"), "TECH_RD_FE", "david@feat.plus", 0, "2026-07-25 10:20:00", "2026-08-02 08:32:00"),
+                new SeedUser("ella", "苏婉宁", Arrays.asList("USER"), "PMC_MARKET", "ella@feat.plus", 1, "2026-07-26 17:35:00", "2026-07-31 15:46:00"),
+                new SeedUser("frank", "王逸飞", Arrays.asList("USER"), "CS", "frank@feat.plus", 1, "2026-07-27 13:15:00", "2026-08-01 09:18:00"),
+                new SeedUser("grace", "许清和", Arrays.asList("AUDITOR"), "FIN", "grace@feat.plus", 0, "2026-07-28 08:46:00", "2026-08-01 17:22:00"),
+                new SeedUser("henry", "赵嘉树", Arrays.asList("USER"), "PMC_MARKET", "henry@feat.plus", 1, "2026-07-29 15:12:00", "2026-08-02 08:55:00"),
+                new SeedUser("iris", "唐语汐", Arrays.asList("USER"), "PMC_DESIGN", "iris@feat.plus", 1, "2026-07-30 12:06:00", "2026-08-01 14:03:00"),
+                new SeedUser("jason", "蒋文博", Arrays.asList("USER"), "TECH_RD_FE", "jason@feat.plus", 1, "2026-08-01 09:40:00", "2026-08-02 09:06:00"),
+                new SeedUser("kelly", "陆安然", Arrays.asList("USER"), "TECH_RD_BE", "kelly@feat.plus", 1, "2026-08-02 08:18:00", "2026-08-02 08:18:00")
         );
     }
 
@@ -119,14 +128,18 @@ public final class SeedData {
         public final String name;
         public final String description;
         public final String permissions;
+        /** 数据范围档位，取值见 DataScope。 */
+        public final int departmentScope;
         public final int builtin;
         public final int status;
 
-        SeedRole(String code, String name, String description, String permissions, int builtin, int status) {
+        SeedRole(String code, String name, String description, String permissions, int departmentScope,
+                 int builtin, int status) {
             this.code = code;
             this.name = name;
             this.description = description;
             this.permissions = permissions;
+            this.departmentScope = departmentScope;
             this.builtin = builtin;
             this.status = status;
         }
@@ -151,18 +164,19 @@ public final class SeedData {
     public static final class SeedUser {
         public final String username;
         public final String displayName;
-        public final String roleCode;
+        /** 一个账号可以挂多个角色，权限取并集、数据范围取最宽。 */
+        public final List<String> roleCodes;
         public final String departmentCode;
         public final String email;
         public final int status;
         public final String createdTime;
         public final String editTime;
 
-        SeedUser(String username, String displayName, String roleCode, String departmentCode, String email,
+        SeedUser(String username, String displayName, List<String> roleCodes, String departmentCode, String email,
                  int status, String createdTime, String editTime) {
             this.username = username;
             this.displayName = displayName;
-            this.roleCode = roleCode;
+            this.roleCodes = roleCodes;
             this.departmentCode = departmentCode;
             this.email = email;
             this.status = status;
