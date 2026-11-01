@@ -1,13 +1,12 @@
 import { useState, type FormEvent } from "react"
 import { ArrowRight, CheckCircle2, Eye, EyeOff, KeyRound, Loader2, ShieldCheck, Sparkles } from "lucide-react"
-import { useLocation } from "react-router-dom"
 
 import type { CurrentUser } from "@/api/types"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { adminService } from "@/services/mock-admin-service"
+import { adminService } from "@/services/http-admin-service"
 
 interface LoginPageProps { onSuccess: (token: string, user: CurrentUser) => void }
 
@@ -17,7 +16,6 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
-  const location = useLocation()
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom"
 
 import type { CurrentUser } from "@/api/types"
+import { setUnauthorizedHandler } from "@/api/client"
 import { AppLayout } from "@/app/AppLayout"
 import { clearToken, getToken, setToken } from "@/auth/token"
 import { adminService } from "@/services/http-admin-service"
@@ -38,6 +39,11 @@ export default function App() {
   const [restoring, setRestoring] = useState(Boolean(getToken()))
   const navigate = useNavigate()
   const location = useLocation()
+
+  useEffect(() => {
+    setUnauthorizedHandler(() => setCurrentUser(null))
+    return () => setUnauthorizedHandler(null)
+  }, [])
 
   useEffect(() => {
     if (!getToken()) {
