@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
-import type { ActivityQuery, DepartmentInput, RoleInput, UserInput, UserQuery, UserStatus } from "@/api/types"
+import type { ActivityQuery, ChangePasswordInput, DepartmentInput, ProfileUpdate, RoleInput, UserInput, UserQuery, UserStatus } from "@/api/types"
 import { adminService } from "@/services/http-admin-service"
 
 export const queryKeys = {
@@ -12,6 +12,7 @@ export const queryKeys = {
   dashboard: ["dashboard"] as const,
   notifications: ["notifications"] as const,
   activities: (query: ActivityQuery) => ["activities", query] as const,
+  profile: ["profile"] as const,
   activityOperators: ["activities", "operators"] as const,
 }
 
@@ -132,6 +133,30 @@ export function useNotificationMutations() {
   return {
     markRead: useMutation({ mutationFn: (id: number) => adminService.markNotificationRead(id), onSuccess: invalidate }),
     markAll: useMutation({ mutationFn: () => adminService.markAllNotificationsRead(), onSuccess: invalidate }),
+  }
+}
+
+/**
+ * 个人资料。与 /api/auth/me 是两份数据：me 决定菜单与按钮，profile 只用来渲染个人中心。
+ * 改完资料后页面会额外刷新一次 me，否则侧边栏头像旁的名字还是旧的。
+ */
+export function useProfile() {
+  return useQuery({ queryKey: queryKeys.profile, queryFn: () => adminService.getProfile() })
+}
+
+export function useProfileMutations() {
+  const client = useQueryClient()
+  const invalidate = async () => {
+    await Promise.all([
+      client.invalidateQueries({ queryKey: queryKeys.profile }),
+      // 昵称改了会出现在用户列表与审计日志的操作人列里。
+      client.invalidateQueries({ queryKey: ["users"] }),
+      client.invalidateQueries({ queryKey: ["activities"] }),
+    ])
+  }
+  return {
+    update: useMutation({ mutationFn: (input: ProfileUpdate) => adminService.updateProfile(input), onSuccess: invalidate }),
+    changePassword: useMutation({ mutationFn: (input: ChangePasswordInput) => adminService.changePassword(input) }),
   }
 }
 

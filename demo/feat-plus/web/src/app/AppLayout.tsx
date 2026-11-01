@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { Bell, Building2, ChevronDown, Command, LayoutDashboard, LogOut, Menu, Moon, PanelLeftClose, PanelLeftOpen, ScrollText, Search, Settings, ShieldCheck, Sun, UsersRound, X } from "lucide-react"
+import { Bell, Building2, ChevronDown, Command, LayoutDashboard, LogOut, Menu, Moon, PanelLeftClose, PanelLeftOpen, ScrollText, Search, Settings, ShieldCheck, Sun, UserRound, UsersRound, X } from "lucide-react"
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 
@@ -43,6 +43,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/roles": "角色权限",
   "/departments": "部门管理",
   "/activities": "审计日志",
+  "/profile": "个人中心",
 }
 
 export function AppLayout({ currentUser, onLogout }: { currentUser: CurrentUser; onLogout: () => void }) {
@@ -113,7 +114,23 @@ export function AppLayout({ currentUser, onLogout }: { currentUser: CurrentUser;
         <div className="border-t p-3">
           <DropdownMenu>
             <DropdownMenuTrigger asChild><button className={cn("flex w-full items-center gap-3 rounded-md p-2 text-left hover:bg-sidebar-accent", collapsed && "justify-center p-1")}><Avatar className="size-8"><AvatarFallback>{currentUser.displayName.slice(0, 1)}</AvatarFallback></Avatar>{!collapsed && <><span className="grid min-w-0 flex-1"><strong className="truncate text-xs">{currentUser.displayName}</strong><span className="truncate text-[10px] text-muted-foreground">{currentUser.username}</span></span><ChevronDown className="size-4 text-muted-foreground" /></>}</button></DropdownMenuTrigger>
-            <DropdownMenuContent side="right" align="end"><DropdownMenuLabel>我的工作空间</DropdownMenuLabel><DropdownMenuSeparator /><DropdownMenuItem onClick={() => setDark((value) => !value)}>{dark ? <Sun /> : <Moon />} 切换主题</DropdownMenuItem>{canResetDemo && <DropdownMenuItem onClick={handleReset}>恢复演示数据</DropdownMenuItem>}<DropdownMenuSeparator /><DropdownMenuItem destructive onClick={onLogout}><LogOut /> 退出登录</DropdownMenuItem></DropdownMenuContent>
+            <DropdownMenuContent side="right" align="end">
+              <DropdownMenuLabel>
+                <span className="block">{currentUser.displayName}</span>
+                <span className="mt-0.5 block text-[11px] font-normal text-muted-foreground">
+                  {currentUser.roleNames.join(" / ") || "无角色"}
+                </span>
+                <span className="block text-[11px] font-normal text-muted-foreground">
+                  数据范围：{currentUser.scopeDescription}
+                </span>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => navigate("/profile")}><UserRound /> 个人中心</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setDark((value) => !value)}>{dark ? <Sun /> : <Moon />} 切换主题</DropdownMenuItem>
+              {canResetDemo && <DropdownMenuItem onClick={handleReset}>恢复演示数据</DropdownMenuItem>}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem destructive onClick={onLogout}><LogOut /> 退出登录</DropdownMenuItem>
+            </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </aside>

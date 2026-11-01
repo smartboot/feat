@@ -24,6 +24,29 @@ export interface CurrentUser {
   scopeDescription: string
 }
 
+/** 「我的资料」。比 CurrentUser 多出邮箱、部门名、创建时间，少掉权限点。 */
+export interface Profile {
+  id: number
+  username: string
+  displayName: string
+  email: string
+  departmentName: string
+  roleNames: string[]
+  /** 后台按本人角色算出的数据范围说明，只读——数据范围由角色决定，不能在个人中心改 */
+  scopeDescription: string
+  createdTime: string
+}
+
+export interface ProfileUpdate {
+  displayName: string
+  email: string
+}
+
+export interface ChangePasswordInput {
+  oldPassword: string
+  newPassword: string
+}
+
 /** 数据范围档位与名称，与后端 DataScope 一一对应。 */
 export const DATA_SCOPE_ALL = 1
 export const DATA_SCOPE_CUSTOM = 2

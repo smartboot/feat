@@ -9,6 +9,9 @@ import type {
   NotificationItem,
   OperatorOption,
   PageResult,
+  Profile,
+  ProfileUpdate,
+  ChangePasswordInput,
   RoleInput,
   RoleItem,
   UserInput,
@@ -47,4 +50,9 @@ export interface AdminService {
   markNotificationRead(id: number): Promise<void>
   markAllNotificationsRead(): Promise<void>
   resetDemo(): Promise<void>
+  /** 个人中心：只要求登录，不要求任何权限点 */
+  getProfile(): Promise<Profile>
+  updateProfile(input: ProfileUpdate): Promise<Profile>
+  /** 返回被踢掉的其它会话数 */
+  changePassword(input: ChangePasswordInput): Promise<number>
 }

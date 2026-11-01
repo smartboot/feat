@@ -9,6 +9,9 @@ import type {
   NotificationItem,
   OperatorOption,
   PageResult,
+  Profile,
+  ProfileUpdate,
+  ChangePasswordInput,
   RoleInput,
   RoleItem,
   UserInput,
@@ -56,6 +59,15 @@ export const adminService: AdminService = {
   },
   listUsers(query: UserQuery): Promise<PageResult<UserListItem>> {
     return request<PageResult<UserListItem>>(`/api/users?${buildQuery(query)}`)
+  },
+  getProfile(): Promise<Profile> {
+    return request<Profile>("/api/profile")
+  },
+  updateProfile(input: ProfileUpdate): Promise<Profile> {
+    return request<Profile>("/api/profile", { method: "PUT", body: jsonBody(input) })
+  },
+  changePassword(input: ChangePasswordInput): Promise<number> {
+    return request<number>("/api/profile/password", { method: "POST", body: jsonBody(input) })
   },
   getAllUsers(): Promise<UserListItem[]> {
     return request<UserListItem[]>("/api/users/all")
