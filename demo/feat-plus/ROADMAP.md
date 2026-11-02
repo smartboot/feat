@@ -74,10 +74,14 @@ feat-plus 的立足点是 Feat 的技术模型：
   管理页 `GET/POST/PUT/DELETE /api/menus` 改完立刻生效；路径只能取 `security/MenuRoutes` 白名单，
   `scripts/check_menu.py` 双向校验白名单 ↔ 前端路由 / 种子菜单 / 图标 / 权限点
 - **权限字典仍在代码**：`Permission.CATALOG` 是权限点的唯一真相（`ALL` 由它派生），前端从 `/api/permissions` 取
-- **回归断言**：312 项（crud 54 / scope 80 / audit 44 / profile 40 / cache 14 / tx 23 / menu 57），
+- **错误契约与健康探针**：`ErrorCode` 五档 + `DomainException` 携带，响应体 `code` 与 HTTP 状态码恒一致，
+  每个响应带 `X-Trace-Id`（500 不再吞栈，堆踪进日志、响应体只留 traceId）；
+  `GET /api/health`（不碰库）与 `GET /api/health/ready`（查库）免登录探针；
+  索引 7 条随建表写入 `schema.sql`（无迁移机制，部署场景均为全新环境）
+- **回归断言**：369 项（crud 54 / scope 80 / audit 44 / profile 40 / cache 14 / tx 23 / menu 69 / error 45），
   外加三项不需要 JDK 的静态检查（分层 / 事务 / 菜单）
 - **按层分包 + 依赖可检查**：`controller / service / mapper / model / dto / security / token / common / cache / tx / seed`，
-  `scripts/check_layers.py` 按白名单校验 101 个类的跨层 import，违反即失败；`security` 已与 `service` 解环
+  `scripts/check_layers.py` 按白名单校验 106 个类的跨层 import，违反即失败；`security` 已与 `service` 解环
 - 部门树：环路校验、删除前检查、按部门筛选含下级
 - 审计日志：类型/操作人/时间范围筛选，操作人姓名联表
 - 站内通知：广播 + 定向，已读状态按「用户 × 通知」记录
@@ -135,24 +139,30 @@ feat-plus 的立足点是 Feat 的技术模型：
 
 顺带解决权限点的三处维护（Java `Permission` / 前端 `types.ts` / 种子角色字符串）：Java 为唯一真相，前端从导出产物生成，启动时再校验一次种子数据里的 key，非法就 fail fast。
 
-### 3. 数据库迁移与索引
+### 3. 数据库迁移与索引（索引已完成 · 2026-11-02；迁移明确不做）
 
-`schema.sql` 全是 `CREATE TABLE IF NOT EXISTS`，**给客户已有的库加一列没有任何路径**——只能删库重来。这条不解决，feat-plus 永远只能做新项目，进不了任何存量系统。
+**迁移不做**：部署场景都是全新环境，没有存量库要演进，为它建 `sys_schema_history` 是给不存在的需求付复杂度。
+表结构变更直接改 `schema.sql`，随建表生效。若未来真要进存量系统，再回头立项。
 
-最低成本方案：`db/migration/V1__*.sql` 按版本顺序执行 + `sys_schema_history` 记录已执行版本，与建表脚本共用一套。
+索引已补：`schema.sql` 末尾按「查询条件里真实出现」建了 7 条索引——`sys_user(department_id / status)`、
+`sys_user_role(role_code)`、`sys_role_dept(department_id)`、`sys_activity(created_time)`、
+`sys_notification(user_id)`、`sys_menu(group_key, group_sort)`。关键字搜索走 LIKE，索引帮不上，不为其建。
 
-同时补索引约定。现在 `CREATE INDEX` 一条都没有：`sys_user.department_id / status`、`sys_activity.creator / created_time / kind`、`sys_user_role.role_code` 上的查询全是全表扫。数据量一上来，「轻快」这个卖点会被自己毁掉。
-
-### 4. 错误契约与可运维性
+### 4. 错误契约与可运维性（已完成 · 2026-11-02）
 
 现在的问题：500 时把 `e.getMessage()` 原样返回前端（漏 SQL、漏类名）；只有中文 message 没有错误码，第三方集成只能字符串匹配；没有 `/health` `/ready`，容器编排没法配探针；没有 traceId，客诉来了查不到那一次请求。
 
-四件事一起做，因为它们是同一件事的不同侧面——**让错误可被程序处理，而不是只被人读**：
+已落地的部分——错误契约的三条保证都收敛在 `ApiController.execute` 一处：
 
-- `DomainException` 加业务错误码，message 走资源文件（也为 i18n 留口）
-- 500 只回通用话术 + traceId，全量留在日志
-- `/health`、`/ready`（可以极简，但要有）
-- 请求级 traceId 透传 + 访问日志（方法、路径、耗时、状态、操作人）
+- **code 对齐**：`RestResult.fail` 默认写 500，HTTP 403 的响应体里 code 也是 500——这个真 bug 已修，
+  响应体 `code` 恒等于 HTTP 状态码；`DomainException` 带 `ErrorCode` 五档（刻意不做逐条编号的错误码表）；
+- **traceId**：每个响应（成功也是）带 `X-Trace-Id`，16 位互不重复；未预期异常不再吞栈——
+  完整堆踪带 traceId 进服务端日志（`java.util.logging`），响应体只给通用文案 + traceId；
+- **探针**：`GET /api/health`（不碰库，数据库挂了仍 200）与 `GET /api/health/ready`（最小数据库往返），
+  都免登录，分层进 `HealthService`；
+- **回归**：`regress_error.py` 45 项，逐响应断言 code 对齐与 traceId 唯一。
+
+**未做**（出现了真实需求再做）：message 走资源文件（i18n 留口）、请求级访问日志（方法/路径/耗时/操作人）。
 
 ---
 
@@ -398,7 +408,8 @@ AI 会读这个文件。把 feat-plus 的约定（软删五字段、权限点登
 
 数据权限机制化排第二，因为它是判据 1 的样板：已经出过一次静默失效，而 AI 写新模块时百分之百会再犯一次。
 
-迁移排第三，因为它决定 feat-plus 能不能进存量系统，而不只是新项目。
+迁移已明确不做（部署场景都是全新环境，没有存量库要演进），只补了索引——为不存在的需求建
+`sys_schema_history` 是给复杂度付利息。
 
 OpenAPI 从第三梯队提到第二梯队，不是因为它能生成代码，而是因为它是 AI 在这套代码里工作时的接口上下文——**契约要机器可读，实现不该被生成**。
 

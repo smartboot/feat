@@ -38,8 +38,9 @@ mvn -q exec:java
 {"success":true,"code":200,"message":null,"data":{}}
 ```
 
-除登录外均需 `Authorization: Bearer <token>`，未登录返回 **401**，前端据此清理本地令牌。
+除登录与健康探针外均需 `Authorization: Bearer <token>`，未登录返回 **401**，前端据此清理本地令牌。
 已登录但当前角色缺少对应权限点时返回 **403**，界面不会显示该操作，接口也不会执行。
+所有错误响应的 body `code` 与 HTTP 状态码一致，且带 `X-Trace-Id` 头（详见「错误契约与健康探针」）。
 
 | 方法 | 路径 | 说明 | 权限点 |
 |---|---|---|---|
@@ -81,6 +82,8 @@ mvn -q exec:java
 | POST | `/api/admin/reset-demo` | 恢复演示数据 | `system:write` |
 | GET | `/api/system/cache` | 当前缓存后端与命中计数 | `system:write` |
 | GET | `/api/system/selftest` | 地基自检（事务回滚是否真的生效） | `system:write` |
+| GET | `/api/health` | 存活探针，免登录，不碰数据库 | 免登录 |
+| GET | `/api/health/ready` | 就绪探针，免登录，做一次最小数据库往返 | 免登录 |
 
 「权限」一栏为 `—` 的接口只要求登录。个人中心的三个接口刻意不挂权限点：
 改自己的昵称和密码是基本权利，要求 `user:write` 会让普通成员永远改不了密码，
@@ -185,6 +188,25 @@ TTL 十分钟兜底，任何写操作后主动失效，且**失效在事务提�
 > **菜单能看见不等于接口放行。** 下发的是「显示层」，`AccessGuard.require` 仍然逐接口校验，
 > 数据范围仍然逐查询生效。两者各自独立，删掉任何一边都不会被另一边兜住。
 
+## 错误契约与健康探针
+
+错误响应是给程序消费的契约，不是一段人话。三条保证由 `ApiController.execute` 统一落地：
+
+| 保证 | 内容 | 为什么 |
+|---|---|---|
+| code 对齐 | 响应体的 `code` 恒等于 HTTP 状态码 | `RestResult.fail` 默认写 500，不纠正的话 HTTP 403 的响应体里 code 也是 500，按 body 判断的调用方全部误判 |
+| traceId | 每个响应（成功也是）都带 `X-Trace-Id` 头，各请求互不相同 | 前端报障带上它，服务端日志就能按 id 定位 |
+| 不吞栈 | 未预期异常的完整堆踪带 traceId 进服务端日志，响应体只给通用文案 + traceId | 堆踪泄漏到 HTTP 响应等于把实现细节交出去 |
+
+错误分类收敛在 `ErrorCode` 五档（400/401/403/404/500），业务异常统一走 `DomainException` 携带。
+刻意不建逐条编号的错误码表——等出现第一个需要按错误码分支的调用方再扩展，枚举加值是兼容变更。
+`X-Trace-Id` 由 `regress_error.py` 逐响应断言（含互不重复）。
+
+探针是容器编排的标准语义，都免登录（编排器手里没有业务令牌）：
+
+- `GET /api/health`：进程活着没有。**不碰数据库**——数据库挂了仍回 200，重启进程救不了它；
+- `GET /api/health/ready`：能不能接流量。做一次最小的数据库往返，不通回 500，编排器应摘流量而非重启。
+
 ## 表结构约定
 
 十张表（`sys_user`、`sys_role`、`sys_department`、`sys_user_role`、`sys_role_dept`、`sys_activity`、`sys_notification`、`sys_notification_read`、`sys_login_stat`、`sys_menu`）都带同一组审计字段：
@@ -204,9 +226,13 @@ TTL 十分钟兜底，任何写操作后主动失效，且**失效在事务提�
 `reset-demo` 是唯一例外：它用 `TRUNCATE ... RESTART IDENTITY` 真清空并重置自增，所以重置后
 用户 id 恒为 1–12、角色 1–4、部门 1–10、通知 1–3，不会像普通删除那样留下软删行。
 
+索引随建表写在 `schema.sql` 末尾，只覆盖查询条件里真实出现的列（用户按部门/状态筛、
+通知按人投递、动态流按时间倒序等）。**没有迁移机制**：部署场景都是全新环境，
+表结构变更直接改这份 schema；存量库改造不属于这个 demo 的目标。
+
 ## 回归脚本与 CI
 
-`scripts/` 下七份用 urllib 写的断言脚本，覆盖 324 项。用 urllib 而不是 curl，是为了对 JSON 做精确断言——
+`scripts/` 下八份用 urllib 写的断言脚本，覆盖 369 项。用 urllib 而不是 curl，是为了对 JSON 做精确断言——
 用 `grep -o '"code"'` 数条数会把 `RestResult` 信封里的 `code: 200` 也数进去。
 
 ```bash
@@ -218,9 +244,10 @@ python3 scripts/regress_profile.py  # 40 项：个人中心改资料 / 改密码
 python3 scripts/regress_cache.py    # 14 项：默认后端、读路径命中、写路径失效、权限边界
 python3 scripts/regress_tx.py       # 23 项：回滚真的发生、多语句写「成功三处都在 / 失败一处不留」
 python3 scripts/regress_menu.py     # 69 项：路径白名单、增删改后立刻生效、按权限过滤、直达拦截、分组同步、审计留痕
+python3 scripts/regress_error.py    # 45 项：code 与 HTTP 状态对齐、X-Trace-Id、探针语义
 ```
 
-七份脚本都会在开头或结尾调用 `reset-demo`，可以任意顺序重复执行——
+八份脚本都会在开头或结尾调用 `reset-demo`，可以任意顺序重复执行——
 唯一的例外是「被踢掉的会话数」这类断言不写死条数：令牌存在进程内存里，跨多次运行会累积。
 
 另有三份不需要启动服务的静态检查：
