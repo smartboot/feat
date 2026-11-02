@@ -173,3 +173,15 @@ CREATE TABLE IF NOT EXISTS sys_login_stat (
     creator BIGINT,
     editor BIGINT
 );
+
+-- 索引：只建「查询条件里真实出现」的列，覆盖三个最重的读路径——
+-- 用户列表按部门/状态筛、通知按人投递、动态流按时间倒序。
+-- 不做迁移机制（部署场景都是全新环境），表结构变更直接改这份 schema，随建表生效。
+-- 关键字搜索走 LIKE '%kw%'，索引帮不上，不为其建索引。
+CREATE INDEX IF NOT EXISTS idx_user_department ON sys_user (department_id);
+CREATE INDEX IF NOT EXISTS idx_user_status ON sys_user (status, is_deleted);
+CREATE INDEX IF NOT EXISTS idx_user_role_role ON sys_user_role (role_code);
+CREATE INDEX IF NOT EXISTS idx_role_dept_dept ON sys_role_dept (department_id);
+CREATE INDEX IF NOT EXISTS idx_activity_created ON sys_activity (created_time);
+CREATE INDEX IF NOT EXISTS idx_notification_user ON sys_notification (user_id);
+CREATE INDEX IF NOT EXISTS idx_menu_group ON sys_menu (group_key, group_sort);
