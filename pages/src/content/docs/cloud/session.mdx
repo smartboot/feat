@@ -93,9 +93,28 @@ server:
 
 feat:
   redis:
-    host: redis.example.com
-    port: 6379
+    address: redis.example.com:6379
 ```
+
+`feat.redis.address` 写成 `host:port`；省略端口时默认 `6379`。也接受 `redis://` / `rediss://` 前缀，其中 `rediss://` 会启用 TLS 并把默认端口换成 `6380`。
+
+除 `address` 外还有三个可选键：
+
+| 键 | 类型 | 说明 |
+|---|---|---|
+| `feat.redis.username` | String | ACL 用户名，旧版 Redis 不用填 |
+| `feat.redis.password` | String | 口令，支持 `${db.password}` 这类占位符 |
+| `feat.redis.database` | int | 库号，默认 0 |
+
+<Aside type="danger">
+`store-type: redis` 必须和 `feat.redis` 块一起出现。这两处配置是分别读取的：`store-type` 决定生成 `applicationContext.getBean("redisun")`，而 `redisun` 这个 Bean 只有在 `feat.redis` 存在时才会被注册。只写 `store-type` 能编译通过，启动时取不到 Bean。
+
+反过来只配 `feat.redis` 而没有 `store-type: redis`，会话仍然走内存，只是多初始化了一个 Redis 客户端——这个组合不会报错，但达不到共享会话的目的，容易误判。
+</Aside>
+
+<Aside type="caution">
+`address` 是在编译期直接写进生成代码的字面量，**不支持 `${}` 占位符**；`username`、`password`、`database` 支持。所以同一份 `feat.yml` 想在多套环境复用 Redis 地址时，用 Profile 拆文件（`feat-prod.yml`），不要指望 `${redis.address}`。
+</Aside>
 
 这类配置属于编译期输入。修改 `feat.yml` 或 `feat-prod.yml` 后，需要重新构建应用，生成代码才会更新。多环境项目里，本地环境可以继续用内存 Session，生产环境再通过 `feat-prod.yml` 覆盖为 Redis Session。
 

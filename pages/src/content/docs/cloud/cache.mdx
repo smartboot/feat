@@ -1,0 +1,197 @@
+---
+title: 业务缓存
+description: Feat 不自带缓存抽象，但提供了 redisun 与编译期配置。这一页给出默认内存、可切 Redis 的最小实现，以及三个必须提前想清楚的点
+sidebar:
+  order: 7.5
+---
+
+import SponsorAside from '../../../components/SponsorAside.astro';
+
+<SponsorAside />
+
+
+import { Aside } from '@astrojs/starlight/components';
+
+Feat 没有 `@Cacheable` 这类缓存注解，也没有内置的缓存抽象层。这是有意的：缓存的有效性取决于业务怎么读、怎么写、能容忍多旧的数据，框架层面能标准化的只有「客户端」和「配置」，再往上就变成了猜测。
+
+所以这一页不讲框架能力，讲**怎么在这套机制上搭一层够用的缓存**，以及三个一旦做错就很难查的点。
+
+## 可以先复用的三样东西
+
+| 能力 | 来源 | 说明 |
+|---|---|---|
+| Redis 客户端 | `tech.smartboot:redisun` | Feat 生态自带的客户端，`feat-cloud` 里声明为 `optional`，用到时需在业务工程显式依赖 |
+| 读取配置 | `@Value("${key:默认值}")` | 编译期从 `feat.yml` 取值并写进生成代码，带默认值时缺配置也能启动 |
+| 装配 | `@Bean` + `@PostConstruct` | `@PostConstruct` 在 `@Autowired` 之后执行，适合做「按配置建后端 + 探活」 |
+
+`redisun` 的依赖写法：
+
+```xml
+<dependency>
+    <groupId>tech.smartboot</groupId>
+    <artifactId>redisun</artifactId>
+    <version>1.4.0</version>
+</dependency>
+```
+
+## 一个够用的结构
+
+分三层，各管一件事：
+
+```text
+CacheStore          后端契约：get / put / evict / stats / providerName
+├── MemoryCacheStore   进程内，默认
+└── RedisCacheStore    走 redisun，多实例共享
+CacheStoreProvider  @Bean("cacheStore")，按配置选后端、探活、启动打印实际后端
+```
+
+业务只依赖 `CacheStore`，切换后端不动业务代码。
+
+### 接口：值统一是 String
+
+```java title="CacheStore.java"
+public interface CacheStore {
+    String get(String key);
+
+    /** ttlSeconds <= 0 时用配置的默认有效期 */
+    void put(String key, String value, int ttlSeconds);
+
+    boolean evict(String key);
+
+    CacheStats stats();
+
+    String providerName();
+}
+```
+
+值不放 `Object` 有三个理由，都是踩过的：
+
+- Redis 只能存字节。内存实现放对象、Redis 实现放字节，两边行为就不一致——开发环境正常、生产开始报序列化错。
+- 序列化交给调用方（项目里用 fastjson2），缓存层不必引入新的序列化契约，实体加字段也不用改缓存。
+- 键值都是字符串，`redis-cli` 能直接看懂现场。
+
+### 内存实现：惰性删除 + 定量清扫
+
+只用惰性删除会出事：写了一万个键、之后一次都没被读过，这些键永远留在堆里，表现为内存慢慢涨、GC 变频繁，而缓存本身「看起来没占多少」。
+
+```java
+// 读的时候顺手判过期
+if (entry.expireAtMillis <= System.currentTimeMillis()) {
+    entries.remove(key, entry);   // 带值删除，避免并发下删掉别的线程刚写入的新值
+    return null;
+}
+```
+
+再配一个计数，每写满若干次做一次全量扫描。不必启动后台线程——缓存是给业务加速的，不该反过来给应用引入一条常驻线程和它的启停顺序问题。
+
+### Redis 实现：用 dbsize 探活
+
+```java title="RedisCacheStore.java"
+this.redisun = Redisun.create(opt -> {
+    opt.setAddress(address);       // host:port，也接受 redis:// 与 rediss://
+    opt.setPassword(password);
+    opt.setDatabase(database);
+});
+
+// 启动时验证「连得上且认证通过」，而不是等第一个业务请求
+redisun.dbsize();
+```
+
+`address` 的格式是 `host:port`，省略端口默认 `6379`（`rediss://` 时 `6380`）。挑 `dbsize` 探活是因为它开销近似 O(1)，又确实走了一次完整的连接与认证。
+
+## 三个必须提前想清楚的点
+
+### 一、TTL 和主动失效要同时有，不是二选一
+
+| 只有主动失效 | 只有 TTL |
+|---|---|
+| 一次漏调就永久读到旧数据，直到重启 | 改完要等 TTL 到点才生效，期间读到的是错的 |
+
+正确做法是两个都做：写路径落库后立即 `evict`，同时给一个不短的 TTL 兜底。TTL 只在漏失效时起作用，所以可以设得比较长。
+
+<Aside type="caution">
+凡是**绕过 Service 直接改库**的路径，都必须自己负责清缓存。典型的是「重置演示数据」这类运维接口：它 TRUNCATE 后重新插入，主键全变，而缓存里还是上一批 id，之后所有按 id 算范围的查询都会落到空集合上——不报错，只是查不到人。
+</Aside>
+
+### 二、写路径内部的读不要走缓存
+
+写方法里通常要回读刚插入的行，或校验某个 id 是否还存在。这些读如果命中旧缓存，会得到两种后果：
+
+- 看不到自己刚插入的行；
+- 拿已删除的数据当有效数据——如果这段是数据权限校验，范围会被悄悄放宽。
+
+规则简单：**读方法用缓存，写方法内一律直读 mapper**。
+
+### 三、配置写错要启动失败，不要静默降级
+
+配了 `provider: redis` 却连不上，如果降级到内存继续跑，应用照常工作、只是慢，没有人会发现配置根本没生效；而在多实例部署下，它表现为「偶发读到旧数据」，比启动失败难查一个数量级。
+
+两件事一起做：`@PostConstruct` 里探活，失败就抛异常；启动日志打印实际生效的后端，因为探活只挡得住一部分错误。
+
+```text
+[feat-plus] cache provider=memory defaultTtl=300s
+```
+
+## 配置化切换
+
+```yaml title="feat.yml"
+feat-plus:
+  cache:
+    provider: memory          # memory | redis
+    default-ttl-seconds: 300
+    key-prefix: "plus:cache:"
+    redis:
+      address: 127.0.0.1:6379
+      database: 0
+```
+
+```java
+@Value("${feat-plus.cache.provider:memory}")
+private String provider;
+```
+
+带默认值的 `@Value` 有两个直接好处：缺配置也能启动，不必在代码里再写一遍兜底；而值本身参与编译期生成，配置和代码一起进版本库。
+
+<Aside type="caution">
+`feat.yml` 属于编译期输入。改完只跑 `mvn compile` **不一定**会重新生成装配代码——Maven 判定为增量构建时，注解处理器可能不重新执行，跑起来仍是上一套配置。改配置后请用 `mvn clean compile`，或者在日志里确认打印出来的值和预期一致。
+</Aside>
+
+`key-prefix` 不是可选项：多套环境共用一个 Redis 时，不带前缀会互相覆盖，而缓存读错不会报错，只会返回旧数据。
+
+## 与 Session 的区别
+
+| | Session | 业务缓存 |
+|---|---|---|
+| 存什么 | 当前访问者的临时状态 | 业务数据的读结果 |
+| 谁写 | 框架按 Cookie 维护 | 业务代码显式读写 |
+| 存哪 | `server.session.store-type: redis` 切换 | 自己搭，配置自己管 |
+| 失效 | 超时或 `invalidate()` | TTL + 主动失效 |
+
+两者可以共用一个 Redis，但建议分库或分前缀——Session 的读写频率远高于业务缓存，混在一起会让「缓存慢了」和「会话慢了」分不清。Session 的细节见 [Session 与请求状态](/feat/cloud/session/)。
+
+## Feat 里写缓存会踩的三个坑
+
+这三个都来自框架的编译期模型，不是缓存本身的问题。
+
+**1. 计算属性不会被序列化。** 返回值在编译期被拼成 JSON 字节，逐字段调用 getter，**没有对应字段的 getter 会被整条丢掉**。命中率这种「只在 getter 里算」的值必须落成真实字段，否则接口里静默少一个键，前端拿到 `undefined`。
+
+**2. 启动异常的中间层 message 会消失。** 启动失败时抛的是 `new FeatException("application start exception", e)`，而它会把 cause 一路解包到最底层再赋值。所以 `new IllegalStateException(msg, e)` 里精心写的提示一个字都打不出来，控制台只剩一句 `Connection refused`。
+
+要让提示显示出来，就把原始信息拼进自己的 message，并且**不设 cause**：
+
+```java
+} catch (RuntimeException e) {
+    throw new IllegalStateException("缓存连不上 Redis：" + address
+            + "（" + e.getClass().getSimpleName() + ": " + e.getMessage() + "）");
+}
+```
+
+**3. `@Value` 的字段必须有 setter。** 注入是编译期生成的 `bean.setXxx(...)` 调用，没有 setter 会直接编译失败（`no setter method for field`）。而且字段类型要在支持列表里：`String`、`int`、`boolean`、`int[]`、`String[]` 及对应的 `List`。
+
+## 什么时候不该用缓存
+
+- 数据量小、查询本身就是内存操作——加一层只是多一次拷贝；
+- 一致性要求高于性能，且没有可靠的失效路径——先想清楚失效再谈缓存；
+- 想用它替代数据库设计——把「查得慢」藏起来，等数据量再涨一个数量级时问题会一起爆发。
+
+缓存是加速手段，不是正确性手段。上线前先确认：**缓存失效时，业务结果是否仍然正确**。

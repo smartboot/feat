@@ -1,0 +1,5 @@
+target/
+cp.txt
+
+# 前端构建产物，由 web/ 构建后复制而来，不纳入版本管理
+src/main/resources/static/
