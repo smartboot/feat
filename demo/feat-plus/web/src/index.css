@@ -3,69 +3,84 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * Linear-style 极简主题。
+ *
+ * 设计哲学：数据驱动，不是 chrome 驱动。管理后台 90% 的时间在看表格和图表，
+ * 所以导航要轻、内容要重、留白要多。默认深色——开发者和管理员长时间盯着屏幕，
+ * 深色背景更护眼，也更有"产品感"。
+ *
+ * 中性色用冷灰色（hue 250-260），比暖灰更"科技"。主色用蓝紫渐变（265→290），
+ * 比纯蓝更有层次。图表 5 色按色相均匀分布，避免相邻色系撞车。
+ */
 :root {
-  --background: oklch(0.985 0.002 247);
-  --foreground: oklch(0.18 0.015 255);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.015 255);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.015 255);
-  --primary: oklch(0.57 0.19 257);
-  --primary-foreground: oklch(0.985 0.002 247);
-  --secondary: oklch(0.95 0.012 255);
-  --secondary-foreground: oklch(0.27 0.02 255);
-  --muted: oklch(0.95 0.012 255);
-  --muted-foreground: oklch(0.49 0.025 255);
-  --accent: oklch(0.94 0.025 255);
-  --accent-foreground: oklch(0.25 0.035 255);
-  --destructive: oklch(0.59 0.21 25);
-  --border: oklch(0.9 0.015 255);
-  --input: oklch(0.86 0.018 255);
-  --ring: oklch(0.57 0.19 257);
-  --chart-1: oklch(0.57 0.19 257);
-  --chart-2: oklch(0.64 0.15 190);
-  --chart-3: oklch(0.66 0.16 145);
-  --radius: 0.75rem;
-  --sidebar: oklch(0.985 0.002 247);
-  --sidebar-foreground: oklch(0.25 0.02 255);
-  --sidebar-primary: oklch(0.57 0.19 257);
-  --sidebar-primary-foreground: oklch(0.985 0.002 247);
-  --sidebar-accent: oklch(0.95 0.018 255);
-  --sidebar-accent-foreground: oklch(0.25 0.035 255);
-  --sidebar-border: oklch(0.91 0.015 255);
-  --sidebar-ring: oklch(0.57 0.19 257);
-}
-
-.dark {
-  --background: oklch(0.145 0.015 255);
-  --foreground: oklch(0.96 0.008 255);
-  --card: oklch(0.19 0.018 255);
-  --card-foreground: oklch(0.96 0.008 255);
-  --popover: oklch(0.19 0.018 255);
-  --popover-foreground: oklch(0.96 0.008 255);
-  --primary: oklch(0.67 0.17 257);
-  --primary-foreground: oklch(0.16 0.018 255);
+  --background: oklch(0.16 0.012 260);
+  --foreground: oklch(0.96 0.006 255);
+  --card: oklch(0.20 0.018 255);
+  --card-foreground: oklch(0.96 0.006 255);
+  --popover: oklch(0.20 0.018 255);
+  --popover-foreground: oklch(0.96 0.006 255);
+  --primary: oklch(0.65 0.18 265);
+  --primary-foreground: oklch(0.16 0.018 265);
   --secondary: oklch(0.25 0.02 255);
   --secondary-foreground: oklch(0.93 0.01 255);
-  --muted: oklch(0.25 0.02 255);
-  --muted-foreground: oklch(0.7 0.025 255);
+  --muted: oklch(0.24 0.02 255);
+  --muted-foreground: oklch(0.68 0.025 255);
   --accent: oklch(0.27 0.03 255);
   --accent-foreground: oklch(0.95 0.008 255);
-  --destructive: oklch(0.7 0.18 22);
-  --border: oklch(0.29 0.025 255);
-  --input: oklch(0.31 0.025 255);
-  --ring: oklch(0.67 0.17 257);
-  --chart-1: #3b82f6;
-  --chart-2: oklch(0.72 0.13 190);
-  --chart-3: oklch(0.75 0.14 145);
-  --sidebar: oklch(0.17 0.018 255);
-  --sidebar-foreground: oklch(0.9 0.012 255);
-  --sidebar-primary: oklch(0.67 0.17 257);
+  --destructive: oklch(0.70 0.18 22);
+  --border: oklch(0.28 0.025 255);
+  --input: oklch(0.30 0.025 255);
+  --ring: oklch(0.65 0.18 265);
+  --chart-1: oklch(0.65 0.18 265);
+  --chart-2: oklch(0.72 0.14 195);
+  --chart-3: oklch(0.70 0.18 300);
+  --chart-4: oklch(0.80 0.16 80);
+  --chart-5: oklch(0.76 0.16 150);
+  --radius: 0.75rem;
+  --sidebar: oklch(0.14 0.015 255);
+  --sidebar-foreground: oklch(0.90 0.012 255);
+  --sidebar-primary: oklch(0.65 0.18 265);
   --sidebar-primary-foreground: oklch(0.16 0.018 255);
   --sidebar-accent: oklch(0.25 0.025 255);
   --sidebar-accent-foreground: oklch(0.95 0.008 255);
-  --sidebar-border: oklch(0.29 0.025 255);
-  --sidebar-ring: oklch(0.67 0.17 257);
+  --sidebar-border: oklch(0.28 0.025 255);
+  --sidebar-ring: oklch(0.65 0.18 265);
+}
+
+/* 浅色模式作为可选，不是默认 */
+.light {
+  --background: oklch(0.985 0.004 260);
+  --foreground: oklch(0.145 0.012 265);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0.012 265);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0.012 265);
+  --primary: oklch(0.54 0.21 265);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.96 0.008 255);
+  --secondary-foreground: oklch(0.27 0.02 255);
+  --muted: oklch(0.95 0.006 255);
+  --muted-foreground: oklch(0.47 0.025 255);
+  --accent: oklch(0.945 0.015 255);
+  --accent-foreground: oklch(0.23 0.035 255);
+  --destructive: oklch(0.58 0.22 25);
+  --border: oklch(0.905 0.006 260);
+  --input: oklch(0.88 0.01 260);
+  --ring: oklch(0.54 0.21 265);
+  --chart-1: oklch(0.54 0.21 265);
+  --chart-2: oklch(0.64 0.16 195);
+  --chart-3: oklch(0.62 0.20 300);
+  --chart-4: oklch(0.75 0.18 80);
+  --chart-5: oklch(0.68 0.17 150);
+  --sidebar: oklch(0.978 0.005 255);
+  --sidebar-foreground: oklch(0.23 0.02 255);
+  --sidebar-primary: oklch(0.54 0.21 265);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.945 0.012 255);
+  --sidebar-accent-foreground: oklch(0.23 0.035 255);
+  --sidebar-border: oklch(0.92 0.008 255);
+  --sidebar-ring: oklch(0.54 0.21 265);
 }
 
 @theme inline {
@@ -90,6 +105,8 @@
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -106,7 +123,10 @@
 @layer base {
   * { @apply border-border outline-ring/50; }
   html, body, #root { min-height: 100%; }
-  body { @apply m-0 bg-background text-foreground antialiased; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+  body {
+    @apply m-0 bg-background text-foreground antialiased;
+    font-family: "Inter", "SF Pro Display", "PingFang SC", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+  }
   button, input, select, textarea { font: inherit; }
 }
 
