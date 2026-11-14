@@ -1,8 +1,14 @@
 import { useEffect, useState } from "react"
-import { FileWarning, Pencil, Plus, SlidersHorizontal, Trash2 } from "lucide-react"
+import { Pencil, Plus, SlidersHorizontal, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
-import type { DatasourceOption, PageAdminItem, PageInput } from "@/api/types"
+import type {
+  DatasourceOption,
+  DwFormConfig,
+  DwListConfig,
+  PageAdminItem,
+  PageInput,
+} from "@/api/types"
 import { useSession } from "@/auth/session"
 import {
   AlertDialog,
@@ -25,29 +31,23 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { DwFormConfigEditor } from "@/components/dw/DwFormConfigEditor"
+import { DwListConfigEditor } from "@/components/dw/DwListConfigEditor"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Textarea } from "@/components/ui/textarea"
+import { cn } from "@/lib/utils"
 import { hasPermission } from "@/lib/permissions"
 import { useDatasources, usePageAdmin, usePageMutations } from "@/services/queries"
 
-const emptyDraft: PageInput = {
-  pageKey: "",
-  title: "",
-  description: "",
-  datasourceKey: "",
-  listJson: "",
-  formJson: "",
-}
-
 /**
- * 动态页面配置管理页：第一阶段的配置编辑形态是「结构化头部 + JSON 文本区」。
+ * 动态页面配置管理页。配置编辑是全结构化的：列 / 筛选 / 表单字段按控件编辑，
+ * 字段 key 只能从数据源的字段声明里选。
  * <p>
- * JSON 本地只做「是不是合法 JSON」的预校验，字段级规则（命中数据源字段、控件枚举、
- * 动作与可写能力一致）在后端 PageService——存进去的一定能渲染，这层保证不能放前端。
+ * 前端校验是后端 PageService 的镜像（必填、选项完整性、正则可编译），目的是即时反馈；
+ * 「存进去的一定能渲染」的最终闸门仍然在后端。
  */
 export function PageManagePage() {
   const session = useSession()
@@ -239,6 +239,48 @@ export function PageManagePage() {
   )
 }
 
+/** 新建时的空白配置：与后端 DTO 的字段默认值对齐。 */
+const emptyList: DwListConfig = { columns: [], filters: [], pageSize: 20, actions: [], rowKey: "id" }
+const emptyForm: DwFormConfig = {
+  createTitle: "新建",
+  editTitle: "编辑",
+  createDescription: "",
+  editDescription: "",
+  fields: [],
+}
+
+/** 配置草稿：头部字段 + 结构化的 list / form，提交时才序列化成 JSON。 */
+interface ConfigDraft {
+  pageKey: string
+  title: string
+  description: string
+  datasourceKey: string
+  list: DwListConfig
+  form: DwFormConfig
+}
+
+/** 编辑弹窗的三个页签：配置分块编辑，避免在一个滚动区里找控件。 */
+type TabKey = "basic" | "list" | "form"
+
+const emptyDraft: ConfigDraft = {
+  pageKey: "",
+  title: "",
+  description: "",
+  datasourceKey: "",
+  list: { ...emptyList, columns: [], filters: [], actions: [] },
+  form: { ...emptyForm, fields: [] },
+}
+
+/** 库里的 list_json / form_json → 结构化草稿。解析失败理论上不该发生（保存时已过校验）。 */
+function parseConfig<T>(json: string, fallback: T): T {
+  if (!json.trim()) return fallback
+  try {
+    return { ...fallback, ...JSON.parse(json) } as T
+  } catch {
+    return fallback
+  }
+}
+
 function PageFormDialog({
   open,
   onOpenChange,
@@ -254,148 +296,344 @@ function PageFormDialog({
   onSubmit: (input: PageInput) => Promise<void>
   pending: boolean
 }) {
-  const [draft, setDraft] = useState<PageInput>(emptyDraft)
+  const [draft, setDraft] = useState<ConfigDraft>(emptyDraft)
+  const [tab, setTab] = useState<TabKey>("basic")
   const [error, setError] = useState("")
+  const [errorTab, setErrorTab] = useState<TabKey>("basic")
+  const [parseWarning, setParseWarning] = useState("")
 
   useEffect(() => {
     if (!open) return
-    setDraft(
-      editing
-        ? {
-            pageKey: editing.pageKey,
-            title: editing.title,
-            description: editing.description,
-            datasourceKey: editing.datasourceKey,
-            listJson: editing.listJson,
-            formJson: editing.formJson,
-          }
-        : { ...emptyDraft },
-    )
+    setTab("basic")
+    setErrorTab("basic")
+    if (editing) {
+      const list = parseConfig<DwListConfig>(editing.listJson, emptyList)
+      const form = parseConfig<DwFormConfig>(editing.formJson, emptyForm)
+      setDraft({
+        pageKey: editing.pageKey,
+        title: editing.title,
+        description: editing.description,
+        datasourceKey: editing.datasourceKey,
+        list,
+        form,
+      })
+      // 保存闸门保证库里的一定能渲染，解析失败只能是脏数据——提示而不是静默丢弃配置。
+      const badList = editing.listJson.trim() !== "" && list === emptyList
+      const badForm = editing.formJson.trim() !== "" && form === emptyForm
+      setParseWarning(
+        badList || badForm
+          ? "存量配置 JSON 解析失败，已回退为空白配置；直接保存会覆盖原配置，请先核对。"
+          : "",
+      )
+    } else {
+      setDraft({ ...emptyDraft })
+      setParseWarning("")
+    }
     setError("")
   }, [open, editing])
 
   const selected = datasources.find((ds) => ds.key === draft.datasourceKey)
+  const fields = selected?.fields ?? []
 
-  function update(patch: Partial<PageInput>) {
+  function update(patch: Partial<ConfigDraft>) {
     setDraft((current) => ({ ...current, ...patch }))
   }
 
-  async function submit() {
-    if (!draft.pageKey.trim()) { setError("请填写页面标识"); return }
-    if (!/^[a-z0-9_-]{1,32}$/.test(draft.pageKey.trim())) {
-      setError("页面标识只能包含小写字母、数字、下划线和短横线")
-      return
+  function switchDatasource(key: string) {
+    setDraft((current) => {
+      const next = datasources.find((ds) => ds.key === key)
+      // 只读数据源：把已勾选的写动作摘掉，避免「保存时被后端 400」。
+      const actions =
+        next && !next.writable
+          ? current.list.actions.filter((action) => action === "refresh")
+          : current.list.actions
+      return { ...current, datasourceKey: key, list: { ...current.list, actions } }
+    })
+    // 新建流程里选完数据源是「基本信息」的最后一步，直接带到列表页签开始配列。
+    if (!editing) {
+      setTab("list")
     }
-    if (!draft.title.trim()) { setError("请填写页面标题"); return }
-    if (!draft.datasourceKey) { setError("请选择数据源"); return }
-    for (const [what, json] of [["列表配置", draft.listJson], ["表单配置", draft.formJson]] as const) {
-      if (!json.trim()) { setError(`请填写${what} JSON`); return }
-      try {
-        JSON.parse(json)
-      } catch {
-        setError(`${what}不是合法的 JSON`)
-        return
+  }
+
+  /**
+   * 后端校验的镜像：能在这里拦住的错误就不发请求。
+   * 返回错误文案 + 所在页签（提交失败时自动切过去，错误文案固定展示在页脚上方）。
+   */
+  function validate(): { tab: TabKey; message: string } {
+    const fail = (tab: TabKey, message: string) => ({ tab, message })
+    if (!draft.pageKey.trim()) return fail("basic", "请填写页面标识")
+    if (!/^[a-z0-9_-]{1,32}$/.test(draft.pageKey.trim())) {
+      return fail("basic", "页面标识只能包含小写字母、数字、下划线和短横线")
+    }
+    if (!draft.title.trim()) return fail("basic", "请填写页面标题")
+    if (!draft.datasourceKey) return fail("basic", "请选择数据源")
+    if (!selected) return fail("basic", "数据源不存在，请重新选择")
+
+    const fieldKeys = new Set(fields.map((field) => field.key))
+    const writableKeys = new Set(fields.filter((field) => field.writable).map((field) => field.key))
+    const { list, form } = draft
+
+    if (list.pageSize < 1 || list.pageSize > 200) {
+      return fail("list", "每页条数必须在 1 到 200 之间")
+    }
+    if (!fieldKeys.has(list.rowKey)) return fail("list", "行主键字段必须是数据源声明过的字段")
+    if (list.columns.length === 0) {
+      return fail("list", "列表至少要有一列，可用「按字段生成」快速建列")
+    }
+
+    for (const column of list.columns) {
+      const where = `列 ${column.label || column.key}`
+      if (!column.key) return fail("list", `${where}缺少字段`)
+      if (!column.label.trim()) return fail("list", `${where}缺少名称`)
+      if (!fieldKeys.has(column.key)) {
+        return fail("list", `${where}的字段 ${column.key} 不在当前数据源声明里`)
+      }
+      if (column.format === "badge" && (column.options ?? []).length === 0) {
+        return fail("list", `${where}是 badge 格式，需要配置值映射（或改用 text / muted）`)
+      }
+      const optionError = checkOptions(column.options ?? [], where)
+      if (optionError) return fail("list", optionError)
+    }
+    for (const [i, column] of list.columns.entries()) {
+      if (list.columns.slice(0, i).some((other) => other.key === column.key)) {
+        return fail("list", `列 ${column.label} 的字段 ${column.key} 重复出现`)
       }
     }
-    setError("")
-    await onSubmit({ ...draft, pageKey: draft.pageKey.trim(), title: draft.title.trim() })
+
+    for (const filter of list.filters) {
+      const where = `筛选 ${filter.label || filter.key}`
+      if (!filter.key) return fail("list", `${where}缺少字段`)
+      if (!filter.label.trim()) return fail("list", `${where}缺少名称`)
+      if (!fieldKeys.has(filter.key)) {
+        return fail("list", `${where}的字段 ${filter.key} 不在当前数据源声明里`)
+      }
+      if (filter.widget === "select" && (filter.options ?? []).length === 0) {
+        return fail("list", `${where}是下拉控件，必须配置选项`)
+      }
+      const optionError = checkOptions(filter.options ?? [], where)
+      if (optionError) return fail("list", optionError)
+    }
+    for (const [i, filter] of list.filters.entries()) {
+      if (list.filters.slice(0, i).some((other) => other.key === filter.key)) {
+        return fail("list", `筛选 ${filter.label} 的字段 ${filter.key} 重复出现`)
+      }
+    }
+
+    for (const field of form.fields) {
+      const where = `表单字段 ${field.label || field.key}`
+      if (!field.key) return fail("form", `${where}缺少字段`)
+      if (!field.label.trim()) return fail("form", `${where}缺少名称`)
+      if (!writableKeys.has(field.key)) {
+        return fail("form", `${where}的字段 ${field.key} 不是当前数据源的可写字段`)
+      }
+      if (field.widget === "select" && (field.options ?? []).length === 0) {
+        return fail("form", `${where}是下拉字段，必须配置选项`)
+      }
+      if (field.required && field.widget === "span") {
+        return fail("form", `${where}是只读展示字段，不能同时是必填项`)
+      }
+      if (field.pattern && field.pattern.trim() !== "") {
+        try {
+          new RegExp(field.pattern)
+        } catch {
+          return fail("form", `${where}的校验正则无法编译：${field.pattern}`)
+        }
+      }
+      const optionError = checkOptions(field.options ?? [], where)
+      if (optionError) return fail("form", optionError)
+    }
+
+    for (const [i, field] of form.fields.entries()) {
+      if (form.fields.slice(0, i).some((other) => other.key === field.key)) {
+        return fail("form", `表单字段 ${field.label} 的 ${field.key} 重复出现`)
+      }
+    }
+    return { tab, message: "" }
   }
+
+  async function submit() {
+    const result = validate()
+    if (result.message) {
+      setErrorTab(result.tab)
+      setTab(result.tab)
+      setError(result.message)
+      return
+    }
+    setError("")
+    await onSubmit({
+      pageKey: draft.pageKey.trim(),
+      title: draft.title.trim(),
+      description: draft.description,
+      datasourceKey: draft.datasourceKey,
+      listJson: JSON.stringify(draft.list),
+      formJson: JSON.stringify(draft.form),
+    })
+  }
+
+  const tabs: Array<{ key: TabKey; label: string; count?: string }> = [
+    { key: "basic", label: "基本信息" },
+    {
+      key: "list",
+      label: "列表",
+      count: `${draft.list.columns.length} 列 · ${draft.list.filters.length} 筛选`,
+    },
+    {
+      key: "form",
+      label: "表单",
+      count: `${draft.form.fields.length} 字段`,
+    },
+  ]
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+      <DialogContent className="flex h-[92vh] max-h-[92vh] w-[calc(100vw-2rem)] flex-col overflow-hidden sm:max-w-5xl">
         <DialogHeader>
           <DialogTitle>{editing ? "编辑页面配置" : "新建页面配置"}</DialogTitle>
           <DialogDescription>
             {editing
-              ? "页面标识创建后不可修改（菜单以 /p/{标识} 引用它）。字段级校验在后端：列与表单字段必须命中数据源声明的字段。"
-              : "保存后挂一条 /p/{标识} 的菜单即可上线。字段级校验在后端：列与表单字段必须命中数据源声明的字段。"}
+              ? "页面标识创建后不可修改（菜单以 /p/{标识} 引用它）。字段只能从数据源声明里选，校验规则与后端一致。"
+              : "保存后挂一条 /p/{标识} 的菜单即可上线。字段只能从数据源声明里选，校验规则与后端一致。"}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-4 py-2">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="grid gap-2">
-              <Label htmlFor="page-key">页面标识 *</Label>
-              <Input
-                id="page-key"
-                value={draft.pageKey}
-                disabled={Boolean(editing)}
-                placeholder="roles"
-                onChange={(event) => update({ pageKey: event.target.value })}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="page-title">页面标题 *</Label>
-              <Input id="page-title" value={draft.title} onChange={(event) => update({ title: event.target.value })} />
-            </div>
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="page-desc">说明</Label>
-            <Input
-              id="page-desc"
-              value={draft.description}
-              placeholder="这个页面做什么用"
-              onChange={(event) => update({ description: event.target.value })}
-            />
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="page-datasource">数据源 *</Label>
-            <Select value={draft.datasourceKey} onValueChange={(value) => update({ datasourceKey: value })}>
-              <SelectTrigger id="page-datasource">
-                <SelectValue placeholder="选择一个数据源" />
-              </SelectTrigger>
-              <SelectContent>
-                {datasources.map((ds) => (
-                  <SelectItem key={ds.key} value={ds.key}>
-                    {ds.label}（{ds.key}）
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {selected && (
-              <div className="flex flex-wrap gap-1 rounded-md border bg-muted/40 p-2">
-                <span className="w-full text-xs text-muted-foreground">
-                  可用字段（只读字段不能配进表单）：
-                </span>
-                {selected.fields.map((field) => (
-                  <Badge key={field.key} variant={field.writable ? "secondary" : "outline"} className="text-[10px]">
-                    {field.key}
-                  </Badge>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="grid gap-2">
-            <div className="flex items-center gap-1">
-              <Label htmlFor="page-list-json">列表配置 JSON *</Label>
-              <FileWarning className="size-3 text-muted-foreground" />
-            </div>
-            <Textarea
-              id="page-list-json"
-              value={draft.listJson}
-              className="min-h-[140px] font-mono text-xs"
-              placeholder='{"rowKey":"id","pageSize":20,"actions":["create","edit"],"filters":[],"columns":[]}'
-              onChange={(event) => update({ listJson: event.target.value })}
-            />
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="page-form-json">表单配置 JSON *</Label>
-            <Textarea
-              id="page-form-json"
-              value={draft.formJson}
-              className="min-h-[140px] font-mono text-xs"
-              placeholder='{"createTitle":"新建","editTitle":"编辑","fields":[]}'
-              onChange={(event) => update({ formJson: event.target.value })}
-            />
-          </div>
-
-          {error && <p className="text-sm text-destructive" role="alert">{error}</p>}
+        <div className="flex gap-1 border-b" role="tablist" aria-label="配置分区">
+          {tabs.map((item) => {
+            const active = tab === item.key
+            return (
+              <button
+                key={item.key}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                className={cn(
+                  "-mb-px flex items-center gap-1.5 border-b-2 px-3 py-2 text-sm font-medium transition-colors",
+                  active
+                    ? "border-primary text-primary"
+                    : "border-transparent text-muted-foreground hover:text-foreground",
+                  !selected && item.key !== "basic" && "opacity-50",
+                )}
+                onClick={() => setTab(item.key)}
+              >
+                {item.label}
+                {item.count && (
+                  <span className="text-xs font-normal text-muted-foreground">{item.count}</span>
+                )}
+                {error && errorTab === item.key && (
+                  <span className="size-1.5 rounded-full bg-destructive" aria-label="此分区有校验错误" />
+                )}
+              </button>
+            )
+          })}
         </div>
+
+        <div className="min-h-0 flex-1 overflow-y-auto py-4">
+          {tab === "basic" && (
+            <div className="grid gap-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-2">
+                  <Label htmlFor="page-key">页面标识 *</Label>
+                  <Input
+                    id="page-key"
+                    value={draft.pageKey}
+                    disabled={Boolean(editing)}
+                    placeholder="roles"
+                    onChange={(event) => update({ pageKey: event.target.value })}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="page-title">页面标题 *</Label>
+                  <Input
+                    id="page-title"
+                    value={draft.title}
+                    onChange={(event) => update({ title: event.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="page-desc">说明</Label>
+                <Input
+                  id="page-desc"
+                  value={draft.description}
+                  placeholder="这个页面做什么用"
+                  onChange={(event) => update({ description: event.target.value })}
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="page-datasource">数据源 *</Label>
+                <Select value={draft.datasourceKey} onValueChange={switchDatasource}>
+                  <SelectTrigger id="page-datasource">
+                    <SelectValue placeholder="选择一个数据源" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {datasources.map((ds) => (
+                      <SelectItem key={ds.key} value={ds.key}>
+                        {ds.label}（{ds.key}）{ds.writable ? "" : " · 只读"}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {selected && (
+                  <div className="flex flex-wrap gap-1 rounded-md border bg-muted/40 p-2">
+                    <span className="w-full text-xs text-muted-foreground">
+                      可用字段（只读字段不能配进表单）：
+                    </span>
+                    {selected.fields.map((field) => (
+                      <Badge
+                        key={field.key}
+                        variant={field.writable ? "secondary" : "outline"}
+                        className="text-[10px]"
+                      >
+                        {field.key}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+                {!selected && (
+                  <p className="text-xs text-muted-foreground">
+                    选定数据源后即可配置列、筛选与表单。
+                  </p>
+                )}
+              </div>
+
+              {parseWarning && (
+                <p className="text-sm text-amber-600 dark:text-amber-400">{parseWarning}</p>
+              )}
+            </div>
+          )}
+
+          {tab === "list" && (
+            selected ? (
+              <DwListConfigEditor
+                value={draft.list}
+                fields={fields}
+                writable={selected.writable}
+                onChange={(list) => update({ list })}
+              />
+            ) : (
+              <p className="py-8 text-center text-sm text-muted-foreground">
+                请先在「基本信息」里选择数据源。
+              </p>
+            )
+          )}
+
+          {tab === "form" && (
+            selected ? (
+              <DwFormConfigEditor value={draft.form} fields={fields} onChange={(form) => update({ form })} />
+            ) : (
+              <p className="py-8 text-center text-sm text-muted-foreground">
+                请先在「基本信息」里选择数据源。
+              </p>
+            )
+          )}
+        </div>
+
+        {error && (
+          <p className="pb-2 text-sm text-destructive" role="alert">
+            {error}
+          </p>
+        )}
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>取消</Button>
@@ -406,6 +644,17 @@ function PageFormDialog({
       </DialogContent>
     </Dialog>
   )
+}
+
+/** 选项校验：值非空、不重复。样式枚举由下拉控件保证。 */
+function checkOptions(options: Array<{ value: string }>, where: string): string {
+  const seen = new Set<string>()
+  for (const option of options) {
+    if (!option.value.trim()) return `${where}有选项的值为空`
+    if (seen.has(option.value)) return `${where}的选项值重复：${option.value}`
+    seen.add(option.value)
+  }
+  return ""
 }
 
 function datasourceLabel(datasources: DatasourceOption[], key: string): string {

@@ -103,7 +103,7 @@ me_menus = me(admin).get("menus", [])
 check("登录响应与 /me 的菜单逐字段一致", me_menus, login_menus)
 check("登录响应与 /me 的 restrictedPaths 一致",
       me(admin).get("restrictedPaths"), body.get("data", {}).get("user", {}).get("restrictedPaths"))
-check("菜单条数", 7, len(me_menus))
+check("菜单条数", 9, len(me_menus))
 check("首个菜单是数据概览", "/dashboard", paths({"menus": me_menus})[0])
 check("分组顺序", ["workspace", "system", "account"],
       list(dict.fromkeys([item.get("groupKey") for item in me_menus])))
@@ -124,7 +124,7 @@ print("--- 权限点字典仍由代码定义 ---")
 status, body = call("GET", "/api/permissions", admin)
 catalog = body.get("data", [])
 check("字典接口状态", 200, status)
-check("字典条数", 11, len(catalog))
+check("字典条数", 13, len(catalog))
 check("字典 key 集合与管理员权限一致", sorted(admin_permissions), sorted(item.get("key") for item in catalog))
 counts = {item.get("key"): item.get("menuCount") for item in catalog}
 check("dashboard:read 挂在 1 条菜单上", 1, counts.get("dashboard:read"))
@@ -147,8 +147,8 @@ alice = login("alice")
 check("部门主管（USER + DEPT_MANAGER）多看一个成员管理", ["/dashboard", "/users", "/profile"], paths(me(alice)))
 carol_token = login("carol")
 carol = me(carol_token)
-check("审计员看得到六个管理菜单",
-      ["/dashboard", "/users", "/roles", "/departments", "/activities", "/profile"], paths(carol))
+check("审计员看得到七个管理菜单（含动态页）",
+      ["/dashboard", "/users", "/roles", "/departments", "/activities", "/p/roles", "/profile"], paths(carol))
 for name, token in (("bob", bob), ("alice", alice)):
     user = me(token)
     owned = set(user.get("permissions", []))
@@ -160,11 +160,11 @@ print("--- 直达拦截：无权页面随 /me 点名 ---")
 # 侧栏过滤只藏入口：知道地址的人仍能在地址栏打开 /users，然后面对一屏 403。
 # restrictedPaths 把「配置了菜单且当前人无权」的页面点名下发，前端据此在进入前拦住并说明原因。
 # 它必须与 visibleFor 读同一份数据、同一次权限合并，否则侧栏和直达拦截会各说各话。
-check("普通成员的 restrictedPaths", ["/users", "/roles", "/departments", "/activities", "/menus"],
+check("普通成员的 restrictedPaths", ["/users", "/roles", "/departments", "/activities", "/menus", "/p/roles", "/pages"],
       bob_user.get("restrictedPaths"))
-check("部门主管少了 /users", ["/roles", "/departments", "/activities", "/menus"],
+check("部门主管少了 /users", ["/roles", "/departments", "/activities", "/menus", "/p/roles", "/pages"],
       me(alice).get("restrictedPaths"))
-check("审计员只被拦菜单管理", ["/menus"], me(carol_token).get("restrictedPaths"))
+check("审计员被拦菜单管理与页面配置", ["/menus", "/pages"], me(carol_token).get("restrictedPaths"))
 check("管理员无拦截（空列表，不是 null）", [], me(admin).get("restrictedPaths"))
 
 print("--- 管理接口的权限边界 ---")
@@ -177,7 +177,7 @@ check("没有 menu:write 的人拿不到路径白名单", 403, call("GET", "/api
 print("--- 路径白名单：菜单只能指向已经存在的页面 ---")
 status, body = call("GET", "/api/menus/routes", admin)
 routes = body.get("data", [])
-check("白名单条数", 7, len(routes))
+check("白名单条数", 9, len(routes))
 check_true("白名单含菜单管理自己", "/menus" in routes, routes)
 
 base = {"groupKey": "system", "groupLabel": "系统管理", "groupSort": 20, "icon": "scroll",
@@ -206,7 +206,7 @@ before = admin_menus(admin)
 activities = before["/activities"]
 status, _ = call("DELETE", "/api/menus/%d" % activities["id"], admin)
 check("删除审计日志菜单", 200, status)
-check("/me 里立刻消失", 6, len(me(admin).get("menus", [])))
+check("/me 里立刻消失", 8, len(me(admin).get("menus", [])))
 check("审计日志确实不在菜单里", False, "/activities" in paths(me(admin)))
 
 status, body = call("POST", "/api/menus", admin, {
@@ -253,10 +253,10 @@ check("同组其它行跟着改名（不是只改一行）", {"常用"}, workspa
 print("--- 删除的影响面 ---")
 status, _ = call("DELETE", "/api/menus/%d" % created["id"], admin)
 check("删除测试菜单", 200, status)
-check("侧栏少一条", 6, len(me(admin).get("menus", [])))
+check("侧栏少一条", 8, len(me(admin).get("menus", [])))
 # 菜单删掉后就不是「配置了但无权」了，从 restrictedPaths 里消失——它拦的是配置，不是页面本身。
 check("删除后 restrictedPaths 也不再点名该页面",
-      ["/users", "/roles", "/departments", "/menus"], me(bob).get("restrictedPaths"))
+      ["/users", "/roles", "/departments", "/menus", "/p/roles", "/pages"], me(bob).get("restrictedPaths"))
 check("删不存在的菜单返回 404", 404, call("DELETE", "/api/menus/%d" % created["id"], admin)[0])
 check("改不存在的菜单返回 404", 404, call("PUT", "/api/menus/999999", admin, {
     "groupKey": "system", "groupLabel": "系统管理", "path": "/roles", "name": "x"})[0])

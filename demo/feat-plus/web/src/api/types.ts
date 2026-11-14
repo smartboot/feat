@@ -463,5 +463,7 @@ export interface DwFieldMeta {
 export interface DatasourceOption {
   key: string
   label: string
+  /** 只读数据源：编辑器据此禁用 create / edit / delete 动作勾选 */
+  writable: boolean
   fields: DwFieldMeta[]
 }

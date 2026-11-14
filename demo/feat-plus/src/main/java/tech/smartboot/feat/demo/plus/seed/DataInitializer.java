@@ -106,6 +106,9 @@ public class DataInitializer {
         notificationMapper.truncateReads();
         notificationMapper.truncate();
         loginStatMapper.truncate();
+        // 活动日志也必须清：不清的话每次 reset 都把种子活动追加一遍，
+        // 「日志条数 / 操作人下拉」的回归断言会随 reset 次数线性漂移。
+        activityMapper.truncate();
         // 关联表先清：sys_user_role / sys_role_dept 的主键是业务组合键，不自增，
         // 但顺序上仍应先清关联再清主表，避免以后加外键时返工。
         userMapper.truncateUserRoles();

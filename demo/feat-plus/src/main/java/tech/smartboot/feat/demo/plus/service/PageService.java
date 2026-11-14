@@ -140,12 +140,13 @@ public class PageService {
         return paths;
     }
 
-    /** 配置管理页的数据源下拉 + 字段提示。 */
+    /** 配置管理页的数据源下拉 + 字段提示（writable 供编辑器禁用只读源的写动作）。 */
     public List<DatasourceOptionResponse> datasourceOptions() {
         List<DatasourceOptionResponse> options = new ArrayList<>();
         for (PageDataSource dataSource : pageDataSourceRegistry.all()) {
             List<DwFieldMeta> fields = dataSource.fields();
-            options.add(new DatasourceOptionResponse(dataSource.key(), dataSource.label(), fields));
+            options.add(new DatasourceOptionResponse(dataSource.key(), dataSource.label(),
+                    dataSource.writable(), fields));
         }
         return options;
     }

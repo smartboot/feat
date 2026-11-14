@@ -58,6 +58,9 @@ public class RolePageDataSource implements PageDataSource {
         fields.add(new DwFieldMeta("scopeLabel", "数据范围", "string", false));
         fields.add(new DwFieldMeta("userCount", "成员数", "number", false));
         fields.add(new DwFieldMeta("createdTime", "创建时间", "string", false));
+        // 虚拟筛选字段：不对应行数据的列，list() 里解释成「名称 / 编码 / 描述」三列模糊匹配。
+        // 不声明它的话，种子配置里的 keyword 筛选会在页面配置保存时被「字段漂移」校验拒掉。
+        fields.add(new DwFieldMeta("keyword", "搜索（名称 / 编码 / 描述）", "string", false));
         return fields;
     }
 
