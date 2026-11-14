@@ -64,18 +64,30 @@ public class DataInitializer {
      * 两条分支不能合并：{@link #reset()} 会清空全部业务数据，而「菜单表是新加的」这件事只发生在
      * 已经有数据的库上——那种库升级上来时，用户表非空、菜单表为空，需要的只是补一份菜单，
      * 不是把客户的数据清掉重来。这个分支就是「给存量库加表」的最小迁移路径。
+     * <p>
+     * 首次启动走 {@link #seedAll()} 而不是 {@link #reset()}：Feat 的 @PostConstruct 按注册顺序执行，
+     * 不感知 bean 依赖，DataInitializer 可能排在 CacheStoreProvider 之前——那时调 menuSnapshot.invalidate()
+     * 会撞上「缓存尚未初始化」。首次启动本来也无须失效：进程内缓存是空的；Redis 后端下上一个进程
+     * 留下的旧条目由 TTL 兜底，与「TTL 兜住漏失效路径」是同一条原则。
      */
     @PostConstruct
     public void init() {
         if (userMapper.countAll() == 0) {
-            reset();
+            seedAll();
         } else if (menuMapper.countAll() == 0) {
             seedMenus();
         }
     }
 
     public void reset() {
-        activityMapper.truncate();
+        truncateAll();
+        seedAll();
+        // 重置换了菜单行的 id，缓存里还是上一批。不清的话「恢复演示数据」之后侧栏还是改过的样子，
+        // 要等十分钟 TTL 到期才恢复——这正是「缓存忘了失效」最典型的现场。
+        menuSnapshot.invalidate();
+    }
+
+    private void truncateAll() {
         // 已读状态是通知的从属数据，必须先清，否则重置后旧 id 的已读记录会串到新通知上。
         notificationMapper.truncateReads();
         notificationMapper.truncate();
@@ -88,7 +100,9 @@ public class DataInitializer {
         roleMapper.truncate();
         departmentMapper.truncate();
         menuMapper.truncate();
+    }
 
+    private void seedAll() {
         seedRoles();
         Map<String, Long> departmentIds = seedDepartments();
         seedUsers(departmentIds);
@@ -96,9 +110,6 @@ public class DataInitializer {
         seedNotifications();
         seedLoginStats();
         seedMenus();
-        // 重置换了菜单行的 id，缓存里还是上一批。不清的话「恢复演示数据」之后侧栏还是改过的样子，
-        // 要等十分钟 TTL 到期才恢复——这正是「缓存忘了失效」最典型的现场。
-        menuSnapshot.invalidate();
     }
 
     /**

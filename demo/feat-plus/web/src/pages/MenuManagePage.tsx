@@ -193,11 +193,31 @@ export function MenuManagePage() {
           </p>
         </div>
         {canWrite && (
-          <Button onClick={openCreate} className="shrink-0">
+          <Button onClick={openCreate} className="shrink-0"
+                  disabled={!routes.some((r) => !usedPaths.has(r))}
+                  title={routes.some((r) => !usedPaths.has(r)) ? "" : "所有页面都已配好菜单：新增菜单只能指向已经存在的页面"}>
             <Plus className="size-4" /> 新增菜单
           </Button>
         )}
       </div>
+
+      {!isLoading && !isError && routes.length > 0 && !routes.some((r) => !usedPaths.has(r)) && (
+        <div className="flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 p-4 text-sm">
+          <span className="mt-0.5 text-primary">ℹ</span>
+          <div className="min-w-0">
+            <strong className="block">白名单里的页面都已配好菜单，新增按钮已锁定。</strong>
+            <p className="mt-1 text-muted-foreground">
+              菜单只能指向已经存在的页面。要挂新菜单，需要在代码里完成三步：
+              <code className="mx-1 rounded bg-muted px-1 py-0.5 text-xs">App.tsx</code>加
+              <code className="mx-1 rounded bg-muted px-1 py-0.5 text-xs">Route</code>
+              →
+              <code className="mx-1 rounded bg-muted px-1 py-0.5 text-xs">security/MenuRoutes</code>加一行
+              → 回到这里配名称与权限点。
+              <code className="mx-1 rounded bg-muted px-1 py-0.5 text-xs">scripts/check_menu.py</code>会双向校验。
+            </p>
+          </div>
+        </div>
+      )}
 
       {isError && (
         <Card>
