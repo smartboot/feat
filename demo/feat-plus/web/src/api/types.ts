@@ -389,12 +389,23 @@ export interface DwFormField {
   span?: 1 | 2
 }
 
+/**
+ * 数据通道覆盖：列表查询与行删除可改走自定义接口，留空走内置 /api/dw 通道，允许混搭。
+ * 只覆盖这两个操作——保存 / 详情始终走内置通道（表单写路径牵涉校验与审计，不开旁路）。
+ * 行结构契约不变——自定义接口返回的行字段仍须与数据源声明一致。
+ */
+export interface DwDataApi {
+  query?: string
+  delete?: string
+}
+
 export interface DwListConfig {
   columns: DwColumn[]
   filters: DwFilter[]
   pageSize: number
   actions: DwAction[]
   rowKey: string
+  dataApi?: DwDataApi
 }
 
 export interface DwFormConfig {

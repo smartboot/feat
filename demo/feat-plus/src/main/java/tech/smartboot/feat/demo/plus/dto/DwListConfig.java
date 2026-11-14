@@ -8,6 +8,8 @@ import java.util.List;
  * <p>
  * actions 是内置标准动作的子集（create / edit / delete / refresh）——
  * 老平台把按钮 JS 整段存库的能力刻意不再支持，自定义动作等后续用别的方式替换。
+ * <p>
+ * dataApi 是数据通道覆盖（见 {@link DwDataApi}）：只覆盖查询与删除，渲染描述不变。
  */
 public class DwListConfig {
     private List<DwColumn> columns = new ArrayList<>();
@@ -15,6 +17,7 @@ public class DwListConfig {
     private int pageSize = 20;
     private List<String> actions = new ArrayList<>();
     private String rowKey = "id";
+    private DwDataApi dataApi = new DwDataApi();
 
     public List<DwColumn> getColumns() {
         return columns;
@@ -54,5 +57,13 @@ public class DwListConfig {
 
     public void setRowKey(String rowKey) {
         this.rowKey = rowKey;
+    }
+
+    public DwDataApi getDataApi() {
+        return dataApi;
+    }
+
+    public void setDataApi(DwDataApi dataApi) {
+        this.dataApi = dataApi == null ? new DwDataApi() : dataApi;
     }
 }

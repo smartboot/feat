@@ -56,6 +56,11 @@ export function DwListConfigEditor({
     onChange({ ...value, ...patch })
   }
 
+  /** 通道覆盖的字段级更新：dataApi 整体存在或不存在都好处理。 */
+  function patchDataApi(patch: Partial<NonNullable<DwListConfig["dataApi"]>>) {
+    onChange({ ...value, dataApi: { ...value.dataApi, ...patch } })
+  }
+
   function toggleAction(action: DwAction) {
     const active = value.actions.includes(action)
     patch({
@@ -158,6 +163,35 @@ export function DwListConfigEditor({
         {!writable && (
           <p className="text-xs text-muted-foreground">该数据源是只读的，create / edit / delete 不可勾选。</p>
         )}
+      </div>
+
+      <div className="grid gap-2">
+        <Label>数据接口（可选覆盖）</Label>
+        <p className="text-xs text-muted-foreground">
+          留空走内置通道；填了则该操作改走自定义接口。接口须返回与数据源声明一致的行结构，
+          权限由目标接口自己校验。查询 GET {`{path}?page&pageSize&filter`}，删除 DELETE {`{path}/{id}`}。
+          保存与详情不支持覆盖——表单写路径牵涉校验与审计，不开旁路。
+        </p>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <div className="grid gap-1">
+            <FieldLabel>查询</FieldLabel>
+            <Input
+              className="h-8 font-mono text-xs"
+              value={value.dataApi?.query ?? ""}
+              placeholder="/api/..."
+              onChange={(event) => patchDataApi({ query: event.target.value.trim() })}
+            />
+          </div>
+          <div className="grid gap-1">
+            <FieldLabel>删除</FieldLabel>
+            <Input
+              className="h-8 font-mono text-xs"
+              value={value.dataApi?.delete ?? ""}
+              placeholder="/api/..."
+              onChange={(event) => patchDataApi({ delete: event.target.value.trim() })}
+            />
+          </div>
+        </div>
       </div>
 
       <Section

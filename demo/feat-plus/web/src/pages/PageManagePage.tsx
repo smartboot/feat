@@ -380,6 +380,14 @@ function PageFormDialog({
     if (list.columns.length === 0) {
       return fail("list", "列表至少要有一列，可用「按字段生成」快速建列")
     }
+    for (const [what, path] of [
+      ["查询接口", list.dataApi?.query],
+      ["删除接口", list.dataApi?.delete],
+    ] as const) {
+      if (path && !/^\/api\/[A-Za-z0-9/_.-]{2,120}$/.test(path)) {
+        return fail("list", `${what}必须是 /api/ 开头的站内路径（不以 / 结尾）：${path}`)
+      }
+    }
 
     for (const column of list.columns) {
       const where = `列 ${column.label || column.key}`

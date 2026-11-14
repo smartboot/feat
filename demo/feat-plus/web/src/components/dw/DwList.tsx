@@ -54,8 +54,10 @@ export function DwList({ pageKey, config }: { pageKey: string; config: PageConfi
     pageSize,
     filters: activeFilters(filters, list.filters),
   }
-  const { data, isLoading, isFetching, isError, refetch } = useDwData(pageKey, query)
-  const mutations = useDwMutations(pageKey)
+  // dataApi 通道覆盖：配置里指定了自定义接口就走它，留空的项回落内置 /api/dw 通道。
+  const dataApi = list.dataApi
+  const { data, isLoading, isFetching, isError, refetch } = useDwData(pageKey, query, true, dataApi)
+  const mutations = useDwMutations(pageKey, dataApi)
 
   const rows: DwRow[] = data?.items || []
   const total = data?.total || 0

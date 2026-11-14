@@ -4,6 +4,7 @@ import type {
   ActivityQuery,
   ChangePasswordInput,
   DepartmentInput,
+  DwDataApi,
   DwDataQuery,
   DwSaveInput,
   GroupUpdateInput,
@@ -35,7 +36,6 @@ export const queryKeys = {
   activityOperators: ["activities", "operators"] as const,
   // 动态页面：配置 / 数据 / 配置管理三条缓存线
   pageConfig: (pageKey: string) => ["dw", "pages", pageKey] as const,
-  dwData: (pageKey: string, query: DwDataQuery) => ["dw", "data", pageKey, query] as const,
   pageAdmin: ["dw", "admin", "pages"] as const,
   datasources: ["dw", "datasources"] as const,
 }
@@ -289,11 +289,13 @@ export function usePageConfig(pageKey: string, enabled = true) {
   })
 }
 
-/** 动态列表数据：翻页时保留上一页，避免表格闪白（与 useUsers 同款取舍）。 */
-export function useDwData(pageKey: string, query: DwDataQuery, enabled = true) {
+/** 动态列表数据：翻页时保留上一页，避免表格闪白（与 useUsers 同款取舍）。
+ * dataApi 是通道覆盖：query 路径进缓存键，换通道等于换数据源。 */
+export function useDwData(pageKey: string, query: DwDataQuery, enabled = true, dataApi?: DwDataApi) {
+  const queryPath = dataApi?.query || ""
   return useQuery({
-    queryKey: queryKeys.dwData(pageKey, query),
-    queryFn: () => adminService.listDwData(pageKey, query),
+    queryKey: ["dw", "data", pageKey, queryPath, query],
+    queryFn: () => adminService.listDwData(pageKey, query, dataApi?.query),
     placeholderData: (previous) => previous,
     enabled,
   })
@@ -302,16 +304,23 @@ export function useDwData(pageKey: string, query: DwDataQuery, enabled = true) {
 /**
  * 动态页面的写操作。只失效本页数据——配置没变，别的页面不陪跑。
  * 角色数据源背后是手写 Service，写完还会产生审计日志。
+ * dataApi.delete 覆盖删除通道；保存始终走内置通道（权限由目标接口自己校验）。
  */
-export function useDwMutations(pageKey: string) {
+export function useDwMutations(pageKey: string, dataApi?: DwDataApi) {
   const client = useQueryClient()
   const invalidate = async () => {
     await client.invalidateQueries({ queryKey: ["dw", "data", pageKey] })
     await client.invalidateQueries({ queryKey: ["activities"] })
   }
   return {
-    save: useMutation({ mutationFn: (input: DwSaveInput) => adminService.saveDwData(pageKey, input), onSuccess: invalidate }),
-    remove: useMutation({ mutationFn: (id: number) => adminService.deleteDwRow(pageKey, id), onSuccess: invalidate }),
+    save: useMutation({
+      mutationFn: (input: DwSaveInput) => adminService.saveDwData(pageKey, input),
+      onSuccess: invalidate,
+    }),
+    remove: useMutation({
+      mutationFn: (id: number) => adminService.deleteDwRow(pageKey, id, dataApi?.delete),
+      onSuccess: invalidate,
+    }),
   }
 }
 

@@ -16,6 +16,7 @@ import tech.smartboot.feat.cloud.annotation.Bean;
 import tech.smartboot.feat.demo.plus.common.DomainException;
 import tech.smartboot.feat.demo.plus.dto.DatasourceOptionResponse;
 import tech.smartboot.feat.demo.plus.dto.DwColumn;
+import tech.smartboot.feat.demo.plus.dto.DwDataApi;
 import tech.smartboot.feat.demo.plus.dto.DwFieldMeta;
 import tech.smartboot.feat.demo.plus.dto.DwFilter;
 import tech.smartboot.feat.demo.plus.dto.DwFormConfig;
@@ -64,6 +65,8 @@ public class PageService {
             "create", "edit", "delete", "refresh"));
     private static final Set<String> VARIANTS = new HashSet<>(Arrays.asList(
             "success", "warning", "destructive", "secondary", "outline"));
+    /** 自定义数据接口的路径格式：站内 /api/ 相对路径，防外链与拼接注入面。 */
+    private static final Pattern API_PATH_PATTERN = Pattern.compile("^/api/[A-Za-z0-9/_.-]{2,120}$");
 
     @Autowired
     private PageMapper pageMapper;
@@ -338,6 +341,8 @@ public class PageService {
             throw new DomainException("列表至少要有一列");
         }
 
+        validateDataApi(list.getDataApi(), dataSource);
+
         seen = new HashSet<>();
         for (DwFilter filter : list.getFilters()) {
             String where = "筛选 " + filter.getKey();
@@ -424,6 +429,35 @@ public class PageService {
             }
         }
         return keys;
+    }
+
+    /**
+     * 数据通道覆盖的校验。行结构契约不变（列 / 筛选仍锚定数据源字段），
+     * 这里只管路径合法性与「只读数据源不得配删除通道」——后者与 actions 的约束同源：
+     * 按钮能不能点是 canWrite 决定的，只读源配了自定义删除接口只会做出「按钮永远灰着」的死配置。
+     */
+    private static void validateDataApi(DwDataApi dataApi, PageDataSource dataSource) {
+        if (dataApi == null) {
+            return;
+        }
+        requireApiPath(dataApi.getQuery(), "查询接口");
+        requireApiPath(dataApi.getDelete(), "删除接口");
+        if (!dataSource.writable() && !trimToEmpty(dataApi.getDelete()).isEmpty()) {
+            throw new DomainException("数据源「" + dataSource.label() + "」是只读的，"
+                    + "不能配置删除接口（通道覆盖不改变可写性约束）");
+        }
+    }
+
+    /** 站内 /api/ 相对路径；留空表示走内置通道。 */
+    private static void requireApiPath(String raw, String what) {
+        String path = trimToEmpty(raw);
+        if (path.isEmpty()) {
+            return;
+        }
+        if (!API_PATH_PATTERN.matcher(path).matches() || path.endsWith("/")) {
+            throw new DomainException(what + "必须是 /api/ 开头的站内路径（不以 / 结尾，不含参数与特殊字符）："
+                    + path);
+        }
     }
 
     // ---------- JSON 解析 ----------

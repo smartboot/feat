@@ -186,8 +186,10 @@ export const adminService: AdminService = {
   getPageConfig(pageKey: string): Promise<PageConfig> {
     return request<PageConfig>(`/api/dw/pages/${encodeURIComponent(pageKey)}`)
   },
-  listDwData(pageKey: string, query: DwDataQuery): Promise<PageResult<DwRow>> {
-    return request<PageResult<DwRow>>(`/api/dw/pages/${encodeURIComponent(pageKey)}/data?${buildDwQuery(query)}`)
+  /** 列表数据。queryPath 是数据通道覆盖（配置里的 dataApi.query），留空走内置通道。 */
+  listDwData(pageKey: string, query: DwDataQuery, queryPath?: string): Promise<PageResult<DwRow>> {
+    const path = queryPath || `/api/dw/pages/${encodeURIComponent(pageKey)}/data`
+    return request<PageResult<DwRow>>(`${path}?${buildDwQuery(query)}`)
   },
   getDwRow(pageKey: string, id: number): Promise<DwRow> {
     return request<DwRow>(`/api/dw/pages/${encodeURIComponent(pageKey)}/data/${id}`)
@@ -198,8 +200,10 @@ export const adminService: AdminService = {
       body: jsonBody(input),
     })
   },
-  deleteDwRow(pageKey: string, id: number): Promise<void> {
-    return request<void>(`/api/dw/pages/${encodeURIComponent(pageKey)}/data/${id}`, { method: "DELETE" })
+  /** deletePath 覆盖内置通道（调用时拼 /{id}）。保存/详情不支持覆盖——写路径不开旁路。 */
+  deleteDwRow(pageKey: string, id: number, deletePath?: string): Promise<void> {
+    const path = deletePath || `/api/dw/pages/${encodeURIComponent(pageKey)}/data`
+    return request<void>(`${path}/${id}`, { method: "DELETE" })
   },
   listPageConfigs(): Promise<PageAdminItem[]> {
     return request<PageAdminItem[]>("/api/pages")

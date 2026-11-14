@@ -82,13 +82,14 @@ export interface AdminService {
   changePassword(input: ChangePasswordInput): Promise<number>
   /** 动态页面：拉渲染配置（权限按数据源声明，canWrite 逐请求计算） */
   getPageConfig(pageKey: string): Promise<PageConfig>
-  /** 动态页面：列表数据（分页 + 筛选） */
-  listDwData(pageKey: string, query: DwDataQuery): Promise<PageResult<DwRow>>
+  /** 动态页面：列表数据（分页 + 筛选）。queryPath 覆盖内置通道，见 DwDataApi */
+  listDwData(pageKey: string, query: DwDataQuery, queryPath?: string): Promise<PageResult<DwRow>>
   /** 动态页面：单行数据，表单编辑回填 */
   getDwRow(pageKey: string, id: number): Promise<DwRow>
   /** 动态页面：保存（id 为空表示新建） */
   saveDwData(pageKey: string, input: DwSaveInput): Promise<DwRow>
-  deleteDwRow(pageKey: string, id: number): Promise<void>
+  /** deletePath 覆盖内置通道（调用时拼 /{id}）。保存/详情不支持覆盖——写路径不开旁路 */
+  deleteDwRow(pageKey: string, id: number, deletePath?: string): Promise<void>
   /** 页面配置管理 */
   listPageConfigs(): Promise<PageAdminItem[]>
   createPageConfig(input: PageInput): Promise<PageAdminItem>
