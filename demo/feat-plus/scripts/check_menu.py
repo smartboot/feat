@@ -15,6 +15,11 @@
        —— 缺了会退化成默认图标，不报错
     5. 种子菜单的 permission 必须存在于 Permission.CATALOG（空串除外）
     6. MenuRoutes 里的每个页面都要有种子菜单，否则首次启动的侧栏会缺项
+    7. 动态页面例外：/p/:pageKey 是唯一的动态路由，不进白名单（合法性由 sys_page 决定），
+       但挂 /p/xxx 的种子菜单必须满足三条替代规则：
+       a) App.tsx 里存在 /p/:pageKey 这条动态路由
+       b) pageKey 格式合法（^/p/[a-z0-9_-]{1,32}$）
+       c) pageKey 在 SeedData.pages() 里有对应种子——菜单 ↔ sys_page 种子 ↔ 动态路由三方一致
 
 只做文本级解析：这个脚本要在没有 JDK、没有 npm 的环境里几秒内跑完。
 代价是认不出「用变量拼路径」这类写法——真出现那种写法，本脚本会报「未登记」，
@@ -37,6 +42,11 @@ NAV_ICONS = os.path.join(ROOT, "web", "src", "lib", "icons.ts")
 # 不需要菜单的页面：登录页在未登录时渲染，不可能出现在侧栏。
 # 这个名单要尽量短——每加一条都是「有页面没菜单」的例外。
 EXEMPT_ROUTES = {"/login"}
+
+# 动态页面：唯一的参数化路由，页面合法性由 sys_page 的 pageKey 决定，
+# 走规则 7 的三方一致性（替代「白名单 + 种子菜单」两方一致性）。
+DYNAMIC_ROUTE = "/p/:pageKey"
+DYNAMIC_PATH_RE = re.compile(r"^/p/[a-z0-9_-]{1,32}$")
 
 
 def read(path):
@@ -112,6 +122,11 @@ def app_routes():
     return re.findall(r'<Route\s+path="([^"]+)"', read(APP_TSX))
 
 
+def seed_pages():
+    """SeedData.pages() 里的 pageKey 集合（文本级解析）。"""
+    return re.findall(r'new SeedPage\(\s*"([^"]+)"', squash(read(SEED_DATA)))
+
+
 def nav_icon_keys():
     body = read(NAV_ICONS)
     start = body.find("export const NAV_ICONS")
@@ -132,7 +147,11 @@ def main():
     items = seed_menus()
     keys = permission_keys()
     routes = [r for r in app_routes() if r not in ("/", "*")]
-    normalized_routes = {normalize(r) for r in routes}
+    has_dynamic_route = DYNAMIC_ROUTE in routes
+    # 动态路由不参与「必须白名单 / 必须有种子菜单」的检查——它是一条参数化壳路由，
+    # 合法性由规则 7 的三方一致性单独约束。normalize 会把它的参数段剥掉，必须先摘出来。
+    normalized_routes = {normalize(r) for r in routes if r != DYNAMIC_ROUTE}
+    dynamic_page_keys = set(seed_pages())
     icons = nav_icon_keys()
 
     problems = []
@@ -142,14 +161,28 @@ def main():
         if path in seen_paths:
             problems.append("种子菜单路径重复：%s（%s 与 %s）" % (path, seen_paths[path], name))
         seen_paths[path] = name
-        if path not in whitelist:
-            problems.append("种子菜单 %s（%s）不在 MenuRoutes 白名单里" % (path, name))
-        if path not in normalized_routes:
-            problems.append("种子菜单 %s（%s）在 App.tsx 里没有对应 Route" % (path, name))
+        if DYNAMIC_PATH_RE.match(path):
+            page_key = path[len("/p/"):]
+            if not has_dynamic_route:
+                problems.append("动态菜单 %s（%s）挂了 /p/ 路径，但 App.tsx 里没有 %s 这条动态路由"
+                                % (path, name, DYNAMIC_ROUTE))
+            if page_key not in dynamic_page_keys:
+                problems.append("动态菜单 %s（%s）的 pageKey 在 SeedData.pages() 里没有对应种子"
+                                % (path, name))
+        else:
+            if path not in whitelist:
+                problems.append("种子菜单 %s（%s）不在 MenuRoutes 白名单里" % (path, name))
+            if path not in normalized_routes:
+                problems.append("种子菜单 %s（%s）在 App.tsx 里没有对应 Route" % (path, name))
         if icon not in icons:
             problems.append("种子菜单 %s 的图标 key「%s」不在 NAV_ICONS 里" % (path, icon))
         if permission is not None and permission not in keys:
             problems.append("种子菜单 %s 引用了未登记的权限点：%s" % (path, permission))
+
+    # SeedData.pages() 里的 pageKey 也要反向核对：有配置没有菜单，动态页面就没有入口。
+    for page_key in sorted(dynamic_page_keys):
+        if "/p/" + page_key not in seen_paths:
+            problems.append("页面配置种子 %s 没有对应的 /p/ 种子菜单（首次启动时侧栏没有入口）" % page_key)
 
     for path in whitelist:
         if path not in normalized_routes:
@@ -169,8 +202,8 @@ def main():
             print("  - " + problem)
         return 1
 
-    print("菜单检查通过：白名单 %d 个页面、种子菜单 %d 条、权限点 %d 个、图标 key %d 个"
-          % (len(whitelist), len(items), len(keys), len(icons)))
+    print("菜单检查通过：白名单 %d 个页面、种子菜单 %d 条、动态页面 %d 个、权限点 %d 个、图标 key %d 个"
+          % (len(whitelist), len(items), len(dynamic_page_keys), len(keys), len(icons)))
     return 0
 
 

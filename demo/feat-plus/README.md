@@ -188,6 +188,48 @@ TTL 十分钟兜底，任何写操作后主动失效，且**失效在事务提�
 > **菜单能看见不等于接口放行。** 下发的是「显示层」，`AccessGuard.require` 仍然逐接口校验，
 > 数据范围仍然逐查询生效。两者各自独立，删掉任何一边都不会被另一边兜住。
 
+## 动态页面：配置驱动的列表与表单
+
+`sys_page` 一行 = 一个可以通过 `/p/{pageKey}` 访问的页面：列、筛选、分页、按钮动作存 `list_json`，
+表单字段（控件 / 必填 / 正则校验）存 `form_json`，后端反序列化成结构下发，前端 `DwList` /
+`DwFormDialog` 动态渲染。设计理念移植自一个 2014 年的元数据驱动平台（smart-platform：
+六张元数据表 + 运行时拼 HTML），形态上做了两处现代化：
+
+- **渲染在前端**：服务端不再拼 HTML / JS，配置下发给 React 组件树；
+- **按钮脚本不存库**：老平台把整段按钮 JavaScript 存进 `datawindow_page.script`，等价于把不受控
+  代码注入运行时；这里只保留 create / edit / delete / refresh 四个内置动作，自定义动作等后续用
+  受控方式补。
+
+**数据从哪来：数据源注册表，不是动态 SQL。** 老平台的配置里直接存表名 + WHERE 片段、运行时拼
+SQL；这里的配置只描述「怎么渲染」，数据与保存走 `PageDataSource` 白名单（`@Bean` 编译期注册，
+页面配置通过 `datasourceKey` 绑定）。查询、事务、审计、数据权限全部在类型化 Service 里免费复用，
+动态层拿到的只是行数据（`Map`），不接触 SQL、不接触 Mapper。配一个新页面 = 一行 `sys_page` +
+一条 `/p/xxx` 菜单，不用发版；配一个新数据源 = 一个 Java 类 + 注册表一行，必须发版——
+这与权限点「字典在代码里」是同一条边界。
+
+| 归数据库（可运营） | 归代码（编译期） |
+|---|---|
+| 页面标识、标题、数据源绑定、列 / 筛选 / 表单字段配置、按钮动作组合 | 有哪些数据源（`PageDataSourceRegistry`）、数据怎么查怎么存（类型化 Service）、权限点（`Permission.CATALOG`）、渲染器本体（`DwList` / `DwFormDialog`） |
+
+**「存进去的一定能渲染」由保存时校验保证**（`PageService`）：`datasourceKey` 必须命中注册表白名单；
+列 / 筛选 / 表单字段的 key 必须命中数据源的字段声明（表单字段还必须是可写字段）——数据源改字段名时，
+配置漂移在保存配置的瞬间报 400，而不是渲染时静默空列；create / edit / delete 只能配在可写数据源上。
+渲染配置的读路径走 `PageSnapshot` 缓存（TTL 十分钟 + 写后失效，同菜单），`canWrite` 按请求人
+逐次计算、绝不进缓存。配置改动与数据写操作都记审计。
+
+**权限挂在数据源上，不挂在页面配置上**：拉配置与读数据要数据源的读权限点，保存 / 删除要写权限点
+（`DwController` 统一 require）。页面配置管理页（`/pages`）自己独立挂 `page:read` / `page:write`——
+改的是别人页面的长相，风险等级不同。
+
+**试点与边界**：`/p/roles`（角色权限·配置版）与手写页 `/roles` 并行存在。动态表单只覆盖
+code / name / description / status 四个字段——权限点勾选组、数据范围卡片这些复合控件不在第一阶段的
+控件枚举里，强行替换会降级功能。更新路径会回填当前权限与数据范围（`RoleService.update` 是整体
+覆盖语义，不回填的话简化表单每次保存都会清空角色权限）。待控件集补齐 `checkbox-group` /
+`radio-group` / 级联选择后，把菜单指到 `/p/roles` 并删除手写页即可完成迁移。
+
+`check_menu.py` 对动态页面走三方一致性（替代白名单两方一致性）：`/p/:pageKey` 路由存在、
+pageKey 格式合法、每个挂 `/p/` 的种子菜单在 `SeedData.pages()` 里有对应种子（反向也查）。
+
 ## 错误契约与健康探针
 
 错误响应是给程序消费的契约，不是一段人话。三条保证由 `ApiController.execute` 统一落地：
@@ -209,7 +251,7 @@ TTL 十分钟兜底，任何写操作后主动失效，且**失效在事务提�
 
 ## 表结构约定
 
-十张表（`sys_user`、`sys_role`、`sys_department`、`sys_user_role`、`sys_role_dept`、`sys_activity`、`sys_notification`、`sys_notification_read`、`sys_login_stat`、`sys_menu`）都带同一组审计字段：
+十一张表（`sys_user`、`sys_role`、`sys_department`、`sys_user_role`、`sys_role_dept`、`sys_activity`、`sys_notification`、`sys_notification_read`、`sys_login_stat`、`sys_menu`、`sys_page`）都带同一组审计字段：
 
 | 列 | 类型 | 说明 |
 |---|---|---|

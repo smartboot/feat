@@ -49,6 +49,13 @@ public final class Permission {
     public static final String MENU_READ = "menu:read";
     public static final String MENU_WRITE = "menu:write";
 
+    /**
+     * 动态页面配置。渲染一个动态页面（/p/{pageKey}）只需要所挂数据源自己的权限点，
+     * 这一对只控制「配置管理页」：改的是别人页面的长相，属于高危操作，独立成点。
+     */
+    public static final String PAGE_READ = "page:read";
+    public static final String PAGE_WRITE = "page:write";
+
     /** 重置演示数据这类系统级动作。 */
     public static final String SYSTEM_WRITE = "system:write";
 
@@ -84,6 +91,10 @@ public final class Permission {
                     "查看菜单", "查看侧边栏菜单配置"),
             new Entry("system", "系统", MENU_WRITE,
                     "管理菜单", "新增、修改、删除菜单项，调整分组与顺序"),
+            new Entry("system", "系统", PAGE_READ,
+                    "查看页面配置", "查看动态页面配置列表与可选数据源"),
+            new Entry("system", "系统", PAGE_WRITE,
+                    "管理页面配置", "新增、修改、删除动态页面的渲染配置"),
 
             new Entry("system", "系统", SYSTEM_WRITE,
                     "重置演示数据", "清空并重建全部演示数据")));

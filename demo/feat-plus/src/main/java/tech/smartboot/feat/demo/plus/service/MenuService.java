@@ -27,7 +27,7 @@ import tech.smartboot.feat.demo.plus.tx.TxTemplate;
  * 现在是在界面上填的，错的代价是「侧栏有这一条，点进去被弹回首页」——数据看起来完全正常，
  * 排查成本极高。所以这里有四道闸：
  * <ol>
- *   <li>{@code path} 必须命中 {@link MenuRoutes} 的白名单，且未删除范围内唯一；</li>
+ *   <li>{@code path} 必须命中 {@link MenuRoutes} 的白名单或 sys_page 里真实存在的动态页面（/p/{pageKey}），且未删除范围内唯一；</li>
  *   <li>{@code permission} 必须是 {@link Permission#CATALOG} 里登记过的权限点（或空串）；</li>
  *   <li>{@code icon} 只做长度校验——图标填错的后果是退化成默认图标，不影响可用性，
  *       交给 {@code check_menu.py} 静态检查种子数据就够了；</li>
@@ -58,6 +58,14 @@ public class MenuService {
 
     @Autowired
     private TxTemplate txTemplate;
+
+    /**
+     * 动态页面的存在性由 sys_page 决定，菜单校验要查它。
+     * 依赖方向是单向的（MenuService → PageService），PageService 不反向依赖，
+     * 否则「配菜单时校验页面」和「配页面时校验菜单」互相等待，初始化顺序就死了。
+     */
+    @Autowired
+    private PageService pageService;
 
     /**
      * 管理页用的全量列表（含不进侧栏的项），走缓存。
@@ -159,7 +167,10 @@ public class MenuService {
 
     /** 可选的页面路径，供管理页的「路径」下拉使用。 */
     public List<String> routeOptions() {
-        return MenuRoutes.ALL;
+        // 静态白名单在前、动态页面在后：手写页面是主流，/p/* 是增量。
+        List<String> options = new ArrayList<>(MenuRoutes.ALL);
+        options.addAll(pageService.dynamicRouteOptions());
+        return options;
     }
 
     public MenuAdminItemResponse create(MenuInputRequest input, long operatorId) {
@@ -329,10 +340,14 @@ public class MenuService {
     /**
      * 路径白名单。这是「菜单入库」之后最重要的一道校验：
      * 没有它，管理员可以配出指向不存在页面的菜单，而错误只会在有人点它的时候以「跳回首页」的形式出现。
+     * <p>
+     * 动态页面走第二张白名单——sys_page 的 pageKey（/p/{pageKey}）。它由页面配置管理，
+     * 存量即合法：配一个动态页面 + 挂一条菜单，全程不用改代码；页面配置删掉后这条校验自动收紧，
+     * 菜单保存时就会报「页面不存在」。
      */
-    private static String requirePath(String raw) {
+    private String requirePath(String raw) {
         String value = trimToEmpty(raw);
-        if (!MenuRoutes.isValid(value)) {
+        if (!MenuRoutes.isValid(value) && !pageService.isValidDynamicPath(value)) {
             throw new DomainException("页面不存在：" + value + "，请从可选路径中选择");
         }
         return value;

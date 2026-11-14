@@ -64,7 +64,7 @@ public interface RoleMapper {
     int insert(RoleRecord role);
 
     @Update("UPDATE sys_role SET name = #{name}, description = #{description}, "
-            + "permissions = #{permissions}, department_scope = #{departmentScope}, "
+            + "permissions = #{permissions}, department_scope = #{departmentScope}, status = #{status}, "
             + "edit_time = #{editTime}, editor = #{editor} "
             + "WHERE id = #{id} AND is_deleted = 0")
     int update(RoleRecord role);

@@ -2,9 +2,11 @@ import {
   Boxes,
   Building2,
   LayoutDashboard,
+  Layers,
   ListTree,
   ScrollText,
   ShieldCheck,
+  SlidersHorizontal,
   UserRound,
   UsersRound,
   type LucideIcon,
@@ -28,6 +30,8 @@ export const NAV_ICONS: Record<string, LucideIcon> = {
   scroll: ScrollText,
   menu: ListTree,
   user: UserRound,
+  layers: Layers,
+  sliders: SlidersHorizontal,
 }
 
 /** 兜底图标，不进可选项——它表示「没配好」，不是一个设计选择。 */

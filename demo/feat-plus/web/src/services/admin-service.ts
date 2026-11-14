@@ -3,8 +3,12 @@ import type {
   ActivityQuery,
   CurrentUser,
   DashboardSummary,
+  DatasourceOption,
   DepartmentInput,
   DepartmentNode,
+  DwDataQuery,
+  DwRow,
+  DwSaveInput,
   GroupUpdateInput,
   LoginResponse,
   MenuAdminItem,
@@ -12,6 +16,9 @@ import type {
   MenuInput,
   NotificationItem,
   OperatorOption,
+  PageAdminItem,
+  PageConfig,
+  PageInput,
   PageResult,
   PermissionItem,
   Profile,
@@ -73,4 +80,20 @@ export interface AdminService {
   updateProfile(input: ProfileUpdate): Promise<Profile>
   /** 返回被踢掉的其它会话数 */
   changePassword(input: ChangePasswordInput): Promise<number>
+  /** 动态页面：拉渲染配置（权限按数据源声明，canWrite 逐请求计算） */
+  getPageConfig(pageKey: string): Promise<PageConfig>
+  /** 动态页面：列表数据（分页 + 筛选） */
+  listDwData(pageKey: string, query: DwDataQuery): Promise<PageResult<DwRow>>
+  /** 动态页面：单行数据，表单编辑回填 */
+  getDwRow(pageKey: string, id: number): Promise<DwRow>
+  /** 动态页面：保存（id 为空表示新建） */
+  saveDwData(pageKey: string, input: DwSaveInput): Promise<DwRow>
+  deleteDwRow(pageKey: string, id: number): Promise<void>
+  /** 页面配置管理 */
+  listPageConfigs(): Promise<PageAdminItem[]>
+  createPageConfig(input: PageInput): Promise<PageAdminItem>
+  updatePageConfig(id: number, input: PageInput): Promise<PageAdminItem>
+  deletePageConfig(id: number): Promise<void>
+  /** 可选数据源 + 字段声明，配置表单的下拉与字段提示 */
+  listDatasources(): Promise<DatasourceOption[]>
 }

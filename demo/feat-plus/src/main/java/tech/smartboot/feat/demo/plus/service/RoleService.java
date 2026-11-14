@@ -133,6 +133,7 @@ public class RoleService {
         current.setDescription(trimToEmpty(input.getDescription()));
         current.setPermissions(permissions);
         current.setDepartmentScope(scope);
+        int previousStatus = current.getStatus();
         if (input.getStatus() != null) {
             if (current.getBuiltin() == 1 && input.getStatus() != current.getStatus()) {
                 throw new DomainException("内置角色不允许停用");
@@ -148,6 +149,12 @@ public class RoleService {
         // scope / departmentIds 在上面按「是否超管」分支重新赋值过。
         final int resolvedScope = scope;
         final List<Long> resolvedDepartments = departmentIds;
+        // 编辑路径也能改状态（独立启停开关的语义见 setStatus）：变更时审计要带上
+        // 「账号权限随之恢复/失效」，否则停用一个角色在审计里只是一条普通的更新。
+        final String statusNote = current.getStatus() == previousStatus ? ""
+                : " · 状态：" + (previousStatus == 1 ? "启用" : "停用") + " → "
+                + (current.getStatus() == 1 ? "启用" : "停用")
+                + "（该角色下的账号权限随之" + (current.getStatus() == 1 ? "恢复" : "失效") + "）";
 
         txTemplate.run(session -> {
             RoleMapper roles = session.getMapper(RoleMapper.class);
@@ -157,7 +164,7 @@ public class RoleService {
             }
             activityRecorder.record("update", "更新了角色 " + current.getName(),
                     current.getCode() + " · " + describeCount(current.getPermissions())
-                            + " · " + DataScope.label(resolvedScope), null, operatorId);
+                            + " · " + DataScope.label(resolvedScope) + statusNote, null, operatorId);
         });
         return get(id);
     }

@@ -13,15 +13,18 @@ import tech.smartboot.feat.demo.plus.mapper.DepartmentMapper;
 import tech.smartboot.feat.demo.plus.mapper.LoginStatMapper;
 import tech.smartboot.feat.demo.plus.mapper.MenuMapper;
 import tech.smartboot.feat.demo.plus.mapper.NotificationMapper;
+import tech.smartboot.feat.demo.plus.mapper.PageMapper;
 import tech.smartboot.feat.demo.plus.mapper.RoleMapper;
 import tech.smartboot.feat.demo.plus.mapper.UserMapper;
 import tech.smartboot.feat.demo.plus.model.ActivityRecord;
 import tech.smartboot.feat.demo.plus.model.DepartmentRecord;
 import tech.smartboot.feat.demo.plus.model.MenuRecord;
 import tech.smartboot.feat.demo.plus.model.NotificationRecord;
+import tech.smartboot.feat.demo.plus.model.PageRecord;
 import tech.smartboot.feat.demo.plus.model.RoleRecord;
 import tech.smartboot.feat.demo.plus.model.UserAccount;
 import tech.smartboot.feat.demo.plus.security.MenuSnapshot;
+import tech.smartboot.feat.demo.plus.service.PageSnapshot;
 
 /**
  * 演示数据初始化器。
@@ -56,7 +59,13 @@ public class DataInitializer {
     private MenuMapper menuMapper;
 
     @Autowired
+    private PageMapper pageMapper;
+
+    @Autowired
     private MenuSnapshot menuSnapshot;
+
+    @Autowired
+    private PageSnapshot pageSnapshot;
 
     /**
      * 首次启动装种子数据；存量库补菜单。
@@ -76,6 +85,9 @@ public class DataInitializer {
             seedAll();
         } else if (menuMapper.countAll() == 0) {
             seedMenus();
+        } else if (pageMapper.countAll() == 0) {
+            // 动态页面配置是后加的表：存量库升级时补一份种子，与菜单分支是同一个迁移套路。
+            seedPages();
         }
     }
 
@@ -84,7 +96,9 @@ public class DataInitializer {
         seedAll();
         // 重置换了菜单行的 id，缓存里还是上一批。不清的话「恢复演示数据」之后侧栏还是改过的样子，
         // 要等十分钟 TTL 到期才恢复——这正是「缓存忘了失效」最典型的现场。
+        // 页面配置的缓存同理：重置换了行的 id，缓存里还是上一批。
         menuSnapshot.invalidate();
+        pageSnapshot.invalidate();
     }
 
     private void truncateAll() {
@@ -100,6 +114,7 @@ public class DataInitializer {
         roleMapper.truncate();
         departmentMapper.truncate();
         menuMapper.truncate();
+        pageMapper.truncate();
     }
 
     private void seedAll() {
@@ -110,6 +125,7 @@ public class DataInitializer {
         seedNotifications();
         seedLoginStats();
         seedMenus();
+        seedPages();
     }
 
     /**
@@ -133,6 +149,26 @@ public class DataInitializer {
             record.setCreatedTime(now);
             record.setEditTime(now);
             menuMapper.insert(record);
+        }
+    }
+
+    /**
+     * 页面配置表初始化。落库之后由「页面配置」页维护，这里只负责第一份可用的动态页面。
+     */
+    private void seedPages() {
+        Date now = new Date();
+        for (SeedData.SeedPage seed : SeedData.pages()) {
+            PageRecord record = new PageRecord();
+            record.setPageKey(seed.pageKey);
+            record.setTitle(seed.title);
+            record.setDescription(seed.description);
+            record.setDatasourceKey(seed.datasourceKey);
+            record.setListJson(seed.listJson);
+            record.setFormJson(seed.formJson);
+            record.setIsDeleted(0);
+            record.setCreatedTime(now);
+            record.setEditTime(now);
+            pageMapper.insert(record);
         }
     }
 

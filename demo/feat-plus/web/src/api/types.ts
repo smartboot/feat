@@ -330,3 +330,138 @@ export interface GroupUpdateInput {
   label: string
   sort: number
 }
+
+// ---------------------------------------------------------------------------
+// 动态页面（元数据驱动的列表 / 表单）
+//
+// 渲染配置存在后端 sys_page（list_json / form_json），下发即这些接口；
+// 数据经 /api/dw 通用通道按 datasourceKey 分发。字段命名与后端 Dw* DTO 一一对应，
+// 可选字段标注 ?（后端总是下发非 null 值，? 只是 JSON 里可能省略的防御）。
+// ---------------------------------------------------------------------------
+
+/** 表单控件枚举，与后端 PageService 的 FIELD_WIDGETS 校验集一致 */
+export type DwWidget = "input" | "password" | "textarea" | "select" | "switch" | "span"
+/** 列表内置动作枚举。自定义按钮动作（老平台的 script 存库）刻意不支持 */
+export type DwAction = "create" | "edit" | "delete" | "refresh"
+export type DwColumnFormat = "text" | "muted" | "badge" | "tags" | "number"
+export type DwVariant = "success" | "warning" | "destructive" | "secondary" | "outline"
+
+/** 枚举选项：select 的 option / badge、tags 的值映射 */
+export interface DwOption {
+  value: string
+  label: string
+  variant?: DwVariant
+}
+
+/** 一列：key 必须命中数据源声明的字段 */
+export interface DwColumn {
+  key: string
+  label: string
+  format: DwColumnFormat
+  /** Tailwind 宽度 class（如 "w-36"），省略表示自适应 */
+  width?: string
+  /** badge / tags 格式的值 → 文案 / 变体映射 */
+  options?: DwOption[]
+}
+
+/** 一条筛选：input 约定模糊匹配、select 约定精确匹配（由数据源解释） */
+export interface DwFilter {
+  key: string
+  label: string
+  widget: "input" | "select"
+  placeholder?: string
+  options?: DwOption[]
+}
+
+/** 一个表单字段。immutable = 创建可填、编辑只读；pattern 两端各自校验 */
+export interface DwFormField {
+  key: string
+  label: string
+  widget: DwWidget
+  required?: boolean
+  immutable?: boolean
+  pattern?: string
+  patternError?: string
+  placeholder?: string
+  defaultValue?: string
+  options?: DwOption[]
+  /** 1 = 半宽、2 = 全宽 */
+  span?: 1 | 2
+}
+
+export interface DwListConfig {
+  columns: DwColumn[]
+  filters: DwFilter[]
+  pageSize: number
+  actions: DwAction[]
+  rowKey: string
+}
+
+export interface DwFormConfig {
+  createTitle: string
+  editTitle: string
+  createDescription: string
+  editDescription: string
+  fields: DwFormField[]
+}
+
+/** GET /api/dw/pages/{pageKey} 的响应。canWrite 按当前请求人逐次计算 */
+export interface PageConfig {
+  pageKey: string
+  title: string
+  description: string
+  datasourceKey: string
+  list: DwListConfig
+  form: DwFormConfig
+  canWrite: boolean
+}
+
+/** 动态行的取值：字符串 / 数字 / 布尔 / 字符串数组，渲染层按 format 解释 */
+export type DwRow = Record<string, unknown>
+
+export interface DwDataQuery {
+  page: number
+  pageSize: number
+  filters: Record<string, string>
+}
+
+export interface DwSaveInput {
+  /** null / 省略表示新建 */
+  id?: number | null
+  values: Record<string, string>
+}
+
+/** 配置管理页的一行，来自 GET /api/pages。listJson / formJson 原文供编辑框回显 */
+export interface PageAdminItem {
+  id: number
+  pageKey: string
+  title: string
+  description: string
+  datasourceKey: string
+  listJson: string
+  formJson: string
+  editTime: string
+}
+
+export interface PageInput {
+  pageKey: string
+  title: string
+  description: string
+  datasourceKey: string
+  listJson: string
+  formJson: string
+}
+
+/** 数据源声明的可用字段：配置表单的字段提示 + 「防配置漂移」的锚点 */
+export interface DwFieldMeta {
+  key: string
+  label: string
+  type: string
+  writable: boolean
+}
+
+export interface DatasourceOption {
+  key: string
+  label: string
+  fields: DwFieldMeta[]
+}

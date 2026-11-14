@@ -9,8 +9,10 @@ import { adminService } from "@/services/http-admin-service"
 import { ActivityLogPage } from "@/pages/ActivityLogPage"
 import { DashboardPage } from "@/pages/DashboardPage"
 import { DepartmentPage } from "@/pages/DepartmentPage"
+import { DynamicPage } from "@/pages/DynamicPage"
 import { LoginPage } from "@/pages/LoginPage"
 import { MenuManagePage } from "@/pages/MenuManagePage"
+import { PageManagePage } from "@/pages/PageManagePage"
 import { ProfilePage } from "@/pages/ProfilePage"
 import { RoleListPage } from "@/pages/RoleListPage"
 import { UserListPage } from "@/pages/UserListPage"
@@ -31,6 +33,13 @@ function AuthenticatedApp({ currentUser, onLogout, onRefreshUser }: { currentUse
         <Route path="/departments" element={<DepartmentPage />} />
         <Route path="/activities" element={<ActivityLogPage />} />
         <Route path="/menus" element={<MenuManagePage />} />
+        {/*
+          动态页面的唯一路由：配置驱动的页面全部挂在 /p/:pageKey 下，
+          菜单配一条 /p/xxx 即可上线，不再走「App.tsx + MenuRoutes + 菜单」三处登记。
+          pageKey 合法性由后端 sys_page 校验（菜单保存时 + 配置请求时各拦一道）。
+        */}
+        <Route path="/p/:pageKey" element={<DynamicPage />} />
+        <Route path="/pages" element={<PageManagePage />} />
         <Route path="/profile" element={<ProfilePage onProfileUpdated={onRefreshUser} />} />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />

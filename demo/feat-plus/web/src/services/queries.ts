@@ -1,6 +1,21 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
-import type { ActivityQuery, ChangePasswordInput, DepartmentInput, GroupUpdateInput, MenuInput, MenuGroup, ProfileUpdate, RoleInput, UserInput, UserQuery, UserStatus } from "@/api/types"
+import type {
+  ActivityQuery,
+  ChangePasswordInput,
+  DepartmentInput,
+  DwDataQuery,
+  DwSaveInput,
+  GroupUpdateInput,
+  MenuInput,
+  MenuGroup,
+  PageInput,
+  ProfileUpdate,
+  RoleInput,
+  UserInput,
+  UserQuery,
+  UserStatus,
+} from "@/api/types"
 import { adminService } from "@/services/http-admin-service"
 
 export const queryKeys = {
@@ -18,6 +33,11 @@ export const queryKeys = {
   activities: (query: ActivityQuery) => ["activities", query] as const,
   profile: ["profile"] as const,
   activityOperators: ["activities", "operators"] as const,
+  // 动态页面：配置 / 数据 / 配置管理三条缓存线
+  pageConfig: (pageKey: string) => ["dw", "pages", pageKey] as const,
+  dwData: (pageKey: string, query: DwDataQuery) => ["dw", "data", pageKey, query] as const,
+  pageAdmin: ["dw", "admin", "pages"] as const,
+  datasources: ["dw", "datasources"] as const,
 }
 
 export function useUsers(query: UserQuery, enabled = true) {
@@ -250,4 +270,84 @@ export function useResetDemo() {
       await client.invalidateQueries()
     },
   })
+}
+
+// ---------------------------------------------------------------------------
+// 动态页面
+// ---------------------------------------------------------------------------
+
+/**
+ * 页面渲染配置。配置低频变更（staleTime 5 分钟兜底，保存配置后主动失效），
+ * 每次渲染动态页都拉它——这是「配置即页面」的唯一入口。
+ */
+export function usePageConfig(pageKey: string, enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.pageConfig(pageKey),
+    queryFn: () => adminService.getPageConfig(pageKey),
+    staleTime: 5 * 60_000,
+    enabled,
+  })
+}
+
+/** 动态列表数据：翻页时保留上一页，避免表格闪白（与 useUsers 同款取舍）。 */
+export function useDwData(pageKey: string, query: DwDataQuery, enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.dwData(pageKey, query),
+    queryFn: () => adminService.listDwData(pageKey, query),
+    placeholderData: (previous) => previous,
+    enabled,
+  })
+}
+
+/**
+ * 动态页面的写操作。只失效本页数据——配置没变，别的页面不陪跑。
+ * 角色数据源背后是手写 Service，写完还会产生审计日志。
+ */
+export function useDwMutations(pageKey: string) {
+  const client = useQueryClient()
+  const invalidate = async () => {
+    await client.invalidateQueries({ queryKey: ["dw", "data", pageKey] })
+    await client.invalidateQueries({ queryKey: ["activities"] })
+  }
+  return {
+    save: useMutation({ mutationFn: (input: DwSaveInput) => adminService.saveDwData(pageKey, input), onSuccess: invalidate }),
+    remove: useMutation({ mutationFn: (id: number) => adminService.deleteDwRow(pageKey, id), onSuccess: invalidate }),
+  }
+}
+
+/** 配置管理页的列表。 */
+export function usePageAdmin(enabled = true) {
+  return useQuery({ queryKey: queryKeys.pageAdmin, queryFn: () => adminService.listPageConfigs(), enabled })
+}
+
+/** 可选数据源字典（编译期白名单），staleTime 同权限字典量级。 */
+export function useDatasources(enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.datasources,
+    queryFn: () => adminService.listDatasources(),
+    staleTime: 5 * 60_000,
+    enabled,
+  })
+}
+
+/**
+ * 页面配置的写操作。失效范围比数据写操作大：配置决定所有动态页的渲染，
+ * 页面管理页改完，所有 pageKey 的配置缓存与菜单下拉都要重新拉。
+ */
+export function usePageMutations() {
+  const client = useQueryClient()
+  const invalidate = async () => {
+    await Promise.all([
+      client.invalidateQueries({ queryKey: ["dw", "pages"] }),
+      client.invalidateQueries({ queryKey: ["dw", "data"] }),
+      client.invalidateQueries({ queryKey: queryKeys.pageAdmin }),
+      client.invalidateQueries({ queryKey: queryKeys.menuRoutes }),
+      client.invalidateQueries({ queryKey: ["activities"] }),
+    ])
+  }
+  return {
+    create: useMutation({ mutationFn: (input: PageInput) => adminService.createPageConfig(input), onSuccess: invalidate }),
+    update: useMutation({ mutationFn: ({ id, input }: { id: number; input: PageInput }) => adminService.updatePageConfig(id, input), onSuccess: invalidate }),
+    remove: useMutation({ mutationFn: (id: number) => adminService.deletePageConfig(id), onSuccess: invalidate }),
+  }
 }

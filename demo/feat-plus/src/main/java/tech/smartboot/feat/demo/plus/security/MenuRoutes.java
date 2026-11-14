@@ -34,11 +34,13 @@ public final class MenuRoutes {
     public static final String ACTIVITIES = "/activities";
     /** 菜单管理。 */
     public static final String MENUS = "/menus";
+    /** 页面配置（动态页面的管理页）。 */
+    public static final String PAGES = "/pages";
     /** 个人中心：不进侧栏，但仍是标题来源。 */
     public static final String PROFILE = "/profile";
 
     public static final List<String> ALL = Collections.unmodifiableList(Arrays.asList(
-            DASHBOARD, USERS, ROLES, DEPARTMENTS, ACTIVITIES, MENUS, PROFILE));
+            DASHBOARD, USERS, ROLES, DEPARTMENTS, ACTIVITIES, MENUS, PAGES, PROFILE));
 
     private MenuRoutes() {
     }

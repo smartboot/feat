@@ -3,8 +3,12 @@ import type {
   ActivityQuery,
   CurrentUser,
   DashboardSummary,
+  DatasourceOption,
   DepartmentInput,
   DepartmentNode,
+  DwDataQuery,
+  DwRow,
+  DwSaveInput,
   GroupUpdateInput,
   LoginResponse,
   MenuAdminItem,
@@ -12,6 +16,9 @@ import type {
   MenuInput,
   NotificationItem,
   OperatorOption,
+  PageAdminItem,
+  PageConfig,
+  PageInput,
   PageResult,
   PermissionItem,
   Profile,
@@ -35,6 +42,15 @@ function buildQuery(query: UserQuery): string {
   if (query.status !== "all") params.set("status", query.status)
   if (query.roleCode !== "all") params.set("roleCode", query.roleCode)
   if (query.departmentId !== "all") params.set("departmentId", String(query.departmentId))
+  return params.toString()
+}
+
+function buildDwQuery(query: DwDataQuery): string {
+  const params = new URLSearchParams()
+  params.set("page", String(query.page))
+  params.set("pageSize", String(query.pageSize))
+  // 筛选整包 JSON：值由后端数据源做类型化解释，不参与 SQL 拼接。
+  if (Object.keys(query.filters).length > 0) params.set("filter", JSON.stringify(query.filters))
   return params.toString()
 }
 
@@ -166,5 +182,38 @@ export const adminService: AdminService = {
   },
   resetDemo(): Promise<void> {
     return request<void>("/api/admin/reset-demo", { method: "POST" })
+  },
+  getPageConfig(pageKey: string): Promise<PageConfig> {
+    return request<PageConfig>(`/api/dw/pages/${encodeURIComponent(pageKey)}`)
+  },
+  listDwData(pageKey: string, query: DwDataQuery): Promise<PageResult<DwRow>> {
+    return request<PageResult<DwRow>>(`/api/dw/pages/${encodeURIComponent(pageKey)}/data?${buildDwQuery(query)}`)
+  },
+  getDwRow(pageKey: string, id: number): Promise<DwRow> {
+    return request<DwRow>(`/api/dw/pages/${encodeURIComponent(pageKey)}/data/${id}`)
+  },
+  saveDwData(pageKey: string, input: DwSaveInput): Promise<DwRow> {
+    return request<DwRow>(`/api/dw/pages/${encodeURIComponent(pageKey)}/data`, {
+      method: "POST",
+      body: jsonBody(input),
+    })
+  },
+  deleteDwRow(pageKey: string, id: number): Promise<void> {
+    return request<void>(`/api/dw/pages/${encodeURIComponent(pageKey)}/data/${id}`, { method: "DELETE" })
+  },
+  listPageConfigs(): Promise<PageAdminItem[]> {
+    return request<PageAdminItem[]>("/api/pages")
+  },
+  createPageConfig(input: PageInput): Promise<PageAdminItem> {
+    return request<PageAdminItem>("/api/pages", { method: "POST", body: jsonBody(input) })
+  },
+  updatePageConfig(id: number, input: PageInput): Promise<PageAdminItem> {
+    return request<PageAdminItem>(`/api/pages/${id}`, { method: "PUT", body: jsonBody(input) })
+  },
+  deletePageConfig(id: number): Promise<void> {
+    return request<void>(`/api/pages/${id}`, { method: "DELETE" })
+  },
+  listDatasources(): Promise<DatasourceOption[]> {
+    return request<DatasourceOption[]>("/api/pages/datasources")
   },
 }
