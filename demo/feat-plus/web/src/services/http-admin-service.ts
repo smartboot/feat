@@ -5,8 +5,10 @@ import type {
   DashboardSummary,
   DepartmentInput,
   DepartmentNode,
+  GroupUpdateInput,
   LoginResponse,
   MenuAdminItem,
+  MenuGroup,
   MenuInput,
   NotificationItem,
   OperatorOption,
@@ -125,6 +127,12 @@ export const adminService: AdminService = {
   },
   deleteMenu(id: number): Promise<void> {
     return request<void>(`/api/menus/${id}`, { method: "DELETE" })
+  },
+  listMenuGroups(): Promise<MenuGroup[]> {
+    return request<MenuGroup[]>("/api/menus/groups")
+  },
+  updateMenuGroup(groupKey: string, input: GroupUpdateInput): Promise<void> {
+    return request<void>(`/api/menus/groups/${groupKey}`, { method: "PUT", body: jsonBody(input) })
   },
   listDepartments(): Promise<DepartmentNode[]> {
     return request<DepartmentNode[]>("/api/departments")

@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react"
-import { GripVertical, Pencil, Plus, Trash2 } from "lucide-react"
+import { ChevronDown, ChevronRight, GripVertical, Pencil, Plus, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
-import type { MenuAdminItem, MenuInput } from "@/api/types"
+import type { GroupUpdateInput, MenuAdminItem, MenuGroup, MenuInput } from "@/api/types"
 import { useRefreshSession, useSession } from "@/auth/session"
 import {
   AlertDialog,
@@ -34,7 +34,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { NAV_ICONS, NAV_ICON_KEYS } from "@/lib/icons"
 import { groupByKey } from "@/lib/menus"
 import { hasPermission } from "@/lib/permissions"
-import { useMenuMutations, useMenuRoutes, useMenus, usePermissionCatalog } from "@/services/queries"
+import { useMenuGroupMutations, useMenuGroups, useMenuMutations, useMenuRoutes, useMenus, usePermissionCatalog } from "@/services/queries"
 
 /**
  * 表单初值。分组的标识与名称留空而不是写死一个——写死会让「新增」总是落进同一个组，
@@ -70,15 +70,24 @@ export function MenuManagePage() {
   // 路径与权限点只在写的时候用得上，没有 menu:write 就不必去请求（否则只会拿到 403）。
   const { data: routes = [] } = useMenuRoutes(canWrite)
   const { data: permissionCatalog = [] } = usePermissionCatalog(canRead)
+  // 分组列表。菜单管理页的「分组管理」面板用，与菜单列表独立请求——分组是聚合查询，缓存策略可以不同。
+  const { data: groupsList = [], isLoading: groupsLoading } = useMenuGroups(canRead)
   // 改完菜单要重新拉一次 /me，否则管理页显示新标题、左边侧栏还是旧的。
   const refreshSession = useRefreshSession()
   const mutations = useMenuMutations(refreshSession)
+  const groupMutations = useMenuGroupMutations(refreshSession)
 
   const [editing, setEditing] = useState<MenuAdminItem | null>(null)
   const [draft, setDraft] = useState<MenuInput>(emptyDraft)
   const [formOpen, setFormOpen] = useState(false)
   const [formError, setFormError] = useState("")
   const [removing, setRemoving] = useState<MenuAdminItem | null>(null)
+
+  // 分组编辑状态
+  const [editingGroup, setEditingGroup] = useState<MenuGroup | null>(null)
+  const [groupDraft, setGroupDraft] = useState<GroupUpdateInput>({ label: "", sort: 0 })
+  const [groupFormOpen, setGroupFormOpen] = useState(false)
+  const [groupFormError, setGroupFormError] = useState("")
 
   // 后端已按 groupSort / sort / id 排好序，这里只做分组，不再排序。
   const groups = useMemo(() => groupByKey(menus), [menus])
@@ -172,6 +181,28 @@ export function MenuManagePage() {
     }
   }
 
+  function openEditGroup(group: MenuGroup) {
+    setEditingGroup(group)
+    setGroupDraft({ label: group.label, sort: group.sort })
+    setGroupFormError("")
+    setGroupFormOpen(true)
+  }
+
+  async function submitGroup() {
+    if (!editingGroup) return
+    if (!groupDraft.label.trim()) {
+      setGroupFormError("请填写分组名称")
+      return
+    }
+    try {
+      await groupMutations.update.mutateAsync({ groupKey: editingGroup.key, input: groupDraft })
+      toast.success("分组已更新")
+      setGroupFormOpen(false)
+    } catch (error) {
+      setGroupFormError(error instanceof Error ? error.message : "保存失败")
+    }
+  }
+
   if (!canRead) {
     return (
       <div className="space-y-2">
@@ -224,6 +255,50 @@ export function MenuManagePage() {
           <CardContent className="flex items-center justify-between gap-4 p-6 text-sm">
             <span className="text-muted-foreground">菜单加载失败，请稍后重试。</span>
             <Button variant="outline" onClick={() => refetch()}>重试</Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* 分组管理面板 */}
+      {!isLoading && !isError && canWrite && (
+        <Card>
+          <CardContent className="p-0">
+            <div className="flex items-center justify-between border-b px-4 py-3">
+              <div className="flex items-center gap-2">
+                <strong className="text-sm">分组管理</strong>
+                <Badge variant="secondary" className="text-[10px]">{groupsList.length} 个分组</Badge>
+              </div>
+              <span className="text-[11px] text-muted-foreground">
+                分组是跟着菜单走的：空组会自动消失，不能单独删除
+              </span>
+            </div>
+            {groupsLoading ? (
+              <div className="p-4"><Skeleton className="h-16 w-full" /></div>
+            ) : groupsList.length === 0 ? (
+              <p className="p-6 text-center text-sm text-muted-foreground">还没有任何分组</p>
+            ) : (
+              <div className="divide-y">
+                {groupsList.map((group) => (
+                  <div key={group.key} className="flex items-center justify-between px-4 py-3 hover:bg-muted/50">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <GripVertical className="size-4 shrink-0 text-muted-foreground/50" />
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <strong className="text-sm">{group.label}</strong>
+                          <Badge variant="outline" className="text-[10px]">{group.key}</Badge>
+                        </div>
+                        <p className="mt-0.5 text-[11px] text-muted-foreground">
+                          顺序 {group.sort} · {group.count} 个菜单
+                        </p>
+                      </div>
+                    </div>
+                    <Button variant="ghost" size="icon" onClick={() => openEditGroup(group)} aria-label="编辑分组">
+                      <Pencil className="size-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
@@ -434,6 +509,38 @@ export function MenuManagePage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* 分组编辑 Dialog */}
+      <Dialog open={groupFormOpen} onOpenChange={setGroupFormOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>编辑分组「{editingGroup?.label}」</DialogTitle>
+            <DialogDescription>
+              改完后同组所有菜单会同步更新。分组不能单独删除——删完组内最后一个菜单，组自然消失。
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-4 py-2">
+            <div className="grid gap-2">
+              <Label htmlFor="group-label">分组名称</Label>
+              <Input id="group-label" value={groupDraft.label}
+                     onChange={(event) => setGroupDraft((d) => ({ ...d, label: event.target.value }))}
+                     placeholder="例如：工作台" maxLength={32} />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="group-sort">分组顺序</Label>
+              <Input id="group-sort" type="number" value={groupDraft.sort}
+                     onChange={(event) => setGroupDraft((d) => ({ ...d, sort: Number(event.target.value) || 0 }))} />
+            </div>
+            {groupFormError && <p className="text-sm text-destructive">{groupFormError}</p>}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setGroupFormOpen(false)}>取消</Button>
+            <Button onClick={submitGroup} disabled={groupMutations.update.isPending}>保存</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

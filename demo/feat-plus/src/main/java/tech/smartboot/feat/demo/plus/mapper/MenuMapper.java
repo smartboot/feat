@@ -77,4 +77,12 @@ public interface MenuMapper {
 
     @Delete("TRUNCATE TABLE sys_menu RESTART IDENTITY")
     int truncate();
+
+    /**
+     * 聚合查询现有分组。按 groupKey 分组，取每组第一条的 label/sort（同组内一致），并统计菜单数。
+     * 排序用 group_sort，与菜单列表保持一致。
+     */
+    @Select("SELECT group_key, MAX(group_label) AS group_label, MAX(group_sort) AS group_sort, COUNT(*) AS menu_count "
+            + "FROM sys_menu WHERE is_deleted = 0 GROUP BY group_key ORDER BY MAX(group_sort) ASC, group_key ASC")
+    List<MenuGroupSummary> selectGroups();
 }

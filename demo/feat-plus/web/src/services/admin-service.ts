@@ -5,8 +5,10 @@ import type {
   DashboardSummary,
   DepartmentInput,
   DepartmentNode,
+  GroupUpdateInput,
   LoginResponse,
   MenuAdminItem,
+  MenuGroup,
   MenuInput,
   NotificationItem,
   OperatorOption,
@@ -51,6 +53,10 @@ export interface AdminService {
   createMenu(input: MenuInput): Promise<MenuAdminItem>
   updateMenu(id: number, input: MenuInput): Promise<MenuAdminItem>
   deleteMenu(id: number): Promise<void>
+  /** 分组列表。聚合自 sys_menu，count=0 表示空组 */
+  listMenuGroups(): Promise<MenuGroup[]>
+  /** 更新分组的名称和顺序 */
+  updateMenuGroup(groupKey: string, input: GroupUpdateInput): Promise<void>
   listDepartments(): Promise<DepartmentNode[]>
   createDepartment(input: DepartmentInput): Promise<DepartmentNode>
   updateDepartment(id: number, input: DepartmentInput): Promise<DepartmentNode>

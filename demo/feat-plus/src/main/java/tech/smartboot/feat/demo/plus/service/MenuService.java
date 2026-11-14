@@ -8,9 +8,11 @@ import java.util.regex.Pattern;
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Bean;
 import tech.smartboot.feat.demo.plus.common.DomainException;
+import tech.smartboot.feat.demo.plus.dto.GroupResponse;
 import tech.smartboot.feat.demo.plus.dto.MenuAdminItemResponse;
 import tech.smartboot.feat.demo.plus.dto.MenuInputRequest;
 import tech.smartboot.feat.demo.plus.dto.MenuItemResponse;
+import tech.smartboot.feat.demo.plus.mapper.MenuGroupSummary;
 import tech.smartboot.feat.demo.plus.mapper.MenuMapper;
 import tech.smartboot.feat.demo.plus.model.MenuRecord;
 import tech.smartboot.feat.demo.plus.security.MenuRoutes;
@@ -90,6 +92,49 @@ public class MenuService {
                     row.getName(), row.getIcon(), permission, row.getSortOrder(), row.getVisible() == 1));
         }
         return items;
+    }
+
+    /**
+     * 聚合查询现有分组。管理页和侧栏都用这个——侧栏渲染分组标题、管理页渲染分组列表。
+     * <p>
+     * 分组信息冗余在每行上，所以这里按 groupKey 聚合，取每组第一条的 label/sort（同组内一致），
+     * 并统计菜单数。返回结果按 groupSort 排序，与菜单列表保持一致。
+     */
+    public List<GroupResponse> listGroups() {
+        List<MenuGroupSummary> summaries = menuMapper.selectGroups();
+        List<GroupResponse> groups = new ArrayList<>(summaries.size());
+        for (MenuGroupSummary s : summaries) {
+            groups.add(new GroupResponse(s.getGroupKey(), s.getGroupLabel(), s.getGroupSort(), s.getMenuCount()));
+        }
+        return groups;
+    }
+
+    /**
+     * 更新分组的名称和顺序。底层调 {@code updateGroupMeta} 同步同组所有菜单行，
+     * 否则前端分组取「该组第一条的 label」，会看到只有部分行改了名。
+     * <p>
+     * 不暴露「删除分组」接口：分组是跟着菜单走的，删完组内最后一个菜单，组自然就消失了。
+     * 单独删组反而会让它名下菜单变成「无组状态」，而 schema 里 group_key 是 NOT NULL。
+     */
+    public void updateGroup(String groupKey, String newLabel, int newSort, long operatorId) {
+        String label = requireGroupLabel(newLabel);
+        if (newSort < 0) {
+            throw new DomainException("分组顺序不能小于 0");
+        }
+        // 先确认分组存在：selectGroups() 聚合查询，找不到就说明没有这个 groupKey 的菜单。
+        List<MenuGroupSummary> existing = menuMapper.selectGroups();
+        boolean found = false;
+        for (MenuGroupSummary s : existing) {
+            if (s.getGroupKey().equals(groupKey)) {
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            throw DomainException.notFound("分组不存在：" + groupKey);
+        }
+        menuMapper.updateGroupMeta(groupKey, label, newSort, operatorId);
+        menuSnapshot.invalidate();
     }
 
     /**

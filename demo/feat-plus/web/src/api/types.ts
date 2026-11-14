@@ -312,3 +312,21 @@ export interface DashboardSummary {
   trend30: TrendPoint[]
   activities: ActivityItem[]
 }
+
+/**
+ * 菜单管理页的分组信息。后端从 sys_menu 按 groupKey 聚合出来——所以 count=0 的分组意味着
+ * 该组下没有菜单，可以安全删除（但后端不暴露单独的删除接口：删完组内最后一个菜单，组自然消失）。
+ */
+export interface MenuGroup {
+  key: string
+  label: string
+  sort: number
+  /** 该分组下的菜单数。为 0 表示空组。 */
+  count: number
+}
+
+/** 更新分组的请求体。groupKey 在 URL 路径里，这里只有 label 和 sort。 */
+export interface GroupUpdateInput {
+  label: string
+  sort: number
+}

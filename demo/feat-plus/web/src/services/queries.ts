@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
-import type { ActivityQuery, ChangePasswordInput, DepartmentInput, MenuInput, ProfileUpdate, RoleInput, UserInput, UserQuery, UserStatus } from "@/api/types"
+import type { ActivityQuery, ChangePasswordInput, DepartmentInput, GroupUpdateInput, MenuInput, MenuGroup, ProfileUpdate, RoleInput, UserInput, UserQuery, UserStatus } from "@/api/types"
 import { adminService } from "@/services/http-admin-service"
 
 export const queryKeys = {
@@ -11,6 +11,7 @@ export const queryKeys = {
   permissionCatalog: ["permissions", "catalog"] as const,
   menus: ["menus"] as const,
   menuRoutes: ["menus", "routes"] as const,
+  menuGroups: ["menus", "groups"] as const,
   departments: ["departments"] as const,
   dashboard: ["dashboard"] as const,
   notifications: ["notifications"] as const,
@@ -168,6 +169,7 @@ export function useMenuMutations(onChanged?: () => void) {
   const invalidate = async () => {
     await Promise.all([
       client.invalidateQueries({ queryKey: queryKeys.menus }),
+      client.invalidateQueries({ queryKey: queryKeys.menuGroups }),
       client.invalidateQueries({ queryKey: ["activities"] }),
     ])
     // 侧边栏的菜单来自 /api/auth/me 的响应，不在 react-query 缓存里，
@@ -178,6 +180,32 @@ export function useMenuMutations(onChanged?: () => void) {
     create: useMutation({ mutationFn: (input: MenuInput) => adminService.createMenu(input), onSuccess: invalidate }),
     update: useMutation({ mutationFn: ({ id, input }: { id: number; input: MenuInput }) => adminService.updateMenu(id, input), onSuccess: invalidate }),
     remove: useMutation({ mutationFn: (id: number) => adminService.deleteMenu(id), onSuccess: invalidate }),
+  }
+}
+
+/**
+ * 分组列表。菜单管理页的「分组管理」面板用。
+ */
+export function useMenuGroups(enabled = true) {
+  return useQuery({ queryKey: queryKeys.menuGroups, queryFn: () => adminService.listMenuGroups(), enabled })
+}
+
+/**
+ * 分组更新。成功后同时失效菜单列表（分组信息存在菜单行上，改分组等于改菜单）。
+ */
+export function useMenuGroupMutations(onChanged?: () => void) {
+  const client = useQueryClient()
+  const invalidate = async () => {
+    await Promise.all([
+      client.invalidateQueries({ queryKey: queryKeys.menuGroups }),
+      client.invalidateQueries({ queryKey: queryKeys.menus }),
+    ])
+    onChanged?.()
+  }
+  return {
+    update: useMutation(
+      { mutationFn: ({ groupKey, input }: { groupKey: string; input: GroupUpdateInput }) => adminService.updateMenuGroup(groupKey, input), onSuccess: invalidate },
+    ),
   }
 }
 
