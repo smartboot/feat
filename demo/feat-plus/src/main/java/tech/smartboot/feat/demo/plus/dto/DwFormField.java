@@ -19,6 +19,10 @@ import java.util.List;
  * <p>
  * {@code pattern} 是 Java 与 JS 都能执行的正则源串，两端各自校验，前端拦体验、后端拦脏数据。
  * switch 的值统一用 "1" / "0" 字符串：动态层的所有值都是字符串，避免类型漂移。
+ * <p>
+ * {@code select} 有两种形态：单选（值是一个字符串）与多选（{@code multiple=true}，值是一个数组）。
+ * 选项可以静态写在 {@code options} 里，也可以指向 {@code optionsApi} 现取——人员、权限点这类
+ * 会变的字典都不该被复制进配置。
  */
 public class DwFormField {
     private String key;
@@ -34,6 +38,28 @@ public class DwFormField {
     private String placeholder = "";
     private String defaultValue = "";
     private List<DwOption> options = new ArrayList<>();
+    /**
+     * 选项来源接口：站内 {@code /api/} 路径，与静态 {@code options} 二选一。
+     * <p>
+     * 与筛选上的同名字段是同一套语义：存的是「去哪取」而不是取回来的结果。
+     * 权限点、角色、部门这类选项会随业务变动，存快照等于每次变动都要回来重存一遍页面配置。
+     */
+    private String optionsApi = "";
+    private String optionValueField = "value";
+    private String optionLabelField = "label";
+    /**
+     * 分组字段：选项按它分块渲染（权限点按模块分组）。留空则平铺。
+     * 分组只影响排版，不影响提交值——提交的永远是 {@code optionValueField} 的取值。
+     */
+    private String optionGroupField = "";
+    private String optionGroupLabelField = "label";
+    /**
+     * 多选：下拉换成勾选组，提交值是数组而不是字符串。
+     * <p>
+     * 只对 {@code select} 生效。它同时改变了保存契约——{@code DwSaveRequest.list(key)} 取值，
+     * 而不是 {@code text(key)}；用错会抛异常而不是静默取空，正是为了防「保存后权限被清空」。
+     */
+    private boolean multiple;
     /** 1 = 半宽（两列布局的半边），2 = 全宽。 */
     private int span = 1;
 
@@ -130,6 +156,54 @@ public class DwFormField {
 
     public void setOptions(List<DwOption> options) {
         this.options = options == null ? new ArrayList<>() : options;
+    }
+
+    public String getOptionsApi() {
+        return optionsApi;
+    }
+
+    public void setOptionsApi(String optionsApi) {
+        this.optionsApi = optionsApi;
+    }
+
+    public String getOptionValueField() {
+        return optionValueField;
+    }
+
+    public void setOptionValueField(String optionValueField) {
+        this.optionValueField = optionValueField;
+    }
+
+    public String getOptionLabelField() {
+        return optionLabelField;
+    }
+
+    public void setOptionLabelField(String optionLabelField) {
+        this.optionLabelField = optionLabelField;
+    }
+
+    public String getOptionGroupField() {
+        return optionGroupField;
+    }
+
+    public void setOptionGroupField(String optionGroupField) {
+        this.optionGroupField = optionGroupField;
+    }
+
+    public String getOptionGroupLabelField() {
+        return optionGroupLabelField;
+    }
+
+    public void setOptionGroupLabelField(String optionGroupLabelField) {
+        this.optionGroupLabelField = optionGroupLabelField;
+    }
+
+    public boolean isMultiple() {
+        return multiple;
+    }
+
+    public void setMultiple(boolean multiple) {
+        this.multiple = multiple;
     }
 
     public int getSpan() {

@@ -47,8 +47,8 @@
     "form": {
       "createTitle": "新建角色",
       "editTitle": "编辑角色",
-      "createDescription": "角色编码创建后不可修改。简化表单不包含权限点与数据范围，请到「角色权限」页补充。",
-      "editDescription": "编码创建后不可修改；权限点与数据范围请到「角色权限」页调整。",
+      "createDescription": "角色编码创建后不可修改。数据范围仍在「角色权限」页配置。",
+      "editDescription": "编码创建后不可修改；数据范围请到「角色权限」页调整。",
       "fields": [
         {
           "key": "code",
@@ -61,7 +61,19 @@
         },
         { "key": "name", "label": "角色名称", "widget": "input", "required": true },
         { "key": "description", "label": "描述", "widget": "input", "span": 2 },
-        { "key": "status", "label": "启用角色", "widget": "switch", "defaultValue": "1", "span": 2 }
+        { "key": "status", "label": "启用角色", "widget": "switch", "defaultValue": "1", "span": 2 },
+        {
+          "key": "permissions",
+          "label": "权限点",
+          "widget": "select",
+          "multiple": true,
+          "span": 2,
+          "optionsApi": "/api/permissions",
+          "optionValueField": "key",
+          "optionLabelField": "label",
+          "optionGroupField": "groupKey",
+          "optionGroupLabelField": "groupLabel"
+        }
       ]
     }
   },

@@ -2,7 +2,7 @@ import { useState } from "react"
 import { Filter, Inbox, MoreHorizontal, Pencil, Plus, RotateCcw, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
-import type { DwColumn, DwFilter, DwRow, PageConfig } from "@/api/types"
+import type { DwColumn, DwFilter, DwFormValue, DwRow, PageConfig } from "@/api/types"
 import { DwCell } from "@/components/dw/DwCell"
 import { DwFormDialog } from "@/components/dw/DwFormDialog"
 import {
@@ -34,7 +34,7 @@ import { cn } from "@/lib/utils"
 
 /**
  * 通用动态列表渲染器：列 / 筛选 / 分页 / 行操作全部来自 PageConfig，
- * 组件本身不感知任何具体业务。交互质感以手写页（RoleListPage / ActivityLogPage）为母版。
+ * 组件本身不感知任何具体业务。交互质感以手写页（RoleListPage）为母版。
  * <p>
  * 编辑回填直接用列表行数据：PageDataSource 的契约是行数据自带全部声明字段，
  * 不需要为打开表单再发一次单行请求。
@@ -90,7 +90,7 @@ export function DwList({ pageKey, config }: { pageKey: string; config: PageConfi
     setDialogOpen(true)
   }
 
-  async function submit(values: Record<string, string>) {
+  async function submit(values: Record<string, DwFormValue>) {
     try {
       await mutations.save.mutateAsync({
         id: editing ? rowId(editing, list.rowKey) : null,

@@ -23,11 +23,13 @@ import tech.smartboot.feat.demo.plus.security.Permission;
  * 角色量级小（一屏以内），list 走内存过滤 + 分页，不动 RoleMapper。
  * 角色是全局数据，没有部门维度，{@code access} 只用来取操作人。
  * <p>
- * <b>简化表单的功能边界。</b> 动态表单只覆盖 code / name / description / status 四个字段；
- * 权限点勾选、数据范围配置仍是手写页 /roles 的专属能力（控件集后续补齐后再迁移）。
- * {@code RoleService.update} 对非 ADMIN 角色会用入参整体覆盖权限与数据范围——
- * 所以这里的更新路径必须先把当前值回填进 RoleInputRequest，否则简化表单一保存，
- * 角色的权限点就被静默清空了。
+ * <b>权限点走多选控件。</b> {@code permissions} 是可写字段，选项来自 {@code /api/permissions}
+ * （按模块分组），不把权限点字典复制进页面配置——{@code Permission.CATALOG} 才是它的真相。
+ * 值类型是数组，用 {@code DwSaveRequest.list()} 取值。
+ * <p>
+ * <b>仍然留在手写页的两件事：</b>数据范围（需要「全部 / 本部门 / 本部门及以下 / 自定义」四态
+ * 加部门树联动，不是一个字段能表达的），以及内置角色的逐行差异化禁用（超管权限恒为全集、
+ * 内置角色不允许停用）——这些规则由 {@link RoleService} 兜底，配置层只负责不把用户送进死胡同。
  */
 @Bean
 public class RolePageDataSource implements PageDataSource {
@@ -54,7 +56,8 @@ public class RolePageDataSource implements PageDataSource {
         fields.add(new DwFieldMeta("description", "描述", "string", true));
         // 值统一按字符串处理（"1" / "0"），switch 与 badge 都按字符串比较。
         fields.add(new DwFieldMeta("status", "状态", "string", true));
-        fields.add(new DwFieldMeta("permissions", "权限点", "list", false));
+        // 权限点可写：选项由 /api/permissions 现取，值以数组提交。
+        fields.add(new DwFieldMeta("permissions", "权限点", "list", true));
         fields.add(new DwFieldMeta("scopeLabel", "数据范围", "string", false));
         fields.add(new DwFieldMeta("userCount", "成员数", "number", false));
         fields.add(new DwFieldMeta("createdTime", "创建时间", "string", false));
@@ -118,26 +121,33 @@ public class RolePageDataSource implements PageDataSource {
     @Override
     public Map<String, Object> save(DwSaveRequest request, AccessContext access) {
         RoleInputRequest input = new RoleInputRequest();
-        input.setName(value(request.getValues(), "name"));
-        input.setDescription(value(request.getValues(), "description"));
-        input.setStatus(parseStatus(value(request.getValues(), "status")));
+        input.setName(request.text("name"));
+        input.setDescription(request.text("description"));
+        input.setStatus(parseStatus(request.text("status")));
 
         if (request.getId() == null) {
-            // 新建：简化表单不配权限点与数据范围，Service 的默认逻辑是「无权限 + 全部数据」，
-            // 权限由管理员后续在手写角色页补齐——formJson 的说明文案里写了这条边界。
-            input.setCode(value(request.getValues(), "code"));
-            RoleItemResponse created = roleService.create(input, access.getUserId());
-            return toRow(created);
+            // 新建：没配权限点字段就是空权限，由管理员后续补——配置里没这一项不该让保存失败。
+            input.setCode(request.text("code"));
+            if (request.has("permissions")) {
+                input.setPermissions(knownPermissions(request.list("permissions")));
+            }
+            return toRow(roleService.create(input, access.getUserId()));
         }
 
-        // 更新：回填当前权限与数据范围。RoleService.update 会整体覆盖这两个字段，
-        // 不回填的话，简化表单每次保存都会把角色权限清空。
         RoleItemResponse current = roleService.get(request.getId());
-        input.setPermissions(current.getPermissions());
+        // 数据范围不在动态表单里：不传就等于「保持不变」，绝不能因为表单没这一项被清空。
         input.setDepartmentScope(current.getDepartmentScope());
         input.setDepartmentIds(current.getDepartmentIds());
-        RoleItemResponse updated = roleService.update(request.getId(), input, access.getUserId());
-        return toRow(updated);
+        if ("ADMIN".equals(current.getCode())) {
+            // 超管的权限恒为全集，RoleService 会拒绝任何变更。这里先按原值回填，
+            // 让「改个名称」不会被一条「权限不可修改」挡下来——勾选框对超管本就不该有效果。
+            input.setPermissions(current.getPermissions());
+        } else if (request.has("permissions")) {
+            input.setPermissions(knownPermissions(request.list("permissions")));
+        } else {
+            input.setPermissions(current.getPermissions());
+        }
+        return toRow(roleService.update(request.getId(), input, access.getUserId()));
     }
 
     @Override
@@ -177,5 +187,20 @@ public class RolePageDataSource implements PageDataSource {
             return Integer.parseInt(raw);
         }
         throw new DomainException("状态值只能是 1（启用）或 0（停用）");
+    }
+
+    /**
+     * 只接受 {@code Permission.CATALOG} 里登记过的权限点。
+     * <p>
+     * 不做静默过滤：勾选框来自那个接口，传回一个不存在的 key 意味着配置或接口已经不一致，
+     * 这时候悄悄丢掉比报错更难查——管理员会以为「保存成功但没生效」。
+     */
+    private static List<String> knownPermissions(List<String> raw) {
+        for (String key : raw) {
+            if (!Permission.ALL.contains(key)) {
+                throw new DomainException("未知的权限点：" + key);
+            }
+        }
+        return raw;
     }
 }

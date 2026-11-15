@@ -39,9 +39,10 @@ export const queryKeys = {
   pageConfig: (pageKey: string) => ["dw", "pages", pageKey] as const,
   pageAdmin: ["dw", "admin", "pages"] as const,
   datasources: ["dw", "datasources"] as const,
-  // 远程选项：同一路径 + 同一取值/显示字段组合共用一个缓存，不同页面不重复拉
-  remoteOptions: (apiPath: string, valueField: string, labelField: string) =>
-    ["dw", "options", apiPath, valueField, labelField] as const,
+  // 远程选项：同一路径 + 同一取值/显示/分组字段组合共用一个缓存，不同页面不重复拉
+  remoteOptions: (apiPath: string, valueField: string, labelField: string,
+                  groupField = "", groupLabelField = "") =>
+    ["dw", "options", apiPath, valueField, labelField, groupField, groupLabelField] as const,
 }
 
 export function useUsers(query: UserQuery, enabled = true) {
@@ -343,17 +344,40 @@ export function usePageAdmin(enabled = true) {
  * 请求走同一个 request（带 Bearer），所以能取到哪些选项由目标接口自己判权：
  * 操作人下拉只会列出当前数据范围内的人，不会因为「配置了一个接口路径」就变成越权入口。
  */
-export function useRemoteOptions(apiPath: string, valueField: string, labelField: string) {
+export interface RemoteOption {
+  value: string
+  label: string
+  /** 分组标识；没配分组字段时是空串 */
+  group: string
+  groupLabel: string
+}
+
+export function useRemoteOptions(
+  apiPath: string,
+  valueField: string,
+  labelField: string,
+  groupField = "",
+  groupLabelField = "",
+) {
   return useQuery({
-    queryKey: queryKeys.remoteOptions(apiPath, valueField, labelField),
-    queryFn: async () => {
+    queryKey: queryKeys.remoteOptions(apiPath, valueField, labelField, groupField, groupLabelField),
+    queryFn: async (): Promise<RemoteOption[]> => {
       const rows = await request<Array<Record<string, unknown>>>(apiPath)
       if (!Array.isArray(rows)) return []
       return rows
-        .map((row) => ({
-          value: String(row[valueField] ?? ""),
-          label: String(row[labelField] ?? ""),
-        }))
+        .map((row) => {
+          const group = groupField ? String(row[groupField] ?? "") : ""
+          return {
+            value: String(row[valueField] ?? ""),
+            label: String(row[labelField] ?? ""),
+            group,
+            // 分组标题优先取专门的分组文案字段，没有就退回分组标识本身：
+            // 权限点接口两个都给了（groupKey / groupLabel），部门接口往往只有 id。
+            groupLabel: group === ""
+              ? ""
+              : String(row[groupLabelField || labelField] ?? group),
+          }
+        })
         .filter((option) => option.value !== "")
     },
     enabled: apiPath !== "",

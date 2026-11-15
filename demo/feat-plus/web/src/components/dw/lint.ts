@@ -1,6 +1,6 @@
 import type { DatasourceOption } from "@/api/types"
 
-import { writeModeOf, type PageDraft } from "./meta"
+import { FORM_WIDGET_LABELS, writeModeOf, type PageDraft } from "./meta"
 
 /**
  * 页面配置的保存前体检。
@@ -288,8 +288,51 @@ export function lintDraft({ draft, datasources }: LintContext): DwIssue[] {
         anchor,
       })
     }
-    if (field.widget === "select" && (field.options ?? []).length === 0) {
-      issues.push({ section: "form", level: "error", message: `${where}是下拉字段，必须配置选项`, anchor })
+    if (field.widget === "select") {
+      // 与筛选同一条规则：静态选项与选项接口二选一，都空等于一个点开没有内容的勾选框。
+      const api = (field.optionsApi ?? "").trim()
+      if ((field.options ?? []).length === 0 && !api) {
+        issues.push({
+          section: "form",
+          level: "error",
+          message: `${where}是下拉字段，必须配置选项或选项接口`,
+          anchor,
+        })
+      }
+      if (api && (field.options ?? []).length > 0) {
+        issues.push({
+          section: "form",
+          level: "error",
+          message: `${where}同时配置了静态选项与选项接口，以哪个为准不明确`,
+          anchor,
+        })
+      }
+      if (api && !API_PATH_PATTERN.test(api)) {
+        issues.push({
+          section: "form",
+          level: "error",
+          message: `${where}的选项接口必须是 /api/ 开头的站内路径：${api}`,
+          anchor,
+        })
+      }
+    }
+    if (field.multiple) {
+      if (field.widget !== "select") {
+        issues.push({
+          section: "form",
+          level: "error",
+          message: `${where}只有下拉控件能多选，当前控件是「${FORM_WIDGET_LABELS[field.widget]}」`,
+          anchor,
+        })
+      }
+      if ((field.pattern ?? "").trim()) {
+        issues.push({
+          section: "form",
+          level: "error",
+          message: `${where}是多选字段，正则校验作用在一个值上，语义不成立`,
+          anchor,
+        })
+      }
     }
     if (field.required && field.widget === "span") {
       issues.push({

@@ -1,10 +1,10 @@
 import { useEffect, useRef } from "react"
 import { Filter, Inbox, MoreHorizontal, Pencil, Plus, RotateCcw, Trash2 } from "lucide-react"
 
-import type { DatasourceOption } from "@/api/types"
+import type { DatasourceOption, DwFormValue } from "@/api/types"
 import { DwCell } from "@/components/dw/DwCell"
 import { MarkDot } from "@/components/dw/DwEditorBits"
-import { DwFormFields, fieldText } from "@/components/dw/DwFormFields"
+import { DwFormFields, fieldText, initialFormValue } from "@/components/dw/DwFormFields"
 import { focusAnchor, type DwFocusTarget, type DwMarks } from "@/components/dw/link"
 import { ACTION_LABELS, columnTitle, sampleRows, type PageDraft } from "@/components/dw/meta"
 import { Badge } from "@/components/ui/badge"
@@ -105,9 +105,13 @@ export function DwPreview({
   if (mode === "create" || mode === "edit") {
     const editing = mode === "edit"
     const rows = sampleRows(fields, list.columns, 1)
-    const values: Record<string, string> = {}
+    const values: Record<string, DwFormValue> = {}
     for (const field of form.fields) {
-      values[field.key] = editing ? fieldText(rows[0]?.[field.key]) : field.defaultValue ?? ""
+      // 预览里的初值走和真实弹窗同一个函数：多选字段在预览里也要是多选的样子。
+      values[field.key] = initialFormValue(
+        field,
+        editing ? (rows[0] as Record<string, unknown> | undefined) ?? null : null,
+      )
     }
     return (
       <div ref={containerRef} data-preview-mode={mode}>

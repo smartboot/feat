@@ -407,8 +407,29 @@ public class PageService {
             }
             field.setWriteMode(writeMode);
             field.setImmutable(!"always".equals(writeMode));
-            if ("select".equals(field.getWidget()) && field.getOptions().isEmpty()) {
-                throw new DomainException(where + "是下拉字段，必须配置选项");
+            if ("select".equals(field.getWidget()) && field.getOptions().isEmpty()
+                    && trimToEmpty(field.getOptionsApi()).isEmpty()) {
+                throw new DomainException(where + "是下拉字段，必须配置静态选项或选项接口");
+            }
+            requireApiPath(field.getOptionsApi(), where + "的选项接口");
+            if (!trimToEmpty(field.getOptionsApi()).isEmpty()) {
+                if (!field.getOptions().isEmpty()) {
+                    // 两处都能定义选项时，改哪一处不生效取决于实现顺序——配置项里不该有这种二义性。
+                    throw new DomainException(where + "不能同时配置静态选项与选项接口");
+                }
+                if (trimToEmpty(field.getOptionValueField()).isEmpty()
+                        || trimToEmpty(field.getOptionLabelField()).isEmpty()) {
+                    throw new DomainException(where + "的选项接口必须指定取值字段与文案字段");
+                }
+            }
+            if (field.isMultiple()) {
+                if (!"select".equals(field.getWidget())) {
+                    throw new DomainException(where + "的多选只支持下拉控件（当前是 " + field.getWidget() + "）");
+                }
+                if (!trimToEmpty(field.getPattern()).isEmpty()) {
+                    // 正则作用在「一个字符串」上，多选提交的是数组；两端都没有明确的执行语义。
+                    throw new DomainException(where + "是多选字段，不支持正则校验");
+                }
             }
             if (field.isRequired() && "span".equals(field.getWidget())) {
                 throw new DomainException(where + "是只读展示字段，不能同时是必填项");

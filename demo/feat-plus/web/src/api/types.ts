@@ -408,6 +408,9 @@ export interface DwFilter {
 export type DwWriteMode = "always" | "createOnly" | "readonly"
 
 /** 一个表单字段。pattern 两端各自校验 */
+/** 表单值：单值控件是字符串，多选控件是字符串数组。 */
+export type DwFormValue = string | string[]
+
 export interface DwFormField {
   key: string
   label: string
@@ -422,6 +425,15 @@ export interface DwFormField {
   placeholder?: string
   defaultValue?: string
   options?: DwOption[]
+  /** 选项来源：站内 /api 路径，与 options 二选一。存「去哪取」而不是取回来的快照 */
+  optionsApi?: string
+  optionValueField?: string
+  optionLabelField?: string
+  /** 分组字段：选项按它分块渲染（权限点按模块分组）。留空则平铺 */
+  optionGroupField?: string
+  optionGroupLabelField?: string
+  /** 多选：勾选组替代下拉，提交值是数组而不是字符串 */
+  multiple?: boolean
   /** 1 = 半宽、2 = 全宽 */
   span?: 1 | 2
 }
@@ -476,7 +488,8 @@ export interface DwDataQuery {
 export interface DwSaveInput {
   /** null / 省略表示新建 */
   id?: number | null
-  values: Record<string, string>
+  /** 单值字段是字符串，多选字段是字符串数组（与后端 text() / list() 对应） */
+  values: Record<string, DwFormValue>
 }
 
 /** 配置管理页的一行，来自 GET /api/pages。listJson / formJson 原文供编辑框回显 */

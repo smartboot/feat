@@ -121,7 +121,7 @@ export function DashboardPage() {
             {canReadAudit && (
               <div className="pt-3">
                 <Button asChild variant="ghost" size="sm" className="w-full justify-between text-xs text-muted-foreground">
-                  <Link to="/activities">在审计日志中查看全部记录<ArrowUpRight className="size-3" /></Link>
+                  <Link to="/p/activities">在审计日志中查看全部记录<ArrowUpRight className="size-3" /></Link>
                 </Button>
               </div>
             )}

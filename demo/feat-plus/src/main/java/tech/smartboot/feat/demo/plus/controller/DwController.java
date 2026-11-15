@@ -1,5 +1,6 @@
 package tech.smartboot.feat.demo.plus.controller;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -108,11 +109,13 @@ public class DwController extends ApiController {
      * <p>
      * 选择「回填旧值」而不是「删掉 key」：数据源是按 key 取值的（{@code value(values, "code")}），
      * 删掉会被读成空串，反而把字段清空。回填旧值让「不可改」在任何数据源实现下都成立。
-     * 集合 / 对象型字段不走字符串表单，删除 key 由数据源自己的更新语义处理，不替它做序列化。
+     * <p>
+     * 标量转成字符串回填（数据源用 {@code text()} 取值）；集合原样回填——拼成字符串后
+     * {@code list()} 会拿到 "[a, b]" 这种结果，等于把只读字段的旧值改坏了。
      */
     private void applyWriteMode(String pageKey, DwSaveRequest request, PageDataSource dataSource,
                                 AccessContext access) {
-        Map<String, String> values = request.getValues();
+        Map<String, Object> values = request.getValues();
         if (values == null) {
             return;
         }
@@ -139,6 +142,8 @@ public class DwController extends ApiController {
                 values.remove(key);
             } else if (old instanceof String || old instanceof Number || old instanceof Boolean) {
                 values.put(key, String.valueOf(old));
+            } else if (old instanceof Collection) {
+                values.put(key, old);
             } else {
                 values.remove(key);
             }

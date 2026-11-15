@@ -245,7 +245,14 @@ export function DwFormConfigEditor({
                       <FieldLabel>控件</FieldLabel>
                       <Select
                         value={field.widget}
-                        onValueChange={(widget) => updateField(index, { ...field, widget: widget as DwWidget })}
+                        onValueChange={(widget) =>
+                          updateField(index, {
+                            ...field,
+                            widget: widget as DwWidget,
+                            // multiple 只对下拉有意义：换成别的控件还留着它，会留一条永不生效的配置。
+                            multiple: widget === "select" ? field.multiple : false,
+                          })
+                        }
                       >
                         <SelectTrigger className="h-8">
                           <SelectValue />
@@ -327,12 +334,110 @@ export function DwFormConfigEditor({
                   </div>
 
                   {field.widget === "select" && (
-                    <div className="grid gap-1">
-                      <FieldLabel>选项</FieldLabel>
-                      <DwOptionListEditor
-                        options={field.options ?? []}
-                        onChange={(options) => updateField(index, { ...field, options })}
-                      />
+                    <div className="grid gap-2 rounded-md border p-2.5">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <FieldLabel>选项</FieldLabel>
+                        <div className="flex items-center gap-1.5">
+                          <Switch
+                            id={`dw-field-multiple-${index}`}
+                            checked={Boolean(field.multiple)}
+                            onCheckedChange={(multiple) => updateField(index, { ...field, multiple })}
+                          />
+                          <Label htmlFor={`dw-field-multiple-${index}`} className="text-xs font-normal">
+                            多选
+                          </Label>
+                        </div>
+                      </div>
+                      <Select
+                        value={field.optionsApi ? "api" : "static"}
+                        onValueChange={(mode) => {
+                          // 切换来源时清空另一侧：两份配置并存时「以哪个为准」没有明确语义。
+                          if (mode === "api") {
+                            updateField(index, { ...field, options: [], optionsApi: field.optionsApi || "/api/" })
+                          } else {
+                            updateField(index, { ...field, optionsApi: "" })
+                          }
+                        }}
+                      >
+                        <SelectTrigger className="h-8">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="static">静态选项（写死在配置里）</SelectItem>
+                          <SelectItem value="api">接口现取（站内 /api 路径）</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {field.optionsApi ? (
+                        <div className="grid gap-2 sm:grid-cols-2">
+                          <div className="grid gap-1 sm:col-span-2">
+                            <FieldLabel>选项接口</FieldLabel>
+                            <Input
+                              className="h-8 font-mono text-xs"
+                              value={field.optionsApi}
+                              placeholder="/api/permissions"
+                              onChange={(event) => updateField(index, { ...field, optionsApi: event.target.value })}
+                            />
+                          </div>
+                          <div className="grid gap-1">
+                            <FieldLabel>取值字段</FieldLabel>
+                            <Input
+                              className="h-8"
+                              value={field.optionValueField ?? ""}
+                              placeholder="key"
+                              onChange={(event) =>
+                                updateField(index, { ...field, optionValueField: event.target.value })
+                              }
+                            />
+                          </div>
+                          <div className="grid gap-1">
+                            <FieldLabel>文案字段</FieldLabel>
+                            <Input
+                              className="h-8"
+                              value={field.optionLabelField ?? ""}
+                              placeholder="label"
+                              onChange={(event) =>
+                                updateField(index, { ...field, optionLabelField: event.target.value })
+                              }
+                            />
+                          </div>
+                          <div className="grid gap-1">
+                            <FieldLabel>分组字段（可选）</FieldLabel>
+                            <Input
+                              className="h-8"
+                              value={field.optionGroupField ?? ""}
+                              placeholder="留空则平铺"
+                              onChange={(event) =>
+                                updateField(index, { ...field, optionGroupField: event.target.value })
+                              }
+                            />
+                          </div>
+                          <div className="grid gap-1">
+                            <FieldLabel>分组文案字段</FieldLabel>
+                            <Input
+                              className="h-8"
+                              value={field.optionGroupLabelField ?? ""}
+                              placeholder="groupLabel"
+                              disabled={!field.optionGroupField}
+                              onChange={(event) =>
+                                updateField(index, { ...field, optionGroupLabelField: event.target.value })
+                              }
+                            />
+                          </div>
+                          <p className="text-[10px] text-muted-foreground sm:col-span-2">
+                            选项是「现取」不是「存快照」：权限点增减、人员变动都不必回来重存这一页。
+                          </p>
+                        </div>
+                      ) : (
+                        <DwOptionListEditor
+                          options={field.options ?? []}
+                          onChange={(options) => updateField(index, { ...field, options })}
+                        />
+                      )}
+                      {field.multiple && (
+                        <p className="text-[10px] text-muted-foreground">
+                          多选提交数组，数据源用 request.list(&quot;字段&quot;) 取值；不能配正则校验。
+                        </p>
+                      )}
                     </div>
                   )}
 

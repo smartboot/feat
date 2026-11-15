@@ -30,8 +30,6 @@ public final class MenuRoutes {
     public static final String ROLES = "/roles";
     /** 部门管理。 */
     public static final String DEPARTMENTS = "/departments";
-    /** 审计日志。 */
-    public static final String ACTIVITIES = "/activities";
     /** 菜单管理。 */
     public static final String MENUS = "/menus";
     /** 页面配置（动态页面的管理页）。 */
@@ -40,7 +38,7 @@ public final class MenuRoutes {
     public static final String PROFILE = "/profile";
 
     public static final List<String> ALL = Collections.unmodifiableList(Arrays.asList(
-            DASHBOARD, USERS, ROLES, DEPARTMENTS, ACTIVITIES, MENUS, PAGES, PROFILE));
+            DASHBOARD, USERS, ROLES, DEPARTMENTS, MENUS, PAGES, PROFILE));
 
     private MenuRoutes() {
     }
