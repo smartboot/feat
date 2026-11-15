@@ -22,19 +22,36 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { DwOptionListEditor } from "@/components/dw/DwOptionListEditor"
+import {
+  ACTIONS,
+  ACTION_HINTS,
+  ACTION_LABELS,
+  COLUMN_FORMATS,
+  COLUMN_FORMAT_HINTS,
+  COLUMN_FORMAT_LABELS,
+  FIELD_TYPE_LABELS,
+  FILTER_WIDGET_LABELS,
+  FILTER_WIDGETS,
+  WIDTH_TIERS,
+  columnFromField,
+  defaultFormatFor,
+  isKnownWidth,
+} from "@/components/dw/meta"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 
-const COLUMN_FORMATS: DwColumnFormat[] = ["text", "muted", "badge", "tags", "number"]
 const WRITE_ACTIONS: DwAction[] = ["create", "edit", "delete"]
-const ALL_ACTIONS: DwAction[] = ["create", "edit", "delete", "refresh"]
 
 /**
- * 页面配置的列表编辑器：列 / 筛选 / 动作 / 分页全部按控件编辑，
- * 字段 key 只能从数据源的字段声明里选——「配置漂移」在这里就没有输入面。
- * 提交前由 PageManagePage 做镜像校验，后端 PageService 仍是最终闸门。
+ * 列表视图编辑器。
+ *
+ * 三处刻意的设计：
+ * ① 字段只能从数据源声明里选，已用过的置灰——「配置漂移」与「同字段两列」在这里就没有输入面；
+ * ② 列名默认继承数据源字段标签，改过的才单独存：同一个字段在列表叫「角色名称」、
+ *    在表单叫「名称」的不一致，大多是因为两处都要手填一遍；
+ * ③ 宽度给档位而不是 Tailwind 类名——存量值（w-36 之类）识别成「自定义」原样保留，不覆盖。
  */
 export function DwListConfigEditor({
   value,
@@ -49,8 +66,9 @@ export function DwListConfigEditor({
   onChange: (list: DwListConfig) => void
 }) {
   const fieldKeys = new Set(fields.map((field) => field.key))
-  // 覆盖列之前先确认：现有列的 format / width / 选项映射是手工调过的，静默覆盖等于丢工作。
+  // 覆盖列之前先确认：现有列的格式 / 宽度 / 选项映射是手工调过的，静默覆盖等于丢工作。
   const [confirmGenerate, setConfirmGenerate] = useState(false)
+  const [advancedOpen, setAdvancedOpen] = useState(Boolean(value.dataApi?.query || value.dataApi?.delete))
 
   function patch(patch: Partial<DwListConfig>) {
     onChange({ ...value, ...patch })
@@ -64,9 +82,7 @@ export function DwListConfigEditor({
   function toggleAction(action: DwAction) {
     const active = value.actions.includes(action)
     patch({
-      actions: active
-        ? value.actions.filter((item) => item !== action)
-        : [...value.actions, action],
+      actions: active ? value.actions.filter((item) => item !== action) : [...value.actions, action],
     })
   }
 
@@ -96,16 +112,9 @@ export function DwListConfigEditor({
     patch({ filters })
   }
 
-  /** 按数据源字段一键生成列：text/number/tags 按声明类型映射。已有列时先确认再覆盖。 */
+  /** 按数据源字段一键生成列：格式按声明类型映射，列名继承字段标签。 */
   function generateColumns() {
-    const columns: DwColumn[] = fields.map((field) => ({
-      key: field.key,
-      label: field.label,
-      format: field.type === "number" ? "number" : field.type === "list" ? "tags" : "text",
-      width: "",
-      options: [],
-    }))
-    patch({ columns })
+    patch({ columns: fields.map(columnFromField) })
     setConfirmGenerate(false)
   }
 
@@ -114,34 +123,37 @@ export function DwListConfigEditor({
     ...value.filters.map((filter) => filter.key),
   ].filter((key) => key !== "" && !fieldKeys.has(key))
 
+  const unusedFields = fields.filter(
+    (field) =>
+      !value.columns.some((column) => column.key === field.key) &&
+      !value.filters.some((filter) => filter.key === field.key),
+  )
+
   return (
-    <div className="grid gap-4">
+    <div className="grid gap-5">
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="grid gap-2">
+        <div className="grid gap-1.5" id="row-key">
           <Label>行主键字段</Label>
-          <FieldKeySelect
-            value={value.rowKey}
-            fields={fields}
-            onChange={(key) => patch({ rowKey: key })}
-          />
+          <FieldKeySelect value={value.rowKey} fields={fields} onChange={(key) => patch({ rowKey: key })} />
+          <Hint>行操作、编辑回填、删除都按它定位。通常是 id。</Hint>
         </div>
-        <div className="grid gap-2">
-          <Label htmlFor="dw-list-pagesize">每页条数</Label>
+        <div className="grid gap-1.5" id="page-size">
+          <Label>每页条数</Label>
           <Input
-            id="dw-list-pagesize"
             type="number"
             min={1}
             max={200}
             value={value.pageSize}
             onChange={(event) => patch({ pageSize: Number(event.target.value) || 0 })}
           />
+          <Hint>1–200，用户可以在列表底部临时改成其他档位。</Hint>
         </div>
       </div>
 
-      <div className="grid gap-2">
-        <Label>按钮动作</Label>
+      <div className="grid gap-2" id="list-actions">
+        <Label>工具栏与行操作</Label>
         <div className="flex flex-wrap gap-1.5">
-          {ALL_ACTIONS.map((action) => {
+          {ACTIONS.map((action) => {
             const disabled = !writable && WRITE_ACTIONS.includes(action)
             const active = value.actions.includes(action)
             return (
@@ -153,215 +165,265 @@ export function DwListConfigEditor({
                 className={cn("h-7 text-xs", active && "border-primary bg-primary/10 text-primary")}
                 disabled={disabled}
                 onClick={() => toggleAction(action)}
-                title={disabled ? "只读数据源不能配置写动作" : undefined}
+                title={disabled ? "只读数据源不能配置写动作" : ACTION_HINTS[action]}
               >
-                {action}
+                {ACTION_LABELS[action]}
               </Button>
             )
           })}
         </div>
-        {!writable && (
-          <p className="text-xs text-muted-foreground">该数据源是只读的，create / edit / delete 不可勾选。</p>
-        )}
-      </div>
-
-      <div className="grid gap-2">
-        <Label>数据接口（可选覆盖）</Label>
-        <p className="text-xs text-muted-foreground">
-          留空走内置通道；填了则该操作改走自定义接口。接口须返回与数据源声明一致的行结构，
-          权限由目标接口自己校验。查询 GET {`{path}?page&pageSize&filter`}，删除 DELETE {`{path}/{id}`}。
-          保存与详情不支持覆盖——表单写路径牵涉校验与审计，不开旁路。
-        </p>
-        <div className="grid gap-2 sm:grid-cols-2">
-          <div className="grid gap-1">
-            <FieldLabel>查询</FieldLabel>
-            <Input
-              className="h-8 font-mono text-xs"
-              value={value.dataApi?.query ?? ""}
-              placeholder="/api/..."
-              onChange={(event) => patchDataApi({ query: event.target.value.trim() })}
-            />
-          </div>
-          <div className="grid gap-1">
-            <FieldLabel>删除</FieldLabel>
-            <Input
-              className="h-8 font-mono text-xs"
-              value={value.dataApi?.delete ?? ""}
-              placeholder="/api/..."
-              onChange={(event) => patchDataApi({ delete: event.target.value.trim() })}
-            />
-          </div>
-        </div>
+        <Hint>
+          {writable
+            ? "新建 / 编辑 / 删除会同时受当前账号权限过滤：没有写权限的人看不到这些按钮。"
+            : "该数据源是只读的，新建 / 编辑 / 删除不可勾选（保存时后端也会拒绝）。"}
+        </Hint>
       </div>
 
       <Section
         title="列"
+        anchor="list-columns"
         count={value.columns.length}
+        empty="还没有列。用「按字段生成」按数据源字段一次建好，再逐列调格式。"
         onGenerate={() => (value.columns.length === 0 ? generateColumns() : setConfirmGenerate(true))}
-        onAdd={() =>
-          patch({ columns: [...value.columns, { key: "", label: "", format: "text", width: "", options: [] }] })
+        onAdd={() => patch({ columns: [...value.columns, { key: "", label: "", format: "text", width: "", options: [] }] })}
+        footer={
+          unusedFields.length > 0 && value.columns.length > 0
+            ? `还有 ${unusedFields.length} 个字段没有出现在列表里：${unusedFields
+                .slice(0, 6)
+                .map((field) => field.label)
+                .join("、")}${unusedFields.length > 6 ? " 等" : ""}`
+            : undefined
         }
       >
-        {value.columns.map((column, index) => (
-          <ItemRow
-            key={index}
-            index={index}
-            total={value.columns.length}
-            label={`列 ${index + 1}`}
-            onMove={(delta) => moveColumn(index, delta)}
-            onRemove={() => patch({ columns: value.columns.filter((_, i) => i !== index) })}
-          >
-            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="grid gap-1">
-                <FieldLabel>字段 *</FieldLabel>
-                <FieldKeySelect
-                  value={column.key}
-                  fields={fields}
-                  used={value.columns.map((item, i) => (i === index ? "" : item.key))}
-                  onChange={(key) =>
-                    updateColumn(index, {
-                      ...column,
-                      key,
-                      // 选字段时 label 为空则带出字段名，填过的不覆盖。
-                      label: column.label || fields.find((field) => field.key === key)?.label || "",
-                    })
-                  }
-                />
+        {value.columns.map((column, index) => {
+          const meta = fields.find((field) => field.key === column.key)
+          const usableKeys = value.columns.map((item, i) => (i === index ? "" : item.key))
+          return (
+            <ItemRow
+              key={index}
+              anchor={`column-${index}`}
+              index={index}
+              total={value.columns.length}
+              title={column.label || meta?.label || `第 ${index + 1} 列`}
+              subtitle={column.key ? `${column.key} · ${COLUMN_FORMAT_LABELS[column.format]}` : "未选择字段"}
+              onMove={(delta) => moveColumn(index, delta)}
+              onRemove={() => patch({ columns: value.columns.filter((_, i) => i !== index) })}
+            >
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="grid gap-1">
+                  <FieldLabel>字段</FieldLabel>
+                  <FieldKeySelect
+                    value={column.key}
+                    fields={fields}
+                    used={usableKeys}
+                    onChange={(key) => {
+                      const nextMeta = fields.find((field) => field.key === key)
+                      updateColumn(index, {
+                        ...column,
+                        key,
+                        // 列名还是空的或是上一个字段的标签时，跟着换；手工改过就保留。
+                        label:
+                          !column.label || column.label === meta?.label
+                            ? nextMeta?.label ?? ""
+                            : column.label,
+                        format: meta ? column.format : defaultFormatFor(nextMeta?.type ?? "string"),
+                      })
+                    }}
+                  />
+                </div>
+                <div className="grid gap-1">
+                  <FieldLabel>列名</FieldLabel>
+                  <Input
+                    className="h-8"
+                    value={column.label}
+                    placeholder={meta?.label || "表头文案"}
+                    onChange={(event) => updateColumn(index, { ...column, label: event.target.value })}
+                  />
+                </div>
+                <div className="grid gap-1">
+                  <FieldLabel>格式</FieldLabel>
+                  <Select
+                    value={column.format}
+                    onValueChange={(format) => updateColumn(index, { ...column, format: format as DwColumnFormat })}
+                  >
+                    <SelectTrigger className="h-8">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {COLUMN_FORMATS.map((format) => (
+                        <SelectItem key={format} value={format}>
+                          {COLUMN_FORMAT_LABELS[format]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-1">
+                  <FieldLabel>宽度</FieldLabel>
+                  <WidthSelect
+                    value={column.width}
+                    onChange={(width) => updateColumn(index, { ...column, width })}
+                  />
+                </div>
               </div>
-              <div className="grid gap-1">
-                <FieldLabel>列名 *</FieldLabel>
-                <Input
-                  className="h-8"
-                  value={column.label}
-                  placeholder="表头文案"
-                  onChange={(event) => updateColumn(index, { ...column, label: event.target.value })}
-                />
-              </div>
-              <div className="grid gap-1">
-                <FieldLabel>格式</FieldLabel>
-                <Select
-                  value={column.format}
-                  onValueChange={(format) => updateColumn(index, { ...column, format: format as DwColumnFormat })}
-                >
-                  <SelectTrigger className="h-8">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {COLUMN_FORMATS.map((format) => (
-                      <SelectItem key={format} value={format}>
-                        {format}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-1">
-                <FieldLabel>宽度 class</FieldLabel>
-                <Input
-                  className="h-8"
-                  value={column.width ?? ""}
-                  placeholder="如 w-36，留空自适应"
-                  onChange={(event) => updateColumn(index, { ...column, width: event.target.value })}
-                />
-              </div>
-            </div>
-            {column.format === "badge" && (
-              <div className="grid gap-1">
-                <FieldLabel>值 → 文案映射（badge）</FieldLabel>
-                <DwOptionListEditor
-                  options={column.options ?? []}
-                  onChange={(options) => updateColumn(index, { ...column, options })}
-                />
-              </div>
-            )}
-          </ItemRow>
-        ))}
+              <Hint>{COLUMN_FORMAT_HINTS[column.format]}</Hint>
+              {column.format === "badge" && (
+                <div className="grid gap-1">
+                  <FieldLabel>值 → 文案映射（不配的话只显示原始值）</FieldLabel>
+                  <DwOptionListEditor
+                    options={column.options ?? []}
+                    onChange={(options) => updateColumn(index, { ...column, options })}
+                  />
+                </div>
+              )}
+            </ItemRow>
+          )
+        })}
       </Section>
 
       <Section
         title="筛选"
+        anchor="list-filters"
         count={value.filters.length}
+        empty="没有筛选项时，列表工具栏不出现筛选区。"
         onAdd={() =>
-          patch({ filters: [...value.filters, { key: "", label: "", widget: "input", placeholder: "", options: [] }] })
+          patch({
+            filters: [...value.filters, { key: "", label: "", widget: "input", placeholder: "", options: [] }],
+          })
         }
       >
-        {value.filters.map((filter, index) => (
-          <ItemRow
-            key={index}
-            index={index}
-            total={value.filters.length}
-            label={`筛选 ${index + 1}`}
-            onMove={(delta) => moveFilter(index, delta)}
-            onRemove={() => patch({ filters: value.filters.filter((_, i) => i !== index) })}
-          >
-            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="grid gap-1">
-                <FieldLabel>字段 *</FieldLabel>
-                <FieldKeySelect
-                  value={filter.key}
-                  fields={fields}
-                  used={value.filters.map((item, i) => (i === index ? "" : item.key))}
-                  onChange={(key) =>
-                    updateFilter(index, {
-                      ...filter,
-                      key,
-                      label: filter.label || fields.find((field) => field.key === key)?.label || "",
-                    })
-                  }
-                />
+        {value.filters.map((filter, index) => {
+          const meta = fields.find((field) => field.key === filter.key)
+          return (
+            <ItemRow
+              key={index}
+              anchor={`filter-${index}`}
+              index={index}
+              total={value.filters.length}
+              title={filter.label || meta?.label || `筛选 ${index + 1}`}
+              subtitle={filter.key ? `${filter.key} · ${FILTER_WIDGET_LABELS[filter.widget]}` : "未选择字段"}
+              onMove={(delta) => moveFilter(index, delta)}
+              onRemove={() => patch({ filters: value.filters.filter((_, i) => i !== index) })}
+            >
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-1">
+                  <FieldLabel>字段</FieldLabel>
+                  <FieldKeySelect
+                    value={filter.key}
+                    fields={fields}
+                    used={value.filters.map((item, i) => (i === index ? "" : item.key))}
+                    onChange={(key) => {
+                      const nextMeta = fields.find((field) => field.key === key)
+                      updateFilter(index, {
+                        ...filter,
+                        key,
+                        label:
+                          !filter.label || filter.label === meta?.label
+                            ? nextMeta?.label ?? ""
+                            : filter.label,
+                      })
+                    }}
+                  />
+                </div>
+                <div className="grid gap-1">
+                  <FieldLabel>名称</FieldLabel>
+                  <Input
+                    className="h-8"
+                    value={filter.label}
+                    placeholder="筛选项文案"
+                    onChange={(event) => updateFilter(index, { ...filter, label: event.target.value })}
+                  />
+                </div>
+                <div className="grid gap-1">
+                  <FieldLabel>控件</FieldLabel>
+                  <Select
+                    value={filter.widget}
+                    onValueChange={(widget) =>
+                      updateFilter(index, { ...filter, widget: widget as "input" | "select" })
+                    }
+                  >
+                    <SelectTrigger className="h-8">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {FILTER_WIDGETS.map((widget) => (
+                        <SelectItem key={widget} value={widget}>
+                          {FILTER_WIDGET_LABELS[widget]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div className="grid gap-1">
-                <FieldLabel>名称 *</FieldLabel>
-                <Input
-                  className="h-8"
-                  value={filter.label}
-                  placeholder="筛选项文案"
-                  onChange={(event) => updateFilter(index, { ...filter, label: event.target.value })}
-                />
-              </div>
-              <div className="grid gap-1">
-                <FieldLabel>控件</FieldLabel>
-                <Select
-                  value={filter.widget}
-                  onValueChange={(widget) => updateFilter(index, { ...filter, widget: widget as "input" | "select" })}
-                >
-                  <SelectTrigger className="h-8">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="input">input（模糊）</SelectItem>
-                    <SelectItem value="select">select（精确）</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              {filter.widget === "input" && (
+              {filter.widget === "input" ? (
                 <div className="grid gap-1">
                   <FieldLabel>占位提示</FieldLabel>
                   <Input
                     className="h-8"
                     value={filter.placeholder ?? ""}
+                    placeholder={filter.label || "输入关键字"}
                     onChange={(event) => updateFilter(index, { ...filter, placeholder: event.target.value })}
                   />
                 </div>
+              ) : (
+                <div className="grid gap-1">
+                  <FieldLabel>选项（下拉里除「全部」之外的取值）</FieldLabel>
+                  <DwOptionListEditor
+                    options={filter.options ?? []}
+                    onChange={(options) => updateFilter(index, { ...filter, options })}
+                  />
+                </div>
               )}
-            </div>
-            {filter.widget === "select" && (
-              <div className="grid gap-1">
-                <FieldLabel>选项（select 精确匹配）</FieldLabel>
-                <DwOptionListEditor
-                  options={filter.options ?? []}
-                  onChange={(options) => updateFilter(index, { ...filter, options })}
-                />
-              </div>
-            )}
-          </ItemRow>
-        ))}
+            </ItemRow>
+          )
+        })}
       </Section>
 
+      <div className="grid gap-2 rounded-lg border border-dashed p-3">
+        <button
+          type="button"
+          className="flex items-center justify-between text-left"
+          onClick={() => setAdvancedOpen((open) => !open)}
+          aria-expanded={advancedOpen}
+        >
+          <span className="text-sm font-medium">高级：数据接口覆盖</span>
+          <ChevronDown className={cn("size-4 text-muted-foreground transition-transform", advancedOpen && "rotate-180")} />
+        </button>
+        {advancedOpen && (
+          <div className="grid gap-2">
+            <Hint>
+              留空走内置 /api/dw 通道；填了则该操作改走自定义接口。接口须返回与数据源声明一致的行结构，
+              权限由目标接口自己校验。查询 GET <code>{"{path}?page&pageSize&filter"}</code>，删除 DELETE{" "}
+              <code>{"{path}/{id}"}</code>。保存与详情不支持覆盖——表单写路径牵涉校验与审计，不开旁路。
+            </Hint>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <div className="grid gap-1" id="data-api-query">
+                <FieldLabel>查询接口</FieldLabel>
+                <Input
+                  className="h-8 font-mono text-xs"
+                  value={value.dataApi?.query ?? ""}
+                  placeholder="/api/..."
+                  onChange={(event) => patchDataApi({ query: event.target.value.trim() })}
+                />
+              </div>
+              <div className="grid gap-1" id="data-api-delete">
+                <FieldLabel>删除接口</FieldLabel>
+                <Input
+                  className="h-8 font-mono text-xs"
+                  value={value.dataApi?.delete ?? ""}
+                  placeholder="/api/..."
+                  onChange={(event) => patchDataApi({ delete: event.target.value.trim() })}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
       {unknownKeys.length > 0 && (
-        <p className="text-xs text-destructive" role="alert">
-          以下字段不在当前数据源的声明里（可能是刚切换了数据源），请重新选择或用「按字段生成」重建：
-          {unknownKeys.map((key) => ` ${key}`)}
+        <p className="rounded-md border border-destructive/30 bg-destructive/5 p-2 text-xs text-destructive" role="alert">
+          以下字段不在当前数据源的声明里（可能是切换过数据源），保存会被拒绝：
+          {unknownKeys.map((key) => ` ${key}`)}。请到「字段」里用「迁移到新数据源」清理。
         </p>
       )}
 
@@ -370,7 +432,7 @@ export function DwListConfigEditor({
           <AlertDialogHeader>
             <AlertDialogTitle>按字段重新生成列？</AlertDialogTitle>
             <AlertDialogDescription>
-              现有 {value.columns.length} 列的格式、宽度与 badge 映射是手工配置的，重新生成会全部覆盖。
+              现有 {value.columns.length} 列的格式、宽度与状态映射是手工配置的，重新生成会全部覆盖。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -380,6 +442,62 @@ export function DwListConfigEditor({
         </AlertDialogContent>
       </AlertDialog>
     </div>
+  )
+}
+
+/** 宽度档位选择。识别不了的存量值（`w-36` 之外的自定义类名）走「自定义」并原样保留。 */
+function WidthSelect({ value, onChange }: { value?: string; onChange: (value: string) => void }) {
+  const [forceCustom, setForceCustom] = useState(false)
+  const known = isKnownWidth(value)
+  const custom = forceCustom || !known
+
+  if (custom) {
+    return (
+      <div className="flex items-center gap-1">
+        <Input
+          className="h-8 font-mono text-xs"
+          value={value ?? ""}
+          placeholder="留空为自适应"
+          onChange={(event) => onChange(event.target.value)}
+        />
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 shrink-0 px-2 text-[11px]"
+          onClick={() => {
+            setForceCustom(false)
+            onChange("")
+          }}
+        >
+          档位
+        </Button>
+      </div>
+    )
+  }
+
+  return (
+    <Select
+      value={value || "__auto"}
+      onValueChange={(next) => {
+        if (next === "__custom") {
+          setForceCustom(true)
+          return
+        }
+        onChange(next === "__auto" ? "" : next)
+      }}
+    >
+      <SelectTrigger className="h-8">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {WIDTH_TIERS.map((tier) => (
+          <SelectItem key={tier.value || "auto"} value={tier.value || "__auto"}>
+            {tier.label}
+          </SelectItem>
+        ))}
+        <SelectItem value="__custom">自定义…</SelectItem>
+      </SelectContent>
+    </Select>
   )
 }
 
@@ -410,7 +528,10 @@ export function FieldKeySelect({
       <SelectContent>
         {fields.map((field) => (
           <SelectItem key={field.key} value={field.key} disabled={usedSet.has(field.key)}>
-            {field.label}（{field.key}）
+            {field.label}
+            <span className="ml-1 text-[10px] text-muted-foreground">
+              {field.key} · {FIELD_TYPE_LABELS[field.type] ?? field.type}
+            </span>
           </SelectItem>
         ))}
       </SelectContent>
@@ -424,19 +545,25 @@ export function FieldKeySelect({
 
 function Section({
   title,
+  anchor,
   count,
+  empty,
   onGenerate,
   onAdd,
+  footer,
   children,
 }: {
   title: string
+  anchor: string
   count: number
+  empty: string
   onGenerate?: () => void
   onAdd: () => void
+  footer?: string
   children: ReactNode
 }) {
   return (
-    <div className="grid gap-2">
+    <div className="grid gap-2" id={anchor}>
       <div className="flex items-center justify-between gap-2">
         <Label>
           {title}
@@ -455,20 +582,25 @@ function Section({
           </Button>
         </div>
       </div>
-      <div className="grid gap-2">{children}</div>
+      {count === 0 ? <p className="rounded-md border border-dashed p-3 text-xs text-muted-foreground">{empty}</p> : <div className="grid gap-2">{children}</div>}
+      {footer && <p className="text-[11px] text-muted-foreground">{footer}</p>}
     </div>
   )
 }
 
 function ItemRow({
-  label,
+  anchor,
+  title,
+  subtitle,
   index,
   total,
   onMove,
   onRemove,
   children,
 }: {
-  label: string
+  anchor: string
+  title: string
+  subtitle: string
   index: number
   total: number
   onMove: (delta: number) => void
@@ -476,18 +608,14 @@ function ItemRow({
   children: ReactNode
 }) {
   return (
-    <div className="grid gap-2 rounded-lg border p-2.5">
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-medium text-muted-foreground">{label}</span>
-        <div className="flex items-center gap-0.5">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-7"
-            aria-label="上移"
-            disabled={index === 0}
-            onClick={() => onMove(-1)}
-          >
+    <div className="grid gap-2 rounded-lg border bg-card/40 p-2.5" id={anchor}>
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <p className="truncate text-xs font-medium">{title}</p>
+          <p className="truncate text-[10px] text-muted-foreground">{subtitle}</p>
+        </div>
+        <div className="flex shrink-0 items-center gap-0.5">
+          <Button variant="ghost" size="icon" className="size-7" aria-label="上移" disabled={index === 0} onClick={() => onMove(-1)}>
             <ChevronUp className="size-3.5" />
           </Button>
           <Button
@@ -512,5 +640,10 @@ function ItemRow({
 
 /** 行内小标签：视觉层级低于表单主 Label。 */
 function FieldLabel({ children }: { children: ReactNode }) {
-  return <span className="text-xs text-muted-foreground">{children}</span>
+  return <span className="text-[11px] text-muted-foreground">{children}</span>
+}
+
+/** 解释性文案：一句话说清这个配置项会发生什么，不写「请填写 XXX」。 */
+function Hint({ children }: { children: ReactNode }) {
+  return <p className="text-[11px] leading-relaxed text-muted-foreground">{children}</p>
 }

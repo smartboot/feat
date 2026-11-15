@@ -3,6 +3,7 @@ import { Filter, Inbox, MoreHorizontal, Pencil, Plus, RotateCcw, Trash2 } from "
 import { toast } from "sonner"
 
 import type { DwColumn, DwRow, PageConfig } from "@/api/types"
+import { DwCell } from "@/components/dw/DwCell"
 import { DwFormDialog } from "@/components/dw/DwFormDialog"
 import {
   AlertDialog,
@@ -231,7 +232,7 @@ export function DwList({ pageKey, config }: { pageKey: string; config: PageConfi
                       <TableRow key={String(row[list.rowKey])}>
                         {list.columns.map((column) => (
                           <TableCell key={column.key} className={cn(column.format === "number" && "text-right")}>
-                            {renderCell(column, row)}
+                            <DwCell column={column} row={row} />
                           </TableCell>
                         ))}
                         {showRowMenu && (
@@ -328,7 +329,7 @@ export function DwList({ pageKey, config }: { pageKey: string; config: PageConfi
           <AlertDialogHeader>
             <AlertDialogTitle>确认删除？</AlertDialogTitle>
             <AlertDialogDescription>
-              「{rowLabel(removing, list.rowKey)}」将被删除，该操作会记录到审计日志。
+              「{rowLabel(removing, list.columns, list.rowKey)}」将被删除，该操作会记录到审计日志。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -377,60 +378,20 @@ function rowId(row: DwRow, rowKey: string): number {
   return Number(row[rowKey])
 }
 
-/** 删除确认框里的行标识：优先用 name 字段，退化成行主键。 */
-function rowLabel(row: DwRow | null, rowKey: string): string {
+/**
+ * 删除确认框里的行标识：优先用第一列的文本值（配置者认为那是这行的「名字」），
+ * 退化成 row.name，最后退化成主键。写死 name 字段会让换了数据源的页面全都显示 #12。
+ */
+function rowLabel(row: DwRow | null, columns: DwColumn[], rowKey: string): string {
   if (!row) return ""
-  const name = row.name
-  return typeof name === "string" && name ? name : `#${String(row[rowKey])}`
-}
-
-/** 单元格按 format 分发：数值右对齐由调用方处理，这里只负责内容。 */
-function renderCell(column: DwColumn, row: DwRow) {
-  const value = row[column.key]
-  switch (column.format) {
-    case "muted":
-      return <span className="text-sm text-muted-foreground">{text(value)}</span>
-    case "number":
-      return <span className="text-sm tabular-nums">{text(value)}</span>
-    case "badge": {
-      const raw = text(value)
-      const option = (column.options ?? []).find((item) => item.value === raw)
-      return (
-        <Badge variant={option?.variant ?? "secondary"}>
-          <span className="size-1.5 rounded-full bg-current" />
-          {option?.label ?? raw}
-        </Badge>
-      )
+  for (const column of columns) {
+    if (column.format === "text" || column.format === "muted") {
+      const value = row[column.key]
+      if (typeof value === "string" && value) return value
     }
-    case "tags": {
-      const values = Array.isArray(value) ? value.map(text) : value ? [text(value)] : []
-      if (values.length === 0) {
-        return <span className="text-xs text-muted-foreground">—</span>
-      }
-      return (
-        <div className="flex flex-wrap gap-1">
-          {values.slice(0, 4).map((item) => (
-            <Badge key={item} variant="secondary" className="text-[10px]">
-              {item}
-            </Badge>
-          ))}
-          {values.length > 4 && (
-            <Badge variant="outline" className="text-[10px]">
-              +{values.length - 4}
-            </Badge>
-          )}
-        </div>
-      )
-    }
-    case "text":
-    default:
-      return <span className="text-sm">{text(value)}</span>
   }
+  const name = row.name
+  if (typeof name === "string" && name) return name
+  return `#${String(row[rowKey])}`
 }
 
-/** 行数据的值只可能是字符串 / 数字 / 布尔 / 字符串数组，统一转展示文本。 */
-function text(value: unknown): string {
-  if (value == null) return ""
-  if (Array.isArray(value)) return value.map(String).join(", ")
-  return String(value)
-}
