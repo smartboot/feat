@@ -10,6 +10,7 @@ import type {
   DwFilterWidget,
   DwListConfig,
   DwRowAction,
+  DwValueFormat,
 } from "@/api/types"
 import {
   AlertDialog,
@@ -45,11 +46,13 @@ import {
   FILTER_WIDGET_LABELS,
   FILTER_WIDGETS,
   MAX_ROW_ACTIONS,
+  VALUE_FORMATS,
   WIDTH_TIERS,
   columnFromField,
   defaultFormatFor,
   isKnownWidth,
   newRowAction,
+  valueFormatLabel,
 } from "@/components/dw/meta"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -292,10 +295,17 @@ export function DwListConfigEditor({
         {value.columns.length === 0 ? (
           <EmptyColumns fields={fields} onGenerate={generateColumns} />
         ) : (
-          <RowTable template={COLUMN_TEMPLATE} header={["", "列名", "字段", "格式", "宽度", ""]}>
+          <RowTable template={COLUMN_TEMPLATE} header={["", "列名", "字段", "格式", "映射", "宽度", ""]}>
             {value.columns.map((column, index) => {
               const meta = fields.find((field) => field.key === column.key)
               const usableKeys = value.columns.map((item, i) => (i === index ? "" : item.key))
+              const columnExpanded = expanded === `column-${index}`
+              const valueFormatSample = VALUE_FORMATS.find(
+                (item) => item.value === (column.valueFormat ?? ""),
+              )?.sample
+              const mapped = (column.options ?? []).length
+              // 字段分区里配的同名值域：本列留空就继承它，配了则覆盖
+              const inherited = (value.fieldMaps?.[column.key] ?? []).length
               return (
                 <RowTableItem
                   key={index}
@@ -308,21 +318,65 @@ export function DwListConfigEditor({
                   drag={dragHandlers(index, value.columns, (from, to) =>
                     patch({ columns: reorder(value.columns, from, to) }),
                   )}
-                  expanded={expanded === `column-${index}`}
+                  expanded={columnExpanded}
                   onToggleExpand={() => toggleExpanded(`column-${index}`)}
                   detail={
-                    <div className="grid gap-2">
-                      {column.format === "badge" ? (
-                        <div className="grid gap-1">
-                          <FieldLabel>值 → 文案映射（不配只显示原始值）</FieldLabel>
-                          <DwOptionListEditor
-                            options={column.options ?? []}
-                            onChange={(options) => updateColumn(index, { ...column, options })}
-                          />
+                    <div className="grid gap-2.5">
+                      <div className="grid gap-1">
+                        <div className="flex flex-wrap items-baseline justify-between gap-x-2">
+                          <FieldLabel>值 → 文案映射</FieldLabel>
+                          <span className="text-[10px] text-muted-foreground">
+                            命中的值显示文案，未命中的值原样显示
+                            {column.valueFormat ? "并按下面的格式化排版" : ""}
+                          </span>
                         </div>
-                      ) : (
-                        <p className="text-[11px] text-muted-foreground">{COLUMN_FORMAT_HINTS[column.format]}</p>
-                      )}
+                        <DwOptionListEditor
+                          options={column.options ?? []}
+                          onChange={(options) => updateColumn(index, { ...column, options })}
+                        />
+                        {inherited > 0 && (
+                          <p className="text-[11px] leading-relaxed text-muted-foreground">
+                            该字段在「字段」分区配了 {inherited} 项值域：这里留空就是继承它，
+                            填了则只对这一列生效（其余视图仍用字段值域）。
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="grid gap-1">
+                        <FieldLabel>值格式化（映射未命中时生效）</FieldLabel>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Select
+                            value={column.valueFormat || "raw"}
+                            onValueChange={(next) =>
+                              updateColumn(index, {
+                                ...column,
+                                valueFormat: (next === "raw" ? "" : next) as DwValueFormat,
+                              })
+                            }
+                          >
+                            <SelectTrigger
+                              className="h-7 w-32 text-xs"
+                              aria-label={`第 ${index + 1} 列的值格式化`}
+                            >
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {VALUE_FORMATS.map((item) => (
+                                <SelectItem key={item.value || "raw"} value={item.value || "raw"}>
+                                  {item.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <span className="text-[11px] text-muted-foreground">
+                            {valueFormatSample ? `例：${valueFormatSample}` : "数据源给什么就显示什么"}
+                          </span>
+                        </div>
+                      </div>
+
+                      <p className="text-[11px] leading-relaxed text-muted-foreground">
+                        {COLUMN_FORMAT_HINTS[column.format]}
+                      </p>
                       <RowDelete
                         name={column.label || meta?.label || column.key || `第 ${index + 1} 列`}
                         label={`删掉不影响数据，只是这页不再显示「${
@@ -372,6 +426,39 @@ export function DwListConfigEditor({
                       ))}
                     </SelectContent>
                   </Select>
+                  {/*
+                    映射是一等入口，不只是「badge 的附加配置」：这一格永远在、永远可点。
+                    没有内容时显示「—」而不是隐藏，否则「这个功能不存在」和「还没配」
+                    在界面上长得一模一样。
+                  */}
+                  <button
+                    type="button"
+                    onClick={() => toggleExpanded(`column-${index}`)}
+                    aria-label={`第 ${index + 1} 列的值映射与格式化`}
+                    title="值 → 文案映射，以及日期 / 千分位格式化"
+                    className={cn(
+                      "flex h-7 min-w-0 items-center gap-1 rounded-md border px-1.5 text-[11px] transition-colors",
+                      mapped > 0 || column.valueFormat
+                        ? "border-primary/40 bg-primary/5 text-foreground"
+                        : "text-muted-foreground hover:bg-muted",
+                    )}
+                  >
+                    <span className="min-w-0 flex-1 truncate text-left">
+                      {mapped > 0
+                        ? `${mapped} 项`
+                        : inherited > 0
+                          ? `继承 ${inherited} 项`
+                          : column.valueFormat
+                            ? valueFormatLabel(column.valueFormat)
+                            : "—"}
+                    </span>
+                    <ChevronDown
+                      className={cn(
+                        "size-3 shrink-0 text-muted-foreground/60 transition-transform",
+                        columnExpanded && "rotate-180",
+                      )}
+                    />
+                  </button>
                   <WidthTicks
                     value={column.width}
                     ariaLabel={`第 ${index + 1} 列的宽度`}

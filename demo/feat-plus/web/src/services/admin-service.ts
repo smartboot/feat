@@ -102,4 +102,12 @@ export interface AdminService {
   deletePageConfig(id: number): Promise<void>
   /** 可选数据源 + 字段声明，配置表单的下拉与字段提示 */
   listDatasources(): Promise<DatasourceOption[]>
+  /**
+   * 拉一份原始字典，供配置页「从接口导入值域」使用。
+   *
+   * 返回**未加工**的数组：取值 / 显示字段由配置者当场指定，前端不猜字段名。
+   * 权限点接口返回的是 `{ key, label, groupKey, groupLabel }`，和默认的 `value` 不一样——
+   * 猜一次就会得到一份空映射，而且不报错。
+   */
+  fetchOptionRows(api: string): Promise<Array<Record<string, unknown>>>
 }

@@ -42,7 +42,24 @@
             { "value": "0", "label": "已停用", "variant": "warning" }
           ]
         }
-      ]
+      ],
+      "fieldMaps": {
+        "permissions": [
+          { "value": "dashboard:read", "label": "查看概览" },
+          { "value": "user:read", "label": "查看成员" },
+          { "value": "user:write", "label": "管理成员" },
+          { "value": "role:read", "label": "查看角色" },
+          { "value": "role:write", "label": "管理角色" },
+          { "value": "dept:read", "label": "查看部门" },
+          { "value": "dept:write", "label": "管理部门" },
+          { "value": "audit:read", "label": "查看审计日志" },
+          { "value": "menu:read", "label": "查看菜单" },
+          { "value": "menu:write", "label": "管理菜单" },
+          { "value": "page:read", "label": "查看页面配置" },
+          { "value": "page:write", "label": "管理页面配置" },
+          { "value": "system:write", "label": "重置演示数据" }
+        ]
+      }
     },
     "form": {
       "createTitle": "新建角色",

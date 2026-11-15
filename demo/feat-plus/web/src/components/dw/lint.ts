@@ -1,6 +1,12 @@
 import type { DatasourceOption } from "@/api/types"
 
-import { FORM_WIDGET_LABELS, MAX_ROW_ACTIONS, writeModeOf, type PageDraft } from "./meta"
+import {
+  FORM_WIDGET_LABELS,
+  MAX_ROW_ACTIONS,
+  VALUE_FORMATS,
+  writeModeOf,
+  type PageDraft,
+} from "./meta"
 
 /**
  * 页面配置的保存前体检。
@@ -15,7 +21,7 @@ import { FORM_WIDGET_LABELS, MAX_ROW_ACTIONS, writeModeOf, type PageDraft } from
 export type DwIssueLevel = "error" | "warning"
 
 /** 问题所属分区。发布检查是汇总视图，不产生自己的问题。 */
-export type DwIssueSection = "basic" | "list" | "form"
+export type DwIssueSection = "basic" | "fields" | "list" | "form"
 
 export interface DwIssue {
   section: DwIssueSection
@@ -78,6 +84,30 @@ export function lintDraft({ draft, datasources }: LintContext): DwIssue[] {
   if (list.pageSize < 1 || list.pageSize > 200) {
     issues.push({ section: "list", level: "error", message: "每页条数必须在 1 到 200 之间", anchor: "page-size" })
   }
+  // 字段值域：key 必须命中数据源（否则没有任何视图取得到它），值域不能为空（等于配了不生效）。
+  // 这两条与后端 validateFieldMaps 一一对应，只是这里一次给全。
+  Object.entries(list.fieldMaps ?? {}).forEach(([key, options]) => {
+    const where = `字段值域「${key}」`
+    const anchor = `field-map-${key}`
+    if (!allKeys.has(key)) {
+      issues.push({
+        section: "fields",
+        level: "error",
+        message: `${where}不在当前数据源声明里，没有任何视图能用上它`,
+        anchor,
+      })
+    }
+    if (options.length === 0) {
+      issues.push({
+        section: "fields",
+        level: "error",
+        message: `${where}没有任何映射，配了不起作用；要么补一条，要么删掉这一项`,
+        anchor,
+      })
+    }
+    issues.push(...lintOptions(options, "fields", where, anchor))
+  })
+
   if (!allKeys.has(list.rowKey)) {
     issues.push({
       section: "list",
@@ -131,6 +161,26 @@ export function lintDraft({ draft, datasources }: LintContext): DwIssue[] {
         anchor,
       })
     }
+    if (column.valueFormat && !VALUE_FORMATS.some((item) => item.value === column.valueFormat)) {
+      issues.push({
+        section: "list",
+        level: "error",
+        message: `${where}的值格式化「${column.valueFormat}」不受支持，保存会被后端拒绝`,
+        anchor,
+      })
+    }
+    // 映射只写值不写文案，等于配了不生效——显示时只能退回原始值，
+    // 而配置者会以为「我已经翻译过了」。
+    ;(column.options ?? []).forEach((option, optionIndex) => {
+      if (option.value.trim() && !option.label.trim()) {
+        issues.push({
+          section: "list",
+          level: "error",
+          message: `${where}的第 ${optionIndex + 1} 条映射没有文案，保存上去等于没配`,
+          anchor,
+        })
+      }
+    })
     issues.push(...lintOptions(column.options ?? [], "list", where, anchor))
   })
 
@@ -484,6 +534,7 @@ export function splitIssues(issues: DwIssue[]) {
 export function countBySection(issues: DwIssue[]) {
   return {
     basic: issues.filter((issue) => issue.section === "basic").length,
+    fields: issues.filter((issue) => issue.section === "fields").length,
     list: issues.filter((issue) => issue.section === "list").length,
     form: issues.filter((issue) => issue.section === "form").length,
   }

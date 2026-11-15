@@ -438,7 +438,8 @@ export function PageStudio({
           {SECTIONS.map((item) => {
             const Icon = item.icon
             const active = section === item.key
-            const count = item.key === "basic" ? sectionCounts.basic : item.key === "list" ? sectionCounts.list : item.key === "form" ? sectionCounts.form : 0
+            {/* 按分区取问题数：新增分区不必回来改这行判断，漏改的后果是那个分区的问题数永远不显示 */}
+            const count = (sectionCounts as Record<string, number>)[item.key] ?? 0
             return (
               <button
                 key={item.key}
@@ -585,6 +586,18 @@ export function PageStudio({
                 <DwFieldCatalog
                   datasource={datasource}
                   draft={draft}
+                  fieldMaps={draft.list.fieldMaps ?? {}}
+                  onChangeFieldMap={(fieldKey, options) => {
+                    // 删到空就整项移除：留着空值域在保存时被后端拒绝，而界面上只是「0 项」，
+                    // 看起来像个无害的中间状态。
+                    const next = { ...(draft.list.fieldMaps ?? {}) }
+                    if (options.length === 0) {
+                      delete next[fieldKey]
+                    } else {
+                      next[fieldKey] = options
+                    }
+                    update({ list: { ...draft.list, fieldMaps: next } })
+                  }}
                   onAdd={addFromCatalog}
                   onMigrate={migrate}
                   onLocate={locate}

@@ -21,6 +21,8 @@
        b) pageKey 格式合法（^/p/[a-z0-9_-]{1,32}$）
        c) pageKey 在 src/main/resources/pages/pages.json 里有对应配置——
           菜单 ↔ 页面配置 ↔ 动态路由三方一致
+    8. pages.json 里 list.fieldMaps.permissions 必须与 Permission.CATALOG **双向**一致
+       —— 手抄的映射会随权限点新增静默少一条，表现是列表里冒出「user:write」这种原始编码。
 
 只做文本级解析：这个脚本要在没有 JDK、没有 npm 的环境里几秒内跑完。
 代价是认不出「用变量拼路径」这类写法——真出现那种写法，本脚本会报「未登记」，
@@ -138,6 +140,9 @@ def seed_pages():
       - title / datasourceKey 非空
       - list.columns 非空、form.fields 存在（只读页面写空数组）
       - 列与筛选的 key 各自不重复（重复会让 React 复用节点，表现为「改一列动两列」）
+      - list.fieldMaps 的每一项都是非空数组
+
+    额外返回「哪些页面把 permissions 手抄成了静态映射」，供规则 8 与 Permission.CATALOG 对账。
     """
     import json
 
@@ -152,6 +157,7 @@ def seed_pages():
         sys.exit("%s 顶层必须是非空数组（首次启动会得到空侧栏）" % os.path.basename(PAGES_JSON))
 
     keys = []
+    permission_maps = []
     for index, seed in enumerate(seeds, start=1):
         where = "%s 第 %d 项" % (os.path.basename(PAGES_JSON), index)
         if not isinstance(seed, dict):
@@ -183,7 +189,17 @@ def seed_pages():
                 if key in seen:
                     sys.exit("%s（%s）的 list.%s 里 key 重复：%s" % (where, page_key, group_name, key))
                 seen.add(key)
-    return keys
+        maps = listing.get("fieldMaps") or {}
+        if not isinstance(maps, dict):
+            sys.exit("%s（%s）的 list.fieldMaps 必须是对象（字段 key → 映射数组）" % (where, page_key))
+        for map_key, options in maps.items():
+            if not isinstance(options, list) or not options:
+                sys.exit("%s（%s）的 list.fieldMaps.%s 必须是非空数组（空映射等于没配）"
+                         % (where, page_key, map_key))
+            if map_key == "permissions":
+                permission_maps.append(
+                    (page_key, [item.get("value") for item in options if isinstance(item, dict)]))
+    return keys, permission_maps
 
 
 def nav_icon_keys():
@@ -210,7 +226,8 @@ def main():
     # 动态路由不参与「必须白名单 / 必须有种子菜单」的检查——它是一条参数化壳路由，
     # 合法性由规则 7 的三方一致性单独约束。normalize 会把它的参数段剥掉，必须先摘出来。
     normalized_routes = {normalize(r) for r in routes if r != DYNAMIC_ROUTE}
-    dynamic_page_keys = set(seed_pages())
+    dynamic_page_keys, permission_maps = seed_pages()
+    dynamic_page_keys = set(dynamic_page_keys)
     icons = nav_icon_keys()
 
     problems = []
@@ -242,6 +259,18 @@ def main():
     for page_key in sorted(dynamic_page_keys):
         if "/p/" + page_key not in seen_paths:
             problems.append("页面配置 %s 没有对应的 /p/ 种子菜单（首次启动时侧栏没有入口）" % page_key)
+
+    # 规则 8：手抄的权限点映射必须与字典双向一致。少一条 → 列表显示原始编码；
+    # 多一条 → 留着一个已经不存在的权限点，改角色时还会被当成合法值写回去。
+    for page_key, mapped in permission_maps:
+        missing = [key for key in keys if key not in mapped]
+        stale = [value for value in mapped if value not in keys]
+        if missing:
+            problems.append("页面 %s 的 permissions 值域缺少权限点：%s（这些会在列表里显示原始编码）"
+                            % (page_key, "、".join(missing)))
+        if stale:
+            problems.append("页面 %s 的 permissions 值域含有未登记的权限点：%s"
+                            % (page_key, "、".join(str(v) for v in stale)))
 
     for path in whitelist:
         if path not in normalized_routes:

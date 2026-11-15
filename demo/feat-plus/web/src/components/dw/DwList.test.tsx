@@ -15,7 +15,7 @@ import { DwList } from "@/components/dw/DwList"
  */
 
 const useDwData = vi.fn()
-const useRemoteOptions = vi.fn()
+const useFilterOptions = vi.fn()
 const runRowAction = vi.fn()
 
 vi.mock("@/services/queries", () => ({
@@ -25,14 +25,14 @@ vi.mock("@/services/queries", () => ({
     remove: { isPending: false, mutateAsync: vi.fn() },
     action: { isPending: false, mutateAsync: (...args: unknown[]) => runRowAction(...args) },
   }),
-  useRemoteOptions: (...args: unknown[]) => useRemoteOptions(...args),
+  useFilterOptions: (filters: unknown[]) => useFilterOptions(filters),
 }))
 
 afterEach(cleanup)
 
 beforeEach(() => {
   useDwData.mockReset()
-  useRemoteOptions.mockReset()
+  useFilterOptions.mockReset()
   runRowAction.mockReset()
   runRowAction.mockResolvedValue("已下发一次性凭证")
   useDwData.mockReturnValue({
@@ -42,7 +42,8 @@ beforeEach(() => {
     isError: false,
     refetch: vi.fn(),
   })
-  useRemoteOptions.mockReturnValue({ data: [], isLoading: false })
+  // 默认每个筛选都「还没取到」：一次性把数量对齐，避免索引越界
+  useFilterOptions.mockImplementation((filters: unknown[]) => filters.map(() => ({ data: [] })))
 })
 
 const config: PageConfig = {
@@ -118,18 +119,33 @@ describe("DwList 的筛选取数", () => {
     expect(screen.getByLabelText("时间范围（结束）")).toBeDisabled()
   })
 
-  it("配置了 optionsApi 的筛选用远程选项，静态筛选用配置里的选项", () => {
+  it("配置了 optionsApi 的筛选把路径与取值/显示字段交给取数层，静态筛选不交给它", () => {
     render(<DwList pageKey="activities" config={config} />)
 
-    // 远程：路径与取值/显示字段原样传下去，前端不猜字段名
-    const remoteCall = useRemoteOptions.mock.calls.find(
-      ([path]) => path === "/api/activities/operators",
-    )
-    expect(remoteCall).toBeTruthy()
-    expect(remoteCall?.slice(1)).toEqual(["id", "name"])
+    const [filters] = useFilterOptions.mock.calls[0] as [Array<Record<string, unknown>>]
+    // 三个筛选项逐个过一遍取数层：远程的带上接口，静态的不带（enabled 由路径是否为空决定）
+    expect(filters).toHaveLength(3)
+    expect(filters[1]).toMatchObject({
+      optionsApi: "/api/activities/operators",
+      optionValueField: "id",
+      optionLabelField: "name",
+    })
+    expect(filters[0].optionsApi).toBeUndefined()
+    expect(filters[2].optionsApi).toBeUndefined()
+  })
 
-    // 静态：不发起任何远程请求，空路径被跳过
-    expect(useRemoteOptions).toHaveBeenCalledWith("", "value", "label")
+  it("远程接口返回的选项真的进了下拉", async () => {
+    useFilterOptions.mockReturnValue([
+      { data: [] },
+      { data: [{ value: "7", label: "张三", group: "", groupLabel: "" }] },
+      { data: [] },
+    ])
+    render(<DwList pageKey="activities" config={config} />)
+
+    // SelectTrigger 不是表单控件，label 的 htmlFor 指不到它，只能按 id 取
+    await userEvent.click(document.getElementById("dw-filter-operatorId") as HTMLElement)
+
+    expect(await screen.findByRole("option", { name: "张三" })).toBeTruthy()
   })
 
   it("只读页面不渲染新建入口与行操作菜单", () => {

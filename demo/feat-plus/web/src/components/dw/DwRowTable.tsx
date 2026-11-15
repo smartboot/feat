@@ -16,7 +16,12 @@ import { cn } from "@/lib/utils"
  * 这里只负责三件事：栅格对齐、行内联动高亮、顺序调整。
  * 每一格渲染什么由调用方给，因为列 / 筛选 / 自定义按钮的字段不一样。
  */
-export const COLUMN_TEMPLATE = "16px minmax(0,1.45fr) minmax(0,1.05fr) 58px 94px 80px"
+/**
+ * 列比别的表多一格「映射」：值 → 文案的映射一度被当成「状态标签」的附属品，
+ * 只在 badge 展开区里出现，于是「code 想显示成中文」这种最普通的需求找不到入口。
+ * 现在它是行内可见、可点的一格——哪怕只有一个「—」，也说明这里有东西可配。
+ */
+export const COLUMN_TEMPLATE = "16px minmax(0,1.2fr) minmax(0,0.9fr) 72px 64px 84px 76px"
 export const FILTER_TEMPLATE = "16px minmax(0,1.3fr) minmax(0,0.95fr) 88px minmax(0,1.1fr) 80px"
 export const ACTION_TEMPLATE = "16px minmax(0,1fr) minmax(0,1.5fr) minmax(0,1.1fr) 76px"
 

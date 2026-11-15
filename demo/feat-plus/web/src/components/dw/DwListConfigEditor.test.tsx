@@ -96,7 +96,7 @@ describe("列表配置：表格式行内编辑", () => {
 })
 
 describe("列表配置：二级配置按需展开", () => {
-  it("徽标列的映射默认不占地方，点开才出现", async () => {
+  it("映射编辑器默认不占地方，点开才出现", async () => {
     renderEditor(base())
     expect(screen.queryByText(/值 → 文案映射/)).toBeNull()
 
@@ -117,11 +117,13 @@ describe("列表配置：二级配置按需展开", () => {
     expect(spy.mock.lastCall?.[0].columns.map((column: { key: string }) => column.key)).toEqual(["status"])
   })
 
-  it("文本列展开的是一句格式说明，不是空的映射编辑器", async () => {
+  it("文本列同样能配值映射：code 转中文不必先把格式改成状态标签", async () => {
     renderEditor(base())
     await userEvent.click(screen.getAllByRole("button", { name: "展开配置" })[0])
 
-    expect(screen.queryByText(/值 → 文案映射/)).toBeNull()
+    expect(screen.getByText(/值 → 文案映射/)).toBeTruthy()
+    expect(screen.getByRole("button", { name: "添加选项" })).toBeTruthy()
+    expect(screen.getByLabelText("第 1 列的值格式化")).toBeTruthy()
     expect(screen.getByText(/删掉不影响数据/)).toBeTruthy()
   })
 })
@@ -191,5 +193,55 @@ describe("列表配置：动作合并成一块", () => {
     expect(screen.getByLabelText("第 1 个自定义按钮的名称")).toHaveProperty("value", "重置密码")
     expect(screen.getByLabelText("第 1 个自定义按钮的接口")).toHaveProperty("value", "/api/users/reset-password")
     expect(screen.getByLabelText("第 2 个自定义按钮的提示框")).toHaveProperty("value", "")
+  })
+})
+
+describe("列表配置：字段值映射与格式化", () => {
+  it("映射格常驻在行内：没配也显示「—」，不藏起来", () => {
+    renderEditor(base())
+    // 两列各一个映射入口，aria-label 带列序号，不会和「展开配置」混淆
+    expect(screen.getByRole("button", { name: "第 1 列的值映射与格式化" })).toHaveProperty("textContent", "—")
+    expect(screen.getByRole("button", { name: "第 2 列的值映射与格式化" })).toBeTruthy()
+  })
+
+  it("配了映射就显示项数，多了格式化再追加名称", () => {
+    renderEditor(
+      base({
+        columns: [
+          {
+            key: "status",
+            label: "状态",
+            format: "badge",
+            width: "",
+            options: [
+              { value: "1", label: "启用", variant: "success" },
+              { value: "0", label: "停用", variant: "destructive" },
+            ],
+          },
+        ],
+      }),
+    )
+
+    expect(screen.getByRole("button", { name: "第 1 列的值映射与格式化" })).toHaveProperty("textContent", "2 项")
+  })
+
+  it("行内的映射格点一下也能展开，不必去找行尾的箭头", async () => {
+    renderEditor(base())
+    await userEvent.click(screen.getByRole("button", { name: "第 1 列的值映射与格式化" }))
+    expect(screen.getByText(/值 → 文案映射/)).toBeTruthy()
+  })
+
+  it("值格式化写进配置，选「原样」写回空串", async () => {
+    const spy = vi.fn()
+    renderEditor(base(), spy)
+
+    await userEvent.click(screen.getAllByRole("button", { name: "展开配置" })[0])
+    await userEvent.click(screen.getByLabelText("第 1 列的值格式化"))
+    await userEvent.click(await screen.findByRole("option", { name: "日期" }))
+    expect(spy.mock.lastCall?.[0].columns[0].valueFormat).toBe("date")
+
+    await userEvent.click(screen.getByLabelText("第 1 列的值格式化"))
+    await userEvent.click(await screen.findByRole("option", { name: "原样" }))
+    expect(spy.mock.lastCall?.[0].columns[0].valueFormat).toBe("")
   })
 })

@@ -8,8 +8,10 @@ import type {
   DwFormConfig,
   DwFormField,
   DwListConfig,
+  DwOption,
   DwRow,
   DwRowAction,
+  DwValueFormat,
   DwVariant,
   DwWidget,
   DwWriteMode,
@@ -39,9 +41,26 @@ export const COLUMN_FORMAT_LABELS: Record<DwColumnFormat, string> = {
 export const COLUMN_FORMAT_HINTS: Record<DwColumnFormat, string> = {
   text: "原样展示，最主要的列格式",
   muted: "弱化的辅助信息，如编码、说明",
-  badge: "单个状态值 → 彩色标签，需要值映射",
+  badge: "单个状态值 → 彩色标签，通常要配值映射",
   tags: "多值字段，如权限点、标签，超出 4 个折叠",
   number: "右对齐等宽数字，如成员数、金额",
+}
+
+/**
+ * 「值排版」，与列格式正交：格式决定怎么画（纯文本 / 彩标 / 多值），
+ * 它决定同一个值怎么写。两件都配不冲突——弱化的日期文本是合法组合。
+ *
+ * 只做这几种，是因为每一种的输出都必须确定：多一个选项就多一种「配了但不生效」的可能。
+ */
+export const VALUE_FORMATS: Array<{ value: DwValueFormat; label: string; sample: string }> = [
+  { value: "", label: "原样", sample: "" },
+  { value: "date", label: "日期", sample: "2026-11-15" },
+  { value: "datetime", label: "日期时间", sample: "2026-11-15 18:53" },
+  { value: "thousands", label: "千分位", sample: "1,234,567" },
+]
+
+export function valueFormatLabel(value: string | undefined): string {
+  return VALUE_FORMATS.find((item) => item.value === (value ?? ""))?.label ?? "原样"
 }
 
 export const FILTER_WIDGETS: DwFilterWidget[] = ["input", "select", "dateRange"]
@@ -241,11 +260,17 @@ export function sampleRows(fields: DwFieldMeta[], columns: DwColumn[], count = 3
     for (const field of fields) {
       row[field.key] = sampleValue(field, i)
     }
-    // 配了值映射的列，样例值取映射里的值，否则预览看不到 badge / 状态色。
+    // 预览必须证明「配置生效了」，所以样例值特意用配置能吃进去的原始形态：
+    // 配了映射就取映射里的值，配了日期格式化就给 ISO 串，否则表格里看到的
+    // 只是「本来就长这样」，证明不了任何配置起了作用。
     for (const column of columns) {
       const options = column.options ?? []
       if (options.length > 0) {
         row[column.key] = options[(i - 1) % options.length].value
+      } else if (column.valueFormat === "date" || column.valueFormat === "datetime") {
+        row[column.key] = `2026-11-${String(i).padStart(2, "0")}T10:${String(i).padStart(2, "0")}:00`
+      } else if (column.valueFormat === "thousands") {
+        row[column.key] = 1234567 * i
       }
     }
     rows.push(row)
@@ -296,7 +321,24 @@ export const EMPTY_LIST: DwListConfig = {
   pageSize: 20,
   actions: [],
   rowActions: [],
+  fieldMaps: {},
   rowKey: "id",
+}
+
+/**
+ * 字段值域：本页共享的「值 → 文案」映射表。
+ *
+ * 视图（列 / 表单字段 / 筛选）自己配了就用视图的，没配的从这里继承。
+ * 规则与后端 {@code PageService.applyFieldMaps} 同源——两边都只有「空则继承」一条，
+ * 但改一处必须同时改另一处，否则预览与线上会给出不同的结果。
+ */
+export function fieldMapOf(list: DwListConfig, key: string): DwOption[] {
+  return list.fieldMaps?.[key] ?? []
+}
+
+/** 一个视图实际生效的选项：自己的优先，空则继承字段值域。 */
+export function effectiveOptions(list: DwListConfig, key: string, own?: DwOption[]): DwOption[] {
+  return own && own.length > 0 ? own : fieldMapOf(list, key)
 }
 
 export const EMPTY_FORM: DwFormConfig = {

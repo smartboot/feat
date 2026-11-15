@@ -344,6 +344,12 @@ export type DwWidget = "input" | "password" | "textarea" | "select" | "switch" |
 /** 列表内置动作枚举。自定义按钮动作（老平台的 script 存库）刻意不支持 */
 export type DwAction = "create" | "edit" | "delete" | "refresh"
 export type DwColumnFormat = "text" | "muted" | "badge" | "tags" | "number"
+
+/**
+ * 列的「值排版」方式，与 format（怎么画）正交：
+ * 同一个值可以既配 `muted` 又配 `date`，得到「弱化的日期文本」。
+ */
+export type DwValueFormat = "" | "date" | "datetime" | "thousands"
 export type DwVariant = "success" | "warning" | "destructive" | "secondary" | "outline"
 
 /** 枚举选项：select 的 option / badge、tags 的值映射 */
@@ -360,8 +366,10 @@ export interface DwColumn {
   format: DwColumnFormat
   /** Tailwind 宽度 class（如 "w-36"），省略表示自适应 */
   width?: string
-  /** badge / tags 格式的值 → 文案 / 变体映射 */
+  /** 值 → 文案 / 变体映射，任何格式都可用；命中时不再套 valueFormat */
   options?: DwOption[]
+  /** 值排版：空串原样、date、datetime、thousands。映射未命中时才生效 */
+  valueFormat?: DwValueFormat
 }
 
 /**
@@ -470,6 +478,11 @@ export interface DwListConfig {
   actions: DwAction[]
   /** 自定义行操作，与编辑 / 删除同列在行操作菜单里 */
   rowActions?: DwRowAction[]
+  /**
+   * 本页共享的「字段值域」：字段 key → 值 → 文案映射，列表 / 表单 / 筛选统一继承。
+   * 存 list_json 是工程折中（不为一个 map 新建一列），语义上面向整页。
+   */
+  fieldMaps?: Record<string, DwOption[]>
   rowKey: string
   dataApi?: DwDataApi
 }

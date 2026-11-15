@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import type {
   ActivityQuery,
@@ -361,14 +361,18 @@ export interface RemoteOption {
   groupLabel: string
 }
 
-export function useRemoteOptions(
+/**
+ * 远程选项的查询配置。抽出来给单条（useRemoteOptions）与批量（useFilterOptions）共用——
+ * 两处必须同键同 staleTime，否则同一份字典会被缓存两次。
+ */
+function remoteOptionsQuery(
   apiPath: string,
   valueField: string,
   labelField: string,
   groupField = "",
   groupLabelField = "",
 ) {
-  return useQuery({
+  return {
     queryKey: queryKeys.remoteOptions(apiPath, valueField, labelField, groupField, groupLabelField),
     queryFn: async (): Promise<RemoteOption[]> => {
       const rows = await request<Array<Record<string, unknown>>>(apiPath)
@@ -391,6 +395,41 @@ export function useRemoteOptions(
     },
     enabled: apiPath !== "",
     staleTime: 5 * 60_000,
+  }
+}
+
+export function useRemoteOptions(
+  apiPath: string,
+  valueField: string,
+  labelField: string,
+  groupField = "",
+  groupLabelField = "",
+) {
+  return useQuery(remoteOptionsQuery(apiPath, valueField, labelField, groupField, groupLabelField))
+}
+
+/**
+ * 一次解析一个列表页里所有筛选的远程选项。
+ *
+ * 为什么不删掉这个函数、让渲染组件各自调 useRemoteOptions：筛选数量由配置决定，
+ * 在 `map` 里调 hook 会让 hook 顺序随筛选数量变化（加一个筛选就崩）；而列表展示层一旦
+ * 含 `useQuery`，配置页预览就被迫活在 QueryClientProvider 里——预览是纯静态渲染，
+ * 不该被数据层绑住（它连请求都不该发）。
+ *
+ * `useQueries` 的 hook 数量固定、参数是数组，两件事一起解决：取数留在容器，
+ * 展示层只收 `options`。
+ */
+export function useFilterOptions(
+  filters: Array<{ optionsApi?: string; optionValueField?: string; optionLabelField?: string }>,
+) {
+  return useQueries({
+    queries: filters.map((filter) =>
+      remoteOptionsQuery(
+        filter.optionsApi ?? "",
+        filter.optionValueField || "value",
+        filter.optionLabelField || "label",
+      ),
+    ),
   })
 }
 

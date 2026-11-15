@@ -5,7 +5,9 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 import com.alibaba.fastjson2.JSON;
@@ -60,6 +62,12 @@ public class PageService {
 
     private static final Set<String> COLUMN_FORMATS = new HashSet<>(Arrays.asList(
             "text", "muted", "badge", "tags", "number"));
+    /**
+     * 列的「值格式化」白名单。映射（options）优先，未命中才按这里排版；
+     * 空串表示原样显示。只认这几个是因为每个值都得有确定的输出，写错就是整列乱码。
+     */
+    private static final Set<String> VALUE_FORMATS = new HashSet<>(Arrays.asList(
+            "", "date", "datetime", "thousands"));
     private static final Set<String> FILTER_WIDGETS = new HashSet<>(Arrays.asList(
             "input", "select", "dateRange"));
     private static final Set<String> FIELD_WIDGETS = new HashSet<>(Arrays.asList(
@@ -116,8 +124,11 @@ public class PageService {
         response.setTitle(record.getTitle());
         response.setDescription(record.getDescription());
         response.setDatasourceKey(record.getDatasourceKey());
-        response.setList(parseListConfig(record.getListJson()));
-        response.setForm(parseFormConfig(record.getFormJson()));
+        DwListConfig list = parseListConfig(record.getListJson());
+        DwFormConfig form = parseFormConfig(record.getFormJson());
+        applyFieldMaps(list, form);
+        response.setList(list);
+        response.setForm(form);
         response.setCanWrite(canWrite);
         return response;
     }
@@ -125,6 +136,54 @@ public class PageService {
     /** 配置行存在性 + 数据源 key，供 DwController 定位数据源。 */
     public String requireDatasourceKey(String pageKey) {
         return requireByPageKey(pageKey).getDatasourceKey();
+    }
+
+    /**
+     * 渲染前的最后一步：把页面级的「字段值域」铺到各视图的空位上。
+     * <p>
+     * 为什么不交给前端各自 fallback：消费同一份映射的地方有列表列、筛选下拉、表单下拉三处，
+     * 任何一处忘了查表，就会出现「这一列显示中文、那列显示编码」。合并只发生在这里，
+     * 渲染面拿到的就是最终值，没有第二处需要记住这条规则。
+     * <p>
+     * 只填空位：视图自己配了 options 就用视图的——那是「覆盖」，不是「重复」。
+     * 表单字段与筛选还多一个来源（optionsApi 远程选项），配了接口的不再继承静态值域，
+     * 否则两个来源同时生效，谁赢说不清。
+     * <p>
+     * 注意这是<b>只对下发副本</b>做的处理：存储里的 list_json 原样保留，编辑器打开时
+     * 看到的仍是「谁配了什么」，继承与否由界面自己表达。
+     */
+    private static void applyFieldMaps(DwListConfig list, DwFormConfig form) {
+        Map<String, List<DwOption>> fieldMaps = list.getFieldMaps();
+        if (fieldMaps.isEmpty()) {
+            return;
+        }
+        for (DwColumn column : list.getColumns()) {
+            inheritFieldMap(fieldMaps, column.getKey(), column.getOptions(), column::setOptions);
+        }
+        for (DwFilter filter : list.getFilters()) {
+            if (!filter.getOptionsApi().isEmpty()) {
+                continue;
+            }
+            inheritFieldMap(fieldMaps, filter.getKey(), filter.getOptions(), filter::setOptions);
+        }
+        for (DwFormField field : form.getFields()) {
+            if (!field.getOptionsApi().isEmpty()) {
+                continue;
+            }
+            inheritFieldMap(fieldMaps, field.getKey(), field.getOptions(), field::setOptions);
+        }
+    }
+
+    private static void inheritFieldMap(Map<String, List<DwOption>> fieldMaps, String key,
+                                        List<DwOption> own, Consumer<List<DwOption>> setter) {
+        if (own != null && !own.isEmpty()) {
+            return;
+        }
+        List<DwOption> inherited = fieldMaps.get(key);
+        if (inherited != null && !inherited.isEmpty()) {
+            // 复制一份：下发副本与存储对象不共享同一个 List，缓存里的配置不会被响应侧改动带偏
+            setter.accept(new ArrayList<>(inherited));
+        }
     }
 
     /**
@@ -348,6 +407,7 @@ public class PageService {
         }
 
         validateRowActions(list.getRowActions(), dataSource, pageKey);
+        validateFieldMaps(list.getFieldMaps(), fieldKeys);
 
         Set<String> seen = new HashSet<>();
         for (DwColumn column : list.getColumns()) {
@@ -357,6 +417,12 @@ public class PageService {
                 throw new DomainException(where + "的格式不支持：" + column.getFormat()
                         + "（可选 text / muted / badge / tags / number）");
             }
+            String valueFormat = column.getValueFormat() == null ? "" : column.getValueFormat().trim();
+            if (!VALUE_FORMATS.contains(valueFormat)) {
+                throw new DomainException(where + "的值格式化不支持：" + valueFormat
+                        + "（可选留空 / date / datetime / thousands）");
+            }
+            column.setValueFormat(valueFormat);
             validateOptions(column.getOptions(), where);
         }
         if (list.getColumns().isEmpty()) {
@@ -519,6 +585,24 @@ public class PageService {
         seen.add(key);
         if (!fieldKeys.contains(key)) {
             throw new DomainException(where + "不是数据源声明过的字段（或不可写），请核对字段标识");
+        }
+    }
+
+    /**
+     * 字段值域的校验。key 必须命中数据源声明——否则没有任何视图取得到它，是一份死配置；
+     * 空值域同样拒绝：它会让「已配值域」和「没配」在界面上长得一样，而配置者以为已经翻译过了。
+     */
+    private static void validateFieldMaps(Map<String, List<DwOption>> fieldMaps, Set<String> fieldKeys) {
+        for (Map.Entry<String, List<DwOption>> entry : fieldMaps.entrySet()) {
+            String key = entry.getKey();
+            if (!fieldKeys.contains(key)) {
+                throw new DomainException("字段值域「" + key + "」不是数据源声明过的字段，没有任何视图能用上它");
+            }
+            List<DwOption> options = entry.getValue();
+            if (options == null || options.isEmpty()) {
+                throw new DomainException("字段值域「" + key + "」没有任何映射，配了不起作用，请删掉这一项");
+            }
+            validateOptions(options, "字段值域 " + key);
         }
     }
 

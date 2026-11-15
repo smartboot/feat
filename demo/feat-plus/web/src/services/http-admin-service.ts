@@ -232,4 +232,13 @@ export const adminService: AdminService = {
   listDatasources(): Promise<DatasourceOption[]> {
     return request<DatasourceOption[]>("/api/pages/datasources")
   },
+  async fetchOptionRows(api: string): Promise<Array<Record<string, unknown>>> {
+    const rows = await request<unknown>(api)
+    // 形状不对就当场说清楚：这里静默返回 [] 的话，界面上会显示「读到 0 行」，
+    // 配置者只会以为接口没数据，查很久。
+    if (!Array.isArray(rows)) {
+      throw new Error(`${api} 返回的不是数组，无法作为选项导入`)
+    }
+    return rows as Array<Record<string, unknown>>
+  },
 }
