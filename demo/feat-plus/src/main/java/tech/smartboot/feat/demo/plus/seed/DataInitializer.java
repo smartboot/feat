@@ -1,9 +1,14 @@
 package tech.smartboot.feat.demo.plus.seed;
 
+import java.sql.Connection;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.ibatis.io.Resources;
+import org.apache.ibatis.jdbc.ScriptRunner;
+import org.apache.ibatis.session.SqlSessionFactory;
 
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Bean;
@@ -20,7 +25,6 @@ import tech.smartboot.feat.demo.plus.model.ActivityRecord;
 import tech.smartboot.feat.demo.plus.model.DepartmentRecord;
 import tech.smartboot.feat.demo.plus.model.MenuRecord;
 import tech.smartboot.feat.demo.plus.model.NotificationRecord;
-import tech.smartboot.feat.demo.plus.model.PageRecord;
 import tech.smartboot.feat.demo.plus.model.RoleRecord;
 import tech.smartboot.feat.demo.plus.model.UserAccount;
 import tech.smartboot.feat.demo.plus.security.MenuSnapshot;
@@ -36,6 +40,9 @@ import tech.smartboot.feat.demo.plus.service.PageSnapshot;
  */
 @Bean
 public class DataInitializer {
+
+    /** 建表 + 页面初始配置。启动时由 feat.yaml 的 initial-sql 执行，reset 时重放同一份。 */
+    private static final String SCHEMA = "mybatis/ddl/schema.sql";
 
     @Autowired
     private UserMapper userMapper;
@@ -60,6 +67,10 @@ public class DataInitializer {
 
     @Autowired
     private PageMapper pageMapper;
+
+    // 字段名必须等于 bean 名（@Autowired 按名注入，AOT 硬约束）。
+    @Autowired
+    private SqlSessionFactory sessionFactory;
 
     @Autowired
     private MenuSnapshot menuSnapshot;
@@ -156,22 +167,41 @@ public class DataInitializer {
     }
 
     /**
-     * 页面配置表初始化。落库之后由「页面配置」页维护，这里只负责第一份可用的动态页面。
+     * 页面配置初始化。
+     * <p>
+     * 配置的唯一真相在 {@code mybatis/ddl/schema.sql}：启动时由 initial-sql 建表并写入，
+     * 这里只在表为空时重放同一份脚本（reset-demo 清库之后、或存量库升级到这张表时）。
+     * 不在 Java 里再拼一份 JSON——那会变成「DDL 一套、常量一套」，改一处忘一处。
      */
     private void seedPages() {
-        Date now = new Date();
-        for (SeedData.SeedPage seed : SeedData.pages()) {
-            PageRecord record = new PageRecord();
-            record.setPageKey(seed.pageKey);
-            record.setTitle(seed.title);
-            record.setDescription(seed.description);
-            record.setDatasourceKey(seed.datasourceKey);
-            record.setListJson(seed.listJson);
-            record.setFormJson(seed.formJson);
-            record.setIsDeleted(0);
-            record.setCreatedTime(now);
-            record.setEditTime(now);
-            pageMapper.insert(record);
+        if (pageMapper.countAll() > 0) {
+            return;
+        }
+        replaySchema();
+    }
+
+    /**
+     * 重放建表脚本。脚本里的 INSERT 都带 {@code WHERE NOT EXISTS}，重复执行安全。
+     */
+    private void replaySchema() {
+        Connection connection = null;
+        try {
+            connection = sessionFactory.getConfiguration().getEnvironment().getDataSource().getConnection();
+            ScriptRunner runner = new ScriptRunner(connection);
+            runner.setLogWriter(null);
+            runner.setStopOnError(true);
+            runner.runScript(Resources.getResourceAsReader(SCHEMA));
+        } catch (Exception e) {
+            // 启动失败的异常会被解包到最底层 cause，message 不拼进来就只剩一句 SQL 报错。
+            throw new IllegalStateException("重放 " + SCHEMA + " 失败：" + e);
+        } finally {
+            if (connection != null) {
+                try {
+                    connection.close();
+                } catch (Exception ignored) {
+                    // ScriptRunner 已关闭连接时 close 是幂等的
+                }
+            }
         }
     }
 

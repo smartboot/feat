@@ -222,3 +222,26 @@ CREATE INDEX IF NOT EXISTS idx_activity_created ON sys_activity (created_time);
 CREATE INDEX IF NOT EXISTS idx_notification_user ON sys_notification (user_id);
 CREATE INDEX IF NOT EXISTS idx_menu_group ON sys_menu (group_key, group_sort);
 CREATE INDEX IF NOT EXISTS idx_page_key ON sys_page (page_key, is_deleted);
+
+-- ---------------------------------------------------------------------------
+-- 配置驱动的页面（配置数据，与表结构同源、同一次启动生效）
+--
+-- 为什么在 DDL 里而不是 Java 常量里：页面配置是一份「可渲染的声明」，它和表结构描述的是
+-- 同一个业务对象。放在 SeedData 里拼字符串的结果是——改一条列宽要改代码、重新编译，
+-- 而且 check_menu.py 只能靠正则解析 Java 源码来核对菜单与页面的对应关系。
+--
+-- 幂等：按 page_key 判断（含软删行），重启不会重复插入；软删过的页面也不会被「复活」。
+-- 想恢复初始配置用 reset-demo——它会 truncate 后重放本脚本。
+-- 新增一个配置驱动页面 = 这里加一条 INSERT + sys_menu 里加一条 /p/{pageKey} 菜单，不改 Java。
+--
+-- 注意：list_json / form_json 里不能出现 ASCII 分号，ScriptRunner 按分号切语句；
+-- 也不要用单引号（外层字符串用的是单引号）。中文分号「；」是安全的。
+-- ---------------------------------------------------------------------------
+INSERT INTO sys_page (page_key, title, description, datasource_key, list_json, form_json,
+                      is_deleted, created_time, edit_time)
+SELECT 'roles', '角色权限（配置版）',
+       '配置驱动的角色列表：列、筛选与表单全部来自 sys_page 配置，改完即生效。', 'role',
+       '{"rowKey":"id","pageSize":20,"actions":["create","edit","delete","refresh"],"filters":[{"key":"keyword","label":"搜索","widget":"input","placeholder":"名称 / 编码 / 描述"},{"key":"status","label":"状态","widget":"select","options":[{"value":"1","label":"已启用"},{"value":"0","label":"已停用"}]}],"columns":[{"key":"name","label":"角色","format":"text"},{"key":"code","label":"编码","format":"muted","width":"w-36"},{"key":"description","label":"描述","format":"muted"},{"key":"permissions","label":"权限","format":"tags"},{"key":"scopeLabel","label":"数据范围","format":"text","width":"w-36"},{"key":"userCount","label":"成员数","format":"number","width":"w-24"},{"key":"status","label":"状态","format":"badge","width":"w-24","options":[{"value":"1","label":"已启用","variant":"success"},{"value":"0","label":"已停用","variant":"warning"}]}]}',
+       '{"createTitle":"新建角色","editTitle":"编辑角色","createDescription":"角色编码创建后不可修改。简化表单不包含权限点与数据范围，请到「角色权限」页补充。","editDescription":"编码创建后不可修改；权限点与数据范围请到「角色权限」页调整。","fields":[{"key":"code","label":"角色编码","widget":"input","required":true,"pattern":"^[A-Z][A-Z0-9_]{1,31}$","patternError":"需以大写字母开头，只能包含大写字母、数字和下划线","writeMode":"createOnly"},{"key":"name","label":"角色名称","widget":"input","required":true},{"key":"description","label":"描述","widget":"input","span":2},{"key":"status","label":"启用角色","widget":"switch","defaultValue":"1","span":2}]}',
+       0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+WHERE NOT EXISTS (SELECT 1 FROM sys_page WHERE page_key = 'roles');

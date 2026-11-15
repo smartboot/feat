@@ -217,6 +217,21 @@ SQL；这里的配置只描述「怎么渲染」，数据与保存走 `PageDataS
 渲染配置的读路径走 `PageSnapshot` 缓存（TTL 十分钟 + 写后失效，同菜单），`canWrite` 按请求人
 逐次计算、绝不进缓存。配置改动与数据写操作都记审计。
 
+**初始配置沉淀在 DDL 里，启动即生效。** `sys_page` 的第一份配置不是 Java 常量，而是
+`src/main/resources/mybatis/ddl/schema.sql` 末尾的一条 `INSERT ... SELECT ... WHERE NOT EXISTS`：
+`feat.yaml` 的 `initial-sql` 在 `sessionFactory` 构建时执行这份脚本，建表与初始页面同一次完成。
+于是「加一个配置驱动页面」= 在 DDL 里加一条 INSERT + 在 `sys_menu` 加一条 `/p/{pageKey}` 菜单，
+既不用改 Java，也不用先进管理页手工配一遍——部署完打开就有。
+
+三个约束写在脚本注释里，`scripts/check_menu.py` 会静态检查前两条：
+
+- **JSON 里不能有 ASCII 分号**：`ScriptRunner` 按分号切语句，切坏的是整个启动；
+- **JSON 必须是合法 JSON**：种子绕过了 `PageService` 的保存校验，坏配置会一直等到渲染时才暴露；
+- **按 `page_key` 判断幂等**（含软删行）：重启不重复插入，软删过的页面也不会被「复活」。
+
+`reset-demo` 走的是同一个脚本（`DataInitializer.replaySchema()`），清库后重放即可恢复初始配置——
+这样「首次启动的配置」和「重置后的配置」不存在两份，改一处两处都对。
+
 **权限挂在数据源上，不挂在页面配置上**：拉配置与读数据要数据源的读权限点，保存 / 删除要写权限点
 （`DwController` 统一 require）。页面配置管理页（`/pages`）自己独立挂 `page:read` / `page:write`——
 改的是别人页面的长相，风险等级不同。

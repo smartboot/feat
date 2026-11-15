@@ -19,7 +19,8 @@
        但挂 /p/xxx 的种子菜单必须满足三条替代规则：
        a) App.tsx 里存在 /p/:pageKey 这条动态路由
        b) pageKey 格式合法（^/p/[a-z0-9_-]{1,32}$）
-       c) pageKey 在 SeedData.pages() 里有对应种子——菜单 ↔ sys_page 种子 ↔ 动态路由三方一致
+       c) pageKey 在 mybatis/ddl/schema.sql 的 sys_page 初始化数据里有对应行——
+          菜单 ↔ sys_page 配置 ↔ 动态路由三方一致
 
 只做文本级解析：这个脚本要在没有 JDK、没有 npm 的环境里几秒内跑完。
 代价是认不出「用变量拼路径」这类写法——真出现那种写法，本脚本会报「未登记」，
@@ -36,6 +37,7 @@ ROOT = os.path.join(HERE, "..")
 MENU_ROUTES = os.path.join(ROOT, BASE, "security", "MenuRoutes.java")
 PERMISSION = os.path.join(ROOT, BASE, "security", "Permission.java")
 SEED_DATA = os.path.join(ROOT, BASE, "seed", "SeedData.java")
+SCHEMA_SQL = os.path.join(ROOT, "src", "main", "resources", "mybatis", "ddl", "schema.sql")
 APP_TSX = os.path.join(ROOT, "web", "src", "App.tsx")
 NAV_ICONS = os.path.join(ROOT, "web", "src", "lib", "icons.ts")
 
@@ -123,8 +125,30 @@ def app_routes():
 
 
 def seed_pages():
-    """SeedData.pages() 里的 pageKey 集合（文本级解析）。"""
-    return re.findall(r'new SeedPage\(\s*"([^"]+)"', squash(read(SEED_DATA)))
+    """schema.sql 里写入 sys_page 的 pageKey 集合。
+
+    页面配置已从 Java 常量迁到 DDL：启动时由 initial-sql 建表并写入，reset 重放同一份。
+    这里顺带把两条「启动才会炸」的静态约束钉住：
+      - JSON 字面量必须能被 json.loads 解析（种子绕过了 PageService 校验）；
+      - JSON 里不能出现 ASCII 分号，MyBatis ScriptRunner 按分号切语句，切坏的是整个启动。
+    """
+    import json
+
+    sql = read(SCHEMA_SQL)
+    keys = []
+    for match in re.finditer(r"INSERT\s+INTO\s+sys_page\b.*?WHERE\s+NOT\s+EXISTS",
+                             sql, re.IGNORECASE | re.DOTALL):
+        block = match.group(0)
+        keys.extend(re.findall(r"SELECT\s+'([^']+)'", block))
+        for jsonish in re.findall(r"'(\{.*?\})'", block, re.DOTALL):
+            if ";" in jsonish:
+                sys.exit("schema.sql 的 sys_page 配置里出现了 ASCII 分号，ScriptRunner 会切断语句：%s"
+                         % jsonish[:80])
+            try:
+                json.loads(jsonish)
+            except ValueError as e:
+                sys.exit("schema.sql 的 sys_page 配置不是合法 JSON：%s" % e)
+    return keys
 
 
 def nav_icon_keys():
@@ -167,7 +191,7 @@ def main():
                 problems.append("动态菜单 %s（%s）挂了 /p/ 路径，但 App.tsx 里没有 %s 这条动态路由"
                                 % (path, name, DYNAMIC_ROUTE))
             if page_key not in dynamic_page_keys:
-                problems.append("动态菜单 %s（%s）的 pageKey 在 SeedData.pages() 里没有对应种子"
+                problems.append("动态菜单 %s（%s）的 pageKey 在 schema.sql 的 sys_page 配置里没有对应行"
                                 % (path, name))
         else:
             if path not in whitelist:
@@ -179,10 +203,10 @@ def main():
         if permission is not None and permission not in keys:
             problems.append("种子菜单 %s 引用了未登记的权限点：%s" % (path, permission))
 
-    # SeedData.pages() 里的 pageKey 也要反向核对：有配置没有菜单，动态页面就没有入口。
+    # schema.sql 里的 pageKey 也要反向核对：有配置没有菜单，动态页面就没有入口。
     for page_key in sorted(dynamic_page_keys):
         if "/p/" + page_key not in seen_paths:
-            problems.append("页面配置种子 %s 没有对应的 /p/ 种子菜单（首次启动时侧栏没有入口）" % page_key)
+            problems.append("页面配置 %s 没有对应的 /p/ 种子菜单（首次启动时侧栏没有入口）" % page_key)
 
     for path in whitelist:
         if path not in normalized_routes:

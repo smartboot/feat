@@ -88,7 +88,7 @@ public final class SeedData {
                         Permission.MENU_READ, 40, true),
                 // 配置驱动的角色页：与手写 /roles 并行存在（动态表单暂不覆盖权限点勾选与数据范围），
                 // path 用字面量而不是 MenuRoutes 常量——它校验的是 sys_page 里存在 pageKey=roles，
-                // check_menu.py 对 /p/* 菜单走「动态路由 + SeedPage 对应」的专门规则。
+                // check_menu.py 对 /p/* 菜单走「动态路由 + schema.sql 里的 sys_page 配置」专门规则。
                 new SeedMenu("system", "系统管理", 20, "/p/roles", "角色权限（配置版）", "layers",
                         Permission.ROLE_READ, 50, true),
                 new SeedMenu("system", "系统管理", 20, MenuRoutes.PAGES, "页面配置", "sliders",
@@ -164,58 +164,6 @@ public final class SeedData {
         list.add(new SeedNotification("你的资料待完善", "请补充手机号，便于接收安全提醒", 2, "2026-08-01 16:20:00"));
         list.add(new SeedNotification("本季度审计任务已分配", "请在审计日志中核对 7 月的账号变更", 4, "2026-08-01 11:05:00"));
         return Collections.unmodifiableList(list);
-    }
-
-    /**
-     * 动态页面的初始配置。与菜单同理：入库之后由「页面配置」页维护，这里只是第一份可用的样子。
-     * <p>
-     * listJson / formJson 必须能过 PageService 的全部校验（字段命中 RolePageDataSource 声明、
-     * 控件在枚举内），由 check_menu.py 在提交前静态确认种子与数据源字段对得上——种子绕过了
-     * Service 校验（直插 Mapper），漏检就是「首次启动就配出一个渲染不了的页面」。
-     */
-    public static List<SeedPage> pages() {
-        return Arrays.asList(
-                new SeedPage("roles", "role", "角色权限（配置版）",
-                        "配置驱动的角色列表：列、筛选与表单全部来自 sys_page 配置，改完即生效。",
-                        // 角色列表：列 / 筛选 / 按钮动作。permissions 用 tags 格式渲染权限点数组。
-                        "{"
-                                + "\"rowKey\":\"id\","
-                                + "\"pageSize\":20,"
-                                + "\"actions\":[\"create\",\"edit\",\"delete\",\"refresh\"],"
-                                + "\"filters\":["
-                                + "  {\"key\":\"keyword\",\"label\":\"搜索\",\"widget\":\"input\",\"placeholder\":\"名称 / 编码 / 描述\"},"
-                                + "  {\"key\":\"status\",\"label\":\"状态\",\"widget\":\"select\","
-                                + "    \"options\":[{\"value\":\"1\",\"label\":\"已启用\"},{\"value\":\"0\",\"label\":\"已停用\"}]}"
-                                + "],"
-                                + "\"columns\":["
-                                + "  {\"key\":\"name\",\"label\":\"角色\",\"format\":\"text\"},"
-                                + "  {\"key\":\"code\",\"label\":\"编码\",\"format\":\"muted\",\"width\":\"w-36\"},"
-                                + "  {\"key\":\"description\",\"label\":\"描述\",\"format\":\"muted\"},"
-                                + "  {\"key\":\"permissions\",\"label\":\"权限\",\"format\":\"tags\"},"
-                                + "  {\"key\":\"scopeLabel\",\"label\":\"数据范围\",\"format\":\"text\",\"width\":\"w-36\"},"
-                                + "  {\"key\":\"userCount\",\"label\":\"成员数\",\"format\":\"number\",\"width\":\"w-24\"},"
-                                + "  {\"key\":\"status\",\"label\":\"状态\",\"format\":\"badge\",\"width\":\"w-24\","
-                                + "    \"options\":[{\"value\":\"1\",\"label\":\"已启用\",\"variant\":\"success\"},"
-                                + "               {\"value\":\"0\",\"label\":\"已停用\",\"variant\":\"warning\"}]}"
-                                + "]"
-                                + "}",
-                        // 角色表单：简化版——只覆盖 code / name / description / status。
-                        // 权限点勾选与数据范围仍是手写页 /roles 的专属（控件集后续补齐再迁移），
-                        // 说明文案把这条边界写给用户，避免「以为在配置页也能配权限」。
-                        "{"
-                                + "\"createTitle\":\"新建角色\","
-                                + "\"editTitle\":\"编辑角色\","
-                                + "\"createDescription\":\"角色编码创建后不可修改。简化表单不包含权限点与数据范围，请到「角色权限」页补充。\","
-                                + "\"editDescription\":\"编码创建后不可修改；权限点与数据范围请到「角色权限」页调整。\","
-                                + "\"fields\":["
-                                + "  {\"key\":\"code\",\"label\":\"角色编码\",\"widget\":\"input\",\"required\":true,\"immutable\":true,"
-                                + "    \"pattern\":\"^[A-Z][A-Z0-9_]{1,31}$\","
-                                + "    \"patternError\":\"需以大写字母开头，只能包含大写字母、数字和下划线\"},"
-                                + "  {\"key\":\"name\",\"label\":\"角色名称\",\"widget\":\"input\",\"required\":true},"
-                                + "  {\"key\":\"description\",\"label\":\"描述\",\"widget\":\"input\",\"span\":2},"
-                                + "  {\"key\":\"status\",\"label\":\"启用角色\",\"widget\":\"switch\",\"defaultValue\":\"1\",\"span\":2}"
-                                + "]"
-                                + "}"));
     }
 
     public static Date parseTime(String text) {
@@ -332,30 +280,6 @@ public final class SeedData {
             this.username = username;
             this.operator = operator;
             this.createdTime = createdTime;
-        }
-    }
-
-    /**
-     * 一条动态页面配置。pageKey 同时是菜单 path（/p/{pageKey}）与前端拉配置的键；
-     * listJson / formJson 原文入库，PageService 下发前按同一套规则解析。
-     */
-    public static final class SeedPage {
-        public final String pageKey;
-        /** 数据源 key，必须是 PageDataSourceRegistry 里的白名单条目。 */
-        public final String datasourceKey;
-        public final String title;
-        public final String description;
-        public final String listJson;
-        public final String formJson;
-
-        SeedPage(String pageKey, String datasourceKey, String title, String description,
-                 String listJson, String formJson) {
-            this.pageKey = pageKey;
-            this.datasourceKey = datasourceKey;
-            this.title = title;
-            this.description = description;
-            this.listJson = listJson;
-            this.formJson = formJson;
         }
     }
 
