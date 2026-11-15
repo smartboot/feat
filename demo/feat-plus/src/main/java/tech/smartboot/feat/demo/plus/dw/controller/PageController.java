@@ -1,4 +1,4 @@
-package tech.smartboot.feat.demo.plus.controller;
+package tech.smartboot.feat.demo.plus.dw.controller;
 
 import java.util.List;
 
@@ -10,12 +10,12 @@ import tech.smartboot.feat.cloud.annotation.RequestMapping;
 import tech.smartboot.feat.cloud.annotation.RequestMethod;
 import tech.smartboot.feat.demo.plus.common.ApiController;
 import tech.smartboot.feat.demo.plus.common.DomainException;
-import tech.smartboot.feat.demo.plus.dto.DatasourceOptionResponse;
-import tech.smartboot.feat.demo.plus.dto.PageAdminItemResponse;
-import tech.smartboot.feat.demo.plus.dto.PageInputRequest;
+import tech.smartboot.feat.demo.plus.dw.dto.DatasourceOptionResponse;
+import tech.smartboot.feat.demo.plus.dw.dto.PageAdminItemResponse;
+import tech.smartboot.feat.demo.plus.dw.dto.PageInputRequest;
 import tech.smartboot.feat.demo.plus.security.AccessGuard;
 import tech.smartboot.feat.demo.plus.security.Permission;
-import tech.smartboot.feat.demo.plus.service.PageService;
+import tech.smartboot.feat.demo.plus.dw.service.PageService;
 import tech.smartboot.feat.router.Context;
 
 /**

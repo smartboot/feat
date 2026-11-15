@@ -1,4 +1,4 @@
-package tech.smartboot.feat.demo.plus.dto;
+package tech.smartboot.feat.demo.plus.dw.dto;
 
 /**
  * 数据源声明的一个可用字段：key、给人看的名称、值类型（string / number / list）、

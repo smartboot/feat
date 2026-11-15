@@ -1,7 +1,7 @@
-package tech.smartboot.feat.demo.plus.dto;
+package tech.smartboot.feat.demo.plus.dw.dto;
 
 import tech.smartboot.feat.demo.plus.common.DateFormats;
-import tech.smartboot.feat.demo.plus.model.PageRecord;
+import tech.smartboot.feat.demo.plus.dw.model.PageRecord;
 
 /**
  * 配置管理页的一行，来自 {@code GET /api/pages}。

@@ -204,8 +204,8 @@ TTL 十分钟兜底，任何写操作后主动失效，且**失效在事务提�
 SQL；这里的配置只描述「怎么渲染」，数据与保存走 `PageDataSource` 白名单（`@Bean` 编译期注册，
 页面配置通过 `datasourceKey` 绑定）。查询、事务、审计、数据权限全部在类型化 Service 里免费复用，
 动态层拿到的只是行数据（`Map`），不接触 SQL、不接触 Mapper。配一个新页面 = 一行 `sys_page` +
-一条 `/p/xxx` 菜单，不用发版；配一个新数据源 = 一个 Java 类 + 注册表一行，必须发版——
-这与权限点「字典在代码里」是同一条边界。
+一条 `/p/xxx` 菜单，不用发版；配一个新数据源 = 一个 Java 类 + 组合根（`service/PageDataSources`）
+一行登记，必须发版——这与权限点「字典在代码里」是同一条边界。
 
 | 归数据库（可运营） | 归代码（编译期） |
 |---|---|
@@ -244,9 +244,10 @@ ASCII 分号**（`ScriptRunner` 按分号切语句，切坏的是整个启动）
 `list` / `form` 在 JSON 里是嵌套对象，落库时序列化成字符串，与「配置管理页保存」完全同一种存储形态——
 运行期读路径不区分种子还是人工配置。导入只做**结构**校验（顶层数组、pageKey 格式与唯一、`title` /
 `datasourceKey` 非空、`list` / `form` 存在），**不做「列是否存在于数据源」的交叉校验**：那需要
-`PageDataSourceRegistry`，而 AOT 的 `@PostConstruct` 按注册顺序执行，`DataInitializer` 排在它前面
-（拿到的是一张空注册表）。交叉校验放在两处补：保存配置时由 `PageService` 拒，提交前由
-`scripts/check_menu.py` 查。写错就在启动时抛异常，而不是让某个页面白屏到被人发现。
+`PageDataSourceRegistry`，而 AOT 的 `@PostConstruct` 按全限定类名字典序执行，`seed.DataInitializer`
+排在 `service.PageDataSources`（真正登记数据源的地方）之前，导入那一刻拿到的是一张空注册表。
+交叉校验放在两处补：保存配置时由 `PageService` 拒，提交前由 `scripts/check_menu.py` 查。
+写错就在启动时抛异常，而不是让某个页面白屏到被人发现。
 
 **权限挂在数据源上，不挂在页面配置上**：拉配置与读数据要数据源的读权限点，保存 / 删除要写权限点
 （`DwController` 统一 require）。页面配置管理页（`/pages`）自己独立挂 `page:read` / `page:write`——
@@ -449,27 +450,46 @@ python3 scripts/check_menu.py       # MenuRoutes ↔ 前端路由 / 种子菜单
 
 ## 结构
 
-按层分包，不按功能模块分包。理由：横切能力（权限校验、数据范围、审计）要加一次就覆盖全层，
+业务代码按层分包，不按功能模块分包。理由：横切能力（权限校验、数据范围、审计）要加一次就覆盖全层，
 按功能分会变成「改七个目录」；而 AI 定位代码靠搜索而不是浏览目录，功能内聚对人的导航价值
 在这里兑现不了。
+
+`dw/` 是唯一的例外。动态页面（数据窗口）是自洽的子系统——有自己的表、渲染契约、分层和启动数据，
+摊进业务层就变成「controller 两个、service 四个、dto 十四个、mapper 一个」散在四处，既看不出边界，
+也抽不走。所以它整块收进一个包，内部保持与外部同构的分层。
 
 ```text
 src/main/java/tech/smartboot/feat/demo/plus/
 ├── Bootstrap.java        入口，挂载 SPA 回退
-├── controller/          13 个 Controller：收参数、验权限点、调 Service
-├── service/             11 个业务服务：业务规则与校验在这里，不允许直接拼 SQL
-├── mapper/              10 个 MyBatis 接口 + SqlFragments（SQL 片段常量）
+├── controller/          14 个 Controller：收参数、验权限点、调 Service
+├── service/             14 个业务服务（含 2 个 PageDataSource 实现与装配点），不允许直接拼 SQL
+├── mapper/              12 个 MyBatis 接口 + SqlFragments / MenuGroupSummary
 ├── model/               12 个表结构映射，含 passwordHash / isDeleted 等不外露字段
-├── dto/                 25 个请求与响应契约，OpenAPI 从这里导出
-├── security/             认证与授权的机制层：AccessContext / AccessGuard /
-│                         DataScopeResolver / Permission（权限点字典，唯一真相）/
-│                         MenuRoutes（页面白名单）/ MenuSnapshot（菜单全表读缓存）/
-│                         DataScope / DepartmentTree / DepartmentSnapshot（部门读缓存）
-├── cache/                缓存后端：CacheStore 契约 + 内存 / Redis 两实现 + 按配置选择
-├── tx/                   事务模板：写操作的唯一入口（TxTemplate / TxWork / TxAction）
-├── token/                令牌与会话（内存实现，可替换成 Redis）
-├── common/               统一响应、异常、ApiController、SPA 回退
-└── seed/                 演示数据，接入真实项目时整包删除
+├── dto/                 28 个业务请求与响应契约，OpenAPI 从这里导出
+├── security/            认证与授权的机制层：AccessContext / AccessGuard /
+│                        DataScopeResolver / Permission（权限点字典，唯一真相）/
+│                        MenuRoutes（页面白名单）/ MenuSnapshot（菜单全表读缓存）/
+│                        DataScope / DepartmentTree / DepartmentSnapshot（部门读缓存）
+├── audit/               审计写入（ActivityRecorder）：被业务服务与 dw 共同依赖，
+│                        住在 service 里就会让 dw 反向依赖业务层
+├── cache/               缓存后端：CacheStore 契约 + 内存 / Redis 两实现 + 按配置选择
+├── tx/                  事务模板：写操作的唯一入口（TxTemplate / TxWork / TxAction）
+├── token/               令牌与会话（内存实现，可替换成 Redis）
+├── common/              统一响应、异常、ApiController、SPA 回退
+├── seed/                演示数据（业务部分），接入真实项目时整包删除
+└── dw/                  动态页面模块，自成一套分层
+    ├── controller/      DwController（页面数据通道）/ PageController（配置管理）
+    ├── service/         PageService（校验与读写）/ PageSnapshot（配置读缓存）/
+    │                    PageDataSource（数据源契约）/ PageDataSourceRegistry（白名单）
+    ├── dto/             14 个渲染契约：列表 / 表单 / 筛选 / 保存请求
+    ├── mapper/          PageMapper
+    ├── model/           PageRecord（sys_page）
+    └── seed/            PageSeeder：pages/pages.json → sys_page
+```
+
+**`PageDataSource` 的实现不在 `dw` 里。** `RolePageDataSource` / `ActivityPageDataSource` 与装配点
+`service/PageDataSources` 都留在业务侧：平台只定义契约，谁来实现由业务决定。这也是 `dw` 包内
+搜不到 role / activity 字样的原因——否则「抽走这个模块」会连着把业务一起抽走。
 
 scripts/                  回归断言（crud / scope / audit / profile / cache / tx / menu）
                           + 静态检查（check_layers / check_tx / check_menu）
@@ -494,20 +514,33 @@ web/src/
 | `mapper` | `model` |
 | `cache` | 无（只有 redisun） |
 | `tx` | 无（只有 mybatis） |
+| `audit` | `model` `mapper` `tx` `common` |
 | `security` | `model` `mapper` `token` `common` `cache` |
 | `dto` | `model` `security` `common` |
-| `service` | `dto` `model` `mapper` `security` `token` `common` `cache` `tx` |
+| `service` | `dto` `model` `mapper` `security` `token` `common` `cache` `tx` `audit` `dw` |
 | `controller` | `dto` `service` `security` `token` `common` `cache` `seed` |
 | `common` `token` | 无 |
 | `seed` | 不限制（演示设施，接入时整包删） |
+| `dw/model` | 无 |
+| `dw/mapper` | `dw.model` |
+| `dw/dto` | `dw.model` `common` |
+| `dw/service` | `dw.dto` `dw.mapper` `dw.model` `audit` `cache` `common` `security` `tx` |
+| `dw/controller` | `dw.dto` `dw.service` `common` `security` |
+| `dw/seed` | `dw.mapper` `dw.model` |
 
-两条硬规则的由来：
+三条硬规则的由来：
 
 - **`controller` 不许直接用 `mapper`**：绕过 Service 就等于绕过数据范围校验，而这种写法
   编译能过、跑起来只是多看到几条数据，不会报错。
 - **`security` 不许依赖 `service` / `controller`**：机制层一旦反向依赖业务层，两层就成环，
   之后谁也抽不走。部门子树的算法为此放在 `security/DepartmentTree`（纯函数，入参是部门行），
   `service` 与 `security` 共用同一份实现，不必各写一遍。
+- **`dw` 里不许出现 `-> service`**：业务层可以用 `dw`（实现数据源、菜单校验页面存在性），反过来不行。
+  平台层一旦反向依赖业务层，「整体抽走这个模块」就只是句空话。为此把审计写入提到 `audit/`——
+  它是 `service` 与 `dw` 共同依赖的横切能力，住在任何一边都会制造环。
+
+`check_layers.py` 还检查两件事：根包里不许散落业务类、顶层不许出现未声明的包
+（不声明就等于零检查，新包会从旁边绕过去）。
 
 > **`model` 与 `dto` 是两层，不合并。** `UserAccount` 有 `passwordHash`、`isDeleted`，
 > `UserItemResponse` 没有。合并成一个「实体」后，密码哈希会直接进 JSON，

@@ -21,6 +21,10 @@ seed 包不检查：它用 TRUNCATE 重置演示数据，DDL 会隐式提交，�
 接收 Mapper 参数的方法（如 replaceRoles(UserMapper users, ...)）视为事务片段，不单独判 A——
 它自己不开事务，由调用方决定边界。
 
+扫描范围是「所有可能写库的层」：service / audit / dw.service。少扫一个目录不会报错，
+只会让那个目录悄悄变成无检查区——`audit/ActivityRecorder` 与 `dw/service/PageService`
+都有事务块，正因为它们不在 `service/` 下，必须显式列进来。
+
 局限（有意接受）：这是文本级检查，认不出「先把注入 Mapper 存进局部变量再写」这种绕法。
 它拦的是最常见、最容易被 AI 写出来的那种错法，不是形式化证明。
 """
@@ -31,6 +35,9 @@ import sys
 BASE = "tech.smartboot.feat.demo.plus"
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                     "..", "src", "main", "java", *BASE.split("."))
+
+# 需要检查的目录（相对 ROOT）。
+SCANNED = ("service", "audit", os.path.join("dw", "service"))
 
 # 写操作：Mapper 里以下列前缀命名的方法。select / count 是读，不在内。
 WRITE_CALL = re.compile(r"(\w+)\s*\.\s*(insert|update|softDelete|restore|truncate|delete|increase|rename)\w*\s*\(")
@@ -99,45 +106,56 @@ def tx_regions(body):
     return regions
 
 
+def check_file(path):
+    """检查一个类，返回 (违规列表)。违规以 (文件名, 方法名, 说明) 表示。"""
+    found = []
+    with open(path, encoding="utf-8") as f:
+        src = strip_noise(f.read())
+    name = os.path.basename(path)
+
+    injected = set(field for typ, field in AUTOWIRED_FIELD.findall(src) if typ.endswith("Mapper"))
+
+    for head in METHOD_HEAD.finditer(src):
+        body_start = head.end() - 1
+        body_end = match_pair(src, body_start, "{", "}")
+        body = src[body_start:body_end]
+        method = head.group(0).strip().split("(")[0].split()[-1]
+
+        regions = tx_regions(body)
+        writes = [w for w in WRITE_CALL.finditer(body) if w.group(1) in injected]
+
+        if len(writes) >= 2 and not regions:
+            found.append((name, method, "%d 处写库没有包在事务里" % len(writes)))
+
+        if regions and writes:
+            covered = [any(s <= w.start() < e for s, e in regions) for w in writes]
+            if not all(covered):
+                found.append((name, method, "同一方法里一部分写在事务内、一部分自动提交"))
+
+        for start, end in regions:
+            inner = body[start:end]
+            for field in injected:
+                if re.search(r"\b%s\s*\." % re.escape(field), inner):
+                    found.append((name, method,
+                                  "事务体内用了注入的 %s，应改用 session.getMapper(...)" % field))
+    return found
+
+
 def main():
     if not os.path.isdir(ROOT):
         sys.exit("未找到源码目录：%s" % os.path.abspath(ROOT))
 
     violations = []
     counted = 0
-    pkg_dir = os.path.join(ROOT, "service")
-    for name in sorted(os.listdir(pkg_dir)):
-        if not name.endswith(".java"):
-            continue
-        counted += 1
-        with open(os.path.join(pkg_dir, name), encoding="utf-8") as f:
-            src = strip_noise(f.read())
-
-        injected = set(field for typ, field in AUTOWIRED_FIELD.findall(src) if typ.endswith("Mapper"))
-
-        for head in METHOD_HEAD.finditer(src):
-            body_start = head.end() - 1
-            body_end = match_pair(src, body_start, "{", "}")
-            body = src[body_start:body_end]
-            method = head.group(0).strip().split("(")[0].split()[-1]
-
-            regions = tx_regions(body)
-            writes = [w for w in WRITE_CALL.finditer(body) if w.group(1) in injected]
-
-            if len(writes) >= 2 and not regions:
-                violations.append((name, method, "%d 处写库没有包在事务里" % len(writes)))
-
-            if regions and writes:
-                covered = [any(s <= w.start() < e for s, e in regions) for w in writes]
-                if not all(covered):
-                    violations.append((name, method, "同一方法里一部分写在事务内、一部分自动提交"))
-
-            for start, end in regions:
-                inner = body[start:end]
-                for field in injected:
-                    if re.search(r"\b%s\s*\." % re.escape(field), inner):
-                        violations.append((name, method,
-                                           "事务体内用了注入的 %s，应改用 session.getMapper(...)" % field))
+    for rel in SCANNED:
+        pkg_dir = os.path.join(ROOT, rel)
+        if not os.path.isdir(pkg_dir):
+            sys.exit("扫描目录不存在（改了包结构就要同步本脚本）：%s" % pkg_dir)
+        for name in sorted(os.listdir(pkg_dir)):
+            if not name.endswith(".java"):
+                continue
+            counted += 1
+            violations.extend(check_file(os.path.join(pkg_dir, name)))
 
     if violations:
         print("违反事务约束 %d 处：" % len(violations))
@@ -145,7 +163,8 @@ def main():
             print("  %-28s %-24s %s" % (name, method, why))
         return 1
 
-    print("事务检查通过：%d 个 Service 类，多语句写全部包在模板内，事务体未混用注入 Mapper" % counted)
+    print("事务检查通过：%d 个类（%s），多语句写全部包在模板内，事务体未混用注入 Mapper"
+          % (counted, " / ".join(SCANNED)))
     return 0
 
 

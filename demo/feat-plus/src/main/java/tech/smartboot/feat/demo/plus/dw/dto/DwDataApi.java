@@ -1,4 +1,4 @@
-package tech.smartboot.feat.demo.plus.dto;
+package tech.smartboot.feat.demo.plus.dw.dto;
 
 /**
  * 动态页面的<b>数据通道覆盖</b>：列表查询与行删除两个操作可改走自定义接口，

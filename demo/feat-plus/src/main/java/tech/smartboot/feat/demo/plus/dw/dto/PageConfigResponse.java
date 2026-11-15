@@ -1,4 +1,4 @@
-package tech.smartboot.feat.demo.plus.dto;
+package tech.smartboot.feat.demo.plus.dw.dto;
 
 /**
  * {@code GET /api/dw/pages/{pageKey}} 的响应：一个动态页面的完整渲染配置。

@@ -1,4 +1,4 @@
-package tech.smartboot.feat.demo.plus.model;
+package tech.smartboot.feat.demo.plus.dw.model;
 
 import java.util.Date;
 

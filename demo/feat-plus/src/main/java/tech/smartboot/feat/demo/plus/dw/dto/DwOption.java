@@ -1,4 +1,4 @@
-package tech.smartboot.feat.demo.plus.dto;
+package tech.smartboot.feat.demo.plus.dw.dto;
 
 /**
  * 动态渲染的一个枚举选项：select 的 option、badge / tags 的值映射。

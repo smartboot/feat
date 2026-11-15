@@ -1,4 +1,4 @@
-package tech.smartboot.feat.demo.plus.dto;
+package tech.smartboot.feat.demo.plus.dw.dto;
 
 /**
  * 创建 / 更新页面配置的请求体。listJson / formJson 以 JSON 文本提交（第一阶段的配置管理页

@@ -1,4 +1,4 @@
-package tech.smartboot.feat.demo.plus.mapper;
+package tech.smartboot.feat.demo.plus.dw.mapper;
 
 import java.util.List;
 
@@ -9,7 +9,7 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
-import tech.smartboot.feat.demo.plus.model.PageRecord;
+import tech.smartboot.feat.demo.plus.dw.model.PageRecord;
 
 /**
  * 动态页面配置读写。

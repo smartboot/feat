@@ -1,4 +1,4 @@
-package tech.smartboot.feat.demo.plus.service;
+package tech.smartboot.feat.demo.plus.audit;
 
 import java.util.Date;
 

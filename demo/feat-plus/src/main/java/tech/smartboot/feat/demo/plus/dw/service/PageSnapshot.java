@@ -1,4 +1,4 @@
-package tech.smartboot.feat.demo.plus.service;
+package tech.smartboot.feat.demo.plus.dw.service;
 
 import java.util.List;
 
@@ -6,8 +6,8 @@ import com.alibaba.fastjson2.JSON;
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Bean;
 import tech.smartboot.feat.demo.plus.cache.CacheStore;
-import tech.smartboot.feat.demo.plus.mapper.PageMapper;
-import tech.smartboot.feat.demo.plus.model.PageRecord;
+import tech.smartboot.feat.demo.plus.dw.mapper.PageMapper;
+import tech.smartboot.feat.demo.plus.dw.model.PageRecord;
 
 /**
  * 页面配置全表的读缓存，模式与 MenuSnapshot 一致：主动失效为主、TTL 只兜底，

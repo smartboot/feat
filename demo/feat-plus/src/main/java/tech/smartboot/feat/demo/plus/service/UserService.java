@@ -9,6 +9,7 @@ import java.util.Map;
 
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Bean;
+import tech.smartboot.feat.demo.plus.audit.ActivityRecorder;
 import tech.smartboot.feat.demo.plus.common.DomainException;
 import tech.smartboot.feat.demo.plus.common.PageResult;
 import tech.smartboot.feat.demo.plus.dto.UserInputRequest;

@@ -1,4 +1,4 @@
-package tech.smartboot.feat.demo.plus.service;
+package tech.smartboot.feat.demo.plus.dw.service;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -14,24 +14,25 @@ import com.alibaba.fastjson2.JSONException;
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Bean;
 import tech.smartboot.feat.demo.plus.common.DomainException;
-import tech.smartboot.feat.demo.plus.dto.DatasourceOptionResponse;
-import tech.smartboot.feat.demo.plus.dto.DwColumn;
-import tech.smartboot.feat.demo.plus.dto.DwDataApi;
-import tech.smartboot.feat.demo.plus.dto.DwFieldMeta;
-import tech.smartboot.feat.demo.plus.dto.DwFilter;
-import tech.smartboot.feat.demo.plus.dto.DwFormConfig;
-import tech.smartboot.feat.demo.plus.dto.DwFormField;
-import tech.smartboot.feat.demo.plus.dto.DwListConfig;
-import tech.smartboot.feat.demo.plus.dto.DwOption;
-import tech.smartboot.feat.demo.plus.dto.PageAdminItemResponse;
-import tech.smartboot.feat.demo.plus.dto.PageConfigResponse;
-import tech.smartboot.feat.demo.plus.dto.PageInputRequest;
-import tech.smartboot.feat.demo.plus.mapper.PageMapper;
-import tech.smartboot.feat.demo.plus.model.PageRecord;
+import tech.smartboot.feat.demo.plus.dw.dto.DatasourceOptionResponse;
+import tech.smartboot.feat.demo.plus.dw.dto.DwColumn;
+import tech.smartboot.feat.demo.plus.dw.dto.DwDataApi;
+import tech.smartboot.feat.demo.plus.dw.dto.DwFieldMeta;
+import tech.smartboot.feat.demo.plus.dw.dto.DwFilter;
+import tech.smartboot.feat.demo.plus.dw.dto.DwFormConfig;
+import tech.smartboot.feat.demo.plus.dw.dto.DwFormField;
+import tech.smartboot.feat.demo.plus.dw.dto.DwListConfig;
+import tech.smartboot.feat.demo.plus.dw.dto.DwOption;
+import tech.smartboot.feat.demo.plus.dw.dto.PageAdminItemResponse;
+import tech.smartboot.feat.demo.plus.dw.dto.PageConfigResponse;
+import tech.smartboot.feat.demo.plus.dw.dto.PageInputRequest;
+import tech.smartboot.feat.demo.plus.dw.mapper.PageMapper;
+import tech.smartboot.feat.demo.plus.dw.model.PageRecord;
+import tech.smartboot.feat.demo.plus.audit.ActivityRecorder;
 import tech.smartboot.feat.demo.plus.tx.TxTemplate;
 
 /**
- * 动态页面配置的读写与校验规则，模式同 {@link MenuService}。
+ * 动态页面配置的读写与校验规则，模式同 {@link tech.smartboot.feat.demo.plus.service.MenuService}。
  * <p>
  * 「配置入库」比「菜单入库」风险面更大：菜单纯错了是导航跳转失败，页面配置错的是整页渲染。
  * 所以校验闸门全部设在保存时，<b>存进去的一定能渲染</b>：
@@ -66,7 +67,7 @@ public class PageService {
             "create", "edit", "delete", "refresh"));
     private static final Set<String> VARIANTS = new HashSet<>(Arrays.asList(
             "success", "warning", "destructive", "secondary", "outline"));
-    /** 表单字段的写入策略：两态布尔不够用了，见 {@link tech.smartboot.feat.demo.plus.dto.DwFormField}。 */
+    /** 表单字段的写入策略：两态布尔不够用了，见 {@link tech.smartboot.feat.demo.plus.dw.dto.DwFormField}。 */
     private static final Set<String> WRITE_MODES = new HashSet<>(Arrays.asList(
             "always", "createOnly", "readonly"));
     /** 自定义数据接口的路径格式：站内 /api/ 相对路径，防外链与拼接注入面。 */
