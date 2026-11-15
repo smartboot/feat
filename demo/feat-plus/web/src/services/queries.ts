@@ -310,6 +310,10 @@ export function useDwData(pageKey: string, query: DwDataQuery, enabled = true, d
  * 动态页面的写操作。只失效本页数据——配置没变，别的页面不陪跑。
  * 角色数据源背后是手写 Service，写完还会产生审计日志。
  * dataApi.delete 覆盖删除通道；保存始终走内置通道（权限由目标接口自己校验）。
+ *
+ * action 是配置里的自定义行操作：路径来自配置、主键来自当前行。
+ * 执行完照样失效本页——「重新分配」之后列表里的归属列很可能已经变了，
+ * 让用户手动刷新是最容易被漏掉的一步。
  */
 export function useDwMutations(pageKey: string, dataApi?: DwDataApi) {
   const client = useQueryClient()
@@ -324,6 +328,11 @@ export function useDwMutations(pageKey: string, dataApi?: DwDataApi) {
     }),
     remove: useMutation({
       mutationFn: (id: number) => adminService.deleteDwRow(pageKey, id, dataApi?.delete),
+      onSuccess: invalidate,
+    }),
+    action: useMutation({
+      mutationFn: (input: { api: string; rowKey: string; id: number }) =>
+        adminService.runDwRowAction(input.api, input.rowKey, input.id),
       onSuccess: invalidate,
     }),
   }

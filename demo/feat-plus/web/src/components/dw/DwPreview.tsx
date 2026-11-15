@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
-import { Filter, Inbox, MoreHorizontal, Pencil, Plus, RotateCcw, Trash2 } from "lucide-react"
+import { Filter, Inbox, MoreHorizontal, Pencil, Plus, RotateCcw, Trash2, Zap } from "lucide-react"
 
-import type { DatasourceOption, DwFormValue, DwRow } from "@/api/types"
+import type { DatasourceOption, DwFormValue, DwRow, DwRowAction } from "@/api/types"
 import { DwCell } from "@/components/dw/DwCell"
 import { MarkDot } from "@/components/dw/DwEditorBits"
 import { DwFormFields, initialFormValue } from "@/components/dw/DwFormFields"
@@ -24,6 +24,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
@@ -104,6 +105,11 @@ export function DwPreview({
   const [editIndex, setEditIndex] = useState(0)
   /** 删除确认框的目标行。null = 关闭。 */
   const [removing, setRemoving] = useState<DwRow | null>(null)
+  /**
+   * 自定义行操作的预览目标。预览一律弹框（即使线上会因为没配提示框而直接执行）：
+   * 配置者要验证的正是「这句话会不会出现、接口会不会打对」，静默执行等于什么都没演示。
+   */
+  const [running, setRunning] = useState<{ action: DwRowAction; row: DwRow } | null>(null)
 
   const anchor = focus ? focusAnchor(focus) : ""
   useEffect(() => {
@@ -118,6 +124,7 @@ export function DwPreview({
   // 切走预览模式时收起确认框：压在「编辑」弹窗上的删除确认框会让人说不清在看哪一态。
   useEffect(() => {
     setRemoving(null)
+    setRunning(null)
   }, [mode])
 
   const isFocused = (kind: DwFocusTarget["kind"], index: number) =>
@@ -195,8 +202,9 @@ export function DwPreview({
   const rows = mode === "empty" ? [] : sampleRows(fields, list.columns, 3)
   const total = mode === "empty" ? 0 : 24
   const rowActions = list.actions.filter((action) => action === "edit" || action === "delete")
+  const customActions = list.rowActions ?? []
   // 操作列的表头与线上一致：只要配了行操作就保留这一列，空态下也留着（那时只是没有行）。
-  const showRowMenu = canWrite && rowActions.length > 0
+  const showRowMenu = canWrite && (rowActions.length > 0 || customActions.length > 0)
 
   return (
     <div ref={containerRef} data-preview-mode={mode} className="space-y-3">
@@ -391,6 +399,15 @@ export function DwPreview({
                               <Trash2 /> {ACTION_LABELS.delete}
                             </DropdownMenuItem>
                           )}
+                          {customActions.length > 0 && rowActions.length > 0 && <DropdownMenuSeparator />}
+                          {customActions.map((action, index) => (
+                            <DropdownMenuItem
+                              key={`${action.api}-${index}`}
+                              onClick={() => setRunning({ action, row })}
+                            >
+                              <Zap /> {action.label || `按钮 ${index + 1}`}
+                            </DropdownMenuItem>
+                          ))}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -411,7 +428,7 @@ export function DwPreview({
         {showRowMenu && (
           <p className="border-t px-4 py-1.5 text-[10px] leading-relaxed text-muted-foreground">
             每行最右的 <MoreHorizontal className="inline size-3 align-text-bottom" /> 可点开：「编辑」切到编辑弹窗并回填该行，
-            「删除」弹确认框——确认键在预览里不可用，不会真的删掉数据。
+            「删除」与自定义按钮弹确认框——确认键在预览里不可用，不会真的删掉数据或发出请求。
           </p>
         )}
 
@@ -449,6 +466,33 @@ export function DwPreview({
             <AlertDialogAction disabled className="bg-destructive text-white hover:bg-destructive/90">
               确认删除
             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      {/*
+        自定义行操作的提示框：结构、标题、正文都照线上来，唯一多出来的是那行请求说明——
+        配置者最想知道的是「这句话会配着哪个接口、带的是哪个主键值」。确认键禁用，不发请求。
+      */}
+      <AlertDialog open={Boolean(running)} onOpenChange={(open) => { if (!open) setRunning(null) }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{running?.action.label || "未命名按钮"}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {running?.action.confirm?.trim()
+                ? running.action.confirm
+                : "没有配置提示框：线上点一下会直接执行，不再拦一次。"}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="rounded-md border bg-muted/40 p-2 font-mono text-[10px] leading-relaxed">
+            <p className="break-all">POST {running?.action.api || "（未配置接口）"}</p>
+            <p className="text-muted-foreground">
+              {`{ "${list.rowKey}": ${running ? String(running.row[list.rowKey]) : ""} }`}
+            </p>
+          </div>
+          <AlertDialogFooter className="sm:items-center">
+            <span className="text-[10px] text-muted-foreground sm:mr-auto">预览：不会发出这个请求。</span>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction disabled>确认执行</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

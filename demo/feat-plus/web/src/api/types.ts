@@ -448,11 +448,28 @@ export interface DwDataApi {
   delete?: string
 }
 
+/**
+ * 自定义行操作：行操作菜单里排在内置「编辑 / 删除」之后的一个按钮。
+ *
+ * 只声明「叫什么、要不要二次确认、调哪个站内接口」，不存任何脚本或参数模板——
+ * 调用方式是固定的：POST 到 `api`，请求体为 `{ [rowKey]: 主键值 }`，权限由目标接口自己校验。
+ */
+export interface DwRowAction {
+  /** 按钮文案（≤12 字），同时是审计日志里的动作口径 */
+  label: string
+  /** 二次确认文案；留空表示点了直接执行，只该给可逆、低风险的动作留空 */
+  confirm?: string
+  /** 站内 /api/ 路径 */
+  api: string
+}
+
 export interface DwListConfig {
   columns: DwColumn[]
   filters: DwFilter[]
   pageSize: number
   actions: DwAction[]
+  /** 自定义行操作，与编辑 / 删除同列在行操作菜单里 */
+  rowActions?: DwRowAction[]
   rowKey: string
   dataApi?: DwDataApi
 }

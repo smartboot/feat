@@ -16,12 +16,14 @@ import { DwList } from "@/components/dw/DwList"
 
 const useDwData = vi.fn()
 const useRemoteOptions = vi.fn()
+const runRowAction = vi.fn()
 
 vi.mock("@/services/queries", () => ({
   useDwData: (...args: unknown[]) => useDwData(...args),
   useDwMutations: () => ({
     save: { isPending: false, mutateAsync: vi.fn() },
     remove: { isPending: false, mutateAsync: vi.fn() },
+    action: { isPending: false, mutateAsync: (...args: unknown[]) => runRowAction(...args) },
   }),
   useRemoteOptions: (...args: unknown[]) => useRemoteOptions(...args),
 }))
@@ -31,6 +33,8 @@ afterEach(cleanup)
 beforeEach(() => {
   useDwData.mockReset()
   useRemoteOptions.mockReset()
+  runRowAction.mockReset()
+  runRowAction.mockResolvedValue("已下发一次性凭证")
   useDwData.mockReturnValue({
     data: { items: [{ id: 1, title: "创建了用户", kind: "create" }], total: 1 },
     isLoading: false,
@@ -132,5 +136,66 @@ describe("DwList 的筛选取数", () => {
     render(<DwList pageKey="activities" config={config} />)
     expect(screen.queryByRole("button", { name: /新建/ })).toBeNull()
     expect(screen.queryByRole("button", { name: "行操作" })).toBeNull()
+  })
+})
+
+/**
+ * 自定义行操作的调用契约：**主键来自当前行，路径来自配置**。
+ *
+ * 这两件事错了都不会报错——点下去只是「什么也没发生」或者「操作了别人的行」，
+ * 所以这里直接断言发出去的是什么，而不是断言弹出了什么。
+ */
+describe("DwList 的自定义行操作", () => {
+  const writableConfig: PageConfig = {
+    ...config,
+    canWrite: true,
+    list: {
+      ...config.list,
+      actions: ["edit", "delete", "refresh"],
+      rowActions: [
+        { label: "重置密码", confirm: "旧密码会立即失效，并下发一次性凭证。", api: "/api/users/reset-password" },
+        { label: "重新分配", api: "/api/users/reassign" },
+      ],
+    },
+  }
+
+  it("没配提示框的按钮点了直接调用，请求带上配置的路径与当前行主键", async () => {
+    render(<DwList pageKey="users" config={writableConfig} />)
+
+    await userEvent.click(screen.getByRole("button", { name: "行操作" }))
+    await userEvent.click(await screen.findByText("重新分配"))
+
+    expect(runRowAction).toHaveBeenCalledWith({
+      api: "/api/users/reassign",
+      rowKey: "id",
+      id: 1,
+    })
+  })
+
+  it("配了提示框的按钮先确认，正文取配置文案，确认后才发出请求", async () => {
+    render(<DwList pageKey="users" config={writableConfig} />)
+
+    await userEvent.click(screen.getByRole("button", { name: "行操作" }))
+    await userEvent.click(await screen.findByText("重置密码"))
+
+    expect(await screen.findByText("旧密码会立即失效，并下发一次性凭证。")).toBeTruthy()
+    expect(runRowAction).not.toHaveBeenCalled()
+
+    await userEvent.click(screen.getByRole("button", { name: "确认执行" }))
+    expect(runRowAction).toHaveBeenCalledWith({
+      api: "/api/users/reset-password",
+      rowKey: "id",
+      id: 1,
+    })
+  })
+
+  it("只有自定义按钮、没有编辑 / 删除时，行操作入口照样出现", async () => {
+    render(
+      <DwList
+        pageKey="users"
+        config={{ ...writableConfig, list: { ...writableConfig.list, actions: ["refresh"] } }}
+      />,
+    )
+    expect(screen.getByRole("button", { name: "行操作" })).toBeTruthy()
   })
 })

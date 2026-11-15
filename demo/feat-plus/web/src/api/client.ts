@@ -24,7 +24,13 @@ export function setUnauthorizedHandler(handler: (() => void) | null) {
   unauthorizedHandler = handler
 }
 
-export async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+/**
+ * 发一次请求，返回完整信封（success / code / message / data）。
+ *
+ * 大多数调用只要 data，用 {@link request}；自定义行操作这类「后端会回一句人话」的场景
+ * 需要 message（例如「已为该账号下发一次性凭证」），丢掉它就只能 toast 一句「操作成功」。
+ */
+export async function requestEnvelope<T>(path: string, init: RequestInit = {}): Promise<RestResult<T>> {
   const headers = new Headers(init.headers)
   headers.set("Accept", "application/json")
   if (init.body) headers.set("Content-Type", "application/json")
@@ -37,8 +43,12 @@ export async function request<T>(path: string, init: RequestInit = {}): Promise<
     clearToken()
     unauthorizedHandler?.()
   }
-  if (!response.ok || !body?.success) {
+  if (!response.ok || !body || !body.success) {
     throw new ApiError(body?.message || "请求失败，请稍后重试", response.status, body?.code)
   }
-  return body.data
+  return body
+}
+
+export async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+  return (await requestEnvelope<T>(path, init)).data
 }

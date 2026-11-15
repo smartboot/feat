@@ -31,7 +31,7 @@ import type {
   UserQuery,
   UserStatus,
 } from "@/api/types"
-import { request } from "@/api/client"
+import { request, requestEnvelope } from "@/api/client"
 import type { AdminService } from "@/services/admin-service"
 
 function buildQuery(query: UserQuery): string {
@@ -204,6 +204,18 @@ export const adminService: AdminService = {
   deleteDwRow(pageKey: string, id: number, deletePath?: string): Promise<void> {
     const path = deletePath || `/api/dw/pages/${encodeURIComponent(pageKey)}/data`
     return request<void>(`${path}/${id}`, { method: "DELETE" })
+  },
+  /**
+   * 自定义行操作。调用方式固定成 POST + `{ [rowKey]: id }`——
+   * 配置里只存路径，不存方法、参数模板或脚本；接口自己的鉴权由目标接口负责，
+   * 这里不带任何通行凭证，只带当前登录态（request 会加 Bearer）。
+   */
+  async runDwRowAction(api: string, rowKey: string, id: number): Promise<string> {
+    const result = await requestEnvelope<unknown>(api, {
+      method: "POST",
+      body: jsonBody({ [rowKey]: id }),
+    })
+    return result.message ?? ""
   },
   listPageConfigs(): Promise<PageAdminItem[]> {
     return request<PageAdminItem[]>("/api/pages")

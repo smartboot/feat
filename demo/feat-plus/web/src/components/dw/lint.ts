@@ -1,6 +1,6 @@
 import type { DatasourceOption } from "@/api/types"
 
-import { FORM_WIDGET_LABELS, writeModeOf, type PageDraft } from "./meta"
+import { FORM_WIDGET_LABELS, MAX_ROW_ACTIONS, writeModeOf, type PageDraft } from "./meta"
 
 /**
  * 页面配置的保存前体检。
@@ -222,6 +222,63 @@ export function lintDraft({ draft, datasources }: LintContext): DwIssue[] {
       anchor: "list-actions",
     })
   }
+
+  // 自定义行操作：与内置写动作同一条约束，另外三项是「点了必须有事发生、且能说清是什么」。
+  const rowActions = list.rowActions ?? []
+  if (rowActions.length > MAX_ROW_ACTIONS) {
+    issues.push({
+      section: "list",
+      level: "error",
+      message: `自定义行操作最多 ${MAX_ROW_ACTIONS} 个（当前 ${rowActions.length} 个），再多应做成工具栏批量操作`,
+      anchor: "list-row-actions",
+    })
+  }
+  if (!datasource.writable && rowActions.length > 0) {
+    issues.push({
+      section: "list",
+      level: "error",
+      message: `数据源「${datasource.label}」是只读的，不能配置自定义行操作（它属于写动作）`,
+      anchor: "list-row-actions",
+    })
+  }
+  const seenActionLabels = new Set<string>()
+  rowActions.forEach((action, index) => {
+    const where = `自定义行操作 ${index + 1}`
+    const anchor = "list-row-actions"
+    const label = action.label.trim()
+    if (!label) {
+      issues.push({ section: "list", level: "error", message: `${where}缺少按钮名称`, anchor })
+    } else if (label.length > 12) {
+      issues.push({ section: "list", level: "error", message: `${where}的名称超过 12 个字`, anchor })
+    } else if (seenActionLabels.has(label)) {
+      issues.push({
+        section: "list",
+        level: "error",
+        message: `${where}的名称「${label}」重复，下拉里两项同名无法区分`,
+        anchor,
+      })
+    }
+    if (label) seenActionLabels.add(label)
+    const api = action.api.trim()
+    if (!api) {
+      issues.push({
+        section: "list",
+        level: "error",
+        message: `${where}「${label || "未命名"}」还没有配置接口路径，点了不会有任何反应`,
+        anchor,
+      })
+    } else if (!API_PATH_PATTERN.test(api) || api.endsWith("/")) {
+      issues.push({
+        section: "list",
+        level: "error",
+        message: `${where}的接口必须是 /api/ 开头的站内路径，且不以 / 结尾：${api}`,
+        anchor,
+      })
+    }
+    if ((action.confirm ?? "").length > 120) {
+      issues.push({ section: "list", level: "error", message: `${where}的提示框超过 120 个字`, anchor })
+    }
+  })
 
   for (const [what, path, anchor] of [
     ["查询接口", list.dataApi?.query, "data-api-query"],

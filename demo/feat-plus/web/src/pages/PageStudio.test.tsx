@@ -226,4 +226,27 @@ describe("预览里的行操作", () => {
     await userEvent.click(screen.getByRole("button", { name: "无写权限" }))
     expect(screen.queryByRole("button", { name: "行操作" })).toBeNull()
   })
+
+  it("自定义行操作排在内置动作之后，点开能看到它调的接口与主键", async () => {
+    renderStudio({
+      listJson: JSON.stringify({
+        ...listJson,
+        rowActions: [
+          { label: "重置密码", confirm: "旧密码会立即失效，并下发一次性凭证。", api: "/api/users/reset-password" },
+        ],
+      }),
+    })
+
+    await userEvent.click(screen.getAllByRole("button", { name: "行操作" })[0])
+    // 菜单里三件事同时在：编辑、删除、自定义按钮（编辑项后面还跟着「回填第 N 行」，所以数条目而不是查文案）
+    await screen.findByText("重置密码")
+    expect(document.querySelectorAll('[role="menuitem"]')).toHaveLength(3)
+    await userEvent.click(screen.getByText("重置密码"))
+
+    // 提示框正文取配置文案；多出来的一行说明它实际会打哪个接口、带哪个主键
+    expect(await screen.findByText("旧密码会立即失效，并下发一次性凭证。")).toBeTruthy()
+    expect(screen.getByText("POST /api/users/reset-password")).toBeTruthy()
+    expect(screen.getByText(/\{ "id": 1 \}/)).toBeTruthy()
+    expect(screen.getByRole("button", { name: "确认执行" })).toBeDisabled()
+  })
 })

@@ -9,6 +9,7 @@ import type {
   DwFilter,
   DwFilterWidget,
   DwListConfig,
+  DwRowAction,
 } from "@/api/types"
 import {
   AlertDialog,
@@ -34,10 +35,12 @@ import {
   FIELD_TYPE_LABELS,
   FILTER_WIDGET_LABELS,
   FILTER_WIDGETS,
+  MAX_ROW_ACTIONS,
   WIDTH_TIERS,
   columnFromField,
   defaultFormatFor,
   isKnownWidth,
+  newRowAction,
 } from "@/components/dw/meta"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -74,9 +77,26 @@ export function DwListConfigEditor({
   // 覆盖列之前先确认：现有列的格式 / 宽度 / 选项映射是手工调过的，静默覆盖等于丢工作。
   const [confirmGenerate, setConfirmGenerate] = useState(false)
   const [advancedOpen, setAdvancedOpen] = useState(Boolean(value.dataApi?.query || value.dataApi?.delete))
+  const rowActions = value.rowActions ?? []
 
   function patch(patch: Partial<DwListConfig>) {
     onChange({ ...value, ...patch })
+  }
+
+  /** 行操作是数组项，逐项打补丁；整表替换会把这行其他输入框的焦点状态一起换掉。 */
+  function updateRowAction(index: number, patchAction: Partial<DwRowAction>) {
+    patch({
+      rowActions: rowActions.map((action, i) => (i === index ? { ...action, ...patchAction } : action)),
+    })
+  }
+
+  function moveRowAction(index: number, delta: number) {
+    const target = index + delta
+    if (target < 0 || target >= rowActions.length) return
+    const next = [...rowActions]
+    const [moved] = next.splice(index, 1)
+    next.splice(target, 0, moved)
+    patch({ rowActions: next })
   }
 
   /** 通道覆盖的字段级更新：dataApi 整体存在或不存在都好处理。 */
@@ -183,6 +203,75 @@ export function DwListConfigEditor({
             : "该数据源是只读的，新建 / 编辑 / 删除不可勾选（保存时后端也会拒绝）。"}
         </Hint>
       </div>
+
+      <Section
+        title="自定义行操作"
+        anchor="list-row-actions"
+        count={rowActions.length}
+        empty={
+          writable
+            ? "没有自定义按钮。需要「重置密码」「重新分配」这类对单行的操作时，加一个：它会出现在行操作菜单里，排在编辑 / 删除之后。"
+            : "该数据源是只读的，不能加自定义行操作——行操作属于写动作，与编辑 / 删除同一条约束。"
+        }
+        onAdd={() => patch({ rowActions: [...rowActions, newRowAction()] })}
+        addDisabled={!writable || rowActions.length >= MAX_ROW_ACTIONS}
+        footer={
+          rowActions.length >= MAX_ROW_ACTIONS
+            ? `已到上限 ${MAX_ROW_ACTIONS} 个：再多就不该挤在一个下拉里，改做成工具栏的批量操作。`
+            : undefined
+        }
+      >
+        {rowActions.map((action, index) => (
+          <ItemRow
+            key={index}
+            index={index}
+            total={rowActions.length}
+            title={action.label || `按钮 ${index + 1}`}
+            subtitle={action.api || "未配置接口"}
+            onMove={(delta) => moveRowAction(index, delta)}
+            onRemove={() => patch({ rowActions: rowActions.filter((_, i) => i !== index) })}
+          >
+            <div className="grid gap-2 sm:grid-cols-2">
+              <div className="grid gap-1">
+                <FieldLabel>按钮名称</FieldLabel>
+                <Input
+                  className="h-8"
+                  maxLength={12}
+                  value={action.label}
+                  placeholder="重置密码"
+                  onChange={(event) => updateRowAction(index, { label: event.target.value })}
+                />
+              </div>
+              <div className="grid gap-1">
+                <FieldLabel>接口路径</FieldLabel>
+                <Input
+                  className="h-8 font-mono text-xs"
+                  value={action.api}
+                  placeholder="/api/users/reset-password"
+                  onChange={(event) => updateRowAction(index, { api: event.target.value.trim() })}
+                />
+              </div>
+            </div>
+            <div className="grid gap-1">
+              <FieldLabel>提示框（可选）</FieldLabel>
+              <Input
+                className="h-8"
+                maxLength={120}
+                value={action.confirm ?? ""}
+                placeholder="留空：点一下就直接执行"
+                onChange={(event) => updateRowAction(index, { confirm: event.target.value })}
+              />
+            </div>
+          </ItemRow>
+        ))}
+      </Section>
+      {rowActions.length > 0 && (
+        <Hint>
+          调用方式固定：<code>POST {"{接口}"}</code>，请求体是{" "}
+          <code>{`{"${value.rowKey || "id"}": 主键值}`}</code>——主键由「行主键字段」决定，不用在按钮上再写一遍。
+          能不能点仍受当前账号写权限过滤；接口自己的鉴权由目标接口负责，配置只存路径。
+        </Hint>
+      )}
 
       <Section
         title="列"

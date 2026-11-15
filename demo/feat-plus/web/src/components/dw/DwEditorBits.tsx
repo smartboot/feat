@@ -24,7 +24,8 @@ export function ItemRow({
   onRemove,
   children,
 }: {
-  target: DwFocusTarget
+  /** 联动目标。预览里没有对应元素的条目（如自定义行操作）不传，卡片就不参与高亮与滚动。 */
+  target?: DwFocusTarget
   link?: EditorLink
   title: string
   subtitle: string
@@ -34,22 +35,22 @@ export function ItemRow({
   onRemove: () => void
   children: ReactNode
 }) {
-  const focused = sameFocus(link?.focus, target)
-  const mark = link?.marks?.[target.kind][target.index]
+  const focused = target ? sameFocus(link?.focus, target) : false
+  const mark = target ? link?.marks?.[target.kind][target.index] : undefined
 
   return (
     <div
-      id={focusAnchor(target)}
-      data-link-focus={focused ? focusAnchor(target) : undefined}
+      id={target ? focusAnchor(target) : undefined}
+      data-link-focus={focused && target ? focusAnchor(target) : undefined}
       className={cn(
         "grid gap-2 rounded-lg border bg-card/40 p-2.5 transition-shadow",
         focused && "border-primary/50 ring-2 ring-primary/20",
       )}
       // 联动只认「指针进入」和「内部控件获得焦点」：点击输入框本身就等于选中这一条，
       // 不需要额外的整行点击热区去抢输入框的焦点。
-      onMouseEnter={() => link?.onHover?.(target)}
+      onMouseEnter={() => target && link?.onHover?.(target)}
       onMouseLeave={() => link?.onHover?.(null)}
-      onFocusCapture={() => link?.onSelect?.(target)}
+      onFocusCapture={() => target && link?.onSelect?.(target)}
     >
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0">
@@ -97,6 +98,7 @@ export function Section({
   empty,
   onGenerate,
   onAdd,
+  addDisabled = false,
   footer,
   children,
 }: {
@@ -106,6 +108,8 @@ export function Section({
   empty: string
   onGenerate?: () => void
   onAdd: () => void
+  /** 到上限 / 只读源：按钮灰掉，而不是点了没反应 */
+  addDisabled?: boolean
   footer?: string
   children: ReactNode
 }) {
@@ -123,7 +127,7 @@ export function Section({
               按字段生成
             </Button>
           )}
-          <Button variant="outline" size="sm" className="h-7 gap-1 text-xs" onClick={onAdd}>
+          <Button variant="outline" size="sm" className="h-7 gap-1 text-xs" onClick={onAdd} disabled={addDisabled}>
             <Plus className="size-3" />
             添加
           </Button>

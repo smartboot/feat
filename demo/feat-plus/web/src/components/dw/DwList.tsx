@@ -1,8 +1,8 @@
 import { useState } from "react"
-import { Filter, Inbox, MoreHorizontal, Pencil, Plus, RotateCcw, Trash2 } from "lucide-react"
+import { Filter, Inbox, MoreHorizontal, Pencil, Plus, RotateCcw, Trash2, Zap } from "lucide-react"
 import { toast } from "sonner"
 
-import type { DwFilter, DwFormValue, DwRow, PageConfig } from "@/api/types"
+import type { DwFilter, DwFormValue, DwRow, DwRowAction, PageConfig } from "@/api/types"
 import { DwCell } from "@/components/dw/DwCell"
 import { DwFormDialog } from "@/components/dw/DwFormDialog"
 import { rowLabel } from "@/components/dw/meta"
@@ -23,6 +23,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
@@ -44,7 +45,9 @@ export function DwList({ pageKey, config }: { pageKey: string; config: PageConfi
   const list = config.list
   const canWrite = config.canWrite
   const rowActions = list.actions.filter((action) => action === "edit" || action === "delete")
-  const showRowMenu = canWrite && rowActions.length > 0
+  /** 自定义行操作：与编辑 / 删除同列在菜单里，排在它们之后。 */
+  const customActions = list.rowActions ?? []
+  const showRowMenu = canWrite && (rowActions.length > 0 || customActions.length > 0)
 
   // 筛选草稿：input 存空串、select 存 "all"，发起查询前统一清掉这两种「未设置」态。
   const [filters, setFilters] = useState<Record<string, string>>(() => initialFilters(list.filters))
@@ -69,6 +72,8 @@ export function DwList({ pageKey, config }: { pageKey: string; config: PageConfi
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editing, setEditing] = useState<DwRow | null>(null)
   const [removing, setRemoving] = useState<DwRow | null>(null)
+  /** 待确认的自定义行操作。配了提示框才走这一步，没配就直接执行。 */
+  const [pendingAction, setPendingAction] = useState<{ action: DwRowAction; row: DwRow } | null>(null)
 
   function resetFilters() {
     setFilters(initialFilters(list.filters))
@@ -114,6 +119,35 @@ export function DwList({ pageKey, config }: { pageKey: string; config: PageConfi
     } finally {
       setRemoving(null)
     }
+  }
+
+  /**
+   * 自定义行操作：POST 配置里的接口，请求体只带主键。
+   * 成功后用它自己的 message 提示——「已下发一次性凭证」比「操作成功」有用得多；
+   * 没配 message 才退回按钮名。
+   */
+  async function runAction(action: DwRowAction, row: DwRow) {
+    try {
+      const message = await mutations.action.mutateAsync({
+        api: action.api,
+        rowKey: list.rowKey,
+        id: rowId(row, list.rowKey),
+      })
+      toast.success(message || `已执行「${action.label}」`)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "操作失败")
+    } finally {
+      setPendingAction(null)
+    }
+  }
+
+  /** 配了提示框才拦一下；留空表示这个动作可逆、不需要二次确认。 */
+  function triggerAction(action: DwRowAction, row: DwRow) {
+    if ((action.confirm ?? "").trim()) {
+      setPendingAction({ action, row })
+      return
+    }
+    void runAction(action, row)
   }
 
   return (
@@ -236,6 +270,16 @@ export function DwList({ pageKey, config }: { pageKey: string; config: PageConfi
                                     <Trash2 /> 删除
                                   </DropdownMenuItem>
                                 )}
+                                {customActions.length > 0 && rowActions.length > 0 && <DropdownMenuSeparator />}
+                                {customActions.map((action, index) => (
+                                  <DropdownMenuItem
+                                    key={`${action.api}-${index}`}
+                                    disabled={mutations.action.isPending}
+                                    onClick={() => triggerAction(action, row)}
+                                  >
+                                    <Zap /> {action.label}
+                                  </DropdownMenuItem>
+                                ))}
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </TableCell>
@@ -318,6 +362,36 @@ export function DwList({ pageKey, config }: { pageKey: string; config: PageConfi
             <AlertDialogCancel>取消</AlertDialogCancel>
             <AlertDialogAction className="bg-destructive text-white hover:bg-destructive/90" onClick={confirmRemove}>
               确认删除
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/*
+        自定义行操作的提示框。标题与正文都来自配置——这件事会做什么，只有配它的人说得清；
+        平台不在这里编一句「确定执行吗」，那种话既没信息量也没法追责。
+        按钮不换颜色：破坏性由提示框文案表达，不给配置再加一个「红不红」的枚举。
+      */}
+      <AlertDialog open={Boolean(pendingAction)} onOpenChange={(open) => { if (!open) setPendingAction(null) }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{pendingAction?.action.label}</AlertDialogTitle>
+            <AlertDialogDescription>{pendingAction?.action.confirm}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="sm:items-center">
+            <span className="truncate font-mono text-[10px] text-muted-foreground sm:mr-auto">
+              {pendingAction && `${pendingAction.action.api} · ${list.rowKey}=${String(pendingAction.row[list.rowKey])}`}
+            </span>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={mutations.action.isPending}
+              // 不自动关闭：失败时要能重试，也要能看清错误；成功后由 runAction 收起来。
+              onClick={(event) => {
+                event.preventDefault()
+                if (pendingAction) void runAction(pendingAction.action, pendingAction.row)
+              }}
+            >
+              {mutations.action.isPending ? "正在执行…" : "确认执行"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -145,3 +145,70 @@ describe("lintDraft", () => {
     expect(errors).toHaveLength(0)
   })
 })
+
+/**
+ * 自定义行操作：三条硬约束都是「配了但点了没事发生」的典型成因，
+ * 所以全部当错误挡在保存前，而不是等上线后有人点一个没有反应的按钮。
+ */
+describe("lintDraft：自定义行操作", () => {
+  function withActions(actions: Array<{ label: string; confirm?: string; api: string }>): PageDraft {
+    const next = draft()
+    next.list = { ...next.list, rowActions: actions }
+    return next
+  }
+
+  it("名称与接口齐全时不报问题", () => {
+    const issues = lintDraft({
+      draft: withActions([{ label: "重置密码", confirm: "旧密码会立即失效", api: "/api/users/reset-password" }]),
+      datasources: [datasource],
+    })
+    expect(issues).toEqual([])
+  })
+
+  it("缺名称 / 缺接口都算错误：前者下拉里没有文案，后者点了不会有任何反应", () => {
+    const { errors } = splitIssues(
+      lintDraft({
+        draft: withActions([
+          { label: "", api: "/api/users/reset-password" },
+          { label: "重新分配", api: "" },
+        ]),
+        datasources: [datasource],
+      }),
+    )
+    const messages = errors.map((issue) => issue.message)
+    expect(messages.some((message) => message.includes("缺少按钮名称"))).toBe(true)
+    expect(messages.some((message) => message.includes("还没有配置接口路径"))).toBe(true)
+  })
+
+  it("名称重复、接口外链、超过上限都会被挡", () => {
+    const issues = splitIssues(
+      lintDraft({
+        draft: withActions([
+          { label: "重置密码", api: "https://evil.example.com/reset" },
+          { label: "重置密码", api: "/api/users/reset" },
+          { label: "第三个", api: "/api/users/third" },
+          { label: "第四个", api: "/api/users/fourth" },
+        ]),
+        datasources: [datasource],
+      }),
+    )
+    const messages = issues.errors.map((issue) => issue.message)
+    expect(messages.some((message) => message.includes("最多 3 个"))).toBe(true)
+    expect(messages.some((message) => message.includes("名称「重置密码」重复"))).toBe(true)
+    expect(messages.some((message) => message.includes("/api/ 开头的站内路径"))).toBe(true)
+  })
+
+  it("只读数据源不能配自定义行操作", () => {
+    const readOnly = draft()
+    readOnly.datasourceKey = "log"
+    readOnly.list = {
+      ...readOnly.list,
+      columns: [{ key: "id", label: "ID", format: "number", width: "" }],
+      actions: ["refresh"],
+      rowActions: [{ label: "重新计算", api: "/api/logs/recalc" }],
+    }
+    readOnly.form = { ...readOnly.form, fields: [] }
+    const { errors } = splitIssues(lintDraft({ draft: readOnly, datasources: [readOnlyDatasource] }))
+    expect(errors.some((issue) => issue.message.includes("不能配置自定义行操作"))).toBe(true)
+  })
+})

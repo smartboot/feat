@@ -23,6 +23,7 @@ import tech.smartboot.feat.demo.plus.dw.dto.DwFormConfig;
 import tech.smartboot.feat.demo.plus.dw.dto.DwFormField;
 import tech.smartboot.feat.demo.plus.dw.dto.DwListConfig;
 import tech.smartboot.feat.demo.plus.dw.dto.DwOption;
+import tech.smartboot.feat.demo.plus.dw.dto.DwRowAction;
 import tech.smartboot.feat.demo.plus.dw.dto.PageAdminItemResponse;
 import tech.smartboot.feat.demo.plus.dw.dto.PageConfigResponse;
 import tech.smartboot.feat.demo.plus.dw.dto.PageInputRequest;
@@ -42,7 +43,7 @@ import tech.smartboot.feat.demo.plus.tx.TxTemplate;
  *   <li>list_json / form_json 必须是合法 JSON 且逐项过校验：列 / 筛选 / 表单字段的 key
  *       必须命中数据源的字段声明，表单字段还必须是可写字段——数据源改字段名时，
  *       配置漂移在保存配置的瞬间报 400，而不是渲染时静默空列；</li>
- *   <li>create / edit / delete 动作只能配在可写数据源上，避免「按钮能点、保存被拒」的错配；</li>
+ *   <li>create / edit / delete 与自定义行操作只能配在可写数据源上，避免「按钮能点、保存被拒」的错配；</li>
  *   <li>任何配置改动记审计——它决定别人页面的长相。</li>
  * </ol>
  * <p>
@@ -65,6 +66,11 @@ public class PageService {
             "input", "password", "textarea", "select", "switch", "span"));
     private static final Set<String> ACTIONS = new HashSet<>(Arrays.asList(
             "create", "edit", "delete", "refresh"));
+    /**
+     * 自定义行操作的上限。下拉里已经有编辑 / 删除两项，再塞 4 个就变成「什么都往这里放」——
+     * 那类需求该做成工具栏批量操作，不是每行重复一遍。
+     */
+    private static final int MAX_ROW_ACTIONS = 3;
     private static final Set<String> VARIANTS = new HashSet<>(Arrays.asList(
             "success", "warning", "destructive", "secondary", "outline"));
     /** 表单字段的写入策略：两态布尔不够用了，见 {@link tech.smartboot.feat.demo.plus.dw.dto.DwFormField}。 */
@@ -341,6 +347,8 @@ public class PageService {
             throw new DomainException("数据源「" + dataSource.label() + "」是只读的，不能配置 create / edit / delete 动作");
         }
 
+        validateRowActions(list.getRowActions(), dataSource, pageKey);
+
         Set<String> seen = new HashSet<>();
         for (DwColumn column : list.getColumns()) {
             String where = "列 " + column.getKey();
@@ -448,6 +456,57 @@ public class PageService {
             validateOptions(field.getOptions(), where);
         }
         return form;
+    }
+
+    /**
+     * 自定义行操作的校验。三条约束都指向同一件事：<b>配进去的按钮点了必须有事发生，且能说清发生了什么</b>。
+     * <ul>
+     *   <li>只读数据源不许配：行操作是写动作，与 create / edit / delete 同一条约束——
+     *       否则会做出「按钮渲染不出来 / 能渲染但永远被目标接口拒」的死配置；</li>
+     *   <li>名称必填且唯一：它是审计日志里的动作口径，同名两项在日志里就分不出来了；</li>
+     *   <li>接口必须是站内 /api/ 路径：行操作只允许触发自己的后端，不开外链与拼接面。</li>
+     * </ul>
+     * 调用方式固定 POST + 请求体 {@code {"<rowKey>": <主键>}}，所以没有可配的方法与参数模板。
+     */
+    private static void validateRowActions(List<DwRowAction> rowActions, PageDataSource dataSource, String pageKey) {
+        if (rowActions.isEmpty()) {
+            return;
+        }
+        if (!dataSource.writable()) {
+            throw new DomainException("数据源「" + dataSource.label() + "」是只读的，不能配置自定义行操作"
+                    + "（行操作属于写动作，与 create / edit / delete 同一条约束）");
+        }
+        if (rowActions.size() > MAX_ROW_ACTIONS) {
+            throw new DomainException("页面 " + pageKey + " 最多配置 " + MAX_ROW_ACTIONS + " 个自定义行操作（当前 "
+                    + rowActions.size() + " 个）");
+        }
+        Set<String> labels = new HashSet<>();
+        for (int i = 0; i < rowActions.size(); i++) {
+            DwRowAction action = rowActions.get(i);
+            String where = "第 " + (i + 1) + " 个自定义行操作";
+            String label = trimToEmpty(action.getLabel());
+            if (label.isEmpty()) {
+                throw new DomainException(where + "缺少按钮名称");
+            }
+            if (label.length() > 12) {
+                throw new DomainException(where + "的按钮名称不能超过 12 个字符：" + label);
+            }
+            if (!labels.add(label)) {
+                throw new DomainException(where + "的按钮名称重复：" + label + "（下拉里两项同名无法区分）");
+            }
+            action.setLabel(label);
+            String confirm = trimToEmpty(action.getConfirm());
+            if (confirm.length() > 120) {
+                throw new DomainException("自定义行操作「" + label + "」的提示框不能超过 120 个字符");
+            }
+            action.setConfirm(confirm);
+            String api = trimToEmpty(action.getApi());
+            if (api.isEmpty()) {
+                throw new DomainException("自定义行操作「" + label + "」必须配置接口路径");
+            }
+            requireApiPath(api, "自定义行操作「" + label + "」的接口");
+            action.setApi(api);
+        }
     }
 
     private static void requireFieldKey(String key, Set<String> seen, Set<String> fieldKeys, String where) {

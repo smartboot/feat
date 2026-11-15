@@ -9,6 +9,7 @@ import type {
   DwFormField,
   DwListConfig,
   DwRow,
+  DwRowAction,
   DwVariant,
   DwWidget,
   DwWriteMode,
@@ -113,6 +114,17 @@ export function isFieldWritable(field: Pick<DwFormField, "writeMode" | "immutabl
 
 export const ACTIONS: DwAction[] = ["create", "edit", "delete", "refresh"]
 
+/**
+ * 自定义行操作的上限，与 `PageService.MAX_ROW_ACTIONS` 同值。
+ * 下拉里已有编辑 / 删除两项，再多就不是「单行操作」而是批量工具了。
+ */
+export const MAX_ROW_ACTIONS = 3
+
+/** 新加一个自定义行操作时的空白项：名称与接口必填，提示框可选。 */
+export function newRowAction(): DwRowAction {
+  return { label: "", confirm: "", api: "" }
+}
+
 export const ACTION_LABELS: Record<DwAction, string> = {
   create: "新建",
   edit: "编辑",
@@ -125,6 +137,11 @@ export const ACTION_HINTS: Record<DwAction, string> = {
   edit: "行操作菜单里的「编辑」，按行回填表单",
   delete: "行操作菜单里的「删除」，二次确认后删除",
   refresh: "工具栏的「刷新」，只重查数据",
+}
+
+/** 自定义行操作在预览里的一句话说明：调用方式固定，配置者不需要记。 */
+export function rowActionCall(action: DwRowAction, rowKey: string): string {
+  return `POST ${action.api || "（未配置接口）"} · 请求体 { "${rowKey}": 主键 }`
 }
 
 export const VARIANTS: DwVariant[] = ["secondary", "success", "warning", "destructive", "outline"]
@@ -278,6 +295,7 @@ export const EMPTY_LIST: DwListConfig = {
   filters: [],
   pageSize: 20,
   actions: [],
+  rowActions: [],
   rowKey: "id",
 }
 

@@ -90,6 +90,11 @@ export interface AdminService {
   saveDwData(pageKey: string, input: DwSaveInput): Promise<DwRow>
   /** deletePath 覆盖内置通道（调用时拼 /{id}）。保存/详情不支持覆盖——写路径不开旁路 */
   deleteDwRow(pageKey: string, id: number, deletePath?: string): Promise<void>
+  /**
+   * 自定义行操作：POST 到配置里的站内接口，请求体是 `{ [rowKey]: id }`。
+   * 返回后端的 message（没有就返回空串），由调用方决定怎么提示。
+   */
+  runDwRowAction(api: string, rowKey: string, id: number): Promise<string>
   /** 页面配置管理 */
   listPageConfigs(): Promise<PageAdminItem[]>
   createPageConfig(input: PageInput): Promise<PageAdminItem>
