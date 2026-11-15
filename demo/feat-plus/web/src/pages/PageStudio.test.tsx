@@ -191,3 +191,39 @@ describe("PageStudio 与预览的联动", () => {
     expect(screen.getByText("已定位 表单字段「角色名称」")).toBeTruthy()
   })
 })
+
+/**
+ * 行操作的可验证性。
+ *
+ * 之前行操作菜单整块禁用，配了 edit / delete 的页面在预览里只能看到一列「⋯」，
+ * 「点了会怎样」全靠想象——这等于没预览。现在菜单可开，编辑切态、删除弹框，
+ * 只在「确认删除」这一步停住。
+ */
+describe("预览里的行操作", () => {
+  it("点某一行的「编辑」，切到编辑弹窗并回填那一行的示例值", async () => {
+    renderStudio()
+    expect(document.querySelector('[data-preview-mode="list"]')).toBeTruthy()
+
+    await userEvent.click(screen.getAllByRole("button", { name: "行操作" })[1])
+    await userEvent.click(await screen.findByText(/回填第 2 行/))
+
+    expect(document.querySelector('[data-preview-mode="edit"]')).toBeTruthy()
+    expect(screen.getByText(/示例数据第 2 行/)).toBeTruthy()
+  })
+
+  it("点「删除」弹出与线上同结构的确认框，但确认键不可用", async () => {
+    renderStudio()
+    await userEvent.click(screen.getAllByRole("button", { name: "行操作" })[0])
+    await userEvent.click(await screen.findByText("删除"))
+
+    expect(await screen.findByText("确认删除？")).toBeTruthy()
+    expect(screen.getByText(/「角色名称1」将被删除/)).toBeTruthy()
+    expect(screen.getByRole("button", { name: "确认删除" })).toBeDisabled()
+  })
+
+  it("只读账号的预览里没有行操作入口", async () => {
+    renderStudio()
+    await userEvent.click(screen.getByRole("button", { name: "无写权限" }))
+    expect(screen.queryByRole("button", { name: "行操作" })).toBeNull()
+  })
+})

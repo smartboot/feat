@@ -253,6 +253,25 @@ export function columnTitle(column: DwColumn, fields: DwFieldMeta[]): string {
   return column.label || fieldMeta(fields, column.key)?.label || column.key || "未命名字段"
 }
 
+/**
+ * 删除确认框里的行标识：优先用第一列的文本值（配置者认为那是这行的「名字」），
+ * 退化成 row.name，最后退化成主键。写死 name 字段会让换了数据源的页面全都显示 #12。
+ *
+ * 列表与配置预览共用：预览里的删除确认框如果和线上说的不是同一句话，那它证明不了什么。
+ */
+export function rowLabel(row: DwRow | null, columns: DwColumn[], rowKey: string): string {
+  if (!row) return ""
+  for (const column of columns) {
+    if (column.format === "text" || column.format === "muted") {
+      const value = row[column.key]
+      if (typeof value === "string" && value) return value
+    }
+  }
+  const name = row.name
+  if (typeof name === "string" && name) return name
+  return `#${String(row[rowKey])}`
+}
+
 /** 新建一行配置时的默认值，与后端 DTO 的字段默认值对齐。 */
 export const EMPTY_LIST: DwListConfig = {
   columns: [],

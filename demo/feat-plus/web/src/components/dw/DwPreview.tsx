@@ -1,12 +1,22 @@
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Filter, Inbox, MoreHorizontal, Pencil, Plus, RotateCcw, Trash2 } from "lucide-react"
 
-import type { DatasourceOption, DwFormValue } from "@/api/types"
+import type { DatasourceOption, DwFormValue, DwRow } from "@/api/types"
 import { DwCell } from "@/components/dw/DwCell"
 import { MarkDot } from "@/components/dw/DwEditorBits"
-import { DwFormFields, fieldText, initialFormValue } from "@/components/dw/DwFormFields"
+import { DwFormFields, initialFormValue } from "@/components/dw/DwFormFields"
 import { focusAnchor, type DwFocusTarget, type DwMarks } from "@/components/dw/link"
-import { ACTION_LABELS, columnTitle, sampleRows, type PageDraft } from "@/components/dw/meta"
+import { ACTION_LABELS, columnTitle, rowLabel, sampleRows, type PageDraft } from "@/components/dw/meta"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -35,7 +45,16 @@ import { cn } from "@/lib/utils"
  *
  * 光「长这样」还不够：看得出问题之后，下一个动作是「回去改那一处」。所以预览与编辑区
  * 双向联动——左边悬停哪一条，这里对应位置亮；点表头 / 筛选 / 字段，左边滚到那一条。
- * 会改数据的按钮（刷新、删除）保持禁用，只切预览状态的按钮（新建）可点。
+ *
+ * ## 哪些按钮可点
+ *
+ * 判据不是「会不会改数据」，而是「点了会不会让人以为数据变了」：
+ * - 新建 / 行内编辑只切预览状态（弹窗、回填第几行），不写任何东西 → 可点；
+ * - 删除会弹真实结构（同 DwList）的确认框，但确认键禁用并说明「预览不会真的删除」→ 可点；
+ * - 刷新会换掉眼前这份示例数据，点完只剩困惑 → 保持禁用。
+ *
+ * 行操作菜单如果整块禁用，配置者就只能看到一列「⋯」看不出那里有什么——这正是
+ * 配了 edit / delete 却验证不了的地方。所以菜单本身可开，只是走到最后一步停住。
  */
 export type PreviewMode = "list" | "empty" | "create" | "edit" | "readonly"
 
@@ -78,6 +97,14 @@ export function DwPreview({
   const { list, form } = draft
   const containerRef = useRef<HTMLDivElement>(null)
 
+  /**
+   * 编辑弹窗预览的是第几行示例数据。行内「编辑」点哪一行就是哪一行——
+   * 不带上这一层，三行示例点哪行都弹同一份值，「按行回填」这件事在预览里就没发生过。
+   */
+  const [editIndex, setEditIndex] = useState(0)
+  /** 删除确认框的目标行。null = 关闭。 */
+  const [removing, setRemoving] = useState<DwRow | null>(null)
+
   const anchor = focus ? focusAnchor(focus) : ""
   useEffect(() => {
     if (!pinned || !anchor) return
@@ -87,6 +114,11 @@ export function DwPreview({
       element.scrollIntoView({ block: "nearest", inline: "nearest" })
     }
   }, [pinned, anchor])
+
+  // 切走预览模式时收起确认框：压在「编辑」弹窗上的删除确认框会让人说不清在看哪一态。
+  useEffect(() => {
+    setRemoving(null)
+  }, [mode])
 
   const isFocused = (kind: DwFocusTarget["kind"], index: number) =>
     focus?.kind === kind && focus.index === index
@@ -104,14 +136,14 @@ export function DwPreview({
 
   if (mode === "create" || mode === "edit") {
     const editing = mode === "edit"
-    const rows = sampleRows(fields, list.columns, 1)
+    const rows = sampleRows(fields, list.columns, 3)
+    // 行内编辑点过第几行，这里就回填第几行；行数变少时退到最后一行的示例值。
+    const index = Math.min(editIndex, Math.max(rows.length - 1, 0))
+    const row = rows[index] ?? null
     const values: Record<string, DwFormValue> = {}
     for (const field of form.fields) {
       // 预览里的初值走和真实弹窗同一个函数：多选字段在预览里也要是多选的样子。
-      values[field.key] = initialFormValue(
-        field,
-        editing ? (rows[0] as Record<string, unknown> | undefined) ?? null : null,
-      )
+      values[field.key] = initialFormValue(field, editing ? (row as Record<string, unknown> | null) : null)
     }
     return (
       <div ref={containerRef} data-preview-mode={mode}>
@@ -121,6 +153,13 @@ export function DwPreview({
             <p className="text-xs text-muted-foreground">
               {(editing ? form.editDescription : form.createDescription) || "（未配置说明文案）"}
             </p>
+            {editing && (
+              <p className="text-[10px] text-muted-foreground/80">
+                示例数据第 {index + 1} 行
+                {row ? `（${rowLabel(row, list.columns, list.rowKey)}）` : ""}——行内「编辑」点哪行，
+                这里回填哪一行。
+              </p>
+            )}
           </div>
           <div className="mt-4">
             <DwFormFields
@@ -156,7 +195,8 @@ export function DwPreview({
   const rows = mode === "empty" ? [] : sampleRows(fields, list.columns, 3)
   const total = mode === "empty" ? 0 : 24
   const rowActions = list.actions.filter((action) => action === "edit" || action === "delete")
-  const showRowMenu = canWrite && rowActions.length > 0 && rows.length > 0
+  // 操作列的表头与线上一致：只要配了行操作就保留这一列，空态下也留着（那时只是没有行）。
+  const showRowMenu = canWrite && rowActions.length > 0
 
   return (
     <div ref={containerRef} data-preview-mode={mode} className="space-y-3">
@@ -323,18 +363,31 @@ export function DwPreview({
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="size-6" disabled>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-6"
+                            aria-label="行操作"
+                            title="看行操作的效果：编辑会回填这一行，删除只弹确认框"
+                          >
                             <MoreHorizontal className="size-3.5" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           {list.actions.includes("edit") && (
-                            <DropdownMenuItem disabled>
+                            <DropdownMenuItem
+                              disabled={!onOpenForm}
+                              onClick={() => {
+                                setEditIndex(rowIndex)
+                                onOpenForm?.("edit")
+                              }}
+                            >
                               <Pencil /> {ACTION_LABELS.edit}
+                              <span className="ml-1 text-[10px] text-muted-foreground">回填第 {rowIndex + 1} 行</span>
                             </DropdownMenuItem>
                           )}
                           {list.actions.includes("delete") && (
-                            <DropdownMenuItem disabled>
+                            <DropdownMenuItem destructive onClick={() => setRemoving(row)}>
                               <Trash2 /> {ACTION_LABELS.delete}
                             </DropdownMenuItem>
                           )}
@@ -355,6 +408,13 @@ export function DwPreview({
           </div>
         )}
 
+        {showRowMenu && (
+          <p className="border-t px-4 py-1.5 text-[10px] leading-relaxed text-muted-foreground">
+            每行最右的 <MoreHorizontal className="inline size-3 align-text-bottom" /> 可点开：「编辑」切到编辑弹窗并回填该行，
+            「删除」弹确认框——确认键在预览里不可用，不会真的删掉数据。
+          </p>
+        )}
+
         <div className="flex items-center justify-between border-t px-4 py-2">
           <p className="text-[11px] text-muted-foreground">
             第 1 / {Math.max(1, Math.ceil(total / Math.max(1, list.pageSize)))} 页 · 共 {total} 条
@@ -370,6 +430,28 @@ export function DwPreview({
           </div>
         </div>
       </Card>
+
+      {/*
+        删除确认框与 DwList 是同一套结构与同一句文案：配置者要验证的正是「线上会怎么问」。
+        唯一的差别是确认键禁用——预览不发请求，也不该让人以为刚才删掉了什么。
+      */}
+      <AlertDialog open={Boolean(removing)} onOpenChange={(open) => { if (!open) setRemoving(null) }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>确认删除？</AlertDialogTitle>
+            <AlertDialogDescription>
+              「{rowLabel(removing, list.columns, list.rowKey)}」将被删除，该操作会记录到审计日志。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="sm:items-center">
+            <span className="text-[10px] text-muted-foreground sm:mr-auto">预览：确认键不可用，不会真的删除。</span>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction disabled className="bg-destructive text-white hover:bg-destructive/90">
+              确认删除
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
