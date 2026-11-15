@@ -194,3 +194,36 @@ describe("预览与线上是同源渲染", () => {
     expect(screen.getByText(/选项来自 \/api\/users，预览不取数/)).toBeTruthy()
   })
 })
+
+/**
+ * 预览必须先合并字段值域再渲染。
+ *
+ * 线上拿到的配置是后端 `applyFieldMaps` 处理过的副本，预览拿到的是编辑器里的原始
+ * draft——列上的 `options` 还空着。少了合并这一步，配好值域的列在预览里显示原始编码，
+ * 保存后线上却显示中文。这时候预览不是「略有出入」，而是把配置者往反方向带：
+ * 他会以为值域没生效，回列表里再配一份，于是同一字段有了两份会漂移的映射。
+ *
+ * 这条断言就是钉住这个回归的：值域只配在字段上（列表列留空），预览也必须显示文案。
+ */
+describe("预览继承字段值域", () => {
+  it("列留空、值域配在字段上时，单元格显示文案而不是原始编码", () => {
+    const inherited: DwListConfig = {
+      ...list,
+      columns: [{ key: "status", label: "状态", format: "badge", width: "w-24", options: [] }],
+      filters: [],
+      fieldMaps: {
+        status: [
+          { value: "1", label: "已启用", variant: "success" },
+          { value: "0", label: "已停用" },
+        ],
+      },
+    }
+
+    render(<DwPreview draft={{ ...draft, list: inherited }} datasource={datasource} mode="list" />)
+
+    const cells = Array.from(document.querySelectorAll("tbody td")).map((cell) => (cell.textContent ?? "").trim())
+    expect(cells).toContain("已启用")
+    // 原始编码不该出现在任何一格：出现了就说明合并没生效
+    expect(cells).not.toContain("1")
+  })
+})

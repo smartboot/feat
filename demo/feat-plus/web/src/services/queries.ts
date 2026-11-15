@@ -404,8 +404,15 @@ export function useRemoteOptions(
   labelField: string,
   groupField = "",
   groupLabelField = "",
+  /**
+   * 是否真的去取。预览传 false：配置还没入库，能不能取到取决于当前账号的权限，
+   * 预览不该因为权限不足而看起来「坏了」，更不该在只是看看配置的时候就发请求。
+   * 置 false 时复用同一个缓存键，所以从预览切到线上不会多拉一次。
+   */
+  enabled = true,
 ) {
-  return useQuery(remoteOptionsQuery(apiPath, valueField, labelField, groupField, groupLabelField))
+  const query = remoteOptionsQuery(apiPath, valueField, labelField, groupField, groupLabelField)
+  return useQuery({ ...query, enabled: enabled && query.enabled })
 }
 
 /**

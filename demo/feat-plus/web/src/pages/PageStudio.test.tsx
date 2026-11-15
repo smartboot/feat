@@ -250,3 +250,47 @@ describe("预览里的行操作", () => {
     expect(screen.getByRole("button", { name: "确认执行" })).toBeDisabled()
   })
 })
+
+/**
+ * 撤销 / 重做。
+ *
+ * 没有它，误点一次「按字段生成」或垃圾桶就只能手工重建——而配置页里没有任何一步
+ * 有二次确认，因为每一步都确认会让正常操作变得很吵。撤销是这个取舍的前提。
+ */
+describe("撤销 / 重做", () => {
+  it("加一列后撤销一次整列消失，重做又回来", async () => {
+    renderStudio()
+    await userEvent.click(screen.getByRole("button", { name: /^列表视图/ }))
+    // 起始两列（name / status）
+    expect(document.getElementById("column-2")).toBeNull()
+
+    await userEvent.click(screen.getAllByRole("button", { name: "添加" })[0])
+    expect(document.getElementById("column-2")).toBeTruthy()
+
+    await userEvent.click(screen.getByRole("button", { name: "撤销" }))
+    expect(document.getElementById("column-2")).toBeNull()
+
+    await userEvent.click(screen.getByRole("button", { name: "重做" }))
+    expect(document.getElementById("column-2")).toBeTruthy()
+  })
+
+  it("撤销回起点后不再提示「有未保存的修改」", async () => {
+    renderStudio()
+    await userEvent.click(screen.getByRole("button", { name: /^列表视图/ }))
+    expect(screen.queryByText(/有未保存的修改/)).toBeNull()
+
+    await userEvent.click(screen.getAllByRole("button", { name: "添加" })[0])
+    expect(screen.getByText(/有未保存的修改/)).toBeTruthy()
+
+    await userEvent.click(screen.getByRole("button", { name: "撤销" }))
+    // 版本号回到起点就是干净草稿——不是「内容碰巧一样」，是真的没改
+    expect(screen.queryByText(/有未保存的修改/)).toBeNull()
+    expect(screen.getByRole("button", { name: "撤销" })).toBeDisabled()
+  })
+
+  it("没有历史时两个按钮都是禁用的（不是点了没反应）", () => {
+    renderStudio()
+    expect(screen.getByRole("button", { name: "撤销" })).toBeDisabled()
+    expect(screen.getByRole("button", { name: "重做" })).toBeDisabled()
+  })
+})

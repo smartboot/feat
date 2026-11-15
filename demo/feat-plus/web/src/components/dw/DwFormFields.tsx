@@ -37,6 +37,7 @@ export function DwFormFields({
   idPrefix = "dw-field",
   fieldErrors,
   link,
+  remote = true,
 }: {
   form: DwFormConfig
   values: Record<string, DwFormValue>
@@ -49,6 +50,11 @@ export function DwFormFields({
   /** 按字段下标给的行内错误：错误挂在出错的那一行，而不是一句飘在底部的文案 */
   fieldErrors?: Record<number, string>
   link?: FormFieldsLink
+  /**
+   * 是否真的去取 optionsApi 的选项。预览传 false——它连请求都不该发。
+   * 默认 true，所以运行时的调用方不用关心这个参数。
+   */
+  remote?: boolean
 }) {
   return (
     <div className="grid gap-4 sm:grid-cols-2">
@@ -88,6 +94,7 @@ export function DwFormFields({
               editing,
               disabled,
               lockNote,
+              remote,
             })}
             {fieldErrors?.[index] && (
               <p className="text-xs text-destructive" role="alert">
@@ -127,6 +134,7 @@ function renderField({
   editing,
   disabled,
   lockNote,
+  remote,
 }: {
   field: DwFormField
   value: DwFormValue
@@ -135,20 +143,35 @@ function renderField({
   editing: boolean
   disabled?: boolean
   lockNote?: string
+  remote: boolean
 }) {
   // 只读 = 预览态全禁 + 配置的写入策略。两处规则同源，预览才不会「看着能改、上线不能改」。
   const locked = Boolean(disabled || !isFieldWritable(field, editing))
   const set = (next: string) => update?.(field.key, next)
   const text = typeof value === "string" ? value : ""
 
-  // 多选走独立的勾选组：它要拉远程选项（hook 不能在这个函数里调），语义也和下拉不同。
-  if (field.widget === "select" && field.multiple) {
+  // 多选与单选都要能拉远程选项（hook 不能在这个函数里调），各自提到独立组件里。
+  if (field.widget === "select") {
+    if (field.multiple) {
+      return (
+        <MultiSelectField
+          field={field}
+          value={Array.isArray(value) ? value : []}
+          locked={locked}
+          id={id}
+          remote={remote}
+          onChange={(next) => update?.(field.key, next)}
+        />
+      )
+    }
     return (
-      <MultiSelectField
+      <SingleSelectField
         field={field}
-        value={Array.isArray(value) ? value : []}
+        value={text}
         locked={locked}
-        onChange={(next) => update?.(field.key, next)}
+        id={id}
+        remote={remote}
+        onChange={set}
       />
     )
   }
@@ -174,21 +197,6 @@ function renderField({
           placeholder={field.placeholder}
           onChange={(event) => set(event.target.value)}
         />
-      )
-    case "select":
-      return (
-        <Select value={text} onValueChange={set} disabled={locked}>
-          <SelectTrigger id={id}>
-            <SelectValue placeholder={field.placeholder || "请选择"} />
-          </SelectTrigger>
-          <SelectContent>
-            {(field.options ?? []).map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label || option.value}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
       )
     case "switch":
       return (
@@ -229,6 +237,100 @@ function renderField({
 }
 
 /**
+ * 下拉字段的选项解析：静态 `options` 与远程 `optionsApi` 二选一，单选 / 多选共用。
+ *
+ * 单独抽出来是因为这里漏过一次：单选下拉曾经只读 `field.options`，而配置器允许
+ * 任何 select 选「接口现取」——保存成功、预览正常（预览也是空的，所以看不出差别），
+ * 上线后下拉里只有一个 placeholder。两个控件走同一个钩子，这类分歧才没有第二次机会。
+ *
+ * `remote=false`（预览）时不去取数，但仍保留 `fromApi` 标记，界面据此说明
+ * 「选项来自哪个接口」，而不是让配置者以为选项丢了。
+ */
+function useFieldOptions(field: DwFormField, remote: boolean) {
+  const fromApi = (field.optionsApi ?? "") !== ""
+  const query = useRemoteOptions(
+    field.optionsApi ?? "",
+    field.optionValueField || "value",
+    field.optionLabelField || "label",
+    field.optionGroupField || "",
+    field.optionGroupLabelField || "label",
+    remote,
+  )
+  const options: RemoteOption[] = fromApi
+    ? query.data ?? []
+    : (field.options ?? []).map((option: DwOption) => ({
+        value: option.value,
+        label: option.label || option.value,
+        group: "",
+        groupLabel: "",
+      }))
+  return {
+    fromApi,
+    options,
+    /** 配了接口但这次不取（预览）：既不算加载中，也不算空 */
+    deferred: fromApi && !remote,
+    loading: fromApi && remote && query.isLoading,
+    failed: fromApi && remote && query.isError,
+  }
+}
+
+/** 预览态的说明：选项是现取的、这次没取。放在控件外面，别藏进 disabled 的下拉里。 */
+function RemoteOptionHint({ api }: { api: string }) {
+  return <p className="text-[10px] leading-tight text-muted-foreground">选项来自 {api}，预览不取数</p>
+}
+
+/** 单选下拉：静态选项与接口现取都支持，与多选共用同一套取数规则。 */
+function SingleSelectField({
+  field,
+  value,
+  locked,
+  id,
+  remote,
+  onChange,
+}: {
+  field: DwFormField
+  value: string
+  locked: boolean
+  id: string
+  remote: boolean
+  onChange: (next: string) => void
+}) {
+  const { options, deferred, loading, failed } = useFieldOptions(field, remote)
+
+  if (loading) {
+    return <p className="min-h-9 rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground">正在加载选项...</p>
+  }
+  if (failed) {
+    return (
+      <p className="min-h-9 rounded-md border border-destructive/40 px-3 py-2 text-sm text-destructive">
+        选项加载失败，请检查选项接口
+      </p>
+    )
+  }
+  if (options.length === 0 && !deferred) {
+    return <p className="min-h-9 rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground">没有可选项。</p>
+  }
+
+  return (
+    <div className="grid gap-1">
+      <Select value={value} onValueChange={onChange} disabled={locked}>
+        <SelectTrigger id={id}>
+          <SelectValue placeholder={field.placeholder || "请选择"} />
+        </SelectTrigger>
+        <SelectContent>
+          {options.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label || option.value}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {deferred && field.optionsApi && <RemoteOptionHint api={field.optionsApi} />}
+    </div>
+  )
+}
+
+/**
  * 多选勾选组：按分组字段分块，组标题带全选 / 清空。
  *
  * 为什么不复用下拉：多选下拉在「权限点有二十几个、需要分组扫一眼」的场景下不可用——
@@ -240,39 +342,36 @@ function MultiSelectField({
   field,
   value,
   locked,
+  id,
+  remote,
   onChange,
 }: {
   field: DwFormField
   value: string[]
   locked: boolean
+  id: string
+  remote: boolean
   onChange: (next: string[]) => void
 }) {
-  const remote = useRemoteOptions(
-    field.optionsApi ?? "",
-    field.optionValueField || "value",
-    field.optionLabelField || "label",
-    field.optionGroupField || "",
-    field.optionGroupLabelField || "label",
-  )
-  const options: RemoteOption[] = field.optionsApi
-    ? remote.data ?? []
-    : (field.options ?? []).map((option: DwOption) => ({
-        value: option.value,
-        label: option.label || option.value,
-        group: "",
-        groupLabel: "",
-      }))
+  const { options, deferred, loading, failed } = useFieldOptions(field, remote)
 
   const selected = new Set(value)
   const groups = groupOptions(options)
 
-  if (field.optionsApi && remote.isLoading) {
+  if (loading) {
     return <p className="min-h-9 rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground">正在加载选项...</p>
   }
-  if (field.optionsApi && remote.isError) {
+  if (failed) {
     return (
       <p className="min-h-9 rounded-md border border-destructive/40 px-3 py-2 text-sm text-destructive">
         选项加载失败，请检查选项接口
+      </p>
+    )
+  }
+  if (deferred) {
+    return (
+      <p className="min-h-9 rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground">
+        选项来自 {field.optionsApi}，预览不取数
       </p>
     )
   }
@@ -302,7 +401,7 @@ function MultiSelectField({
   }
 
   return (
-    <div className={cn("grid gap-3 rounded-lg border p-3", locked && "opacity-70")}>
+    <div id={id} className={cn("grid gap-3 rounded-lg border p-3", locked && "opacity-70")}>
       {groups.map((group) => {
         const allChecked = group.items.every((option) => selected.has(option.value))
         return (

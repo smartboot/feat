@@ -1,4 +1,5 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import type { DwFormConfig } from "@/api/types"
@@ -8,17 +9,28 @@ import { isFieldWritable } from "@/components/dw/meta"
 // 每个用例独立渲染：不清掉上一个用例的 DOM，screen 查询会命中多份同名控件。
 afterEach(cleanup)
 
-// 多选字段会去拉远程选项。测试只关心「勾了之后交出去什么」，所以把取数固定成一组带分组的选项。
+// 下拉字段会去拉远程选项。测试只关心「选/勾了之后交出去什么」，所以把取数固定成一组带分组的选项。
+// 第六个参数是 enabled：预览传 false，真实实现据此不发请求，这里也要跟着不发数据。
 vi.mock("@/services/queries", () => ({
-  useRemoteOptions: () => ({
-    data: [
-      { value: "user:read", label: "查看成员", group: "user", groupLabel: "成员" },
-      { value: "user:write", label: "管理成员", group: "user", groupLabel: "成员" },
-      { value: "role:read", label: "查看角色", group: "role", groupLabel: "角色" },
-    ],
-    isLoading: false,
-    isError: false,
-  }),
+  useRemoteOptions: (
+    _api: string,
+    _value: string,
+    _label: string,
+    _group: string,
+    _groupLabel: string,
+    enabled = true,
+  ) =>
+    enabled
+      ? {
+          data: [
+            { value: "user:read", label: "查看成员", group: "user", groupLabel: "成员" },
+            { value: "user:write", label: "管理成员", group: "user", groupLabel: "成员" },
+            { value: "role:read", label: "查看角色", group: "role", groupLabel: "角色" },
+          ],
+          isLoading: false,
+          isError: false,
+        }
+      : { data: undefined, isLoading: false, isError: false },
 }))
 
 const form: DwFormConfig = {
@@ -128,5 +140,45 @@ describe("多选字段", () => {
     )
     fireEvent.click(screen.getByRole("checkbox", { name: /查看成员/ }))
     expect(onChange).toHaveBeenCalledWith("permissions", ["user:write"])
+  })
+})
+
+const singleForm: DwFormConfig = {
+  createTitle: "新建",
+  editTitle: "编辑",
+  createDescription: "",
+  editDescription: "",
+  fields: [
+    {
+      key: "owner",
+      label: "负责人",
+      widget: "select",
+      optionsApi: "/api/users",
+      optionValueField: "id",
+      optionLabelField: "name",
+    },
+  ],
+}
+
+/**
+ * 单选下拉也吃 optionsApi。
+ *
+ * 这里曾经漏过：配置器允许任何 select 选「接口现取」，但渲染层只给多选做了远程取数，
+ * 单选直接读 `field.options`（切到接口模式时它被清空了）。表现为保存成功、预览正常
+ * （预览也是空的，看不出差别）、上线后下拉里只有一个 placeholder——最难查的一类故障。
+ */
+describe("单选下拉", () => {
+  it("配了 optionsApi 时用接口返回的选项，选中后交出字符串值", async () => {
+    const onChange = vi.fn()
+    render(<DwFormFields form={singleForm} values={{ owner: "" }} onChange={onChange} editing />)
+    await userEvent.click(document.getElementById("dw-field-control-owner-0") as HTMLElement)
+    await userEvent.click(await screen.findByRole("option", { name: "查看成员" }))
+    expect(onChange).toHaveBeenCalledWith("owner", "user:read")
+  })
+
+  it("预览（remote=false）不取数，改成说明选项来源——而不是伪装成空下拉", () => {
+    render(<DwFormFields form={singleForm} values={{ owner: "" }} editing disabled remote={false} />)
+    expect(screen.getByText(/选项来自 \/api\/users，预览不取数/)).toBeTruthy()
+    expect(screen.queryByRole("option", { name: "查看成员" })).toBeNull()
   })
 })

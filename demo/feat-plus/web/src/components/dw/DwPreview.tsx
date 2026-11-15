@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { memo, useEffect, useMemo, useRef, useState } from "react"
 import { MoreHorizontal } from "lucide-react"
 
 import type { DatasourceOption, DwFormValue, DwRow } from "@/api/types"
@@ -6,6 +6,7 @@ import { DwFormFields, initialFormValue } from "@/components/dw/DwFormFields"
 import { DwListView } from "@/components/dw/DwListView"
 import { focusAnchor, type DwFocusTarget, type DwMarks } from "@/components/dw/link"
 import { rowLabel, sampleRows, type PageDraft } from "@/components/dw/meta"
+import { resolveFormConfig, resolveListConfig } from "@/components/dw/resolve"
 import { Button } from "@/components/ui/button"
 
 /**
@@ -45,7 +46,7 @@ export const PREVIEW_MODES: Array<{ value: PreviewMode; label: string; hint: str
   { value: "readonly", label: "无写权限", hint: "只读账号看到的样子：写按钮全部不渲染" },
 ]
 
-export function DwPreview({
+function DwPreviewImpl({
   draft,
   datasource,
   mode,
@@ -73,7 +74,21 @@ export function DwPreview({
   onOpenForm?: (mode: "create" | "edit") => void
 }) {
   const fields = datasource?.fields ?? []
-  const { list, form } = draft
+
+  /**
+   * 关键的一层：**预览必须先合并字段值域，再渲染**。
+   *
+   * 线上拿到的配置是后端 `applyFieldMaps` 合并过的副本；这里拿到的是编辑器里的原始
+   * draft，列上的 `options` 还空着。少了这一步，配好值域的列在预览里仍显示原始编码，
+   * 而保存后线上显示中文——预览就变成了一句谎话（见 `resolve.ts`）。
+   *
+   * `useMemo` 的依赖是 draft：它随每次编辑换新，但合并在没有任何值域时原样返回同一个
+   * 引用，所以下面那些按引用比较的判断不会被白白打穿。
+   */
+  const { list, form } = useMemo(
+    () => ({ list: resolveListConfig(draft.list), form: resolveFormConfig(draft.list, draft.form) }),
+    [draft.list, draft.form],
+  )
   const containerRef = useRef<HTMLDivElement>(null)
 
   /**
@@ -125,6 +140,9 @@ export function DwPreview({
               values={values}
               editing={editing}
               disabled
+              // 预览不发请求：配了 optionsApi 的字段在这里只说明「选项来自哪」，
+              // 不去真的取——否则「预览不依赖数据层」这条约束就名存实亡了。
+              remote={false}
               link={{
                 index: focus?.kind === "field" ? focus.index : null,
                 marks: marks?.field,
@@ -206,3 +224,12 @@ export function DwPreview({
     </div>
   )
 }
+
+/**
+ * 预览整块做成 memo：编辑区的紧急渲染（每敲一个字）不该穿透到这里。
+ *
+ * 工作台把 `draft` 换成 `useDeferredValue` 之后，一次击键的紧急渲染拿到的是**同一个**
+ * 延迟草稿，于是这里整块跳过；真正要重画时已经在低优先级渲染里了。悬停仍然会重画
+ * （`focus` 变了），但那只是移动一个高亮，不是每个字符都来一次。
+ */
+export const DwPreview = memo(DwPreviewImpl)

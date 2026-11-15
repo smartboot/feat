@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useDeferredValue, useState } from "react"
 import { toast } from "sonner"
 
 import type { DwFilter, DwFormValue, DwRow, DwRowAction, PageConfig } from "@/api/types"
@@ -26,10 +26,21 @@ export function DwList({ pageKey, config }: { pageKey: string; config: PageConfi
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editing, setEditing] = useState<DwRow | null>(null)
 
+  /**
+   * 筛选项进查询条件前先延后一帧。
+   *
+   * 不延的话，搜索框每敲一个字符就是一个 GET：「张三三」发三次，前两次的结果刚回来
+   * 就被下一次覆盖。服务端和用户都在为中间态付费。延后不是防抖，它不设时间阈值——
+   * 打字连击时 React 会自然合批，停手后立刻发，输入框全程跟手。
+   *
+   * 注意只有**查询**用延迟值：输入框的值与「N 个条件」用实时值，否则打一个字要等
+   * 一帧才显示出来，那是另一种卡。
+   */
+  const deferredFilters = useDeferredValue(filters)
   const query = {
     page,
     pageSize,
-    filters: activeFilters(filters, list.filters),
+    filters: activeFilters(deferredFilters, list.filters),
   }
   // dataApi 通道覆盖：配置里指定了自定义接口就走它，留空的项回落内置 /api/dw 通道。
   const dataApi = list.dataApi

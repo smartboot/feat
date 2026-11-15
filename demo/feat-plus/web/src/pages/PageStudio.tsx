@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react"
 import {
   AlertTriangle,
   ArrowLeft,
@@ -10,12 +10,14 @@ import {
   Info,
   LayoutList,
   Link2,
+  Redo2,
   Rocket,
   Table2,
+  Undo2,
   Unlink,
 } from "lucide-react"
 
-import type { DatasourceOption, DwFieldMeta, PageAdminItem, PageInput } from "@/api/types"
+import type { DatasourceOption, DwFieldMeta, DwListConfig, DwFormConfig, PageAdminItem, PageInput } from "@/api/types"
 import { DwFieldCatalog } from "@/components/dw/DwFieldCatalog"
 import { DwFormConfigEditor } from "@/components/dw/DwFormConfigEditor"
 import { DwListConfigEditor } from "@/components/dw/DwListConfigEditor"
@@ -38,6 +40,7 @@ import {
   fieldFromMeta,
   type PageDraft,
 } from "@/components/dw/meta"
+import { useDraftHistory } from "@/components/dw/useDraftHistory"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -130,8 +133,13 @@ export function PageStudio({
   onSubmit: (input: PageInput) => Promise<void>
   onClose: () => void
 }) {
-  const [draft, setDraft] = useState<PageDraft>(() => (initial ? fromRecord(initial) : emptyDraft()))
-  const [baseline] = useState(() => (initial ? JSON.stringify(fromRecord(initial)) : JSON.stringify(emptyDraft())))
+  /**
+   * 草稿状态。撤销栈替掉了原来的 `JSON.stringify` 比对：
+   * 每敲一个字序列化一整份配置，是这套界面里最贵的一笔固定开销，而且「有未保存修改」
+   * 这件事本来就不该靠字符串计算。
+   */
+  const [initialDraft] = useState<PageDraft>(() => (initial ? fromRecord(initial) : emptyDraft()))
+  const { draft, setDraft, undo, redo, canUndo, canRedo, dirty } = useDraftHistory(initialDraft)
   const [section, setSection] = useState<StudioSection>(mode === "create" ? "basic" : "fields")
   const [previewMode, setPreviewMode] = useState<PreviewMode>("list")
   /** 预览模式是否跟随左侧分区自动切换。手动点过预览页签即锁定，避免「我明明选了空态」被抢走。 */
@@ -148,51 +156,92 @@ export function PageStudio({
 
   useEffect(() => {
     if (!initial) return
-    const badList = initial.listJson.trim() !== "" && isEmptyConfig(initial.listJson, EMPTY_LIST)
-    const badForm = initial.formJson.trim() !== "" && isEmptyConfig(initial.formJson, EMPTY_FORM)
     // 保存闸门保证库里的一定能渲染，解析失败只能是脏数据——提示而不是静默丢弃。
+    const badList = initial.listJson.trim() !== "" && parseObject(initial.listJson) === null
+    const badForm = initial.formJson.trim() !== "" && parseObject(initial.formJson) === null
     if (badList || badForm) {
       setParseWarning("存量配置 JSON 解析失败，已回退为空白配置；直接保存会覆盖原配置，请先核对。")
     }
   }, [initial])
 
   const datasource = datasources.find((ds) => ds.key === draft.datasourceKey)
-  const issues = useMemo(() => lintDraft({ draft, datasources }), [draft, datasources])
+
+  /**
+   * 编辑区拿实时草稿，**下游一律拿延迟草稿**。
+   *
+   * 这是这套界面最重要的一条重渲染边界：一次击键的紧急渲染只更新输入框本身，
+   * 体检（几十条规则，含 `new RegExp`）与整张预览表都挪到低优先级的后续渲染里。
+   * `useDeferredValue` 不设时间阈值，打字连击时 React 会自然合批，比手写 debounce 更跟手。
+   */
+  const deferredDraft = useDeferredValue(draft)
+  const issues = useMemo(() => lintDraft({ draft: deferredDraft, datasources }), [deferredDraft, datasources])
   const { errors, warnings } = splitIssues(issues)
-  const sectionCounts = countBySection(issues)
-  const dirty = JSON.stringify(draft) !== baseline
+  const sectionCounts = useMemo(() => countBySection(issues), [issues])
   const marks = useMemo(() => marksFromIssues(issues), [issues])
   const focus = hovered ?? selected
   /** 高亮来自点选（而不是悬停）：只有这种才自动滚动预览，不然鼠标一动预览就抖。 */
   const pinned = Boolean(selected) && !hovered
   const focusLabel = focus ? describeFocus(draft, focus, datasource?.fields ?? []) : ""
 
+  /**
+   * 撤销 / 重做。拦 Cmd/Ctrl+Z 的唯一理由：这里是受控输入，浏览器原生撤销本来就
+   * 不生效（React 会用 state 把值写回去）。让位给原生等于「按了没反应」。
+   */
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (!(event.metaKey || event.ctrlKey)) return
+      const key = event.key.toLowerCase()
+      if (key === "z") {
+        event.preventDefault()
+        if (event.shiftKey) redo()
+        else undo()
+        return
+      }
+      // Windows 习惯：Ctrl+Y 也是重做
+      if (key === "y" && !event.shiftKey) {
+        event.preventDefault()
+        redo()
+      }
+    }
+    window.addEventListener("keydown", onKeyDown)
+    return () => window.removeEventListener("keydown", onKeyDown)
+  }, [undo, redo])
+
   /** 分区切换：预览模式跟着走，并清掉不属于新分区的选中项。 */
-  function goSection(next: StudioSection) {
-    setSection(next)
-    setHovered(null)
-    if (selected && sectionOfFocus(selected) !== next) setSelected(null)
-    if (followPreview) setPreviewMode((current) => followMode(next, current))
-  }
+  const goSection = useCallback(
+    (next: StudioSection) => {
+      setSection(next)
+      setHovered(null)
+      if (selected && sectionOfFocus(selected) !== next) setSelected(null)
+      if (followPreview) setPreviewMode((current) => followMode(next, current))
+    },
+    [followPreview, selected],
+  )
 
   /**
    * 预览里点某一条（表头 / 筛选 / 表单字段）→ 编辑区切分区、滚过去、选中它。
    * 这里不走 goSection：那会把刚选中的目标当成「不属于新分区」清掉。
    */
-  function locate(target: DwFocusTarget) {
-    setSelected(target)
-    setHovered(null)
-    const next = sectionOfFocus(target)
-    setSection(next)
-    if (followPreview) setPreviewMode((current) => followMode(next, current))
-    scrollToAnchor(focusAnchor(target))
-  }
+  const locate = useCallback(
+    (target: DwFocusTarget) => {
+      setSelected(target)
+      setHovered(null)
+      const next = sectionOfFocus(target)
+      setSection(next)
+      if (followPreview) setPreviewMode((current) => followMode(next, current))
+      scrollToAnchor(focusAnchor(target))
+    },
+    [followPreview],
+  )
 
   /** 预览里点「新建」：切预览模式；跟随时顺手把编辑区带到表单分区。 */
-  function openFormPreview(next: "create" | "edit") {
-    if (followPreview) goSection("form")
-    setPreviewMode(next)
-  }
+  const openFormPreview = useCallback(
+    (next: "create" | "edit") => {
+      if (followPreview) goSection("form")
+      setPreviewMode(next)
+    },
+    [followPreview, goSection],
+  )
 
   /** 手动点预览页签：明确表达了「我要看这个」，从此不再被分区切换抢走。 */
   function selectPreviewMode(next: PreviewMode) {
@@ -310,20 +359,6 @@ export function PageStudio({
     })
   }
 
-  /** 滚到编辑区的某一条，并把焦点落到第一个可输入控件上。 */
-  function scrollToAnchor(anchor: string) {
-    window.setTimeout(() => {
-      const target = document.getElementById(anchor)
-      if (!target) return
-      // jsdom 没有 scrollIntoView；滚动只是体验优化，测试里跳过
-      if (typeof target.scrollIntoView === "function") {
-        target.scrollIntoView({ block: "center", behavior: "smooth" })
-      }
-      const focusable = target.querySelector<HTMLElement>("input, select, textarea, button")
-      focusable?.focus({ preventScroll: true })
-    }, 60)
-  }
-
   /**
    * 跳到出问题的地方：切分区 → 选中 → 滚动 → 聚焦。
    * 锚点能对上列 / 筛选 / 字段时顺手选中它，预览里同一格同时亮起来——
@@ -337,9 +372,12 @@ export function PageStudio({
   }
 
   async function save() {
-    if (errors.length > 0) {
+    // 闸门必须用**实时**草稿重算一次：`issues` 走的是延迟渲染队列，用户刚修完最后一个
+    // 错误就点保存时，队列里可能还躺着那条旧错误，会把他莫名其妙挡回去。
+    const blocking = splitIssues(lintDraft({ draft, datasources })).errors
+    if (blocking.length > 0) {
       goSection("publish")
-      setSaveError(`还有 ${errors.length} 个问题需要处理，点问题可直接跳到对应位置。`)
+      setSaveError(`还有 ${blocking.length} 个问题需要处理，点问题可直接跳到对应位置。`)
       return
     }
     try {
@@ -366,7 +404,7 @@ export function PageStudio({
 
   const preview = (mode: PreviewMode) => (
     <DwPreview
-      draft={draft}
+      draft={deferredDraft}
       datasource={datasource}
       mode={mode}
       focus={focus}
@@ -396,6 +434,32 @@ export function PageStudio({
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
+          {/*
+            撤销 / 重做放在页头而不是编辑器里：它们作用于整份草稿，不属于某个分区。
+            快捷键写在 title 上——这两个按钮大部分时候是靠手记的。
+          */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8"
+            aria-label="撤销"
+            title="撤销（⌘Z / Ctrl+Z）"
+            disabled={!canUndo}
+            onClick={undo}
+          >
+            <Undo2 className="size-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8"
+            aria-label="重做"
+            title="重做（⇧⌘Z / Ctrl+Y）"
+            disabled={!canRedo}
+            onClick={redo}
+          >
+            <Redo2 className="size-4" />
+          </Button>
           <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs xl:hidden" onClick={() => setPreviewOpen(true)}>
             <LayoutList className="size-3.5" />
             预览
@@ -865,34 +929,88 @@ export function PageStudio({
 // 辅助
 // ---------------------------------------------------------------------------
 
+/**
+ * 配置原文 → 内部草稿。**逐字段构造**，不做 `{...fallback, ...JSON.parse(json)}`。
+ *
+ * 两个理由：
+ * ① 浅合并会让嵌套的 `dataApi` 被整体替换，将来它多一个子字段就丢默认值；
+ * ② fallback 是模块常量 `EMPTY_LIST`，浅合并后 `columns` / `fieldMaps` 与常量共享
+ *    同一个引用——只要哪天有人写了 `columns.push(...)`，全局默认值就被污染了。
+ *
+ * 入库 JSON 本来就不该被信任，这里是唯一的解码口。
+ */
 function fromRecord(record: PageAdminItem): PageDraft {
   return {
     pageKey: record.pageKey,
     title: record.title,
     description: record.description,
     datasourceKey: record.datasourceKey,
-    list: parseConfig(record.listJson, EMPTY_LIST),
-    form: parseConfig(record.formJson, EMPTY_FORM),
+    list: decodeList(parseObject(record.listJson) ?? {}),
+    form: decodeForm(parseObject(record.formJson) ?? {}),
   }
 }
 
-function parseConfig<T>(json: string, fallback: T): T {
-  if (!json.trim()) return fallback
-  try {
-    return { ...fallback, ...JSON.parse(json) } as T
-  } catch {
-    return fallback
+function decodeList(raw: Record<string, unknown>): DwListConfig {
+  const dataApi = raw.dataApi
+  return {
+    rowKey: text(raw.rowKey) || EMPTY_LIST.rowKey,
+    pageSize: typeof raw.pageSize === "number" ? raw.pageSize : EMPTY_LIST.pageSize,
+    actions: Array.isArray(raw.actions) ? (raw.actions as DwListConfig["actions"]) : [...EMPTY_LIST.actions],
+    columns: Array.isArray(raw.columns) ? (raw.columns as DwListConfig["columns"]) : [],
+    filters: Array.isArray(raw.filters) ? (raw.filters as DwListConfig["filters"]) : [],
+    rowActions: Array.isArray(raw.rowActions) ? (raw.rowActions as DwListConfig["rowActions"]) : [],
+    // 逐键复制：不与 EMPTY_LIST.fieldMaps 共享同一个对象
+    fieldMaps: { ...((raw.fieldMaps as DwListConfig["fieldMaps"]) ?? {}) },
+    ...(dataApi && typeof dataApi === "object"
+      ? { dataApi: { ...(dataApi as NonNullable<DwListConfig["dataApi"]>) } }
+      : {}),
   }
 }
 
-function isEmptyConfig(json: string, fallback: object): boolean {
-  try {
-    const parsed = JSON.parse(json)
-    if (!parsed || typeof parsed !== "object" || Object.keys(parsed).length === 0) return true
-    return JSON.stringify({ ...fallback, ...parsed }) === JSON.stringify(fallback)
-  } catch {
-    return true
+function decodeForm(raw: Record<string, unknown>): DwFormConfig {
+  return {
+    createTitle: text(raw.createTitle) || EMPTY_FORM.createTitle,
+    editTitle: text(raw.editTitle) || EMPTY_FORM.editTitle,
+    createDescription: text(raw.createDescription),
+    editDescription: text(raw.editDescription),
+    fields: Array.isArray(raw.fields) ? (raw.fields as DwFormConfig["fields"]) : [],
   }
+}
+
+function text(value: unknown): string {
+  return typeof value === "string" ? value : ""
+}
+
+/** 解析失败与「本来就是空」是两件事：前者要提示，后者不提示。 */
+function parseObject(json: string): Record<string, unknown> | null {
+  if (!json.trim()) return null
+  try {
+    const parsed: unknown = JSON.parse(json)
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null
+    return parsed as Record<string, unknown>
+  } catch {
+    return null
+  }
+}
+
+/**
+ * 滚到编辑区的某一条，并把焦点落到第一个可输入控件上。
+ *
+ * 延一帧而不是 `setTimeout(60)`：分区切换会让编辑区整块重挂，固定毫秒数在慢机器上
+ * 会早于 DOM 出现（滚了个空），在快机器上又白等。`requestAnimationFrame` 至少保证
+ * 「本次提交渲染完」之后才找元素。
+ */
+function scrollToAnchor(anchor: string) {
+  window.requestAnimationFrame(() => {
+    const target = document.getElementById(anchor)
+    if (!target) return
+    // jsdom 没有 scrollIntoView；滚动只是体验优化，测试里跳过
+    if (typeof target.scrollIntoView === "function") {
+      target.scrollIntoView({ block: "center", behavior: "smooth" })
+    }
+    const focusable = target.querySelector<HTMLElement>("input, select, textarea, button")
+    focusable?.focus({ preventScroll: true })
+  })
 }
 
 function SectionTitle({ title, hint }: { title: string; hint: string }) {
