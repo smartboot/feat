@@ -1,6 +1,5 @@
-import type { ReactNode } from "react"
 import { useState } from "react"
-import { ChevronDown, ChevronUp, Plus, Trash2, Wand2 } from "lucide-react"
+import { ChevronDown } from "lucide-react"
 
 import type {
   DwAction,
@@ -21,7 +20,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
+import { FieldLabel, Hint, ItemRow, Section } from "@/components/dw/DwEditorBits"
 import { DwOptionListEditor } from "@/components/dw/DwOptionListEditor"
+import type { EditorLink } from "@/components/dw/link"
 import {
   ACTIONS,
   ACTION_HINTS,
@@ -58,12 +59,15 @@ export function DwListConfigEditor({
   fields,
   writable,
   onChange,
+  link,
 }: {
   value: DwListConfig
   fields: DwFieldMeta[]
   /** 只读数据源：写动作只能看不能勾 */
   writable: boolean
   onChange: (list: DwListConfig) => void
+  /** 与右侧预览的联动：悬停 / 聚焦某一条时，预览里对应位置高亮 */
+  link?: EditorLink
 }) {
   const fieldKeys = new Set(fields.map((field) => field.key))
   // 覆盖列之前先确认：现有列的格式 / 宽度 / 选项映射是手工调过的，静默覆盖等于丢工作。
@@ -201,7 +205,8 @@ export function DwListConfigEditor({
           return (
             <ItemRow
               key={index}
-              anchor={`column-${index}`}
+              target={{ kind: "column", index }}
+              link={link}
               index={index}
               total={value.columns.length}
               title={column.label || meta?.label || `第 ${index + 1} 列`}
@@ -297,7 +302,8 @@ export function DwListConfigEditor({
           return (
             <ItemRow
               key={index}
-              anchor={`filter-${index}`}
+              target={{ kind: "filter", index }}
+              link={link}
               index={index}
               total={value.filters.length}
               title={filter.label || meta?.label || `筛选 ${index + 1}`}
@@ -537,113 +543,4 @@ export function FieldKeySelect({
       </SelectContent>
     </Select>
   )
-}
-
-// ---------------------------------------------------------------------------
-// 私有布局辅助
-// ---------------------------------------------------------------------------
-
-function Section({
-  title,
-  anchor,
-  count,
-  empty,
-  onGenerate,
-  onAdd,
-  footer,
-  children,
-}: {
-  title: string
-  anchor: string
-  count: number
-  empty: string
-  onGenerate?: () => void
-  onAdd: () => void
-  footer?: string
-  children: ReactNode
-}) {
-  return (
-    <div className="grid gap-2" id={anchor}>
-      <div className="flex items-center justify-between gap-2">
-        <Label>
-          {title}
-          <span className="ml-1.5 text-xs font-normal text-muted-foreground">{count} 项</span>
-        </Label>
-        <div className="flex items-center gap-1.5">
-          {onGenerate && (
-            <Button variant="outline" size="sm" className="h-7 gap-1 text-xs" onClick={onGenerate}>
-              <Wand2 className="size-3" />
-              按字段生成
-            </Button>
-          )}
-          <Button variant="outline" size="sm" className="h-7 gap-1 text-xs" onClick={onAdd}>
-            <Plus className="size-3" />
-            添加
-          </Button>
-        </div>
-      </div>
-      {count === 0 ? <p className="rounded-md border border-dashed p-3 text-xs text-muted-foreground">{empty}</p> : <div className="grid gap-2">{children}</div>}
-      {footer && <p className="text-[11px] text-muted-foreground">{footer}</p>}
-    </div>
-  )
-}
-
-function ItemRow({
-  anchor,
-  title,
-  subtitle,
-  index,
-  total,
-  onMove,
-  onRemove,
-  children,
-}: {
-  anchor: string
-  title: string
-  subtitle: string
-  index: number
-  total: number
-  onMove: (delta: number) => void
-  onRemove: () => void
-  children: ReactNode
-}) {
-  return (
-    <div className="grid gap-2 rounded-lg border bg-card/40 p-2.5" id={anchor}>
-      <div className="flex items-center justify-between gap-2">
-        <div className="min-w-0">
-          <p className="truncate text-xs font-medium">{title}</p>
-          <p className="truncate text-[10px] text-muted-foreground">{subtitle}</p>
-        </div>
-        <div className="flex shrink-0 items-center gap-0.5">
-          <Button variant="ghost" size="icon" className="size-7" aria-label="上移" disabled={index === 0} onClick={() => onMove(-1)}>
-            <ChevronUp className="size-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-7"
-            aria-label="下移"
-            disabled={index === total - 1}
-            onClick={() => onMove(1)}
-          >
-            <ChevronDown className="size-3.5" />
-          </Button>
-          <Button variant="ghost" size="icon" className="size-7 text-destructive" aria-label="删除" onClick={onRemove}>
-            <Trash2 className="size-3.5" />
-          </Button>
-        </div>
-      </div>
-      {children}
-    </div>
-  )
-}
-
-/** 行内小标签：视觉层级低于表单主 Label。 */
-function FieldLabel({ children }: { children: ReactNode }) {
-  return <span className="text-[11px] text-muted-foreground">{children}</span>
-}
-
-/** 解释性文案：一句话说清这个配置项会发生什么，不写「请填写 XXX」。 */
-function Hint({ children }: { children: ReactNode }) {
-  return <p className="text-[11px] leading-relaxed text-muted-foreground">{children}</p>
 }

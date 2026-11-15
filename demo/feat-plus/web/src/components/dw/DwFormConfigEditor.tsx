@@ -1,11 +1,12 @@
-import type { ReactNode } from "react"
 import { useState } from "react"
-import { ChevronDown, ChevronUp, Plus, Trash2, Wand2 } from "lucide-react"
+import { ChevronDown, Plus, Wand2 } from "lucide-react"
 
 import type { DwFieldMeta, DwFormConfig, DwFormField, DwWidget } from "@/api/types"
 import { Button } from "@/components/ui/button"
+import { FieldLabel, ItemRow } from "@/components/dw/DwEditorBits"
 import { DwOptionListEditor } from "@/components/dw/DwOptionListEditor"
 import { FieldKeySelect } from "@/components/dw/DwListConfigEditor"
+import type { EditorLink } from "@/components/dw/link"
 import {
   FIELD_TYPE_LABELS,
   FORM_WIDGET_HINTS,
@@ -35,10 +36,13 @@ export function DwFormConfigEditor({
   value,
   fields,
   onChange,
+  link,
 }: {
   value: DwFormConfig
   fields: DwFieldMeta[]
   onChange: (form: DwFormConfig) => void
+  /** 与右侧预览的联动：悬停 / 聚焦某个字段时，预览弹窗里对应字段高亮 */
+  link?: EditorLink
 }) {
   const writable = fields.filter((field) => field.writable)
   const writableKeys = new Set(writable.map((field) => field.key))
@@ -190,47 +194,19 @@ export function DwFormConfigEditor({
             {value.fields.map((field, index) => {
               const meta = writable.find((item) => item.key === field.key)
               return (
-                <div key={index} className="grid gap-2 rounded-lg border bg-card/40 p-2.5" id={`field-${index}`}>
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="truncate text-xs font-medium">{field.label || meta?.label || `字段 ${index + 1}`}</p>
-                      <p className="truncate text-[10px] text-muted-foreground">
-                        {field.key ? `${field.key} · ${FORM_WIDGET_LABELS[field.widget]}` : "未选择字段"}
-                        {field.required ? " · 必填" : ""}
-                      </p>
-                    </div>
-                    <div className="flex shrink-0 items-center gap-0.5">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-7"
-                        aria-label="上移"
-                        disabled={index === 0}
-                        onClick={() => moveField(index, -1)}
-                      >
-                        <ChevronUp className="size-3.5" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-7"
-                        aria-label="下移"
-                        disabled={index === value.fields.length - 1}
-                        onClick={() => moveField(index, 1)}
-                      >
-                        <ChevronDown className="size-3.5" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-7 text-destructive"
-                        aria-label="删除"
-                        onClick={() => patch({ fields: value.fields.filter((_, i) => i !== index) })}
-                      >
-                        <Trash2 className="size-3.5" />
-                      </Button>
-                    </div>
-                  </div>
+                <ItemRow
+                  key={index}
+                  target={{ kind: "field", index }}
+                  link={link}
+                  index={index}
+                  total={value.fields.length}
+                  title={field.label || meta?.label || `字段 ${index + 1}`}
+                  subtitle={`${field.key ? `${field.key} · ${FORM_WIDGET_LABELS[field.widget]}` : "未选择字段"}${
+                    field.required ? " · 必填" : ""
+                  }`}
+                  onMove={(delta) => moveField(index, delta)}
+                  onRemove={() => patch({ fields: value.fields.filter((_, i) => i !== index) })}
+                >
 
                   <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
                     <div className="grid gap-1">
@@ -399,7 +375,7 @@ export function DwFormConfigEditor({
                       </div>
                     </div>
                   )}
-                </div>
+                </ItemRow>
               )
             })}
           </div>
@@ -420,9 +396,4 @@ export function DwFormConfigEditor({
       )}
     </div>
   )
-}
-
-/** 行内小标签：视觉层级低于表单主 Label。 */
-function FieldLabel({ children }: { children: ReactNode }) {
-  return <span className="text-[11px] text-muted-foreground">{children}</span>
 }
