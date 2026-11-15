@@ -1,5 +1,8 @@
+import { Lock } from "lucide-react"
+
 import type { DwFormConfig, DwFormField } from "@/api/types"
 import { MarkDot } from "@/components/dw/DwEditorBits"
+import { isFieldWritable, writeModeOf } from "@/components/dw/meta"
 import type { DwMarkLevel } from "@/components/dw/link"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -37,7 +40,7 @@ export function DwFormFields({
   form: DwFormConfig
   values: Record<string, string>
   onChange?: (key: string, value: string) => void
-  /** 编辑态：immutable 字段变成只读 */
+  /** 编辑态：createOnly 字段变成只读；readonly 字段任何态都只读 */
   editing: boolean
   /** 预览态：全部只读 */
   disabled?: boolean
@@ -51,6 +54,9 @@ export function DwFormFields({
       {form.fields.map((field, index) => {
         const focused = link?.index === index
         const mark = link?.marks?.[index]
+        // 只读的原因要写在字段上：光把控件变灰，用户会以为是加载失败或者权限不足。
+        const mode = writeModeOf(field)
+        const lockNote = mode === "readonly" ? "始终只读" : mode === "createOnly" && editing ? "创建后不可改" : ""
         return (
           <div
             key={`${field.key}-${index}`}
@@ -70,6 +76,7 @@ export function DwFormFields({
                 </span>
                 {/* 开关的标题画在控件里，标记点贴不到行首，留给发布检查列表去说 */}
                 {mark && <MarkDot level={mark} />}
+                {lockNote && <ReadonlyNote text={lockNote} />}
               </Label>
             )}
             {renderField({
@@ -79,6 +86,7 @@ export function DwFormFields({
               update: onChange,
               editing,
               disabled,
+              lockNote,
             })}
             {fieldErrors?.[index] && (
               <p className="text-xs text-destructive" role="alert">
@@ -117,6 +125,7 @@ function renderField({
   update,
   editing,
   disabled,
+  lockNote,
 }: {
   field: DwFormField
   value: string
@@ -124,9 +133,10 @@ function renderField({
   update?: (key: string, value: string) => void
   editing: boolean
   disabled?: boolean
+  lockNote?: string
 }) {
-  // immutable = 创建可填、编辑只读（角色编码这类锚点字段）。
-  const locked = Boolean(disabled || (field.immutable && editing))
+  // 只读 = 预览态全禁 + 配置的写入策略。两处规则同源，预览才不会「看着能改、上线不能改」。
+  const locked = Boolean(disabled || !isFieldWritable(field, editing))
   const set = (next: string) => update?.(field.key, next)
 
   switch (field.widget) {
@@ -169,9 +179,12 @@ function renderField({
     case "switch":
       return (
         <div className="flex items-center justify-between rounded-lg border px-3 py-2">
-          <Label htmlFor={id} className="text-sm">
-            {field.label}
-            {field.required && <span className="text-destructive"> *</span>}
+          <Label htmlFor={id} className="flex items-center gap-1.5 text-sm">
+            <span>
+              {field.label}
+              {field.required && <span className="text-destructive"> *</span>}
+            </span>
+            {lockNote && <ReadonlyNote text={lockNote} />}
           </Label>
           <Switch
             id={id}
@@ -199,6 +212,19 @@ function renderField({
         />
       )
   }
+}
+
+/** 只读标记：小锁 + 原因。视觉上比灰掉控件更明确——用户知道「这是设计如此」，而不是坏了。 */
+function ReadonlyNote({ text }: { text: string }) {
+  return (
+    <span
+      className="inline-flex shrink-0 items-center gap-0.5 rounded bg-muted px-1 text-[10px] font-normal leading-4 text-muted-foreground"
+      title={`该字段${text}，保存时服务端会保留原值`}
+    >
+      <Lock className="size-2.5" aria-hidden />
+      {text}
+    </span>
+  )
 }
 
 /** 行取值转表单值：动态层的值统一按字符串编辑（switch 的 "1"/"0" 同此约定）。 */

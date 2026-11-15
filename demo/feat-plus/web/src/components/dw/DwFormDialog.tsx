@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 
 import type { DwFormConfig, DwRow } from "@/api/types"
 import { DwFormFields, fieldText } from "@/components/dw/DwFormFields"
+import { isFieldWritable } from "@/components/dw/meta"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -58,6 +59,9 @@ export function DwFormDialog({
   async function submit() {
     const found: Record<number, string> = {}
     form.fields.forEach((field, index) => {
+      // 只读字段（readonly / 编辑态的 createOnly）不参与校验：
+      // 控件填不了却要它「必填」，用户只会卡在一个无法完成的弹窗里。
+      if (!isFieldWritable(field, isEdit)) return
       const value = (draft[field.key] ?? "").trim()
       if (field.required && value === "") {
         found[index] = `请填写${field.label}`
@@ -83,6 +87,8 @@ export function DwFormDialog({
 
     const values: Record<string, string> = {}
     for (const field of form.fields) {
+      // 不可写字段不提交：服务端会按 writeMode 回填旧值 / 丢弃，前端传过去只会制造「好像改了」的错觉。
+      if (!isFieldWritable(field, isEdit)) continue
       values[field.key] = (draft[field.key] ?? "").trim()
     }
     await onSubmit(values)

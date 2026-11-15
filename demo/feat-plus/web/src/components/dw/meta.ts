@@ -10,6 +10,7 @@ import type {
   DwRow,
   DwVariant,
   DwWidget,
+  DwWriteMode,
 } from "@/api/types"
 
 /**
@@ -66,6 +67,40 @@ export const FORM_WIDGET_HINTS: Record<DwWidget, string> = {
   select: "从固定选项里选一个，需要选项表",
   switch: "是 / 否两态，值按 \"1\" / \"0\" 提交",
   span: "只在编辑弹窗里展示，不参与提交，不能必填",
+}
+
+/**
+ * 写入策略。三档而不是一个「创建后锁定」开关：
+ * 企业表单里既有「一次定死」（编码），也有「谁都不许改」（系统生成、创建时间）。
+ * 两态布尔表达不了后者，配置者只能用只读展示控件绕过——那样连新建都填不了。
+ */
+export const WRITE_MODES: DwWriteMode[] = ["always", "createOnly", "readonly"]
+
+export const WRITE_MODE_LABELS: Record<DwWriteMode, string> = {
+  always: "可编辑",
+  createOnly: "仅新增可编辑",
+  readonly: "始终只读",
+}
+
+export const WRITE_MODE_HINTS: Record<DwWriteMode, string> = {
+  always: "新建、编辑都能改",
+  createOnly: "新建时填，编辑弹窗里锁定并展示当前值",
+  readonly: "任何状态都不能改，只展示当前值",
+}
+
+/** 归一：老配置只有 immutable，true 按 createOnly 读；新配置以 writeMode 为准。 */
+export function writeModeOf(field: Pick<DwFormField, "writeMode" | "immutable">): DwWriteMode {
+  if (field.writeMode && WRITE_MODES.includes(field.writeMode)) return field.writeMode
+  return field.immutable ? "createOnly" : "always"
+}
+
+/** 某一态下这个字段是否可写：新建 / 编辑都要判断，别只判一半。 */
+export function isFieldWritable(field: Pick<DwFormField, "writeMode" | "immutable" | "widget">, editing: boolean): boolean {
+  // 只读展示控件不参与写入，任何态都不可写（服务端也不会收到它）。
+  if (field.widget === "span") return false
+  const mode = writeModeOf(field)
+  if (mode === "readonly") return false
+  return !(mode === "createOnly" && editing)
 }
 
 export const ACTIONS: DwAction[] = ["create", "edit", "delete", "refresh"]
@@ -265,7 +300,7 @@ export function fieldFromMeta(meta: DwFieldMeta): DwFormField {
     label: meta.label,
     widget: defaultWidgetFor(meta.type),
     required: false,
-    immutable: false,
+    writeMode: "always",
     placeholder: "",
     defaultValue: "",
     pattern: "",

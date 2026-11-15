@@ -1,6 +1,6 @@
 import type { DatasourceOption } from "@/api/types"
 
-import type { PageDraft } from "./meta"
+import { writeModeOf, type PageDraft } from "./meta"
 
 /**
  * 页面配置的保存前体检。
@@ -250,6 +250,32 @@ export function lintDraft({ draft, datasources }: LintContext): DwIssue[] {
         section: "form",
         level: "error",
         message: `${where}是只读展示字段，不能同时是必填项`,
+        anchor,
+      })
+    }
+    // 写入策略与字段形态的冲突放在这里说，而不是等上线后有人问「为什么改不了」。
+    const writeMode = writeModeOf(field)
+    if (field.widget === "span" && writeMode !== "readonly") {
+      issues.push({
+        section: "form",
+        level: "warning",
+        message: `${where}是只读展示控件，写入策略「${writeMode === "createOnly" ? "仅新增可编辑" : "可编辑"}」不会生效`,
+        anchor,
+      })
+    }
+    if (writeMode === "readonly" && field.required) {
+      issues.push({
+        section: "form",
+        level: "error",
+        message: `${where}是只读字段，必填永远无法满足；要么改成可写，要么取消必填`,
+        anchor,
+      })
+    }
+    if (writeMode === "createOnly" && !list.actions.includes("create")) {
+      issues.push({
+        section: "form",
+        level: "warning",
+        message: `${where}只在新增时可填，但列表没有开启「新建」，这个字段永远不会被填写`,
         anchor,
       })
     }

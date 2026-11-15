@@ -107,4 +107,41 @@ describe("lintDraft", () => {
     expect(second.errors).toHaveLength(0)
     expect(second.warnings.some((issue) => issue.message.includes("永远用不上"))).toBe(true)
   })
+
+  it("写入策略与字段形态冲突时给出提示", () => {
+    // 只读展示控件配「可编辑」不会生效
+    const span = draft()
+    span.form = { ...span.form, fields: [{ key: "code", label: "编码", widget: "span", writeMode: "always" }] }
+    const spanIssues = splitIssues(lintDraft({ draft: span, datasources: [datasource] }))
+    expect(spanIssues.warnings.some((issue) => issue.message.includes("写入策略"))).toBe(true)
+
+    // 只读字段又要求必填，新建时永远填不了
+    const readonlyRequired = draft()
+    readonlyRequired.form = {
+      ...readonlyRequired.form,
+      fields: [{ key: "code", label: "编码", widget: "input", required: true, writeMode: "readonly" }],
+    }
+    const readIssues = splitIssues(lintDraft({ draft: readonlyRequired, datasources: [datasource] }))
+    expect(readIssues.errors.some((issue) => issue.message.includes("必填永远无法满足"))).toBe(true)
+
+    // 仅新增可编辑，却没有新建入口
+    const noCreate = draft()
+    noCreate.list = { ...noCreate.list, actions: ["edit", "refresh"] }
+    noCreate.form = {
+      ...noCreate.form,
+      fields: [{ key: "code", label: "编码", widget: "input", writeMode: "createOnly" }],
+    }
+    const createIssues = splitIssues(lintDraft({ draft: noCreate, datasources: [datasource] }))
+    expect(createIssues.warnings.some((issue) => issue.message.includes("新增时可填"))).toBe(true)
+  })
+
+  it("旧配置的 immutable 按「仅新增可编辑」读，不报冲突", () => {
+    const legacy = draft()
+    legacy.form = {
+      ...legacy.form,
+      fields: [{ key: "code", label: "编码", widget: "input", immutable: true, span: 1 }],
+    }
+    const { errors } = splitIssues(lintDraft({ draft: legacy, datasources: [datasource] }))
+    expect(errors).toHaveLength(0)
+  })
 })

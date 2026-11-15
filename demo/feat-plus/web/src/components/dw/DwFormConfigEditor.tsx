@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { ChevronDown, Plus, Wand2 } from "lucide-react"
 
-import type { DwFieldMeta, DwFormConfig, DwFormField, DwWidget } from "@/api/types"
+import type { DwFieldMeta, DwFormConfig, DwFormField, DwWidget, DwWriteMode } from "@/api/types"
 import { Button } from "@/components/ui/button"
 import { FieldLabel, ItemRow } from "@/components/dw/DwEditorBits"
 import { DwOptionListEditor } from "@/components/dw/DwOptionListEditor"
@@ -12,7 +12,11 @@ import {
   FORM_WIDGET_HINTS,
   FORM_WIDGET_LABELS,
   WIDGETS,
+  WRITE_MODES,
+  WRITE_MODE_HINTS,
+  WRITE_MODE_LABELS,
   fieldFromMeta,
+  writeModeOf,
 } from "@/components/dw/meta"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -167,7 +171,7 @@ export function DwFormConfigEditor({
                       label: "",
                       widget: "input",
                       required: false,
-                      immutable: false,
+                      writeMode: "always",
                       placeholder: "",
                       defaultValue: "",
                       pattern: "",
@@ -279,7 +283,7 @@ export function DwFormConfigEditor({
                       <Switch
                         id={`dw-field-required-${index}`}
                         checked={Boolean(field.required)}
-                        disabled={field.widget === "span"}
+                        disabled={field.widget === "span" || writeModeOf(field) === "readonly"}
                         onCheckedChange={(required) => updateField(index, { ...field, required })}
                       />
                       <Label htmlFor={`dw-field-required-${index}`} className="text-xs font-normal">
@@ -287,17 +291,33 @@ export function DwFormConfigEditor({
                       </Label>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <Switch
-                        id={`dw-field-immutable-${index}`}
-                        checked={Boolean(field.immutable)}
-                        disabled={field.widget === "span"}
-                        onCheckedChange={(immutable) => updateField(index, { ...field, immutable })}
-                      />
-                      <Label htmlFor={`dw-field-immutable-${index}`} className="text-xs font-normal">
-                        创建后锁定
+                      <Label htmlFor={`dw-field-write-${index}`} className="text-xs font-normal">
+                        写入
                       </Label>
-                      <span className="text-[10px] text-muted-foreground">编码类字段用</span>
+                      <Select
+                        value={writeModeOf(field)}
+                        disabled={field.widget === "span"}
+                        onValueChange={(next) => {
+                          const writeMode = next as DwWriteMode
+                          // immutable 是给老配置的兼容字段，跟着 writeMode 一起写，避免两处不一致。
+                          updateField(index, { ...field, writeMode, immutable: writeMode !== "always" })
+                        }}
+                      >
+                        <SelectTrigger id={`dw-field-write-${index}`} className="h-7 w-[124px] text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {WRITE_MODES.map((mode) => (
+                            <SelectItem key={mode} value={mode}>
+                              {WRITE_MODE_LABELS[mode]}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
+                    <span className="text-[10px] text-muted-foreground">
+                      {field.widget === "span" ? "只读展示控件不参与写入" : WRITE_MODE_HINTS[writeModeOf(field)]}
+                    </span>
                     {meta && (
                       <span className="text-[10px] text-muted-foreground">
                         数据源类型：{FIELD_TYPE_LABELS[meta.type] ?? meta.type}

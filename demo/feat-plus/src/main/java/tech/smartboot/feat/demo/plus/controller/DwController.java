@@ -16,6 +16,7 @@ import tech.smartboot.feat.cloud.annotation.RequestMethod;
 import tech.smartboot.feat.demo.plus.common.ApiController;
 import tech.smartboot.feat.demo.plus.common.DomainException;
 import tech.smartboot.feat.demo.plus.common.PageResult;
+import tech.smartboot.feat.demo.plus.dto.DwFormField;
 import tech.smartboot.feat.demo.plus.dto.DwSaveRequest;
 import tech.smartboot.feat.demo.plus.dto.PageConfigResponse;
 import tech.smartboot.feat.demo.plus.dto.PageDataQuery;
@@ -89,8 +90,55 @@ public class DwController extends ApiController {
         return execute(context, () -> {
             PageDataSource dataSource = dataSourceOf(pageKey);
             AccessContext access = accessGuard.require(context, dataSource.writePermission());
+            applyWriteMode(pageKey, request, dataSource, access);
             return dataSource.save(request, access);
         });
+    }
+
+    /**
+     * 按表单字段的 writeMode 清洗入参。
+     * <p>
+     * 前端把 createOnly / readonly 字段的控件置灰，只解决「手点不到」；改请求体仍能写进去。
+     * 页面配置既然是写入契约，就必须由服务端执行：<b>新建时丢掉 readonly 字段</b>，
+     * <b>编辑时用库里的当前值覆盖 createOnly / readonly 字段</b>。
+     * <p>
+     * 选择「回填旧值」而不是「删掉 key」：数据源是按 key 取值的（{@code value(values, "code")}），
+     * 删掉会被读成空串，反而把字段清空。回填旧值让「不可改」在任何数据源实现下都成立。
+     * 集合 / 对象型字段不走字符串表单，删除 key 由数据源自己的更新语义处理，不替它做序列化。
+     */
+    private void applyWriteMode(String pageKey, DwSaveRequest request, PageDataSource dataSource,
+                                AccessContext access) {
+        Map<String, String> values = request.getValues();
+        if (values == null) {
+            return;
+        }
+        boolean creating = request.getId() == null;
+        Map<String, Object> current = null;
+        for (DwFormField field : pageService.requireForm(pageKey).getFields()) {
+            String mode = field.getWriteMode();
+            if (mode == null || "always".equals(mode)) {
+                continue;
+            }
+            String key = field.getKey();
+            if (creating) {
+                // 新建态没有旧值可留：只读字段只能不接受客户端传入。
+                if ("readonly".equals(mode)) {
+                    values.remove(key);
+                }
+                continue;
+            }
+            if (current == null) {
+                current = dataSource.get(request.getId(), access);
+            }
+            Object old = current.get(key);
+            if (old == null) {
+                values.remove(key);
+            } else if (old instanceof String || old instanceof Number || old instanceof Boolean) {
+                values.put(key, String.valueOf(old));
+            } else {
+                values.remove(key);
+            }
+        }
     }
 
     @RequestMapping(value = "/pages/{pageKey}/data/{id}", method = RequestMethod.DELETE)

@@ -373,12 +373,26 @@ export interface DwFilter {
   options?: DwOption[]
 }
 
-/** 一个表单字段。immutable = 创建可填、编辑只读；pattern 两端各自校验 */
+/**
+ * 表单字段的写入策略。决定「什么时候能改」，不是「字段本身可变不可变」：
+ * - always：新建、编辑都可写
+ * - createOnly：新建可写，编辑态只读（角色编码这类一次定死的字段）
+ * - readonly：始终只读，只展示当前值
+ *
+ * 服务端保存时会按它清洗入参（新建丢弃 readonly，编辑回填 createOnly / readonly 的旧值），
+ * 所以 UI 置灰与真实可写性是同一套规则。
+ */
+export type DwWriteMode = "always" | "createOnly" | "readonly"
+
+/** 一个表单字段。pattern 两端各自校验 */
 export interface DwFormField {
   key: string
   label: string
   widget: DwWidget
   required?: boolean
+  /** 写入策略；缺省按 always，`immutable: true` 的老配置等价于 createOnly */
+  writeMode?: DwWriteMode
+  /** @deprecated 旧表达：true = createOnly。新配置请写 writeMode */
   immutable?: boolean
   pattern?: string
   patternError?: string

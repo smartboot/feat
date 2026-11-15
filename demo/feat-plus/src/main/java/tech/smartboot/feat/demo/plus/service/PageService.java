@@ -65,6 +65,9 @@ public class PageService {
             "create", "edit", "delete", "refresh"));
     private static final Set<String> VARIANTS = new HashSet<>(Arrays.asList(
             "success", "warning", "destructive", "secondary", "outline"));
+    /** 表单字段的写入策略：两态布尔不够用了，见 {@link tech.smartboot.feat.demo.plus.dto.DwFormField}。 */
+    private static final Set<String> WRITE_MODES = new HashSet<>(Arrays.asList(
+            "always", "createOnly", "readonly"));
     /** 自定义数据接口的路径格式：站内 /api/ 相对路径，防外链与拼接注入面。 */
     private static final Pattern API_PATH_PATTERN = Pattern.compile("^/api/[A-Za-z0-9/_.-]{2,120}$");
 
@@ -114,6 +117,15 @@ public class PageService {
     /** 配置行存在性 + 数据源 key，供 DwController 定位数据源。 */
     public String requireDatasourceKey(String pageKey) {
         return requireByPageKey(pageKey).getDatasourceKey();
+    }
+
+    /**
+     * 表单配置，供保存通道按写入策略清洗入参。
+     * <p>
+     * 不走 {@link #config}：那条路径要算 canWrite、还要带列表配置，写路径只需要字段级的写入策略。
+     */
+    public DwFormConfig requireForm(String pageKey) {
+        return parseFormConfig(requireByPageKey(pageKey).getFormJson());
     }
 
     /** 菜单校验用：path 形如 /p/{pageKey} 且配置行真实存在。 */
@@ -371,6 +383,15 @@ public class PageService {
                 throw new DomainException(where + "的控件不支持：" + field.getWidget()
                         + "（可选 input / password / textarea / select / switch / span）");
             }
+            // 写入策略归一：getter 已把「空值 + immutable」推成 createOnly，这里只校验取值，
+            // 再把 immutable 反推回派生值。存进去的永远是带 writeMode 的配置，不会两处各说一套。
+            String writeMode = field.getWriteMode();
+            if (!WRITE_MODES.contains(writeMode)) {
+                throw new DomainException(where + "的写入策略不支持：" + writeMode
+                        + "（可选 always / createOnly / readonly）");
+            }
+            field.setWriteMode(writeMode);
+            field.setImmutable(!"always".equals(writeMode));
             if ("select".equals(field.getWidget()) && field.getOptions().isEmpty()) {
                 throw new DomainException(where + "是下拉字段，必须配置选项");
             }
