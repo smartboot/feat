@@ -157,13 +157,59 @@ export function lintDraft({ draft, datasources }: LintContext): DwIssue[] {
         anchor,
       })
     }
-    if (filter.widget === "select" && (filter.options ?? []).length === 0) {
-      issues.push({
-        section: "list",
-        level: "error",
-        message: `${where}是下拉筛选，必须配置选项，否则下拉里只有「全部」`,
-        anchor,
-      })
+    if (filter.widget === "select") {
+      // 两个来源二选一：静态选项或远程接口。两边都空等于下拉里只有「全部」。
+      const api = (filter.optionsApi ?? "").trim()
+      if ((filter.options ?? []).length === 0 && !api) {
+        issues.push({
+          section: "list",
+          level: "error",
+          message: `${where}是下拉筛选，必须配置选项或选项接口，否则下拉里只有「全部」`,
+          anchor,
+        })
+      }
+      if (api && !API_PATH_PATTERN.test(api)) {
+        issues.push({
+          section: "list",
+          level: "error",
+          message: `${where}的选项接口必须是 /api/ 开头的站内路径：${api}`,
+          anchor,
+        })
+      }
+    }
+    if (filter.widget === "dateRange") {
+      // 结束键漏配的表现是「填了结束日期、结果没变」，比报错难查得多，这里当错误挡。
+      const endKey = (filter.endKey ?? "").trim()
+      if (!endKey) {
+        issues.push({
+          section: "list",
+          level: "error",
+          message: `${where}是日期范围筛选，必须选择结束字段`,
+          anchor,
+        })
+      } else if (endKey === filter.key) {
+        issues.push({
+          section: "list",
+          level: "error",
+          message: `${where}的起始与结束字段不能是同一个`,
+          anchor,
+        })
+      } else if (!allKeys.has(endKey)) {
+        issues.push({
+          section: "list",
+          level: "error",
+          message: `${where}的结束字段「${endKey}」不在当前数据源声明里`,
+          anchor,
+        })
+      } else if (seenFilters.has(endKey)) {
+        issues.push({
+          section: "list",
+          level: "error",
+          message: `${where}的结束字段「${endKey}」已被别的筛选占用`,
+          anchor,
+        })
+      }
+      if (endKey) seenFilters.add(endKey)
     }
     issues.push(...lintOptions(filter.options ?? [], "list", where, anchor))
   })

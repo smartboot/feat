@@ -1,0 +1,132 @@
+[
+  {
+    "pageKey": "roles",
+    "title": "角色权限（配置版）",
+    "description": "配置驱动的角色列表：列、筛选与表单全部来自 sys_page 配置，改完即生效。",
+    "datasourceKey": "role",
+    "list": {
+      "rowKey": "id",
+      "pageSize": 20,
+      "actions": ["create", "edit", "delete", "refresh"],
+      "filters": [
+        {
+          "key": "keyword",
+          "label": "搜索",
+          "widget": "input",
+          "placeholder": "名称 / 编码 / 描述"
+        },
+        {
+          "key": "status",
+          "label": "状态",
+          "widget": "select",
+          "options": [
+            { "value": "1", "label": "已启用" },
+            { "value": "0", "label": "已停用" }
+          ]
+        }
+      ],
+      "columns": [
+        { "key": "name", "label": "角色", "format": "text" },
+        { "key": "code", "label": "编码", "format": "muted", "width": "w-36" },
+        { "key": "description", "label": "描述", "format": "muted" },
+        { "key": "permissions", "label": "权限", "format": "tags" },
+        { "key": "scopeLabel", "label": "数据范围", "format": "text", "width": "w-36" },
+        { "key": "userCount", "label": "成员数", "format": "number", "width": "w-24" },
+        {
+          "key": "status",
+          "label": "状态",
+          "format": "badge",
+          "width": "w-24",
+          "options": [
+            { "value": "1", "label": "已启用", "variant": "success" },
+            { "value": "0", "label": "已停用", "variant": "warning" }
+          ]
+        }
+      ]
+    },
+    "form": {
+      "createTitle": "新建角色",
+      "editTitle": "编辑角色",
+      "createDescription": "角色编码创建后不可修改。简化表单不包含权限点与数据范围，请到「角色权限」页补充。",
+      "editDescription": "编码创建后不可修改；权限点与数据范围请到「角色权限」页调整。",
+      "fields": [
+        {
+          "key": "code",
+          "label": "角色编码",
+          "widget": "input",
+          "required": true,
+          "pattern": "^[A-Z][A-Z0-9_]{1,31}$",
+          "patternError": "需以大写字母开头，只能包含大写字母、数字和下划线",
+          "writeMode": "createOnly"
+        },
+        { "key": "name", "label": "角色名称", "widget": "input", "required": true },
+        { "key": "description", "label": "描述", "widget": "input", "span": 2 },
+        { "key": "status", "label": "启用角色", "widget": "switch", "defaultValue": "1", "span": 2 }
+      ]
+    }
+  },
+  {
+    "pageKey": "activities",
+    "title": "审计日志（配置版）",
+    "description": "只读的配置驱动列表：类型与操作人下拉、日期范围筛选，选项按需从接口取。",
+    "datasourceKey": "activity",
+    "list": {
+      "rowKey": "id",
+      "pageSize": 20,
+      "actions": ["refresh"],
+      "filters": [
+        {
+          "key": "kind",
+          "label": "类型",
+          "widget": "select",
+          "options": [
+            { "value": "create", "label": "新建" },
+            { "value": "update", "label": "修改" },
+            { "value": "enable", "label": "启用" },
+            { "value": "disable", "label": "停用" },
+            { "value": "password", "label": "重置密码" },
+            { "value": "delete", "label": "删除" },
+            { "value": "system", "label": "系统" }
+          ]
+        },
+        {
+          "key": "operatorId",
+          "label": "操作人",
+          "widget": "select",
+          "optionsApi": "/api/activities/operators",
+          "optionValueField": "id",
+          "optionLabelField": "name"
+        },
+        { "key": "from", "label": "时间范围", "widget": "dateRange", "endKey": "to" }
+      ],
+      "columns": [
+        { "key": "createdTime", "label": "时间", "format": "muted", "width": "w-40" },
+        {
+          "key": "kind",
+          "label": "类型",
+          "format": "badge",
+          "width": "w-24",
+          "options": [
+            { "value": "create", "label": "新建", "variant": "success" },
+            { "value": "update", "label": "修改", "variant": "secondary" },
+            { "value": "enable", "label": "启用", "variant": "success" },
+            { "value": "disable", "label": "停用", "variant": "warning" },
+            { "value": "password", "label": "重置密码", "variant": "warning" },
+            { "value": "delete", "label": "删除", "variant": "destructive" },
+            { "value": "system", "label": "系统", "variant": "outline" }
+          ]
+        },
+        { "key": "title", "label": "动作", "format": "text" },
+        { "key": "description", "label": "详情", "format": "muted" },
+        { "key": "operatorName", "label": "操作人", "format": "text", "width": "w-32" }
+      ]
+    },
+    "form": {
+      "createTitle": "新建",
+      "editTitle": "编辑",
+      "createDescription": "",
+      "editDescription": "",
+      "fields": []
+    }
+  }
+]

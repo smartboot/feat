@@ -19,8 +19,8 @@
        但挂 /p/xxx 的种子菜单必须满足三条替代规则：
        a) App.tsx 里存在 /p/:pageKey 这条动态路由
        b) pageKey 格式合法（^/p/[a-z0-9_-]{1,32}$）
-       c) pageKey 在 mybatis/ddl/schema.sql 的 sys_page 初始化数据里有对应行——
-          菜单 ↔ sys_page 配置 ↔ 动态路由三方一致
+       c) pageKey 在 src/main/resources/pages/pages.json 里有对应配置——
+          菜单 ↔ 页面配置 ↔ 动态路由三方一致
 
 只做文本级解析：这个脚本要在没有 JDK、没有 npm 的环境里几秒内跑完。
 代价是认不出「用变量拼路径」这类写法——真出现那种写法，本脚本会报「未登记」，
@@ -37,7 +37,7 @@ ROOT = os.path.join(HERE, "..")
 MENU_ROUTES = os.path.join(ROOT, BASE, "security", "MenuRoutes.java")
 PERMISSION = os.path.join(ROOT, BASE, "security", "Permission.java")
 SEED_DATA = os.path.join(ROOT, BASE, "seed", "SeedData.java")
-SCHEMA_SQL = os.path.join(ROOT, "src", "main", "resources", "mybatis", "ddl", "schema.sql")
+PAGES_JSON = os.path.join(ROOT, "src", "main", "resources", "pages", "pages.json")
 APP_TSX = os.path.join(ROOT, "web", "src", "App.tsx")
 NAV_ICONS = os.path.join(ROOT, "web", "src", "lib", "icons.ts")
 
@@ -49,6 +49,10 @@ EXEMPT_ROUTES = {"/login"}
 # 走规则 7 的三方一致性（替代「白名单 + 种子菜单」两方一致性）。
 DYNAMIC_ROUTE = "/p/:pageKey"
 DYNAMIC_PATH_RE = re.compile(r"^/p/[a-z0-9_-]{1,32}$")
+
+# 与 PageService.KEY_PATTERN / DataInitializer.KEY_PATTERN 同源：pageKey 同时是
+# 菜单 path 段、前端拉配置的键、sys_page 的唯一键，三处必须同一套规则。
+PAGE_KEY_RE = re.compile(r"^[a-z0-9_-]{1,32}$")
 
 
 def read(path):
@@ -125,29 +129,60 @@ def app_routes():
 
 
 def seed_pages():
-    """schema.sql 里写入 sys_page 的 pageKey 集合。
+    """pages/pages.json 里的 pageKey 列表。
 
-    页面配置已从 Java 常量迁到 DDL：启动时由 initial-sql 建表并写入，reset 重放同一份。
-    这里顺带把两条「启动才会炸」的静态约束钉住：
-      - JSON 字面量必须能被 json.loads 解析（种子绕过了 PageService 校验）；
-      - JSON 里不能出现 ASCII 分号，MyBatis ScriptRunner 按分号切语句，切坏的是整个启动。
+    页面配置是「一份 JSON 数组，首次启动由 DataInitializer 导入 sys_page」。
+    导入路径只做结构校验（它跑在 @PostConstruct 里，比数据源注册表还早，拿不到字段声明），
+    所以这里把「启动就炸」和「页面白屏」这两类问题钉在提交前：
+      - 顶层是非空数组，pageKey 合法、不重复
+      - title / datasourceKey 非空
+      - list.columns 非空、form.fields 存在（只读页面写空数组）
+      - 列与筛选的 key 各自不重复（重复会让 React 复用节点，表现为「改一列动两列」）
     """
     import json
 
-    sql = read(SCHEMA_SQL)
+    if not os.path.isfile(PAGES_JSON):
+        sys.exit("未找到页面配置文件：%s" % os.path.abspath(PAGES_JSON))
+    try:
+        with open(PAGES_JSON, encoding="utf-8") as f:
+            seeds = json.load(f)
+    except ValueError as e:
+        sys.exit("%s 不是合法 JSON：%s" % (os.path.basename(PAGES_JSON), e))
+    if not isinstance(seeds, list) or not seeds:
+        sys.exit("%s 顶层必须是非空数组（首次启动会得到空侧栏）" % os.path.basename(PAGES_JSON))
+
     keys = []
-    for match in re.finditer(r"INSERT\s+INTO\s+sys_page\b.*?WHERE\s+NOT\s+EXISTS",
-                             sql, re.IGNORECASE | re.DOTALL):
-        block = match.group(0)
-        keys.extend(re.findall(r"SELECT\s+'([^']+)'", block))
-        for jsonish in re.findall(r"'(\{.*?\})'", block, re.DOTALL):
-            if ";" in jsonish:
-                sys.exit("schema.sql 的 sys_page 配置里出现了 ASCII 分号，ScriptRunner 会切断语句：%s"
-                         % jsonish[:80])
-            try:
-                json.loads(jsonish)
-            except ValueError as e:
-                sys.exit("schema.sql 的 sys_page 配置不是合法 JSON：%s" % e)
+    for index, seed in enumerate(seeds, start=1):
+        where = "%s 第 %d 项" % (os.path.basename(PAGES_JSON), index)
+        if not isinstance(seed, dict):
+            sys.exit(where + "必须是对象")
+        page_key = seed.get("pageKey")
+        if not isinstance(page_key, str) or not PAGE_KEY_RE.match(page_key):
+            sys.exit(where + "的 pageKey 不合法：%r（需匹配 %s）" % (page_key, PAGE_KEY_RE.pattern))
+        if page_key in keys:
+            sys.exit(where + "的 pageKey 重复：%s" % page_key)
+        keys.append(page_key)
+        for field in ("title", "datasourceKey"):
+            if not str(seed.get(field) or "").strip():
+                sys.exit("%s（%s）缺少 %s" % (where, page_key, field))
+        listing = seed.get("list")
+        if not isinstance(listing, dict) or not isinstance(listing.get("columns"), list) or not listing["columns"]:
+            sys.exit("%s（%s）的 list.columns 必须是非空数组" % (where, page_key))
+        form = seed.get("form")
+        if not isinstance(form, dict) or not isinstance(form.get("fields"), list):
+            sys.exit("%s（%s）的 form.fields 必须是数组（只读页面写空数组）" % (where, page_key))
+        for group_name, group, allow_empty in (("columns", listing["columns"], False),
+                                               ("filters", listing.get("filters") or [], True)):
+            if not isinstance(group, list) or (not group and not allow_empty):
+                sys.exit("%s（%s）的 list.%s 格式不对" % (where, page_key, group_name))
+            seen = set()
+            for item in group:
+                key = item.get("key") if isinstance(item, dict) else None
+                if not key:
+                    sys.exit("%s（%s）的 list.%s 里有条目缺少 key" % (where, page_key, group_name))
+                if key in seen:
+                    sys.exit("%s（%s）的 list.%s 里 key 重复：%s" % (where, page_key, group_name, key))
+                seen.add(key)
     return keys
 
 
@@ -191,7 +226,7 @@ def main():
                 problems.append("动态菜单 %s（%s）挂了 /p/ 路径，但 App.tsx 里没有 %s 这条动态路由"
                                 % (path, name, DYNAMIC_ROUTE))
             if page_key not in dynamic_page_keys:
-                problems.append("动态菜单 %s（%s）的 pageKey 在 schema.sql 的 sys_page 配置里没有对应行"
+                problems.append("动态菜单 %s（%s）的 pageKey 在 pages.json 里没有对应配置"
                                 % (path, name))
         else:
             if path not in whitelist:
@@ -203,7 +238,7 @@ def main():
         if permission is not None and permission not in keys:
             problems.append("种子菜单 %s 引用了未登记的权限点：%s" % (path, permission))
 
-    # schema.sql 里的 pageKey 也要反向核对：有配置没有菜单，动态页面就没有入口。
+    # pages.json 里的 pageKey 也要反向核对：有配置没有菜单，动态页面就没有入口。
     for page_key in sorted(dynamic_page_keys):
         if "/p/" + page_key not in seen_paths:
             problems.append("页面配置 %s 没有对应的 /p/ 种子菜单（首次启动时侧栏没有入口）" % page_key)

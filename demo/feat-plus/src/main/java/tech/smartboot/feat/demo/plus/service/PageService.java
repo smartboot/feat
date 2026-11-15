@@ -58,7 +58,8 @@ public class PageService {
 
     private static final Set<String> COLUMN_FORMATS = new HashSet<>(Arrays.asList(
             "text", "muted", "badge", "tags", "number"));
-    private static final Set<String> FILTER_WIDGETS = new HashSet<>(Arrays.asList("input", "select"));
+    private static final Set<String> FILTER_WIDGETS = new HashSet<>(Arrays.asList(
+            "input", "select", "dateRange"));
     private static final Set<String> FIELD_WIDGETS = new HashSet<>(Arrays.asList(
             "input", "password", "textarea", "select", "switch", "span"));
     private static final Set<String> ACTIONS = new HashSet<>(Arrays.asList(
@@ -360,10 +361,24 @@ public class PageService {
             String where = "筛选 " + filter.getKey();
             requireFieldKey(filter.getKey(), seen, fieldKeys, where);
             if (!FILTER_WIDGETS.contains(filter.getWidget())) {
-                throw new DomainException(where + "的控件不支持：" + filter.getWidget() + "（可选 input / select）");
+                throw new DomainException(where + "的控件不支持：" + filter.getWidget()
+                        + "（可选 input / select / dateRange）");
             }
-            if ("select".equals(filter.getWidget()) && filter.getOptions().isEmpty()) {
-                throw new DomainException(where + "是下拉筛选，必须配置选项");
+            // dateRange 占两个键：起止都要命中数据源字段，否则「结束日期」这一侧会静默写进
+            // 数据源读不到的名字里——筛选框能填、结果不变，比报错更难查。
+            if ("dateRange".equals(filter.getWidget())) {
+                if (filter.getEndKey().isEmpty()) {
+                    throw new DomainException(where + "是日期范围筛选，必须配置结束字段 endKey");
+                }
+                requireFieldKey(filter.getEndKey(), seen, fieldKeys, where + " 的结束字段");
+            }
+            // 下拉的选项有两个来源：静态 options 或远程 optionsApi，二选一即可。
+            if ("select".equals(filter.getWidget())
+                    && filter.getOptions().isEmpty() && filter.getOptionsApi().isEmpty()) {
+                throw new DomainException(where + "是下拉筛选，必须配置选项或选项接口");
+            }
+            if (!filter.getOptionsApi().isEmpty() && !API_PATH_PATTERN.matcher(filter.getOptionsApi()).matches()) {
+                throw new DomainException(where + "的选项接口必须是站内 /api/ 路径：" + filter.getOptionsApi());
             }
             validateOptions(filter.getOptions(), where);
         }

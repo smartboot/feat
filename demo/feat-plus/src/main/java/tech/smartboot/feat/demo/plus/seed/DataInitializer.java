@@ -1,14 +1,22 @@
 package tech.smartboot.feat.demo.plus.seed;
 
-import java.sql.Connection;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.apache.ibatis.io.Resources;
-import org.apache.ibatis.jdbc.ScriptRunner;
-import org.apache.ibatis.session.SqlSessionFactory;
+
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONArray;
+import com.alibaba.fastjson2.JSONObject;
 
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Bean;
@@ -25,6 +33,7 @@ import tech.smartboot.feat.demo.plus.model.ActivityRecord;
 import tech.smartboot.feat.demo.plus.model.DepartmentRecord;
 import tech.smartboot.feat.demo.plus.model.MenuRecord;
 import tech.smartboot.feat.demo.plus.model.NotificationRecord;
+import tech.smartboot.feat.demo.plus.model.PageRecord;
 import tech.smartboot.feat.demo.plus.model.RoleRecord;
 import tech.smartboot.feat.demo.plus.model.UserAccount;
 import tech.smartboot.feat.demo.plus.security.MenuSnapshot;
@@ -41,8 +50,16 @@ import tech.smartboot.feat.demo.plus.service.PageSnapshot;
 @Bean
 public class DataInitializer {
 
-    /** 建表 + 页面初始配置。启动时由 feat.yaml 的 initial-sql 执行，reset 时重放同一份。 */
-    private static final String SCHEMA = "mybatis/ddl/schema.sql";
+    /**
+     * sys_page 初始配置。表为空时导入（首次启动、reset-demo、存量库升级到这张表）。
+     * <p>
+     * 建表仍由 feat.yaml 的 {@code initial-sql} 负责，这里只负责灌配置——两件事分开之后，
+     * 表结构变更不需要动配置，改一条列宽也不需要动 SQL。
+     */
+    private static final String PAGES = "pages/pages.json";
+
+    /** 与 PageService.KEY_PATTERN 同源：pageKey 同时是菜单 path 段和前端拉配置的键。 */
+    private static final Pattern KEY_PATTERN = Pattern.compile("^[a-z0-9_-]{1,32}$");
 
     @Autowired
     private UserMapper userMapper;
@@ -67,10 +84,6 @@ public class DataInitializer {
 
     @Autowired
     private PageMapper pageMapper;
-
-    // 字段名必须等于 bean 名（@Autowired 按名注入，AOT 硬约束）。
-    @Autowired
-    private SqlSessionFactory sessionFactory;
 
     @Autowired
     private MenuSnapshot menuSnapshot;
@@ -167,42 +180,105 @@ public class DataInitializer {
     }
 
     /**
-     * 页面配置初始化。
+     * 页面配置初始化：把 {@code pages/pages.json} 逐条导入 sys_page。
      * <p>
-     * 配置的唯一真相在 {@code mybatis/ddl/schema.sql}：启动时由 initial-sql 建表并写入，
-     * 这里只在表为空时重放同一份脚本（reset-demo 清库之后、或存量库升级到这张表时）。
-     * 不在 Java 里再拼一份 JSON——那会变成「DDL 一套、常量一套」，改一处忘一处。
+     * 配置的唯一真相在那份 JSON 里，Java 只负责搬运。放在 JSON 而不是 SQL 字符串里的原因很实际：
+     * 它是嵌套结构，塞进 SQL 后不能出现 ASCII 分号（ScriptRunner 按分号切语句）、不能用单引号、
+     * 整行无法 diff——三条纪律都只是为了迁就脚本执行器。
+     * <p>
+     * 导入只做结构校验，不做「列 / 筛选键是否存在于数据源」的交叉校验：那需要
+     * {@code PageDataSourceRegistry}，而 @PostConstruct 顺序上本类排在它之前（AOT 按注册顺序执行）。
+     * 交叉校验放在两处——保存配置时由 {@code PageService} 拒，提交前由 {@code check_menu.py} 查。
      */
     private void seedPages() {
         if (pageMapper.countAll() > 0) {
             return;
         }
-        replaySchema();
+        JSONArray seeds = readPageSeeds();
+        // 种子配置是代码的一部分：写错就在启动时炸，而不是让某个页面白屏到被人发现。
+        Date now = new Date();
+        Set<String> seen = new HashSet<>();
+        for (int i = 0; i < seeds.size(); i++) {
+            PageRecord record = toPageRecord(seeds.getJSONObject(i), i + 1, seen);
+            record.setIsDeleted(0);
+            record.setCreatedTime(now);
+            record.setEditTime(now);
+            pageMapper.insert(record);
+        }
+    }
+
+    private JSONArray readPageSeeds() {
+        String text;
+        try (InputStream in = Resources.getResourceAsStream(PAGES)) {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            byte[] buffer = new byte[4096];
+            int len;
+            while ((len = in.read(buffer)) != -1) {
+                out.write(buffer, 0, len);
+            }
+            text = new String(out.toByteArray(), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new IllegalStateException("读取页面配置 " + PAGES + " 失败：" + e);
+        }
+        JSONArray seeds;
+        try {
+            seeds = JSON.parseArray(text);
+        } catch (RuntimeException e) {
+            throw new IllegalStateException(PAGES + " 不是合法的 JSON 数组：" + e);
+        }
+        if (seeds == null || seeds.isEmpty()) {
+            throw new IllegalStateException(PAGES + " 里没有任何页面配置，首次启动会得到空侧栏");
+        }
+        return seeds;
     }
 
     /**
-     * 重放建表脚本。脚本里的 INSERT 都带 {@code WHERE NOT EXISTS}，重复执行安全。
+     * 一份配置 = 一行 sys_page。list / form 在 JSON 里是嵌套对象，落库时序列化成字符串，
+     * 与「配置管理页保存」走完全相同的存储形态——运行期读路径不区分种子还是人工配置。
      */
-    private void replaySchema() {
-        Connection connection = null;
-        try {
-            connection = sessionFactory.getConfiguration().getEnvironment().getDataSource().getConnection();
-            ScriptRunner runner = new ScriptRunner(connection);
-            runner.setLogWriter(null);
-            runner.setStopOnError(true);
-            runner.runScript(Resources.getResourceAsReader(SCHEMA));
-        } catch (Exception e) {
-            // 启动失败的异常会被解包到最底层 cause，message 不拼进来就只剩一句 SQL 报错。
-            throw new IllegalStateException("重放 " + SCHEMA + " 失败：" + e);
-        } finally {
-            if (connection != null) {
-                try {
-                    connection.close();
-                } catch (Exception ignored) {
-                    // ScriptRunner 已关闭连接时 close 是幂等的
-                }
-            }
+    private PageRecord toPageRecord(JSONObject seed, int ordinal, Set<String> seen) {
+        String where = PAGES + " 第 " + ordinal + " 项";
+        String pageKey = trim(seed.getString("pageKey"));
+        if (pageKey == null || !KEY_PATTERN.matcher(pageKey).matches()) {
+            throw new IllegalStateException(where + "的 pageKey 不合法：" + pageKey
+                    + "（需匹配 " + KEY_PATTERN.pattern() + "）");
         }
+        if (!seen.add(pageKey)) {
+            throw new IllegalStateException(where + "的 pageKey 重复：" + pageKey);
+        }
+        String title = trim(seed.getString("title"));
+        if (title == null) {
+            throw new IllegalStateException(where + "（" + pageKey + "）缺少 title");
+        }
+        String datasourceKey = trim(seed.getString("datasourceKey"));
+        if (datasourceKey == null) {
+            throw new IllegalStateException(where + "（" + pageKey + "）缺少 datasourceKey");
+        }
+        JSONObject list = seed.getJSONObject("list");
+        if (list == null || list.isEmpty()) {
+            throw new IllegalStateException(where + "（" + pageKey + "）缺少 list 配置");
+        }
+        JSONObject form = seed.getJSONObject("form");
+        if (form == null) {
+            throw new IllegalStateException(where + "（" + pageKey + "）缺少 form 配置（只读页面写空 fields）");
+        }
+
+        PageRecord record = new PageRecord();
+        record.setPageKey(pageKey);
+        record.setTitle(title);
+        record.setDescription(trim(seed.getString("description")));
+        record.setDatasourceKey(datasourceKey);
+        record.setListJson(list.toJSONString());
+        record.setFormJson(form.toJSONString());
+        return record;
+    }
+
+    private static String trim(String raw) {
+        if (raw == null) {
+            return null;
+        }
+        String value = raw.trim();
+        return value.isEmpty() ? null : value;
     }
 
     private void seedRoles() {

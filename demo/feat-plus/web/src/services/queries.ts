@@ -18,6 +18,7 @@ import type {
   UserStatus,
 } from "@/api/types"
 import { adminService } from "@/services/http-admin-service"
+import { request } from "@/api/client"
 
 export const queryKeys = {
   users: (query: UserQuery) => ["users", query] as const,
@@ -38,6 +39,9 @@ export const queryKeys = {
   pageConfig: (pageKey: string) => ["dw", "pages", pageKey] as const,
   pageAdmin: ["dw", "admin", "pages"] as const,
   datasources: ["dw", "datasources"] as const,
+  // 远程选项：同一路径 + 同一取值/显示字段组合共用一个缓存，不同页面不重复拉
+  remoteOptions: (apiPath: string, valueField: string, labelField: string) =>
+    ["dw", "options", apiPath, valueField, labelField] as const,
 }
 
 export function useUsers(query: UserQuery, enabled = true) {
@@ -327,6 +331,34 @@ export function useDwMutations(pageKey: string, dataApi?: DwDataApi) {
 /** 配置管理页的列表。 */
 export function usePageAdmin(enabled = true) {
   return useQuery({ queryKey: queryKeys.pageAdmin, queryFn: () => adminService.listPageConfigs(), enabled })
+}
+
+/**
+ * 远程选项：筛选下拉的选项不写死在配置里，而是运行时从这个站内接口取。
+ *
+ * 配置只存「去哪取」和「取哪两个字段」，取回来的列表按三者组合缓存。
+ * 这样角色改名、新增部门、人员变动之后，不需要重新保存页面配置——
+ * 存进 sys_page 的是取数方式，不是取数的结果。
+ *
+ * 请求走同一个 request（带 Bearer），所以能取到哪些选项由目标接口自己判权：
+ * 操作人下拉只会列出当前数据范围内的人，不会因为「配置了一个接口路径」就变成越权入口。
+ */
+export function useRemoteOptions(apiPath: string, valueField: string, labelField: string) {
+  return useQuery({
+    queryKey: queryKeys.remoteOptions(apiPath, valueField, labelField),
+    queryFn: async () => {
+      const rows = await request<Array<Record<string, unknown>>>(apiPath)
+      if (!Array.isArray(rows)) return []
+      return rows
+        .map((row) => ({
+          value: String(row[valueField] ?? ""),
+          label: String(row[labelField] ?? ""),
+        }))
+        .filter((option) => option.value !== "")
+    },
+    enabled: apiPath !== "",
+    staleTime: 5 * 60_000,
+  })
 }
 
 /** 可选数据源字典（编译期白名单），staleTime 同权限字典量级。 */

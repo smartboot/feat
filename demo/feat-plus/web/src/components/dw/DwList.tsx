@@ -2,7 +2,7 @@ import { useState } from "react"
 import { Filter, Inbox, MoreHorizontal, Pencil, Plus, RotateCcw, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
-import type { DwColumn, DwRow, PageConfig } from "@/api/types"
+import type { DwColumn, DwFilter, DwRow, PageConfig } from "@/api/types"
 import { DwCell } from "@/components/dw/DwCell"
 import { DwFormDialog } from "@/components/dw/DwFormDialog"
 import {
@@ -29,7 +29,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { useDwData, useDwMutations } from "@/services/queries"
+import { useDwData, useDwMutations, useRemoteOptions } from "@/services/queries"
 import { cn } from "@/lib/utils"
 
 /**
@@ -63,10 +63,7 @@ export function DwList({ pageKey, config }: { pageKey: string; config: PageConfi
   const rows: DwRow[] = data?.items || []
   const total = data?.total || 0
   const pageCount = Math.max(1, Math.ceil(total / pageSize))
-  const activeFilterCount = list.filters.filter((filter) => {
-    const value = filters[filter.key] ?? ""
-    return value !== "" && value !== "all"
-  }).length
+  const activeFilterCount = countActiveFilters(filters, list.filters)
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editing, setEditing] = useState<DwRow | null>(null)
@@ -122,35 +119,19 @@ export function DwList({ pageKey, config }: { pageKey: string; config: PageConfi
     <div className="space-y-6">
       {list.filters.length > 0 && (
         <Card>
-          <CardContent className={cn("grid gap-3 p-3 md:items-end", filterGrid(list.filters.length))}>
+          <CardContent className={cn("grid gap-3 p-3 md:items-end", filterGrid(list.filters))}>
             {list.filters.map((filter) => (
-              <div key={filter.key} className="grid gap-2">
+              <div
+                key={filter.key}
+                className={cn("grid gap-2", filter.widget === "dateRange" && "md:col-span-2")}
+              >
                 <Label htmlFor={`dw-filter-${filter.key}`}>{filter.label}</Label>
-                {filter.widget === "select" ? (
-                  <Select
-                    value={filters[filter.key] ?? "all"}
-                    onValueChange={(value) => updateFilter(filter.key, value)}
-                  >
-                    <SelectTrigger id={`dw-filter-${filter.key}`}>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">全部</SelectItem>
-                      {(filter.options ?? []).map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <Input
-                    id={`dw-filter-${filter.key}`}
-                    value={filters[filter.key] ?? ""}
-                    placeholder={filter.placeholder || filter.label}
-                    onChange={(event) => updateFilter(filter.key, event.target.value)}
-                  />
-                )}
+                <DwFilterControl
+                  filter={filter}
+                  value={filters[filter.key] ?? ""}
+                  endValue={filter.endKey ? (filters[filter.endKey] ?? "") : ""}
+                  onChange={updateFilter}
+                />
               </div>
             ))}
           </CardContent>
@@ -348,18 +329,111 @@ export function DwList({ pageKey, config }: { pageKey: string; config: PageConfi
 // 私有渲染辅助
 // ---------------------------------------------------------------------------
 
-function initialFilters(filters: Array<{ key: string; widget: string }>): Record<string, string> {
+/**
+ * 一个筛选控件。拆成独立组件而不是在 map 里内联，是因为远程选项要用 useQuery——
+ * 在循环里调 hook 会让 hook 顺序随筛选数量变化，加一个筛选就崩。
+ * <p>
+ * 选项来源二选一：配置里写了 optionsApi 就按接口取，否则用静态 options。
+ * 两种来源产出同一种 { value, label }，渲染分支不需要知道区别。
+ */
+function DwFilterControl({
+  filter,
+  value,
+  endValue,
+  onChange,
+}: {
+  filter: DwFilter
+  value: string
+  endValue: string
+  onChange: (key: string, value: string) => void
+}) {
+  const remote = useRemoteOptions(
+    filter.optionsApi ?? "",
+    filter.optionValueField || "value",
+    filter.optionLabelField || "label",
+  )
+  const options = filter.optionsApi ? (remote.data ?? []) : (filter.options ?? [])
+  const controlId = `dw-filter-${filter.key}`
+
+  if (filter.widget === "dateRange") {
+    // 起止是两个独立筛选键，不是「一个值拆开」：数据源按命名参数读（filters.get("from")）。
+    return (
+      <div className="flex items-center gap-2">
+        <Input
+          id={controlId}
+          type="date"
+          className="min-w-0 flex-1"
+          value={value}
+          onChange={(event) => onChange(filter.key, event.target.value)}
+        />
+        <span className="shrink-0 text-xs text-muted-foreground">至</span>
+        <Input
+          type="date"
+          aria-label={`${filter.label}（结束）`}
+          className="min-w-0 flex-1"
+          value={endValue}
+          disabled={!filter.endKey}
+          onChange={(event) => {
+            if (filter.endKey) onChange(filter.endKey, event.target.value)
+          }}
+        />
+      </div>
+    )
+  }
+
+  if (filter.widget === "select") {
+    return (
+      <Select value={value || "all"} onValueChange={(next) => onChange(filter.key, next)}>
+        <SelectTrigger id={controlId}>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">全部</SelectItem>
+          {options.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    )
+  }
+
+  return (
+    <Input
+      id={controlId}
+      value={value}
+      placeholder={filter.placeholder || filter.label}
+      onChange={(event) => onChange(filter.key, event.target.value)}
+    />
+  )
+}
+
+function initialFilters(filters: DwFilter[]): Record<string, string> {
   const result: Record<string, string> = {}
   for (const filter of filters) {
     result[filter.key] = filter.widget === "select" ? "all" : ""
+    // 日期范围的结束键不是独立筛选，不会出现在 filters 数组里，所以单独初始化。
+    if (filter.widget === "dateRange" && filter.endKey) {
+      result[filter.endKey] = ""
+    }
   }
   return result
 }
 
-/** 发起查询前清掉「未设置」态：input 的空串、select 的 all。 */
-function activeFilters(filters: Record<string, string>, definitions: Array<{ key: string; widget: string }>) {
+/** 发起查询前清掉「未设置」态：input 的空串、select 的 all；日期范围两端各自判断。 */
+function activeFilters(filters: Record<string, string>, definitions: DwFilter[]) {
   const result: Record<string, string> = {}
   for (const definition of definitions) {
+    if (definition.widget === "dateRange") {
+      const from = (filters[definition.key] ?? "").trim()
+      if (from !== "") result[definition.key] = from
+      if (definition.endKey) {
+        const to = (filters[definition.endKey] ?? "").trim()
+        if (to !== "") result[definition.endKey] = to
+      }
+      continue
+    }
     const value = (filters[definition.key] ?? "").trim()
     if (value !== "" && value !== "all") {
       result[definition.key] = value
@@ -368,10 +442,34 @@ function activeFilters(filters: Record<string, string>, definitions: Array<{ key
   return result
 }
 
-function filterGrid(count: number): string {
-  if (count <= 1) return "md:grid-cols-[1fr_auto]"
-  if (count === 2) return "md:grid-cols-2"
-  return "md:grid-cols-3"
+/** 「几个条件」按筛选条目算，不按键算：日期范围填了两端仍是一个条件。 */
+function countActiveFilters(filters: Record<string, string>, definitions: DwFilter[]) {
+  let count = 0
+  for (const definition of definitions) {
+    if (definition.widget === "dateRange") {
+      const from = (filters[definition.key] ?? "").trim()
+      const to = definition.endKey ? (filters[definition.endKey] ?? "").trim() : ""
+      if (from !== "" || to !== "") count++
+      continue
+    }
+    const value = filters[definition.key] ?? ""
+    if (value !== "" && value !== "all") count++
+  }
+  return count
+}
+
+/**
+ * 按「占几列」算网格宽度，不按「有几个筛选」算：日期范围要两个输入框的宽度，
+ * 三个普通筛选和「两个普通 + 一个日期范围」需要的列数不是一回事。
+ */
+function filterGrid(filters: DwFilter[]): string {
+  if (filters.length <= 1 && !filters.some((filter) => filter.widget === "dateRange")) {
+    return "md:grid-cols-[1fr_auto]"
+  }
+  const span = filters.reduce((total, filter) => total + (filter.widget === "dateRange" ? 2 : 1), 0)
+  if (span <= 2) return "md:grid-cols-2"
+  if (span === 3) return "md:grid-cols-3"
+  return "md:grid-cols-4"
 }
 
 function rowId(row: DwRow, rowKey: string): number {

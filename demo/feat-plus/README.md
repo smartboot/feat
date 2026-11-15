@@ -217,24 +217,68 @@ SQL；这里的配置只描述「怎么渲染」，数据与保存走 `PageDataS
 渲染配置的读路径走 `PageSnapshot` 缓存（TTL 十分钟 + 写后失效，同菜单），`canWrite` 按请求人
 逐次计算、绝不进缓存。配置改动与数据写操作都记审计。
 
-**初始配置沉淀在 DDL 里，启动即生效。** `sys_page` 的第一份配置不是 Java 常量，而是
-`src/main/resources/mybatis/ddl/schema.sql` 末尾的一条 `INSERT ... SELECT ... WHERE NOT EXISTS`：
-`feat.yaml` 的 `initial-sql` 在 `sessionFactory` 构建时执行这份脚本，建表与初始页面同一次完成。
-于是「加一个配置驱动页面」= 在 DDL 里加一条 INSERT + 在 `sys_menu` 加一条 `/p/{pageKey}` 菜单，
-既不用改 Java，也不用先进管理页手工配一遍——部署完打开就有。
+**初始配置是一份 JSON 文件，首次启动导入。** `sys_page` 的第一份配置既不是 Java 常量，也不是 SQL 里的
+INSERT，而是 `src/main/resources/pages/pages.json`——一个数组，一项对应一个页面：
 
-三个约束写在脚本注释里，`scripts/check_menu.py` 会静态检查前两条：
+```json
+[
+  {
+    "pageKey": "activities",
+    "title": "审计日志（配置版）",
+    "datasourceKey": "activity",
+    "list": { "rowKey": "id", "actions": ["refresh"], "filters": [], "columns": [] },
+    "form": { "fields": [] }
+  }
+]
+```
 
-- **JSON 里不能有 ASCII 分号**：`ScriptRunner` 按分号切语句，切坏的是整个启动；
-- **JSON 必须是合法 JSON**：种子绕过了 `PageService` 的保存校验，坏配置会一直等到渲染时才暴露；
-- **按 `page_key` 判断幂等**（含软删行）：重启不重复插入，软删过的页面也不会被「复活」。
+`feat.yaml` 的 `initial-sql` 只负责建表（`schema.sql`），`DataInitializer` 在「表为空」时读这份 JSON、
+逐条写进 `sys_page`。三条路径共用同一份导入逻辑：首次启动、`reset-demo`、存量库升级到这张表。
+于是「加一个配置驱动页面」= `pages.json` 里加一项 + `sys_menu` 里加一条 `/p/{pageKey}` 菜单，
+不用改 Java，也不用先进管理页手工配一遍——部署完打开就有。
 
-`reset-demo` 走的是同一个脚本（`DataInitializer.replaySchema()`），清库后重放即可恢复初始配置——
-这样「首次启动的配置」和「重置后的配置」不存在两份，改一处两处都对。
+为什么不是 DDL 里的 `INSERT`：配置是嵌套结构，塞进 SQL 字符串后要额外遵守三条纪律——**不能出现
+ASCII 分号**（`ScriptRunner` 按分号切语句，切坏的是整个启动）、不能出现单引号、整行无法 diff 与评审。
+抽成 `.json` 后三条全部消失，编辑器还能做语法校验与格式化，改一条列宽不必先读懂一段 SQL。
+
+`list` / `form` 在 JSON 里是嵌套对象，落库时序列化成字符串，与「配置管理页保存」完全同一种存储形态——
+运行期读路径不区分种子还是人工配置。导入只做**结构**校验（顶层数组、pageKey 格式与唯一、`title` /
+`datasourceKey` 非空、`list` / `form` 存在），**不做「列是否存在于数据源」的交叉校验**：那需要
+`PageDataSourceRegistry`，而 AOT 的 `@PostConstruct` 按注册顺序执行，`DataInitializer` 排在它前面
+（拿到的是一张空注册表）。交叉校验放在两处补：保存配置时由 `PageService` 拒，提交前由
+`scripts/check_menu.py` 查。写错就在启动时抛异常，而不是让某个页面白屏到被人发现。
 
 **权限挂在数据源上，不挂在页面配置上**：拉配置与读数据要数据源的读权限点，保存 / 删除要写权限点
 （`DwController` 统一 require）。页面配置管理页（`/pages`）自己独立挂 `page:read` / `page:write`——
-改的是别人页面的长相，风险等级不同。
+改的是别人页面的长相，风险等级不同。下发给前端的 `canWrite` 是「数据源可写 **且** 有写权限点」，
+只读数据源恒为 `false`——它回答的是「这一页能不能写」，不是「有没有那个权限点」，否则只读页也会
+渲染出不该有的写入口。
+
+**两个已上线的模板，分别代表配置驱动的两类页面：**
+
+| 页面 | 数据源 | 动作 | 覆盖范围 |
+|---|---|---|---|
+| `/p/roles` 角色权限（配置版） | `role`（可写） | create / edit / delete / refresh | 简化表单只覆盖 code / name / description / status，权限点勾选仍在手写页 |
+| `/p/activities` 审计日志（配置版） | `activity`（只读） | refresh | 无表单、无保存、无删除——日志只能由 `ActivityRecorder` 落库 |
+
+审计日志这一页把最干净的一类场景跑通了：**只读列表 + 筛选**。企业里这类页最多（日志、流水、台账、
+记录），共同点是没有任何写路径，所以配置层不必面对「表单能不能表达业务规则」这个问题。
+
+筛选取值有三种控件（`input` / `select` / `dateRange`），后两种的来源边界值得记住：
+
+- **`dateRange` 占两个筛选键**，不是「一个值拆开」：起止分别是 `key` 与 `endKey`，前端产出
+  `{"from":"2026-08-01","to":"2026-08-30"}`，数据源按命名参数读。拼成逗号串会让每个数据源都写一遍
+  split，而且空值的两种写法无法自证。漏配 `endKey` 在保存配置时就报 400——否则表现是「填了结束
+  日期、结果没变」，比报错难查得多。
+- **`select` 的选项有两个来源**：静态 `options`，或 `optionsApi`（站内 `/api/` 路径 +
+  `optionValueField` / `optionLabelField`）。存进 `sys_page` 的是「去哪取」而不是取回来的结果，
+  所以角色改名、人员变动之后不需要重新保存页面配置。接口自己判权（操作人下拉只列数据范围内的人），
+  配置里填一个路径不构成越权入口。
+
+两者走同一条边界：**配置能改渲染，不能改数据范围**。
+
+> 还没做的：远程选项只落在筛选上，表单字段的下拉仍是静态选项表。用户管理的角色多选、部门树
+> 因此还迁不过来——这是「用户管理能不能全量配置化」目前唯一的硬缺口，不是渲染器的问题。
 
 ### 页面工作台：配置怎么被编辑
 
@@ -298,14 +342,19 @@ SQL；这里的配置只描述「怎么渲染」，数据与保存走 `PageDataS
 - **写入策略是按动作的，不是按人的**。`createOnly` 对所有人都一样：编辑态谁都不能改。
   「A 能改、B 不能改」需要字段级权限，得把权限点挂到字段上，现在没有。
 
-**试点与边界**：`/p/roles`（角色权限·配置版）与手写页 `/roles` 并行存在。动态表单只覆盖
-code / name / description / status 四个字段——权限点勾选组、数据范围卡片这些复合控件不在第一阶段的
-控件枚举里，强行替换会降级功能。更新路径会回填当前权限与数据范围（`RoleService.update` 是整体
-覆盖语义，不回填的话简化表单每次保存都会清空角色权限）。待控件集补齐 `checkbox-group` /
-`radio-group` / 级联选择后，把菜单指到 `/p/roles` 并删除手写页即可完成迁移。
+**试点与边界**：两个配置版页面都与手写页并行存在，便于逐行对照。
+
+- `/p/roles`（角色权限·配置版）：动态表单只覆盖 code / name / description / status 四个字段——
+  权限点勾选组、数据范围卡片这些复合控件不在第一阶段的控件枚举里，强行替换会降级功能。更新路径
+  会回填当前权限与数据范围（`RoleService.update` 是整体覆盖语义，不回填的话简化表单每次保存都会
+  清空角色权限）。待控件集补齐 `checkbox-group` / `radio-group` / 级联选择后，把菜单指到
+  `/p/roles` 并删除手写页即可完成迁移。
+- `/p/activities`（审计日志·配置版）：功能对齐手写页，可以直接替换——这也是只读页比可写页更容易
+  迁移的原因，没有任何写路径要在两个实现之间对齐语义。留着它主要是为了对照渲染细节。
 
 `check_menu.py` 对动态页面走三方一致性（替代白名单两方一致性）：`/p/:pageKey` 路由存在、
-pageKey 格式合法、每个挂 `/p/` 的种子菜单在 `SeedData.pages()` 里有对应种子（反向也查）。
+pageKey 格式合法、每个挂 `/p/` 的种子菜单在 `pages/pages.json` 里有对应配置（反向也查——
+配了页面却没有菜单，首次启动的侧栏就没有入口）。
 
 ## 错误契约与健康探针
 

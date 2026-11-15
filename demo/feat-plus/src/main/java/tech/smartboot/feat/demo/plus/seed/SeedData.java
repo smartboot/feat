@@ -84,6 +84,11 @@ public final class SeedData {
                         Permission.DEPT_READ, 20, true),
                 new SeedMenu("system", "系统管理", 20, MenuRoutes.ACTIVITIES, "审计日志", "scroll",
                         Permission.AUDIT_READ, 30, true),
+                // 配置驱动的审计日志：只读页，与手写 /activities 并行存在，便于逐行对照。
+                // 这条菜单能成立的前提是 pages/pages.json 里已经有 pageKey=activities 的配置——
+                // 菜单校验会去查 sys_page，查不到直接 400，不会配出「点进去 404」的入口。
+                new SeedMenu("system", "系统管理", 20, "/p/activities", "审计日志（配置版）", "layers",
+                        Permission.AUDIT_READ, 31, true),
                 new SeedMenu("system", "系统管理", 20, MenuRoutes.MENUS, "菜单管理", "menu",
                         Permission.MENU_READ, 40, true),
                 // 配置驱动的角色页：与手写 /roles 并行存在（动态表单暂不覆盖权限点勾选与数据范围），

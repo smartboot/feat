@@ -56,7 +56,11 @@ public class DwController extends ApiController {
         return execute(context, () -> {
             PageDataSource dataSource = dataSourceOf(pageKey);
             AccessContext access = accessGuard.require(context, dataSource.readPermission());
-            return pageService.config(pageKey, access.can(dataSource.writePermission()));
+            // canWrite 回答的是「这一页能不能写」，不是「有没有写权限点」：
+            // 只读数据源的 writePermission 与 readPermission 同值（省掉一个用不上的权限点），
+            // 只看 access.can 会把审计日志这类只读页算成可写，前端据此渲染出不该有的入口。
+            return pageService.config(pageKey,
+                    dataSource.writable() && access.can(dataSource.writePermission()));
         });
     }
 

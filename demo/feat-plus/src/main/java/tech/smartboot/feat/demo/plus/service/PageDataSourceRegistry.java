@@ -23,11 +23,16 @@ public class PageDataSourceRegistry {
     @Autowired
     private RolePageDataSource rolePageDataSource;
 
+    // 字段名必须等于 bean 名（@Autowired 按名注入，AOT 硬约束）。
+    @Autowired
+    private ActivityPageDataSource activityPageDataSource;
+
     private final Map<String, PageDataSource> byKey = new LinkedHashMap<>();
 
     @PostConstruct
     public void init() {
         register(rolePageDataSource);
+        register(activityPageDataSource);
     }
 
     private void register(PageDataSource dataSource) {

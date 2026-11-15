@@ -166,7 +166,12 @@ export function DwPreview({
                 <div
                   key={`${filter.key}-${index}`}
                   data-preview-focus={active ? `filter-${index}` : undefined}
-                  className={cn("relative grid gap-1.5 rounded-md p-1", active && "ring-2 ring-primary/30")}
+                  className={cn(
+                    "relative grid gap-1.5 rounded-md p-1",
+                    // 日期范围要两个输入框的宽度，两列布局里占满一行才看得清。
+                    filter.widget === "dateRange" && "col-span-2",
+                    active && "ring-2 ring-primary/30",
+                  )}
                 >
                   <Label className="flex items-center gap-1.5 text-xs">
                     {label}
@@ -184,8 +189,20 @@ export function DwPreview({
                             {option.label || option.value}
                           </SelectItem>
                         ))}
+                        {/* 预览不发真实请求：远程选项在这里只能说清「选项从哪来」，不能假装已经取到。 */}
+                        {filter.optionsApi && (
+                          <SelectItem value="__remote" disabled>
+                            打开页面后从 {filter.optionsApi} 加载
+                          </SelectItem>
+                        )}
                       </SelectContent>
                     </Select>
+                  ) : filter.widget === "dateRange" ? (
+                    <div className="flex items-center gap-1.5">
+                      <Input type="date" className="h-8 min-w-0 flex-1" disabled />
+                      <span className="shrink-0 text-[10px] text-muted-foreground">至</span>
+                      <Input type="date" className="h-8 min-w-0 flex-1" disabled />
+                    </div>
                   ) : (
                     <Input className="h-8" disabled placeholder={filter.placeholder || filter.label || "输入关键字"} />
                   )}

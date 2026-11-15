@@ -4,6 +4,7 @@ import type {
   DwColumn,
   DwColumnFormat,
   DwFieldMeta,
+  DwFilterWidget,
   DwFormConfig,
   DwFormField,
   DwListConfig,
@@ -42,11 +43,18 @@ export const COLUMN_FORMAT_HINTS: Record<DwColumnFormat, string> = {
   number: "右对齐等宽数字，如成员数、金额",
 }
 
-export const FILTER_WIDGETS: Array<"input" | "select"> = ["input", "select"]
+export const FILTER_WIDGETS: DwFilterWidget[] = ["input", "select", "dateRange"]
 
-export const FILTER_WIDGET_LABELS: Record<"input" | "select", string> = {
+export const FILTER_WIDGET_LABELS: Record<DwFilterWidget, string> = {
   input: "文本（模糊匹配）",
   select: "下拉（精确匹配）",
+  dateRange: "日期范围",
+}
+
+export const FILTER_WIDGET_HINTS: Record<DwFilterWidget, string> = {
+  input: "单框输入，值原样交给数据源做模糊匹配",
+  select: "选项可以写死在配置里，也可以指向一个接口按需取（角色、部门、操作人这类会变的）",
+  dateRange: "起止两个日期，占两个筛选键。结束日期含当天，由数据源解释",
 }
 
 export const WIDGETS: DwWidget[] = ["input", "password", "textarea", "select", "switch", "span"]

@@ -7,6 +7,7 @@ import type {
   DwColumnFormat,
   DwFieldMeta,
   DwFilter,
+  DwFilterWidget,
   DwListConfig,
 } from "@/api/types"
 import {
@@ -317,7 +318,7 @@ export function DwListConfigEditor({
                   <FieldKeySelect
                     value={filter.key}
                     fields={fields}
-                    used={value.filters.map((item, i) => (i === index ? "" : item.key))}
+                    used={usedByOthers(value.filters, index)}
                     onChange={(key) => {
                       const nextMeta = fields.find((field) => field.key === key)
                       updateFilter(index, {
@@ -345,7 +346,17 @@ export function DwListConfigEditor({
                   <Select
                     value={filter.widget}
                     onValueChange={(widget) =>
-                      updateFilter(index, { ...filter, widget: widget as "input" | "select" })
+                      // 换控件时清掉另一支的配置：否则会存下「既是下拉又是日期范围」的混合体，
+                      // 换回来时又带着上次的选项，配置页说不清它现在是什么。
+                      updateFilter(index, {
+                        ...filter,
+                        widget: widget as DwFilterWidget,
+                        endKey: widget === "dateRange" ? (filter.endKey ?? "") : "",
+                        options: widget === "select" ? (filter.options ?? []) : [],
+                        optionsApi: widget === "select" ? (filter.optionsApi ?? "") : "",
+                        optionValueField: widget === "select" ? (filter.optionValueField ?? "") : "",
+                        optionLabelField: widget === "select" ? (filter.optionLabelField ?? "") : "",
+                      })
                     }
                   >
                     <SelectTrigger className="h-8">
@@ -361,7 +372,7 @@ export function DwListConfigEditor({
                   </Select>
                 </div>
               </div>
-              {filter.widget === "input" ? (
+              {filter.widget === "input" && (
                 <div className="grid gap-1">
                   <FieldLabel>占位提示</FieldLabel>
                   <Input
@@ -371,13 +382,100 @@ export function DwListConfigEditor({
                     onChange={(event) => updateFilter(index, { ...filter, placeholder: event.target.value })}
                   />
                 </div>
-              ) : (
+              )}
+              {filter.widget === "dateRange" && (
                 <div className="grid gap-1">
-                  <FieldLabel>选项（下拉里除「全部」之外的取值）</FieldLabel>
-                  <DwOptionListEditor
-                    options={filter.options ?? []}
-                    onChange={(options) => updateFilter(index, { ...filter, options })}
+                  <FieldLabel>结束字段</FieldLabel>
+                  <FieldKeySelect
+                    value={filter.endKey ?? ""}
+                    fields={fields}
+                    used={reservedForEnd(value.filters, index)}
+                    onChange={(endKey) => updateFilter(index, { ...filter, endKey })}
+                    ariaLabel="日期范围结束字段"
                   />
+                  <Hint>
+                    日期范围占两个筛选键：起始是 <code>{filter.key || "（未选）"}</code>，结束是{" "}
+                    <code>{filter.endKey || "（未选）"}</code>。数据源分别读这两个键，不做拼接解析。
+                  </Hint>
+                </div>
+              )}
+              {filter.widget === "select" && (
+                <div className="grid gap-2">
+                  <div className="grid gap-1">
+                    <FieldLabel>选项来源</FieldLabel>
+                    <Select
+                      value={filter.optionsApi ? "api" : "static"}
+                      onValueChange={(source) =>
+                        updateFilter(index, {
+                          ...filter,
+                          // 两个来源互斥：留着一半的旧配置，取数时就要猜「到底哪个算」。
+                          options: source === "static" ? (filter.options ?? []) : [],
+                          optionsApi: source === "api" ? (filter.optionsApi ?? "") : "",
+                          optionValueField: source === "api" ? (filter.optionValueField ?? "") : "",
+                          optionLabelField: source === "api" ? (filter.optionLabelField ?? "") : "",
+                        })
+                      }
+                    >
+                      <SelectTrigger className="h-8">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="static">写死的选项</SelectItem>
+                        <SelectItem value="api">从接口按需取</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {filter.optionsApi ? (
+                    <>
+                      <div className="grid gap-1">
+                        <FieldLabel>接口路径</FieldLabel>
+                        <Input
+                          className="h-8"
+                          value={filter.optionsApi}
+                          placeholder="/api/activities/operators"
+                          onChange={(event) =>
+                            updateFilter(index, { ...filter, optionsApi: event.target.value })
+                          }
+                        />
+                      </div>
+                      <div className="grid gap-1">
+                        <FieldLabel>取值字段 / 显示字段</FieldLabel>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            className="h-8"
+                            value={filter.optionValueField ?? ""}
+                            placeholder="id"
+                            aria-label="取值字段"
+                            onChange={(event) =>
+                              updateFilter(index, { ...filter, optionValueField: event.target.value })
+                            }
+                          />
+                          <span className="shrink-0 text-xs text-muted-foreground">/</span>
+                          <Input
+                            className="h-8"
+                            value={filter.optionLabelField ?? ""}
+                            placeholder="name"
+                            aria-label="显示字段"
+                            onChange={(event) =>
+                              updateFilter(index, { ...filter, optionLabelField: event.target.value })
+                            }
+                          />
+                        </div>
+                      </div>
+                      <Hint>
+                        只允许站内 <code>/api/</code> 路径，接口返回对象数组。选项在打开页面时现取，
+                        不写进配置——角色改名、新增部门之后不用重新保存这一页。
+                      </Hint>
+                    </>
+                  ) : (
+                    <div className="grid gap-1">
+                      <FieldLabel>选项（下拉里除「全部」之外的取值）</FieldLabel>
+                      <DwOptionListEditor
+                        options={filter.options ?? []}
+                        onChange={(options) => updateFilter(index, { ...filter, options })}
+                      />
+                    </div>
+                  )}
                 </div>
               )}
             </ItemRow>
@@ -505,6 +603,29 @@ function WidthSelect({ value, onChange }: { value?: string; onChange: (value: st
       </SelectContent>
     </Select>
   )
+}
+
+/**
+ * 被「其他筛选」占用的字段键，含它们的日期范围结束键。
+ * 漏掉 endKey 的后果是两个筛选能配成同一个结束字段，保存时被后端拒掉——
+ * 前端能选、后端才报错，是这一层最该提前挡住的错配。
+ */
+function usedByOthers(filters: DwFilter[], index: number): string[] {
+  const used: string[] = []
+  filters.forEach((filter, i) => {
+    if (i === index) return
+    if (filter.key) used.push(filter.key)
+    if (filter.widget === "dateRange" && filter.endKey) used.push(filter.endKey)
+  })
+  return used
+}
+
+/** 结束字段额外要排除当前筛选自己的起始键：起止配成同一个字段没有意义。 */
+function reservedForEnd(filters: DwFilter[], index: number): string[] {
+  const used = usedByOthers(filters, index)
+  const self = filters[index]?.key
+  if (self) used.push(self)
+  return used
 }
 
 /**

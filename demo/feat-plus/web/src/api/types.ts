@@ -364,13 +364,36 @@ export interface DwColumn {
   options?: DwOption[]
 }
 
-/** 一条筛选：input 约定模糊匹配、select 约定精确匹配（由数据源解释） */
+/**
+ * 筛选控件枚举，与后端 PageService 的 FILTER_WIDGETS 校验集一致。
+ * - input：模糊匹配
+ * - select：精确匹配，选项来自静态 options 或远程 optionsApi
+ * - dateRange：日期范围，产出两个筛选键（key 与 endKey）
+ */
+export type DwFilterWidget = "input" | "select" | "dateRange"
+
+/**
+ * 一条筛选。值的解释权在数据源：input 约定模糊匹配、select 约定精确匹配。
+ *
+ * dateRange 占两个键：起止分别是 key 与 endKey，前端产出 {"from":"2026-08-01","to":"2026-08-30"}。
+ * 选项两种来源二选一：静态 options，或远程 optionsApi（站内 /api/ 路径，用
+ * optionValueField / optionLabelField 指定取哪两个字段）。
+ */
 export interface DwFilter {
   key: string
   label: string
-  widget: "input" | "select"
+  widget: DwFilterWidget
   placeholder?: string
+  /** dateRange 的结束键；其他控件留空 */
+  endKey?: string
+  /** 静态选项 */
   options?: DwOption[]
+  /** 远程选项路径，如 /api/activities/operators */
+  optionsApi?: string
+  /** 远程选项的取值字段，如 id；留空按 value */
+  optionValueField?: string
+  /** 远程选项的显示字段，如 name；留空按 label */
+  optionLabelField?: string
 }
 
 /**
