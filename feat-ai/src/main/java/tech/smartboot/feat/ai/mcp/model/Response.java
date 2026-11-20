@@ -10,15 +10,15 @@
 
 package tech.smartboot.feat.ai.mcp.model;
 
-import com.alibaba.fastjson2.JSONObject;
-
 /**
+ * JSON-RPC 2.0 应答对象：result 与 error 互斥，两者都不会出现或只出现其一。
+ *
  * @author 三刀 zhengjunweimail@163.com
  * @version v1.0 6/18/25
  */
 public class Response<T> extends JsonRpc {
     private T result;
-    private JSONObject error;
+    private JsonRpcError error;
 
     public T getResult() {
         return result;
@@ -28,11 +28,11 @@ public class Response<T> extends JsonRpc {
         this.result = result;
     }
 
-    public JSONObject getError() {
+    public JsonRpcError getError() {
         return error;
     }
 
-    public void setError(JSONObject error) {
+    public void setError(JsonRpcError error) {
         this.error = error;
     }
 }

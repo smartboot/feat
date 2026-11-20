@@ -17,6 +17,8 @@ import tech.smartboot.feat.ai.mcp.McpException;
 import tech.smartboot.feat.ai.mcp.McpProtocol;
 import tech.smartboot.feat.ai.mcp.model.McpInitializeRequest;
 import tech.smartboot.feat.ai.mcp.model.McpInitializeResponse;
+import tech.smartboot.feat.ai.mcp.model.JsonRpc;
+import tech.smartboot.feat.ai.mcp.model.JsonRpcError;
 import tech.smartboot.feat.ai.mcp.model.Request;
 import tech.smartboot.feat.ai.mcp.model.ResourceTemplate;
 import tech.smartboot.feat.ai.mcp.model.Response;
@@ -41,7 +43,6 @@ import tech.smartboot.feat.core.common.FeatUtils;
 import tech.smartboot.feat.core.common.HeaderName;
 import tech.smartboot.feat.core.common.HeaderValue;
 import tech.smartboot.feat.core.common.HttpStatus;
-import tech.smartboot.feat.core.common.exception.FeatException;
 import tech.smartboot.feat.core.common.exception.HttpException;
 import tech.smartboot.feat.core.common.logging.Logger;
 import tech.smartboot.feat.core.common.logging.LoggerFactory;
@@ -208,24 +209,38 @@ public class McpServer {
         return latest;
     }
 
+    /**
+     * 构造一个立即完成的 JSON-RPC 错误应答。id 无法从请求中识别时必须置为 null（序列化时省略）。
+     */
+    private static CompletableFuture<Response> errorResponse(Object id, int code, String message) {
+        Response<JSONObject> response = new Response<>();
+        response.setId(id);
+        response.setError(new JsonRpcError(code, message));
+        CompletableFuture<Response> future = new CompletableFuture<>();
+        future.complete(response);
+        return future;
+    }
+
     public CompletableFuture<Response> jsonRpcHandle(StreamSession session, HttpRequest request) throws Throwable {
         if (session == null) {
             throw new HttpException(HttpStatus.UNAUTHORIZED);
         }
         switch (session.getState()) {
             case StreamSession.STATE_INITIALIZE: {
-                Request<McpInitializeRequest> req = JSON.parseObject(FeatUtils.asString(request.getInputStream()), new TypeReference<Request<McpInitializeRequest>>() {
-                });
+                Request<McpInitializeRequest> req;
+                try {
+                    req = JSON.parseObject(FeatUtils.asString(request.getInputStream()), new TypeReference<Request<McpInitializeRequest>>() {
+                    });
+                } catch (Exception e) {
+                    // 报文无法按 JSON 解析属于 -32700，此时 id 无法识别，置为 null
+                    logger.warn("malformed initialize payload", e);
+                    return errorResponse(null, McpException.PARSE_ERROR, "Parse error");
+                }
                 if (req == null) {
-                    throw new HttpException(HttpStatus.BAD_REQUEST);
+                    return errorResponse(null, McpException.PARSE_ERROR, "Parse error");
                 }
                 if (req.getParams() == null || FeatUtils.isBlank(req.getParams().getProtocolVersion())) {
-                    Response<JSONObject> err = new Response<>();
-                    err.setId(req.getId());
-                    err.setError(JSONObject.of("code", McpException.INVALID_PARAMS, "message", "protocolVersion is required"));
-                    CompletableFuture<Response> failed = new CompletableFuture<>();
-                    failed.complete(err);
-                    return failed;
+                    return errorResponse(req.getId(), McpException.INVALID_PARAMS, "protocolVersion is required");
                 }
                 session.setInitializeRequest(req.getParams());
                 Response<McpInitializeResponse> rsp = new Response<>();
@@ -281,37 +296,52 @@ public class McpServer {
                     return null;
                 }
                 if (HeaderValue.ContentType.APPLICATION_JSON.equals(request.getContentType())) {
-                    JSONObject jsonObject = JSON.parseObject(request.getInputStream());
+                    JSONObject jsonObject;
+                    try {
+                        jsonObject = JSON.parseObject(request.getInputStream());
+                    } catch (Exception e) {
+                        // JSON-RPC 2.0：报文无法按 JSON 解析时返回 -32700，id 无法识别置为 null
+                        logger.warn("malformed json-rpc payload", e);
+                        return errorResponse(null, McpException.PARSE_ERROR, "Parse error");
+                    }
+                    if (jsonObject == null) {
+                        return errorResponse(null, McpException.PARSE_ERROR, "Parse error");
+                    }
+                    Object id = jsonObject.get("id");
+                    if (!JsonRpc.VERSION.equals(jsonObject.getString("jsonrpc"))) {
+                        // jsonrpc 成员缺失或版本不为 2.0 属于 Invalid Request（-32600）
+                        return errorResponse(id, McpException.INVALID_REQUEST, "Invalid Request: jsonrpc must be \"2.0\"");
+                    }
                     String method = jsonObject.getString("method");
+                    if (id == null) {
+                        // 无 id 的消息是通知：按规范不得返回任何应答（包括错误应答），处理完以 202 结束
+                        if (FeatUtils.isBlank(method)) {
+                            return errorResponse(null, McpException.INVALID_REQUEST, "Invalid Request: method is required");
+                        }
+                        if ("notifications/roots/list_changed".equalsIgnoreCase(method) && session.getSseEmitter() != null) {
+                            session.rootsList();
+                        }
+                        request.getResponse().setHttpStatus(HttpStatus.ACCEPTED);
+                        return null;
+                    }
                     if (FeatUtils.isBlank(method)) {
-                        int id = jsonObject.getIntValue("id", -1);
-                        Consumer<JSONObject> response = session.doResponse(id);
+                        // 带 id 且无 method：这是客户端对服务端请求的应答，找不到对应在途请求时按 Invalid Request 处理
+                        int pendingId = id instanceof Number ? ((Number) id).intValue() : -1;
+                        Consumer<JSONObject> response = session.doResponse(pendingId);
                         if (response != null) {
                             response.accept(jsonObject.getJSONObject("result"));
                             return null;
-                        } else {
-                            throw new FeatException("method is null");
                         }
-                    } else if ("notifications/roots/list_changed".equalsIgnoreCase(method)) {
-                        if (session.getSseEmitter() != null) {
-                            session.rootsList();
-                        }
-                        return null;
+                        return errorResponse(id, McpException.INVALID_REQUEST, "Invalid Request: no pending request for id " + id);
                     }
-
 
                     ServerHandler handler = handlers.get(method);
                     if (handler == null) {
-                        Response<JSONObject> notFound = new Response<>();
-                        notFound.setId(jsonObject.get("id"));
-                        notFound.setError(JSONObject.of("code", McpException.METHOD_NOT_FOUND,
-                                "message", "Method not found: " + method));
-                        CompletableFuture<Response> failed = new CompletableFuture<>();
-                        failed.complete(notFound);
-                        return failed;
+                        return errorResponse(id, McpException.METHOD_NOT_FOUND, "Method not found: " + method);
                     }
                     CompletableFuture<Response> future = new CompletableFuture<>();
                     Response<JSONObject> response = new Response<>();
+                    response.setId(id);
 
                     try {
                         CompletableFuture<JSONObject> result = handler.asyncHandle(this, request, jsonObject);
@@ -319,29 +349,18 @@ public class McpServer {
                             response.setResult(rsp);
                             future.complete(response);
                         }).exceptionally(throwable -> {
-                            JSONObject error = new JSONObject();
-                            error.put("code", -32603);
-                            error.put("message", throwable.toString());
-                            response.setError(error);
+                            response.setError(new JsonRpcError(McpException.INTERNAL_ERROR, throwable.toString()));
                             future.complete(response);
                             return null;
                         });
                     } catch (McpException e) {
-                        JSONObject error = new JSONObject();
-                        error.put("code", e.getCode());
-                        error.put("message", e.getMessage());
-                        error.put("data", e.getData());
-                        response.setError(error);
+                        response.setError(new JsonRpcError(e.getCode(), e.getMessage(), e.getData()));
                         future.complete(response);
                     } catch (Throwable e) {
                         logger.error("", e);
-                        JSONObject error = new JSONObject();
-                        error.put("code", -32603);
-                        error.put("message", e.toString());
-                        response.setError(error);
+                        response.setError(new JsonRpcError(McpException.INTERNAL_ERROR, e.toString()));
                         future.complete(response);
                     }
-                    response.setId(jsonObject.get("id"));
                     return future;
                 }
                 break;

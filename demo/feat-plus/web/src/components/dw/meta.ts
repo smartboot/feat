@@ -8,7 +8,6 @@ import type {
   DwFormConfig,
   DwFormField,
   DwListConfig,
-  DwOption,
   DwRow,
   DwRowAction,
   DwValueFormat,
@@ -326,20 +325,12 @@ export const EMPTY_LIST: DwListConfig = {
 }
 
 /**
- * 字段值域：本页共享的「值 → 文案」映射表。
+ * 字段值域的读取留给了 {@link resolve.ts}。
  *
- * 视图（列 / 表单字段 / 筛选）自己配了就用视图的，没配的从这里继承。
- * 规则与后端 {@code PageService.applyFieldMaps} 同源——两边都只有「空则继承」一条，
- * 但改一处必须同时改另一处，否则预览与线上会给出不同的结果。
+ * 这里曾经有一份 `fieldMapOf` / `effectiveOptions`，写完后没有任何调用点——渲染侧
+ * 各自读 `column.options`，于是预览与线上分叉。规则只该有一份，所以它们被删掉了，
+ * 不要在这里重新加回来。
  */
-export function fieldMapOf(list: DwListConfig, key: string): DwOption[] {
-  return list.fieldMaps?.[key] ?? []
-}
-
-/** 一个视图实际生效的选项：自己的优先，空则继承字段值域。 */
-export function effectiveOptions(list: DwListConfig, key: string, own?: DwOption[]): DwOption[] {
-  return own && own.length > 0 ? own : fieldMapOf(list, key)
-}
 
 export const EMPTY_FORM: DwFormConfig = {
   createTitle: "新建",

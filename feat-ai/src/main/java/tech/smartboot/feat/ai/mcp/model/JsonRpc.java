@@ -15,7 +15,12 @@ package tech.smartboot.feat.ai.mcp.model;
  * @version v1.0 6/22/25
  */
 public class JsonRpc {
-    private String jsonrpc = "2.0";
+    /**
+     * JSON-RPC 协议版本，请求与应答都必须携带且取值固定。
+     */
+    public static final String VERSION = "2.0";
+
+    private String jsonrpc = VERSION;
 
     /**
      * JSON-RPC 2.0 允许 id 为字符串或数字，原样透传，不得强制转换为 int。

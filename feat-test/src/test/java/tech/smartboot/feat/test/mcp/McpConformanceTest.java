@@ -215,6 +215,73 @@ public class McpConformanceTest {
         Assert.assertEquals("req-abc", response.getString("id"));
     }
 
+    /**
+     * 报文无法按 JSON 解析时应返回 -32700，且 id 无法识别时不应输出非空 id。
+     */
+    @Test
+    public void testParseError() throws Exception {
+        HttpURLConnection conn = (HttpURLConnection) new URL(ENDPOINT).openConnection();
+        conn.setRequestMethod("POST");
+        conn.setDoOutput(true);
+        conn.setUseCaches(false);
+        conn.setRequestProperty("Content-Type", "application/json");
+        conn.setRequestProperty("Accept", "application/json, text/event-stream");
+        conn.setRequestProperty("Connection", "close");
+        conn.setRequestProperty("mcp-session-id", sessionId);
+        byte[] payload = "{not json".getBytes(StandardCharsets.UTF_8);
+        conn.setFixedLengthStreamingMode(payload.length);
+        try (OutputStream out = conn.getOutputStream()) {
+            out.write(payload);
+        }
+        Assert.assertEquals(200, conn.getResponseCode());
+        JSONObject response = JSONObject.parseObject(read(conn.getInputStream()));
+        Assert.assertEquals(-32700, response.getJSONObject("error").getIntValue("code"));
+        conn.disconnect();
+    }
+
+    /**
+     * jsonrpc 版本字段缺失或不为 2.0 应返回 -32600。
+     */
+    @Test
+    public void testInvalidJsonRpcVersion() throws Exception {
+        JSONObject response = post(JSONObject.of("jsonrpc", "1.0", "id", 11, "method", "ping"), sessionId);
+        Assert.assertEquals(-32600, response.getJSONObject("error").getIntValue("code"));
+        Assert.assertEquals(11, response.getIntValue("id"));
+
+        response = post(JSONObject.of("id", 12, "method", "ping"), sessionId);
+        Assert.assertEquals(-32600, response.getJSONObject("error").getIntValue("code"));
+    }
+
+    /**
+     * 无 id 的通知不得收到任何 JSON-RPC 应答（包括错误应答），规范要求以 202 结束。
+     */
+    @Test
+    public void testNotificationNeverAnswered() throws Exception {
+        JSONObject empty = post(JSONObject.of("jsonrpc", "2.0", "method", "notifications/unknown"), sessionId);
+        Assert.assertEquals(202, empty.getIntValue("_status"));
+        Assert.assertTrue(empty.isEmpty() || empty.getString("error") == null);
+    }
+
+    /**
+     * 无 id 且无 method 的消息既不是请求也不是通知，应返回 -32600。
+     */
+    @Test
+    public void testNeitherRequestNorNotification() throws Exception {
+        JSONObject response = post(JSONObject.of("jsonrpc", "2.0"), sessionId);
+        Assert.assertEquals(-32600, response.getJSONObject("error").getIntValue("code"));
+    }
+
+    /**
+     * error.data 为 null 时不得在应答中输出 "data": null（JSON-RPC 2.0 规范）。
+     */
+    @Test
+    public void testErrorDataOmittedWhenNull() throws Exception {
+        JSONObject response = post(JSONObject.of("jsonrpc", "2.0", "id", 13, "method", "no/such/method"), sessionId);
+        JSONObject error = response.getJSONObject("error");
+        Assert.assertEquals(-32601, error.getIntValue("code"));
+        Assert.assertFalse(error.containsKey("data"));
+    }
+
     private JSONObject initializeBody(String protocolVersion) {
         return JSONObject.of("jsonrpc", "2.0", "id", 0, "method", "initialize",
                 "params", JSONObject.of("protocolVersion", protocolVersion,

@@ -72,6 +72,30 @@ ChatModel chatModel = FeatAI.chatModel(opts -> opts
 );
 ```
 
+### 使用 OpenAI Responses API 规范
+
+OpenAI 除 Chat Completions（`/v1/chat/completions`）外还提供 Responses API（`/v1/responses`）：消息历史走 `input` 项数组、系统提示用顶层 `instructions` 表达、工具定义为扁平结构（无 `function` 嵌套）、流式返回语义事件（无 `[DONE]`，以 `response.completed` 等事件收尾）。通过 `specProvider(...)` 切换到该规范，`chat(...)` / `chatStream(...)` 的调用方式完全不变：
+
+```java title="ResponsesApiExample.java"
+import tech.smartboot.feat.ai.FeatAI;
+import tech.smartboot.feat.ai.chat.ChatModel;
+import tech.smartboot.feat.ai.chat.provider.openai.OpenAiResponsesProvider;
+
+ChatModel chatModel = FeatAI.chatModel(opts -> opts
+        .baseUrl("https://api.openai.com/v1")
+        .apiKey(System.getenv("OPENAI_API_KEY"))
+        .model("gpt-4.1")
+        .specProvider(OpenAiResponsesProvider::new)
+);
+```
+
+要点：
+
+- `system(...)` 与消息列表中的 system 消息会合并为请求的顶层 `instructions`。
+- 助手消息的 `tool_calls` 转为 `function_call` 项、tool 消息转为 `function_call_output` 项，关联键为 `call_id`；响应中的 `call_id` 映射回 `ToolCall.id`，多轮工具对话代码与 Chat Completions 写法一致。
+- 响应 `output` 里的 `reasoning` 项（summary/content）映射到 `ChatResponse.reasoningContent` / `onReasoning`；`usage` 的 `input_tokens` / `output_tokens` 映射到 `promptTokens` / `completionTokens`。
+- 截断终态 `incomplete`（`max_output_tokens`）映射为 `finishReason = "length"`。
+
 ## 同步调用：chat(...)
 
 `chat(...)` 系列方法返回 `CompletableFuture<ChatResponse>`，适合需要完整响应后再处理的场景。

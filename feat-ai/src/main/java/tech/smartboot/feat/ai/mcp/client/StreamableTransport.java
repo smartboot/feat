@@ -66,7 +66,7 @@ final class StreamableTransport extends Transport {
                     Response<JSONObject> rsp = JSONObject.parseObject(response.body(), new TypeReference<Response<JSONObject>>() {
                     });
                     if (rsp.getError() != null) {
-                        future.completeExceptionally(new McpException(rsp.getError().getInteger("code"), rsp.getError().getString("message")));
+                        future.completeExceptionally(new McpException(rsp.getError().getCode(), rsp.getError().getMessage(), rsp.getError().getData()));
                     } else {
                         future.complete(rsp);
                     }
@@ -80,7 +80,7 @@ final class StreamableTransport extends Transport {
                     Response<JSONObject> rsp = JSONObject.parseObject(event.getData(), new TypeReference<Response<JSONObject>>() {
                     });
                     if (rsp.getError() != null) {
-                        future.completeExceptionally(new McpException(rsp.getError().getInteger("code"), rsp.getError().getString("message")));
+                        future.completeExceptionally(new McpException(rsp.getError().getCode(), rsp.getError().getMessage(), rsp.getError().getData()));
                     } else {
                         future.complete(rsp);
                     }

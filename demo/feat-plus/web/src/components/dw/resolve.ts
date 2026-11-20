@@ -71,8 +71,3 @@ function inheritOptions(own: DwOption[] | undefined, mapped: DwOption[] | undefi
   if (!mapped || mapped.length === 0) return null
   return [...mapped]
 }
-
-/** 某个字段是否配有值域；编辑器用它决定显示「继承 N 项」还是「—」。 */
-export function inheritedOptionCount(list: DwListConfig, key: string): number {
-  return list.fieldMaps?.[key]?.length ?? 0
-}
