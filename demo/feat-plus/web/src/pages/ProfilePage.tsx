@@ -61,9 +61,8 @@ export function ProfilePage({ onProfileUpdated }: { onProfileUpdated?: () => voi
 function ProfileHeader() {
   return (
     <div>
-      <p className="text-sm text-muted-foreground">工作台</p>
-      <h2 className="mt-1 text-3xl font-semibold tracking-tight">个人中心</h2>
-      <p className="mt-2 text-sm text-muted-foreground">
+      <h2 className="text-lg font-semibold tracking-tight">个人中心</h2>
+      <p className="mt-0.5 text-xs text-muted-foreground">
         修改自己的昵称、邮箱与密码。部门与角色由管理员分配，这里只做展示。
       </p>
     </div>

@@ -32,6 +32,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Switch } from "@/components/ui/switch"
 import { useDepartmentMutations, useDepartments } from "@/services/queries"
 import { countDepartments, departmentLabelNames, findDepartment, flattenDepartments } from "@/lib/departments"
+import { PageHeader } from "@/components/layout/PageHeader"
 import { hasPermission } from "@/lib/permissions"
 import { cn } from "@/lib/utils"
 
@@ -94,20 +95,16 @@ export function DepartmentPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-        <div>
-          <p className="text-sm text-muted-foreground">系统管理</p>
-          <h2 className="mt-1 text-3xl font-semibold tracking-tight">部门管理</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            维护组织层级，共 {total} 个部门。按部门筛选成员时会自动包含其全部下级。
-          </p>
-        </div>
-        {canWrite && (
+      <PageHeader
+        title="部门管理"
+        count={total ? `${total} 个部门` : undefined}
+        description="按部门筛选成员时会自动包含其全部下级。"
+        actions={canWrite && (
           <Button onClick={() => setDialog({ mode: "create", parentId: 0 })}>
             <Plus className="size-4" />新建根部门
           </Button>
         )}
-      </div>
+      />
 
       <Card>
         <CardContent className="p-2 sm:p-4">

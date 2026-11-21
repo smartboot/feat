@@ -231,7 +231,7 @@ function NotificationButton({ notifications, unread, onRead, onReadAll }: { noti
                 <div>
                   <p className="text-xs font-medium">{item.title}</p>
                   <p className="mt-0.5 text-[10px] text-muted-foreground">{item.description}</p>
-                  <p className="mt-1 text-[9px] text-muted-foreground">{item.createdTime}</p>
+                  <p className="mt-1 text-[11px] text-muted-foreground">{item.createdTime}</p>
                 </div>
               </div>
             </button>

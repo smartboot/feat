@@ -145,7 +145,12 @@ export const adminService: AdminService = {
     return request<void>(`/api/menus/${id}`, { method: "DELETE" })
   },
   listMenuGroups(): Promise<MenuGroup[]> {
-    return request<MenuGroup[]>("/api/menus/groups")
+    // 后端返回 groupKey/groupLabel/groupSort/menuCount，这里统一映射成前端的
+    // MenuGroup（key/label/sort/count）。此前直接 as MenuGroup[] 返回，
+    // 字段名对不上导致菜单管理页「分组管理」的名称、顺序、数量全部渲染成空白。
+    return request<{ groupKey: string; groupLabel: string; groupSort: number; menuCount: number }[]>("/api/menus/groups").then((rows) =>
+      rows.map((row) => ({ key: row.groupKey, label: row.groupLabel, sort: row.groupSort, count: row.menuCount })),
+    )
   },
   updateMenuGroup(groupKey: string, input: GroupUpdateInput): Promise<void> {
     return request<void>(`/api/menus/groups/${groupKey}`, { method: "PUT", body: jsonBody(input) })

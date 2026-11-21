@@ -59,6 +59,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Switch } from "@/components/ui/switch"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { departmentLabelNames, flattenDepartments } from "@/lib/departments"
+import { PageHeader } from "@/components/layout/PageHeader"
 import { hasPermission } from "@/lib/permissions"
 import { useAllUsers, useDepartments, useRoles, useUser, useUserMutations, useUsers } from "@/services/queries"
 
@@ -208,19 +209,17 @@ export function UserListPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-        <div>
-          <p className="text-sm text-muted-foreground">系统管理</p>
-          <h2 className="mt-1 text-3xl font-semibold tracking-tight">用户管理</h2>
-          <p className="mt-2 text-sm text-muted-foreground">维护组织成员、账号状态与角色归属。</p>
-        </div>
-        {canWrite && (
+      <PageHeader
+        title="用户管理"
+        count={data ? `共 ${data.total} 人` : undefined}
+        description="维护组织成员、账号状态与角色归属。"
+        actions={canWrite && (
           <Button onClick={openCreate}>
             <Plus className="size-4" />
             新建用户
           </Button>
         )}
-      </div>
+      />
 
       <Card>
         <CardContent className="flex flex-col gap-3 p-3 md:flex-row md:items-center md:justify-between">

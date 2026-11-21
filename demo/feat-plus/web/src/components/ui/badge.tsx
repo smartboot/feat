@@ -9,8 +9,14 @@ const badgeVariants = cva("inline-flex items-center gap-1 rounded-md border px-2
       secondary: "border-transparent bg-secondary text-secondary-foreground",
       destructive: "border-transparent bg-destructive text-white",
       outline: "text-foreground",
-      success: "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-300",
-      warning: "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300",
+      /*
+       * 状态徽章（成功/停用）：中性底 + 彩点，而不是饱和药丸。
+       * 理由：状态是表格里信息价值最低的字段，不该比姓名还抢眼；
+       * 彩点保留一瞥可辨的语义，底色回归中性后整表只有真正的
+       * 主操作和危险操作带颜色。
+       */
+      success: "border-transparent bg-secondary text-secondary-foreground before:inline-block before:size-1.5 before:rounded-full before:bg-emerald-500 before:content-[''] dark:before:bg-emerald-400",
+      warning: "border-transparent bg-secondary text-secondary-foreground before:inline-block before:size-1.5 before:rounded-full before:bg-amber-500 before:content-[''] dark:before:bg-amber-400",
     },
   },
   defaultVariants: { variant: "default" },

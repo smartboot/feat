@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react"
-import { AlertTriangle, Check, Copy, ExternalLink, Pencil, Plus, Search, SlidersHorizontal, Trash2 } from "lucide-react"
+import { AlertTriangle, Copy, ExternalLink, Pencil, Plus, Search, SlidersHorizontal, Trash2 } from "lucide-react"
 import { Link } from "react-router-dom"
 import { toast } from "sonner"
 
@@ -389,9 +389,8 @@ export function PageManagePage() {
 function PageHeader() {
   return (
     <div>
-      <p className="text-sm text-muted-foreground">系统管理</p>
-      <h2 className="mt-1 text-3xl font-semibold tracking-tight">页面配置</h2>
-      <p className="mt-2 text-sm text-muted-foreground">
+      <h2 className="text-lg font-semibold tracking-tight">页面配置</h2>
+      <p className="mt-0.5 truncate text-xs text-muted-foreground">
         配置驱动的动态页面：数据源决定能用什么字段，列 / 筛选 / 表单决定怎么展示，改完即生效，不用发版。
       </p>
     </div>
@@ -427,8 +426,7 @@ function ConfigStatus({
     )
   }
   return (
-    <Badge variant="outline" className="gap-1 border-emerald-600/40 text-[10px] text-emerald-700 dark:text-emerald-400">
-      <Check className="size-2.5" />
+    <Badge variant="success" className="text-[10px]">
       正常
     </Badge>
   )

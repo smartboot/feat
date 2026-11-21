@@ -20,7 +20,7 @@ function ProtectedLayout({ currentUser, onLogout, onRefreshUser }: { currentUser
   return <AppLayout currentUser={currentUser} onLogout={onLogout} onRefreshUser={onRefreshUser} />
 }
 
-function AuthenticatedApp({ currentUser, onLogout, onRefreshUser }: { currentUser: CurrentUser; onLogout: () => void; onRefreshUser: () => void }) {
+export function AuthenticatedApp({ currentUser, onLogout, onRefreshUser }: { currentUser: CurrentUser; onLogout: () => void; onRefreshUser: () => void }) {
   return (
     <Routes>
       <Route element={<ProtectedLayout currentUser={currentUser} onLogout={onLogout} onRefreshUser={onRefreshUser} />}>

@@ -31,6 +31,10 @@ export function DashboardPage() {
 
   const trend = range === "7" ? data.trend7 : data.trend30
   const totalLogins = trend.reduce((sum, point) => sum + point.value, 0)
+  // 真实环比：trend30 的最后 7 天就是 trend7，往前再数 7 天是上一个窗口。
+  // 之前这里硬编码「较上周新增 3 人」，是假文案——数字必须从数据里来。
+  const prevWeekLogins = data.trend30.slice(-14, -7).reduce((sum, point) => sum + point.value, 0)
+  const loginDelta = totalLogins - prevWeekLogins
   const activeRate = data.totalUsers ? Math.round(data.enabledUsers / data.totalUsers * 100) : 0
   const hour = new Date().getHours()
   const greeting = hour < 12 ? "早上好" : hour < 18 ? "下午好" : "晚上好"
@@ -51,8 +55,8 @@ export function DashboardPage() {
 
       {/* 关键指标 */}
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-label="关键指标">
-        <MetricCard href="/users" label="系统用户" value={data.totalUsers} detail="较上周新增 3 人" trend="up" icon={<UsersRound className="size-4" />} />
-        <MetricCard href="/users?status=1" label="已启用账号" value={data.enabledUsers} detail={`${activeRate}% 账号状态正常`} trend="up" icon={<CheckCircle2 className="size-4" />} />
+        <MetricCard href="/users" label="系统用户" value={data.totalUsers} trend="neutral" icon={<UsersRound className="size-4" />} />
+        <MetricCard href="/users?status=1" label="已启用账号" value={data.enabledUsers} detail={`${activeRate}% 账号状态正常`} trend="neutral" icon={<CheckCircle2 className="size-4" />} />
         <MetricCard href="/users?status=0" label="停用账号" value={data.disabledUsers} detail="可在用户管理中恢复" trend="neutral" icon={<UserRoundX className="size-4" />} />
         <MetricCard label="未读通知" value={data.unreadNotifications} detail="打开顶部通知查看详情" trend="neutral" icon={<ActivityIcon className="size-4" />} />
       </section>
@@ -70,6 +74,10 @@ export function DashboardPage() {
               <div className="text-right">
                 <strong className="text-3xl font-semibold tracking-tight">{totalLogins}</strong>
                 <p className="text-[11px] text-muted-foreground">累计登录</p>
+                <p className={`mt-0.5 flex items-center justify-end gap-0.5 text-[11px] numeric ${loginDelta >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"}`}>
+                  {loginDelta >= 0 ? <ArrowUpRight className="size-3" /> : <ArrowDownRight className="size-3" />}
+                  {Math.abs(loginDelta)} 较上周
+                </p>
               </div>
               <div className="flex rounded-lg border bg-muted/40 p-0.5" role="tablist" aria-label="图表时间范围">
                 <Button size="sm" variant={range === "7" ? "secondary" : "ghost"} onClick={() => setRange("7")} role="tab" aria-selected={range === "7"} className="text-xs">7 天</Button>
@@ -132,23 +140,25 @@ export function DashboardPage() {
   )
 }
 
-function MetricCard({ href, label, value, detail, trend, icon }: { href?: string; label: string; value: number; detail: string; trend: "up" | "down" | "neutral"; icon: React.ReactNode }) {
+function MetricCard({ href, label, value, detail, trend, icon }: { href?: string; label: string; value: number; detail?: string; trend: "up" | "down" | "neutral"; icon: React.ReactNode }) {
   const content = (
     <CardContent className="p-5">
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-muted-foreground">{label}</span>
-        <span className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+        <span className="flex size-8 items-center justify-center rounded-lg bg-muted text-muted-foreground">
           {icon}
         </span>
       </div>
       <strong className="mt-3 block text-5xl font-semibold tracking-tight text-foreground numeric">
         {value}
       </strong>
-      <p className={`mt-2 flex items-center gap-1 text-xs ${trend === "up" ? "text-emerald-600 dark:text-emerald-400" : trend === "down" ? "text-destructive" : "text-muted-foreground"}`}>
-        {trend === "up" && <ArrowUpRight className="size-3" />}
-        {trend === "down" && <ArrowDownRight className="size-3" />}
-        {detail}
-      </p>
+      {detail && (
+        <p className={`mt-2 flex items-center gap-1 text-xs ${trend === "up" ? "text-emerald-600 dark:text-emerald-400" : trend === "down" ? "text-destructive" : "text-muted-foreground"}`}>
+          {trend === "up" && <ArrowUpRight className="size-3" />}
+          {trend === "down" && <ArrowDownRight className="size-3" />}
+          {detail}
+        </p>
+      )}
     </CardContent>
   )
   return href ? (

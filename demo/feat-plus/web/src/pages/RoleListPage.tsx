@@ -39,6 +39,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Switch } from "@/components/ui/switch"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { flattenDepartments } from "@/lib/departments"
+import { PageHeader } from "@/components/layout/PageHeader"
 import { groupByKey } from "@/lib/menus"
 import { hasPermission } from "@/lib/permissions"
 import { useDepartments, usePermissionCatalog, useRoleMutations, useRoles } from "@/services/queries"
@@ -122,20 +123,16 @@ export function RoleListPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-        <div>
-          <p className="text-sm text-muted-foreground">系统管理</p>
-          <h2 className="mt-1 text-3xl font-semibold tracking-tight">角色权限</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            角色决定成员能做什么。权限点改动后立即生效，不需要成员重新登录。
-          </p>
-        </div>
-        {canWrite && (
+      <PageHeader
+        title="角色权限"
+        count={roles.length ? `${roles.length} 个角色` : undefined}
+        description="角色决定成员能做什么。权限点改动后立即生效，不需要成员重新登录。"
+        actions={canWrite && (
           <Button onClick={openCreate}>
             <Plus className="size-4" />新建角色
           </Button>
         )}
-      </div>
+      />
 
       <Card className="overflow-hidden">
         {isError ? (

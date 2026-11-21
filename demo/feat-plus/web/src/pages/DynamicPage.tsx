@@ -3,6 +3,7 @@ import { LayoutTemplate } from "lucide-react"
 
 import { usePageConfig } from "@/services/queries"
 import { DwList } from "@/components/dw/DwList"
+import { PageHeader } from "@/components/layout/PageHeader"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -37,10 +38,7 @@ export function DynamicPage() {
   if (isError || !config) {
     return (
       <div className="space-y-6">
-        <div>
-          <h2 className="text-3xl font-semibold tracking-tight">动态页面</h2>
-          <p className="mt-2 text-sm text-muted-foreground">/p/{pageKey}</p>
-        </div>
+        <PageHeader title="动态页面" description={`/p/${pageKey}`} />
         <Card>
           <CardContent className="p-12 text-center">
             <LayoutTemplate className="mx-auto size-8 text-muted-foreground/40" />
@@ -61,12 +59,7 @@ export function DynamicPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <p className="text-sm text-muted-foreground">动态页面</p>
-        <h2 className="mt-1 text-3xl font-semibold tracking-tight">{config.title}</h2>
-        {config.description && <p className="mt-2 text-sm text-muted-foreground">{config.description}</p>}
-      </div>
-
+      <PageHeader title={config.title} description={config.description} />
       <DwList pageKey={pageKey} config={config} />
     </div>
   )

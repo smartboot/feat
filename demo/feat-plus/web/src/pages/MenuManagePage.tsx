@@ -33,6 +33,7 @@ import { Switch } from "@/components/ui/switch"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { NAV_ICONS, NAV_ICON_KEYS } from "@/lib/icons"
 import { groupByKey } from "@/lib/menus"
+import { PageHeader } from "@/components/layout/PageHeader"
 import { hasPermission } from "@/lib/permissions"
 import { useMenuGroupMutations, useMenuGroups, useMenuMutations, useMenuRoutes, useMenus, usePermissionCatalog } from "@/services/queries"
 
@@ -206,7 +207,7 @@ export function MenuManagePage() {
   if (!canRead) {
     return (
       <div className="space-y-2">
-        <h2 className="text-3xl font-semibold tracking-tight">菜单管理</h2>
+        <h2 className="text-lg font-semibold tracking-tight">菜单管理</h2>
         <p className="text-sm text-muted-foreground">你没有查看菜单配置的权限（menu:read）。</p>
       </div>
     )
@@ -214,23 +215,18 @@ export function MenuManagePage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-        <div>
-          <p className="text-sm text-muted-foreground">系统管理</p>
-          <h2 className="mt-1 text-3xl font-semibold tracking-tight">菜单管理</h2>
-          <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
-            侧边栏的名称、分组、图标、顺序与权限点都在这里改，保存后刷新即生效，不需要重新发版。
-            能新增的只有「已经存在的页面」——路径下拉只列出白名单里的页面，因为组件必须在编译期存在。
-          </p>
-        </div>
-        {canWrite && (
+      <PageHeader
+        title="菜单管理"
+        count={menus.length ? `${menus.length} 条菜单` : undefined}
+        description="侧边栏的名称、分组、图标、顺序与权限点都在这里改，保存后刷新即生效，不需要重新发版。"
+        actions={canWrite && (
           <Button onClick={openCreate} className="shrink-0"
                   disabled={!routes.some((r) => !usedPaths.has(r))}
                   title={routes.some((r) => !usedPaths.has(r)) ? "" : "所有页面都已配好菜单：新增菜单只能指向已经存在的页面"}>
             <Plus className="size-4" /> 新增菜单
           </Button>
         )}
-      </div>
+      />
 
       {!isLoading && !isError && routes.length > 0 && !routes.some((r) => !usedPaths.has(r)) && (
         <div className="flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 p-4 text-sm">
