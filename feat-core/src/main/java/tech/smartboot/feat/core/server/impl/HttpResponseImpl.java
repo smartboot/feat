@@ -46,15 +46,15 @@ class HttpResponseImpl extends AbstractResponse {
         if (closed) {
             return;
         }
+        closed = true;
         try {
             if (outputStream != null && !outputStream.isClosed()) {
                 outputStream.close();
             }
         } catch (IOException ignored) {
         } finally {
-            request.getAioSession().close();
+            request.getAioSession().close(false);
         }
-        closed = true;
     }
 
 }
