@@ -53,6 +53,7 @@ class HttpResponseImpl extends AbstractResponse {
             }
         } catch (IOException ignored) {
         } finally {
+            // 当缓冲区存在大量待输出数据时，close(true) 可能导致数据丢失
             request.getAioSession().close(false);
         }
     }
