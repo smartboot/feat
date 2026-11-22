@@ -212,6 +212,12 @@ public class ChatModel {
         partial.setRole(Message.ROLE_ASSISTANT);
         partial.setContent(context.getContent());
         partial.setReasoningContent(context.getReasoning());
+        // 回填流式过程中已累积的元数据与工具调用，与正常终止标记收尾保持一致
+        partial.setId(context.getId());
+        partial.setModel(context.getModel());
+        partial.setFinishReason(context.getFinishReason());
+        partial.setUsage(context.getUsage());
+        partial.setToolCalls(context.getToolCalls());
         partial.setSuccess(true);
         return partial;
     }

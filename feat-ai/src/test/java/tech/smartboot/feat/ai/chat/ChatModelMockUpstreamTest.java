@@ -579,4 +579,58 @@ public class ChatModelMockUpstreamTest {
             slowServer.stop(0);
         }
     }
+
+    @Test
+    public void streamWithoutDoneMarkerCompletesWithAccumulatedMetadata() throws Exception {
+        // 上游发出若干帧后直接关闭连接，不发 [DONE]
+        HttpServer truncatedServer = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        truncatedServer.createContext("/v1/chat/completions", new HttpHandler() {
+            @Override
+            public void handle(HttpExchange exchange) throws IOException {
+                exchange.getResponseHeaders().set("Content-Type", "text/event-stream");
+                exchange.sendResponseHeaders(200, 0);
+                try (OutputStream os = exchange.getResponseBody()) {
+                    os.write(("data: " + JSONObject.of("id", "chatcmpl-truncated", "model", "mock-model",
+                            "choices", Collections.singletonList(JSONObject.of("index", 0,
+                                    "delta", JSONObject.of("role", "assistant", "content", "partial")))).toJSONString()
+                            + "\n\n").getBytes(StandardCharsets.UTF_8));
+                    os.flush();
+                    JSONObject toolCall = new JSONObject();
+                    toolCall.put("index", 0);
+                    toolCall.put("id", "call_truncated");
+                    toolCall.put("function", JSONObject.of("name", "get_weather", "arguments", "{\"city\":\"hz\"}"));
+                    os.write(("data: " + JSONObject.of("id", "chatcmpl-truncated", "model", "mock-model",
+                            "choices", Collections.singletonList(JSONObject.of("index", 0,
+                                    "delta", JSONObject.of("tool_calls", Collections.singletonList(toolCall)),
+                                    "finish_reason", "tool_calls"))).toJSONString()
+                            + "\n\n").getBytes(StandardCharsets.UTF_8));
+                    os.flush();
+                    // 不写 [DONE]，直接关闭
+                }
+            }
+        });
+        truncatedServer.start();
+        try {
+            String url = "http://127.0.0.1:" + truncatedServer.getAddress().getPort() + "/v1";
+            ChatModel chatModel = FeatAI.chatModel(o -> {
+                o.baseUrl(url);
+                o.model("mock-model");
+            });
+            RecordingListener listener = new RecordingListener();
+            ChatResponse response = chatModel.chatStream("hi", listener).get(10, TimeUnit.SECONDS);
+
+            Assert.assertNull("断连不应触发 onError", listener.error.get());
+            Assert.assertNotNull("断连应以已累积内容完成", listener.completion.get());
+            Assert.assertEquals("partial", response.getContent());
+            Assert.assertEquals("chatcmpl-truncated", response.getId());
+            Assert.assertEquals("mock-model", response.getModel());
+            Assert.assertEquals("tool_calls", response.getFinishReason());
+            Assert.assertNotNull(response.getToolCalls());
+            Assert.assertEquals(1, response.getToolCalls().size());
+            Assert.assertEquals("call_truncated", response.getToolCalls().get(0).getId());
+            Assert.assertEquals("{\"city\":\"hz\"}", response.getToolCalls().get(0).getArguments());
+        } finally {
+            truncatedServer.stop(0);
+        }
+    }
 }

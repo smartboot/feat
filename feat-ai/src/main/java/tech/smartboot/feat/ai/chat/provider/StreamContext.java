@@ -1,8 +1,12 @@
 package tech.smartboot.feat.ai.chat.provider;
 
 import tech.smartboot.feat.ai.chat.entity.ChatResponse;
+import tech.smartboot.feat.ai.chat.entity.ToolCall;
 import tech.smartboot.feat.ai.chat.entity.Usage;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -78,6 +82,12 @@ public class StreamContext {
      * Token 用量统计，上游在流末尾返回
      */
     private volatile Usage usage;
+
+    /**
+     * 流式过程中累积的工具调用
+     * <p>provider 每解析出工具调用增量即回写，供流未正常收尾（如断连）时构建部分响应</p>
+     */
+    private volatile List<ToolCall> toolCalls = Collections.emptyList();
 
     /**
      * 获取当前流式响应状态
@@ -217,5 +227,23 @@ public class StreamContext {
         if (usage != null) {
             this.usage = usage;
         }
+    }
+
+    /**
+     * 获取流式过程中累积的工具调用
+     *
+     * @return 工具调用列表，未收到时为不可变空列表
+     */
+    public List<ToolCall> getToolCalls() {
+        return toolCalls;
+    }
+
+    /**
+     * 回写当前累积的工具调用
+     *
+     * @param toolCalls 工具调用列表
+     */
+    public void setToolCalls(List<ToolCall> toolCalls) {
+        this.toolCalls = toolCalls == null ? Collections.emptyList() : new ArrayList<>(toolCalls);
     }
 }

@@ -255,6 +255,7 @@ public class AnthropicProvider extends Provider {
                         builder.setId(contentBlock.getString("id"));
                         builder.setName(contentBlock.getString("name"));
                         toolCallBuilderMap.put(blockIndex, builder);
+                        accumulateToolCalls(context, toolCallBuilderMap);
                     }
                     break;
                 case "content_block_delta": {
@@ -295,6 +296,7 @@ public class AnthropicProvider extends Provider {
                         if (builder != null && FeatUtils.isNotBlank(partialJson)) {
                             builder.appendArguments(partialJson);
                         }
+                        accumulateToolCalls(context, toolCallBuilderMap);
                         // 工具调用参数增量以 ToolCall 分片形式推送
                         ToolCall increment = new ToolCall();
                         increment.setIndex(deltaIndex);

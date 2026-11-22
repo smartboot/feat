@@ -4,6 +4,7 @@ import tech.smartboot.feat.ai.chat.ChatOptions;
 import tech.smartboot.feat.ai.chat.entity.Tool;
 import tech.smartboot.feat.ai.chat.entity.Message;
 import tech.smartboot.feat.ai.chat.entity.ChatResponse;
+import tech.smartboot.feat.ai.chat.entity.ToolCall;
 import tech.smartboot.feat.ai.chat.ChatStreamListener;
 import tech.smartboot.feat.ai.chat.provider.anthropic.AnthropicProvider;
 import tech.smartboot.feat.ai.chat.provider.openai.OpenAiProvider;
@@ -11,7 +12,9 @@ import tech.smartboot.feat.core.client.HttpResponse;
 import tech.smartboot.feat.core.client.HttpRest;
 import tech.smartboot.feat.core.client.SseEvent;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * AI 聊天 API 提供商抽象基类
@@ -55,6 +58,22 @@ public abstract class Provider {
      */
     public Provider(ChatOptions options) {
         this.options = options;
+    }
+
+    /**
+     * 将当前累积的工具调用构建器回写到流式上下文。
+     * <p>使流未正常收尾（如服务端未发终止标记即断连）时，
+     * 上层仍能基于上下文构建包含工具调用的部分响应。</p>
+     *
+     * @param context  流式上下文
+     * @param builders 按调用索引组织的工具调用构建器
+     */
+    protected static void accumulateToolCalls(StreamContext context, Map<Integer, ToolCallBuilder> builders) {
+        List<ToolCall> toolCalls = new ArrayList<>(builders.size());
+        for (ToolCallBuilder builder : builders.values()) {
+            toolCalls.add(builder.toToolCall());
+        }
+        context.setToolCalls(toolCalls);
     }
 
     /**

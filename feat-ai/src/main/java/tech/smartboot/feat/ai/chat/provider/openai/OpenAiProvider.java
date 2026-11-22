@@ -292,6 +292,8 @@ public class OpenAiProvider extends Provider {
                 increments.add(increment);
             }
             chunk.setToolCalls(increments);
+            // 回写累积状态，供流未正常收尾时构建部分响应
+            accumulateToolCalls(context, toolCallMap);
         }
 
         // 推送结构化数据块（文本/推理增量回调已先行触发）

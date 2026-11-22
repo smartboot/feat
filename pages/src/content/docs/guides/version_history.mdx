@@ -34,21 +34,25 @@ import { Aside, Steps } from '@astrojs/starlight/components';
 - **Client**：修复无路径 URL 的查询参数解析（如 `http://host?a=1`）
 - **Client**：Host 头省略协议默认端口，scheme 统一归一化为小写
 - **Client**：修复连接异常关闭时请求 `future` 永久挂起的问题，改为以 `IOException` 结束
-- **Router**：修复 `ByteTree` 超过最大深度时节点互相覆盖的问题
+- **Router**：修复 `ByteTree` 超过最大深度时节点互相覆盖的问题，并移除请求期动态写入 URI 缓存，避免路由映射被污染
 - **静态资源**：修复异步写入问题，补充空文件请求的提前返回处理
+- **Server**：修复响应关闭时状态标记异常的问题（#IKX2U7），`closed` 标志提前置位，连接改用 `close(false)` 非阻塞关闭，避免缓冲区待输出数据丢失
 - **认证**：补充 BasicAuth 处理器的异步处理方法，确保被包装的异步 Handler 正常工作
-- **依赖**：升级 smart-socket 至 `2.2.0`
+- **依赖**：升级 smart-socket 至 `2.2.0`，升级 central-publishing-maven-plugin 至 `0.12.0`
 
 #### Feat Cloud / AOT
 
-- `feat.yaml` 新增 bool 类型的配置值
+- `feat.yaml` 新增 bool 类型的配置值，并支持通过系统属性与环境变量注入
 - 优化 Feat Cloud 启动流程，外部 Bean 统一由 `ApplicationContext` 管理
 
 #### Feat AI
 
-- **Chat**：`chatStream` 返回类型由 `void` 调整为 `CompletableFuture<ChatResponse>`，支持获取流式终态响应
+- **Chat**：`chatStream` 返回类型由 `void` 调整为 `CompletableFuture<ChatResponse>`，支持获取流式终态响应；流已启动但服务端未发终止标记即断连时以已累积内容补齐完成，`future.cancel(true)` 可中止上游请求且取消后不再触发回调
 - **Chat**：`ChatStreamListener` 新增 `onChunk(ChatChunk)` 回调，暴露上游数据帧的完整元数据（`id`、`model`、`finish_reason`、`tool_calls` 增量、`usage`），网关与代理类场景可原样转发
 - **Chat**：新增 `ChatOptions#includeUsage`，流式响应末尾返回 token 用量
+- **Chat**：新增 OpenAI Responses API 规范处理器 `OpenAiResponsesProvider`，通过 `specProvider(OpenAiResponsesProvider::new)` 切换；`input` / `instructions` 消息、扁平工具定义、`output` 项与语义化流式事件（无 `[DONE]`）均映射到既有 Chat 模型，调用方式不变
+- **Chat**：`Message` 新增 `ROLE_TOOL`、`ofAssistant(content, toolCalls)` 与 `ofTool(toolCallId, content)`，支持多轮工具调用上下文回传
+- **Agent**：新增 Agent Harness 编排层，以 `AgentHarness` / `HarnessOptions` 提供步骤、预算、取消与恢复的异步编排，并支持工具策略、审批门、校验器、上下文引擎及会话存储等可插拔组件
 - **MCP**：协议版本对齐至 `2025-11-25`，同时保留对 `2025-06-18` 的兼容，客户端与服务端按对方声明协商，不再绑定单一版本。最新规范 `2026-07-28` **尚未支持**（见下方说明）
 - **MCP**：新增 `Icon` 图标元数据，覆盖 Tool、Resource、ResourceTemplate、Prompt 与 Implementation（SEP-973），服务端侧提供 `icons(...)` 链式方法
 - **MCP**：新增 URL 模式 elicitation 与枚举 Schema 支持，覆盖 `enum`、`oneOf`、多选等形态，新增错误码 `-32042`
@@ -79,6 +83,8 @@ import { Aside, Steps } from '@astrojs/starlight/components';
 3. 若继承了 `SessionManager`，适配新增的 `getSession(String)` 与 `createSession()` 抽象方法
 4. 若使用 MCP，检查 `JsonRpc#getId()` 的返回值使用处，按需显式转换类型
 5. MCP 列表默认不分页，行为与旧版一致；如需分页，通过服务端 `McpOptions#setPageSize` 开启
+6. （可选）使用 OpenAI Responses API 时，配置 `specProvider(OpenAiResponsesProvider::new)`
+7. （可选）使用 Agent Harness 时，配置 `HarnessOptions` 并提供 `loop` 与 `toolRuntime`
 </Steps>
 
 ### 兼容性说明
@@ -94,6 +100,9 @@ import { Aside, Steps } from '@astrojs/starlight/components';
 | `McpException.INTERNAL_ERROR` | 数值由 `-32602` 修正为 `-32603` | 按字面量匹配错误码的代码需同步调整，建议改用常量 |
 | `Transport#asyncRequest` | 失败时抛出异常，不再返回 `null` | 依赖 `null` 判断的分支改用 `exceptionally` 或 `handle` |
 | MCP 列表分页 | 默认关闭（服务端 `pageSize` 为 `Integer.MAX_VALUE`） | 需要分页时调用服务端 `McpOptions#setPageSize` 开启 |
+| `OpenAiResponsesProvider` | 新增可选规范处理器，默认仍为 Chat Completions | 需切换时显式配置 `specProvider` |
+| Agent Harness | 新增编排层，不影响既有 Agent 用法 | 按需引入 |
+| 响应关闭行为 | `closed` 提前置位，连接改用 `close(false)` 非阻塞关闭 | 无需处理，修复异常时状态遗漏与缓冲区数据丢失 |
 
 ---
 

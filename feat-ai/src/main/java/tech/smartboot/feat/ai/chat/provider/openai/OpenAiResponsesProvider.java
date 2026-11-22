@@ -213,6 +213,7 @@ public class OpenAiResponsesProvider extends Provider {
                     if (FeatUtils.isNotBlank(item.getString("name"))) {
                         builder.setName(item.getString("name"));
                     }
+                    accumulateToolCalls(context, toolCallMap);
                     ChatChunk chunk = metaChunk(context);
                     chunk.setToolCalls(Collections.singletonList(incrementOf(index, builder)));
                     consumer.onChunk(chunk);
@@ -225,6 +226,7 @@ public class OpenAiResponsesProvider extends Provider {
                     int index = object.getIntValue("output_index");
                     ToolCallBuilder builder = toolCallMap.computeIfAbsent(index, ToolCallBuilder::new);
                     builder.appendArguments(delta);
+                    accumulateToolCalls(context, toolCallMap);
                     ChatChunk chunk = metaChunk(context);
                     chunk.setToolCalls(Collections.singletonList(incrementOf(index, builder)));
                     consumer.onChunk(chunk);
