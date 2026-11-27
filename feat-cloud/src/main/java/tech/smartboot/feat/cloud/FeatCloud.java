@@ -33,16 +33,24 @@ public class FeatCloud {
      * Package-private so the failure cleanup path can be verified without starting a socket server.
      */
     static void startApplicationContext(ApplicationContext application) {
+        startApplicationContext(application::start, application::destroy);
+    }
+
+    static void startApplicationContext(StartupAction start, Runnable destroy) {
         try {
-            application.start();
+            start.run();
         } catch (Throwable e) {
             try {
-                application.destroy();
+                destroy.run();
             } catch (Throwable cleanupError) {
                 e.addSuppressed(cleanupError);
             }
             throw new FeatException("application start exception", e);
         }
+    }
+
+    interface StartupAction {
+        void run() throws Throwable;
     }
 
     /**
