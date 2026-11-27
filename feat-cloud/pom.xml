@@ -32,6 +32,11 @@
             <artifactId>feat-ai</artifactId>
         </dependency>
         <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>tech.smartboot</groupId>
             <artifactId>redisun</artifactId>
             <version>1.4.0</version>
