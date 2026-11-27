@@ -29,6 +29,23 @@ import java.util.function.Consumer;
 public class FeatCloud {
 
     /**
+     * Start the application context and release any resources created before a startup failure.
+     * Package-private so the failure cleanup path can be verified without starting a socket server.
+     */
+    static void startApplicationContext(ApplicationContext application) {
+        try {
+            application.start();
+        } catch (Throwable e) {
+            try {
+                application.destroy();
+            } catch (Throwable cleanupError) {
+                e.addSuppressed(cleanupError);
+            }
+            throw new FeatException("application start exception", e);
+        }
+    }
+
+    /**
      * 创建默认配置的云服务器实例
      * <p>
      * 使用默认配置创建云服务器实例，不进行任何额外配置。
@@ -58,13 +75,7 @@ public class FeatCloud {
         options.accept(opt);
         // 创建应用上下文实例
         ApplicationContext application = new ApplicationContext(opt);
-        try {
-            // 启动应用上下文
-            application.start();
-        } catch (Throwable e) {
-            // 如果启动过程中出现异常，则封装为FeatException抛出
-            throw new FeatException("application start exception", e);
-        }
+        startApplicationContext(application);
 
         // 创建HTTP服务器实例
         HttpServer server = Feat.httpServer(opt);
