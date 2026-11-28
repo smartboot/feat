@@ -254,6 +254,7 @@ public final class CloudOptionsSerializer implements Serializer {
         }
 
         printWriter.println("\tprivate List<" + CloudService.class.getSimpleName() + "> services = new " + ArrayList.class.getSimpleName() + "(" + services.size() + ");");
+        extensions.forEach(Serializer::serializeProperty);
     }
 
     @Override
@@ -365,5 +366,6 @@ public final class CloudOptionsSerializer implements Serializer {
         printWriter.println("\t\tfor (CloudService service : services) {");
         printWriter.println("\t\t\tservice.destroy();");
         printWriter.println("\t\t}");
+        extensions.forEach(Serializer::serializeDestroy);
     }
 }
