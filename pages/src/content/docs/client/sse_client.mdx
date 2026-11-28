@@ -17,9 +17,11 @@ SSE 客户端基于 HttpClient 构建，用于接收服务端推送的流式事�
 
 ```java
 import tech.smartboot.feat.Feat;
+import tech.smartboot.feat.core.common.HeaderName;
 
 Feat.httpClient("http://localhost:8080")
         .get("/events")
+        .header(header -> header.set(HeaderName.ACCEPT, "text/event-stream"))
         .onSSE(sse -> sse
                 .onOpen(response -> {
                     System.out.println("连接成功，状态码: " + response.statusCode());
@@ -54,15 +56,17 @@ Feat.httpClient("http://localhost:8080", options -> {
 
 ### 基本事件监听
 
-SSE 事件对象包含三个核心字段：
+SSE 事件由 `SseEvent` 类表示，常用读取方法如下：
 
-```java
-public interface SseEvent {
-    String getId();      // 事件 ID（用于断点续传）
-    String getType();    // 事件类型（event 字段）
-    String getData();    // 事件数据（data 字段）
-}
-```
+| 方法 | 含义 |
+|---|---|
+| `getId()` | 事件 ID |
+| `getType()` | `event:` 字段指定的事件类型；未指定时为 `null` |
+| `getData()` | 事件数据 |
+| `getRetry()` | 服务端建议的重连间隔，单位毫秒；未提供或格式错误时为 `null` |
+| `getComment()` | 事件注释字段 |
+
+`getId()` 只负责读取事件 ID，不会自动保存游标或在断线后重连。需要续传时，应用应保存最后处理的 ID，并在下一次请求中主动设置 `Last-Event-ID` 请求头。
 
 ### 处理命名事件
 
@@ -114,11 +118,10 @@ sequenceDiagram
             Client-->>App: onData() / onEvent()
         end
         
-        Server-->>Client: 连接关闭
+        Server-->>Client: 连接正常结束
         Client-->>App: onClose()
-    else 连接失败
+    else 请求异常
         Client-->>App: onFailure()
-        Client-->>App: onClose()
     end
 ```
 
@@ -131,7 +134,7 @@ sequenceDiagram
 5. **连接关闭** - 无论成功或失败，连接关闭时都会触发 `onClose()`
 
 <Aside type="tip">
-`onClose()` 是**最终回调**，无论连接成功还是失败都会执行，适合用于资源清理操作。
+`onClose()` 不是失败回调：它只在请求 Future 正常完成时执行。连接或解析异常应通过 `onFailure()` 处理。`onOpen()` 只有在响应满足 SSE 判定条件（默认 HTTP 200 且 Content-Type 以 `text/event-stream` 开头）时才触发。
 </Aside>
 
 ## 请求配置
@@ -188,18 +191,23 @@ rest.submit();
 import tech.smartboot.feat.Feat;
 import tech.smartboot.feat.core.client.HttpRest;
 
-HttpRest rest;
-rest = Feat.httpClient("http://localhost:8080")
+import java.util.concurrent.atomic.AtomicReference;
+
+AtomicReference<HttpRest> restRef = new AtomicReference<>();
+HttpRest rest = Feat.httpClient("http://localhost:8080")
         .get("/events")
         .onSSE(sse -> sse.onData(event -> {
             System.out.println("收到: " + event.getData());
-            // 收到特定消息后关闭
             if ("complete".equals(event.getData())) {
-                rest.close();
+                HttpRest current = restRef.get();
+                if (current != null) {
+                    current.close();
+                }
             }
         }))
         .onFailure(Throwable::printStackTrace);
 
+restRef.set(rest);
 rest.submit();
 ```
 
@@ -207,10 +215,17 @@ rest.submit();
 
 ```java
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-Executors.newSingleThreadScheduledExecutor()
-        .schedule(rest::close, 30, TimeUnit.SECONDS);
+ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+scheduler.schedule(() -> {
+    try {
+        rest.close();
+    } finally {
+        scheduler.shutdown();
+    }
+}, 30, TimeUnit.SECONDS);
 ```
 
 
@@ -225,6 +240,7 @@ import tech.smartboot.feat.core.server.upgrade.sse.SseEmitter;
 
 import java.io.IOException;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class SimpleSseServer {
@@ -234,23 +250,36 @@ public class SimpleSseServer {
                 req.getResponse().write("use /events");
                 return;
             }
-            
+
             req.upgrade(new SSEUpgrade() {
                 @Override
                 public void onOpen(SseEmitter emitter) throws IOException {
                     emitter.send(SseEmitter.event()
                             .name("connected")
                             .data("Welcome to SSE"));
-                    
-                    // 定时发送消息
-                    Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> {
-                        try {
-                            emitter.send(SseEmitter.event()
-                                    .name("message")
-                                    .id(String.valueOf(System.currentTimeMillis()))
-                                    .data("Server time: " + System.currentTimeMillis()));
-                        } catch (IOException e) {
-                            e.printStackTrace();
+
+                    // 演示用：每个连接创建一个任务，结束时停止调度
+                    ScheduledExecutorService scheduler =
+                            Executors.newSingleThreadScheduledExecutor();
+                    scheduler.scheduleAtFixedRate(new Runnable() {
+                        int i = 0;
+
+                        @Override
+                        public void run() {
+                            try {
+                                emitter.send(SseEmitter.event()
+                                        .name("message")
+                                        .id(String.valueOf(i))
+                                        .data("Server event " + i));
+                                i++;
+                                if (i == 10) {
+                                    emitter.complete();
+                                    scheduler.shutdown();
+                                }
+                            } catch (IOException e) {
+                                emitter.complete();
+                                scheduler.shutdownNow();
+                            }
                         }
                     }, 1, 1, TimeUnit.SECONDS);
                 }
