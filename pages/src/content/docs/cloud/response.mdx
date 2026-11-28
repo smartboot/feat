@@ -121,6 +121,7 @@ public class UserController {
     {
       "success": true,
       "code": 200,
+      "message": null,
       "data": {
         "username": "feat",
         "role": "admin"
@@ -133,7 +134,8 @@ public class UserController {
     {
       "success": false,
       "code": 500,
-      "message": "User not found"
+      "message": "User not found",
+      "data": null
     }
     ```
   </TabItem>
@@ -182,15 +184,17 @@ ctx.Response.write(bytes);
 
 注解处理器会分析 Controller 方法的返回类型，并为常见类型生成直接写出逻辑。
 
-| 类型 | 序列化方式 |
+| 返回类型 / 字段类型 | 序列化方式 |
 |------|-----------|
-| `String`、基本类型、包装类型 | 直接写输出流 |
-| `Date`、`Timestamp` | 直接格式化后写输出流 |
-| 自定义 POJO | 按 getter 生成访问代码 |
-| `List`、`Map` | 生成遍历代码 |
-| 数组、`Object`、嵌套过深对象 | 回退到 FastJSON2 |
+| Controller 返回 `String`、`byte[]` | 直接转换为字节并写入响应流 |
+| Controller 返回基本类型 `int`、`boolean` | 使用专门的直接写出逻辑 |
+| 自定义 POJO | 按 getter 生成字段访问与写出代码 |
+| POJO 字段中的数值包装类型、布尔值 | 生成直接取值与写出代码 |
+| POJO 字段中的 `Date`、`Timestamp` | 默认写出毫秒时间戳；可用 `@JSONField(format = "...")` 指定格式 |
+| 声明了泛型的 `List<T>` | 生成遍历代码，元素类型继续按对应规则处理 |
+| `Map`、数组、`Object`、未声明泛型的 `List`、嵌套过深对象 | 回退到 FastJSON2 |
 
-如果返回的是 `RestResult<List<Map<String, String>>>` 这种更复杂的结构，生成出来的代码会更像“按字段逐个写出”：
+如果返回的是 `RestResult<List<Map<String, String>>>` 这种更复杂的结构，`RestResult` 和有泛型的 `List` 会生成直接写出代码；其中每个 `Map` 则交给 FastJSON2 的 `JSONObject` 处理：
 
 ```java
 RestResult<List<Map<String, String>>> rst = bean.hello1ss2();
@@ -213,7 +217,7 @@ os.write(b_data);
 两条建议：**DTO 嵌套不要超过两层**；需要表达“没有值”时用空串或空集合，别用 `null`。
 </Aside>
 
-这也是 Feat Cloud 性能模型的一部分：框架尽量在编译期确定响应结构，运行时少做反射和动态判断。对读者来说，真正能感受到的不是术语，而是“我写的一个返回值，最后会被展开成一段具体的写出逻辑”。
+这也是 Feat Cloud 性能模型的一部分：对于有明确结构的 POJO 和泛型 List，框架尽量在编译期确定字段访问与遍历代码；Map、数组、Object、原始 List 和深层嵌套则保留 FastJSON2 运行时序列化路径。对读者来说，关键不是“所有返回值都没有反射”，而是明确哪些类型可以走生成代码，哪些类型会回退。
 
 <Aside type="caution">
 `AsyncResponse` 的完成结果发生在运行时，编译期无法提前知道具体对象结构，因此会走运行时 JSON 序列化。异步响应的写法放在 [Controller 与请求处理](/feat/cloud/controller/) 的运行时能力部分。
