@@ -35,6 +35,7 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -134,6 +135,11 @@ public class HttpStaticResourceHandler implements HttpHandler {
 
     public void handleClassPath(HttpRequest request, CompletableFuture<Void> completableFuture, String fileName) throws Throwable {
         HttpResponse response = request.getResponse();
+        boolean gzip = acceptsGzip(request);
+        response.setHeader(HeaderName.VARY, HeaderName.ACCEPT_ENCODING.getName());
+        if (gzip) {
+            response.setHeader(HeaderName.CONTENT_ENCODING, HeaderValue.ContentEncoding.GZIP);
+        }
 
         //304 命中缓存
         String requestModified = request.getHeader(HeaderName.IF_MODIFIED_SINCE);
@@ -160,13 +166,57 @@ public class HttpStaticResourceHandler implements HttpHandler {
         });
         response.setHeader(HeaderName.LAST_MODIFIED, lastModifyDateFormat);
         response.setHeader(HeaderName.CONTENT_TYPE, Mimetypes.getInstance().getMimetype(fileName) + "; charset=utf-8");
-        //HEAD不输出内容
+        //HEAD 返回与 GET 相同的表示元数据，但不输出内容
         if (HttpMethod.HEAD.equals(request.getMethod())) {
             completableFuture.complete(null);
             return;
         }
-        response.setHeader(HeaderName.CONTENT_ENCODING, HeaderValue.ContentEncoding.GZIP);
 
+        if (gzip) {
+            streamGzip(inputStream, response, completableFuture);
+        } else {
+            streamPlain(inputStream, response, completableFuture);
+        }
+    }
+
+    private boolean acceptsGzip(HttpRequest request) {
+        Collection<String> values = request.getHeaders(HeaderName.ACCEPT_ENCODING.getName());
+        Boolean gzipAccepted = null;
+        Boolean wildcardAccepted = null;
+        for (String value : values) {
+            for (String item : value.split(",")) {
+                String[] parts = item.trim().split(";");
+                if (parts.length == 0) {
+                    continue;
+                }
+                String coding = parts[0].trim();
+                if (coding.isEmpty()) {
+                    continue;
+                }
+                double quality = 1.0;
+                for (int i = 1; i < parts.length; i++) {
+                    String parameter = parts[i].trim();
+                    int separator = parameter.indexOf('=');
+                    if (separator > 0 && "q".equalsIgnoreCase(parameter.substring(0, separator).trim())) {
+                        try {
+                            quality = Double.parseDouble(parameter.substring(separator + 1).trim());
+                        } catch (NumberFormatException e) {
+                            quality = 0;
+                        }
+                    }
+                }
+                boolean accepted = quality > 0 && quality <= 1;
+                if ("gzip".equalsIgnoreCase(coding)) {
+                    gzipAccepted = accepted;
+                } else if ("*".equals(coding)) {
+                    wildcardAccepted = accepted;
+                }
+            }
+        }
+        return gzipAccepted != null ? gzipAccepted : Boolean.TRUE.equals(wildcardAccepted);
+    }
+
+    private void streamGzip(InputStream inputStream, HttpResponse response, CompletableFuture<Void> completableFuture) throws IOException {
         Runnable consumer = new Runnable() {
             final byte[] bytes = new byte[options.writeBufferSize()];
             final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
@@ -174,9 +224,9 @@ public class HttpStaticResourceHandler implements HttpHandler {
 
             @Override
             public void run() {
-                int length;
                 try {
-                    if ((length = inputStream.read(bytes)) >= 0) {
+                    int length = inputStream.read(bytes);
+                    if (length >= 0) {
                         outputStream.write(bytes, 0, length);
                         byte[] gzipBytes = byteArrayOutputStream.toByteArray();
                         byteArrayOutputStream.reset();
@@ -199,9 +249,34 @@ public class HttpStaticResourceHandler implements HttpHandler {
         consumer.run();
     }
 
+    private void streamPlain(InputStream inputStream, HttpResponse response, CompletableFuture<Void> completableFuture) {
+        Runnable consumer = new Runnable() {
+            final byte[] bytes = new byte[options.writeBufferSize()];
+
+            @Override
+            public void run() {
+                try {
+                    int length = inputStream.read(bytes);
+                    if (length >= 0) {
+                        response.getOutputStream().write(bytes, 0, length, this);
+                    } else {
+                        response.getOutputStream().flush();
+                        completableFuture.complete(null);
+                    }
+                } catch (Throwable throwable) {
+                    completableFuture.completeExceptionally(throwable);
+                }
+            }
+        };
+        consumer.run();
+    }
+
     private void handleFilePath(HttpRequest request, CompletableFuture<Void> completableFuture, String fileName) throws Throwable {
         HttpResponse response = request.getResponse();
-        File file = new File(baseDir, fileName);
+        File file = new File(baseDir, fileName).getCanonicalFile();
+        if (!file.toPath().startsWith(baseDir.toPath())) {
+            throw new WafException(HttpStatus.FORBIDDEN, WafOptions.DESC);
+        }
 
         if (options.autoIndex() && file.isDirectory()) {
             int index = fileName.lastIndexOf('/');
