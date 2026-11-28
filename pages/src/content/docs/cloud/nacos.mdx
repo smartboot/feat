@@ -221,17 +221,60 @@ curl http://localhost:8081/nacos
 然后去 Nacos 控制台修改 `config1` / `feat` 这个配置的内容，稍等片刻再请求一次，应该能看到新值。
 
 <Aside type="tip">
-生产环境要开鉴权时，把 `namespace`、`username`、`password` 也声明到 `feat.yml`，在 `init()` 里一并塞进 `Properties`：
+生产环境启用 Nacos 鉴权时，除了服务端开启鉴权，还要让客户端携带对应的 namespace、用户名和口令。不要只把键写进 YAML：这些值也必须注入到创建 `ConfigService` 的代码中。
+
+先在 `feat.yml` 中声明配置入口：
+
+```yaml title="feat-prod.yml"
+nacos:
+  namespace: ${nacos.namespace:}
+  username: ${nacos.username:}
+  password: ${nacos.password:}
+```
+
+在 `ConfigBootstrap` 中增加字段：
 
 ```java
-properties.put(PropertyKeyConst.NAMESPACE, namespace);
+@Value("${nacos.namespace:}")
+private String namespace;
+
+@Value("${nacos.username:}")
+private String username;
+
+@Value("${nacos.password:}")
+private String password;
+```
+
+并为这三个字段提供 setter（Feat 的字段注入会生成 setter 调用）：
+
+```java
+public void setNamespace(String namespace) { this.namespace = namespace; }
+public void setUsername(String username) { this.username = username; }
+public void setPassword(String password) { this.password = password; }
+```
+
+最后在创建客户端前补充属性。下面以 `ConfigService` 为例；`RegisterBootstrap` 和 `DiscoverBootstrap` 创建 `NamingService` 时，也要向各自的 `Properties` 写入相同的 namespace / username / password：
+
+```java
+if (namespace != null && !namespace.isEmpty()) {
+    properties.put(PropertyKeyConst.NAMESPACE, namespace);
+}
 if (username != null && !username.isEmpty()) {
     properties.put(PropertyKeyConst.USERNAME, username);
     properties.put(PropertyKeyConst.PASSWORD, password);
 }
 ```
 
-口令不要硬编码进仓库，用环境变量注入。
+启动时通过 JVM 系统属性或环境变量提供敏感值，例如：
+
+```bash
+java -Dnacos.namespace=your-namespace \
+     -Dnacos.username=your-user \
+     -Dnacos.password=your-password \
+     -Dfeat.profiles.active=prod -jar yourapp.jar
+```
+
+也可以使用 `NACOS_NAMESPACE`、`NACOS_USERNAME`、`NACOS_PASSWORD` 环境变量。不要把真实口令提交到仓库。这里的 namespace 应填写 Nacos 实际使用的 namespace ID；默认 public namespace 通常不需要显式设置。
 </Aside>
 
 ## 服务注册
@@ -424,7 +467,7 @@ curl http://localhost:8083/nacos/instances
 上线前记住几件事就够了：
 
 - **开鉴权**：Nacos 服务端开启鉴权，`namespace` / 用户名 / 口令通过环境变量注入，不要写死在仓库里
-- **先校验再刷新**：监听到新配置后先检查格式和必填字段，坏配置不要覆盖内存值
+- **先校验再刷新**：监听到新配置后先检查格式和必填字段，坏配置不要覆盖内存值。本文的 `ConfigBootstrap` 为了展示监听链路，只把原始文本保存到 `config`；真实业务应在回调中解析并校验配置成功后，再一次性替换当前配置快照。
 - **拷贝回调数据**：`receiveConfigInfo` / `NamingEvent.getInstances()` 返回的是 Nacos 内部引用，回调线程和请求线程并发访问时务必拷贝快照
 - **容器里别用回环 IP**：注册的 `ip` 必须是调用方可达地址，容器化部署要注入真实 IP
 - **优雅关闭**：`@PreDestroy` 里先 `removeListener` / `unsubscribe` 再 `shutDown`，避免停机时还在回调已释放的资源

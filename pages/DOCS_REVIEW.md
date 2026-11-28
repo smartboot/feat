@@ -11,6 +11,15 @@ Router 文档已拆分为使用、匹配、拦截器和 Session 四个主题，�
 
 ## 已确认问题
 
+### H2：Nacos 生产鉴权示例缺少完整的 Feat 注入链路
+
+对照 `pages/src/content/docs/cloud/nacos.mdx`、`demo/nacos/pom.xml`、`demo/nacos/src/main/resources/feat.yml` 与当前 Bean 配置注入约定核对后，发现原生产鉴权提示只展示了向 Nacos `Properties` 写入 namespace、username、password，却没有展示这些变量如何从 Feat 配置注入；若直接照抄片段，三个变量没有来源。
+
+已在 Nacos 文档补充 `@Value` 字段、setter、环境变量/JVM 参数示例，以及将值写入 `Properties` 的完整片段。另明确当前最小配置监听示例只保存原始文本，生产业务应先解析和校验新配置，再替换当前配置快照。
+
+当前 `demo/nacos` 使用 Nacos Client 3.2.3，示例配置覆盖 Config、Naming 注册和发现参数。Demo 的 `docker-compose.yaml` 仅用于本地单机环境，不应被理解为已经完整配置了生产鉴权。
+
+
 ### H3：文档站点 README 仍是初始化模板
 
 当前 `pages/README.md` 仍保留 Astro Starlight Starter Kit 的默认介绍、StackBlitz/CodeSandbox/Netlify/Vercel 模板链接，以及“删除此文件”的提示。它没有说明 Feat 文档目录、开发命令、构建方式、文档维护约定或 Pages 部署流程，容易误导后续维护者。
