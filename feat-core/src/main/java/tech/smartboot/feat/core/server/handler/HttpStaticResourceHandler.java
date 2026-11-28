@@ -135,45 +135,50 @@ public class HttpStaticResourceHandler implements HttpHandler {
 
     public void handleClassPath(HttpRequest request, CompletableFuture<Void> completableFuture, String fileName) throws Throwable {
         HttpResponse response = request.getResponse();
-        boolean gzip = acceptsGzip(request);
-        response.setHeader(HeaderName.VARY, HeaderName.ACCEPT_ENCODING.getName());
-
-        //304 命中缓存
-        String requestModified = request.getHeader(HeaderName.IF_MODIFIED_SINCE);
-        if (FeatUtils.isNotBlank(requestModified) && lastModifyDate.getTime() <= FeatUtils.parseRFC1123(requestModified).getTime()) {
-            if (gzip) {
-                response.setHeader(HeaderName.CONTENT_ENCODING, HeaderValue.ContentEncoding.GZIP);
-            }
-            response.setHttpStatus(HttpStatus.NOT_MODIFIED);
-            completableFuture.complete(null);
-            return;
-        }
-
         URL url = getClassPathURL(fileName);
         if (url == null) {
             fileNotFound(request, response);
             completableFuture.complete(null);
             return;
         }
-        InputStream inputStream = url.openStream();
-        fileName = url.getFile();
 
+        int encoding = selectContentEncoding(request);
+        response.setHeader(HeaderName.VARY, HeaderName.ACCEPT_ENCODING.getName());
+        if (encoding < 0) {
+            response.setHttpStatus(HttpStatus.NOT_ACCEPTABLE);
+            completableFuture.complete(null);
+            return;
+        }
+        boolean gzip = encoding == 1;
+        if (gzip) {
+            response.setHeader(HeaderName.CONTENT_ENCODING, HeaderValue.ContentEncoding.GZIP);
+        }
+
+        fileName = url.getFile();
+        response.setHeader(HeaderName.LAST_MODIFIED, lastModifyDateFormat);
+        response.setHeader(HeaderName.CONTENT_TYPE, Mimetypes.getInstance().getMimetype(fileName) + "; charset=utf-8");
+
+        //304 命中缓存
+        String requestModified = request.getHeader(HeaderName.IF_MODIFIED_SINCE);
+        if (FeatUtils.isNotBlank(requestModified) && lastModifyDate.getTime() <= FeatUtils.parseRFC1123(requestModified).getTime()) {
+            response.setHttpStatus(HttpStatus.NOT_MODIFIED);
+            completableFuture.complete(null);
+            return;
+        }
+
+        //HEAD 返回与 GET 相同的表示元数据，但不输出内容
+        if (HttpMethod.HEAD.equals(request.getMethod())) {
+            completableFuture.complete(null);
+            return;
+        }
+
+        InputStream inputStream = url.openStream();
         completableFuture.whenComplete((r, t) -> {
             try {
                 inputStream.close();
             } catch (IOException ignored) {
             }
         });
-        response.setHeader(HeaderName.LAST_MODIFIED, lastModifyDateFormat);
-        response.setHeader(HeaderName.CONTENT_TYPE, Mimetypes.getInstance().getMimetype(fileName) + "; charset=utf-8");
-        if (gzip) {
-            response.setHeader(HeaderName.CONTENT_ENCODING, HeaderValue.ContentEncoding.GZIP);
-        }
-        //HEAD 返回与 GET 相同的表示元数据，但不输出内容
-        if (HttpMethod.HEAD.equals(request.getMethod())) {
-            completableFuture.complete(null);
-            return;
-        }
 
         if (gzip) {
             streamGzip(inputStream, response, completableFuture);
@@ -182,10 +187,17 @@ public class HttpStaticResourceHandler implements HttpHandler {
         }
     }
 
-    private boolean acceptsGzip(HttpRequest request) {
+    /**
+     * Selects the best representation supported by the request.
+     *
+     * @return 1 for gzip, 0 for identity, or -1 when neither is acceptable.
+     */
+    private int selectContentEncoding(HttpRequest request) {
         Collection<String> values = request.getHeaders(HeaderName.ACCEPT_ENCODING.getName());
-        Boolean gzipAccepted = null;
-        Boolean wildcardAccepted = null;
+        Double gzipQuality = null;
+        Double identityQuality = null;
+        Double wildcardQuality = null;
+
         for (String value : values) {
             for (String item : value.split(",")) {
                 String[] parts = item.trim().split(";");
@@ -196,27 +208,39 @@ public class HttpStaticResourceHandler implements HttpHandler {
                 if (coding.isEmpty()) {
                     continue;
                 }
-                double quality = 1.0;
-                for (int i = 1; i < parts.length; i++) {
-                    String parameter = parts[i].trim();
-                    int separator = parameter.indexOf('=');
-                    if (separator > 0 && "q".equalsIgnoreCase(parameter.substring(0, separator).trim())) {
-                        try {
-                            quality = Double.parseDouble(parameter.substring(separator + 1).trim());
-                        } catch (NumberFormatException e) {
-                            quality = 0;
-                        }
-                    }
-                }
-                boolean accepted = quality > 0 && quality <= 1;
+                double quality = parseQuality(parts);
                 if ("gzip".equalsIgnoreCase(coding)) {
-                    gzipAccepted = accepted;
+                    gzipQuality = quality;
+                } else if ("identity".equalsIgnoreCase(coding)) {
+                    identityQuality = quality;
                 } else if ("*".equals(coding)) {
-                    wildcardAccepted = accepted;
+                    wildcardQuality = quality;
                 }
             }
         }
-        return gzipAccepted != null ? gzipAccepted : Boolean.TRUE.equals(wildcardAccepted);
+
+        double gzip = gzipQuality != null ? gzipQuality : (wildcardQuality != null ? wildcardQuality : 0);
+        double identity = identityQuality != null ? identityQuality : (wildcardQuality != null && wildcardQuality == 0 ? 0 : 1);
+        if (gzip <= 0 && identity <= 0) {
+            return -1;
+        }
+        return gzip > 0 && gzip >= identity ? 1 : 0;
+    }
+
+    private double parseQuality(String[] parts) {
+        double quality = 1.0;
+        for (int i = 1; i < parts.length; i++) {
+            String parameter = parts[i].trim();
+            int separator = parameter.indexOf('=');
+            if (separator > 0 && "q".equalsIgnoreCase(parameter.substring(0, separator).trim())) {
+                try {
+                    quality = Double.parseDouble(parameter.substring(separator + 1).trim());
+                } catch (NumberFormatException e) {
+                    quality = 0;
+                }
+            }
+        }
+        return quality >= 0 && quality <= 1 ? quality : 0;
     }
 
     private void streamGzip(InputStream inputStream, HttpResponse response, CompletableFuture<Void> completableFuture) throws IOException {
