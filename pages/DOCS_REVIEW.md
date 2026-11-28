@@ -339,4 +339,4 @@ Feat Core 与 Feat AI 采用 Apache 2.0；Feat Cloud 则采用赞助授权模式
 
 本轮改动涉及 `feat-core/src/main/java/tech/smartboot/feat/core/server/handler/HttpStaticResourceHandler.java` 与 `feat-test` 下的静态资源测试和测试资源，并同步修正文档中已经过时的 gzip / 路径安全说明。
 
-**验证状态：**GitHub Actions 的定向测试步骤在 commit `0749443` 上运行了两个 `HttpStaticResourceHandlerTest` 类，共 6 项测试，0 failures、0 errors、0 skipped。后续一次重跑只在测试清理阶段因 `HttpClient.close()` 抛出 `client is not belong to this multiplex client` 而失败；测试断言已执行完毕，现已移除该测试清理调用，最新提交的重跑仍在排队。Core 编译步骤已成功；Astro 构建未执行。合并前仍需确认最新提交的定向测试重跑通过。
+**验证状态：**GitHub Actions 在 commit `18c6e6e` 上完成定向测试：两个 `HttpStaticResourceHandlerTest` 类共 6 项测试，0 failures、0 errors、0 skipped。Core 编译、Feat Static 构建和 Redis Session Demo 构建均成功。Native 构建与性能基准任务仍在执行；Astro 构建未执行。
