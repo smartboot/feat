@@ -136,7 +136,6 @@ public class HttpStaticResourceHandlerTest extends BastTest {
             Assert.assertEquals(HttpStatus.NOT_FOUND.value(), missing.statusCode());
             Assert.assertNull(missing.getHeader("Content-Encoding"));
         } finally {
-            client.close();
             classpathServer.shutdown();
         }
     }
