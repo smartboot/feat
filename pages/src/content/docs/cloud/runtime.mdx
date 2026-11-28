@@ -32,18 +32,23 @@ import SponsorAside from '../../../components/SponsorAside.astro';
 
 ## 启动生命周期
 
-Feat Cloud 启动时，`ApplicationContext` 会按顺序调用所有 `CloudService`：
+Feat Cloud 启动时，`ApplicationContext` 会通过 `ServiceLoader` 加载生成的 `CloudService`，然后分阶段调用它们。每个阶段都会先处理完所有服务，再进入下一阶段：
 
-1. `loadBean(...)`：创建 Bean，并注册到应用上下文
-2. `loadMethodBean(...)`：处理通过方法声明的 Bean
-3. `autowired(...)`：完成依赖注入
-4. `postConstruct(...)`：执行初始化逻辑
+1. `loadBean(...)`：创建类级 Bean，并注册到应用上下文
+2. `loadMethodBean(...)`：调用工厂方法，创建并注册方法级 Bean
+3. `autowired(...)`：按生成代码完成依赖注入
+4. `postConstruct(...)`：执行 Bean 初始化逻辑
 5. `router(...)`：注册 HTTP 路由
-6. `destroy()`：应用关闭时释放资源
 
 ![](./img/runtime_2.png)
 
-这个顺序解释了很多行为：为什么 Bean 要先创建再注入，为什么路由要等初始化完成后才注册，为什么启动日志里能直接打印出最终路由。
+这个顺序解释了很多行为：为什么类级 Bean 要先创建，方法级 Bean 才能通过参数取得依赖；为什么依赖注入发生在初始化之前；也解释了为什么路由要等初始化完成后才注册。
+
+### 应用关闭阶段
+
+`destroy()` 不属于启动流程。应用关闭时，Feat Cloud 会调用各个 `CloudService` 的销毁方法，生成代码再执行对应 Bean 上的 `@PreDestroy` 方法，释放应用持有的资源。
+
+因此，可以把整个生命周期理解为：启动时完成创建、装配、初始化和路由注册；关闭时执行资源清理。
 
 ## 这对开发方式意味着什么
 
