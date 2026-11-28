@@ -1,0 +1,101 @@
+---
+title: Router Session
+description: 在 Feat Core Router 中创建、读取和失效 Session，并了解默认存储与自定义管理器
+toc: true
+sidebar:
+  order: 5
+---
+
+HTTP 请求本身是一次性的。如果需要在多个请求之间保存登录状态或少量用户数据，可以使用 Session。
+
+Feat Core Router 通过 `Context#session()` 获取当前请求关联的 Session。默认使用本地内存的 `LocalSessionManager`。
+
+## 创建和读取 Session
+
+```java
+router.route("/login", context -> {
+    Session session = context.session();
+    session.put("user", "alice");
+    context.Response.write("Login success");
+});
+
+router.route("/profile", context -> {
+    Session session = context.session();
+    String user = session.get("user");
+
+    if (user == null) {
+        context.Response.setHttpStatus(401);
+        context.Response.write("Please login");
+        return;
+    }
+
+    context.Response.write("Hello " + user);
+});
+
+router.route("/logout", context -> {
+    context.session().invalidate();
+    context.Response.write("Logged out");
+});
+```
+
+Session 当前提供字符串键值操作：`put`、`get`，以及 `invalidate`、超时设置等方法。
+
+需要注意：`context.session()` 当前会以允许创建的方式获取 Session。即使请求中没有已有 Session，它也会创建一个新的 Session 并在响应中下发 Cookie。因此，不要把它理解成一个“只读取、绝不创建”的查询方法。
+
+## 用浏览器或 curl 验证
+
+先访问登录接口并保存服务端返回的 Cookie，再在后续请求中携带它：
+
+```shell
+curl -i -c cookies.txt http://localhost:8080/login
+curl -i -b cookies.txt http://localhost:8080/profile
+curl -i -b cookies.txt http://localhost:8080/logout
+```
+
+默认 Session Cookie 名称为 `FEAT_SESSION`。框架创建 Session 时会设置 HttpOnly、Path=/ 和 Max-Age。
+
+## 默认存储与过期时间
+
+默认的 `LocalSessionManager` 把 Session 保存在当前进程的内存中：
+
+- 默认超时时间为 30 分钟。
+- 活跃访问会刷新最近访问时间。
+- 应用进程重启后，内存中的 Session 不再存在。
+- 多个应用实例之间不会自动共享这份内存数据。
+
+如果希望调整默认超时时间，可以在交给 Router 之前配置 `LocalSessionManager`：
+
+```java
+LocalSessionManager sessionManager = new LocalSessionManager();
+sessionManager.getOptions().setTimeout(10 * 60);
+
+router.setSessionManager(sessionManager);
+```
+
+上例将 Session 超时时间设置为 10 分钟，单位是秒。
+
+## 使用自定义 SessionManager
+
+`SessionManager` 是抽象类，不是接口。它负责统一编排 Cookie 解析、Session 查找、创建和 Cookie 下发；具体存储由子类实现。
+
+自定义管理器需要实现两个方法：
+
+```java
+public class CustomSessionManager extends SessionManager {
+    @Override
+    protected Session getSession(String sessionId) {
+        // 从自己的存储中按 ID 查找 Session
+        return null;
+    }
+
+    @Override
+    protected Session createSession() {
+        // 创建 Session，并保存到自己的存储
+        return null;
+    }
+}
+```
+
+上面只是扩展点结构示意，不是可直接运行的完整存储实现。实际实现还需要提供符合 `Session` 接口的对象，并处理并发访问、超时和失效。
+
+实现完成后，通过 `router.setSessionManager(customSessionManager)` 替换默认管理器。Feat Cloud 的 Redis 集群 Session 属于 Cloud 层集成，不要与 Core 默认的本地 Session 混为一谈。
