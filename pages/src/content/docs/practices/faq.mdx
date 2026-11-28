@@ -88,7 +88,7 @@ Controller 方法直接声明 POJO 参数，不需要注解，框架按字段名
 
 ### 服务器在 Nginx 后面拿不到真实 IP？
 
-启用代理协议支持：`options.proxyProtocolSupport()`（PROXY protocol）。前提是前置代理配置了对应协议转发，见[ServerOptions 配置](/feat/server/serveroptions/)。
+启用代理协议支持：`options.proxyProtocolSupport()`（PROXY protocol）。它不是对 `X-Forwarded-For` 的解析：普通 Nginx HTTP `proxy_pass` 默认不会向上游发送 PROXY protocol。只有当前置代理显式发送 PROXY protocol 时才启用该选项；如果代理只转发 `X-Forwarded-For`，应在应用侧仅信任已知代理写入的该请求头。见[ServerOptions 配置](/feat/server/serveroptions/)。
 
 ## AI 能力
 
