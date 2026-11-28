@@ -21,6 +21,7 @@ export default defineConfig({
                 src: './src/assets/feat_logo_v2.svg',
             },
             customCss: [
+                // 你的自定义 CSS 文件的相对路径
                 './src/styles/custom.css',
             ],
             head: [
@@ -44,7 +45,7 @@ export default defineConfig({
                 (function() {
                   var hm = document.createElement("script");
                   hm.src = "https://hm.baidu.com/hm.js?ee8630857921d8030d612dbd7d751b55";
-                  var s = document.getElementsByTagName("script")[0];
+                  var s = document.getElementsByTagName("script")[0]; 
                   s.parentNode.insertBefore(hm, s);
                 })();
           `
@@ -58,7 +59,7 @@ export default defineConfig({
                 customSets: [
                     {
                         label: '认识 Feat',
-                        description: 'Feat 的定位、模块关系和设计原理',
+                        description: 'Feat 核心概念和设计原理文档',
                         paths: ['guides/**'],
                     },
                     {
@@ -73,38 +74,47 @@ export default defineConfig({
                     },
                     {
                         label: 'Feat Cloud',
-                        description: 'Feat Cloud 注解式业务应用开发模型',
+                        description: 'Feat 云原生模块文档',
                         paths: ['cloud/**'],
                     },
                     {
                         label: 'Feat AI',
-                        description: 'Feat AI 模型、Agent 与应用能力',
+                        description: 'Feat AI 集成模块文档',
                         paths: ['ai/**'],
                     },
                     {
                         label: 'Feat Core 服务端',
-                        description: 'Feat Core HTTP 服务端文档',
+                        description: 'Feat 核心服务器模块文档',
                         paths: ['server/**'],
                     },
                     {
                         label: 'Feat Core 客户端',
-                        description: 'Feat Core HTTP 客户端文档',
+                        description: 'Feat 客户端相关文档',
                         paths: ['client/**'],
                     },
                     {
-                        label: '技术参考',
-                        description: '版本、基准测试和补充参考资料',
+                        label: '附录',
+                        description: 'Feat 附录和参考文档',
                         paths: ['appendix/**'],
                     },
                 ],
             }),starlightImageZoomPlugin(),starlightScrollToTop({
+                // Button position
+                // Tooltip text
                 tooltipText: '回到顶部',
                 showTooltip: true,
+                // Use smooth scrolling
+                // smoothScroll: true,
+                // Visibility threshold (show after scrolling 20% down)
                 threshold: 20,
+                // Customize the SVG icon
                 borderRadius: '50',
+                // Show scroll progress ring
                 showProgressRing: true,
+                // Customize progress ring color
                 progressRingColor: '#ff6b6b',
             })],
+            // 为此网站设置中文为默认语言。
             defaultLocale: 'root',
             locales: {
                 root: {
@@ -112,13 +122,14 @@ export default defineConfig({
                     lang: 'zh-CN',
                 },
             },
+            // 展示页面最后更新时间与"编辑此页"入口
             lastUpdated: true,
             editLink: {
                 baseUrl: 'https://github.com/smartboot/feat/edit/master/pages/',
             },
             sidebar: [
                 {
-                    label: '认识 Feat',
+                    label: '理解 Feat',
                     items: [{autogenerate: {directory: 'guides'}}],
                 },
                 {
@@ -139,11 +150,11 @@ export default defineConfig({
                 },
                 {
                     label: 'Feat Cloud',
-                    items: [{autogenerate: {directory: 'cloud'}}, 'sponsors'],
+                    items: [{  autogenerate: {directory: 'cloud'}},'sponsors'],
                 },
                 {
                     label: 'Feat AI',
-                    items: [{autogenerate: {directory: 'ai'}}],
+                    items: [{  autogenerate: {directory: 'ai'}}],
                 },
                 {
                     label: 'Feat Core',
@@ -157,7 +168,7 @@ export default defineConfig({
                 },
                 {
                     label: '附录',
-                    items: [{autogenerate: {directory: 'appendix'}}],
+                    items: [{ autogenerate: {directory: 'appendix'}}],
                 },
             ],
         }),
