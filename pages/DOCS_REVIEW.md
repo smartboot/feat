@@ -153,7 +153,7 @@ Feat Cloud 多个入口曾提示“需先成为赞助者获取授权”，包括
 - 重写 `guides/index.mdx`，明确 Core、AI、Cloud 的依赖关系，并给出 Core、Cloud、AI 三条入口路线。
 - 新增 `building/index.mdx` 与 `building/first-business-application.mdx`，用任务管理示例串起 Controller、Bean、Service 和 HTTP 请求；示例使用内存存储，明确标注不具备持久化与跨实例同步能力。
 - 首页增加“构建第一个业务应用”入口，移除过时的 v2.4.2 徽标和“Cloud 赞助解锁 License”描述。
-- 复核发现首页 Hero、`SponsorAside.astro` 与 Cloud 快速开始页仍残留旧许可口径。已在本轮统一为：Feat 各模块采用 Apache 2.0，赞助为自愿支持，不构成使用条件。
+- 复核发现首页 Hero、`PricingSection.astro`、`SponsorAside.astro`、Cloud 快速开始页和 `sponsors.mdx` 仍残留旧许可口径。已在本轮统一为：Feat 各模块采用 Apache 2.0，赞助为自愿支持，不构成使用条件；AOT License 保留为可选的构建期校验配置，不配置时不会阻止正常生成。
 - 更新 Starlight 侧边栏、LLM 文档集合和 `pages/README.md`，纳入新的 `building/` 章节。
 
 **验证状态：**本轮没有可用的本地 npm 安装与构建环境，尚未执行 `npm ci`、`npm run build`，也没有把构建标记为通过。需要依赖仓库 CI 对 Astro 页面、导航、Mermaid 和 `llms.txt` 生成进行验证。
