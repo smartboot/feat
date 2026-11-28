@@ -10,7 +10,9 @@ import { CardGrid, LinkCard, Aside } from '@astrojs/starlight/components';
 
 如果你已经会用 Java 写 Web 服务，但希望有一个比 Spring Boot 更轻量、启动更快、资源占用更低的选项；或者你想把 AI 能力直接接入 Java 后端而不引入 Python 服务，Feat 很可能是你要找的工具。
 
-Feat 是一个从底层网络服务能力生长出来的 Java Web 框架。它不是 Servlet 容器的包装层，也不是单纯的注解框架。它把 Core、Cloud、AI 三条线收拢到同一套技术栈里，每一层都可以独立使用。
+Feat 是一个从底层网络服务能力生长出来的 Java Web 框架。它不是 Servlet 容器的包装层，也不是单纯的注解框架。它把 Core、AI、Cloud 组织成一套逐层构建的技术栈，各层承担不同职责。
+
+从 Maven 模块依赖看，关系是 **Feat Cloud → Feat AI → Feat Core → smart-socket**：Feat Core 建立在 smart-socket 之上，Feat AI 依赖 Feat Core，Feat Cloud 再依赖 Feat AI。图中的箭头表示上层模块依赖下层模块。
 
 <img src={architecture.src} alt="Feat 架构图" width="800" height="400" />
 
@@ -20,8 +22,8 @@ Feat 是一个从底层网络服务能力生长出来的 Java Web 框架。它�
 | **Feat Cloud** | 注解式开发模型 | 快速构建业务应用，类似 Spring Boot 体验 |
 | **Feat AI** | AI 能力接入层 | 统一接入对话、Embedding、Agent、MCP |
 
-<Aside type="caution">
-Feat 主线仓库采用 Apache 2.0。Feat Core 与 Feat AI 可直接使用；Feat Cloud 通过赞助支持模式开放，如需使用请先[成为赞助者](/feat/sponsors/)获取授权。
+<Aside type="tip">
+Feat 仓库采用 Apache 2.0 开源协议，各模块均可按协议使用。赞助是对项目持续演进的自愿支持，不是使用 Feat Cloud 的授权前提。项目支持方式与赞助名单见[赞助支持](/feat/sponsors/)。
 </Aside>
 
 ## 根据目标选择起点
