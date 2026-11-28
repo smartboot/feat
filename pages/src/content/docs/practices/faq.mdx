@@ -18,7 +18,7 @@ import { Aside, TabItem, Tabs } from '@astrojs/starlight/components';
 
 ### 该从 Core 还是 Cloud 学起？
 
-习惯注解式开发（Controller/Bean）从 [Feat Cloud](/feat/cloud/) 开始；想理解底层模型或做极致性能优化从 [服务端](/feat/server/) 开始。两边共享同一套路由与会话模型。
+习惯注解式开发（Controller/Bean）从 [Feat Cloud](/feat/cloud/) 开始；想直接使用 HTTP 处理器和 Core Router，或理解底层请求模型，从 [服务端](/feat/server/) 开始。Cloud 建立在 Core 之上，但 Controller 与 Core Router 是不同层次的 API；Session 的默认存储和扩展配置也应按 Core、Cloud 各自章节理解。
 
 ### 支持哪些 JDK 和服务器环境？
 
@@ -84,7 +84,7 @@ Controller 方法直接声明 POJO 参数，不需要注解，框架按字段名
 
 ### 接口耗时高、并发上不去？
 
-先分清负载类型：外部调用和数据库访问必须走[异步处理](/feat/server/async/)，调线程数解决不了 IO 等待。完整调优思路见[性能调优](/feat/practices/performance/)。
+先分清负载类型：阻塞式外部调用和数据库访问应考虑[异步处理](/feat/server/async/)或线程隔离；如果客户端本身提供非阻塞 API，也可以组合异步结果。单纯调线程数不能消除 IO 等待。完整调优思路见[性能调优](/feat/practices/performance/)。
 
 ### 服务器在 Nginx 后面拿不到真实 IP？
 
@@ -116,4 +116,4 @@ Controller 方法直接声明 POJO 参数，不需要注解，框架按字段名
 
 ### 静态资源会被路径穿越攻击吗？
 
-内置处理器已拦截 `../`/`..\`。自研文件下载接口不受这层保护，需自行校验，见[静态资源服务](/feat/practices/static-files/)。
+内置处理器会拦截 URL 解码后的 `../` 与 `..\` 字符串，但这不等于完整的规范化路径与符号链接边界校验。自研文件下载接口不受这层保护，需自行校验，见[静态资源服务](/feat/practices/static-files/)。
