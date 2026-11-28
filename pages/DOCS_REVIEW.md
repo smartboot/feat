@@ -339,4 +339,4 @@ Feat Core 与 Feat AI 采用 Apache 2.0；Feat Cloud 则采用赞助授权模式
 
 本轮改动涉及 `feat-core/src/main/java/tech/smartboot/feat/core/server/handler/HttpStaticResourceHandler.java` 与 `feat-test` 下的静态资源测试和测试资源，并同步修正文档中已经过时的 gzip / 路径安全说明。
 
-**验证状态：**GitHub Actions 在 commit `18c6e6e` 上完成定向测试：两个 `HttpStaticResourceHandlerTest` 类共 6 项测试，0 failures、0 errors、0 skipped。Core 编译、Feat Static 构建和 Redis Session Demo 构建均成功。Native 构建与性能基准任务仍在执行；Astro 构建未执行。
+**验证状态：**GitHub Actions 在 commit `18c6e6e` 上完成定向测试：两个 `HttpStaticResourceHandlerTest` 类共 6 项测试，0 failures、0 errors、0 skipped。Core 编译、Feat Static 构建和 Redis Session Demo 构建均成功。Windows、macOS、Ubuntu 三个平台的 Native 构建均成功；性能基准任务在合并时仍在执行，Astro 构建未执行。
