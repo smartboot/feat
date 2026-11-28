@@ -21,8 +21,8 @@ Feat 基于 smart-socket 的异步 IO（AIO）构建，`threadNum` 指定的是*
 
 | 负载特征 | 做法 |
 |---|---|
-| 纯内存操作（少于 1ms） | 同步处理器即可，线程数保持默认 |
-| 外部调用、数据库、文件 IO（大于 10ms） | 用[异步处理](/feat/server/async/)把耗时操作移出主线程，业务自管线程池 |
+| 快速、非阻塞的内存操作 | 同步处理器通常更简单，线程数先保持默认 |
+| 阻塞式外部调用、数据库或文件 IO | 考虑用[异步处理](/feat/server/async/)和应用线程池隔离阻塞任务 |
 | 既有快接口又有慢接口 | 快接口同步、慢接口异步，避免相互拖累 |
 
 `threadNum` 只在同步处理占主导、且确认瓶颈在 CPU 时才值得调大。异步模型下线程数与业务线程池解耦，调 `threadNum` 基本无感。
@@ -53,18 +53,17 @@ Feat.httpServer(options -> {
 gzip 压缩对 JSON/HTML 这类文本收益明显，但要留意两点：
 
 1. **压缩阈值**：小于阈值的内容不压缩（压缩后可能更大）。Cloud 侧在 `feat.yml` 的 `server.gzip` / `server.gzipThreshold` 配置（见[启动配置与环境配置](/feat/cloud/options/)）
-2. **静态资源 classpath 模式**输出固定走 gzip（`Content-Encoding: gzip`），压缩在内存中逐块完成，这是为"jar 内小资源"设计的路径，不适合当大文件下载服务器用
+2. **静态资源 classpath 模式**当前实现会直接设置 `Content-Encoding: gzip`，并在内存中逐块压缩；它没有根据请求的 `Accept-Encoding` 再决定是否压缩。客户端需要支持 gzip。该路径更适合 jar 内小资源，不适合当大文件下载服务器用
 
 CPU 紧张的服务可以关掉 gzip，把压缩交给前置的 nginx——它有专门的压缩优化和缓存。
 
-## 缓存树：被低估的解析加速
+## 字节缓存与 URI 查找
 
-`ServerOptions` 内部维护三棵字节缓存树（`ByteTree`），把 HTTP 报文里高频出现的字符串（方法名、协议版本、Header 名、常见 Header 值）缓存在树里，解析时按字节匹配而不是反复 new String。这是 Feat 基准成绩的重要来源之一。
+`ServerOptions` 中有两类用于解析阶段的字节缓存：`byteCache` 缓存常见方法名、协议版本和 Header 值，`headerNameByteTree` 缓存常见 Header 名称。解析器可以直接按字节识别这些常见内容，减少重复字符串处理。
 
-对使用者的含义：
+此外还有一个 `uriByteTree`，它保存的是 URI 到 `HttpHandler` 的映射，不是通用字符串缓存。需要注意，当前 Core Router 使用自己的 `NodePath` 结构匹配路径，并不会把注册的路由自动写入这个 URI 映射树。因此，不要把 Router 的参数路由、通配路由理解成由 `uriByteTree` 加速。
 
-- 自定义 Header 的名称种类有限且稳定的服务，可以预热：`options.getByteCache().addNode(...)`
-- 请求 URL 高度随机（如带随机 token 路径）的服务，URI 缓存命中率低，不要期望这部分收益
+这些结构属于框架内部的解析与分发优化。除非你在实现自定义的精确 URI 处理器并明确使用对应映射，否则通常不需要手工预热或修改它们。
 
 ## 调优流程建议
 
