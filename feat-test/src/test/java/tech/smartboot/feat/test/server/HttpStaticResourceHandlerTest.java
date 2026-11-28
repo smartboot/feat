@@ -80,11 +80,13 @@ public class HttpStaticResourceHandlerTest extends BastTest {
                     .header(h -> h.set("Accept-Encoding", "gzip"))
                     .submit().get();
             Assert.assertEquals("gzip", gzip.getHeader("Content-Encoding"));
+            Assert.assertEquals("static gzip negotiation test\n", gzip.body());
 
             HttpResponse gzipDisabled = client.get("/gzip.txt")
                     .header(h -> h.set("Accept-Encoding", "gzip;q=0, *;q=1"))
                     .submit().get();
             Assert.assertNull(gzipDisabled.getHeader("Content-Encoding"));
+            Assert.assertEquals("static gzip negotiation test\n", gzipDisabled.body());
 
             HttpResponse missing = client.get("/missing.txt")
                     .header(h -> h.set("Accept-Encoding", "gzip"))
