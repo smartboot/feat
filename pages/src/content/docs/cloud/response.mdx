@@ -188,6 +188,7 @@ ctx.Response.write(bytes);
 |------|-----------|
 | Controller 返回 `String`、`byte[]` | 直接转换为字节并写入响应流 |
 | Controller 返回基本类型 `int`、`boolean` | 使用专门的直接写出逻辑 |
+| Controller 返回包装类型（如 `Integer`、`Long`）或 `Date` / `Timestamp` | 回退到 FastJSON2；POJO 字段中的对应类型则按专用生成逻辑处理 |
 | 自定义 POJO | 按 getter 生成字段访问与写出代码 |
 | POJO 字段中的数值包装类型、布尔值 | 生成直接取值与写出代码 |
 | POJO 字段中的 `Date`、`Timestamp` | 默认写出毫秒时间戳；可用 `@JSONField(format = "...")` 指定格式 |
