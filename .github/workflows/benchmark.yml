@@ -4,10 +4,20 @@ on:
   push:
     branches:
       - master
+    paths-ignore:
+      - 'pages/**'
+      - '*.md'
+      - '**/*.md'
+      - 'llms.txt'
 
   pull_request:
     branches:
       - master
+    paths-ignore:
+      - 'pages/**'
+      - '*.md'
+      - '**/*.md'
+      - 'llms.txt'
 
   workflow_dispatch:
 
