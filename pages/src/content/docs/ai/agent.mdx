@@ -26,6 +26,7 @@ public class AgentDemo {
     public static void main(String[] args) throws Exception {
         FeatAgent agent = FeatAI.agent(opts -> {
             opts.chatOptions().model(ChatModelVendor.GiteeAI.Qwen2_5_72B_Instruct);
+            opts.maxIterations(10);
             opts.tool(new tech.smartboot.feat.ai.agent.tools.WebPageReaderTool());
         });
 
@@ -34,7 +35,6 @@ public class AgentDemo {
         ).get();
 
         System.out.println(result);
-        System.out.println(agent.getState());
     }
 }
 ```
@@ -88,7 +88,7 @@ opts.tool(new WebPageReaderTool());
 opts.tool(new FileOperationTool());
 ```
 
-Feat AI 内置了这些工具，所以你完全可以先从现成工具开始，而不是立刻写自定义工具。
+Feat AI 内置了这些工具，所以你完全可以先从现成工具开始，而不是立刻写自定义工具。需要把自己的 HTTP 服务、第三方 API 或领域能力接入 Agent 时，可以继续阅读[自定义 Jina AI 网页读取工具](/feat/ai/jina-ai-tool/)，了解如何实现 `AgentTool`。
 
 ## 一个容易踩的坑
 
@@ -98,7 +98,7 @@ Feat AI 内置了这些工具，所以你完全可以先从现成工具开始，
 2. 确认它真的能稳定完成任务
 3. 再继续加工具和更复杂的提示策略
 
-否则你最后很可能不知道到底是模型问题、工具问题，还是调度策略问题。
+否则你最后很可能不知道到底是模型问题、工具问题，还是调度策略问题。`maxIterations` 用于限制一次任务的推理/工具循环次数，默认值为 20；任务越复杂不代表越应该无限提高这个值。
 
 ## 常见问题
 
