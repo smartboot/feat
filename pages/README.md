@@ -1,54 +1,69 @@
-# Starlight Starter Kit: Basics
+# Feat 文档站点
 
-[![Built with Starlight](https://astro.badg.es/v2/built-with-starlight/tiny.svg)](https://starlight.astro.build)
+本目录是 Feat 官方文档站点，基于 [Astro](https://astro.build/) 与 [Starlight](https://starlight.astro.build/) 构建。
 
+正式文档内容位于 `src/content/docs/`，按 Feat 的模块与阅读场景组织。修改教程时，应以仓库当前源码和可运行示例为依据，不要直接沿用 Spring 或其他框架的惯例。
+
+## 本地开发
+
+需要 Node.js 24（与 GitHub Pages 工作流保持一致）及 npm。
+
+在本目录执行：
+
+```bash
+npm install
+npm run dev
 ```
-npm create astro@latest -- --template starlight
+
+开发服务器启动后，按终端输出的地址访问。
+
+## 构建与预览
+
+```bash
+npm run build
+npm run preview
 ```
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/withastro/starlight/tree/main/examples/basics)
-[![Open with CodeSandbox](https://assets.codesandbox.io/github/button-edit-lime.svg)](https://codesandbox.io/p/sandbox/github/withastro/starlight/tree/main/examples/basics)
-[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/withastro/starlight&create_from_path=examples/basics)
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fwithastro%2Fstarlight%2Ftree%2Fmain%2Fexamples%2Fbasics&project-name=my-starlight-docs&repository-name=my-starlight-docs)
+生产构建输出到 `dist/`。提交文档变更前，尽量完成一次生产构建，并检查新增页面、站内链接和控制台错误。
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+当前 `package.json` 与 `package-lock.json` 的依赖声明存在漂移。在锁文件重新生成并验证之前，不要把 `npm ci` 或构建视为已通过；具体问题和处理状态见 [DOCS_REVIEW.md](./DOCS_REVIEW.md)。
 
-## 🚀 Project Structure
+## 目录结构
 
-Inside of your Astro + Starlight project, you'll see the following folders and files:
-
-```
-.
-├── public/
+```text
+pages/
+├── public/                  # 不经内容处理的静态资源
 ├── src/
-│   ├── assets/
+│   ├── assets/              # 由 Astro 处理的图片等资源
 │   ├── content/
-│   │   ├── docs/
-│   └── content.config.ts
-├── astro.config.mjs
+│   │   └── docs/            # 正式文档（MDX）
+│   └── styles/              # 站点样式
+├── astro.config.mjs         # Starlight 导航、插件与站点配置
 ├── package.json
-└── tsconfig.json
+└── package-lock.json
 ```
 
-Starlight looks for `.md` or `.mdx` files in the `src/content/docs/` directory. Each file is exposed as a route based on its file name.
+文档页面按目录自动生成侧边栏：
 
-Images can be added to `src/assets/` and embedded in Markdown with a relative link.
+- `guides/`：理解 Feat
+- `practices/`：实践指南
+- `cloud/`：Feat Cloud
+- `ai/`：Feat AI
+- `server/`：Feat Core 服务端
+- `client/`：Feat Core 客户端
+- `appendix/`：附录
 
-Static assets, like favicons, can be placed in the `public/` directory.
+新增页面时，按同目录页面的写法添加 frontmatter，至少包含 `title`、`description`，并设置合适的 `sidebar.order`。
 
-## 🧞 Commands
+## 文档维护约定
 
-All commands are run from the root of the project, from a terminal:
+- 先读当前实现和已有文档，再动笔；源码与文档冲突时，以当前源码为准。
+- 示例必须对应真实 API，不能只保证看起来像 Java 或 Spring。
+- 解释行为时，区分 Feat Core 与 Feat Cloud，不要把两套编程模型混为一谈。
+- 新发现的文档缺口登记到仓库根目录的 `pages/DOCS_GAPS.md`；全量审查结论记录在 `pages/DOCS_REVIEW.md`。
+- 页面内容尽量保持 Markdown/PDF 友好，避免为了网页交互而引入不必要的复杂组件。
+- `starlight-llms-txt` 会从文档内容生成面向 AI 工具的索引文件；新增、移动或重命名页面后，应检查构建产物中的 `llms.txt` 与 `llms-full.txt`。
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+## 部署
 
-## 👀 Want to learn more?
-
-Check out [Starlight’s docs](https://starlight.astro.build/), read [the Astro documentation](https://docs.astro.build), or jump into the [Astro Discord server](https://astro.build/chat).
+推送涉及 `pages/**` 的提交到 `master` 后，GitHub Actions 中的 Pages 工作流会构建并部署文档站点。工作流定义位于仓库根目录的 `.github/workflows/pages.yml`。

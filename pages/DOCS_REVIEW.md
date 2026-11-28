@@ -11,6 +11,13 @@ Router 文档已拆分为使用、匹配、拦截器和 Session 四个主题，�
 
 ## 已确认问题
 
+### H3：文档站点 README 仍是初始化模板
+
+当前 `pages/README.md` 仍保留 Astro Starlight Starter Kit 的默认介绍、StackBlitz/CodeSandbox/Netlify/Vercel 模板链接，以及“删除此文件”的提示。它没有说明 Feat 文档目录、开发命令、构建方式、文档维护约定或 Pages 部署流程，容易误导后续维护者。
+
+已在本轮将其替换为 Feat 文档站点维护说明，补充目录结构、本地开发与构建命令、文档缺口台账入口、AI 文档索引检查要求和部署工作流位置。
+
+
 ### H1：package.json 与 package-lock.json 不一致
 
 对照两个文件的根依赖声明，发现：
@@ -48,7 +55,7 @@ Router 文档已拆分为使用、匹配、拦截器和 Session 四个主题，�
 
 - 本轮未执行 `npm ci`。
 - 本轮未执行 `npm run build`。
-- 尚未完成对文档目录所有页面的逐篇、逐链接审查。
+- 文档目录当前包含 50 篇 MDX 页面；尚未完成逐篇、逐链接审查。
 - 尚未验证构建产物中的 `llms.txt` 是否完整包含新增 Router 章节。
 
 ## 后续顺序
