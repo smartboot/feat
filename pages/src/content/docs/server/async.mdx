@@ -6,21 +6,23 @@ sidebar:
     order: 6
 ---
 
-import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
 
-当请求处理涉及数据库查询、远程 HTTP 调用、文件 IO 等耗时操作时，应该使用异步处理模式。这样可以将工作移出 Feat 的主处理线程，避免阻塞其他请求，显著提升并发处理能力。
+Feat Core 基于 AIO 处理网络 I/O。同步处理器会在当前请求处理调用链中执行；如果在其中执行阻塞式数据库访问、远程调用或文件操作，就会占用执行该请求的线程。对于这类阻塞任务，可以把业务工作提交到应用管理的线程池，再通过完成回调通知 Feat。
 
-## 同步 vs 异步
+是否需要异步，不应由一个固定的毫秒数决定。更重要的是操作是否会阻塞、线程是否需要隔离，以及应用能否接受额外的线程切换和异步编排成本。
+
+## 同步与异步的区别
 
 | 特性 | 同步处理 | 异步处理 |
 |------|---------|---------|
-| 执行线程 | 主处理线程 | 自定义线程池 |
-| 阻塞影响 | 阻塞主线程，降低并发 | 不阻塞主线程 |
-| 适用场景 | 简单、快速的操作 | 耗时操作（>10ms） |
-| 代码复杂度 | 简单 | 需要管理 CompletableFuture |
+| 业务代码执行位置 | 当前请求处理线程 | 由应用选择的执行器或回调线程 |
+| 阻塞影响 | 阻塞当前执行线程 | 提交任务后可释放当前处理调用 |
+| 适用场景 | 快速、非阻塞的处理逻辑 | 需要隔离的阻塞操作或异步任务 |
+| 代码复杂度 | 较低 | 需要管理任务执行与 CompletableFuture |
 
 <Aside type="tip">
-选择建议：纯内存操作、简单数据转换 → 同步；数据库查询、外部 API 调用、文件 IO → 异步
+选择时先看操作本身：快速的内存计算通常直接同步完成；阻塞式数据库访问、外部 API 调用或文件操作，则应考虑线程隔离。若所用客户端本身提供非阻塞 API，也可以组合异步结果，而不必再套一层线程池。
 </Aside>
 
 ## 异步处理模型
@@ -35,8 +37,8 @@ void handle(HttpRequest request, CompletableFuture<Void> future)
 
 使用 `HttpHandler` 的异步模式只需做两件事：
 
-1. **将耗时逻辑放到自定义线程池执行**
-2. **完成后调用 `future.complete(null)` 通知 Feat**
+1. **决定业务任务由哪个执行器或异步 API 执行**。
+2. **在响应处理完成后调用 `future.complete(null)` 通知 Feat**。
 
 <Aside type="caution">
 如果忘记调用 `future.complete(null)`，请求将一直挂起，客户端收不到响应。
@@ -54,6 +56,7 @@ import tech.smartboot.feat.core.server.HttpRequest;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 
 public class AsyncDemo {
     public static void main(String[] args) {
@@ -64,20 +67,27 @@ public class AsyncDemo {
             .httpHandler(new HttpHandler() {
                 @Override
                 public void handle(HttpRequest request, CompletableFuture<Void> future) {
-                    executor.execute(() -> {
-                        try {
-                            // 模拟耗时操作
-                            Thread.sleep(100);
-                            request.getResponse().write("Async response");
-                        } catch (Exception e) {
-                            request.getResponse().setHttpStatus(500);
-                            request.getResponse().write("Internal error");
-                            e.printStackTrace();
-                        } finally {
-                            // 必须调用，否则请求不会结束
-                            future.complete(null);
-                        }
-                    });
+                    try {
+                        executor.execute(() -> {
+                            try {
+                                // 模拟耗时操作
+                                Thread.sleep(100);
+                                request.getResponse().write("Async response");
+                            } catch (Exception e) {
+                                request.getResponse().setHttpStatus(500);
+                                request.getResponse().write("Internal error");
+                                e.printStackTrace();
+                            } finally {
+                                // 业务任务结束后通知 Feat
+                                future.complete(null);
+                            }
+                        });
+                    } catch (RejectedExecutionException e) {
+                        // 任务未能提交，也必须结束本次请求
+                        request.getResponse().setHttpStatus(503);
+                        request.getResponse().write("Service unavailable");
+                        future.complete(null);
+                    }
                 }
 
                 @Override
@@ -144,18 +154,18 @@ sequenceDiagram
     Feat->>Feat: 继续处理其他请求
     
     ThreadPool->>ThreadPool: 执行耗时操作
-    ThreadPool->>Feat: 写入响应
-    ThreadPool->>Handler: future.complete(null)
+    ThreadPool->>Handler: 写入响应并完成业务处理
+    ThreadPool->>Feat: future.complete(null)
     Handler-->>Feat: 通知请求完成
     Feat-->>Client: HTTP Response
 ```
 
 **流程说明：**
 
-1. **接收请求** - Feat 主线程接收 HTTP 请求
+1. **接收请求** - Feat 的网络处理流程完成请求解析
 2. **调用处理器** - 调用 `handle(request, future)` 方法
-3. **提交任务** - 将耗时操作提交到业务线程池
-4. **立即返回** - 主线程立即返回，继续处理其他请求
+3. **提交任务** - 将阻塞式业务操作提交到应用线程池
+4. **返回处理调用** - 处理器返回后，Feat 可以继续推进其他可处理的工作
 5. **异步执行** - 业务线程池执行耗时操作
 6. **完成通知** - 调用 `future.complete(null)` 通知 Feat 请求完成
 7. **发送响应** - Feat 将响应发送给客户端

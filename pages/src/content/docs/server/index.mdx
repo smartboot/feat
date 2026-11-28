@@ -5,7 +5,7 @@ sidebar:
   order: 0
 ---
 
-import { CardGrid, LinkCard, Aside, TabItem, Tabs } from '@astrojs/starlight/components';
+import { Aside, TabItem, Tabs } from '@astrojs/starlight/components';
 import helloFeat from './img/1_2_hello_feat.png';
 import helloWorld from './img/1_2_hello_world.png';
 
@@ -123,3 +123,10 @@ Feat Core 的模型：创建服务 → 注册处理器 → 启动监听。
 4. [Router Session](/feat/server/router-session/)：在多个请求之间保存会话状态。
 
 如果业务处理涉及耗时任务，再阅读[异步处理](/feat/server/async/)，了解如何正确完成请求。
+
+## HTTPS 与协议扩展
+
+基础请求链路稳定之后，可以继续了解服务的传输与连接能力：
+
+- [HTTPS 配置](/feat/server/https/)：通过 SSL 插件为 HTTP 服务启用 TLS。
+- [协议升级](/feat/server/upgrade/)：根据通信需求选择 WebSocket、SSE 或 HTTP/2。

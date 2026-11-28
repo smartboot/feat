@@ -259,3 +259,18 @@ Feat Core 与 Feat AI 采用 Apache 2.0；Feat Cloud 则采用赞助授权模式
 本轮只修改文档与评审台账，没有修改 Feat AI 运行时代码。
 
 **验证状态：**已对照当前 master 源码；未执行 AI 示例 Maven 编译、`npm ci` 或 `npm run build`。向量记忆示例在上述运行时问题修复前不应被当作已验证的生产配置。
+
+## 2026-11-28：Core 服务端文档第二轮复核
+
+本轮重新读取 Core 服务端文档与 master 源码，重点检查 Router、异步处理、ServerOptions、HTTPS 和协议升级章节之间的衔接，并完成以下调整：
+
+- `server/router-matching.mdx`：补充模式分支由 `HashMap` 保存、遍历顺序不构成 API 契约的说明；进一步明确终端路径参数与通配符叶子共用内部特殊键，不能将 `/users/:id` 和 `/users/*` 当作两个可独立竞争的候选路由注册。补充多个后缀模式重叠时也不应依赖隐含顺序。
+- `server/async.mdx`：将“主线程”改为更准确的当前请求处理线程；删除“超过 10ms 就应异步”的固定阈值，改为按阻塞性质、线程隔离和异步编排成本判断。异步示例补充线程池拒绝任务时的 503 响应与 Future 完成处理。
+- `server/serveroptions.mdx`：修正 `headerLimiter` 超限行为。当前解析器达到上限后会忽略后续 Header 字段并继续解析请求，不会仅因数量超限返回 400；同步修正参数表述。
+- `server/index.mdx`：在 Router 与异步章节之后增加 HTTPS 和协议升级的阅读入口，形成从请求处理到传输能力的连续路径。
+- `server/https.mdx` 与 `server/upgrade.mdx`：调整侧边栏顺序，避免与 Router Session、拦截器章节出现重复排序值。
+- 清理 async、ServerOptions、HTTPS 页面未使用的 Starlight 组件导入。
+
+源码核对范围包括 `Router`、`NodePath`、`RouterHandlerImpl`、`Chain`、`RouterHandler`、`Context`、`HttpHandler`、`HttpMessageProcessor`、`HttpRequestProtocol`、`ServerOptions`、`HttpServer`、`SessionManager` 与 `LocalSessionManager`。本轮未修改运行时代码。
+
+**验证状态：**已重新读取本轮修改后的 9 篇服务端页面；Markdown 代码围栏数量均为偶数，检查到的 Markdown 站内链接均指向已存在的章节。未执行 `npm ci`、`npm run build` 或 Maven 示例编译；因此 Astro 构建、示例编译和运行行为仍未验证。
