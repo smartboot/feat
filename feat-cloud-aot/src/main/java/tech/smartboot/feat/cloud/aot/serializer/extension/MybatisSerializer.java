@@ -90,6 +90,8 @@ public class MybatisSerializer extends ExtensionSerializer {
         printWriter.println("import " + AutoMappingBehavior.class.getName() + ";");
         printWriter.println("import " + ExecutorType.class.getName() + ";");
         printWriter.println("import " + SqlSessionFactory.class.getName() + ";");
+        printWriter.println("import " + SqlSession.class.getName() + ";");
+        printWriter.println("import java.io.Reader;");
         printWriter.println("import " + ScriptRunner.class.getName() + ";");
         printWriter.println("import " + Resources.class.getName() + ";");
     }
