@@ -42,6 +42,11 @@ WebSocket URL 必须使用 `ws://`（非加密）或 `wss://`（加密）协议�
 ### 带配置的连接
 
 ```java
+import tech.smartboot.feat.core.client.WebSocketClient;
+import tech.smartboot.feat.core.client.WebSocketListener;
+import tech.smartboot.feat.core.client.WebSocketResponse;
+import tech.smartboot.feat.core.common.codec.websocket.CloseReason;
+
 WebSocketClient client = new WebSocketClient("ws://localhost:8080/chat");
 client.options()
         .debug(true)
@@ -165,8 +170,8 @@ sequenceDiagram
         Server-->>Client: Close Frame
         Client-->>App: onClose()
     else 连接失败
-        Client-->>App: onError()
-        Client-->>App: onClose()
+        Server-->>Client: 非 101 响应
+        Client-->>App: onClose()（错误关闭原因）
     end
 ```
 
@@ -175,11 +180,11 @@ sequenceDiagram
 1. **发起连接** - 调用 `connect()` 后，客户端发送 WebSocket 握手请求
 2. **连接成功** - 握手成功（HTTP 101）时触发 `onOpen()`，此时可以开始发送消息
 3. **接收消息** - 收到服务端消息时触发 `onMessage()`
-4. **连接失败** - 握手失败或网络异常时触发 `onError()`
-5. **连接关闭** - 无论成功或失败，连接关闭时都会触发 `onClose()`
+4. **握手未升级** - 服务端返回非 101 状态码时，当前实现通过 `onClose()` 报告错误关闭原因；连接建立阶段异常可能直接从 `connect()` 抛出。
+5. **连接关闭** - 收到服务端 Close 帧时触发 `onClose()`；底层网络意外断开不保证触发该回调。
 
 <Aside type="tip">
-`onClose()` 是**最终回调**，无论连接成功还是失败都会执行，适合用于资源清理操作。
+`onClose()` 不等于通用网络故障回调。当前实现会在收到 Close 帧或握手状态码不是 101 时调用它；连接建立阶段的异常可能直接从 `connect()` 抛出。`onError()` 用于处理消息分发或监听器执行过程中捕获到的异常。
 </Aside>
 
 ### 完整生命周期示例
@@ -355,7 +360,7 @@ public class InteractiveWebSocketClient {
 
 **`sendMessage` 抛出 IOException**
 
-连接未就绪或已断开。只在 `onOpen` 回调后发送消息：
+连接未就绪或已断开。只在 `onOpen` 回调后发送消息；示例中的 `connected` 是应用自己维护的状态标记，在 `onOpen` 中设为 `true`，在 `onClose` 中设为 `false`：
 ```java
 if (connected) {
     client.sendMessage("data");
@@ -366,10 +371,7 @@ if (connected) {
 
 WebSocket 是长连接，需要手动关闭：
 ```java
-// 正常关闭
-client.close();
-
-// 强制关闭
+// 关闭连接（发送正常关闭帧）
 client.close();
 ```
 
