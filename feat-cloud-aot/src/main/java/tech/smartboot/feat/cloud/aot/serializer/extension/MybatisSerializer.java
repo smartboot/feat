@@ -92,6 +92,8 @@ public class MybatisSerializer extends ExtensionSerializer {
         printWriter.println("import " + SqlSessionFactory.class.getName() + ";");
         printWriter.println("import " + ScriptRunner.class.getName() + ";");
         printWriter.println("import " + Resources.class.getName() + ";");
+        printWriter.println("import " + SqlSession.class.getName() + ";");
+        printWriter.println("import " + Reader.class.getName() + ";");
     }
 
     @Override
