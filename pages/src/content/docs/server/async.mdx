@@ -6,7 +6,7 @@ sidebar:
     order: 6
 ---
 
-import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
 
 Feat Core 基于 AIO 处理网络 I/O。同步处理器会在当前请求处理调用链中执行；如果在其中执行阻塞式数据库访问、远程调用或文件操作，就会占用执行该请求的线程。对于这类阻塞任务，可以把业务工作提交到应用管理的线程池，再通过完成回调通知 Feat。
 
