@@ -26,7 +26,7 @@ Feat Cloud 没有内置 XXL-Job starter，本文直接用官方 `xxl-job-core`�
 <dependency>
     <groupId>com.xuxueli</groupId>
     <artifactId>xxl-job-core</artifactId>
-    <version>2.4.0</version>
+    <version>3.4.0</version>
 </dependency>
 ```
 
@@ -43,9 +43,9 @@ xxl:
       addresses: http://127.0.0.1:8080
       timeout: 3
     executor:
-      enabled: true
+      enabled: ${xxljob.enabled:true}
       appname: feat-executor
-      accessToken: default_token
+      accessToken: ${xxljob.accessToken:default_token}
       ip:
       port: 9999
       address: http://host.docker.internal:9999
@@ -56,7 +56,7 @@ xxl:
 这些值会在编译期通过 `@Value` 注入到字段里。`@Value` 依赖字段对应的 setter 方法，字段叫 `adminAddresses`，就得有 `setAdminAddresses(...)`。嵌套配置用 `xxl.job.admin.addresses` 这种点号路径，自动映射到 `xxl` 下的 `job` 节点。具体规则可以回看 [Bean 与依赖注入](/feat/cloud/bean/)。
 ![](./img/xxljob_2.png)
 <Aside type="caution">
-    生产环境的 `accessToken` 不要硬编码进配置文件提交到仓库。可以用 `${xxl.job.accessToken}` 占位符，运行时通过 JVM 参数 `-Dxxl.job.accessToken=xxx` 或环境变量 `XXL_JOB_ACCESSTOKEN=xxx` 注入。
+    生产环境的 `accessToken` 不要硬编码进配置文件提交到仓库。示例配置使用 `${xxljob.accessToken:default_token}`，运行时通过 JVM 参数 `-Dxxljob.accessToken=xxx` 或环境变量 `XXLJOB_ACCESSTOKEN=xxx` 覆盖；执行器启用开关也可通过 `-Dxxljob.enabled=false` 或 `XXLJOB_ENABLED=false` 控制。注意这里的占位符键是 `xxljob.*`，不是 YAML 中完整的 `xxl.job.executor.*` 路径。
 </Aside>
 
 ## 写代码
@@ -83,7 +83,7 @@ public class XxlJobConfig {
     private int timeout;
 
     @Value("${xxl.job.executor.enabled}")
-    private boolean enabled;
+    private Boolean enabled;
 
     @Value("${xxl.job.executor.appname}")
     private String appname;
@@ -106,7 +106,27 @@ public class XxlJobConfig {
     @Value("${xxl.job.executor.logretentiondays}")
     private int logRetentionDays;
 
-    // getter & setter
+    public void setAdminAddresses(String adminAddresses) { this.adminAddresses = adminAddresses; }
+    public void setTimeout(int timeout) { this.timeout = timeout; }
+    public void setEnabled(Boolean enabled) { this.enabled = enabled; }
+    public void setAppname(String appname) { this.appname = appname; }
+    public void setAccessToken(String accessToken) { this.accessToken = accessToken; }
+    public void setIp(String ip) { this.ip = ip; }
+    public void setPort(int port) { this.port = port; }
+    public void setAddress(String address) { this.address = address; }
+    public void setLogPath(String logPath) { this.logPath = logPath; }
+    public void setLogRetentionDays(int logRetentionDays) { this.logRetentionDays = logRetentionDays; }
+
+    public String getAdminAddresses() { return adminAddresses; }
+    public int getTimeout() { return timeout; }
+    public boolean isEnabled() { return enabled; }
+    public String getAppname() { return appname; }
+    public String getAccessToken() { return accessToken; }
+    public String getIp() { return ip; }
+    public int getPort() { return port; }
+    public String getAddress() { return address; }
+    public String getLogPath() { return logPath; }
+    public int getLogRetentionDays() { return logRetentionDays; }
 }
 ```
 
@@ -170,7 +190,7 @@ import tech.smartboot.feat.cloud.annotation.PreDestroy;
 
 @Bean
 public class Bootstrap {
-    private static final Logger logger = LoggerFactory.getLogger(XxlJobConfig.class);
+    private static final Logger logger = LoggerFactory.getLogger(Bootstrap.class);
 
     @Autowired
     private XxlJobConfig xxlJobConfig;
@@ -210,7 +230,9 @@ public class Bootstrap {
         }
     }
 
-    // setter
+    public void setXxlJobConfig(XxlJobConfig xxlJobConfig) { this.xxlJobConfig = xxlJobConfig; }
+    public void setFirstJobHandler(IJobHandler firstJobHandler) { this.firstJobHandler = firstJobHandler; }
+    public void setSecondJobHandler(IJobHandler secondJobHandler) { this.secondJobHandler = secondJobHandler; }
 
     public static void main(String[] args) {
         FeatCloud.cloudServer().listen(8888);
