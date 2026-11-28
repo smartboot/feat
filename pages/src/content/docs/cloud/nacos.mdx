@@ -467,7 +467,7 @@ curl http://localhost:8083/nacos/instances
 上线前记住几件事就够了：
 
 - **开鉴权**：Nacos 服务端开启鉴权，`namespace` / 用户名 / 口令通过环境变量注入，不要写死在仓库里
-- **先校验再刷新**：监听到新配置后先检查格式和必填字段，坏配置不要覆盖内存值
+- **先校验再刷新**：监听到新配置后先检查格式和必填字段，坏配置不要覆盖内存值。本文的 `ConfigBootstrap` 为了展示监听链路，只把原始文本保存到 `config`；真实业务应在回调中解析并校验配置成功后，再一次性替换当前配置快照。
 - **拷贝回调数据**：`receiveConfigInfo` / `NamingEvent.getInstances()` 返回的是 Nacos 内部引用，回调线程和请求线程并发访问时务必拷贝快照
 - **容器里别用回环 IP**：注册的 `ip` 必须是调用方可达地址，容器化部署要注入真实 IP
 - **优雅关闭**：`@PreDestroy` 里先 `removeListener` / `unsubscribe` 再 `shutDown`，避免停机时还在回调已释放的资源
