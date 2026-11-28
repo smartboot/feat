@@ -68,6 +68,8 @@ public class AsyncDemo {
                             Thread.sleep(100);
                             request.getResponse().write("Async response");
                         } catch (Exception e) {
+                            request.getResponse().setHttpStatus(500);
+                            request.getResponse().write("Internal error");
                             e.printStackTrace();
                         } finally {
                             // 必须调用，否则请求不会结束
