@@ -36,6 +36,6 @@ jobs:
       - name: 上传 feat-static 制品
         uses: actions/upload-artifact@v4
         with:
-          name: feat-static-${{ github.run_id }}
+          name: feat-static-${{ github.ref_name }}
           compression-level: 0
           path: demo/feat_static/target/feat_static-*.jar
