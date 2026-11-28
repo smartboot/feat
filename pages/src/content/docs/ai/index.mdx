@@ -49,43 +49,15 @@ ollama run qwen2.5:7b
 ```java title="HelloFeatAI.java"
 import tech.smartboot.feat.ai.FeatAI;
 import tech.smartboot.feat.ai.chat.ChatModel;
-import tech.smartboot.feat.ai.chat.ChatStreamListener;
 
 public class HelloFeatAI {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         ChatModel model = FeatAI.chatModel(opts -> opts
                 .baseUrl("http://localhost:11434/v1")
                 .model("qwen2.5:7b")
         );
 
-        model.chatStream("用一句话介绍 Feat 框架", new ChatStreamListener() {
-            @Override
-            public void onStreamResponse(String content) {
-                System.out.print(content);
-            }
-        }).join();
-    }
-}
-```
-
-    </TabItem>
-    <TabItem value="云端模型" label="云端模型">
-
-如果你已有云端 API Key，创建 `HelloFeatAI.java`：
-
-```java title="HelloFeatAI.java"
-import tech.smartboot.feat.ai.FeatAI;
-import tech.smartboot.feat.ai.chat.ChatModel;
-
-public class HelloFeatAI {
-    public static void main(String[] args) {
-        ChatModel model = FeatAI.chatModel(opts -> opts
-                .model("Qwen2.5-72B-Instruct")
-        );
-
-        model.chat("用一句话介绍 Feat 框架").thenAccept(response -> {
-            System.out.println(response.getContent());
-        });
+        System.out.println(model.chat("用一句话介绍 Feat 框架").get().getContent());
     }
 }
 ```
@@ -112,7 +84,7 @@ Feat 是一个轻量级、高性能的 Java Web 服务开发框架。
 - 不是空字符串
 
 <Aside type="tip">
-当前 `chatStream(...)` 返回 `CompletableFuture<ChatResponse>`。示例在末尾调用 `join()`，是为了让命令行程序等待流式响应结束；在服务端或已有异步流程中，通常应继续组合这个 Future，而不是阻塞业务线程。
+这里使用 `chat(...).get()`，是为了让命令行程序等待模型返回完整结果。真实服务端代码通常应组合 `CompletableFuture`，避免在请求处理线程中阻塞。流式调用的版本差异和用法见[对话模型](/feat/ai/chat/)。
 </Aside>
 
 ## 两种调用方式的区别
