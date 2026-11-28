@@ -33,9 +33,11 @@ jobs:
         run: mvn -B install --file pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
       - name: Build Feat Static
         run: mvn -B install --file demo/feat_static/pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
+      - name: Build Redis Session Demo
+        run: mvn -B install --file demo/redis_session/pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
       - name: 上传 feat-static 制品
         uses: actions/upload-artifact@v4
         with:
-          name: feat-static-${{ github.ref_name }}
+          name: feat-static-${{ github.run_id }}
           compression-level: 0
           path: demo/feat_static/target/feat_static-*.jar
