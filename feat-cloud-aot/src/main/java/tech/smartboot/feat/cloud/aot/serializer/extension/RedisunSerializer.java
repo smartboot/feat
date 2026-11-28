@@ -30,7 +30,7 @@ public class RedisunSerializer extends ExtensionSerializer {
 
     @Override
     public void serializeProperty() {
-        printWriter.println("\\tprivate Redisun redisun;");
+        printWriter.println("\tprivate Redisun redisun;");
     }
 
     @Override
@@ -62,8 +62,8 @@ public class RedisunSerializer extends ExtensionSerializer {
 
     @Override
     public void serializeDestroy() {
-        printWriter.println("\\t\\tif (redisun != null) {");
-        printWriter.println("\\t\\t\\tredisun.close();");
-        printWriter.println("\\t\\t}");
+        printWriter.println("\t\tif (redisun != null) {");
+        printWriter.println("\t\t\tredisun.close();");
+        printWriter.println("\t\t}");
     }
 }
