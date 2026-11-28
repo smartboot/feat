@@ -7,22 +7,23 @@ sidebar:
 
 ![最小 Feat Cloud 应用从编写到浏览器成功响应的流程插画](./img/index_1.png)
 
-Feat Cloud 面向这样一种场景：你已经接受 Feat Core 的轻量、高性能路线，但在业务项目里仍然希望保留 Controller、Bean、自动装配这些更熟悉的组织方式。
+Feat Cloud 面向希望用清晰的业务结构组织 Java Web 应用的开发者。你可以通过 Controller 定义 HTTP 接口，通过 Bean 组织业务对象，再由编译期生成的代码把它们连接起来。
 
-Feat Core 与 Feat AI 采用 Apache 2.0 开源协议。Feat Cloud 面向企业采用赞助支持模式，赞助企业可解锁 Feat Cloud AOT 编译 License。具体方式及 License 生成入口见[赞助支持](/feat/sponsors/)。
+Feat Cloud 依赖 Feat AI，最终由 Feat Core 提供 HTTP 运行时能力。你不需要为了使用 Cloud 先手动学习所有底层细节，但理解这条依赖关系，会帮助你在遇到运行时问题时找到正确的章节。
 
-如果你还在评估 Feat，建议先从 [Feat Core 快速开始](/feat/server/) 开始。
+Feat 各模块采用 Apache 2.0 开源协议。赞助是对项目长期维护的自愿支持，不是使用 Feat Cloud 的前置条件。详情见[赞助支持](/feat/sponsors/)。
+
+如果你还在评估 Feat，建议先阅读[认识 Feat](/feat/guides/)，了解 Core、AI 和 Cloud 的关系，再决定是否从 Cloud 开始。
 
 这章先不展开配置、数据库或部署。我们只做一件事：写出一个能被编译期识别、启动后可以访问的最小 Feat Cloud 应用。
 
 ## 一个最小应用
 
-最终效果很小：访问 `http://localhost:8080/hello` 返回 `hello Feat Cloud`。  
-但这条链路会经过 Feat Cloud 最重要的机制：编译期扫描注解、生成服务代码、启动时注册路由。
+最终效果很小：访问 `http://localhost:8080/hello` 返回 `hello Feat Cloud`。但这条链路会经过 Feat Cloud 最重要的机制：编译期扫描注解、生成服务代码、启动时注册路由。
 
 需要 JDK 8+ 和 Maven 3.6+，详见[系统要求](/feat/guides/system-requirements/)。
 
-### 添加依赖
+## 添加依赖
 
 在 `pom.xml` 中加入：
 
@@ -43,12 +44,11 @@ Feat Core 与 Feat AI 采用 Apache 2.0 开源协议。Feat Cloud 面向企业�
 </dependency>
 ```
 
-将 `${feat.version}` 替换为实际发布版本，版本号见 [Maven Central](https://central.sonatype.com/artifact/tech.smartboot.feat/feat-cloud-starter)。
+将 `${feat.version}` 替换为同一个已发布版本，版本号见 [Maven Central](https://central.sonatype.com/artifact/tech.smartboot.feat/feat-cloud-starter)。
 
-这里有一个容易忽略的分工：`feat-cloud` 是运行期依赖，`feat-cloud-starter` 负责在编译期生成代码。  
-如果少了后者，应用可以编译到某一步，但 Controller 不会被转成可加载的 `CloudService`。
+这里有一个容易忽略的分工：`feat-cloud` 是运行期依赖，`feat-cloud-starter` 负责在编译期生成代码。如果少了后者，Controller 不会被转成可加载的 `CloudService`。
 
-### 编写入口和控制器
+## 编写入口和控制器
 
 创建 `Bootstrap.java`：
 
@@ -71,14 +71,9 @@ public class Bootstrap {
 }
 ```
 
-这个类同时承担两个角色：
+这个类同时承担两个角色：`main` 方法是应用启动入口；`@Controller` 和 `@RequestMapping` 让编译器知道这里有一个 HTTP 路由。在真实项目里，你通常会把启动类和 Controller 拆开。这里合在一起，是为了让第一条链路尽量短。
 
-- `main` 方法是应用启动入口
-- `@Controller` 和 `@RequestMapping` 让编译器知道这里有一个 HTTP 路由
-
-在真实项目里，你通常会把启动类和 Controller 拆开。这里合在一起，是为了让第一条链路尽量短。
-
-### 运行并验证
+## 编译、运行并验证
 
 先执行 Maven 编译，确保注解处理器生成代码：
 
@@ -88,9 +83,9 @@ mvn clean compile
 
 然后运行 `Bootstrap.main()`。如果使用 IDE 直接运行，请确认 IDE 的构建过程会触发 Maven 注解处理器；生成代码没有更新时，优先用上面的命令重新编译。
 
-控制台出现以下内容说明路由注册成功：
+控制台出现路由注册信息，说明路由已注册：
 
-```text title="控制台输出"
+```text
 Feat Router:
  |-> /hello ==> Bootstrap@helloWorld
 http://0.0.0.0:8080/
@@ -111,6 +106,6 @@ Content-Type: text/plain; charset=utf-8
 hello Feat Cloud
 ```
 
-到这里，你已经跑通了 Feat Cloud 的基本闭环。后面的章节会把这个最小应用拆开：先理解编译期生成的工作模型，再进入 Controller 请求处理、返回响应、Bean 装配、配置与环境、数据库集成和最终部署。
+到这里，你已经跑通了 Feat Cloud 的基本闭环。接下来可以沿着[构建第一个业务应用](/feat/building/first-business-application/)把 Controller、Bean 和 Service 组合起来；再通过[编译期工作模型](/feat/cloud/runtime/)理解注解如何变成运行时服务。
 
 如果你来自 Spring Boot，[从 Spring Boot 迁移](/feat/practices/from-spring/)提供了一张注解与配置的对照地图，可以和主线教程并行阅读。
