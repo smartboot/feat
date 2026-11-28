@@ -44,6 +44,10 @@ Feat.httpServer()
 </TabItem>
 </Tabs>
 
+<Aside type="note">
+`HttpStaticResourceHandler` 的同步 `handle(HttpRequest)` 不支持直接调用；静态文件读取通过异步 `handle(HttpRequest, CompletableFuture)` 完成。将它交给 `Feat.httpServer().httpHandler(...)` 的标准处理链即可；如果自行包装，必须把异步处理方法也正确转发，不能只调用同步入口。
+</Aside>
+
 两种模式下的请求规则一致：
 
 - `GET /` → 返回根目录下的 `index.html`
