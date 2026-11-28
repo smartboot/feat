@@ -282,7 +282,7 @@ Feat Core 与 Feat AI 采用 Apache 2.0；Feat Cloud 则采用赞助授权模式
 - WAF 示例的 `HttpHandler` lambda 参数是 `HttpRequest`，应通过 `request.getResponse()` 写响应，不能使用 `Context.Response` 字段。
 - BasicAuth 示例中的 Router 回调参数是 `Context`，当前 `Context` 没有 `write(...)` 便捷方法，应使用 `ctx.Response.write(...)`。
 - WAF URI 检查对根路径 `/` 有显式放行分支；文档补充该边界，避免把白名单描述成对所有路径一视同仁。
-- `HttpStaticResourceHandler` 会先 URL 解码，再检查 `../` / `..\\`，编码后的穿越片段也会被检查；文档补充这一执行顺序。
+- `HttpStaticResourceHandler` 会先 URL 解码，再检查 `../` / `..\`，编码后的穿越片段也会被检查；文档补充这一执行顺序。
 - `HttpStaticResourceHandler.handle(HttpRequest)` 同步入口直接抛出 `UnsupportedOperationException`，实际静态资源处理由异步入口完成；文档增加自定义包装时必须转发异步入口的提醒。
 
 未发现 WAF 在报文解析阶段校验、BasicAuth 转发异步 Handler、静态资源 404 / Last-Modified 处理等表述与当前源码存在冲突。
@@ -306,3 +306,25 @@ Feat Core 与 Feat AI 采用 Apache 2.0；Feat Cloud 则采用赞助授权模式
 本轮只修改文档示例与说明，没有修改运行时代码。
 
 **验证状态：**已对照当前 master 源码并做文本级检查；未执行 JUnit、静态资源安全测试、`npm ci` 或 `npm run build`。
+
+## 2026-11-28：工程实践文档第二轮复核
+
+在 master 已有的安全、静态资源与示例修正基础上，本轮继续对照 Core 源码检查实践文档的语义边界，并补充以下调整：
+
+- `practices/security.mdx`：将 Session 安全入口指向 Core Router Session，明确 Core 默认 `LocalSessionManager` 与 Cloud Redis Session 的边界；补充静态资源处理器的字符串路径检查不等于最终规范化路径及符号链接隔离。
+- `practices/static-files.mdx`：修正文件目录与 classpath 模式的无扩展名资源回退差异；明确 `autoIndex` 当前只在文件目录分支提供目录列表；补充符号链接越界不受当前字符串检查保护的限制。保留 master 已有的异步 Handler 入口说明。
+- `practices/logging.mdx`：根据 `RunLogger.log()` 的实际判断顺序，说明日志级别刷新不是独立后台轮询，而是在日志调用通过当前级别过滤后才检查系统属性。
+- `practices/deploy-core.mdx`：纠正 `shutdownHook` 语义。回调不会接收请求上下文；当前 `HttpServer.shutdown()` 先执行回调，再关闭底层服务，因此它不是停止接收新请求并排空在途请求的完整优雅停机机制。
+- `practices/testing.mdx`：补充 Cloud 集成测试片段中缺失的端口就绪等待辅助方法。
+- `practices/from-spring.mdx`：修正 `@Param` 仅绑定查询参数的表述，说明其按 Content-Type 从查询参数、表单参数或 JSON 对象取值。
+- `practices/faq.mdx`：澄清 Core Router 与 Cloud Controller 是不同层次的 API；移除“外部调用和数据库访问必须异步”的绝对化建议；同步静态资源安全边界，并保留 master 已有的 PROXY protocol 与 `X-Forwarded-For` 区分。
+- `practices/performance.mdx`：删除固定的 1ms / 10ms 异步判断阈值；进一步区分 `byteCache`、`headerNameByteTree` 与 `uriByteTree`，明确当前 Core Router 使用 `NodePath`，不会自动注册到 URI 映射树；补充 classpath 静态资源当前无条件设置 gzip 响应头的实现细节。
+
+源码核对范围包括 `BasicAuthServerHandler`、`WafOptions`、`WAF`、`HttpStaticResourceHandler`、`FileServerOptions`、`RunLogger`、`LoggerFactory`、`HttpServer`、`ServerOptions`、`HttpHandler` 和 `HttpRequestProtocol`。本轮只修改文档，没有改动运行时代码。
+
+### 发现的实现层后续事项
+
+1. `HttpStaticResourceHandler` 的 classpath 分支当前直接设置 `Content-Encoding: gzip`，没有根据请求的 `Accept-Encoding` 判断客户端是否接受 gzip。文档已注明这一行为；建议后续单独评估实现修复。
+2. 静态资源文件目录模式只检查解码后路径中是否包含 `../` 或 `..\`，没有对最终目标执行 canonical-path containment 校验。资源目录中若存在指向目录外的符号链接，不能把当前检查当作完整的文件系统隔离边界。建议后续评估安全加固。
+
+**验证状态：**已重新读取本轮修改的 8 篇实践页面并检查 Markdown 代码围栏闭合；已修正已知的 `HttpHandler` 示例类型错误。未执行 `npm ci`、`npm run build` 或 Maven 示例编译，不能将 Astro 构建或示例编译标记为通过。

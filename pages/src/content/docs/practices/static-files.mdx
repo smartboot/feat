@@ -48,11 +48,14 @@ Feat.httpServer()
 `HttpStaticResourceHandler` 的同步 `handle(HttpRequest)` 不支持直接调用；静态文件读取通过异步 `handle(HttpRequest, CompletableFuture)` 完成。将它交给 `Feat.httpServer().httpHandler(...)` 的标准处理链即可；如果自行包装，必须把异步处理方法也正确转发，不能只调用同步入口。
 </Aside>
 
-两种模式下的请求规则一致：
+两种模式都支持目录默认查找 `index.html`，但无扩展名路径的回退行为并不完全相同：
 
-- `GET /` → 返回根目录下的 `index.html`
-- `GET /docs/` → 返回 `docs/index.html`
-- `GET /about`（无扩展名）→ 依次尝试 `/about`、`/about/index.html`、`/about.html`，适配"目录和同名 html 并存"的站点结构
+- `GET /` → 查找根目录下的 `index.html`
+- `GET /docs/` → 查找 `docs/index.html`
+- 文件目录模式：`/about` 对应磁盘上的 `about` 文件或目录；若它不存在，不会自动再尝试 `about.html`
+- classpath 模式：当资源 `about` 不存在且路径最后一段没有扩展名时，还会尝试查找 `about.html`
+
+因此，如果希望文件目录与 classpath 两种部署方式表现一致，建议显式使用带扩展名的资源路径，或在两种资源位置中提供相同的目录结构。
 
 ## 目录列表
 
@@ -64,7 +67,7 @@ new HttpStaticResourceHandler(opt -> opt
         .autoIndex(true))
 ```
 
-打开后会渲染一个简单的目录列表页。**生产环境保持默认关闭**——目录列表会把服务器上的文件名全部暴露给访问者。
+文件目录模式打开后会渲染一个简单的目录列表页；当前 classpath 处理分支不提供目录列表。**生产环境保持默认关闭**——目录列表会把服务器上的文件名全部暴露给访问者。
 
 ## 缓存协商
 
@@ -83,7 +86,7 @@ new HttpStaticResourceHandler(opt -> opt
 GET /../../etc/passwd   →  403 Forbidden
 ```
 
-`../` 与 `..\` 两种写法都会被拒绝，处理器会先对 URI 做 UTF-8 URL 解码，再检查路径，因此编码后的穿越片段也会进入同一检查；检查通过后才会进入文件系统或 classpath 查找。这是处理器自带的兜底，但不要因此放松对自己代码的要求：自研的文件下载接口不走这条管道，需要自己校验（见[安全实践](/feat/practices/security/)）。
+`../` 与 `..\` 两种写法在 URL 解码后都会被拒绝。需要明确的是，这是一项字符串层面的路径检查，并不替代对规范化目标路径的校验，也不能防止资源目录中的符号链接指向目录外部。这是处理器自带的兜底，但不要因此放松对自己代码的要求：自研的文件下载接口不走这条管道，需要自己校验（见[安全实践](/feat/practices/security/)）。
 
 其他两个细节也和资源安全有关：
 

@@ -113,7 +113,7 @@ Feat.httpServer(options -> {
 GET /static/../../etc/passwd  →  403 Forbidden
 ```
 
-自研文件下载类接口时不能依赖这层保护——那是在静态资源处理器里做的，不在通用请求管道里。自己拼接文件路径时，务必先 `getCanonicalFile()` 再校验规范化结果是否仍在预期目录内。详见[静态资源服务](/feat/practices/static-files/)。
+自研文件下载类接口时不能依赖这层保护——那是在静态资源处理器里做的，不在通用请求管道里。即使使用内置处理器，也要注意它当前主要检查解码后路径中的 `../` 与 `..\` 字符串，并不等同于对最终文件路径做完整的规范化边界校验；如果资源目录中存在指向目录外部的符号链接，也不能把它当作安全隔离边界。自己拼接文件路径时，应先解析规范化路径，再校验目标仍位于允许目录内。详见[静态资源服务](/feat/practices/static-files/)。
 
 ## 错误响应与信息泄露
 
@@ -128,11 +128,11 @@ Feat 对错误响应的处理是统一的：处理器抛出的 `HttpException`�
 
 ## Session 安全要点
 
-使用 [Session 与请求状态](/feat/cloud/session/)时记住三条底线：
+使用 [Core Router Session](/feat/server/router-session/) 时记住三条底线：
 
 1. Session Cookie 承载的是会话凭据，全站 HTTPS 是前提
 2. Session 里只放与当前 HTTP 会话相关的临时状态，用户资料和权限放数据库/缓存，降低泄露后的爆炸半径
-3. 部署多实例时用 Redis 存储，单机内存 Session 重启即失效（详见[故障排查](/feat/cloud/troubleshooting/)）
+3. Core 默认的 `LocalSessionManager` 只把数据保存在当前进程内存中；多实例部署需要自行接入共享存储。Feat Cloud 的 Redis Session 是 Cloud 层集成，不要把它误认为 Core 默认能力（详见[Cloud Session](/feat/cloud/session/)）
 
 ## 上线前安全检查清单
 
