@@ -48,9 +48,9 @@
   <text class="sub" x="600" y="681" text-anchor="middle">底层网络通信基础</text>
   <text class="detail" x="600" y="706" text-anchor="middle">AIO · TCP · IO 缓冲与连接管理</text>
 
-  <path class="edge" d="M600 285 V260"/>
-  <path class="edge" d="M600 445 V420"/>
-  <path class="edge" d="M600 605 V580"/>
+  <path class="edge" d="M600 250 V275"/>
+  <path class="edge" d="M600 410 V435"/>
+  <path class="edge" d="M600 570 V595"/>
   <text class="edge-label" x="620" y="276">依赖</text>
   <text class="edge-label" x="620" y="436">依赖</text>
   <text class="edge-label" x="620" y="596">依赖</text>
