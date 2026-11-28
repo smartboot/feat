@@ -34,7 +34,7 @@ export default defineConfig({
                     tag: 'meta',
                     attrs: {
                         name: 'description',
-                        content: 'Feat是一款基于Java语言开发的轻量级、高性能Web服务器',
+                        content: 'Feat 是基于 Java 的轻量、高性能 Web 框架，提供 HTTP Server、HTTP Client、AI 能力与编译期业务应用开发模型',
                     }
                 },
                 {
