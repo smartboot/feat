@@ -198,3 +198,18 @@ Feat Core 与 Feat AI 采用 Apache 2.0；Feat Cloud 则采用赞助授权模式
 本轮继续确认此前关于模式重叠、拦截器短路、异步推进限制和 Session 惰性创建的文档表述与当前源码一致。当前上传源码摘录与 master 在 `uriByteTree` 细节上存在版本差异，后续以仓库 master 为准。
 
 **验证状态：**本轮只做源码与 Markdown 内容核对，未执行 `npm ci`、`npm run build` 或 Router 集成测试。Astro 构建及文档示例编译状态仍未验证。
+
+
+## 2026-11-28：HTTPS 与 SSE 示例复核
+
+本轮对照 Feat Core 的 `HttpRequest` / `HttpProtocol`，以及 Feat 当前依赖的 smart-socket 2.2.0 对应 API，检查 HTTPS 与协议升级示例，发现并修正：
+
+- `HttpRequest#getProtocol()` 返回 `HttpProtocol` 对象，不是 `String`。读取可展示的协议名称应调用 `getProtocol().getProtocol()`；修正 HTTPS 示例中的类型错误和 HTTP/2 示例输出。
+- smart-socket 的 `ClientAuth` 选项为 `NONE`、`OPTIONAL`、`REQUIRE`，不存在 `REQUEST`；更新说明。
+- `PemServerSSLContextFactory` 实现的是 `SSLContextFactory`，不是 `ServerSSLContextFactory`；当前 `SslPlugin` 没有文档原先展示的按域名 Lambda 构造方式。删除不可用的多证书示例，明确 SNI 多证书需要自定义 JSSE `SSLContext` / `KeyManager`。
+- mTLS 示例原先既未设置 `SSL_ENGINE_THREAD_LOCAL`，也将 `ClientAuth.REQUIRE` 与 PEM factory 组合成不匹配的构造调用。改为使用 `SslPlugin(SSLContextFactory, Consumer<SSLEngine>)`，在回调中启用 `setNeedClientAuth(true)` 并关联当前请求的 `SSLEngine`；证书读取改用标准 `java.security.cert` API。
+- SSE 定时推送示例原先调用 `complete()` 后没有停止 `scheduleAtFixedRate`，会在连接关闭后继续运行。示例现在在正常结束和发送异常时分别关闭调度器，并补充生产环境应管理调度器生命周期的说明。
+
+本轮只修改文档示例和评审记录，没有修改 Feat 或 smart-socket 运行时代码。
+
+**验证状态：**已对照 Feat master 与 smart-socket 2.2.0 API 源码；未执行 Maven 示例编译、`npm ci` 或 `npm run build`。示例的实际编译与 Astro 构建仍待 CI / 本地环境验证。
