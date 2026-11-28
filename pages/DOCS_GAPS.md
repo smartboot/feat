@@ -32,6 +32,8 @@
 | 16 | Feat Cloud 许可口径 | Cloud 文档和首页曾写“需赞助授权”，与 Apache 2.0 及赞助页的自愿支持说明冲突 | `LICENSE` 为 Apache 2.0；`sponsors.mdx` 明确赞助不构成授权条件；`LicenseLoader` 在未配置 license 时正常返回 | Cloud 文档提示、首页许可说明、`llms.txt` | 已回写（2026-11-28；见 DOCS_REVIEW H1） |
 | 17 | `setPackages` 语义 | 文档把它称为包扫描范围，容易理解为编译期少生成代码 | `AbstractCloudService.acceptService` 在运行时用生成类名 `startsWith(pkg)` 过滤服务；注解处理器仍会生成服务代码 | `cloud/options.mdx`、`AGENTS.md` | 已回写（2026-11-28；见 DOCS_REVIEW H1） |
 | 18 | 配置占位符特殊边界 | 文档泛称 `server.*` 都支持 `${}`，并容易把 `@Value` 的 YAML 路径与外部环境变量解析混为一谈 | `CloudOptionsSerializer` 对 `autoSSL`、Session 特殊键单独读取；`RedisunSerializer` 对 `address` 直接写入；`serializerValueSetter` 先按 YAML 路径取值，再由类型 Serializer 解析值 | `cloud/options.mdx`、`cloud/bean.mdx` | 已回写（2026-11-28；见 DOCS_REVIEW H1） |
+| 19 | Controller 请求绑定边界 | 文档只把 `@Param` 描述为查询参数，未说明 JSON / 表单来源；未说明路径参数支持类型和默认转换值 | `ControllerSerializer` 根据 Content-Type 选择 JSON 或 request parameters；`@PathParam` 仅支持 String、int/Integer、long/Long，数值转换默认 0 | `cloud/controller.mdx` | 已回写（2026-11-28；见 DOCS_REVIEW H1） |
+| 20 | Controller 方法限制与 Gzip | 文档未说明 `RequestMapping.method` 默认不限制 HTTP 方法，也未说明全局 Gzip 配置 | `RequestMapping.method()` 默认空数组；`ControllerSerializer` 读取 `server.gzip` / `server.gzipThreshold` 覆盖控制器配置 | `cloud/controller.mdx`、`cloud/options.mdx` | 已回写（2026-11-28；见 DOCS_REVIEW H1） |
 
 ## 已确认「不补」的
 

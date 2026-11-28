@@ -1,7 +1,7 @@
 # 文档站点评审记录
 
 > 最近核对：2026-11-28  
-> 范围：文档站点工程配置、Router 文档重构后的状态，以及 Feat Cloud Bean、启动配置与许可口径的源码核对。本文记录已核实的问题，不把尚未执行的构建或尚未逐篇检查的内容标记为通过。
+> 范围：文档站点工程配置、Router 文档重构后的状态，以及 Feat Cloud Bean、Controller、启动配置与许可口径的源码核对。本文记录已核实的问题，不把尚未执行的构建或尚未逐篇检查的内容标记为通过。
 
 ## 当前结论
 
@@ -65,11 +65,21 @@ Feat Cloud 多个入口曾提示“需先成为赞助者获取授权”，包括
 
 同时补充 `@Value` 支持的字段类型，并修正 `AGENTS.md` 中把运行时服务过滤描述成编译期扫描的注释，以及“完全没有反射装配”的绝对化表述。
 
+### H1：Controller 请求绑定与 Gzip 文档需要补充实现边界
+
+对照 `ControllerSerializer`、`RequestMapping`、`Param`、`PathParam`、`Controller` 和 `AsyncResponse` 核对后，补充以下边界：
+
+- `@RequestMapping.method` 默认空数组，代表不限制 HTTP 方法；文档示例若只面向 GET 等特定方法，应显式声明。
+- `@Param` 根据 Content-Type 从查询 / 表单参数或 JSON 对象取值，不只是 query string。
+- `@PathParam` 当前支持 String、int / Integer、long / Long；数值转换失败时默认返回 0。
+- `server.gzip` 与 `server.gzipThreshold` 可全局开启压缩并覆盖 Controller 阈值；相关特殊配置不走通用 `${}` 解析。
+- 异步示例必须保证任务异常时也完成 `AsyncResponse`，并恢复线程中断标记。
+
 ## 已完成事项
 
 - PR #9：Router 指南拆章，已合并。
 - Router 路由匹配、拦截器链、Session 和异步处理器文档已按当前源码核对。
-- Feat Cloud 的 Bean 注入、方法级 Bean、CloudOptions 与 Profile 行为已对照 AOT 生成器和运行时上下文核对。
+- Feat Cloud 的 Bean 注入、方法级 Bean、Controller 请求绑定、Gzip、CloudOptions 与 Profile 行为已对照 AOT 生成器和运行时上下文核对。
 - Apache 2.0 与自愿赞助的许可口径已同步到 Cloud 文档、首页和 `llms.txt`。
 - `pages/DOCS_GAPS.md` 已登记本轮 Router 文档发现的缺口。
 

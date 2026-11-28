@@ -251,8 +251,10 @@ feat:
 | `autoSSL` | 特殊 | 设为 `true` 启用自动 HTTPS |
 | `session.store-type` | 特殊 | 设为 `redis` 切换为 Redis 会话存储 |
 | `session.timeout` | 特殊 | 会话超时时间 |
+| `gzip` | 特殊 | 设为 `true` 全局开启响应压缩 |
+| `gzipThreshold` | 特殊 | 全局 Gzip 压缩阈值（字节） |
 
-上表中通过通用字段绑定的 `int` / `String` 项支持 `${}` 占位符，例如 `port: ${port}`。但 `autoSSL`、`session.store-type` 和 `session.timeout` 是单独处理的特殊配置：当前实现直接读取字面值，不经过外部变量解析。请分别写成布尔值 `true`、字符串 `redis` 和整数超时时间，不要写成 `${...}`。
+上表中通过通用字段绑定的 `int` / `String` 项支持 `${}` 占位符，例如 `port: ${port}`。但 `autoSSL`、`session.store-type`、`session.timeout`、`gzip` 和 `gzipThreshold` 是单独处理的特殊配置：当前实现直接读取字面值，不经过外部变量解析。请分别写成布尔值、字符串或整数，不要写成 `${...}`。
 
 <Aside type="caution">
 `debug` 看起来像 `server:` 的一项，但它不是字段、而是方法，且 `boolean` 不在可绑定类型内，写在 `feat.yml` 里不会生效。调试模式只能通过启动入口的 `options.debug(true)` 打开。
