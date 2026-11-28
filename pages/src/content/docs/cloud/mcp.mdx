@@ -158,7 +158,7 @@ public class DynamicMcpController {
     public void init() {
         // 动态注册时，显式设置端点和启用的能力
         mcpServer.getOptions().setMcpEndpoint("/mcp/dynamic").toolEnable();
-        mcpServer.addTool(createTool());
+        // mcpServer.addTool(...) 注册动态工具
     }
 }
 ```
