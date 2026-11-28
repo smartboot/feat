@@ -38,7 +38,7 @@ JDK 8+，主线以 Java 8 编译目标构建，8/11/17/21 均可运行。完整�
 
 ### 路径参数怎么写？
 
-冒号形式：`/:userId`，通过 `@PathParam("userId")` 注入。**花括号形式 `{userId}` 不支持**——曾经支持过但已移除，不要从 Spring 的习惯直接照搬。
+Feat Cloud 的 `@Controller` 支持两种写法：`/:userId` 和 `/{userId}`，都通过 `@PathParam("userId")` 注入。Feat Core 的 `Router` 只支持冒号形式 `/:userId`。这是两层 API 的差异：Cloud 编译期会把花括号形式转换成 Core 使用的冒号形式。
 
 ### 怎么接收 JSON 请求体？
 
