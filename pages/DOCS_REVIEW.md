@@ -11,6 +11,13 @@ Router 文档已拆分为使用、匹配、拦截器和 Session 四个主题，�
 
 ## 已确认问题
 
+### H2：XXL-Job 集成文档与 Demo 版本及配置示例不一致
+
+对照 `pages/src/content/docs/cloud/xxljob.mdx`、`demo/xxljob/pom.xml`、`demo/xxljob/src/main/resources/feat.yaml` 和 Demo 中的 `XxlJobConfig` / `Bootstrap` 核对后，发现文档依赖版本写为 2.4.0，而 Demo 使用 3.4.0；文档中的 `accessToken` 占位符键与 Demo 实际配置的 `xxljob.accessToken` 不一致，环境变量名称也因此不准确。
+
+同时，文档示例遗漏了配置 Bean 和 Bootstrap 的 setter，`enabled` 字段类型与 Demo 不一致，日志记录器还错误地引用了 `XxlJobConfig.class`。已将文档示例对齐当前 Demo，并补全 setter/getter 与系统属性、环境变量说明。此项只修改文档，不改 Demo 或依赖版本。
+
+
 ### H3：文档站点 README 仍是初始化模板
 
 当前 `pages/README.md` 仍保留 Astro Starlight Starter Kit 的默认介绍、StackBlitz/CodeSandbox/Netlify/Vercel 模板链接，以及“删除此文件”的提示。它没有说明 Feat 文档目录、开发命令、构建方式、文档维护约定或 Pages 部署流程，容易误导后续维护者。
