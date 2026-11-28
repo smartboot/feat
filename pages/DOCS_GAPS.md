@@ -30,6 +30,8 @@
 | 14 | 拦截器短路与异步推进 | 旧示例手动完成 Future，未说明 Router 在链路中断后会完成 Future；也未说明延迟异步调用 `chain.proceed` 的限制 | `Router#matchHandler` 在 `chain.proceed` 返回后检查 `Chain#isInterrupted` 并完成 Future | `server/router-interceptors.mdx` | 已回写（`27aabcd`） |
 | 15 | 路由匹配优先级 | 旧文档承诺精确 > 参数 > 通配符的全局优先级，无法覆盖重叠模式的实际行为 | `NodePath` 使用 `HashMap` 保存模式节点，比较深度且通配叶子存在提前结束分支；终端参数与通配符使用同一特殊键 | `server/router-matching.mdx` | 已回写（`1309e15`） |
 | 16 | Feat Cloud 许可口径 | Cloud 文档和首页曾写“需赞助授权”，与 Apache 2.0 及赞助页的自愿支持说明冲突 | `LICENSE` 为 Apache 2.0；`sponsors.mdx` 明确赞助不构成授权条件；`LicenseLoader` 在未配置 license 时正常返回 | Cloud 文档提示、首页许可说明、`llms.txt` | 已回写（2026-11-28；见 DOCS_REVIEW H1） |
+| 17 | `setPackages` 语义 | 文档把它称为包扫描范围，容易理解为编译期少生成代码 | `AbstractCloudService.acceptService` 在运行时用生成类名 `startsWith(pkg)` 过滤服务；注解处理器仍会生成服务代码 | `cloud/options.mdx`、`AGENTS.md` | 已回写（2026-11-28；见 DOCS_REVIEW H1） |
+| 18 | 配置占位符特殊边界 | 文档泛称 `server.*` 都支持 `${}`，并容易把 `@Value` 的 YAML 路径与外部环境变量解析混为一谈 | `CloudOptionsSerializer` 对 `autoSSL`、Session 特殊键单独读取；`RedisunSerializer` 对 `address` 直接写入；`serializerValueSetter` 先按 YAML 路径取值，再由类型 Serializer 解析值 | `cloud/options.mdx`、`cloud/bean.mdx` | 已回写（2026-11-28；见 DOCS_REVIEW H1） |
 
 ## 已确认「不补」的
 
