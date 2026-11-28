@@ -112,9 +112,10 @@ public class GracefulShutdownDemo {
 
 使用要点：
 
-- **业务清理放 `shutdownHook`**，不要放 JVM 钩子里重复写；`shutdownHook` 在连接关闭前执行，还能访问正在处理的请求上下文
-- 容器场景下记得把 JVM 钩子挂上 `server::shutdown`，`docker stop` 默认给 10 秒宽限期
-- `shutdown()` 可重入，多次调用安全（内部会防止重复关闭）
+- **应用资源清理可以放在 `shutdownHook`**，由 JVM 钩子调用 `server.shutdown()` 时触发。这个回调不会接收请求上下文，也不能直接访问某个正在处理的请求。
+- 当前 `HttpServer.shutdown()` 会先执行 `shutdownHook`，回调返回后才关闭底层服务并释放缓冲区。因此回调执行期间监听服务尚未完成关闭，不应把它当作“停止接收新请求并等待在途请求排空”的完整优雅停机机制；避免在其中执行长时间阻塞操作。
+- 容器场景下记得把 JVM 钩子挂上 `server::shutdown`；Docker 在 Linux 上默认通常提供 10 秒停止宽限期，可按部署环境调整。
+- `shutdown()` 可重复调用；服务引用会先置空，后续调用会直接返回。
 
 ## 生产检查清单
 
