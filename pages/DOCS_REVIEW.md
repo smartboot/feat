@@ -167,8 +167,8 @@ Feat Core 与 Feat AI 采用 Apache 2.0；Feat Cloud 则采用赞助授权模式
 
 - astro.config.mjs 的侧边栏仍使用“理解 Feat”，而入口页标题已改为“认识 Feat”，导航术语需要统一。
 - cloud/mybatis.mdx 仍是一篇独立的 User CRUD 教程；新建的 building/first-business-application.mdx 已使用 Task CRUD。两篇承担相似的 Controller → Service → 数据访问链路，后续应将 MyBatis 文档改成前一篇任务应用的持久化扩展，避免读者重复学习第二套业务。
-- MyBatis 示例仍使用 {username} 路径占位符，与当前 Router 主线文档采用的 /:name 风格不一致，需要对照 Cloud Controller 实际路由生成逻辑确认后统一。
-- ai/index.mdx 同时描述 chatStream 的旧 void 返回值和 v2.5.0 起的 CompletableFuture 返回值，快速开始示例及版本边界需要进一步核对当前 API。
+- Cloud Controller 同时支持 `/:name` 与 `/{name}` 两种路径参数写法，并会在编译期转换为 Core Router 使用的冒号形式；Core Router 本身只支持 `/:name`。MyBatis 示例中的花括号写法并非错误，但本轮改用冒号形式，以和新业务教程保持一致。
+- `chatStream` 在 v2.5.0 中从 `void` 改为 `CompletableFuture<ChatResponse>`。为避免第一篇 Quick Start 被版本差异影响，基础示例改用 `chat(...).get()` 展示完整响应；流式调用及其版本边界留在对话模型章节说明。
 - 旧的《Feat 官网文档设计》上传稿记录的是 2.1.1 时期架构，并把 Feat AI 描述为仅增强 HTTP Client 的层次；该描述与当前已经确认的 Core → AI → Cloud 依赖关系不一致，不能作为当前架构文案依据。
 
 本阶段优先处理阅读路径与重复内容，再继续按主题核对示例、API、链接和 PDF 阅读体验。
