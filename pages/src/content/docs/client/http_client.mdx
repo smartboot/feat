@@ -225,11 +225,10 @@ sequenceDiagram
         
         Server-->>Client: 响应完成
         Client-->>App: onSuccess()
-    else 请求失败
+        Client-->>App: onClose()（正常完成）
+    else 请求异常
         Client-->>App: onFailure()
     end
-    
-    Client-->>App: onClose()
 ```
 
 **回调触发顺序说明：**
@@ -239,10 +238,10 @@ sequenceDiagram
 3. **接收响应体** - 如果注册了 `onResponseBody()`，会分块接收响应体数据
 4. **请求成功** - 响应体完整接收后触发 `onSuccess()`
 5. **请求失败** - 网络异常或超时等情况下触发 `onFailure()`
-6. **连接关闭** - 无论成功或失败，连接关闭时都会触发 `onClose()`
+6. **正常完成** - Future 正常完成时触发 `onClose()`；异常完成只走 `onFailure()`
 
 <Aside type="tip">
-`onClose()` 是**最终回调**，无论请求成功还是失败都会执行，适合用于资源清理操作。
+`onClose()` 只在请求 Future 正常完成时执行；异常完成应通过 `onFailure()` 处理。HTTP 4xx/5xx 仍然是正常收到的 HTTP 响应，应该在 `onSuccess()` 中检查 `statusCode()`，不能把它们等同于网络请求异常。
 </Aside>
 
 ### 读取响应数据
@@ -358,6 +357,8 @@ client.get("/large-file.zip")
 ### SSE 客户端
 
 处理 Server-Sent Events 流式响应。详见 [SSE 客户端](/feat/client/sse_client/) 章节。
+
+注意：`onSSE()` 与 `onResponseHeader()` 设置的是同一个响应头回调，后注册的会覆盖先注册的；当响应被识别为 SSE 后，会切换到事件解析流程，此时 `onResponseBody()` 不会再收到原始数据块。
 
 ```java
 client.get("/events")

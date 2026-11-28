@@ -213,3 +213,21 @@ Feat Core 与 Feat AI 采用 Apache 2.0；Feat Cloud 则采用赞助授权模式
 本轮只修改文档示例和评审记录，没有修改 Feat 或 smart-socket 运行时代码。
 
 **验证状态：**已对照 Feat master 与 smart-socket 2.2.0 API 源码；未执行 Maven 示例编译、`npm ci` 或 `npm run build`。示例的实际编译与 Astro 构建仍待 CI / 本地环境验证。
+
+
+## 2026-11-28：Core 客户端 API 与生命周期复核
+
+本轮对照 Feat Core 的 `HttpClient`、`HttpRest`、`HttpRestImpl`、`HttpOptions`、`SseClient`、`SseEvent`、`WebSocketClient`、`WebSocketOptions`、`WebSocketListener` 与 `Feat` 工厂方法，复核客户端章节，发现并修正：
+
+- HTTP 客户端采用 `MultiplexClient` 复用连接，不能在客户端总览中概括为每次请求都建立短连接。
+- `HttpRest#onClose` 当前通过 `CompletableFuture.thenRun` 注册，只在 Future 正常完成时触发；异常完成走 `onFailure`，不会触发 `onClose`。HTTP 4xx/5xx 是正常收到的 HTTP 响应，应用应检查状态码。
+- `onSSE()` 与 `onResponseHeader()` 使用同一个响应头回调槽位，后注册的会覆盖先注册的；识别为 SSE 后会切换事件解析，`onResponseBody()` 不再接收原始数据块。
+- `SseEvent` 是类而不是接口，除 ID / type / data 外还提供 retry 与 comment 读取方法；事件 ID 不会自动实现游标保存或断线续传，`Last-Event-ID` 需要应用自行维护。
+- SSE 文档中的自动关闭示例原先引用未完成赋值的局部变量，改用 `AtomicReference`；定时关闭与服务端定时推送示例均补上调度器清理，避免遗留线程。
+- `WebSocketOptions` 当前没有 `readTimeout`、`writeBufferSize`、`maxFrameSize`；`WebSocketClient` 没有 `header()`、`isConnected()` 或 `close(code, reason)`。请求头应通过 `options().addHeader(...)` 配置，关闭使用无参 `close()`。
+- `WebSocketListener#onError` 的签名包含 `WebSocketResponse` 参数；握手非 101 的处理和底层连接异常不是同一回调路径，不能承诺 `onClose` / `onError` 一定覆盖所有网络故障。
+- 修正 WebSocket 示例中的 `getStatusCode()` 为 `statusCode()`，并补齐示例导入与应用侧连接状态管理。
+
+本轮只修改客户端文档与评审台账，没有修改运行时代码。
+
+**验证状态：**已对照当前 master API 源码；未执行 Maven 示例编译、`npm ci` 或 `npm run build`。客户端代码示例与 Astro 构建仍待实际编译验证。
