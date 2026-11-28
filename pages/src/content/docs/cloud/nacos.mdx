@@ -221,17 +221,60 @@ curl http://localhost:8081/nacos
 然后去 Nacos 控制台修改 `config1` / `feat` 这个配置的内容，稍等片刻再请求一次，应该能看到新值。
 
 <Aside type="tip">
-生产环境要开鉴权时，把 `namespace`、`username`、`password` 也声明到 `feat.yml`，在 `init()` 里一并塞进 `Properties`：
+生产环境启用 Nacos 鉴权时，除了服务端开启鉴权，还要让客户端携带对应的 namespace、用户名和口令。不要只把键写进 YAML：这些值也必须注入到创建 `ConfigService` 的代码中。
+
+先在 `feat.yml` 中声明配置入口：
+
+```yaml title="feat-prod.yml"
+nacos:
+  namespace: ${nacos.namespace:}
+  username: ${nacos.username:}
+  password: ${nacos.password:}
+```
+
+在 `ConfigBootstrap` 中增加字段：
 
 ```java
-properties.put(PropertyKeyConst.NAMESPACE, namespace);
+@Value("${nacos.namespace:}")
+private String namespace;
+
+@Value("${nacos.username:}")
+private String username;
+
+@Value("${nacos.password:}")
+private String password;
+```
+
+并为这三个字段提供 setter（Feat 的字段注入会生成 setter 调用）：
+
+```java
+public void setNamespace(String namespace) { this.namespace = namespace; }
+public void setUsername(String username) { this.username = username; }
+public void setPassword(String password) { this.password = password; }
+```
+
+最后在创建客户端前补充属性：
+
+```java
+if (namespace != null && !namespace.isEmpty()) {
+    properties.put(PropertyKeyConst.NAMESPACE, namespace);
+}
 if (username != null && !username.isEmpty()) {
     properties.put(PropertyKeyConst.USERNAME, username);
     properties.put(PropertyKeyConst.PASSWORD, password);
 }
 ```
 
-口令不要硬编码进仓库，用环境变量注入。
+启动时通过 JVM 系统属性或环境变量提供敏感值，例如：
+
+```bash
+java -Dnacos.namespace=your-namespace \
+     -Dnacos.username=your-user \
+     -Dnacos.password=your-password \
+     -Dfeat.profiles.active=prod -jar yourapp.jar
+```
+
+也可以使用 `NACOS_NAMESPACE`、`NACOS_USERNAME`、`NACOS_PASSWORD` 环境变量。不要把真实口令提交到仓库。这里的 namespace 应填写 Nacos 实际使用的 namespace ID；默认 public namespace 通常不需要显式设置。
 </Aside>
 
 ## 服务注册
