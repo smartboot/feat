@@ -63,6 +63,11 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    // 推荐提供同名、同类型的 setter，让编译期生成代码直接完成注入
+    public void setUserService(UserService userService) {
+        this.userService = userService;
+    }
+
     @RequestMapping("/:username")
     public RestResult<String> getName(@PathParam("username") String username) {
         return RestResult.ok(userService.findDisplayName(username));
@@ -76,7 +81,9 @@ public class UserController {
 - UserService 承担业务动作
 - Feat Cloud 负责在启动阶段把两者接起来
 
-如果启动时报 Bean 不存在，优先检查目标类是否带了 `@Bean`，以及它是否在扫描范围内。
+Feat Cloud 按**字段名**查找 Bean，而不是按字段类型查找。例如字段名是 `userService`，容器中就必须存在名为 `userService` 的 Bean；如果类名默认生成的名称不同，可以在类级 `@Bean("...")` 上显式指定名称。找不到时会在启动阶段报错，而不是静默注入 `null`。
+
+注入代码优先调用与字段匹配的 setter（名称为 `setUserService`，参数类型必须与字段类型一致）；没有匹配 setter 时才回退到反射写字段。为了让生成代码保持直接调用，也避免运行时字段反射，建议为需要注入的字段提供 setter。注意，`@Autowired` 注解仍然标在字段上，不标在 setter 方法上。
 
 ### 从配置注入值
 
@@ -121,7 +128,9 @@ public class AppConfig {
 
 注意不要省略 `${}`：`@Value("app.name")` 注入的是字面量字符串 `"app.name"`，而不是从配置解析出的值。`${}` 占位符的完整解析规则（优先级、环境变量命名等）见 [启动配置与环境配置](/feat/cloud/options/)。
 
-`@Value` 注入会调用字段对应的 setter。配置参与编译期生成，修改 `feat.yml`、`feat-dev.yml` 或 `feat-prod.yml` 后，需要重新构建应用，生成代码才会更新。
+`@Value` 注入必须存在字段对应的 setter（名称和参数类型都要匹配），否则编译期会报错。与 `@Autowired` 不同，它不会回退到反射写字段。如果配置项不存在且没有提供默认值，生成代码会跳过这次赋值，字段保留 Java 默认值。
+
+配置参与编译期生成，修改 `feat.yml`、`feat-dev.yml` 或 `feat-prod.yml` 后，需要重新构建应用，生成代码才会更新。
 
 ## 生命周期与创建顺序
 
@@ -186,11 +195,13 @@ import tech.smartboot.feat.cloud.annotation.Bean;
 @Bean
 public class ClientFactory {
 
-    @Bean("paymentClient")
+    @Bean
     public PaymentClient paymentClient() {
         return new PaymentClient("https://api.example.com");
     }
 }
 ```
 
-如果对象必须在 Feat Cloud 容器启动前由外部代码准备好，可以改用 `CloudOptions.registerBean(...)`。这部分放在启动配置章节里讲。
+方法级 Bean 会在类级 Bean 创建完成后执行，方法参数按**参数名**从容器中查找对应 Bean；返回对象以方法名注册，例如上例注册为 `paymentClient`。当前实现不会读取方法上 `@Bean` 的 `value` 属性，因此不要依赖 `@Bean("自定义名称")` 为方法级 Bean 改名。
+
+还要注意，方法返回对象只是被注册到容器，并不会像类级 `@Bean` 一样自动生成它自己的字段注入、`@PostConstruct` 或 `@PreDestroy` 处理逻辑。如果对象需要完整的 Feat Cloud 生命周期，优先把它声明为类级 `@Bean`；如果对象必须在 Feat Cloud 容器启动前由外部代码准备好，则可使用 `CloudOptions.registerBean(...)`。
