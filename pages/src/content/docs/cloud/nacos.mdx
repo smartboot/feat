@@ -253,7 +253,7 @@ public void setUsername(String username) { this.username = username; }
 public void setPassword(String password) { this.password = password; }
 ```
 
-最后在创建客户端前补充属性：
+最后在创建客户端前补充属性。下面以 `ConfigService` 为例；`RegisterBootstrap` 和 `DiscoverBootstrap` 创建 `NamingService` 时，也要向各自的 `Properties` 写入相同的 namespace / username / password：
 
 ```java
 if (namespace != null && !namespace.isEmpty()) {
