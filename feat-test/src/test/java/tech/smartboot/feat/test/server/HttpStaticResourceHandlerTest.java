@@ -68,6 +68,10 @@ public class HttpStaticResourceHandlerTest extends BastTest {
             classpathServer.httpHandler(new HttpStaticResourceHandler(opt -> opt.baseDir("classpath:static")));
             classpathServer.listen(18888);
 
+            HttpResponse noEncodingHeader = client.get("/gzip.txt").submit().get();
+            Assert.assertNull(noEncodingHeader.getHeader("Content-Encoding"));
+            Assert.assertEquals("static gzip negotiation test\n", noEncodingHeader.body());
+
             HttpResponse identity = client.get("/gzip.txt")
                     .header(h -> h.set("Accept-Encoding", "identity"))
                     .submit().get();
