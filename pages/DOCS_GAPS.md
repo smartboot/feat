@@ -2,7 +2,7 @@
 
 用 Feat 写业务时撞到的文档问题，逐条登记、回写后销账。
 
-与 [`DOCS_REVIEW.md`](./DOCS_REVIEW.md) 的分工：那份是**通读评审**（对当前 50 篇 MDX 页面做全量检查，找出过期、矛盾、断链）；这份是**开发过程中实际撞到的缺口**——按代码写不动、写错了才记下来，因为"实际卡住过"比"看起来可以更好"更能说明文档该补什么。
+与 [`DOCS_REVIEW.md`](./DOCS_REVIEW.md) 的分工：那份记录**通读评审进度**（目标范围为当前 50 篇 MDX 页面，逐步找出过期、矛盾、断链）；这份是**开发过程中实际撞到的缺口**——按代码写不动、写错了才记下来，因为"实际卡住过"比"看起来可以更好"更能说明文档该补什么。
 
 ## 使用方式
 
@@ -29,6 +29,7 @@
 | 13 | SessionManager 类型 | 旧文档称其为接口，指导用户 implements | `SessionManager` 是抽象类，存储扩展点是 `getSession(String)` 与 `createSession()` | `server/router-session.mdx` | 已回写（`9781278`） |
 | 14 | 拦截器短路与异步推进 | 旧示例手动完成 Future，未说明 Router 在链路中断后会完成 Future；也未说明延迟异步调用 `chain.proceed` 的限制 | `Router#matchHandler` 在 `chain.proceed` 返回后检查 `Chain#isInterrupted` 并完成 Future | `server/router-interceptors.mdx` | 已回写（`27aabcd`） |
 | 15 | 路由匹配优先级 | 旧文档承诺精确 > 参数 > 通配符的全局优先级，无法覆盖重叠模式的实际行为 | `NodePath` 使用 `HashMap` 保存模式节点，比较深度且通配叶子存在提前结束分支；终端参数与通配符使用同一特殊键 | `server/router-matching.mdx` | 已回写（`1309e15`） |
+| 16 | Feat Cloud 许可口径 | Cloud 文档和首页曾写“需赞助授权”，与 Apache 2.0 及赞助页的自愿支持说明冲突 | `LICENSE` 为 Apache 2.0；`sponsors.mdx` 明确赞助不构成授权条件；`LicenseLoader` 在未配置 license 时正常返回 | Cloud 文档提示、首页许可说明、`llms.txt` | 已回写（2026-11-28；见 DOCS_REVIEW H1） |
 
 ## 已确认「不补」的
 
