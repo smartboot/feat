@@ -262,7 +262,12 @@ Feat AI 底层复用 Feat Core 的 HTTP 错误处理机制，自动识别以下�
 - **429**：请求频率过高
 - **5xx**：服务端错误
 
-这些错误会触发 `onError` 回调，或在同步调用中导致 `CompletableFuture` 异常完成。得益于 Feat Core 的完整 HTTP 协议实现，你能获得准确的错误信息和状态码。
+需要区分两种调用方式：
+
+- **非流式 `chat(...)`**：HTTP 响应状态码非 200 时，Future 仍会正常完成，但返回的 `ChatResponse.isSuccess()` 为 `false`，错误信息通过 `getError()` 获取。网络异常等传输层错误才会导致 Future 异常完成。
+- **流式 `chatStream(...)`**：HTTP 成功但未能建立有效 SSE 流（例如 401、429），会触发 `ChatStreamListener.onError()`，并使返回的 Future 异常完成；流式传输中的网络异常也走错误回调。
+
+因此，非流式调用应检查 `isSuccess()`，不能只依赖 `whenComplete` 的异常参数。
 
 ## 常见问题
 
