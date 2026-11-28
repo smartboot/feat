@@ -45,8 +45,9 @@ pages/
 
 文档页面按目录自动生成侧边栏：
 
-- `guides/`：理解 Feat
-- `practices/`：实践指南
+- `guides/`：认识 Feat 与设计原理
+- `building/`：从第一个接口到完整业务应用
+- `practices/`：安全、部署、性能、测试等工程实践
 - `cloud/`：Feat Cloud
 - `ai/`：Feat AI
 - `server/`：Feat Core 服务端
