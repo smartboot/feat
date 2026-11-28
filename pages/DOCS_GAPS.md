@@ -2,7 +2,7 @@
 
 用 Feat 写业务时撞到的文档问题，逐条登记、回写后销账。
 
-与 [`DOCS_REVIEW.md`](./DOCS_REVIEW.md) 的分工：那份记录**通读评审进度**（目标范围为当前 50 篇 MDX 页面，逐步找出过期、矛盾、断链）；这份是**开发过程中实际撞到的缺口**——按代码写不动、写错了才记下来，因为"实际卡住过"比"看起来可以更好"更能说明文档该补什么。
+与 [`DOCS_REVIEW.md`](./DOCS_REVIEW.md) 的分工：那份记录**通读评审进度**（目标范围为当前 52 篇 MDX 页面，逐步找出过期、矛盾、断链）；这份是**开发过程中实际撞到的缺口**——按代码写不动、写错了才记下来，因为"实际卡住过"比"看起来可以更好"更能说明文档该补什么。
 
 ## 使用方式
 
@@ -29,7 +29,7 @@
 | 13 | SessionManager 类型 | 旧文档称其为接口，指导用户 implements | `SessionManager` 是抽象类，存储扩展点是 `getSession(String)` 与 `createSession()` | `server/router-session.mdx` | 已回写（`9781278`） |
 | 14 | 拦截器短路与异步推进 | 旧示例手动完成 Future，未说明 Router 在链路中断后会完成 Future；也未说明延迟异步调用 `chain.proceed` 的限制 | `Router#matchHandler` 在 `chain.proceed` 返回后检查 `Chain#isInterrupted` 并完成 Future | `server/router-interceptors.mdx` | 已回写（`27aabcd`） |
 | 15 | 路由匹配优先级 | 旧文档承诺精确 > 参数 > 通配符的全局优先级，无法覆盖重叠模式的实际行为 | `NodePath` 使用 `HashMap` 保存模式节点，比较深度且通配叶子存在提前结束分支；终端参数与通配符使用同一特殊键 | `server/router-matching.mdx` | 已回写（`1309e15`） |
-| 16 | Feat Cloud 许可口径 | Cloud 文档和首页曾写“需赞助授权”，与 Apache 2.0 及赞助页的自愿支持说明冲突 | `LICENSE` 为 Apache 2.0；`sponsors.mdx` 明确赞助不构成授权条件；`LicenseLoader` 在未配置 license 时正常返回 | Cloud 文档提示、首页许可说明、`llms.txt` | 已回写（2026-11-28；见 DOCS_REVIEW H1） |
+| 16 | Feat Cloud 赞助授权口径 | 曾将 Cloud 与 Core、AI 一并写成 Apache 2.0，并把赞助描述为可选支持；该口径已确认错误 | 项目既有商业约定：Core / AI 为 Apache 2.0；Cloud 通过赞助获取 Feat Cloud License。`LicenseLoader` 当前未配置 License 时仍会生成代码，这是实现校验问题，不改变授权约定 | 首页、Cloud 快速开始、赞助页、支付弹窗、`llms.txt` | 已回写（2026-11-28；见 DOCS_REVIEW H1） |
 | 17 | `setPackages` 语义 | 文档把它称为包扫描范围，容易理解为编译期少生成代码 | `AbstractCloudService.acceptService` 在运行时用生成类名 `startsWith(pkg)` 过滤服务；注解处理器仍会生成服务代码 | `cloud/options.mdx`、`AGENTS.md` | 已回写（2026-11-28；见 DOCS_REVIEW H1） |
 | 18 | 配置占位符特殊边界 | 文档泛称 `server.*` 都支持 `${}`，并容易把 `@Value` 的 YAML 路径与外部环境变量解析混为一谈 | `CloudOptionsSerializer` 对 `autoSSL`、Session 特殊键单独读取；`RedisunSerializer` 对 `address` 直接写入；`serializerValueSetter` 先按 YAML 路径取值，再由类型 Serializer 解析值 | `cloud/options.mdx`、`cloud/bean.mdx` | 已回写（2026-11-28；见 DOCS_REVIEW H1） |
 | 19 | Controller 请求绑定边界 | 文档只把 `@Param` 描述为查询参数，未说明 JSON / 表单来源；未说明路径参数支持类型和默认转换值 | `ControllerSerializer` 根据 Content-Type 选择 JSON 或 request parameters；`@PathParam` 仅支持 String、int/Integer、long/Long，数值转换默认 0 | `cloud/controller.mdx` | 已回写（2026-11-28；见 DOCS_REVIEW H1） |

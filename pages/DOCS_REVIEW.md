@@ -135,7 +135,7 @@ Feat Core 与 Feat AI 采用 Apache 2.0；Feat Cloud 则采用赞助授权模式
 
 - 本轮未执行 `npm ci`。
 - 本轮未执行 `npm run build`。
-- 文档目录当前包含 50 篇 MDX 页面；尚未完成逐篇、逐链接审查。
+- 当前文档目录包含 52 篇 MDX 页面；本轮已完成页面清单与结构元数据盘点，尚未完成逐篇内容、源码/API 与站内链接审查。
 - 尚未验证构建产物中的 `llms.txt` 是否完整包含新增 Router 章节。
 
 ## 后续顺序
@@ -157,3 +157,29 @@ Feat Core 与 Feat AI 采用 Apache 2.0；Feat Cloud 则采用赞助授权模式
 - 更新 Starlight 侧边栏、LLM 文档集合和 `pages/README.md`，纳入新的 `building/` 章节。
 
 **验证状态：**本轮没有可用的本地 npm 安装与构建环境，尚未执行 `npm ci`、`npm run build`，也没有把构建标记为通过。需要依赖仓库 CI 对 Astro 页面、导航、Mermaid 和 `llms.txt` 生成进行验证。
+
+
+## 2026-11-28：知识架构第二阶段启动
+
+本轮重新读取 master 上的文档树，确认当前共有 52 篇 MDX 页面。已盘点每篇页面的 frontmatter、章节标题、代码导入和主要站内链接，逐篇内容与源码/API 的核验仍在进行，不能把元数据盘点等同于完整审查。
+
+初步发现：
+
+- astro.config.mjs 的侧边栏仍使用“理解 Feat”，而入口页标题已改为“认识 Feat”，导航术语需要统一。
+- cloud/mybatis.mdx 仍是一篇独立的 User CRUD 教程；新建的 building/first-business-application.mdx 已使用 Task CRUD。两篇承担相似的 Controller → Service → 数据访问链路，后续应将 MyBatis 文档改成前一篇任务应用的持久化扩展，避免读者重复学习第二套业务。
+- Cloud Controller 同时支持 `/:name` 与 `/{name}` 两种路径参数写法，并会在编译期转换为 Core Router 使用的冒号形式；Core Router 本身只支持 `/:name`。MyBatis 示例中的花括号写法并非错误，但本轮改用冒号形式，以和新业务教程保持一致。
+- `chatStream` 在 v2.5.0 中从 `void` 改为 `CompletableFuture<ChatResponse>`。为避免第一篇 Quick Start 被版本差异影响，基础示例改用 `chat(...).get()` 展示完整响应；流式调用及其版本边界留在对话模型章节说明。
+- 旧的《Feat 官网文档设计》上传稿记录的是 2.1.1 时期架构，并把 Feat AI 描述为仅增强 HTTP Client 的层次；该描述与当前已经确认的 Core → AI → Cloud 依赖关系不一致，不能作为当前架构文案依据。
+
+本阶段优先处理阅读路径与重复内容，再继续按主题核对示例、API、链接和 PDF 阅读体验。
+
+
+### 第二阶段本轮处理记录
+
+- 将 `cloud/mybatis.mdx` 从独立的 User CRUD 教程改为前一篇任务管理应用的持久化扩展：沿用 `Task`、`TaskController` 和现有 HTTP 接口，只新增 MyBatis 配置、Mapper，并替换 Service 的存储实现。
+- 修正 MyBatis 示例中的 shell 路径占位符，避免将尖括号占位符放进可直接复制执行的命令。
+- 将 AI Quick Start 的两个示例统一为 `chat(...).get()`，让命令行程序等待完整响应；把流式 API 的版本差异留在对话模型章节，避免 Quick Start 依赖 v2.5.0 才提供的 `chatStream` Future 返回值。
+- 将侧边栏“理解 Feat”统一为“认识 Feat”，并修正 `DOCS_GAPS.md` 中错误的 Cloud 授权描述。
+- 对 52 篇 MDX 页面中的 Markdown 形式站内 `/feat/...` 链接做了路径存在性检查，未发现失效目标。该检查不覆盖 JSX `href`、图片导入、锚点、代码示例编译和 Astro 构建。
+
+**仍未验证：**本轮未执行 `npm ci`、`npm run build`，也未逐段编译全部代码示例。MyBatis 文档中的配置与 API 说明已结合当前文档记录和仓库 Demo 交叉核对，但仍需 CI 和真实示例项目验证。

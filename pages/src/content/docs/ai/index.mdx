@@ -49,43 +49,15 @@ ollama run qwen2.5:7b
 ```java title="HelloFeatAI.java"
 import tech.smartboot.feat.ai.FeatAI;
 import tech.smartboot.feat.ai.chat.ChatModel;
-import tech.smartboot.feat.ai.chat.ChatStreamListener;
 
 public class HelloFeatAI {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         ChatModel model = FeatAI.chatModel(opts -> opts
                 .baseUrl("http://localhost:11434/v1")
                 .model("qwen2.5:7b")
         );
 
-        model.chatStream("用一句话介绍 Feat 框架", new ChatStreamListener() {
-            @Override
-            public void onStreamResponse(String content) {
-                System.out.print(content);
-            }
-        });
-    }
-}
-```
-
-    </TabItem>
-    <TabItem value="云端模型" label="云端模型">
-
-如果你已有云端 API Key，创建 `HelloFeatAI.java`：
-
-```java title="HelloFeatAI.java"
-import tech.smartboot.feat.ai.FeatAI;
-import tech.smartboot.feat.ai.chat.ChatModel;
-
-public class HelloFeatAI {
-    public static void main(String[] args) {
-        ChatModel model = FeatAI.chatModel(opts -> opts
-                .model("Qwen2.5-72B-Instruct")
-        );
-
-        model.chat("用一句话介绍 Feat 框架").thenAccept(response -> {
-            System.out.println(response.getContent());
-        });
+        System.out.println(model.chat("用一句话介绍 Feat 框架").get().getContent());
     }
 }
 ```
@@ -112,7 +84,7 @@ Feat 是一个轻量级、高性能的 Java Web 服务开发框架。
 - 不是空字符串
 
 <Aside type="tip">
-如果程序运行完立刻退出、没看到输出：`chatStream` 是异步的，如果 `main` 方法直接结束，程序可能在回调触发前就退出了。在 quickstart 阶段可以简单加一行 `Thread.sleep(30000)` 观察效果，生产代码应使用更成熟的异步等待机制。
+这里使用 `chat(...).get()`，是为了让命令行程序等待模型返回完整结果。真实服务端代码通常应组合 `CompletableFuture`，避免在请求处理线程中阻塞。流式调用的版本差异和用法见[对话模型](/feat/ai/chat/)。
 </Aside>
 
 ## 两种调用方式的区别
