@@ -148,21 +148,24 @@ import tech.smartboot.feat.cloud.annotation.PostConstruct;
 import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
 
 @Controller
-@McpEndpoint(name = "dynamic-tools", title = "Dynamic Tools",
-        streamableEndpoint = "/mcp/dynamic")
+@McpEndpoint(streamableEndpoint = "/mcp/dynamic")
 public class DynamicMcpController {
     @Autowired
     private McpServer mcpServer;
 
     @PostConstruct
     public void init() {
-        // 动态注册时，显式设置端点和启用的能力
+        // 动态注册时，显式设置端点、服务信息和能力开关
         mcpServer.getOptions().setMcpEndpoint("/mcp/dynamic").toolEnable();
+        mcpServer.getOptions().getImplementation()
+                .setName("dynamic-tools")
+                .setTitle("Dynamic Tools")
+                .setVersion("1.0.0");
         // mcpServer.addTool(...) 注册动态工具
     }
 }
 ```
 
-动态注册时需要在初始化阶段显式设置端点路径，并启用对应能力（`toolEnable()`、`promptsEnable()` 或 `resourceEnable()`），再调用 `addTool`、`addPrompt` 或 `addResource`。注册时机、重复名称处理和动态更新策略由应用负责。
+动态注册时需要在初始化阶段显式设置端点路径和服务信息，并启用对应能力（`toolEnable()`、`promptsEnable()` 或 `resourceEnable()`），再调用 `addTool`、`addPrompt` 或 `addResource`。注册时机、重复名称处理和动态更新策略由应用负责。
 
 默认情况下，优先使用注解；只有能力集合确实需要运行时变化时，再直接管理 `McpServer`。
