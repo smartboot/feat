@@ -61,13 +61,13 @@ Router 文档已拆分为使用、匹配、拦截器和 Session 四个主题，�
 
 本次读取当前 `pages/src/content/docs/appendix/aot.mdx`，页面已围绕 `feat-cloud-aot`、`feat-cloud-starter`、`CloudService`、`ServiceLoader` 和编译期生成流程展开，没有发现 `feat-cloud-aot-vm` 的旧模块叙述。因此台账状态与当前文件内容不一致，应更新为已回写，并在提交中记录对应依据。
 
-### H1：Feat Cloud 赞助提示与开源许可口径冲突
+### H1：Feat Cloud 赞助授权口径被误改
 
-Feat Cloud 多个入口曾提示“需先成为赞助者获取授权”，包括快速开始页、全站 Cloud 章节提示组件、首页许可说明和仓库根目录 `llms.txt`。这与仓库 `LICENSE` 及 `sponsors.mdx` 的口径冲突：所有模块均采用 Apache 2.0，赞助是自愿支持，不构成使用条件。
+Feat Core 与 Feat AI 采用 Apache 2.0；Feat Cloud 则采用赞助授权模式，企业通过赞助获取 Feat Cloud License。此前 PR #35 将 Cloud 与 Core、AI 一并标记为 Apache 2.0，并把赞助描述为可选支持，改变了既有授权规则。这是文档修改错误，不能据此推导 Cloud 的商业授权政策已经改变。
 
-对照 `feat-cloud-aot/license/LicenseLoader`：未配置 `license` / `FEAT_LICENSE` 时，处理器正常返回，不会因缺少赞助授权而阻止生成；只有显式提供 license 时才进行签名和名单校验。因此不能把可选的 license 校验描述成 Feat Cloud 的使用门槛。
+本次恢复统一口径：首页、许可说明、Cloud 快速开始、全站 Cloud 提示、赞助页、支付弹窗和仓库根目录 `llms.txt` 均明确区分 Core / AI 的 Apache 2.0 授权与 Cloud 的赞助 License 模式。赞助后由项目方提供 Feat Cloud License，具体适用范围以实际发放的授权信息为准。
 
-已同步修正 Cloud 文档提示、首页许可说明、支付弹窗说明和 `llms.txt`。另在 Bean 章节补充 `@Autowired` 按字段名查找、setter 优先/反射回退，以及方法级 `@Bean` 当前实现的命名和生命周期边界。
+另需区分商业授权规则与当前代码校验实现：当前 `LicenseLoader` 在未配置 License 时不会主动阻止注解处理器生成代码。本次修复的是官网及机器可读文档中的授权说明，没有擅自改动编译器行为；是否需要进一步强化无 License 时的构建期校验，应作为独立的代码任务评估。
 
 ### H1：CloudOptions 与 Profile 文档边界需要更精确
 
@@ -128,7 +128,7 @@ Feat Cloud 多个入口曾提示“需先成为赞助者获取授权”，包括
 - PR #9：Router 指南拆章，已合并。
 - Router 路由匹配、拦截器链、Session 和异步处理器文档已按当前源码核对。
 - Feat Cloud 的 Bean 注入、方法级 Bean、Controller 请求绑定、Gzip、响应序列化、MyBatis、CloudOptions 与 Profile 行为已对照 AOT 生成器和运行时上下文核对。
-- Apache 2.0 与自愿赞助的许可口径已同步到 Cloud 文档、首页和 `llms.txt`。
+- Feat Core / AI 的 Apache 2.0 与 Feat Cloud 的赞助 License 授权口径已在本修复中重新统一。
 - `pages/DOCS_GAPS.md` 已登记本轮 Router 文档发现的缺口。
 
 ## 尚未验证
@@ -152,8 +152,8 @@ Feat Cloud 多个入口曾提示“需先成为赞助者获取授权”，包括
 
 - 重写 `guides/index.mdx`，明确 Core、AI、Cloud 的依赖关系，并给出 Core、Cloud、AI 三条入口路线。
 - 新增 `building/index.mdx` 与 `building/first-business-application.mdx`，用任务管理示例串起 Controller、Bean、Service 和 HTTP 请求；示例使用内存存储，明确标注不具备持久化与跨实例同步能力。
-- 首页增加“构建第一个业务应用”入口，移除过时的 v2.4.2 徽标和“Cloud 赞助解锁 License”描述。
-- 复核发现首页 Hero、`PricingSection.astro`、`SponsorAside.astro`、Cloud 快速开始页和 `sponsors.mdx` 仍残留旧许可口径。已在本轮统一为：Feat 各模块采用 Apache 2.0，赞助为自愿支持，不构成使用条件；AOT License 保留为可选的构建期校验配置，不配置时不会阻止正常生成。
+- 首页增加“构建第一个业务应用”入口，并移除过时的 v2.4.2 徽标。
+- 本轮曾错误地将 Feat Cloud 描述为 Apache 2.0，并把赞助改成可选支持；该表述现已在本修复中撤销，恢复 Cloud 通过赞助获取 License 的规则。
 - 更新 Starlight 侧边栏、LLM 文档集合和 `pages/README.md`，纳入新的 `building/` 章节。
 
 **验证状态：**本轮没有可用的本地 npm 安装与构建环境，尚未执行 `npm ci`、`npm run build`，也没有把构建标记为通过。需要依赖仓库 CI 对 Astro 页面、导航、Mermaid 和 `llms.txt` 生成进行验证。
