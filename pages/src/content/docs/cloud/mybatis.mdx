@@ -76,7 +76,7 @@ feat:
     initial-sql: mybatis/ddl/schema.sql
 ```
 
-`path` 指向 MyBatis 主配置；`initial-sql` 指向启动时要执行的初始化脚本。它们都属于编译期配置输入，和前一章讲的 `feat.yml` / `feat-{env}.yml` 一样，修改后需要重新构建。
+`path` 指向 MyBatis 主配置，AOT 会在编译期读取并解析它；修改 XML 或 `feat.mybatis.path` 后需要重新构建。`initial-sql` 的路径会写入生成代码，脚本内容则在应用启动时从 classpath 读取。只修改 SQL 文件内容时，确保新文件被打进应用包并重新部署即可；修改配置路径时才需要重新生成代码。
 
 ### 准备 MyBatis 自己的资源
 
@@ -108,7 +108,9 @@ feat:
 </configuration>
 ```
 
-`schema.sql` 负责建表并插入几条初始数据。这样后面的 Controller 和 Service 能立刻验证，不需要再手动准备数据库。
+Feat Cloud 会在编译期解析这份 XML，再生成运行时的 MyBatis `Configuration`。当前数据源适配只支持 MyBatis 的 `POOLED` 类型；如果使用 `UNPOOLED`、`JNDI` 或自定义 DataSource，编译期会报不支持。生成器也会重建 Configuration，只显式复制一部分常用设置；自定义 TypeHandler、typeAlias、ObjectFactory 或带参数的插件等配置，不要默认认为会完整保留，接入后应单独验证。
+
+`schema.sql` 负责建表并插入几条初始数据。注意，`initial-sql` 会在**每次应用启动时**执行。这里的 `DROP TABLE` 和初始化数据只适合本地 H2 演示；生产环境不要把破坏性建表脚本作为每次启动动作，应该使用数据库迁移工具管理版本。
 
 ```sql title="schema.sql"
 DROP TABLE IF EXISTS user_info;
@@ -241,6 +243,10 @@ public class UserService {
     @Autowired
     private UserMapper userMapper;
 
+    public void setUserMapper(UserMapper userMapper) {
+        this.userMapper = userMapper;
+    }
+
     public User findByUsername(String username) {
         return userMapper.selectByUsername(username);
     }
@@ -269,6 +275,8 @@ public class UserService {
     }
 }
 ```
+
+Feat Cloud 生成的 Mapper 包装类会在每次方法调用时执行 `openSession(true)`，即自动提交并关闭会话。因此注入 Mapper 适合单条语句或不要求跨语句原子性的操作；多条 SQL 需要放进同一个事务时，见后面的「会话与事务」。
 
 这一层让职责保持清楚：
 
@@ -305,6 +313,10 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+
+    public void setUserService(UserService userService) {
+        this.userService = userService;
+    }
 
     @RequestMapping("/users")
     public RestResult<List<User>> getAllUsers() {
@@ -396,14 +408,25 @@ curl -X DELETE http://localhost:8080/users/new_user
 `autowired` 阶段才做字段注入，因此业务 Bean 里可以直接声明它：
 
 ```java
+import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
+import tech.smartboot.feat.cloud.annotation.Autowired;
+import tech.smartboot.feat.demo.mybatis.entity.User;
+import tech.smartboot.feat.demo.mybatis.mapper.UserMapper;
+
 @Autowired
 private SqlSessionFactory sessionFactory;
 
-public void moveUser(long fromDept, long toDept, long userId) {
+public void setSessionFactory(SqlSessionFactory sessionFactory) {
+    this.sessionFactory = sessionFactory;
+}
+
+public void createAndUpdate(User user) {
     try (SqlSession session = sessionFactory.openSession(false)) {   // false = 手动提交
         UserMapper users = session.getMapper(UserMapper.class);
-        users.updateDepartment(userId, toDept);
-        users.decreaseDeptCount(fromDept);
+        users.insert(user);
+        user.setDesc("updated in the same transaction");
+        users.update(user);
         session.commit();
     }
 }
@@ -427,10 +450,21 @@ public void moveUser(long fromDept, long toDept, long userId) {
 或者漏掉 catch 里的 rollback。更稳的做法是把这段固定逻辑收敛成一个模板：
 
 ```java
+import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
+import tech.smartboot.feat.cloud.annotation.Autowired;
+import tech.smartboot.feat.cloud.annotation.Bean;
+
+import java.util.function.Function;
+
 @Bean
 public class TxTemplate {
     @Autowired
     private SqlSessionFactory sessionFactory;
+
+    public void setSessionFactory(SqlSessionFactory sessionFactory) {
+        this.sessionFactory = sessionFactory;
+    }
 
     public <T> T call(Function<SqlSession, T> work) {
         try (SqlSession session = sessionFactory.openSession(false)) {

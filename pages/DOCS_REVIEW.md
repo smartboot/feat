@@ -1,7 +1,7 @@
 # 文档站点评审记录
 
 > 最近核对：2026-11-28  
-> 范围：文档站点工程配置、Router 文档重构后的状态，以及 Feat Cloud Bean、Controller、启动配置与许可口径的源码核对。本文记录已核实的问题，不把尚未执行的构建或尚未逐篇检查的内容标记为通过。
+> 范围：文档站点工程配置、Router 文档重构后的状态，以及 Feat Cloud Bean、Controller、MyBatis、启动配置与许可口径的源码核对。本文记录已核实的问题，不把尚未执行的构建或尚未逐篇检查的内容标记为通过。
 
 ## 当前结论
 
@@ -75,11 +75,22 @@ Feat Cloud 多个入口曾提示“需先成为赞助者获取授权”，包括
 - `server.gzip` 与 `server.gzipThreshold` 可全局开启压缩并覆盖 Controller 阈值；相关特殊配置不走通用 `${}` 解析。
 - 异步示例必须保证任务异常时也完成 `AsyncResponse`，并恢复线程中断标记。
 
+### H1：MyBatis 集成文档与当前 AOT 实现需要对齐
+
+对照 `MybatisSerializer`、`MapperSerializer` 和 `demo/mybatis` 核对后，补充并修正：
+
+- Mapper 包装类每次调用使用 `openSession(true)`，自动提交并关闭；跨多条 SQL 的事务必须统一使用同一个手动提交的 `SqlSession` 和 `session.getMapper(...)`。
+- 当前 AOT 数据源重建路径只支持 MyBatis `POOLED` DataSource；MyBatis XML 的配置会被解析后重新生成，不能假定所有自定义设置都会原样保留。
+- `initial-sql` 在每次应用启动时执行；文档中的 `DROP TABLE` 仅适用于本地演示，不应作为生产环境的启动脚本。
+- 修正事务示例中引用了未在前文声明的 Mapper 方法，并为 `@Autowired` 字段补上推荐的 setter。
+
+另发现一项待单独处理的实现风险：`MybatisSerializer` 生成的初始化脚本代码直接使用 `sessionFactory.openSession().getConnection()`，没有保留并关闭 `SqlSession`。这可能造成连接长期占用；本轮只记录问题，不在未验证事务行为前修改运行时代码。
+
 ## 已完成事项
 
 - PR #9：Router 指南拆章，已合并。
 - Router 路由匹配、拦截器链、Session 和异步处理器文档已按当前源码核对。
-- Feat Cloud 的 Bean 注入、方法级 Bean、Controller 请求绑定、Gzip、CloudOptions 与 Profile 行为已对照 AOT 生成器和运行时上下文核对。
+- Feat Cloud 的 Bean 注入、方法级 Bean、Controller 请求绑定、Gzip、MyBatis、CloudOptions 与 Profile 行为已对照 AOT 生成器和运行时上下文核对。
 - Apache 2.0 与自愿赞助的许可口径已同步到 Cloud 文档、首页和 `llms.txt`。
 - `pages/DOCS_GAPS.md` 已登记本轮 Router 文档发现的缺口。
 
