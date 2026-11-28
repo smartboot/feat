@@ -25,6 +25,10 @@
 | 9 | `@Value` 写法 | `bean.mdx` 写 `@Value("app.name")`，`nacos.mdx` / `xxljob.mdx` 写 `@Value("${...}")`，`options.mdx` 说必须带 `${}` | 以 AOT 生成代码为准：不带 `${}` 注入的是字面量 | `cloud/bean.mdx` | 待复核（`bean.mdx` L122 已明确说明，H2 可能已修） |
 | 10 | `appendix/aot.mdx` | 整页约一半在讲已删除的 `feat-cloud-aot-vm` 模块 | 仓库无此模块，`version_history` 记 v2.1.0 已移除 | 重写该页 | 待回写（见 DOCS_REVIEW H1） |
 | 11 | 嵌套层数决定序列化路径 | `response.mdx` 的表格只写「数组、`Object`、嵌套过深对象 → 回退到 FastJSON2」，没说「深一层」的判据，更没说回退后**字段集合会变**。实测 `RestResult → LoginResponse → CurrentUserResponse → List<MenuItem>` 里的元素省略了值为 `null` 的字段，而同样这些元素在 `RestResult → CurrentUserResponse → List<MenuItem>` 里是逐字段写出、包含 `"permission": null` | 生成的 `AuthControllerCloudService`：`/api/auth/login` 用 `os.write(JSON.toJSONBytes(p3))`，`/api/auth/me` 展开成 `p2.getXxx()` | `cloud/response.mdx` 加 caution | 已回写 |
+| 12 | Router 异步处理器 Lambda | 旧示例使用 `(context, future) ->` 注册 Router 处理器，但 `RouterHandler` 只有一个抽象方法，双参数重载是默认方法，示例无法编译 | `RouterHandler#handle(Context)` 是唯一抽象方法；异步实现需匿名类重写 `handle(Context, CompletableFuture)` | `server/router.mdx`、`server/async.mdx` | 已回写（`d5dd22e` / `f07bcd8`） |
+| 13 | SessionManager 类型 | 旧文档称其为接口，指导用户 implements | `SessionManager` 是抽象类，存储扩展点是 `getSession(String)` 与 `createSession()` | `server/router-session.mdx` | 已回写（`9781278`） |
+| 14 | 拦截器短路与异步推进 | 旧示例手动完成 Future，未说明 Router 在链路中断后会完成 Future；也未说明延迟异步调用 `chain.proceed` 的限制 | `Router#matchHandler` 在 `chain.proceed` 返回后检查 `Chain#isInterrupted` 并完成 Future | `server/router-interceptors.mdx` | 已回写（`27aabcd`） |
+| 15 | 路由匹配优先级 | 旧文档承诺精确 > 参数 > 通配符的全局优先级，无法覆盖重叠模式的实际行为 | `NodePath` 使用 `HashMap` 保存模式节点，比较深度且通配叶子存在提前结束分支；终端参数与通配符使用同一特殊键 | `server/router-matching.mdx` | 已回写（`1309e15`） |
 
 ## 已确认「不补」的
 
