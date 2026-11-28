@@ -1,7 +1,7 @@
 # 文档站点评审记录
 
 > 最近核对：2026-11-28  
-> 范围：文档站点工程配置、文档缺口台账及 Router 文档重构后的状态。本文记录已核实的问题，不把尚未执行的构建或尚未逐篇检查的内容标记为通过。
+> 范围：文档站点工程配置、Router 文档重构后的状态，以及 Feat Cloud Bean 与许可口径的源码核对。本文记录已核实的问题，不把尚未执行的构建或尚未逐篇检查的内容标记为通过。
 
 ## 当前结论
 
@@ -45,10 +45,20 @@ Router 文档已拆分为使用、匹配、拦截器和 Session 四个主题，�
 
 本次读取当前 `pages/src/content/docs/appendix/aot.mdx`，页面已围绕 `feat-cloud-aot`、`feat-cloud-starter`、`CloudService`、`ServiceLoader` 和编译期生成流程展开，没有发现 `feat-cloud-aot-vm` 的旧模块叙述。因此台账状态与当前文件内容不一致，应更新为已回写，并在提交中记录对应依据。
 
+### H1：Feat Cloud 赞助提示与开源许可口径冲突
+
+Feat Cloud 多个入口曾提示“需先成为赞助者获取授权”，包括快速开始页、全站 Cloud 章节提示组件、首页许可说明和仓库根目录 `llms.txt`。这与仓库 `LICENSE` 及 `sponsors.mdx` 的口径冲突：所有模块均采用 Apache 2.0，赞助是自愿支持，不构成使用条件。
+
+对照 `feat-cloud-aot/license/LicenseLoader`：未配置 `license` / `FEAT_LICENSE` 时，处理器正常返回，不会因缺少赞助授权而阻止生成；只有显式提供 license 时才进行签名和名单校验。因此不能把可选的 license 校验描述成 Feat Cloud 的使用门槛。
+
+已同步修正 Cloud 文档提示、首页许可说明、支付弹窗说明和 `llms.txt`。另在 Bean 章节补充 `@Autowired` 按字段名查找、setter 优先/反射回退，以及方法级 `@Bean` 当前实现的命名和生命周期边界。
+
 ## 已完成事项
 
 - PR #9：Router 指南拆章，已合并。
 - Router 路由匹配、拦截器链、Session 和异步处理器文档已按当前源码核对。
+- Feat Cloud 的 Bean 注入与方法级 Bean 行为已对照 AOT 生成器和运行时上下文核对。
+- Apache 2.0 与自愿赞助的许可口径已同步到 Cloud 文档、首页和 `llms.txt`。
 - `pages/DOCS_GAPS.md` 已登记本轮 Router 文档发现的缺口。
 
 ## 尚未验证
