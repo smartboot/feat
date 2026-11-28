@@ -97,6 +97,16 @@ Feat Cloud 多个入口曾提示“需先成为赞助者获取授权”，包括
 
 深层嵌套示例的分界按当前 `JsonSerializer.serialize(...)` 的递归层级核对，保留原有两组示例；异步响应仍在运行时走 FastJSON2。
 
+### H1：Redisun 客户端未纳入 AOT 销毁流程
+
+对照 `Redisun.close()`、`RedisunSerializer`、`CloudOptionsSerializer` 和 `FeatAnnotationProcessor` 核对后，发现：
+
+- `feat.redis` 配置会在生成的 `loadBean()` 中创建 Redisun 客户端；客户端内部持有多路复用连接池、异步通道组和 BufferPagePool。
+- Redisun 提供 `close()` 释放这些资源，但扩展序列化器此前只参与 import 和 Bean 初始化，没有把扩展字段及销毁逻辑写入生成类。
+- 因此应用正常关闭时，Redisun 资源没有进入 Feat Cloud 的销毁流程。
+
+本次修复让 `CloudOptionsSerializer` 调用扩展序列化器的 `serializeProperty()` 与 `serializeDestroy()`，由 `RedisunSerializer` 保存客户端实例，并在 CloudService 销毁后调用 `redisun.close()`。
+
 ## 已完成事项
 
 - PR #9：Router 指南拆章，已合并。
