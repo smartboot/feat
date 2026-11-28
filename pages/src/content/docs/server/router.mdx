@@ -101,6 +101,10 @@ router.route("/sync", ctx -> {
 
 ```java
 // 适合耗时操作
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 ExecutorService executor = Executors.newFixedThreadPool(4);
 
 router.route("/async", (ctx, future) -> {
