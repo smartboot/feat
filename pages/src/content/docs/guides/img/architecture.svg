@@ -1,96 +1,59 @@
-<svg width="1200" height="760" viewBox="0 0 1200 760" xmlns="http://www.w3.org/2000/svg">
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="820" viewBox="0 0 1200 820" role="img" aria-labelledby="title desc">
+  <title id="title">Feat 模块依赖关系</title>
+  <desc id="desc">从底层到上层依次为 smart-socket、Feat Core、Feat AI、Feat Cloud。Feat Core 依赖 smart-socket，Feat AI 依赖 Feat Core，Feat Cloud 依赖 Feat AI。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbfcff"/>
+      <stop offset="100%" stop-color="#eef3f8"/>
+    </linearGradient>
+    <filter id="shadow" x="-15%" y="-15%" width="130%" height="140%">
+      <feDropShadow dx="0" dy="7" stdDeviation="10" flood-color="#26354a" flood-opacity=".12"/>
+    </filter>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="7" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#78889c"/>
+    </marker>
+    <style>
+      text { font-family: "PingFang SC","Microsoft YaHei",sans-serif; }
+      .name { font-size: 29px; font-weight: 700; }
+      .sub { font-size: 17px; fill: #435166; }
+      .detail { font-size: 14px; fill: #637187; }
+      .edge { stroke: #78889c; stroke-width: 3; fill: none; marker-end: url(#arrow); }
+      .edge-label { font-size: 14px; fill: #66768b; }
+    </style>
+  </defs>
+  <rect width="1200" height="820" fill="url(#bg)"/>
+  <text x="600" y="58" text-anchor="middle" font-size="30" font-weight="700" fill="#26354a">Feat 模块依赖关系</text>
+  <text x="600" y="88" text-anchor="middle" font-size="15" fill="#718096">从基础网络能力到应用开发能力，逐层构建</text>
 
-    <defs>
+  <g filter="url(#shadow)">
+    <rect x="260" y="125" width="680" height="125" rx="20" fill="#e6efff" stroke="#b7cdf5"/>
+    <rect x="260" y="285" width="680" height="125" rx="20" fill="#e8f5ef" stroke="#b9dfca"/>
+    <rect x="260" y="445" width="680" height="125" rx="20" fill="#fff0e3" stroke="#f1cfad"/>
+    <rect x="260" y="605" width="680" height="125" rx="20" fill="#f0eaff" stroke="#d1c2f2"/>
+  </g>
 
-        <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stop-color="#f7f9ff"/>
-            <stop offset="100%" stop-color="#eef1f8"/>
-        </linearGradient>
+  <text class="name" x="600" y="170" text-anchor="middle" fill="#2859a8">Feat Cloud</text>
+  <text class="sub" x="600" y="201" text-anchor="middle">面向业务应用的开发层</text>
+  <text class="detail" x="600" y="226" text-anchor="middle">Controller · Bean · 配置 · Session · 生态集成</text>
 
-        <filter id="shadow">
-            <feDropShadow dx="0" dy="12" stdDeviation="18" flood-color="#000" flood-opacity="0.12"/>
-        </filter>
+  <text class="name" x="600" y="330" text-anchor="middle" fill="#24734b">Feat AI</text>
+  <text class="sub" x="600" y="361" text-anchor="middle">AI 应用能力层</text>
+  <text class="detail" x="600" y="386" text-anchor="middle">LLM · Agent · MCP 等 AI 应用集成能力</text>
 
-        <filter id="glow">
-            <feGaussianBlur stdDeviation="5" result="b"/>
-            <feMerge>
-                <feMergeNode in="b"/>
-                <feMergeNode in="SourceGraphic"/>
-            </feMerge>
-        </filter>
+  <text class="name" x="600" y="490" text-anchor="middle" fill="#a65a1c">Feat Core</text>
+  <text class="sub" x="600" y="521" text-anchor="middle">HTTP 核心运行层</text>
+  <text class="detail" x="600" y="546" text-anchor="middle">HTTP Server · HTTP Client · Router · 协议处理</text>
 
-        <style>
-            text {
-            font-family: "PingFang SC","Microsoft YaHei",sans-serif;
-            }
+  <text class="name" x="600" y="650" text-anchor="middle" fill="#6547a5">smart-socket</text>
+  <text class="sub" x="600" y="681" text-anchor="middle">底层网络通信基础</text>
+  <text class="detail" x="600" y="706" text-anchor="middle">AIO · TCP · IO 缓冲与连接管理</text>
 
-            .flow {
-            stroke-dasharray: 10;
-            animation: dash 2.2s linear infinite;
-            }
+  <path class="edge" d="M600 285 V260"/>
+  <path class="edge" d="M600 445 V420"/>
+  <path class="edge" d="M600 605 V580"/>
+  <text class="edge-label" x="620" y="276">依赖</text>
+  <text class="edge-label" x="620" y="436">依赖</text>
+  <text class="edge-label" x="620" y="596">依赖</text>
 
-            @keyframes dash {
-            to { stroke-dashoffset: -40; }
-            }
-        </style>
-
-    </defs>
-
-    <!-- 背景 -->
-    <rect width="1200" height="760" fill="url(#bg)"/>
-
-    <!-- 标题 -->
-    <text x="600" y="45" text-anchor="middle" font-size="24" fill="#333" font-weight="bold">
-        Feat 架构模型
-    </text>
-
-    <!-- ================= CLOUD ================= -->
-    <g filter="url(#shadow)">
-        <rect x="120" y="120" width="380" height="170" rx="18" fill="#e8f1ff"/>
-        <text x="310" y="165" text-anchor="middle" font-size="26" fill="#1f6fff" font-weight="bold">Feat Cloud</text>
-        <text x="310" y="200" text-anchor="middle" font-size="16" fill="#333">应用开发层</text>
-        <text x="310" y="230" text-anchor="middle" font-size="14" fill="#666">MVC ｜ DI ｜ 配置体系</text>
-    </g>
-
-    <!-- ================= AI ================= -->
-    <g filter="url(#shadow)">
-        <rect x="700" y="120" width="380" height="170" rx="18" fill="#ffe6f3"/>
-        <text x="890" y="165" text-anchor="middle" font-size="26" fill="#ff2d75" font-weight="bold">Feat AI</text>
-        <text x="890" y="200" text-anchor="middle" font-size="16" fill="#333">智能能力扩展层</text>
-        <text x="890" y="230" text-anchor="middle" font-size="14" fill="#666">依赖 Core HTTP Client</text>
-    </g>
-
-    <!-- ================= CORE ================= -->
-    <g filter="url(#glow)">
-        <rect x="360" y="340" width="480" height="200" rx="22" fill="#eaeaea" stroke="#cfcfcf"/>
-        <text x="600" y="405" text-anchor="middle" font-size="32" fill="#111" font-weight="bold">Feat Core</text>
-        <text x="600" y="445" text-anchor="middle" font-size="16" fill="#444">
-            HTTP 运行内核 ｜ 路由 ｜ 调度 ｜ Client / Server
-        </text>
-        <text x="600" y="480" text-anchor="middle" font-size="14" fill="#666">
-            系统唯一运行中心
-        </text>
-    </g>
-
-    <!-- ================= smart-socket (F O U N D A T I O N) ================= -->
-    <g filter="url(#shadow)">
-        <rect x="260" y="600" width="680" height="90" rx="18" fill="#f7f7f7"/>
-        <text x="600" y="640" text-anchor="middle" font-size="24" fill="#333" font-weight="bold">smart-socket</text>
-        <text x="600" y="665" text-anchor="middle" font-size="14" fill="#666">IO 原语层 ｜ 网络通信底座（Foundation Layer）</text>
-    </g>
-
-    <!-- ================= CONNECTIONS ================= -->
-
-    <!-- Cloud → Core -->
-    <line x1="310" y1="290" x2="520" y2="340"
-          stroke="#7aa7ff" stroke-width="2" class="flow"/>
-
-    <!-- AI → Core -->
-    <line x1="890" y1="290" x2="680" y2="340"
-          stroke="#ff7ab8" stroke-width="2" class="flow"/>
-
-    <!-- Core → smart-socket -->
-    <line x1="600" y1="540" x2="600" y2="600"
-          stroke="#999" stroke-width="2" class="flow"/>
-
+  <text x="600" y="780" text-anchor="middle" font-size="14" fill="#718096">依赖方向：Feat Cloud → Feat AI → Feat Core → smart-socket</text>
 </svg>
