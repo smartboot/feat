@@ -42,6 +42,10 @@
 | 25 | HTTPS API 类型与 TLS 示例 | HTTPS 文档把 `HttpProtocol` 当成 String，ClientAuth 列举了不存在的 `REQUEST`，多证书 Lambda 构造与当前 `SslPlugin` API 不匹配；mTLS 示例缺少请求级 SSLEngine 关联；SSE 定时任务在连接关闭后仍继续调度 | Feat `HttpRequest#getProtocol()` 返回 `HttpProtocol`；smart-socket 2.2.0 的 `ClientAuth` 只有 `NONE/OPTIONAL/REQUIRE`，`SslPlugin` 构造器接收 `SSLContextFactory` 与可选 Consumer；`SseEmitter.complete()` 只关闭连接，不负责取消应用创建的定时任务 | `server/https.mdx`、`server/upgrade.mdx` | 已回写（2026-11-28；本轮复核） |
 | 26 | Core 客户端 API 与回调边界 | 客户端文档将可复用的 HTTP 连接描述为短连接；`onClose` 被描述成成功/失败都会触发；SSE 示例把 `SseEvent` 写成接口、自动续传描述不清且存在调度器泄漏；WebSocket 文档调用不存在的配置方法、头设置方法、连接状态方法和 close 重载，并使用错误的 `onError` 签名 | `HttpClient` 使用 `MultiplexClient`；`HttpRestImpl#onClose` 使用 `thenRun`；`SseEvent` 是类；`WebSocketOptions` / `WebSocketClient` / `WebSocketListener` 当前公开 API 与文档调用不一致 | `client/index.mdx`、`client/http_client.mdx`、`client/sse_client.mdx`、`client/ws_client.mdx` | 已回写（2026-11-28；本轮复核） |
 
+| 27 | Agent Memory 会话隔离与清理 | 文档原先宣称默认会话隔离已生效，并将 `Memory.clear()` 描述为清理当前会话；当前实现中 InMemoryMemory 的检索跨所有 session 桶，VectorMemory 默认 sessionId 为空且 clear() 不删除持久化向量数据 | `InMemoryMemory#search/getRecent` 遍历全部 sessionMemories；`VectorMemory#search` 按 options.sessionId 过滤而写入缺失 ID 时填充 default；`VectorMemory#clear` 只清缓存，`clear(sessionId)` 才删除指定会话 | `ai/memory.mdx` | 文档已澄清；运行时代码问题待修复 |
+| 28 | Embedding 向量维度 | 文档没有提示 embed 是同步阻塞调用，也没有提醒向量集合维度需匹配模型实际输出 | `EmbeddingModel.embed` 内部等待 HTTP Future；请求体当前硬编码 `dimensions=1`，而 `VectorMemoryOptions` 默认维度为 1024，需验证 Provider 实际行为 | `ai/embedding.mdx`、`ai/memory.mdx` | 文档已补充限制；运行时代码问题待修复 |
+| 29 | Agent 状态终态 | Agent 示例打印 `getState()`，容易让开发者把状态值当作任务完成标志 | 当前 `ReActAgent` 只写入 RUNNING / TOOL_EXECUTION，没有写入 FINISHED / ERROR | `ai/agent.mdx` | 已从最小示例移除；运行时代码问题待修复 |
+
 ## 已确认「不补」的
 
 | 主题 | 结论 |
