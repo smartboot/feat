@@ -101,6 +101,8 @@ router.route("/sync", ctx -> {
 
 ```java
 // 适合耗时操作
+ExecutorService executor = Executors.newFixedThreadPool(4);
+
 router.route("/async", (ctx, future) -> {
     CompletableFuture.supplyAsync(() -> fetchData(), executor)
         .whenComplete((result, error) -> {
