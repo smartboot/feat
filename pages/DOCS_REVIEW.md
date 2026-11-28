@@ -282,7 +282,7 @@ Feat Core 与 Feat AI 采用 Apache 2.0；Feat Cloud 则采用赞助授权模式
 - WAF 示例的 `HttpHandler` lambda 参数是 `HttpRequest`，应通过 `request.getResponse()` 写响应，不能使用 `Context.Response` 字段。
 - BasicAuth 示例中的 Router 回调参数是 `Context`，当前 `Context` 没有 `write(...)` 便捷方法，应使用 `ctx.Response.write(...)`。
 - WAF URI 检查对根路径 `/` 有显式放行分支；文档补充该边界，避免把白名单描述成对所有路径一视同仁。
-- `HttpStaticResourceHandler` 会先 URL 解码，再检查 `../` / `..\\`，编码后的穿越片段也会被检查；文档补充这一执行顺序。
+- `HttpStaticResourceHandler` 会先 URL 解码，再检查 `../` / `..\`，编码后的穿越片段也会被检查；文档补充这一执行顺序。
 - `HttpStaticResourceHandler.handle(HttpRequest)` 同步入口直接抛出 `UnsupportedOperationException`，实际静态资源处理由异步入口完成；文档增加自定义包装时必须转发异步入口的提醒。
 
 未发现 WAF 在报文解析阶段校验、BasicAuth 转发异步 Handler、静态资源 404 / Last-Modified 处理等表述与当前源码存在冲突。
@@ -325,6 +325,6 @@ Feat Core 与 Feat AI 采用 Apache 2.0；Feat Cloud 则采用赞助授权模式
 ### 发现的实现层后续事项
 
 1. `HttpStaticResourceHandler` 的 classpath 分支当前直接设置 `Content-Encoding: gzip`，没有根据请求的 `Accept-Encoding` 判断客户端是否接受 gzip。文档已注明这一行为；建议后续单独评估实现修复。
-2. 静态资源文件目录模式只检查解码后路径中是否包含 `../` 或 `..\\`，没有对最终目标执行 canonical-path containment 校验。资源目录中若存在指向目录外的符号链接，不能把当前检查当作完整的文件系统隔离边界。建议后续评估安全加固。
+2. 静态资源文件目录模式只检查解码后路径中是否包含 `../` 或 `..\`，没有对最终目标执行 canonical-path containment 校验。资源目录中若存在指向目录外的符号链接，不能把当前检查当作完整的文件系统隔离边界。建议后续评估安全加固。
 
 **验证状态：**已重新读取本轮修改的 8 篇实践页面并检查 Markdown 代码围栏闭合；已修正已知的 `HttpHandler` 示例类型错误。未执行 `npm ci`、`npm run build` 或 Maven 示例编译，不能将 Astro 构建或示例编译标记为通过。
