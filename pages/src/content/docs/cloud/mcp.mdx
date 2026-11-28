@@ -144,6 +144,7 @@ Prompt 的参数类型比 Tool 更受限；Resource 方法当前只支持无参�
 import tech.smartboot.feat.ai.mcp.server.McpServer;
 import tech.smartboot.feat.cloud.annotation.Autowired;
 import tech.smartboot.feat.cloud.annotation.Controller;
+import tech.smartboot.feat.cloud.annotation.PostConstruct;
 import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
 
 @Controller
@@ -153,10 +154,15 @@ public class DynamicMcpController {
     @Autowired
     private McpServer mcpServer;
 
-    // 在业务初始化逻辑中调用 mcpServer.addTool(...)
+    @PostConstruct
+    public void init() {
+        // 动态注册时，显式设置端点和启用的能力
+        mcpServer.getOptions().setMcpEndpoint("/mcp/dynamic").toolEnable();
+        mcpServer.addTool(createTool());
+    }
 }
 ```
 
-通过 `addTool`、`addPrompt` 和 `addResource` 可以动态注册能力。此时注册时机、重复名称处理和动态更新策略由应用负责。
+动态注册时需要在初始化阶段显式设置端点路径，并启用对应能力（`toolEnable()`、`promptsEnable()` 或 `resourceEnable()`），再调用 `addTool`、`addPrompt` 或 `addResource`。注册时机、重复名称处理和动态更新策略由应用负责。
 
 默认情况下，优先使用注解；只有能力集合确实需要运行时变化时，再直接管理 `McpServer`。
