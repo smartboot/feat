@@ -65,7 +65,7 @@ client.connect(new WebSocketListener() {
     }
     
     @Override
-    public void onError(WebSocketClient client, Throwable error) {
+    public void onError(WebSocketClient client, WebSocketResponse response, Throwable error) {
         error.printStackTrace();
     }
 });
@@ -79,10 +79,10 @@ WebSocketClient client = new WebSocketClient("ws://localhost:8080");
 client.options()
         .debug(true)                    // 开启调试日志
         .connectTimeout(5000)          // 连接超时（毫秒）
-        .readTimeout(30000)            // 读取超时（毫秒）
         .readBufferSize(8192)          // 读缓冲区大小
-        .writeBufferSize(8192)         // 写缓冲区大小
-        .maxFrameSize(65536);          // 最大帧大小
+        .readBufferSize(8192);         // 读缓冲区大小
+
+// 当前 WebSocketOptions 没有 readTimeout、writeBufferSize 或 maxFrameSize 配置项。
 ```
 
 ### 自定义请求头
@@ -92,9 +92,8 @@ import tech.smartboot.feat.core.common.HeaderName;
 
 WebSocketClient client = new WebSocketClient("ws://localhost:8080");
 
-client.header(header -> header
-        .set(HeaderName.USER_AGENT, "Feat-WebSocket-Client")
-        .set(HeaderName.AUTHORIZATION, "Bearer token123"));
+client.options().addHeader(HeaderName.USER_AGENT.getName(), "Feat-WebSocket-Client");
+client.options().addHeader(HeaderName.AUTHORIZATION.getName(), "Bearer token123");
 
 client.connect(listener);
 ```
@@ -188,10 +187,14 @@ sequenceDiagram
 ```java
 import tech.smartboot.feat.core.client.WebSocketClient;
 import tech.smartboot.feat.core.client.WebSocketListener;
+import tech.smartboot.feat.core.client.WebSocketResponse;
 import tech.smartboot.feat.core.common.codec.websocket.CloseReason;
+
+import java.io.IOException;
 
 public class ChatClient {
     private WebSocketClient client;
+    private volatile boolean connected;
     
     public void connect(String url) throws IOException {
         client = new WebSocketClient(url);
@@ -200,7 +203,8 @@ public class ChatClient {
         client.connect(new WebSocketListener() {
             @Override
             public void onOpen(WebSocketClient client, WebSocketResponse response) {
-                System.out.println("[连接成功] " + response.getStatusCode());
+                connected = true;
+                System.out.println("[连接成功] " + response.statusCode());
                 try {
                     client.sendMessage("{\"type\":\"join\",\"room\":\"lobby\"}");
                 } catch (IOException e) {
@@ -215,25 +219,26 @@ public class ChatClient {
             
             @Override
             public void onClose(WebSocketClient client, WebSocketResponse response, CloseReason reason) {
+                connected = false;
                 System.out.println("[连接关闭] Code: " + reason.getCode());
             }
             
             @Override
-            public void onError(WebSocketClient client, Throwable error) {
+            public void onError(WebSocketClient client, WebSocketResponse response, Throwable error) {
                 System.err.println("[错误] " + error.getMessage());
             }
         });
     }
     
     public void send(String message) throws IOException {
-        if (client != null && client.isConnected()) {
+        if (client != null && connected) {
             client.sendMessage(message);
         }
     }
     
     public void close() throws IOException {
         if (client != null) {
-            client.close(1000, "Normal closure");
+            client.close();
         }
     }
 }
@@ -243,32 +248,17 @@ public class ChatClient {
 
 ### 手动关闭连接
 
-WebSocket 是长连接，程序不会自动退出，需要显式关闭。
+WebSocket 是长连接，应用应在不再需要连接时显式关闭。当前 `WebSocketClient` 公开的是无参 `close()`，它发送正常关闭帧并关闭底层客户端；当前 API 没有 `close(code, reason)` 重载供调用方自定义关闭码和原因。
 
 ```java
-// 正常关闭
-client.close(1000, "Normal closure");
-
-// 强制关闭
 client.close();
 ```
 
 ### 实现重连
 
-```java
-public void onClose(WebSocketClient client, WebSocketResponse response, CloseReason reason) {
-    if (reconnectAttempts < MAX_RECONNECT) {
-        reconnectAttempts++;
-        System.out.println("连接断开，尝试重连 (" + reconnectAttempts + "/" + MAX_RECONNECT + ")");
-        try {
-            Thread.sleep(3000);
-            doConnect();  // 重新建立连接
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-}
-```
+当前 `WebSocketClient` 没有内置自动重连策略。应用需要自己管理重连次数、退避间隔和连接状态。不要在 `onClose` / `onError` 回调中直接调用 `Thread.sleep()`，以免阻塞消息处理线程；应交给应用自己的定时调度器执行。
+
+还要注意，当前 `connect()` 在客户端仍处于已连接状态且底层 Session 有效时会直接返回。重连前必须先确认旧连接已关闭，并避免多个回调同时触发重复重连。握手失败和底层网络断开也不是完全相同的回调路径，应用应结合 `connect()` 的异常和 `onClose()` 结果处理。
 
 ## 关闭码说明
 
@@ -345,7 +335,7 @@ public class InteractiveWebSocketClient {
         String line;
         while ((line = reader.readLine()) != null) {
             if ("exit".equalsIgnoreCase(line)) {
-                client.close(1000, "User requested");
+                client.close();
                 break;
             }
             client.sendMessage(line);
@@ -367,7 +357,7 @@ public class InteractiveWebSocketClient {
 
 连接未就绪或已断开。只在 `onOpen` 回调后发送消息：
 ```java
-if (client.isConnected()) {
+if (connected) {
     client.sendMessage("data");
 }
 ```
@@ -377,7 +367,7 @@ if (client.isConnected()) {
 WebSocket 是长连接，需要手动关闭：
 ```java
 // 正常关闭
-client.close(1000, "Normal closure");
+client.close();
 
 // 强制关闭
 client.close();
