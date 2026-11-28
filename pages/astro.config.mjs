@@ -129,7 +129,7 @@ export default defineConfig({
             },
             sidebar: [
                 {
-                    label: '理解 Feat',
+                    label: '认识 Feat',
                     items: [{autogenerate: {directory: 'guides'}}],
                 },
                 {
