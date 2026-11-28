@@ -133,13 +133,8 @@ public class TaskService {
     }
 
     public Task update(String id, String title, boolean completed) {
-        if (!tasks.containsKey(id)) {
-            return null;
-        }
-
-        Task updated = new Task(id, title, completed);
-        tasks.put(id, updated);
-        return updated;
+        return tasks.computeIfPresent(id, (key, current) ->
+                new Task(id, title, completed));
     }
 
     public boolean delete(String id) {
