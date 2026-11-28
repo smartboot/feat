@@ -29,13 +29,18 @@ public class RedisunSerializer extends ExtensionSerializer {
     }
 
     @Override
+    public void serializeProperty() {
+        printWriter.println("\tprivate Redisun redisun;");
+    }
+
+    @Override
     public void serializeImport() {
         printWriter.println("import " + Redisun.class.getName() + ";");
     }
 
     @Override
     public void serializeLoadBean() {
-        printWriter.append(headBlank(0)).println("applicationContext.addBean(\"redisun\", Redisun.create(opt -> {");
+        printWriter.append(headBlank(0)).println("redisun = Redisun.create(opt -> {");
         printWriter.append(headBlank(1)).println("opt.setAddress(\"" + JSONPath.eval(config, "$.feat.redis.address") + "\");");
 
         Object username = JSONPath.eval(config, "$.feat.redis.username");
@@ -51,6 +56,14 @@ public class RedisunSerializer extends ExtensionSerializer {
         if (db != null) {
             printWriter.append(headBlank(1)).println("opt.setDatabase(" + SerializerUtils.resolveIntProperty(db) + ");");
         }
-        printWriter.append(headBlank(0)).println("}));");
+        printWriter.append(headBlank(0)).println("});");
+        printWriter.append(headBlank(0)).println("applicationContext.addBean(\"redisun\", redisun);");
+    }
+
+    @Override
+    public void serializeDestroy() {
+        printWriter.println("\t\tif (redisun != null) {");
+        printWriter.println("\t\t\tredisun.close();");
+        printWriter.println("\t\t}");
     }
 }
