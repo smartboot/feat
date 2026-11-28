@@ -1,0 +1,108 @@
+---
+title: Router 拦截器
+description: 使用 Feat Core Router 拦截器处理鉴权、日志和请求前置逻辑，理解 Chain 的执行方式
+toc: true
+sidebar:
+  order: 4
+---
+
+拦截器适合放置多个路由都会用到的逻辑，例如记录请求、检查身份或添加公共响应头。它不替代路由处理器，而是在请求进入目标处理器之前提供一个可以继续或中断的环节。
+
+## 注册拦截器
+
+通过 `addInterceptor` 为一个路径模式注册拦截器：
+
+```java
+router.addInterceptor("/admin/*", (context, future, chain) -> {
+    String token = context.Request.getHeader("X-Token");
+
+    if (!"expected-token".equals(token)) {
+        context.Response.setHttpStatus(403);
+        context.Response.write("Forbidden");
+        return;
+    }
+
+    chain.proceed(context, future);
+});
+```
+
+上例中，鉴权通过时调用 `chain.proceed`，请求继续进入后续拦截器或最终的路由处理器；鉴权失败时直接返回，不再继续执行后续链路。
+
+当前实现会在拦截器提前结束链路后完成请求的 Future，因此短路分支通常不需要再手动调用 `future.complete(null)`。
+
+## 多个拦截器如何执行
+
+可以多次调用 `addInterceptor`，也可以用 `addInterceptors` 让同一个拦截器匹配多个路径：
+
+```java
+router.addInterceptor("/*", (context, future, chain) -> {
+    System.out.println(
+        context.Request.getMethod() + " " +
+        context.Request.getRequestURI()
+    );
+    chain.proceed(context, future);
+});
+
+router.addInterceptors(
+    Arrays.asList("/api/*", "/admin/*"),
+    (context, future, chain) -> {
+        context.Response.setHeader("X-Request-Checked", "true");
+        chain.proceed(context, future);
+    }
+);
+```
+
+拦截器按注册顺序进入链路。每个拦截器调用 `chain.proceed(context, future)` 后，才会进入下一个拦截器；全部拦截器都继续后，Router 才调用最终的 `RouterHandler`。
+
+```text
+请求
+  │
+  ▼
+日志拦截器
+  │ chain.proceed()
+  ▼
+鉴权拦截器
+  │ chain.proceed()
+  ▼
+路由处理器
+  │
+  ▼
+响应
+```
+
+如果某个拦截器不调用 `chain.proceed`，后面的拦截器和路由处理器都不会执行。
+
+## Chain 做了什么
+
+`Chain` 保存当前拦截器列表、执行位置和最终的路由处理器。每次调用 `proceed`，它取出下一个拦截器并推进索引；当索引越过拦截器列表时，才调用目标处理器。
+
+这也是为什么拦截器可以在 `chain.proceed` 前后执行逻辑：
+
+```java
+router.addInterceptor("/*", (context, future, chain) -> {
+    long start = System.nanoTime();
+
+    chain.proceed(context, future);
+
+    long elapsed = System.nanoTime() - start;
+    System.out.println("handler dispatch took " + elapsed + " ns");
+});
+```
+
+这里统计的是调用下游链路所花的时间。若目标处理器采用异步方式，这段代码不会等待异步任务真正结束；它只测量 `proceed` 调用返回前的同步执行时间。
+
+## 一个重要边界：不要异步延迟推进链路
+
+当前 Router 的实现会在同步调用 `chain.proceed` 返回后检查链路是否仍处于中断状态。如果拦截器先返回、打算在异步回调中再调用 `chain.proceed`，Router 可能已经完成请求 Future。
+
+因此，当前版本的拦截器应在本次 `intercept` 调用期间同步决定继续还是短路。不要把异步鉴权写成“先返回，等回调再推进 Chain”的形式。
+
+如果鉴权必须依赖异步远程调用，建议把该逻辑放到能够明确控制异步完成时机的请求处理流程中，而不是延迟推进当前拦截器链。
+
+## 匹配范围
+
+拦截器的匹配依据是请求 URI 路径模式，不按 HTTP 方法区分。多个路径模式注册在同一个拦截器上时，任意一个模式匹配即可触发该拦截器。
+
+另外，拦截器筛选发生在路由处理器选择之后，但不要求目标路由一定存在。因此，匹配 `/*` 的日志拦截器也可能观察到最终进入默认 404 处理器的请求。
+
+下一篇：[Router Session](/feat/server/router-session/)。
