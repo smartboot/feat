@@ -36,9 +36,8 @@ public class ApiTestBase {
 
     @BeforeAll
     static void setUp() {
-        server = Feat.httpServer(options -> {
-            options.port(PORT);
-        }).httpHandler(ctx -> ctx.write("ok"));
+        server = Feat.httpServer()
+                .httpHandler(request -> request.getResponse().write("ok"));
         server.listen(PORT);
     }
 
@@ -98,6 +97,23 @@ static void setUp() {
 
     // 轮询等待端口就绪，再开始跑用例
     awaitPort(18080, 5000);
+}
+
+static void awaitPort(int port, long timeoutMillis) {
+    long deadline = System.currentTimeMillis() + timeoutMillis;
+    while (System.currentTimeMillis() < deadline) {
+        try (java.net.Socket ignored = new java.net.Socket("127.0.0.1", port)) {
+            return;
+        } catch (java.io.IOException e) {
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException interrupted) {
+                Thread.currentThread().interrupt();
+                throw new IllegalStateException("Interrupted while waiting for server", interrupted);
+            }
+        }
+    }
+    throw new IllegalStateException("Server did not start on port " + port);
 }
 ```
 
