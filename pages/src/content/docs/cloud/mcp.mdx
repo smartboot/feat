@@ -46,7 +46,7 @@ Feat Cloud 提供两种组织方式。
 
 ### 默认 MCP 服务
 
-如果 Controller 没有标注 `@McpEndpoint`，但其中声明了 `@Tool`、`@Prompt` 或 `@Resource`，Feat Cloud 会将这些能力注册到默认 MCP Server。默认服务的 HTTP 端点是 `/mcp`。
+如果 Controller 没有标注 `@McpEndpoint`，但其中声明了 MCP 注解方法，且默认服务未被关闭，Feat Cloud 会生成默认 MCP Server。默认 HTTP 端点是 `/mcp`。当前默认服务只启用 Tool；需要暴露 Prompt 或 Resource 时，请使用显式 `@McpEndpoint`。
 
 默认服务默认启用。可以通过 `feat.yml` 关闭：
 
@@ -57,7 +57,7 @@ server:
       enable: false
 ```
 
-默认服务适合快速验证或规模较小的应用。如果项目中有多个独立的 MCP 能力域，建议使用显式端点，避免所有能力都落在同一个服务边界内。
+默认服务适合快速验证少量 Tool。如果项目需要 Prompt、Resource，或需要划分多个独立的 MCP 服务边界，请使用显式端点。
 
 ### 显式 MCP 端点
 
@@ -138,15 +138,23 @@ Prompt 的参数类型比 Tool 更受限；Resource 方法当前只支持无参�
 
 ## 什么时候直接使用 McpServer
 
-注解适合编译期就能确定的能力。如果工具列表需要在运行时动态变化，例如来自数据库或插件系统，可以直接使用 `McpServer` 的注册 API。
+注解适合编译期就能确定的能力。如果工具列表需要在运行时动态变化，例如来自数据库或插件系统，可以在显式 MCP Controller 中注入 `McpServer`，再使用它的注册 API。
 
 ```java
 import tech.smartboot.feat.ai.mcp.server.McpServer;
 import tech.smartboot.feat.cloud.annotation.Autowired;
+import tech.smartboot.feat.cloud.annotation.Controller;
+import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
 
-// 在 Cloud Bean 中注入
-@Autowired
-private McpServer mcpServer;
+@Controller
+@McpEndpoint(name = "dynamic-tools", title = "Dynamic Tools",
+        streamableEndpoint = "/mcp/dynamic")
+public class DynamicMcpController {
+    @Autowired
+    private McpServer mcpServer;
+
+    // 在业务初始化逻辑中调用 mcpServer.addTool(...)
+}
 ```
 
 通过 `addTool`、`addPrompt` 和 `addResource` 可以动态注册能力。此时注册时机、重复名称处理和动态更新策略由应用负责。
