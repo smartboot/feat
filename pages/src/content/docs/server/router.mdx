@@ -95,6 +95,14 @@ Core Router 使用 `:paramName` 语法，不使用花括号形式 `{paramName}`�
 普通的单参数 Lambda 使用的是同步处理方式。如果希望 Router 处理器自己控制异步完成时机，需要实现 `RouterHandler`，并重写带有 `CompletableFuture` 参数的重载方法：
 
 ```java
+import tech.smartboot.feat.router.Context;
+import tech.smartboot.feat.router.RouterHandler;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
+
 ExecutorService executor = Executors.newFixedThreadPool(8);
 
 router.route("/report", new RouterHandler() {
