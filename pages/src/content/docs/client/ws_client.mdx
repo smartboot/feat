@@ -84,7 +84,6 @@ WebSocketClient client = new WebSocketClient("ws://localhost:8080");
 client.options()
         .debug(true)                    // 开启调试日志
         .connectTimeout(5000)          // 连接超时（毫秒）
-        .readBufferSize(8192)          // 读缓冲区大小
         .readBufferSize(8192);         // 读缓冲区大小
 
 // 当前 WebSocketOptions 没有 readTimeout、writeBufferSize 或 maxFrameSize 配置项。
@@ -169,7 +168,7 @@ sequenceDiagram
         
         Server-->>Client: Close Frame
         Client-->>App: onClose()
-    else 连接失败
+    else 握手未升级
         Server-->>Client: 非 101 响应
         Client-->>App: onClose()（错误关闭原因）
     end
