@@ -62,9 +62,35 @@ public class HelloFeatAI {
 }
 ```
 
-<Aside type="caution">
-云端模型默认读取环境变量 `FEAT_AI_API_KEY`。如果未设置，请求阶段会直接失败。
+<Aside type="tip">
+本地 Ollama 直接访问本机服务，不需要配置 `FEAT_AI_API_KEY`。
 </Aside>
+
+    </TabItem>
+    <TabItem value="云端模型" label="云端模型">
+
+Feat AI 默认使用 Gitee AI 的 OpenAI 兼容接口。将 API Key 配置到环境变量后，可以直接使用默认服务地址：
+
+```shell
+export FEAT_AI_API_KEY=你的_API_Key
+```
+
+```java title="HelloFeatAICloud.java"
+import tech.smartboot.feat.ai.FeatAI;
+import tech.smartboot.feat.ai.chat.ChatModel;
+
+public class HelloFeatAICloud {
+    public static void main(String[] args) throws Exception {
+        ChatModel model = FeatAI.chatModel(opts ->
+                opts.model("Qwen2.5-72B-Instruct")
+        );
+
+        System.out.println(model.chat("用一句话介绍 Feat 框架").get().getContent());
+    }
+}
+```
+
+如果使用其他 OpenAI 兼容服务，再通过 `baseUrl(...)` 指定服务地址。
 
     </TabItem>
 </Tabs>
@@ -98,7 +124,7 @@ Feat AI 提供两种与模型交互的方式，选择取决于你的场景：
 
 ## 继续学习
 
-完成第一个应用后，按以下顺序深入：
+完成第一个应用后，建议按以下顺序深入：先掌握 ChatModel，再理解 Agent 如何调度工具；如果要为 Agent 增加长期记忆，先了解 Embedding，因为向量记忆需要把文本转换为向量，最后再阅读 Memory。
 
 <CardGrid>
   <LinkCard
