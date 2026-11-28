@@ -1,6 +1,6 @@
 ---
 title: 启动配置与环境配置
-description: 区分 CloudOptions 与 feat.yml 的职责，理解启动选项、Profile 合并和多环境生成方式
+description: 理解 CloudOptions、feat.yml、Profile 与运行时占位符的分工
 sidebar:
     order: 6
 ---
@@ -9,209 +9,75 @@ import SponsorAside from '../../../components/SponsorAside.astro';
 
 <SponsorAside />
 
+Feat Cloud 的配置分为三个部分：
 
-import { Aside } from '@astrojs/starlight/components';
+| 配置 | 负责什么 | 何时生效 |
+|---|---|---|
+| `CloudOptions` | 本次应用如何启动 | 启动时 |
+| `feat.yml` / `feat-{env}.yml` | 为不同环境生成什么代码 | 编译期 |
+| `${...}` | 从 JVM 参数或环境变量注入外部值 | 运行时 |
 
-Feat Cloud 里有三类配置容易混在一起：
+先记住这条边界：**启动行为用 `CloudOptions`，影响 AOT 生成结果的配置用 `feat.yml`，密码等部署值用 `${...}`。**
 
-- `CloudOptions`：启动应用时传给 Feat Cloud 的运行时选项
-- `feat.yml` / `feat-{env}.yml`：编译期生成代码时读取的配置输入
-- `${...}` 占位符：写在 `feat.yml` 的值里，运行时从系统属性/环境变量取值
+## CloudOptions：控制本次启动
 
-这章分两段展开：
+`CloudOptions` 继承自 `ServerOptions`。端口、线程数、HTTPS 等基础服务选项仍由 `ServerOptions` 提供；CloudOptions 主要负责服务加载、外部 Bean 和静态资源。
 
-- 前半段讲 `CloudOptions`：启动入口里本次应用怎么跑
-- 后半段讲 `feat.yml`：不同环境如何参与编译期生成，以及值如何在运行时注入
+### 限制加载范围
 
-核心判断：**启动入口里本次怎么跑，看 `CloudOptions`；会影响生成代码的环境差异，看 `feat.yml`；要在运行时注入密钥等值，用 `${}`。**
+`setPackages(...)` 按生成类的包名前缀筛选本次启动要加载的 `CloudService`：
 
-## CloudOptions 启动配置
-
-这一部分只处理启动入口里的运行时选项：启动时加载哪些已生成服务、提前注册哪些对象、是否托管静态资源。
-
-### 先划清边界
-
-`CloudOptions` 继承自 [`ServerOptions`](/feat/server/serveroptions/)，所以端口、线程数、调试模式、HTTPS 这类基础能力仍然在 `ServerOptions` 里配置。
-
-遇到这些问题时，通常看 `CloudOptions`：
-
-- 控制器已经写好，但你想限制哪些包会被接受
-- 有对象必须在 Feat Cloud 容器启动前就准备好
-- 应用需要顺手托管 `classpath` 或文件系统里的静态资源
-- 本次启动要临时调整端口、debug 或 Router
-
-遇到这些问题时，通常看 `feat.yml` 或 Profile：
-
-- 不同环境使用不同端口、数据库或 Redis
-- Session 存储方式在本地和生产不同
-- MyBatis、Redis 等扩展需要参与编译期生成
-- 修改后需要重新构建才生效
-
-### 启动时最常碰到的三件事
-
-| 配置项 | 方法 | 典型用途 |
-|------|------|------|
-| 服务加载范围 | `setPackages(String...)` | 控制启动时加载哪些已生成的 Controller / Bean 服务 |
-| 外部 Bean | `registerBean(String, Object)` | 把启动前已有对象注册进容器 |
-| 静态资源 | `setStaticLocations(String)` | 托管类路径或本地目录里的静态文件 |
-
-### 限制启动时加载的服务范围
-
-如果你的启动类和控制器不在同一个合理的根包下，或者你只想限制本次启动实际加载哪些服务，可以显式设置包名前缀。
-
-```java title="Bootstrap.java"
-import tech.smartboot.feat.cloud.FeatCloud;
-
-public class Bootstrap {
-    public static void main(String[] args) {
-        FeatCloud.cloudServer(options -> {
-            options.setPackages(
-                    "com.example.controller",
-                    "com.example.service"
-            );
-        }).listen();
-    }
-}
+```java
+FeatCloud.cloudServer(options -> {
+    options.setPackages("com.example.controller", "com.example.service");
+}).listen();
 ```
 
-什么时候应该用它：
+它只影响**启动时加载哪些生成类**，不会改变注解处理器的编译范围，也不会减少 AOT 生成代码。匹配使用字符串 `startsWith`，不是严格的 Java 包边界判断，因此包名前缀应尽量明确。
 
-- 多模块项目里，控制器不在启动类同包或子包
-- 你只想限制本次启动实际加载的 Controller / Bean
-- 你要避免把不相关 demo 或测试模块的服务加载进来
+### 注册外部 Bean
 
-这里有一个容易误解的细节：`setPackages(...)` 不会改变 AOT 注解处理器的编译期处理范围，也不会减少生成的代码。注解处理器仍会生成各个 Controller、Bean 对应的 `CloudService`；`setPackages(...)` 是在**启动时**按生成类的包名前缀过滤哪些服务会被加载。未匹配的服务不会注册 Bean，也不会注册路由。
+数据源、第三方客户端等对象如果已经由应用创建，可以在启动时交给容器：
 
-当前实现使用字符串前缀判断（`startsWith`），不是严格的 Java 包边界判断。例如传入 `com.example` 时，也会匹配以 `com.example` 开头的其他包名。建议使用明确、稳定且互不重叠的包名前缀。
-
-如果启动类本身已经位于合理根包下，很多情况下不需要写 `setPackages(...)`。
-
-### 把已有对象交给容器
-
-有些对象不是通过 Feat Cloud 自己创建的，比如数据源、第三方客户端、配置对象。这时可以在启动时手动注册。
-
-```java title="ExternalBeanDemo.java"
-import tech.smartboot.feat.cloud.FeatCloud;
-
-public class ExternalBeanDemo {
-    public static void main(String[] args) {
-        FeatCloud.cloudServer(options -> {
-            options.registerBean("dataSource", createDataSource());
-            options.registerBean("buildVersion", "1.0.0");
-        }).listen();
-    }
-
-    private static Object createDataSource() {
-        return new Object();
-    }
-}
+```java
+FeatCloud.cloudServer(options -> {
+    options.registerBean("dataSource", dataSource);
+}).listen();
 ```
 
-`registerBean(...)` 的 key 不能重复。源码里如果发现同名 key，会直接抛 `FeatException`。外部 Bean 会先于生成的类级 Bean 注册，因此它的名称也不能与类级 `@Bean` 或方法级 `@Bean` 的名称冲突；否则应用启动时会因重复名称失败。
+Bean 名称不能重复，也不能与 Feat Cloud 生成的 Bean 重名，否则启动会失败。
 
-```java title="重复注册同名 Bean 会失败"
-options.registerBean("dataSource", ds1);
-options.registerBean("dataSource", ds2); // 会失败
+### 配置静态资源
+
+默认静态资源目录为 `classpath:static`。需要更换目录时：
+
+```java
+FeatCloud.cloudServer(options -> {
+    options.setStaticLocations("classpath:public");
+}).listen();
 ```
 
-### 托管静态资源
+也支持文件系统路径，例如 `./public` 或 `/var/www/static`。该方法会创建用于静态资源处理的 Router；如果应用还要自定义 Router，需要留意最终使用的是哪个实例。
 
-Feat Cloud 默认静态资源目录是 `classpath:static`。如果你项目里有前端页面、上传后的公开文件或静态文档，可以直接改位置。
+## feat.yml：为环境生成代码
 
-```java title="StaticLocationDemo.java"
-import tech.smartboot.feat.cloud.FeatCloud;
+Feat Cloud 在编译期读取配置，并为每个 Profile 生成独立的服务类。因此，修改这些配置后需要重新构建，单纯重启已有 JAR 不会更新生成结果。
 
-public class StaticLocationDemo {
-    public static void main(String[] args) {
-        FeatCloud.cloudServer(options -> {
-            options.setStaticLocations("classpath:public");
-        }).listen();
-    }
-}
-```
+### 文件约定
 
-你可以使用两种路径形式：
+默认配置文件：
 
-```java title="静态资源配置"
-options.setStaticLocations("classpath:static");
-options.setStaticLocations("classpath:public");
-options.setStaticLocations("/var/www/static");
-options.setStaticLocations("./public");
-```
+- `feat.yml` 或 `feat.yaml`
 
-当你配置静态资源目录后，Feat Cloud 会使用静态资源处理器提供目录首页、常见文件类型识别、`Last-Modified` 缓存和 404 返回。
-
-<Aside type="caution">
-`setStaticLocations(...)` 不只是记住一个路径，它会顺手创建一个新的 `Router` 来挂载静态资源处理器。所以如果你还要自定义底层路由，请明确知道谁是最终生效的 Router。
-</Aside>
-
-### 把启动策略写在入口
-
-实际项目里，这几个配置项经常一起出现：
-
-```java title="CloudOptionsDemo.java"
-import tech.smartboot.feat.cloud.FeatCloud;
-
-public class CloudOptionsDemo {
-    public static void main(String[] args) {
-        FeatCloud.cloudServer(options -> {
-            options.port(8080);
-            options.debug(true);
-
-            options.setPackages("com.example.controller", "com.example.service");
-            options.registerBean("dataSource", createDataSource());
-            options.setStaticLocations("classpath:public");
-        }).listen();
-    }
-
-    private static Object createDataSource() {
-        return new Object();
-    }
-}
-```
-
-这段代码表达的是本次应用如何启动。它不会替代 `feat.yml` 的环境配置，也不会改变已经生成好的代码结构。
-
-## Profile 环境配置
-
-从这里开始，关注点从“本次启动怎么跑”切到“不同环境如何生成代码”。
-
-![Profile 环境配置与默认 feat.yml 深度合并的示意图](./img/profiles_1.png)
-
-### 文件命名
-
-业务应用很少只有一个运行环境。本地开发可能连本机数据库，测试环境要打开更多日志，生产环境则使用独立的数据库、Redis 和端口。
-
-默认配置文件有两种写法：
-
-- `feat.yml`
-- `feat.yaml`
-
-环境配置文件也有两种写法：
+环境配置文件：
 
 - `feat-dev.yml`
-- `feat-dev.yaml`
+- `feat-test.yml`
 - `feat-prod.yml`
-- `feat-prod.yaml`
 
-其中 `dev`、`prod` 就是环境名。环境名只能包含字母和数字，例如 `dev`、`test`、`prod`、`gray1`。
+环境名只允许字母和数字。比如 `dev`、`test`、`prod`；不要使用带横线或下划线的环境名。
 
-<Aside type="caution">
-不要使用 `feat-prod-us.yml` 这类带横线的环境名。当前环境名只允许字母和数字，横线、下划线和点号都不会被识别为合法环境名。
-</Aside>
-
-### 最小可用结构
-
-一个典型项目可以这样组织资源文件：
-
-```text title="src/main/resources"
-src/main/resources/
-├── feat.yml
-├── feat-dev.yml
-└── feat-prod.yml
-```
-
-`feat.yml` 放所有环境都共享的默认值：
+`feat.yml` 保存公共配置，环境文件只写差异：
 
 ```yaml title="feat.yml"
 server:
@@ -221,201 +87,100 @@ feat:
   datasource:
     url: jdbc:mysql://localhost:3306/app
     username: app
-    password: app
-```
-
-`feat-dev.yml` 只写开发环境要覆盖的内容：
-
-```yaml title="feat-dev.yml"
-server:
-  port: 8081
-
-feat:
-  datasource:
-    url: jdbc:mysql://localhost:3306/app_dev
-    username: dev
-    password: dev
-```
-
-### `server:` 块支持的配置项
-
-`feat.yml` 的 `server:` 块并不是所有 `ServerOptions` 选项都能配。当前 AOT 只绑定 `int` 和 `String` 类型的字段，例如 `port`、`host`、`threadNum`、`headerLimiter`、`readBufferSize` 和 `writeBufferSize`。因此 `boolean`、`long` 等类型的字段不会通过这条通用路径绑定；`debug` 也不是字段，而是启动方法 `options.debug(true)`。
-
-| 配置项 | 类型 | 说明 |
-|------|------|------|
-| `port` | int | 监听端口 |
-| `host` | String | 绑定地址 |
-| `threadNum` | int | 工作线程数 |
-| `headerLimiter` | int | 请求头数量上限 |
-| `readBufferSize` / `writeBufferSize` | int | 读写缓冲区大小 |
-| `autoSSL` | 特殊 | 设为 `true` 启用自动 HTTPS |
-| `session.store-type` | 特殊 | 设为 `redis` 切换为 Redis 会话存储 |
-| `session.timeout` | 特殊 | 会话超时时间 |
-| `gzip` | 特殊 | 设为 `true` 全局开启响应压缩 |
-| `gzipThreshold` | 特殊 | 全局 Gzip 压缩阈值（字节） |
-
-上表中通过通用字段绑定的 `int` / `String` 项支持 `${}` 占位符，例如 `port: ${port}`。但 `autoSSL`、`session.store-type`、`session.timeout`、`gzip` 和 `gzipThreshold` 是单独处理的特殊配置：当前实现直接读取字面值，不经过外部变量解析。请分别写成布尔值、字符串或整数，不要写成 `${...}`。
-
-<Aside type="caution">
-`debug` 看起来像 `server:` 的一项，但它不是字段、而是方法，且 `boolean` 不在可绑定类型内，写在 `feat.yml` 里不会生效。调试模式只能通过启动入口的 `options.debug(true)` 打开。
-</Aside>
-
-### 合并规则
-
-Feat Cloud 会先读取默认配置，再读取环境配置。
-
-对 `dev` 环境来说，顺序是：
-
-1. 读取 `feat.yml`
-2. 读取 `feat-dev.yml`
-3. 将 `feat-dev.yml` 的内容覆盖到默认配置上
-
-覆盖粒度遵循一个规则：**对象深度合并，普通值和数组整体替换。**
-
-```yaml title="feat.yml"
-server:
-  port: 8080
-  host: 0.0.0.0
-```
-
-```yaml title="feat-dev.yml"
-server:
-  port: 8081
-```
-
-合并后，`server.port` 会被覆盖，而 `host` 会继续保留：
-
-```yaml title="dev 环境最终配置"
-server:
-  port: 8081
-  host: 0.0.0.0
-```
-
-如果环境文件里的值是数组，则以环境配置为准，不会和默认数组拼接。
-
-### 用 `${}` 引用系统属性和环境变量
-
-`feat.yml` 里的值不一定要写死。只要把值写成 `${...}` 形式，Feat Cloud 就不会把它当成字面量，而是在运行时从系统属性和环境变量里解析。这正是把敏感信息（数据库口令、Nacos 凭据、第三方 Token）从代码仓库里挪出去的官方做法。
-
-```yaml title="feat.yml"
-feat:
-  datasource:
-    url: jdbc:mysql://localhost:3306/app
-    username: ${db.username}
     password: ${db.password}
 ```
-
-`username`、`password` 整条值都是 `${...}`，运行时会解析。打包后，配置文件本身可以安全提交到仓库；真正的密钥在启动时注入：
-
-```bash title="运行时注入"
-java -Ddb.username=app -Ddb.password=secret -jar yourapp.jar
-# 或者用环境变量
-DB_USERNAME=app DB_PASSWORD=secret java -jar yourapp.jar
-```
-
-<Aside type="caution">
-`${}` 只在**整个值**恰好是 `${...}` 时才解析，不能嵌在更长字符串中间。`url: jdbc:mysql://${db.host}/app` 不会被替换，`db.host` 会原样留在地址里。如果整条地址也要注入，就把它作为一个完整变量：`url: ${db.url}`，再通过 `-Ddb.url=...` 或 `DB_URL` 提供。
-</Aside>
-
-#### 支持的写法
-
-| 写法 | 含义 |
-|------|------|
-| `${name}` | 运行时解析 `name`，找不到则字符串为 `null`、整数为 `0` |
-| `${name:default}` | 找不到时使用 `default` 作为字面默认值，按第一个 `:` 拆分 |
-
-`default` 是一段普通文本，不会被再次解析。`:` 只在第一个出现时作为分隔符，所以含 `:` 的默认值可以放心写，例如 `${db.url:jdbc:mysql://localhost:3306/app}` 的默认值就是整条地址。
-
-<Aside type="caution">
-整数类型的占位符只用 `${name}` 这一种写法，不要带非零默认值。带非零默认值的整数占位，在系统属性/环境变量确实提供值时会解析失败。需要默认端口，直接把数字写进 `feat.yml` 更稳妥。
-</Aside>
-
-#### 解析来源与优先级
-
-`feat.yml` 里的 `${name}` 不是引用另一条配置项，而是去外部取值，顺序是：
-
-1. **JVM 系统属性**：名字原样使用，例如 `-Ddb.password=secret` 匹配 `${db.password}`
-2. **操作系统环境变量**：名字按“点号转下划线、全大写”规则转换，例如 `${db.password}` 对应环境变量 `DB_PASSWORD`
-3. 都没有时，使用 `:default`，没有默认值则字符串为 `null`、整数为 `0`
-
-<Aside type="caution">
-这不是 Spring 那种“配置项之间互相引用”的占位符。`${db.password}` 不会去读 `feat.yml` 里的另一条 `db.password`，它只看系统属性和环境变量。如果你要的是“把 `feat.yml` 里某个值注入到某个 Bean 字段”，那是 `@Value("${...}")` 注解的职责，见 [Bean 注入](/feat/cloud/bean/)，两者名字像但机制不同。
-</Aside>
-
-#### 哪些配置项支持
-
-`${}` 只对 Feat Cloud 在编译期消费的配置值生效，典型包括：
-
-- `server.*` 中通过通用字段绑定的 `int` / `String` 启动项，例如 `server.port: ${port}`
-- `feat.datasource.*` 的 `url`、`username`、`password`、`driver`
-- `feat.redis.*` 的 `username`、`password`、`database`（`address` 按字面值写入，不解析占位符）
-- 被 `@Value("${...}")` 注入且类型受支持的字段所引用的配置值
-
-自己用代码直接从配置里读出来的值不会被替换。所以 `${}` 应该写在 Feat Cloud 已经接管的那几个配置块里，而不是任意 YAML 键上。尤其要区分：`@Value("${app.name}")` 的 `app.name` 是编译期从合并后的 YAML 中取值的路径；若 YAML 中该值本身写成 `${DB_PASSWORD}`，这个值才会在运行时继续解析系统属性或环境变量。
-
-#### 和 Profile 的关系
-
-`${}` 解析发生在运行时，而 `feat.profiles.active` 选择环境也发生在运行时，但两者互不依赖：每个环境的 `feat-{env}.yml` 都可以各自使用 `${}`。常见做法是把结构性的环境差异（端口、地址）交给 Profile，把同一份配置里需要保密的值交给 `${}`，配合使用：
 
 ```yaml title="feat-prod.yml"
+server:
+  port: 8081
+
 feat:
   datasource:
-    url: jdbc:mysql://prod-db.example.com:3306/app
+    url: jdbc:mysql://prod-db:3306/app
+    username: app
+```
+
+环境配置会覆盖默认配置：对象按层级合并，普通值和数组整体替换。上例中，生产环境的端口和数据库地址会覆盖默认值，未声明的配置继续沿用默认值。
+
+### server 配置范围
+
+`server:` 并不是对所有 `ServerOptions` 字段开放的通用映射。当前 AOT 通用绑定只处理 `int` 和 `String` 字段；以下特殊项由独立逻辑读取：
+
+| 配置项 | 说明 |
+|---|---|
+| `port`、`host`、`threadNum` | 监听端口、绑定地址和线程数 |
+| `headerLimiter` | 请求头数量上限 |
+| `readBufferSize`、`writeBufferSize` | 读写缓冲区大小 |
+| `autoSSL` | 自动 HTTPS 开关 |
+| `session.store-type`、`session.timeout` | Session 存储方式和超时时间 |
+| `gzip`、`gzipThreshold` | 响应压缩开关和阈值 |
+
+特殊项直接读取配置字面值，不支持 `${...}` 占位符。调试模式也不是 `server:` 配置项，应在启动入口调用 `options.debug(true)`。
+
+## ${...}：注入部署环境中的值
+
+占位符用于把密钥等部署值留在运行环境，而不是提交到配置文件：
+
+```yaml
+feat:
+  datasource:
     username: ${db.username}
     password: ${db.password}
 ```
 
-这样生产环境的地址走 Profile 覆盖，凭据走运行时注入，仓库里既看不到口令，也不必为每个环境硬编码账号。Nacos 凭据的同一种用法可以参考 [Nacos 接入](/feat/cloud/nacos/)。
+运行时按以下顺序查找：
 
-### 编译期会生成什么
+1. JVM 系统属性，例如 `-Ddb.password=secret`
+2. 环境变量，名称将点号替换为下划线并转为大写，例如 `DB_PASSWORD`
+3. 占位符中的默认值
 
-如果项目里只有 `feat.yml`，Feat Cloud 只会生成默认环境的一套代码。
+```bash
+java -Ddb.username=app -Ddb.password=secret -jar app.jar
 
-如果同时存在 `feat-dev.yml`、`feat-prod.yml`，Feat Cloud 会为每个环境生成一套完整代码：
+# 或使用环境变量
+DB_USERNAME=app DB_PASSWORD=secret java -jar app.jar
+```
 
-| 配置文件 | 生成类名示例 |
-|---------|-------------|
+支持两种写法：
+
+- `${name}`：没有外部值时，字符串结果为 `null`，整数结果为 `0`
+- `${name:default}`：没有外部值时使用默认文本
+
+占位符必须占据整个配置值。下面这种嵌入式写法不会解析：
+
+```yaml
+# 不会替换
+url: jdbc:mysql://${db.host}/app
+
+# 将完整值作为占位符
+url: ${db.url}
+```
+
+整数类型不要使用带非零默认值的占位符；需要默认整数时，直接在 YAML 中写数字。
+
+`${...}` 不是 YAML 配置项之间的引用。它只读取 JVM 系统属性或环境变量。若要把合并后的 YAML 值注入 Bean 字段，应使用 `@Value`，参见 [Bean 注入](/feat/cloud/bean/)。
+
+占位符只对 Feat Cloud 已接管的配置生效，例如支持的 `server` 字段、数据源和 Redis 配置，以及 `@Value` 使用的配置值。自己通过代码读取的任意 YAML 值不会自动解析。
+
+## 编译与激活 Profile
+
+如果项目包含多个环境配置，AOT 会为每个环境生成一套独立代码，例如：
+
+| 配置文件 | 生成类名 |
+|---|---|
 | `feat.yml` | `FeatApplication` |
 | `feat-dev.yml` | `FeatApplicationDev` |
 | `feat-prod.yml` | `FeatApplicationProd` |
 
-Controller、Bean、Mapper 等生成类也会追加同样的环境后缀。这样做是为了让每个环境都有独立的配置结果，同时避免生成类同名冲突。
+运行时通过 `feat.profiles.active` 选择已生成的环境：
 
-### 运行时如何选择环境
+```bash
+java -Dfeat.profiles.active=prod -jar app.jar
 
-打包后的应用里可能已经包含多套环境代码。启动时通过 `feat.profiles.active` 选择其中一套：
-
-```bash title="使用 JVM 参数"
-java -Dfeat.profiles.active=dev -jar yourapp.jar
+# 或
+FEAT_PROFILES_ACTIVE=prod java -jar app.jar
 ```
 
-也可以使用环境变量：
+JVM 系统属性优先于环境变量。没有指定时使用默认环境；指定的环境名必须与构建时的配置文件一致。若选择了不存在的环境，Feat Cloud 不会自动回退到默认环境，生成的服务可能无法加载。
 
-```bash title="使用环境变量"
-FEAT_PROFILES_ACTIVE=prod java -jar yourapp.jar
-```
-
-如果两者都没有设置，Feat Cloud 会使用默认环境，也就是 `feat.yml` 对应的那套生成结果。系统属性 `-Dfeat.profiles.active` 优先于环境变量 `FEAT_PROFILES_ACTIVE`。如果已经生成了多套环境代码，却指定了一个不存在的环境名，当前实现不会自动回退到默认环境，生成的 Controller / Bean 服务都不会被选中，应用可能启动成功但没有预期路由。请确保激活名称与某个 `feat-{env}.yml` 文件的环境名完全一致。
-
-### 什么时候应该拆环境配置
-
-适合拆分的内容通常有这些：
-
-- 端口
-- 数据库地址
-- Redis 地址
-- 会话存储方式
-- 第三方服务地址
-- 只在某个环境启用的 Feat Cloud 扩展配置
-
-不建议把业务开关、灰度策略或用户级动态规则放进 `feat-{env}.yml`。这些配置更适合放进数据库、配置中心或业务自己的配置系统，因为它们通常需要运行时调整。
-
-### 重新构建才会生效
-
-多环境配置影响的是编译期生成结果。如果你修改了 `feat-dev.yml`，只重启已经打好的 jar 不会生效，需要重新执行构建。
-
-```bash title="重新生成代码并打包"
-mvn clean package
-```
-
-这也是 Feat Cloud profile 与传统运行期 profile 最大的区别：它追求的是启动时少扫描、少反射、少动态决策，而不是运行时随时重载配置。
+**Profile 适合表达构建时确定的环境差异**，例如数据库地址、端口和 Session 存储方式。需要运行时动态调整的业务开关，应交给配置中心或业务配置系统，而不是 Profile。
