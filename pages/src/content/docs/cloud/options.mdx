@@ -28,6 +28,8 @@ Feat Cloud 的配置分为三个部分：
 `setPackages(...)` 按生成类的包名前缀筛选本次启动要加载的 `CloudService`：
 
 ```java
+import tech.smartboot.feat.cloud.FeatCloud;
+
 FeatCloud.cloudServer(options -> {
     options.setPackages("com.example.controller", "com.example.service");
 }).listen();
@@ -40,6 +42,9 @@ FeatCloud.cloudServer(options -> {
 数据源、第三方客户端等对象如果已经由应用创建，可以在启动时交给容器：
 
 ```java
+import tech.smartboot.feat.cloud.FeatCloud;
+
+// dataSource 为应用已创建的数据源实例
 FeatCloud.cloudServer(options -> {
     options.registerBean("dataSource", dataSource);
 }).listen();
