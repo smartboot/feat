@@ -32,7 +32,7 @@ flowchart BT
 
 **Feat Core** 提供 HTTP Server、HTTP Client、路由分发和请求处理等基础能力，底层网络通信建立在 smart-socket 之上。直接使用 Core 时，你可以更贴近 HTTP 请求和响应本身，决定服务如何组织、如何处理请求。
 
-**Feat AI** 建立在 Core 之上。它把模型对话、流式输出、Embedding、Agent 和工具协作等能力带进 Java 应用。它不是 Cloud 容器中的一个生命周期阶段，也不要求你为了调用模型再单独搭建一套 Python 服务。
+**Feat AI** 建立在 Core 之上。它把模型对话、流式输出、Embedding、Agent 和工具协作等能力带进 Java 应用。这里所说的面向 AI 时代，不是指框架代码由 AI 编写，而是让模型交互、工具调用和 Agent 协作成为 Java 应用可以直接组合的能力。它不是 Cloud 容器中的一个生命周期阶段。
 
 **Feat Cloud** 依赖 Feat AI，并在其上提供更适合组织业务应用的开发模型，例如 Controller、Bean、依赖注入和配置。它让你可以用注解组织业务代码，同时保留 Feat 在编译期生成应用结构的设计路线。
 
