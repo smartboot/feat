@@ -46,6 +46,7 @@
 | 28 | Embedding 向量维度 | 文档没有提示 embed 是同步阻塞调用，也没有提醒向量集合维度需匹配模型实际输出 | `EmbeddingModel.embed` 内部等待 HTTP Future；请求体当前硬编码 `dimensions=1`，而 `VectorMemoryOptions` 默认维度为 1024，需验证 Provider 实际行为 | `ai/embedding.mdx`、`ai/memory.mdx` | 文档已补充限制；运行时代码问题待修复 |
 | 29 | Agent 状态终态 | Agent 示例打印 `getState()`，容易让开发者把状态值当作任务完成标志 | 当前 `ReActAgent` 只写入 RUNNING / TOOL_EXECUTION，没有写入 FINISHED / ERROR | `ai/agent.mdx` | 已从最小示例移除；运行时代码问题待修复 |
 
+| 30 | 安全与静态资源示例 | WAF 的 HttpHandler 示例错误地使用 Context 字段；BasicAuth Router 示例调用不存在的 Context.write；文档未说明 WAF 根路径放行及静态资源 Handler 的异步入口限制 | HttpHandler 接收 HttpRequest；RouterHandler 接收 Context；WAF.checkUri 对 `/` 直接放行；HttpStaticResourceHandler 同步 handle 直接抛 UnsupportedOperationException，异步入口先 URL 解码再检查穿越片段 | `practices/security.mdx`、`practices/static-files.mdx` | 已回写（2026-11-28；本轮复核） |
 ## 已确认「不补」的
 
 | 主题 | 结论 |
