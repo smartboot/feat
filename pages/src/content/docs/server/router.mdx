@@ -116,7 +116,7 @@ router.route("/report", new RouterHandler() {
         try {
             executor.execute(() -> {
                 try {
-                    String report = loadReport();
+                    String report = loadReport(); // 业务方法：执行报表查询或生成
                     context.Response.write(report);
                 } catch (Exception e) {
                     context.Response.setHttpStatus(500);
