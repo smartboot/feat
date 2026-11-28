@@ -39,6 +39,7 @@
 | 23 | RestResult JSON 示例 | 示例省略了生成序列化代码会输出的 null 字段 | `RestResult` 的四个字段均参与 POJO 序列化；生成代码对 null 写出 `null` | `cloud/response.mdx` | 已回写（2026-11-28；见 DOCS_REVIEW H1） |
 
 | 24 | Router 匹配的协议时机 | 原文只描述 URI 到达 Router 后的统一匹配，未区分 HTTP/1.x 与 HTTP/2 的调用入口；上传的旧源码摘录还包含当前 master 已不存在的 `uriByteTree.addNode` | 当前 master 的 `Router.onHeaderComplete` 在 HTTP/1.x 请求头接收完成时匹配并设置 Handler；HTTP/2 在 `Router.handle` 中按 URI 匹配；当前 master 不含该 `uriByteTree` 注册语句 | `server/router-matching.mdx` | 已回写（2026-11-28；本轮复核） |
+| 25 | HTTPS API 类型与 TLS 示例 | HTTPS 文档把 `HttpProtocol` 当成 String，ClientAuth 列举了不存在的 `REQUEST`，多证书 Lambda 构造与当前 `SslPlugin` API 不匹配；mTLS 示例缺少请求级 SSLEngine 关联；SSE 定时任务在连接关闭后仍继续调度 | Feat `HttpRequest#getProtocol()` 返回 `HttpProtocol`；smart-socket 2.2.0 的 `ClientAuth` 只有 `NONE/OPTIONAL/REQUIRE`，`SslPlugin` 构造器接收 `SSLContextFactory` 与可选 Consumer；`SseEmitter.complete()` 只关闭连接，不负责取消应用创建的定时任务 | `server/https.mdx`、`server/upgrade.mdx` | 已回写（2026-11-28；本轮复核） |
 
 ## 已确认「不补」的
 
