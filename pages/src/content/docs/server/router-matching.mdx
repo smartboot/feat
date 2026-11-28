@@ -1,6 +1,6 @@
 ---
 title: Router 匹配过程
-description: 从路由模式到 NodePath 前缀树，理解 Feat Core Router 如何选择请求处理器
+description: 从路由模式、NodePath 到协议请求阶段，理解 Feat Core Router 如何选择请求处理器
 toc: true
 sidebar:
   order: 3
@@ -38,7 +38,7 @@ Feat Core Router 使用 `NodePath` 组织路由节点。它不是把所有路由
 
 ## 一次匹配大致怎样进行
 
-当请求 URI 到达 Router 后，`NodePath.match` 会从根节点开始逐段查找：
+`NodePath.match` 从根节点开始逐段查找：
 
 1. 先在当前节点的精确路径映射中查找当前片段，并尝试沿该分支继续匹配。
 2. 精确分支没有得到结果时，再检查当前节点的模式路径分支。
@@ -46,6 +46,38 @@ Feat Core Router 使用 `NodePath` 组织路由节点。它不是把所有路由
 4. 通配符叶子节点有单独的提前返回逻辑；后缀模式则在最后一个路径片段上通过 `endsWith` 判断。
 
 因此，可以明确说精确路径分支会先被检查；但不能进一步概括成“精确 > 参数 > 通配符 > 后缀”这样覆盖所有组合的全局排序。
+
+## 匹配发生在请求处理的哪个阶段
+
+路径匹配不只涉及 `NodePath`，还与 HTTP 协议的请求处理入口有关。当前 `Router` 对 HTTP/1.x 和 HTTP/2 使用了不同的调用时机：
+
+```text
+HTTP/1.x
+请求头接收完成
+      │
+      ▼
+Router.onHeaderComplete()
+      │
+      ├── 按 URI 调用 matchHandler()
+      │
+      ├── 选择并设置本次请求的 HttpHandler
+      │
+      ▼
+后续请求处理交给已选择的 Handler
+
+HTTP/2
+请求进入 Router.handle()
+      │
+      ▼
+按当前请求 URI 调用 matchHandler()
+      │
+      ▼
+调用匹配到的 Handler
+```
+
+HTTP/1.x 在 `onHeaderComplete` 阶段完成 URI 对应处理器的选择，并把处理器设置到当前 `HttpEndpoint`；后续请求处理沿用这个选择结果。HTTP/2 则在 `Router.handle(HttpRequest, CompletableFuture)` 中按当前请求 URI 调用 `matchHandler`。
+
+这里说的是 Router 的处理器选择时机，不代表 HTTP 方法在路径树中参与匹配。URI 对应的 `RouterHandlerImpl` 还会根据请求方法选择具体的 `RouterHandler`。另外，当前 master 的 `Router.onHeaderComplete` 实现没有额外向 `uriByteTree` 注册 URI 的步骤，不应把其他版本或旧代码中的实现细节写成当前 Router 的行为。
 
 ## 不要依赖重叠模式的隐含顺序
 
@@ -91,6 +123,8 @@ router.route("/users/", usersWithSlashHandler);
 - `Router#route`：路由注册入口。
 - `NodePath#add`：把路径模式拆成节点。
 - `NodePath#match`：按 URI 查找匹配节点。
+- `Router#onHeaderComplete`：HTTP/1.x 请求头接收完成后的处理器选择入口。
+- `Router#handle`：HTTP/2 请求进入 Router 后的处理器选择入口。
 - `RouterHandlerImpl#getRouterUnit`：在路径命中后选择 HTTP 方法对应的处理器。
 - `RouterHandlerImpl#getContext`：根据路由定义中的参数位置构造 `Context`。
 
