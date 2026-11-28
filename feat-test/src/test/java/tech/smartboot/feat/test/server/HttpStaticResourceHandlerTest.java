@@ -88,6 +88,28 @@ public class HttpStaticResourceHandlerTest extends BastTest {
             Assert.assertNull(gzipDisabled.getHeader("Content-Encoding"));
             Assert.assertEquals("static gzip negotiation test\n", gzipDisabled.body());
 
+            HttpResponse lowerGzipPreference = client.get("/gzip.txt")
+                    .header(h -> h.set("Accept-Encoding", "gzip;q=0.5"))
+                    .submit().get();
+            Assert.assertNull(lowerGzipPreference.getHeader("Content-Encoding"));
+            Assert.assertEquals("static gzip negotiation test\n", lowerGzipPreference.body());
+
+            HttpResponse identityForbidden = client.get("/gzip.txt")
+                    .header(h -> h.set("Accept-Encoding", "identity;q=0"))
+                    .submit().get();
+            Assert.assertEquals(HttpStatus.NOT_ACCEPTABLE.value(), identityForbidden.statusCode());
+
+            HttpResponse allForbidden = client.get("/gzip.txt")
+                    .header(h -> h.set("Accept-Encoding", "*;q=0"))
+                    .submit().get();
+            Assert.assertEquals(HttpStatus.NOT_ACCEPTABLE.value(), allForbidden.statusCode());
+
+            HttpResponse gzipOnly = client.get("/gzip.txt")
+                    .header(h -> h.set("Accept-Encoding", "gzip;q=1, identity;q=0"))
+                    .submit().get();
+            Assert.assertEquals("gzip", gzipOnly.getHeader("Content-Encoding"));
+            Assert.assertEquals("static gzip negotiation test\n", gzipOnly.body());
+
             HttpResponse missing = client.get("/missing.txt")
                     .header(h -> h.set("Accept-Encoding", "gzip"))
                     .submit().get();
