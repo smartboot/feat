@@ -27,7 +27,7 @@ LOGGER.error("process failed", throwable);
 
 1. **级别映射到 JUL**：`trace → FINE`、`debug → CONFIG`、`info → INFO`、`warn → WARNING`、`error → SEVERE`
 2. **默认级别 INFO**：未配置时自动设为 `INFO`
-3. **级别可动态调整**：`RunLogger` 每 5 秒检查一次系统属性，改级别不需要重启进程
+3. **级别可动态调整**：`RunLogger` 在处理当前级别允许输出的日志时，最多每 5 秒重新检查一次系统属性；属性变化会在后续检查时生效
 4. **输出到控制台**：默认使用 ConsoleHandler + 自定义 `LogFormatter`，UTF-8 编码
 
 ## 配置日志级别
@@ -54,7 +54,7 @@ java -Dfeat.log.level=INFO \
      -jar app.jar
 ```
 
-因为是每 5 秒轮询一次系统属性，运行期通过 JMX、Arthas 之类工具改这个属性，级别也会随之生效，**无需重启**。
+级别刷新不是独立的后台定时任务：只有某条日志先通过当前级别判断、进入实际输出流程时，才会触发属性检查。因此，运行期通过 JMX、Arthas 等方式修改属性后，通常会在下一次有效日志调用触发的检查中生效；如果当前没有任何已启用级别的日志输出，就不能保证仅靠一条被过滤掉的 debug/trace 日志触发级别提升。
 
 ## debug(true) 不是日志
 
