@@ -14,7 +14,7 @@ Feat Core 客户端提供轻量级、高性能的 HTTP/SSE/WebSocket 客户端�
 | 特性 | HTTP | SSE | WebSocket |
 |-----|------|-----|-----------|
 | 通信模式 | 请求-响应 | 服务端推送 | 双向实时 |
-| 连接方式 | 短连接 | 长连接 | 长连接 |
+| 连接方式 | 请求/响应，可复用连接 | 长连接 | 长连接 |
 | 客户端发送 | ✅ | ❌ | ✅ |
 | 服务端发送 | ✅ | ✅ | ✅ |
 | 协议开销 | 高（每次请求头） | 中 | 低（首次握手后） |
@@ -49,8 +49,10 @@ Feat Core 客户端提供轻量级、高性能的 HTTP/SSE/WebSocket 客户端�
 <TabItem value="gradle" label="Gradle">
 
 ```groovy title="build.gradle"
+def featVersion = "2.4.3" // 请替换为项目使用的 Feat 版本
+
 dependencies {
-    implementation 'tech.smartboot.feat:feat-core:${feat.version}'
+    implementation "tech.smartboot.feat:feat-core:${featVersion}"
 }
 ```
 
