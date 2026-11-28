@@ -143,7 +143,7 @@ public class HttpStaticResourceHandler implements HttpHandler {
         }
 
         int encoding = selectContentEncoding(request);
-        response.setHeader(HeaderName.VARY, HeaderName.ACCEPT_ENCODING.getName());
+        response.addHeader(HeaderName.VARY, HeaderName.ACCEPT_ENCODING.getName());
         if (encoding < 0) {
             response.setHttpStatus(HttpStatus.NOT_ACCEPTABLE);
             completableFuture.complete(null);
