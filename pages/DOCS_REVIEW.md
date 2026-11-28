@@ -105,7 +105,7 @@ Feat Cloud 多个入口曾提示“需先成为赞助者获取授权”，包括
 - Redisun 提供 `close()` 释放这些资源，但扩展序列化器此前只参与 import 和 Bean 初始化，没有把扩展字段及销毁逻辑写入生成类。
 - 因此应用正常关闭时，Redisun 资源没有进入 Feat Cloud 的销毁流程。
 
-本次修复让 `CloudOptionsSerializer` 调用扩展序列化器的 `serializeProperty()` 与 `serializeDestroy()`，由 `RedisunSerializer` 保存客户端实例，并在 `finally` 中调用 `redisun.close()`，确保某个 CloudService 的销毁逻辑抛出异常时，Redisun 仍会释放资源。
+本次修复让 `CloudOptionsSerializer` 调用扩展序列化器的 `serializeProperty()` 与 `serializeDestroy()`，由 `RedisunSerializer` 保存客户端实例，并在 `finally` 中调用 `redisun.close()`，确保某个 CloudService 的销毁逻辑抛出异常时，Redisun 仍会释放资源。 同时，`FeatCloud.cloudServer()` 在 `ApplicationContext.start()` 失败时也会调用 `application.destroy()`，清理启动过程中已经创建的资源。
 
 ## 已完成事项
 
