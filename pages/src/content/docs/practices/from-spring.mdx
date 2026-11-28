@@ -16,7 +16,7 @@ Feat 的目标用户很多来自 Spring Boot。好消息是 Feat Cloud 的开发
 | `@RestController` | `@Controller` | Feat 不区分两类，返回值按类型自动处理（POJO 转 JSON） |
 | `@RequestMapping("/path")` | `@RequestMapping("/path")` | 方法级路径写法一致；类级基准路径直接写在 `@Controller("users")` 的值里 |
 | `@GetMapping` / `@PostMapping` 等 | `@RequestMapping(value = "/path", method = RequestMethod.GET)` | 没有 HTTP 方法专用的简化注解，方法限定写在 `method` 属性里 |
-| `@PathVariable` | `@PathParam` | 名字变了，用法一致；路径参数只支持 `:param` 形式 |
+| `@PathVariable` | `@PathParam` | 名字变了，用法一致；Feat Cloud 支持 `:param` 与 `{param}` 两种写法，Feat Core Router 只支持 `:param` |
 | `@RequestParam` | `@Param` | 查询参数绑定 |
 | `@Autowired` | `@Autowired` | 字段注入，用法一致 |
 | `@Component` / `@Service` | `@Bean` | 一个注解覆盖组件分层；见 [Bean 与依赖注入](/feat/cloud/bean/) |
