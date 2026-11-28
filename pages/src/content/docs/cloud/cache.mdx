@@ -97,6 +97,21 @@ this.redisun = Redisun.create(opt -> {
 redisun.dbsize();
 ```
 
+Redisun 自己持有连接复用客户端、异步通道组和缓冲池。应用正常关闭时，也要在 `@PreDestroy` 中调用 `close()` 释放这些资源：
+
+```java
+import tech.smartboot.feat.cloud.annotation.PreDestroy;
+
+@PreDestroy
+public void close() {
+    if (redisun != null) {
+        redisun.close();
+    }
+}
+```
+
+这里的 `redisun` 是由当前 Bean 持有的客户端实例。不要只在 `@PostConstruct` 中建立连接，却遗漏应用关闭时的清理。
+
 `address` 的格式是 `host:port`，省略端口默认 `6379`（`rediss://` 时 `6380`）。挑 `dbsize` 探活是因为它开销近似 O(1)，又确实走了一次完整的连接与认证。
 
 ## 三个必须提前想清楚的点
