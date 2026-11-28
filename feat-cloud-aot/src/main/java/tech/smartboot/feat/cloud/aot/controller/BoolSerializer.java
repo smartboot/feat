@@ -19,11 +19,19 @@ final class BoolSerializer extends AbstractSerializer {
         super(jsonSerializer);
     }
 
+    static String getterName(String fieldName) {
+        if (fieldName.length() > 2 && fieldName.startsWith("is")
+                && Character.isUpperCase(fieldName.charAt(2))) {
+            return fieldName;
+        }
+        return "is" + Character.toUpperCase(fieldName.charAt(0)) + fieldName.substring(1);
+    }
+
     @Override
     public void serialize(Element se, String obj, int deep, boolean withComma) {
         PrintWriter printWriter = jsonSerializer.getPrintWriter();
         String fieldName = getFieldName(se);
-        printWriter.append(JsonSerializer.headBlank(deep)).append("if (").append(obj).append(".is").append(se.getSimpleName().toString().substring(0, 1).toUpperCase()).append(se.getSimpleName().toString().substring(1)).println("()) {");
+        printWriter.append(JsonSerializer.headBlank(deep)).append("if (").append(obj).append(".").append(getterName(se.getSimpleName().toString())).println("()) {");
         printWriter.append(JsonSerializer.headBlank(deep + 1));
         jsonSerializer.toBytesPool("\"" + fieldName + "\":true", withComma);
 
