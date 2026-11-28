@@ -242,14 +242,16 @@ curl http://localhost:8080/tasks
 更新和删除仍然使用原来的接口：
 
 ```bash
-curl -i -X PUT http://localhost:8080/tasks/<task-id> \
+TASK_ID="replace-with-id-returned-by-POST"
+
+curl -i -X PUT "http://localhost:8080/tasks/$TASK_ID" \
   -H 'Content-Type: application/json' \
   -d '{"title":"已经接入 MyBatis","completed":true}'
 
-curl -i -X DELETE http://localhost:8080/tasks/<task-id>
+curl -i -X DELETE "http://localhost:8080/tasks/$TASK_ID"
 ```
 
-将 `<task-id>` 替换成创建接口返回的实际 ID。因为示例使用 H2 内存数据库，应用进程退出后数据库内容也会消失；如果要验证重启后的持久化，需要换成文件型或独立数据库，并配置对应驱动与连接信息。
+将 `TASK_ID` 替换成创建接口返回的实际 ID。因为示例使用 H2 内存数据库，应用进程退出后数据库内容也会消失；如果要验证重启后的持久化，需要换成文件型或独立数据库，并配置对应驱动与连接信息。
 
 ## Mapper 的会话与事务边界
 
