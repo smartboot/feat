@@ -5,13 +5,6 @@ sidebar:
   order: 0
 ---
 
-import { Aside, TabItem, Tabs } from "@astrojs/starlight/components";
-import demo from './img/demo.png';
-import idea_setting from './img/idea_setting.png';
-
-<Aside type="tip">
-Feat 仓库采用 Apache 2.0 开源协议，Feat Cloud 也可按协议使用。赞助是对项目持续演进的自愿支持，不是使用前提。项目支持方式与赞助名单见[赞助支持](/feat/sponsors/)。
-</Aside>
 ![最小 Feat Cloud 应用从编写到浏览器成功响应的流程插画](./img/index_1.png)
 
 Feat Cloud 面向这样一种场景：你已经接受 Feat Core 的轻量、高性能路线，但在业务项目里仍然希望保留 Controller、Bean、自动装配这些更熟悉的组织方式。
@@ -87,14 +80,15 @@ public class Bootstrap {
 
 ### 运行并验证
 
-<Aside type="tip">
-如果你修改控制器后发现路由没有更新，建议检查 IDEA 设置：`Preferences` → `Build, Execution, Deployment` → `Build Tools` → `Maven` → `Runner`，勾选 `Delegate IDE build/run actions to Maven`。
-    <img src={idea_setting.src} alt="IDEA 配置截图" width="60%" className="shadow"/>
-    只有遇到 APT 生成代码不同步时才需要调整。
-</Aside>
+先执行 Maven 编译，确保注解处理器生成代码：
 
+```bash
+mvn clean compile
+```
 
-运行 `Bootstrap.main()`，控制台出现以下内容说明路由注册成功：
+然后运行 `Bootstrap.main()`。如果使用 IDE 直接运行，请确认 IDE 的构建过程会触发 Maven 注解处理器；生成代码没有更新时，优先用上面的命令重新编译。
+
+控制台出现以下内容说明路由注册成功：
 
 ```text title="控制台输出"
 Feat Router:
@@ -102,22 +96,20 @@ Feat Router:
 http://0.0.0.0:8080/
 ```
 
-访问 `http://localhost:8080/hello`：
+访问 `http://localhost:8080/hello`，或执行：
 
-<Tabs>
-  <TabItem value="浏览器" label="浏览器">
-    <img src={demo.src} alt="Feat Cloud 浏览器访问效果图" width="60%" className="shadow"/>
-  </TabItem>
-  <TabItem value="curl" label="curl">
-    ```shell title="curl 验证"
-    curl -i http://localhost:8080/hello
-    HTTP/1.1 200 OK
-    Content-Type: text/plain; charset=utf-8
+```bash
+curl -i http://localhost:8080/hello
+```
 
-    hello Feat Cloud
-    ```
-  </TabItem>
-</Tabs>
+预期响应：
+
+```http
+HTTP/1.1 200 OK
+Content-Type: text/plain; charset=utf-8
+
+hello Feat Cloud
+```
 
 到这里，你已经跑通了 Feat Cloud 的基本闭环。后面的章节会把这个最小应用拆开：先理解编译期生成的工作模型，再进入 Controller 请求处理、返回响应、Bean 装配、配置与环境、数据库集成和最终部署。
 
