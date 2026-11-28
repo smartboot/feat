@@ -19,7 +19,7 @@ public class BoolSerializerTest {
 
     @Test
     public void shouldNotTreatLowercaseIsPrefixAsBooleanAccessorPrefix() {
-        assertEquals("island", BoolSerializer.getterName("land"));
-        assertEquals("island", BoolSerializer.getterName("island"));
+        assertEquals("isLand", BoolSerializer.getterName("land"));
+        assertEquals("isIsland", BoolSerializer.getterName("island"));
     }
 }
