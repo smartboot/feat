@@ -30,7 +30,7 @@ Feat.httpServer(options -> {
             .addAllowMethod("GET")
             .addAllowMethod("POST");
 })
-.httpHandler(ctx -> ctx.Response.write("ok"))
+.httpHandler(request -> request.getResponse().write("ok"))
 .listen(8080);
 ```
 
@@ -46,7 +46,7 @@ options.getWafOptions()
         .addAllowUriSuffix(".json");
 ```
 
-WAF 触发时抛出 `WafException`（`HttpException` 的子类），由框架统一渲染错误页：方法不匹配返回 `405 Method Not Allowed`，URI 不匹配返回 `400 Bad Request`。
+WAF 触发时抛出 `WafException`（`HttpException` 的子类），由框架统一渲染错误页：方法不匹配返回 `405 Method Not Allowed`，URI 不匹配返回 `400 Bad Request`。注意：当前实现始终放行根路径 `/`，所以 URI 白名单并不是对所有路径都执行同一套匹配。
 
 两点使用建议：
 
@@ -63,7 +63,7 @@ import tech.smartboot.feat.core.server.handler.BasicAuthServerHandler;
 import tech.smartboot.feat.router.Router;
 
 Router router = new Router();
-router.route("/admin/dashboard", ctx -> ctx.write("secret data"));
+router.route("/admin/dashboard", ctx -> ctx.Response.write("secret data"));
 
 Feat.httpServer()
     .httpHandler(new BasicAuthServerHandler("admin", "s3cret", router))
