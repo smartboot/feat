@@ -324,7 +324,19 @@ Feat Core 与 Feat AI 采用 Apache 2.0；Feat Cloud 则采用赞助授权模式
 
 ### 发现的实现层后续事项
 
-1. `HttpStaticResourceHandler` 的 classpath 分支当前直接设置 `Content-Encoding: gzip`，没有根据请求的 `Accept-Encoding` 判断客户端是否接受 gzip。文档已注明这一行为；建议后续单独评估实现修复。
-2. 静态资源文件目录模式只检查解码后路径中是否包含 `../` 或 `..\`，没有对最终目标执行 canonical-path containment 校验。资源目录中若存在指向目录外的符号链接，不能把当前检查当作完整的文件系统隔离边界。建议后续评估安全加固。
+1. 已在后续实现修复中处理：classpath 分支按请求的 `Accept-Encoding` 选择 gzip 或原始响应，并设置 `Vary: Accept-Encoding`；显式 `gzip;q=0` 会禁用 gzip，404 响应不会错误携带 `Content-Encoding: gzip`。
+2. 已在后续实现修复中处理：文件目录模式会对目标执行 canonical-path 解析，并确认结果仍位于配置的 `baseDir` 下，阻止通过符号链接访问目录外文件。
 
 **验证状态：**已重新读取本轮修改的 8 篇实践页面并检查 Markdown 代码围栏闭合；已修正已知的 `HttpHandler` 示例类型错误。未执行 `npm ci`、`npm run build` 或 Maven 示例编译，不能将 Astro 构建或示例编译标记为通过。
+## 2026-11-28：静态资源安全与内容协商实现修复
+
+针对上一轮文档复核发现的两个实现问题，本轮修改 `HttpStaticResourceHandler` 并补充集成测试：
+
+- classpath 资源不再无条件 gzip。处理器读取所有 `Accept-Encoding` 值，识别 `gzip`、`identity`、通配符与 `q` 权重，优先选择权重较高的表示；显式 `gzip;q=0` 优先于通配符。若 gzip 与 identity 都不可接受则返回 406。
+- classpath 响应增加 `Vary: Accept-Encoding`，避免共享缓存把 gzip 表示错误复用给不接受 gzip 的客户端。HEAD 与 304 响应保留对应的表示元数据；同时修正客户端 `InflaterStream`，让带有压缩表示头但没有响应体的 HEAD / 304 / 204 等响应正常完成，不会尝试解压空字节流。404 不再带上未实际压缩的 `Content-Encoding: gzip`。
+- 文件目录模式在路径片段检查后，对目标执行 `getCanonicalFile()`，并通过 `Path.startsWith(baseDir)` 确认目标仍在资源根目录下，阻止符号链接越界。
+- 新增 classpath 测试资源与集成测试，覆盖未发送 Accept-Encoding、identity、gzip、gzip 权重低于 identity、`gzip;q=0` 加 wildcard、identity 被拒绝、所有编码均被拒绝时的 406、HEAD、304 与 404 响应头；新增符号链接越界测试，环境不支持符号链接时由 JUnit Assume 跳过。
+
+本轮改动涉及 `feat-core/src/main/java/tech/smartboot/feat/core/server/handler/HttpStaticResourceHandler.java` 与 `feat-test` 下的静态资源测试和测试资源，并同步修正文档中已经过时的 gzip / 路径安全说明。
+
+**验证状态：**GitHub Actions 在 commit `18c6e6e` 上完成定向测试：两个 `HttpStaticResourceHandlerTest` 类共 6 项测试，0 failures、0 errors、0 skipped。Core 编译、Feat Static 构建和 Redis Session Demo 构建均成功。Native 构建与性能基准任务仍在执行；Astro 构建未执行。

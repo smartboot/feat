@@ -41,6 +41,8 @@ jobs:
         uses: stCarolas/setup-maven@v5
       - name: Build Feat
         run: mvn -B install --file pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
+      - name: Test static resource handler
+        run: mvn -B -pl feat-test -am -Dtest=HttpStaticResourceHandlerTest -Dsurefire.failIfNoSpecifiedTests=false test -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
       - name: Build Feat Static
         run: mvn -B install --file demo/feat_static/pom.xml -DskipTests -Dmaven.compiler.source=8 -Dmaven.compiler.target=8
       - name: Build Redis Session Demo

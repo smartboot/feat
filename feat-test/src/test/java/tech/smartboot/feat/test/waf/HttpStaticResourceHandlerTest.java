@@ -12,6 +12,7 @@ package tech.smartboot.feat.test.waf;
 
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import tech.smartboot.feat.core.client.HttpClient;
@@ -49,6 +50,19 @@ public class HttpStaticResourceHandlerTest extends BastTest {
         bootstrap.httpHandler(new HttpStaticResourceHandler(opt -> opt.baseDir(baseDir.getAbsolutePath())));
         bootstrap.options().debug(true);
         bootstrap.listen(SERVER_PORT);
+    }
+
+    @Test
+    public void testSymlinkCannotEscapeBaseDirectory() throws Exception {
+        File link = new File(tempDir, "base/outside-link.txt");
+        try {
+            Files.createSymbolicLink(link.toPath(), new File(tempDir, "secret.txt").toPath());
+        } catch (UnsupportedOperationException | IOException e) {
+            Assume.assumeNoException("Symbolic links are unavailable in this environment", e);
+        }
+
+        Assert.assertEquals(HttpStatus.FORBIDDEN.value(),
+                getHttpClient().get("/outside-link.txt").submit().get().statusCode());
     }
 
     @Test

@@ -61,6 +61,86 @@ public class HttpStaticResourceHandlerTest extends BastTest {
     }
 
     @Test
+    public void testClasspathGzipNegotiation() throws Exception {
+        HttpServer classpathServer = new HttpServer();
+        HttpClient client = new HttpClient("127.0.0.1", 18888);
+        try {
+            classpathServer.httpHandler(new HttpStaticResourceHandler(opt -> opt.baseDir("classpath:static")));
+            classpathServer.listen(18888);
+
+            HttpResponse noEncodingHeader = client.get("/gzip.txt").submit().get();
+            Assert.assertNull(noEncodingHeader.getHeader("Content-Encoding"));
+            Assert.assertEquals("static gzip negotiation test\n", noEncodingHeader.body());
+
+            HttpResponse identity = client.get("/gzip.txt")
+                    .header(h -> h.set("Accept-Encoding", "identity"))
+                    .submit().get();
+            Assert.assertEquals(HttpStatus.OK.value(), identity.statusCode());
+            Assert.assertNull(identity.getHeader("Content-Encoding"));
+            Assert.assertEquals("Accept-Encoding", identity.getHeader("Vary"));
+            Assert.assertEquals("static gzip negotiation test\n", identity.body());
+
+            HttpResponse gzip = client.get("/gzip.txt")
+                    .header(h -> h.set("Accept-Encoding", "gzip"))
+                    .submit().get();
+            Assert.assertEquals("gzip", gzip.getHeader("Content-Encoding"));
+            Assert.assertEquals("static gzip negotiation test\n", gzip.body());
+
+            HttpResponse head = client.rest("HEAD", "/gzip.txt")
+                    .header(h -> h.set("Accept-Encoding", "gzip"))
+                    .submit().get();
+            Assert.assertEquals("gzip", head.getHeader("Content-Encoding"));
+            Assert.assertEquals("Accept-Encoding", head.getHeader("Vary"));
+
+            HttpResponse notModified = client.get("/gzip.txt")
+                    .header(h -> {
+                        h.set("Accept-Encoding", "gzip");
+                        h.set("If-Modified-Since", gzip.getHeader("Last-Modified"));
+                    })
+                    .submit().get();
+            Assert.assertEquals(HttpStatus.NOT_MODIFIED.value(), notModified.statusCode());
+            Assert.assertEquals("gzip", notModified.getHeader("Content-Encoding"));
+            Assert.assertEquals("Accept-Encoding", notModified.getHeader("Vary"));
+
+            HttpResponse gzipDisabled = client.get("/gzip.txt")
+                    .header(h -> h.set("Accept-Encoding", "gzip;q=0, *;q=1"))
+                    .submit().get();
+            Assert.assertNull(gzipDisabled.getHeader("Content-Encoding"));
+            Assert.assertEquals("static gzip negotiation test\n", gzipDisabled.body());
+
+            HttpResponse lowerGzipPreference = client.get("/gzip.txt")
+                    .header(h -> h.set("Accept-Encoding", "gzip;q=0.5"))
+                    .submit().get();
+            Assert.assertNull(lowerGzipPreference.getHeader("Content-Encoding"));
+            Assert.assertEquals("static gzip negotiation test\n", lowerGzipPreference.body());
+
+            HttpResponse identityForbidden = client.get("/gzip.txt")
+                    .header(h -> h.set("Accept-Encoding", "identity;q=0"))
+                    .submit().get();
+            Assert.assertEquals(HttpStatus.NOT_ACCEPTABLE.value(), identityForbidden.statusCode());
+
+            HttpResponse allForbidden = client.get("/gzip.txt")
+                    .header(h -> h.set("Accept-Encoding", "*;q=0"))
+                    .submit().get();
+            Assert.assertEquals(HttpStatus.NOT_ACCEPTABLE.value(), allForbidden.statusCode());
+
+            HttpResponse gzipOnly = client.get("/gzip.txt")
+                    .header(h -> h.set("Accept-Encoding", "gzip;q=1, identity;q=0"))
+                    .submit().get();
+            Assert.assertEquals("gzip", gzipOnly.getHeader("Content-Encoding"));
+            Assert.assertEquals("static gzip negotiation test\n", gzipOnly.body());
+
+            HttpResponse missing = client.get("/missing.txt")
+                    .header(h -> h.set("Accept-Encoding", "gzip"))
+                    .submit().get();
+            Assert.assertEquals(HttpStatus.NOT_FOUND.value(), missing.statusCode());
+            Assert.assertNull(missing.getHeader("Content-Encoding"));
+        } finally {
+            classpathServer.shutdown();
+        }
+    }
+
+    @Test
     public void testEmptyFile() throws ExecutionException, InterruptedException {
         //空文件必须正常返回200且body为空（旧实现返回500）
         HttpResponse response = getHttpClient().get("/empty.txt").submit().get();

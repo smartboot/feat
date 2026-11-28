@@ -78,6 +78,8 @@ new HttpStaticResourceHandler(opt -> opt
 
 注意 classpath 模式下资源来自 jar 包，`Last-Modified` 取的是**服务启动时间**——jar 内容在运行期不会变，这是合理的简化。文件目录模式取的是文件真实的修改时间。
 
+classpath 模式会按请求的 `Accept-Encoding` 和 `q` 权重选择表示：gzip 的权重不低于 identity 且大于 0 时压缩响应，并设置 `Vary: Accept-Encoding`；否则发送未压缩内容。如果客户端同时拒绝 gzip 与 identity，则返回 406。
+
 ## 内置安全防护
 
 路径穿越攻击在处理器内被直接拦截：
@@ -86,7 +88,7 @@ new HttpStaticResourceHandler(opt -> opt
 GET /../../etc/passwd   →  403 Forbidden
 ```
 
-`../` 与 `..\` 两种写法在 URL 解码后都会被拒绝。需要明确的是，这是一项字符串层面的路径检查，并不替代对规范化目标路径的校验，也不能防止资源目录中的符号链接指向目录外部。这是处理器自带的兜底，但不要因此放松对自己代码的要求：自研的文件下载接口不走这条管道，需要自己校验（见[安全实践](/feat/practices/security/)）。
+`../` 与 `..\` 两种写法在 URL 解码后都会被拒绝。文件目录模式还会对最终文件执行 canonical path 解析，并检查目标仍位于配置的资源根目录内，因此通过符号链接指向目录外部的文件也会被拒绝。classpath 模式通过 ClassLoader 查找资源，不走本地文件路径解析。这些保护只覆盖内置静态资源处理器；自研文件下载接口仍需自行校验（见[安全实践](/feat/practices/security/)）。
 
 其他两个细节也和资源安全有关：
 

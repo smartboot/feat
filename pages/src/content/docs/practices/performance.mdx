@@ -53,7 +53,7 @@ Feat.httpServer(options -> {
 gzip 压缩对 JSON/HTML 这类文本收益明显，但要留意两点：
 
 1. **压缩阈值**：小于阈值的内容不压缩（压缩后可能更大）。Cloud 侧在 `feat.yml` 的 `server.gzip` / `server.gzipThreshold` 配置（见[启动配置与环境配置](/feat/cloud/options/)）
-2. **静态资源 classpath 模式**当前实现会直接设置 `Content-Encoding: gzip`，并在内存中逐块压缩；它没有根据请求的 `Accept-Encoding` 再决定是否压缩。客户端需要支持 gzip。该路径更适合 jar 内小资源，不适合当大文件下载服务器用
+2. **静态资源 classpath 模式**会按 `Accept-Encoding` 和 `q` 权重选择表示：gzip 权重不低于 identity 且大于 0 时设置 `Content-Encoding: gzip` 与 `Vary: Accept-Encoding`；否则发送原始内容。如果客户端同时拒绝 gzip 与 identity，则返回 406。该路径仍在内存中逐块处理，更适合 jar 内小资源，不适合当大文件下载服务器用
 
 CPU 紧张的服务可以关掉 gzip，把压缩交给前置的 nginx——它有专门的压缩优化和缓存。
 
