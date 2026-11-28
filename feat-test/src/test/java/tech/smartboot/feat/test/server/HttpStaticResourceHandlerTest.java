@@ -86,6 +86,22 @@ public class HttpStaticResourceHandlerTest extends BastTest {
             Assert.assertEquals("gzip", gzip.getHeader("Content-Encoding"));
             Assert.assertEquals("static gzip negotiation test\n", gzip.body());
 
+            HttpResponse head = client.rest("HEAD", "/gzip.txt")
+                    .header(h -> h.set("Accept-Encoding", "gzip"))
+                    .submit().get();
+            Assert.assertEquals("gzip", head.getHeader("Content-Encoding"));
+            Assert.assertEquals("Accept-Encoding", head.getHeader("Vary"));
+
+            HttpResponse notModified = client.get("/gzip.txt")
+                    .header(h -> {
+                        h.set("Accept-Encoding", "gzip");
+                        h.set("If-Modified-Since", gzip.getHeader("Last-Modified"));
+                    })
+                    .submit().get();
+            Assert.assertEquals(HttpStatus.NOT_MODIFIED.value(), notModified.statusCode());
+            Assert.assertEquals("gzip", notModified.getHeader("Content-Encoding"));
+            Assert.assertEquals("Accept-Encoding", notModified.getHeader("Vary"));
+
             HttpResponse gzipDisabled = client.get("/gzip.txt")
                     .header(h -> h.set("Accept-Encoding", "gzip;q=0, *;q=1"))
                     .submit().get();
