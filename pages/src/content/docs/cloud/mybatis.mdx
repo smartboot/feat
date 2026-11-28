@@ -76,7 +76,7 @@ feat:
     initial-sql: mybatis/ddl/schema.sql
 ```
 
-`path` 指向 MyBatis 主配置；`initial-sql` 指向启动时要执行的初始化脚本。它们都属于编译期配置输入，和前一章讲的 `feat.yml` / `feat-{env}.yml` 一样，修改后需要重新构建。
+`path` 指向 MyBatis 主配置，AOT 会在编译期读取并解析它；修改 XML 或 `feat.mybatis.path` 后需要重新构建。`initial-sql` 的路径会写入生成代码，脚本内容则在应用启动时从 classpath 读取。只修改 SQL 文件内容时，确保新文件被打进应用包并重新部署即可；修改配置路径时才需要重新生成代码。
 
 ### 准备 MyBatis 自己的资源
 
@@ -408,6 +408,12 @@ curl -X DELETE http://localhost:8080/users/new_user
 `autowired` 阶段才做字段注入，因此业务 Bean 里可以直接声明它：
 
 ```java
+import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
+import tech.smartboot.feat.cloud.annotation.Autowired;
+import tech.smartboot.feat.demo.mybatis.entity.User;
+import tech.smartboot.feat.demo.mybatis.mapper.UserMapper;
+
 @Autowired
 private SqlSessionFactory sessionFactory;
 
