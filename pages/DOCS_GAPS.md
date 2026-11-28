@@ -38,6 +38,8 @@
 | 22 | 响应序列化路径 | 文档把 Map 和所有包装类型都描述为编译期直接写出，遗漏了 Map / 数组 / 原始 List 的 FastJSON2 回退路径 | `MapSerializer` 使用 `JSONObject`；`ListSerializer` 仅对声明泛型的 List 生成遍历；`JsonSerializer` 对数组、Object、深层类型回退 | `cloud/response.mdx` | 已回写（2026-11-28；见 DOCS_REVIEW H1） |
 | 23 | RestResult JSON 示例 | 示例省略了生成序列化代码会输出的 null 字段 | `RestResult` 的四个字段均参与 POJO 序列化；生成代码对 null 写出 `null` | `cloud/response.mdx` | 已回写（2026-11-28；见 DOCS_REVIEW H1） |
 
+| 24 | Router 匹配的协议时机 | 原文只描述 URI 到达 Router 后的统一匹配，未区分 HTTP/1.x 与 HTTP/2 的调用入口；上传的旧源码摘录还包含当前 master 已不存在的 `uriByteTree.addNode` | 当前 master 的 `Router.onHeaderComplete` 在 HTTP/1.x 请求头接收完成时匹配并设置 Handler；HTTP/2 在 `Router.handle` 中按 URI 匹配；当前 master 不含该 `uriByteTree` 注册语句 | `server/router-matching.mdx` | 已回写（2026-11-28；本轮复核） |
+
 ## 已确认「不补」的
 
 | 主题 | 结论 |
