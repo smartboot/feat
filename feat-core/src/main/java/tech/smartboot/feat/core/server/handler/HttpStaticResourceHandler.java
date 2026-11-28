@@ -137,13 +137,13 @@ public class HttpStaticResourceHandler implements HttpHandler {
         HttpResponse response = request.getResponse();
         boolean gzip = acceptsGzip(request);
         response.setHeader(HeaderName.VARY, HeaderName.ACCEPT_ENCODING.getName());
-        if (gzip) {
-            response.setHeader(HeaderName.CONTENT_ENCODING, HeaderValue.ContentEncoding.GZIP);
-        }
 
         //304 命中缓存
         String requestModified = request.getHeader(HeaderName.IF_MODIFIED_SINCE);
         if (FeatUtils.isNotBlank(requestModified) && lastModifyDate.getTime() <= FeatUtils.parseRFC1123(requestModified).getTime()) {
+            if (gzip) {
+                response.setHeader(HeaderName.CONTENT_ENCODING, HeaderValue.ContentEncoding.GZIP);
+            }
             response.setHttpStatus(HttpStatus.NOT_MODIFIED);
             completableFuture.complete(null);
             return;
@@ -166,6 +166,9 @@ public class HttpStaticResourceHandler implements HttpHandler {
         });
         response.setHeader(HeaderName.LAST_MODIFIED, lastModifyDateFormat);
         response.setHeader(HeaderName.CONTENT_TYPE, Mimetypes.getInstance().getMimetype(fileName) + "; charset=utf-8");
+        if (gzip) {
+            response.setHeader(HeaderName.CONTENT_ENCODING, HeaderValue.ContentEncoding.GZIP);
+        }
         //HEAD 返回与 GET 相同的表示元数据，但不输出内容
         if (HttpMethod.HEAD.equals(request.getMethod())) {
             completableFuture.complete(null);
