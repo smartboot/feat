@@ -35,6 +35,8 @@ router.addInterceptor("/admin/*", (context, future, chain) -> {
 可以多次调用 `addInterceptor`，也可以用 `addInterceptors` 让同一个拦截器匹配多个路径：
 
 ```java
+import java.util.Arrays;
+
 router.addInterceptor("/*", (context, future, chain) -> {
     System.out.println(
         context.Request.getMethod() + " " +
