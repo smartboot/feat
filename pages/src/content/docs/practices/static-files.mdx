@@ -78,7 +78,7 @@ new HttpStaticResourceHandler(opt -> opt
 
 注意 classpath 模式下资源来自 jar 包，`Last-Modified` 取的是**服务启动时间**——jar 内容在运行期不会变，这是合理的简化。文件目录模式取的是文件真实的修改时间。
 
-classpath 模式会检查请求的 `Accept-Encoding`：客户端接受 gzip 时才压缩响应，并设置 `Vary: Accept-Encoding`；不接受 gzip 时发送未压缩内容。
+classpath 模式会按请求的 `Accept-Encoding` 和 `q` 权重选择表示：gzip 的权重不低于 identity 且大于 0 时压缩响应，并设置 `Vary: Accept-Encoding`；否则发送未压缩内容。如果客户端同时拒绝 gzip 与 identity，则返回 406。
 
 ## 内置安全防护
 
