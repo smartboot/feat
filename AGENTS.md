@@ -97,7 +97,7 @@ public class Bootstrap {
 }
 ```
 
-改端口和包扫描写在入口，不写在 `application.properties`：
+改端口和服务加载范围写在入口，不写在 `application.properties`：
 
 ```java
 FeatCloud.cloudServer(options -> {
