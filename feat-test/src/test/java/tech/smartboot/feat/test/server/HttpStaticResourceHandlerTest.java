@@ -61,6 +61,43 @@ public class HttpStaticResourceHandlerTest extends BastTest {
     }
 
     @Test
+    public void testClasspathGzipNegotiation() throws Exception {
+        HttpServer classpathServer = new HttpServer();
+        HttpClient client = new HttpClient("127.0.0.1", 18888);
+        try {
+            classpathServer.httpHandler(new HttpStaticResourceHandler(opt -> opt.baseDir("classpath:static")));
+            classpathServer.listen(18888);
+
+            HttpResponse identity = client.get("/gzip.txt")
+                    .header(h -> h.set("Accept-Encoding", "identity"))
+                    .submit().get();
+            Assert.assertEquals(HttpStatus.OK.value(), identity.statusCode());
+            Assert.assertNull(identity.getHeader("Content-Encoding"));
+            Assert.assertEquals("Accept-Encoding", identity.getHeader("Vary"));
+            Assert.assertEquals("static gzip negotiation test\n", identity.body());
+
+            HttpResponse gzip = client.get("/gzip.txt")
+                    .header(h -> h.set("Accept-Encoding", "gzip"))
+                    .submit().get();
+            Assert.assertEquals("gzip", gzip.getHeader("Content-Encoding"));
+
+            HttpResponse gzipDisabled = client.get("/gzip.txt")
+                    .header(h -> h.set("Accept-Encoding", "gzip;q=0, *;q=1"))
+                    .submit().get();
+            Assert.assertNull(gzipDisabled.getHeader("Content-Encoding"));
+
+            HttpResponse missing = client.get("/missing.txt")
+                    .header(h -> h.set("Accept-Encoding", "gzip"))
+                    .submit().get();
+            Assert.assertEquals(HttpStatus.NOT_FOUND.value(), missing.statusCode());
+            Assert.assertNull(missing.getHeader("Content-Encoding"));
+        } finally {
+            client.close();
+            classpathServer.shutdown();
+        }
+    }
+
+    @Test
     public void testEmptyFile() throws ExecutionException, InterruptedException {
         //空文件必须正常返回200且body为空（旧实现返回500）
         HttpResponse response = getHttpClient().get("/empty.txt").submit().get();
