@@ -274,3 +274,24 @@ Feat Core 与 Feat AI 采用 Apache 2.0；Feat Cloud 则采用赞助授权模式
 源码核对范围包括 `Router`、`NodePath`、`RouterHandlerImpl`、`Chain`、`RouterHandler`、`Context`、`HttpHandler`、`HttpMessageProcessor`、`HttpRequestProtocol`、`ServerOptions`、`HttpServer`、`SessionManager` 与 `LocalSessionManager`。本轮未修改运行时代码。
 
 **验证状态：**已重新读取本轮修改后的 9 篇服务端页面；Markdown 代码围栏数量均为偶数，检查到的 Markdown 站内链接均指向已存在的章节。未执行 `npm ci`、`npm run build` 或 Maven 示例编译；因此 Astro 构建、示例编译和运行行为仍未验证。
+## 2026-11-28：工程实践文档复核
+
+本轮对照 Core 服务端源码复核安全、静态资源、日志、部署、测试、性能调优、Spring 迁移与 FAQ 页面，修正了以下内容：
+
+- `practices/security.mdx`：修复 BasicAuth 示例中 Core `Context` 不存在的 `ctx.write()` 调用；将 Session 主入口改为 Core Router Session，并明确 Core 默认本地 Session 与 Cloud Redis Session 的边界；补充静态资源路径检查不覆盖符号链接越界的限制。
+- `practices/static-files.mdx`：修正文件目录与 classpath 模式的无扩展名资源回退差异；明确 `autoIndex` 当前只在文件目录分支提供目录列表；说明路径穿越检查是 URL 解码后的字符串检查，不等同于规范化目标路径和符号链接校验。
+- `practices/logging.mdx`：修复 `HttpHandler` 示例错误使用 `ctx.write()` 的问题；根据 `RunLogger.log()` 的执行顺序，说明级别刷新不是后台定时轮询，而是在日志调用通过当前级别过滤后才检查系统属性。
+- `practices/deploy-core.mdx`：修复 Core `HttpHandler` 示例；纠正 `shutdownHook` 的语义。它不会收到请求上下文，且当前 `HttpServer.shutdown()` 在执行回调后才关闭底层服务，因此不能把它描述为停止接收新请求并排空在途请求的完整优雅停机机制。
+- `practices/testing.mdx`：修复测试服务器的 `HttpHandler` 示例，并补充 Cloud 集成测试片段中缺失的端口就绪等待辅助方法。
+- `practices/from-spring.mdx`：修正 `@Param` 仅绑定查询参数的表述，说明其按 Content-Type 从查询参数、表单参数或 JSON 对象取值。
+- `practices/faq.mdx`：澄清 Core Router 与 Cloud Controller 是不同层次的 API；移除“外部调用和数据库访问必须异步”的绝对化建议；同步静态资源安全边界。
+- `practices/performance.mdx`：删除固定的 1ms / 10ms 异步判断阈值；纠正 ByteTree 与 URI 映射树的职责边界，明确当前 Core Router 使用 `NodePath`，不会自动注册到 `uriByteTree`；补充 classpath 静态资源当前无条件设置 gzip 响应头的实现细节。
+
+源码核对范围包括 `BasicAuthServerHandler`、`WafOptions`、`WAF`、`HttpStaticResourceHandler`、`FileServerOptions`、`RunLogger`、`LoggerFactory`、`HttpServer`、`ServerOptions`、`HttpHandler` 和 `HttpRequestProtocol`。本轮只修改文档，没有改动运行时代码。
+
+### 发现的实现层后续事项
+
+1. `HttpStaticResourceHandler` 的 classpath 分支当前直接设置 `Content-Encoding: gzip`，没有根据请求的 `Accept-Encoding` 判断客户端是否接受 gzip。文档已注明这一行为；建议后续单独评估实现修复。
+2. 静态资源文件目录模式只检查解码后路径中是否包含 `../` 或 `..\\`，没有对最终目标执行 canonical-path containment 校验。资源目录中若存在指向目录外的符号链接，不能把当前检查当作完整的文件系统隔离边界。建议后续评估安全加固。
+
+**验证状态：**已重新读取本轮修改的 8 篇实践页面并检查 Markdown 代码围栏闭合；对示例中已知的 `ctx.write()` 错误进行了修复。未执行 `npm ci`、`npm run build` 或 Maven 示例编译，不能将 Astro 构建或示例编译标记为通过。
