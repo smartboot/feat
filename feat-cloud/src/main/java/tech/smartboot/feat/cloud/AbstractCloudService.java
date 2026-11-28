@@ -589,11 +589,23 @@ public abstract class AbstractCloudService implements CloudService {
      * @throws FeatException 当Bean不存在时抛出异常
      */
     protected <T> T loadBean(String beanName, ApplicationContext context) {
-        // 从上下文中获取Bean
+        return loadBean(beanName, "unknown injection point", context);
+    }
+
+    /**
+     * 从应用上下文中加载依赖Bean，并在依赖尚未注册时提供注入位置。
+     *
+     * @param beanName Bean名称
+     * @param injectionPoint 依赖声明位置
+     * @param context 应用上下文
+     * @param <T> Bean类型
+     * @return 指定名称的Bean实例
+     */
+    protected <T> T loadBean(String beanName, String injectionPoint, ApplicationContext context) {
         T result = context.getBean(beanName);
-        // 如果Bean不存在，则抛出异常
         if (result == null) {
-            throw new FeatException("bean[" + beanName + "] not ready, please check it's @Bean.order");
+            throw new FeatException("Bean dependency [" + beanName + "] required by [" + injectionPoint
+                    + "] is not registered. Check the dependency bean name and @Bean(order) configuration.");
         }
         return result;
     }

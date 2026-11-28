@@ -320,7 +320,7 @@ public abstract class AbstractSerializer implements Serializer {
                     } else {
                         printWriter.print(", ");
                     }
-                    printWriter.print("loadBean(\"" + param.getSimpleName() + "\", applicationContext)");
+                    printWriter.print("loadBean(\"" + param.getSimpleName() + "\", \"" + element.getSimpleName() + "." + se.getSimpleName() + "()\", applicationContext)");
                 }
                 printWriter.println("));");
             }
@@ -360,9 +360,9 @@ public abstract class AbstractSerializer implements Serializer {
                 hasSetter = true;
             }
             if (hasSetter) {
-                printWriter.append("\t\tbean.set").append(name).append("(loadBean(\"").append(field.getSimpleName()).append("\", applicationContext));\n");
+                printWriter.append("\t\tbean.set").append(name).append("(loadBean(\"").append(field.getSimpleName()).append("\", \"").append(element.getSimpleName()).append(".").append(field.getSimpleName()).append("\", applicationContext));\n");
             } else {
-                printWriter.append("\t\treflectAutowired(bean, \"").append(String.valueOf(field.getSimpleName())).append("\", loadBean(\"").append(field.getSimpleName().toString()).append("\", applicationContext));\n");
+                printWriter.append("\t\treflectAutowired(bean, \"").append(String.valueOf(field.getSimpleName())).append("\", loadBean(\"").append(field.getSimpleName().toString()).append("\", \"").append(element.getSimpleName()).append(".").append(field.getSimpleName()).append("\", applicationContext));\n");
             }
         }
     }
