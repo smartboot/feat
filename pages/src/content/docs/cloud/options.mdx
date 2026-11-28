@@ -27,7 +27,7 @@ Feat Cloud 里有三类配置容易混在一起：
 
 ## CloudOptions 启动配置
 
-这一部分只处理启动入口里的运行时选项：扫描哪些包、提前注册哪些对象、是否托管静态资源。
+这一部分只处理启动入口里的运行时选项：启动时加载哪些已生成服务、提前注册哪些对象、是否托管静态资源。
 
 ### 先划清边界
 
@@ -51,7 +51,7 @@ Feat Cloud 里有三类配置容易混在一起：
 
 | 配置项 | 方法 | 典型用途 |
 |------|------|------|
-| 包扫描 | `setPackages(String...)` | 控制 Controller / Bean 的扫描范围 |
+| 服务加载范围 | `setPackages(String...)` | 控制启动时加载哪些已生成的 Controller / Bean 服务 |
 | 外部 Bean | `registerBean(String, Object)` | 把启动前已有对象注册进容器 |
 | 静态资源 | `setStaticLocations(String)` | 托管类路径或本地目录里的静态文件 |
 
@@ -344,9 +344,9 @@ DB_USERNAME=app DB_PASSWORD=secret java -jar yourapp.jar
 
 `${}` 只对 Feat Cloud 在编译期消费的配置值生效，典型包括：
 
-- `server.*` 启动项，例如 `server.port: ${port}`
+- `server.*` 中通过通用字段绑定的 `int` / `String` 启动项，例如 `server.port: ${port}`
 - `feat.datasource.*` 的 `url`、`username`、`password`、`driver`
-- `feat.redis.*` 的 `username`、`password`、`database`
+- `feat.redis.*` 的 `username`、`password`、`database`（`address` 按字面值写入，不解析占位符）
 - 被 `@Value("${...}")` 注入且类型受支持的字段所引用的配置值
 
 自己用代码直接从配置里读出来的值不会被替换。所以 `${}` 应该写在 Feat Cloud 已经接管的那几个配置块里，而不是任意 YAML 键上。尤其要区分：`@Value("${app.name}")` 的 `app.name` 是编译期从合并后的 YAML 中取值的路径；若 YAML 中该值本身写成 `${DB_PASSWORD}`，这个值才会在运行时继续解析系统属性或环境变量。
