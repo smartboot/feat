@@ -32,6 +32,12 @@ public abstract class InflaterStream implements Stream {
 
     @Override
     public void stream(HttpResponse response, byte[] data, boolean end) throws IOException {
+        // HEAD / 304 / 204 responses may carry representation encoding metadata without a body.
+        // Do not create a decompressor for an empty representation.
+        if (inflaterInputStream == null && end && data.length == 0) {
+            stream.stream(response, data, true);
+            return;
+        }
         if (buffer != null && buffer.remaining() > 0) {
             ByteBuffer newBuffer = ByteBuffer.allocate(buffer.remaining() + data.length);
             newBuffer.put(buffer);
