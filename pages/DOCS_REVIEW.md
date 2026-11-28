@@ -276,3 +276,19 @@ Feat Core 与 Feat AI 采用 Apache 2.0；Feat Cloud 则采用赞助授权模式
 本轮只修改文档示例与说明，没有修改运行时代码。
 
 **验证状态：**已对照当前 master 源码；未执行安全集成测试、静态资源测试、`npm ci` 或 `npm run build`。
+
+
+## 2026-11-28：工程实践示例与配置边界复核
+
+继续检查日志、部署、测试、性能与 FAQ 页面：
+
+- `HttpServer.httpHandler` 的参数类型是 `HttpRequest`，不是 Router 的 `Context`。修正日志、部署和测试示例中调用不存在的 `ctx.write(...)`。
+- `ServerOptions.getByteCache()` 与 `getHeaderNameByteTree()` 是不同缓存树。HTTP 头名称解析实际使用 `getHeaderNameByteTree()`，修正性能调优页自定义 Header 预热示例，避免把 Header 名称加进通用值缓存树。
+- `proxyProtocolSupport()` 安装的是 PROXY protocol 插件，不解析 `X-Forwarded-For`。FAQ 补充普通 Nginx HTTP `proxy_pass` 默认不会发送 PROXY protocol 的区别，并提示只有信任的前置代理写入的转发头才可用于识别客户端 IP。
+- 先前安全 / 静态资源复核的修正也已保留：WAF 示例使用 HttpRequest，BasicAuth 路由使用 Context.Response；WAF 根路径例外与静态资源异步处理入口均已说明。
+
+日志门面、动态日志级别、HttpServer shutdownHook 顺序、真实端口集成测试策略及主要 ServerOptions 默认值，本轮抽查未发现与当前源码不一致的结论。
+
+本轮只修改文档示例与说明，没有修改运行时代码。
+
+**验证状态：**已对照当前 master 源码并做文本级检查；未执行 JUnit、静态资源安全测试、`npm ci` 或 `npm run build`。
