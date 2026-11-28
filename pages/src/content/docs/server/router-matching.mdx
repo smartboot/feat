@@ -1,0 +1,99 @@
+---
+title: Router 匹配过程
+description: 从路由模式到 NodePath 前缀树，理解 Feat Core Router 如何选择请求处理器
+toc: true
+sidebar:
+  order: 3
+---
+
+路由注册解决的是“把处理逻辑放在哪里”，匹配过程解决的是“一个请求最终会进入哪段逻辑”。
+
+Feat Core Router 使用 `NodePath` 组织路由节点。它不是把所有路由都转换成正则表达式逐条尝试，而是把路径拆成片段，分别保存精确路径节点和模式路径节点。
+
+## 支持的路径模式
+
+| 写法 | 示例 | 含义 |
+|---|---|---|
+| 精确路径 | `/users/profile` | 路径片段必须一致 |
+| 路径参数 | `/users/:id` | 用一个路径片段填充参数 |
+| 通配路径 | `/static/*` | 匹配该位置之后的剩余路径 |
+| 后缀模式 | `/*.html` | 最后一个路径片段以指定后缀结尾 |
+
+路径参数可以出现在中间或末尾。通配符和后缀模式按当前实现应放在路径末尾；不要把 `*` 当成任意位置都能使用的 glob 表达式。另一个容易忽略的边界是：`/static/*` 不匹配 `/static` 本身；如果父路径也需要响应，应单独注册 `/static`。
+
+## 从注册到节点
+
+注册 `/users/:id` 时，Router 会沿路径片段建立节点。普通片段进入精确路径映射，冒号参数进入模式路径映射。最终的处理器保存在叶子节点中。
+
+可以把它想象成下面这样：
+
+```text
+/
+└── users
+    ├── profile       (精确路径)
+    └── :id            (参数路径)
+```
+
+这张图只表达节点组织方式，不代表参数节点在所有重叠模式下都有固定优先级。
+
+## 一次匹配大致怎样进行
+
+当请求 URI 到达 Router 后，`NodePath.match` 会从根节点开始逐段查找：
+
+1. 先在当前节点的精确路径映射中查找当前片段，并尝试沿该分支继续匹配。
+2. 精确分支没有得到结果时，再检查当前节点的模式路径分支。
+3. 对可继续向下匹配的模式节点递归查找；当前实现会比较候选节点深度，保留更深的匹配结果。
+4. 通配符叶子节点有单独的提前返回逻辑；后缀模式则在最后一个路径片段上通过 `endsWith` 判断。
+
+因此，可以明确说精确路径分支会先被检查；但不能进一步概括成“精确 > 参数 > 通配符 > 后缀”这样覆盖所有组合的全局排序。
+
+## 不要依赖重叠模式的隐含顺序
+
+这是阅读当前实现时尤其需要留意的一点。
+
+模式节点保存在 `HashMap` 中。多个模式都可能匹配同一个 URI 时，遍历顺序并不是一个适合写进 API 契约的稳定规则；通配符叶子还有提前结束遍历的分支。某些终端参数和通配符节点还共用内部的特殊节点键。
+
+例如，下面这些规则在语义上存在重叠：
+
+```java
+router.route("/users/:id", userHandler);
+router.route("/users/*", fallbackHandler);
+```
+
+不要假设它们必然按注册顺序或某个通用优先级竞争。对于业务路由，最稳妥的做法是让规则尽量互斥；确实需要重叠时，应针对当前 Feat 版本编写集成测试，明确验证预期结果。
+
+同样，不建议在相同结构位置只改变参数名来注册两条规则，例如 `/users/:id/orders` 和 `/users/:name/orders`。它们对请求路径的匹配范围相同，参数名不应该被当成区分路由的条件。
+
+## URI 匹配与 HTTP 方法分开处理
+
+Router 先根据 URI 找到对应的路由处理器，再由 `RouterHandlerImpl` 根据请求方法选择具体的处理逻辑。
+
+```java
+router.route("/articles", "GET", getArticles);
+router.route("/articles", "POST", createArticle);
+```
+
+这两条规则共享同一个 URI 路径，但分别关联不同 HTTP 方法。若路径命中而方法没有对应处理器，当前实现会回退到 Router 的默认处理器。默认构造器的行为是返回 404。
+
+## 路径边界也要保持一致
+
+```java
+router.route("/users", usersHandler);
+router.route("/users/", usersWithSlashHandler);
+```
+
+末尾斜杠会参与路径匹配，这两条路由不是同一条规则。Feat Core Router 不会自动替你做路径归一化。
+
+## 源码阅读入口
+
+如果准备继续阅读实现，可以按这个顺序：
+
+- `Router#route`：路由注册入口。
+- `NodePath#add`：把路径模式拆成节点。
+- `NodePath#match`：按 URI 查找匹配节点。
+- `RouterHandlerImpl#getRouterUnit`：在路径命中后选择 HTTP 方法对应的处理器。
+- `RouterHandlerImpl#getContext`：根据路由定义中的参数位置构造 `Context`。
+
+相关源码位于 `feat-core/src/main/java/tech/smartboot/feat/router/`。
+
+下一篇：[Router 拦截器](/feat/server/router-interceptors/)。

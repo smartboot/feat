@@ -112,3 +112,14 @@ Feat Core 的模型：创建服务 → 注册处理器 → 启动监听。
 刚才的示例使用了默认配置（端口 8080、线程数自动等）。在实际开发中，你几乎总是需要调整这些参数：换端口、调线程、开调试、配 HTTPS...
 
 继续阅读 [ServerOptions 配置](/feat/server/serveroptions/)，了解如何按场景定制服务参数。
+
+## Router 与请求处理
+
+当一个服务需要处理多个 URI 时，可以用 Router 把请求分发到不同的处理器。建议按下面的顺序继续学习：
+
+1. [Router 路由](/feat/server/router/)：注册路由、限制 HTTP 方法、读取路径参数。
+2. [Router 匹配过程](/feat/server/router-matching/)：理解精确路径、参数、通配符和后缀模式。
+3. [Router 拦截器](/feat/server/router-interceptors/)：在请求进入业务处理器前执行公共逻辑。
+4. [Router Session](/feat/server/router-session/)：在多个请求之间保存会话状态。
+
+如果业务处理涉及耗时任务，再阅读[异步处理](/feat/server/async/)，了解如何正确完成请求。

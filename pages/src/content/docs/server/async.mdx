@@ -3,7 +3,7 @@ title: 异步处理
 description: 掌握 Feat 服务端异步处理模型：将耗时操作移出主线程，提升并发处理能力
 toc: true
 sidebar:
-    order: 3
+    order: 6
 ---
 
 import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
@@ -31,7 +31,9 @@ Feat 的异步处理依赖 `HttpHandler` 接口的双参数方法：
 void handle(HttpRequest request, CompletableFuture<Void> future)
 ```
 
-使用异步模式只需做两件事：
+如果使用 Feat Core 的 Router，异步处理器需要实现 `RouterHandler`，并重写 `handle(Context, CompletableFuture<Void>)`；单参数 Lambda 对应的是同步处理。具体写法见 [Router 异步路由处理器](/feat/server/router/)。
+
+使用 `HttpHandler` 的异步模式只需做两件事：
 
 1. **将耗时逻辑放到自定义线程池执行**
 2. **完成后调用 `future.complete(null)` 通知 Feat**
