@@ -128,7 +128,7 @@ String sessionId = session.getSessionId();
 session.invalidate();
 ```
 
-`put` 和 `get` 读写字符串；`setTimeout` 设置当前会话的过期时间；`invalidate` 清理会话并移除客户端 Cookie。
+`put` 和 `get` 读写字符串；`setTimeout` 设置当前会话的过期时间；`invalidate` 使服务端会话失效并删除对应存储。它本身不会直接修改当前响应中的 Cookie；客户端下次携带旧会话 ID 请求时，框架会创建新会话并下发新 Cookie。
 
 <Aside type="caution">
 Redis Session 读取和写入时会刷新过期时间。不要把高频、大体积的数据放进 Session，否则很容易把会话存储变成隐蔽的性能热点。
