@@ -87,31 +87,11 @@ Feat.httpServer(opt -> opt.addPlugin(sslPlugin))
 `AutoServerSSLContextFactory` 适合快速测试，生产环境请使用正式签发的证书。
 </Aside>
 
-### 多证书配置
+### 多域名证书
 
-支持为不同域名配置不同证书：
+当前文档采用的 `SslPlugin` API 接收一个 `SSLContextFactory`，并没有通过 `(socketAddress, engine) -> ...` 按域名选择 `PemServerSSLContextFactory` 的构造方式。不要把这种 Lambda 写法当成可用 API。
 
-```java
-import io.github.smartboot.socket.extension.ssl.factory.PemServerSSLContextFactory;
-import java.util.HashMap;
-import java.util.Map;
-
-// 配置多域名证书
-Map<String, PemServerSSLContextFactory> certMap = new HashMap<>();
-certMap.put("example.com", new PemServerSSLContextFactory(
-        certPem1, keyPem1
-));
-certMap.put("api.example.com", new PemServerSSLContextFactory(
-        certPem2, keyPem2
-));
-
-SslPlugin sslPlugin = new SslPlugin(
-        (socketAddress, engine) -> {
-            // 根据域名返回对应证书
-            return certMap.get(engine.getPeerHost());
-        }
-);
-```
+如果一个监听端口需要根据 TLS SNI 为多个域名选择不同证书，需要在 JSSE 层实现相应的 `SSLContext` / `KeyManager` 证书选择逻辑，再交给 `SslPlugin`。这属于自定义 TLS 配置，本节不提供未经验证的简化示例。单证书 HTTPS 服务可直接使用前面的 `PemServerSSLContextFactory`。
 
 ## 处理 HTTPS 请求
 
@@ -203,11 +183,22 @@ Feat.httpServer(opt -> opt.addPlugin(sslPlugin))
 启用双向 TLS 认证，要求客户端提供证书：
 
 ```java
-import io.github.smartboot.socket.extension.ssl.ClientAuth;
+import io.github.smartboot.socket.extension.plugins.SslPlugin;
+import io.github.smartboot.socket.extension.ssl.factory.PemServerSSLContextFactory;
+import tech.smartboot.feat.core.server.HttpRequest;
 
+import javax.net.ssl.SSLEngine;
+import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
+import java.util.function.Consumer;
+
+// 通过 Consumer 同时开启客户端证书强制校验，并将 SSLEngine 关联到请求
 SslPlugin sslPlugin = new SslPlugin(
         new PemServerSSLContextFactory(certPem, keyPem),
-        ClientAuth.REQUIRE  // 要求客户端证书
+        (Consumer<SSLEngine>) sslEngine -> {
+            sslEngine.setNeedClientAuth(true);
+            HttpRequest.SSL_ENGINE_THREAD_LOCAL.set(sslEngine);
+        }
 );
 
 Feat.httpServer(opt -> opt.addPlugin(sslPlugin))
@@ -215,9 +206,11 @@ Feat.httpServer(opt -> opt.addPlugin(sslPlugin))
             SSLEngine engine = req.getSslEngine();
             if (engine != null) {
                 // 获取客户端证书信息
-                javax.security.cert.X509Certificate[] certs = 
-                        engine.getSession().getPeerCertificateChain();
-                req.getResponse().write("Client: " + certs[0].getSubjectDN());
+                Certificate[] certificates = engine.getSession().getPeerCertificates();
+                X509Certificate clientCertificate = (X509Certificate) certificates[0];
+                req.getResponse().write(
+                        "Client: " + clientCertificate.getSubjectX500Principal().getName()
+                );
             }
         })
         .listen();
@@ -228,7 +221,7 @@ Feat.httpServer(opt -> opt.addPlugin(sslPlugin))
 | 模式 | 说明 |
 |------|------|
 | `NONE` | 不验证客户端证书（默认） |
-| `REQUEST` | 请求客户端证书，但不强制 |
+| `OPTIONAL` | 请求客户端证书，但不强制 |
 | `REQUIRE` | 强制要求客户端证书 |
 
 ## 完整示例
@@ -269,7 +262,7 @@ public class HttpsBasicDemo {
                 })
                 .httpHandler(req -> {
                     // 获取协议信息
-                    String protocol = req.getProtocol();  // HTTPS/1.1
+                    String protocol = req.getProtocol().getProtocol();  // HTTP/1.1 或 HTTP/2.0
                     
                     req.getResponse()
                             .setHeader(HeaderName.CONTENT_TYPE, "application/json")
@@ -379,7 +372,7 @@ Feat 的 HTTPS 支持 HTTP/2 协议，无需额外配置。客户端使用 ALPN 
 Feat.httpServer(opt -> opt.addPlugin(sslPlugin))
         .httpHandler(req -> {
             // req.getProtocol() 返回 HTTP/2.0 或 HTTP/1.1
-            req.getResponse().write("Protocol: " + req.getProtocol());
+            req.getResponse().write("Protocol: " + req.getProtocol().getProtocol());
         })
         .listen();
 ```

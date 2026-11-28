@@ -84,6 +84,7 @@ import tech.smartboot.feat.core.server.upgrade.sse.SseEmitter;
 
 import java.io.IOException;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class SSEDemo {
@@ -91,8 +92,13 @@ public class SSEDemo {
         Feat.httpServer(serverOptions -> serverOptions.debug(true))
                 .httpHandler(req -> {
                     req.upgrade(new SSEUpgrade() {
+                        @Override
                         public void onOpen(SseEmitter sseEmitter) {
-                            Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(new Runnable() {
+                            // 演示用：每个连接创建一个定时任务，结束时关闭调度器
+                            ScheduledExecutorService scheduler =
+                                    Executors.newSingleThreadScheduledExecutor();
+
+                            scheduler.scheduleAtFixedRate(new Runnable() {
                                 int i = 0;
 
                                 @Override
@@ -101,15 +107,17 @@ public class SSEDemo {
                                         sseEmitter.send(
                                                 SseEmitter.event()
                                                         .name("update")
-                                                        .comment("aaa")
-                                                        .id(String.valueOf(i++))
+                                                        .id(String.valueOf(i))
                                                         .data("hello world")
                                         );
+                                        i++;
                                         if (i == 10) {
                                             sseEmitter.complete();
+                                            scheduler.shutdown();
                                         }
                                     } catch (IOException e) {
-                                        throw new RuntimeException(e);
+                                        sseEmitter.complete();
+                                        scheduler.shutdownNow();
                                     }
                                 }
                             }, 1, 1, TimeUnit.SECONDS);
@@ -119,6 +127,8 @@ public class SSEDemo {
     }
 }
 ```
+
+示例在发送完 10 条事件后关闭连接并停止定时任务；如果客户端提前断开，发送失败分支也会停止调度器。生产环境通常应复用受应用生命周期管理的调度器，并在连接结束时取消对应任务，而不是为每个连接长期创建独立线程池。
 
 这更适合：
 
