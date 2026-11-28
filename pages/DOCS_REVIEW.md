@@ -1,7 +1,7 @@
 # 文档站点评审记录
 
 > 最近核对：2026-11-28  
-> 范围：文档站点工程配置、Router 文档重构后的状态，以及 Feat Cloud Bean 与许可口径的源码核对。本文记录已核实的问题，不把尚未执行的构建或尚未逐篇检查的内容标记为通过。
+> 范围：文档站点工程配置、Router 文档重构后的状态，以及 Feat Cloud Bean、启动配置与许可口径的源码核对。本文记录已核实的问题，不把尚未执行的构建或尚未逐篇检查的内容标记为通过。
 
 ## 当前结论
 
@@ -53,11 +53,23 @@ Feat Cloud 多个入口曾提示“需先成为赞助者获取授权”，包括
 
 已同步修正 Cloud 文档提示、首页许可说明、支付弹窗说明和 `llms.txt`。另在 Bean 章节补充 `@Autowired` 按字段名查找、setter 优先/反射回退，以及方法级 `@Bean` 当前实现的命名和生命周期边界。
 
+### H1：CloudOptions 与 Profile 文档边界需要更精确
+
+对照 `CloudOptions`、`AbstractCloudService`、`CloudOptionsSerializer` 和 `FeatAnnotationProcessor` 核对后，修正以下表述：
+
+- `setPackages(...)` 是启动时对已生成 `CloudService` 的包名前缀过滤，不会改变编译期注解处理器生成哪些服务；底层判断使用 `startsWith`，不是严格包边界。
+- 外部 `registerBean` 先注册，名称若与生成的类级或方法级 Bean 冲突，会在启动时触发重复名称异常。
+- `server.autoSSL`、`server.session.store-type` 和 `server.session.timeout` 由特殊分支读取，不经过通用 `${}` 解析；Redis 的 `address` 也按字面值写入。
+- `@Value("${app.name}")` 的路径从合并后的 YAML 读取；只有 YAML 对应值自身是 `${ENV_NAME}` 时，才会继续按系统属性 / 环境变量规则解析。
+- 当存在多套 profile 时，指定不存在的环境名不会回退默认环境；系统属性优先于环境变量。
+
+同时补充 `@Value` 支持的字段类型，并修正 `AGENTS.md` 中把运行时服务过滤描述成编译期扫描的注释，以及“完全没有反射装配”的绝对化表述。
+
 ## 已完成事项
 
 - PR #9：Router 指南拆章，已合并。
 - Router 路由匹配、拦截器链、Session 和异步处理器文档已按当前源码核对。
-- Feat Cloud 的 Bean 注入与方法级 Bean 行为已对照 AOT 生成器和运行时上下文核对。
+- Feat Cloud 的 Bean 注入、方法级 Bean、CloudOptions 与 Profile 行为已对照 AOT 生成器和运行时上下文核对。
 - Apache 2.0 与自愿赞助的许可口径已同步到 Cloud 文档、首页和 `llms.txt`。
 - `pages/DOCS_GAPS.md` 已登记本轮 Router 文档发现的缺口。
 

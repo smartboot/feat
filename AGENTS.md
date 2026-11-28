@@ -7,7 +7,7 @@ Feat 是一个 Java Web 服务框架（JDK 8+ / Maven）。写代码前先确认
 | **Feat Core** | `Feat.httpServer().listen()` | 手写 Router / Handler，无注解、无容器 |
 | **Feat Cloud** | `FeatCloud.cloudServer().listen()` | `@Controller`、`@Bean`，注解在**编译期**转成普通 Java 代码 |
 
-Feat Cloud 的注解长得很像 Spring Boot，但**工作方式不同**：没有运行时注解扫描，没有反射装配，没有 Servlet 容器。路由和依赖注入是 `mvn compile` 阶段由注解处理器生成的。
+Feat Cloud 的注解长得很像 Spring Boot，但**工作方式不同**：没有运行时注解扫描，路由和常规装配代码由 `mvn compile` 阶段的注解处理器生成，也没有 Servlet 容器。需要注意，`@Autowired` 字段若没有匹配的 setter，运行时会回退到反射写字段；拦截器调用上下文也会保留方法元数据。不要把“编译期生成”扩大表述为框架所有路径都绝对不使用反射。
 
 > 如果你要**新建一个 Feat 项目**，直接跳到 [最小可运行工程](#最小可运行工程feat-cloud)。
 > 如果你要**修改 Feat 本身**，看 [仓库结构与构建](#仓库结构与构建)。
@@ -97,12 +97,12 @@ public class Bootstrap {
 }
 ```
 
-改端口和包扫描写在入口，不写在 `application.properties`：
+改端口和服务加载范围写在入口，不写在 `application.properties`：
 
 ```java
 FeatCloud.cloudServer(options -> {
     options.port(8080);
-    options.setPackages("demo");   // 不在扫描范围内 = Bean 与路由都不会生成
+    options.setPackages("demo");   // 运行时只加载包名前缀匹配的生成服务；不改变 AOT 生成范围
 }).listen();
 ```
 
