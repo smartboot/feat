@@ -21,6 +21,7 @@ import org.apache.ibatis.scripting.xmltags.XMLLanguageDriver;
 import org.apache.ibatis.session.AutoMappingBehavior;
 import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.session.ExecutorType;
+import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.apache.ibatis.transaction.TransactionFactory;
@@ -36,6 +37,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.io.Reader;
 import java.util.Collection;
 
 import static tech.smartboot.feat.cloud.aot.controller.JsonSerializer.headBlank;
@@ -156,9 +158,12 @@ public class MybatisSerializer extends ExtensionSerializer {
 
         Object obj = JSONPath.eval(config, "$.feat.mybatis['initial-sql']");
         if (obj != null) {
-            printWriter.append(headBlank(0)).println("ScriptRunner runner = new ScriptRunner(sessionFactory.openSession().getConnection());");
-            printWriter.append(headBlank(0)).println("runner.setLogWriter(null);");
-            printWriter.append(headBlank(0)).println("runner.runScript(Resources.getResourceAsReader(\"" + obj + "\"));");
+            printWriter.append(headBlank(0)).println("try (SqlSession mybatisSqlSession = sessionFactory.openSession();");
+            printWriter.append(headBlank(1)).println("Reader mybatisScriptReader = Resources.getResourceAsReader(\"" + obj + "\")) {");
+            printWriter.append(headBlank(1)).println("ScriptRunner runner = new ScriptRunner(mybatisSqlSession.getConnection());");
+            printWriter.append(headBlank(1)).println("runner.setLogWriter(null);");
+            printWriter.append(headBlank(1)).println("runner.runScript(mybatisScriptReader);");
+            printWriter.append(headBlank(0)).println("}");
         }
         printWriter.append(headBlank(0)).println("applicationContext.addBean(\"sessionFactory\", sessionFactory);");
 
