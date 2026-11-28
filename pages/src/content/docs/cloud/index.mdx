@@ -18,7 +18,7 @@ Feat Cloud 面向这样一种场景：你已经接受 Feat Core 的轻量、高�
 最终效果很小：访问 `http://localhost:8080/hello` 返回 `hello Feat Cloud`。  
 但这条链路会经过 Feat Cloud 最重要的机制：编译期扫描注解、生成服务代码、启动时注册路由。
 
-开始前确认本地已经有 JDK 8+、Maven 3.6+ 和一个能正常运行 Maven 项目的 IDE，详见[系统要求](/feat/guides/system-requirements/)。
+需要 JDK 8+ 和 Maven 3.6+，详见[系统要求](/feat/guides/system-requirements/)。
 
 ### 添加依赖
 
@@ -41,9 +41,7 @@ Feat Cloud 面向这样一种场景：你已经接受 Feat Core 的轻量、高�
 </dependency>
 ```
 
-<Aside>
-`${feat.version}` 请替换为实际版本。最新版本可以在 [Maven Central](https://central.sonatype.com/artifact/tech.smartboot.feat/feat-cloud-starter) 查看。
-</Aside>
+将 `${feat.version}` 替换为实际发布版本，版本号见 [Maven Central](https://central.sonatype.com/artifact/tech.smartboot.feat/feat-cloud-starter)。
 
 这里有一个容易忽略的分工：`feat-cloud` 是运行期依赖，`feat-cloud-starter` 负责在编译期生成代码。  
 如果少了后者，应用可以编译到某一步，但 Controller 不会被转成可加载的 `CloudService`。
