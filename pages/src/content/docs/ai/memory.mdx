@@ -21,8 +21,8 @@ public class MemoryDemo {
             opts.chatOptions().model(/* 你的模型配置 */);
             // 启用内存记忆
             opts.memory(memoryOpts -> memoryOpts
-                    .maxMessages(100)        // 最多保留 100 条
-                    .defaultTopK(5));        // 每次检索 5 条注入上下文
+                    .maxMessages(100));       // 每个会话最多保留 100 条
+            opts.memoryTopK(5);               // Agent 每次检索 5 条注入上下文
             opts.sessionId("user-session-123");
         });
 
@@ -34,9 +34,10 @@ public class MemoryDemo {
 
 三件事各自的作用：
 
-- `opts.memory(...)`：启用记忆并配置策略
-- `opts.sessionId(...)`：会话隔离——不同用户的记忆互不可见
-- `opts.memoryTopK(n)`：每次调用检索多少条历史记忆注入提示词
+- `opts.memory(...)`：启用记忆并配置存储策略，例如每个会话的消息上限
+- `opts.sessionId(...)`：给本次 Agent 调用标记会话 ID；向量记忆会用它执行会话过滤
+- `opts.memoryTopK(n)`：控制 Agent 每次检索多少条历史记忆注入提示词
+- `MemoryOptions.defaultTopK(...)`：只影响直接调用 `Memory.search(query)` 时的默认数量，不替代 Agent 的 `memoryTopK`
 
 内存实现（`InMemoryMemory`）数据存在 JVM 里，**重启即失**，适合开发测试和单机会话场景。
 
@@ -44,14 +45,16 @@ public class MemoryDemo {
 
 理解这两点，可以避免对记忆系统的误解：
 
-1. **检索是按相关性注入，不是全量回放**。每次调用 Agent 时，会用当前输入检索最相关的 topK 条历史记忆注入上下文——`maxMessages` 只是存储上限，不是上下文长度
-2. **会话隔离默认开启**（`sessionIsolation=true`），检索范围限定在当前 `sessionId` 内；跨会话共享知识请关闭隔离或使用向量记忆的全局集合
+1. **检索是按相关性注入，不是全量回放**。每次调用 Agent 时，会用当前输入检索最相关的 topK 条历史记忆注入上下文——`maxMessages` 只是每个会话的存储上限，不是上下文长度。
+2. **不要把当前的 InMemoryMemory 当作多用户隔离边界**。它按 sessionId 分桶存储，但当前 `search()` / `getRecent()` 会遍历所有会话桶，未按当前用户过滤。多用户场景不要依赖它隔离不同用户的数据。
+3. **VectorMemory 需要显式设置 sessionId**。默认开启 `sessionIsolation`，检索会按配置的 sessionId 过滤；Agent 示例应通过 `opts.sessionId(...)` 设置同一个会话标识。
 
 其他常用配置：
 
 | 配置 | 默认值 | 说明 |
 |---|---|---|
 | `similarityThreshold` | 0.5 | 相似度低于阈值的记忆不参与检索 |
+| `sessionIsolation` | true | VectorMemory 默认按 sessionId 过滤；InMemoryMemory 当前检索实现尚未应用此过滤 |
 | `enableDeduplication` | false | 合并内容高度相似的消息（阈值 0.95） |
 | `importanceThreshold` | 0.0 | 按消息重要性过滤，低价值记忆不检索 |
 | `includeThoughts` | false | 是否把 Agent 的思考过程也存入记忆 |
@@ -78,6 +81,7 @@ public class VectorMemoryDemo {
                 vectorOpts.collectionName("agent_memory");
             }));
             opts.memoryTopK(5);
+            opts.sessionId("user-session-123");
         });
         // ...
     }
@@ -86,9 +90,11 @@ public class VectorMemoryDemo {
 
 向量记忆需要两个外部依赖：一个 **EmbeddingModel**（把文本转向量，见 [Embedding](/feat/ai/embedding/)）和一个 **VectorStore**。内置支持 Chroma 和 Milvus（`ChromaVectorStore` / `MilvusVectorStore`）。
 
-<Aside type="tip">
-选型判断很简单：会话内记忆用 `Memory.inMemory(...)`，跨会话/海量历史用 `Memory.vector(...)`。不要一开始就上向量库——先确认"记住上次说过什么"对你的产品是真的需求。
+<Aside type="caution">
+向量记忆示例必须设置稳定的 `sessionId`。当前 `VectorMemory` 写入时会为未设置的消息填充默认会话标识，但检索过滤使用配置中的 sessionId；不设置会话 ID 时，写入与检索条件可能不一致。另请确认向量库集合维度与 Embedding 模型实际输出维度一致。
 </Aside>
+
+选型时先确认数据隔离和持久化需求：内存记忆适合单用户开发验证；需要多用户隔离和跨实例共享时，应使用经过验证的外部向量存储，并显式配置 sessionId。
 
 ## 直接操作 Memory API
 
@@ -98,24 +104,33 @@ public class VectorMemoryDemo {
 import tech.smartboot.feat.ai.agent.memory.Memory;
 import tech.smartboot.feat.ai.agent.memory.MemoryMessage;
 
+import java.util.List;
+
+String sessionId = "user-session-123";
 Memory memory = Memory.inMemory(opts -> opts.maxMessages(50));
 
-memory.add(MemoryMessage.ofUser("用户喜欢简洁的回答"));
-memory.add(MemoryMessage.ofAssistant("好的，已记住"));
+MemoryMessage userMessage = MemoryMessage.ofUser("用户喜欢简洁的回答");
+userMessage.setSessionId(sessionId);
+memory.add(userMessage);
+
+MemoryMessage assistantMessage = MemoryMessage.ofAssistant("好的，已记住");
+assistantMessage.setSessionId(sessionId);
+memory.add(assistantMessage);
 
 // 按相关性检索
 List<MemoryMessage> related = memory.search("回答风格", 3);
 // 取最近 N 条
 List<MemoryMessage> recent = memory.getRecent(5);
-// 清除当前会话
-memory.clear();
+// 只清除指定会话
+memory.clear(sessionId);
 ```
 
 适合把记忆能力嵌入自己的编排逻辑，而不是完全交给 ReAct 循环。
 
 ## 生产注意事项
 
-- **多实例部署**时，内存记忆各节点独立，用户一轮在 A 节点、下一轮到 B 节点就"失忆"。多实例必须用向量记忆 + 外部向量库
+- **多实例部署**时，内存记忆各节点独立；此外，当前 InMemoryMemory 的 search/getRecent 会跨 session 桶检索，不适合承担多用户数据隔离。多实例/多用户场景应先修复并验证隔离行为，再使用带显式 sessionId 的外部向量存储
 - **隐私合规**：记忆内容是用户交互原文，落地向量库前确认保留策略与用户知情机制
+- **删除记忆**：`InMemoryMemory.clear()` 清空全部会话，`clear(sessionId)` 只清理指定会话；当前 `VectorMemory.clear()` 只清理本地缓存，不会清空外部 VectorStore，`clear(sessionId)` 才会尝试删除指定会话的数据。
 - **成本控制**：每次调用都会做一次向量检索，记忆规模大时关注向量库的查询延迟
 

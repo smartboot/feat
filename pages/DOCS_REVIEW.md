@@ -231,3 +231,31 @@ Feat Core 与 Feat AI 采用 Apache 2.0；Feat Cloud 则采用赞助授权模式
 本轮只修改客户端文档与评审台账，没有修改运行时代码。
 
 **验证状态：**已对照当前 master API 源码；未执行 Maven 示例编译、`npm ci` 或 `npm run build`。客户端代码示例与 Astro 构建仍待实际编译验证。
+
+
+## 2026-11-28：Feat AI 学习路径与记忆机制复核
+
+本轮对照 Feat AI 的 `ChatModel`、`Provider`、`ChatResponse`、`ReActAgent`、`AgentOptions`、`MemoryOptions`、`InMemoryMemory`、`VectorMemory`、`EmbeddingModel` 与相关文档，复核 AI 学习路径并修正：
+
+- Quick Start 原先声明支持本地 Ollama / 云端模型两种方式，但 Tabs 只有 Ollama 一个选项；补齐 Gitee AI 云端模型示例，并说明本地 Ollama 不需要云端 API Key。
+- 非流式 `ChatModel.chat(...)` 遇到非 200 HTTP 响应时会返回 `success=false` 的 `ChatResponse`，不是 Future 异常完成；流式调用对未建立有效 SSE 的 HTTP 错误会触发 `onError` 并使 Future 异常完成。已按两种路径分别说明。
+- Agent 最小示例删除 `getState()` 输出：当前 `ReActAgent` 只更新 RUNNING / TOOL_EXECUTION，没有在完成或失败时写入 FINISHED / ERROR，状态值不能作为终态依据。
+- Agent 文档补充 `maxIterations` 的用途，并链接到自定义 `AgentTool` 实现示例。
+- Memory 示例将 Agent 检索数量配置改为 `AgentOptions.memoryTopK`；说明 `MemoryOptions.defaultTopK` 只作用于直接调用 `Memory.search(query)`。
+- `Memory.clear()` 清除全部会话；当前会话应调用 `clear(sessionId)`。已修正直接 Memory API 示例。
+- 当前 `InMemoryMemory` 虽按 sessionId 分桶存储，但 `search()` / `getRecent()` 会遍历所有会话桶，未应用 `sessionIsolation` 过滤。文档已明确警告，不应将其当作多用户隔离边界。
+- `VectorMemory` 默认启用 sessionIsolation，但配置中的 sessionId 默认为 null；写入时会为缺失的消息 sessionId 填充默认值，检索则按配置 sessionId 过滤。文档示例现在显式设置 Agent sessionId。
+- `VectorMemory.clear()` 当前只清理本地缓存，没有删除持久化 VectorStore 中的数据；`clear(sessionId)` 才会尝试删除指定会话的数据。此行为与 Memory 接口的“清除所有记忆”描述不一致，列为待代码修复项。
+- `EmbeddingModel.embed()` 当前是同步阻塞调用，文档补充线程使用提醒。
+
+**仍需单独处理的运行时代码问题：**
+
+1. InMemoryMemory 的会话检索隔离没有真正生效，存在跨 session 记忆串读风险。
+2. VectorMemory 的默认 sessionId 与写入时默认 session 标识不一致，未显式配置时可能写入后无法按预期检索。
+3. VectorMemory.clear() 未清理持久化 VectorStore。
+4. EmbeddingModel 请求体硬编码 `dimensions=1`，而 VectorMemoryOptions 默认 `vectorDimension=1024`；需要结合目标 Provider 实际返回维度验证并修正。
+5. ReActAgent 未更新 FINISHED / ERROR 终态。
+
+本轮只修改文档与评审台账，没有修改 Feat AI 运行时代码。
+
+**验证状态：**已对照当前 master 源码；未执行 AI 示例 Maven 编译、`npm ci` 或 `npm run build`。向量记忆示例在上述运行时问题修复前不应被当作已验证的生产配置。
