@@ -38,7 +38,7 @@ public class ApiTestBase {
     static void setUp() {
         server = Feat.httpServer(options -> {
             options.port(PORT);
-        }).httpHandler(ctx -> ctx.write("ok"));
+        }).httpHandler(request -> request.getResponse().write("ok"));
         server.listen(PORT);
     }
 

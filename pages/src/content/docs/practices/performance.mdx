@@ -63,7 +63,7 @@ CPU 紧张的服务可以关掉 gzip，把压缩交给前置的 nginx——它�
 
 对使用者的含义：
 
-- 自定义 Header 的名称种类有限且稳定的服务，可以预热：`options.getByteCache().addNode(...)`
+- 自定义 Header 名称种类有限且稳定的服务，可以预热 Header 名称树：`options.getHeaderNameByteTree().addNode("X-Custom-Header")`
 - 请求 URL 高度随机（如带随机 token 路径）的服务，URI 缓存命中率低，不要期望这部分收益
 
 ## 调优流程建议

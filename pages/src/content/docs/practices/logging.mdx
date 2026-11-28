@@ -62,7 +62,7 @@ java -Dfeat.log.level=INFO \
 
 ```java title="报文级调试"
 Feat.httpServer(options -> options.debug(true))
-    .httpHandler(ctx -> ctx.write("hello"))
+    .httpHandler(request -> request.getResponse().write("hello"))
     .listen(8080);
 ```
 

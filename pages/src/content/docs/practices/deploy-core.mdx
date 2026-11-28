@@ -101,7 +101,7 @@ public class GracefulShutdownDemo {
                 System.out.println("flush pending tasks, release resources...");
                 // 在这里完成：停止接收新任务、刷写缓冲、关闭连接池等
             });
-        }).httpHandler(ctx -> ctx.write("ok"));
+        }).httpHandler(request -> request.getResponse().write("ok"));
 
         server.listen(8080);
 
