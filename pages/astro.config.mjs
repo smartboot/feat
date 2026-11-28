@@ -35,7 +35,7 @@ export default defineConfig({
                     tag: 'meta',
                     attrs: {
                         name: 'description',
-                        content: 'Feat是一款基于Java语言开发的轻量级、高性能Web服务器',
+                        content: 'Feat 是基于 Java 的轻量、高性能 Web 框架，提供 HTTP Server、HTTP Client、AI 能力与编译期业务应用开发模型',
                     }
                 },
                 {
@@ -58,9 +58,14 @@ export default defineConfig({
             plugins: [starlightLlmsTxt({
                 customSets: [
                     {
-                        label: '理解 Feat',
+                        label: '认识 Feat',
                         description: 'Feat 核心概念和设计原理文档',
                         paths: ['guides/**'],
+                    },
+                    {
+                        label: '构建业务应用',
+                        description: '从第一个接口到完整业务应用的开发教程',
+                        paths: ['building/**'],
                     },
                     {
                         label: '实践指南',
@@ -128,12 +133,23 @@ export default defineConfig({
                     items: [{autogenerate: {directory: 'guides'}}],
                 },
                 {
+                    label: '开始使用',
+                    items: [
+                        {label: 'Feat Core', link: '/server/'},
+                        {label: 'Feat Cloud', link: '/cloud/'},
+                        {label: 'Feat AI', link: '/ai/'},
+                    ],
+                },
+                {
+                    label: '构建业务应用',
+                    items: [{autogenerate: {directory: 'building'}}],
+                },
+                {
                     label: '实践指南',
                     items: [{autogenerate: {directory: 'practices'}}],
                 },
                 {
                     label: 'Feat Cloud',
-                    badge: { text: 'VIP', variant: 'danger' },
                     items: [{  autogenerate: {directory: 'cloud'}},'sponsors'],
                 },
                 {

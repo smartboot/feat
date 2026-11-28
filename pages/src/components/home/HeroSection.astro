@@ -34,7 +34,7 @@ const codeFiles = [
     <div class="hero-content">
       <div class="hero-badge">
         <span class="badge-dot"></span>
-        <span>v2.4.2 已发布</span>
+        <span>面向 AI 时代的 Java 应用开发</span>
       </div>
       <h1 class="hero-title">
         <span class="title-highlight">Feat</span>
@@ -42,24 +42,28 @@ const codeFiles = [
       </h1>
 
       <p class="hero-tagline">
-        运行性能超 <span class="highlight-text">Vert.x</span>，开发体验近似 <span class="highlight-text">SpringBoot</span>
+        轻量 HTTP Runtime，编译期生成业务应用。
         <span class="tagline-divider"></span>
-        <span class="tagline-secondary">AI 原生 · 云原生 双引擎驱动</span>
+        <span class="tagline-secondary">从网络服务、AI 能力到企业级 Web 应用，沿着一条清晰的技术路径构建。</span>
       </p>
 
-      <div class="availability-pills" aria-label="模块使用方式">
+      <div class="availability-pills" aria-label="开源许可与项目支持">
         <span class="availability-pill availability-open">Feat Core · Apache 2.0</span>
         <span class="availability-pill availability-open">Feat AI · Apache 2.0</span>
-        <span class="availability-pill availability-sponsored">Feat Cloud · 赞助解锁 License</span>
+        <span class="availability-pill availability-open">Feat Cloud · Apache 2.0</span>
       </div>
+      <p class="hero-support-note">赞助是对项目持续维护的自愿支持，不是使用 Feat 的前置条件。</p>
 
 
       <div class="hero-actions">
         <a href="./guides/" class="btn btn-primary">
-          <span>开始阅读</span>
+          <span>认识 Feat</span>
           <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M5 12h14M12 5l7 7-7 7"/>
           </svg>
+        </a>
+        <a href="./building/first-business-application/" class="btn btn-secondary">
+          <span>构建第一个业务应用</span>
         </a>
         <a href="https://github.com/smartboot/feat" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
           <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
@@ -250,7 +254,14 @@ const codeFiles = [
     display: flex;
     flex-wrap: wrap;
     gap: 0.75rem;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .hero-support-note {
+    color: #64748b;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    margin: 0 0 1.25rem;
   }
 
   .availability-pill {
