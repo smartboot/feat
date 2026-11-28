@@ -292,6 +292,6 @@ Feat Core 与 Feat AI 采用 Apache 2.0；Feat Cloud 则采用赞助授权模式
 ### 发现的实现层后续事项
 
 1. `HttpStaticResourceHandler` 的 classpath 分支当前直接设置 `Content-Encoding: gzip`，没有根据请求的 `Accept-Encoding` 判断客户端是否接受 gzip。文档已注明这一行为；建议后续单独评估实现修复。
-2. 静态资源文件目录模式只检查解码后路径中是否包含 `../` 或 `..\\`，没有对最终目标执行 canonical-path containment 校验。资源目录中若存在指向目录外的符号链接，不能把当前检查当作完整的文件系统隔离边界。建议后续评估安全加固。
+2. 静态资源文件目录模式只检查解码后路径中是否包含 `../` 或 `..\`，没有对最终目标执行 canonical-path containment 校验。资源目录中若存在指向目录外的符号链接，不能把当前检查当作完整的文件系统隔离边界。建议后续评估安全加固。
 
 **验证状态：**已重新读取本轮修改的 8 篇实践页面并检查 Markdown 代码围栏闭合；对示例中已知的 `ctx.write()` 错误进行了修复。未执行 `npm ci`、`npm run build` 或 Maven 示例编译，不能将 Astro 构建或示例编译标记为通过。
