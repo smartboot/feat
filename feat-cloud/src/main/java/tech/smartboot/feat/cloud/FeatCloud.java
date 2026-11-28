@@ -62,6 +62,8 @@ public class FeatCloud {
             // 启动应用上下文
             application.start();
         } catch (Throwable e) {
+            // 启动失败时释放已创建的 Bean 资源，避免部分初始化的客户端和线程池残留
+            application.destroy();
             // 如果启动过程中出现异常，则封装为FeatException抛出
             throw new FeatException("application start exception", e);
         }
