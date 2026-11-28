@@ -1,7 +1,7 @@
 # 文档站点评审记录
 
 > 最近核对：2026-11-28  
-> 范围：文档站点工程配置、Router 文档重构后的状态，以及 Feat Cloud Bean、Controller、MyBatis、启动配置与许可口径的源码核对。本文记录已核实的问题，不把尚未执行的构建或尚未逐篇检查的内容标记为通过。
+> 范围：文档站点工程配置、Router 文档重构后的状态，以及 Feat Cloud Bean、Controller、响应序列化、MyBatis、启动配置与许可口径的源码核对。本文记录已核实的问题，不把尚未执行的构建或尚未逐篇检查的内容标记为通过。
 
 ## 当前结论
 
@@ -86,11 +86,22 @@ Feat Cloud 多个入口曾提示“需先成为赞助者获取授权”，包括
 
 另发现一项待单独处理的实现风险：`MybatisSerializer` 生成的初始化脚本代码直接使用 `sessionFactory.openSession().getConnection()`，没有保留并关闭 `SqlSession`。这可能造成连接长期占用；本轮只记录问题，不在未验证事务行为前修改运行时代码。
 
+### H1：响应序列化文档与 JsonSerializer 实际路径不完全一致
+
+对照 `JsonSerializer`、`ListSerializer`、`MapSerializer`、`DateSerializer` 和 `ControllerSerializer` 核对后，修正：
+
+- Map 并不是编译期生成遍历代码，而是通过 FastJSON2 的 `JSONObject` 序列化；有泛型的 List 才生成遍历代码，原始 List 会回退。
+- Controller 根返回值的直接写出路径主要是 String、byte[]、int 和 boolean；POJO 内的包装类型字段可生成直接写出逻辑，不能笼统说所有包装类型根返回值都直接写出。
+- Date / Timestamp 作为 POJO 字段时默认输出毫秒时间戳，可通过 `@JSONField(format=...)` 自定义格式。
+- 生成的 POJO 字段会保留 null；成功响应的 message 和失败响应的 data 因此应在示例 JSON 中显示为 null。
+
+深层嵌套示例的分界按当前 `JsonSerializer.serialize(...)` 的递归层级核对，保留原有两组示例；异步响应仍在运行时走 FastJSON2。
+
 ## 已完成事项
 
 - PR #9：Router 指南拆章，已合并。
 - Router 路由匹配、拦截器链、Session 和异步处理器文档已按当前源码核对。
-- Feat Cloud 的 Bean 注入、方法级 Bean、Controller 请求绑定、Gzip、MyBatis、CloudOptions 与 Profile 行为已对照 AOT 生成器和运行时上下文核对。
+- Feat Cloud 的 Bean 注入、方法级 Bean、Controller 请求绑定、Gzip、响应序列化、MyBatis、CloudOptions 与 Profile 行为已对照 AOT 生成器和运行时上下文核对。
 - Apache 2.0 与自愿赞助的许可口径已同步到 Cloud 文档、首页和 `llms.txt`。
 - `pages/DOCS_GAPS.md` 已登记本轮 Router 文档发现的缺口。
 

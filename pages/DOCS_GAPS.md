@@ -35,6 +35,8 @@
 | 19 | Controller 请求绑定边界 | 文档只把 `@Param` 描述为查询参数，未说明 JSON / 表单来源；未说明路径参数支持类型和默认转换值 | `ControllerSerializer` 根据 Content-Type 选择 JSON 或 request parameters；`@PathParam` 仅支持 String、int/Integer、long/Long，数值转换默认 0 | `cloud/controller.mdx` | 已回写（2026-11-28；见 DOCS_REVIEW H1） |
 | 20 | Controller 方法限制与 Gzip | 文档未说明 `RequestMapping.method` 默认不限制 HTTP 方法，也未说明全局 Gzip 配置 | `RequestMapping.method()` 默认空数组；`ControllerSerializer` 读取 `server.gzip` / `server.gzipThreshold` 覆盖控制器配置 | `cloud/controller.mdx`、`cloud/options.mdx` | 已回写（2026-11-28；见 DOCS_REVIEW H1） |
 | 21 | MyBatis 数据源与配置重建 | 文档未说明 AOT 只支持 POOLED DataSource，且 XML 中自定义配置不一定完整保留 | `MybatisSerializer` 仅对 `PooledDataSource` 生成重建代码，并显式复制有限的 Configuration 属性 | `cloud/mybatis.mdx` | 已回写（2026-11-28；见 DOCS_REVIEW H1） |
+| 22 | 响应序列化路径 | 文档把 Map 和所有包装类型都描述为编译期直接写出，遗漏了 Map / 数组 / 原始 List 的 FastJSON2 回退路径 | `MapSerializer` 使用 `JSONObject`；`ListSerializer` 仅对声明泛型的 List 生成遍历；`JsonSerializer` 对数组、Object、深层类型回退 | `cloud/response.mdx` | 已回写（2026-11-28；见 DOCS_REVIEW H1） |
+| 23 | RestResult JSON 示例 | 示例省略了生成序列化代码会输出的 null 字段 | `RestResult` 的四个字段均参与 POJO 序列化；生成代码对 null 写出 `null` | `cloud/response.mdx` | 已回写（2026-11-28；见 DOCS_REVIEW H1） |
 
 ## 已确认「不补」的
 
