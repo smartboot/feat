@@ -183,3 +183,18 @@ Feat Core 与 Feat AI 采用 Apache 2.0；Feat Cloud 则采用赞助授权模式
 - 对 52 篇 MDX 页面中的 Markdown 形式站内 `/feat/...` 链接做了路径存在性检查，未发现失效目标。该检查不覆盖 JSX `href`、图片导入、锚点、代码示例编译和 Astro 构建。
 
 **仍未验证：**本轮未执行 `npm ci`、`npm run build`，也未逐段编译全部代码示例。MyBatis 文档中的配置与 API 说明已结合当前文档记录和仓库 Demo 交叉核对，但仍需 CI 和真实示例项目验证。
+
+
+## 2026-11-28：Core Router 请求生命周期复核
+
+本轮重新读取 master 中的 `Router`、`NodePath`、`RouterHandlerImpl`、`Chain` 和 `RouterHandler`，并与上传的 Router 源码摘录对照。确认了一个需要写进文档的协议差异：
+
+- HTTP/1.x 在 `Router.onHeaderComplete(HttpEndpoint)` 中按 URI 调用 `matchHandler`，并将选出的处理器设置到当前 `HttpEndpoint`；后续处理沿用该 Handler。
+- HTTP/2 在 `Router.handle(HttpRequest, CompletableFuture)` 中按当前请求 URI 调用 `matchHandler`，再调用匹配到的 Handler。
+- 当前 master 的 `Router.onHeaderComplete` 不包含向 `uriByteTree` 注册 URI 的逻辑。上传源码摘录中的该行不能直接当作当前 master 的实现依据。
+- URI 路径匹配与 HTTP 方法选择是两个阶段：先由 `NodePath` 找到路径处理器，再由 `RouterHandlerImpl#getRouterUnit` 选择方法处理器；方法不匹配时回退到 Router 默认处理器。
+- 已将协议请求阶段、处理器选择入口和源码阅读顺序补入 `server/router-matching.mdx`。未修改 Router 运行时代码。
+
+本轮继续确认此前关于模式重叠、拦截器短路、异步推进限制和 Session 惰性创建的文档表述与当前源码一致。当前上传源码摘录与 master 在 `uriByteTree` 细节上存在版本差异，后续以仓库 master 为准。
+
+**验证状态：**本轮只做源码与 Markdown 内容核对，未执行 `npm ci`、`npm run build` 或 Router 集成测试。Astro 构建及文档示例编译状态仍未验证。
