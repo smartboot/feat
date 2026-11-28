@@ -98,9 +98,18 @@ Feat.httpServer()
             CompletableFuture.supplyAsync(() -> {
                 // 耗时操作
                 return fetchDataFromDatabase();
-            }).thenAccept(result -> {
-                request.getResponse().write(result);
-                future.complete(null); // 完成后通知 Feat
+            }, executor).whenComplete((result, error) -> {
+                try {
+                    if (error != null) {
+                        request.getResponse().setHttpStatus(500);
+                        request.getResponse().write("Internal error");
+                    } else {
+                        request.getResponse().write(result);
+                    }
+                } finally {
+                    // 成功或失败都要结束请求，避免客户端一直等待
+                    future.complete(null);
+                }
             });
         }
 
