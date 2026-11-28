@@ -68,6 +68,8 @@ public class AsyncDemo {
                             Thread.sleep(100);
                             request.getResponse().write("Async response");
                         } catch (Exception e) {
+                            request.getResponse().setHttpStatus(500);
+                            request.getResponse().write("Internal error");
                             e.printStackTrace();
                         } finally {
                             // 必须调用，否则请求不会结束
@@ -88,7 +90,7 @@ public class AsyncDemo {
 
 ### 简化写法
 
-如果不需要复杂的线程池管理，可以按同样的模式组织异步处理器：
+如果不需要复杂的线程池管理，可以按同样的模式组织异步处理器： 这里省略了 Executor 参数，因此任务会使用 `ForkJoinPool.commonPool()`；这适合演示，不代表所有业务都应该共用默认线程池。
 
 ```java
 Feat.httpServer()
@@ -98,9 +100,18 @@ Feat.httpServer()
             CompletableFuture.supplyAsync(() -> {
                 // 耗时操作
                 return fetchDataFromDatabase();
-            }).thenAccept(result -> {
-                request.getResponse().write(result);
-                future.complete(null); // 完成后通知 Feat
+            }).whenComplete((result, error) -> {
+                try {
+                    if (error != null) {
+                        request.getResponse().setHttpStatus(500);
+                        request.getResponse().write("Internal error");
+                    } else {
+                        request.getResponse().write(result);
+                    }
+                } finally {
+                    // 成功或失败都要结束请求，避免客户端一直等待
+                    future.complete(null);
+                }
             });
         }
 

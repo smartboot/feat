@@ -70,23 +70,15 @@ router.route("/articles", "DELETE", ctx -> { /* ... */ });
 
 ### 匹配优先级
 
-当多个规则可能匹配同一请求时，Router 按以下优先级选择：
-
-1. **精确匹配**（最高）
-2. **路径参数匹配**
-3. **通配符匹配**（最低）
+Router 会优先沿精确路径分支查找；精确分支未命中时，才会尝试模式路径。需要注意，当前实现并没有定义一套适用于所有重叠模式的全局优先级：路径参数、后缀模式和通配符同时竞争时，匹配过程还受节点结构及模式节点遍历顺序影响。因此，不应把它理解成“参数路由一定高于通配符”这样的稳定规则。
 
 ```java
-router.route("/users/profile", ctx -> { /* 精确匹配优先 */ });
-router.route("/users/:id", ctx -> { /* 路径参数次之 */ });
-router.route("/users/*", ctx -> { /* 通配符兜底 */ });
+router.route("/users/profile", ctx -> { /* 精确路径 */ });
+router.route("/users/:id", ctx -> { /* 路径参数 */ });
+router.route("/users/*", ctx -> { /* 通配路径 */ });
 ```
 
-访问 `/users/profile` 时，**精确匹配**胜出。
-
-<Aside type="tip">
-将更具体的路径放在前面注册，有助于代码可读性。
-</Aside>
+访问 `/users/profile` 时，精确路径分支会先被检查。但对于可能同时命中多个模式的路由，建议避免依赖隐含优先级：尽量让路由规则互不重叠，并为实际使用的组合编写测试。
 
 ## 请求处理
 
@@ -109,11 +101,25 @@ router.route("/sync", ctx -> {
 
 ```java
 // 适合耗时操作
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+ExecutorService executor = Executors.newFixedThreadPool(4);
+
 router.route("/async", (ctx, future) -> {
-    CompletableFuture.supplyAsync(() -> fetchData())
-        .thenAccept(result -> {
-            ctx.Response.write(result);
-            future.complete(null); // 必须调用！
+    CompletableFuture.supplyAsync(() -> fetchData(), executor)
+        .whenComplete((result, error) -> {
+            try {
+                if (error != null) {
+                    ctx.Response.setHttpStatus(500);
+                    ctx.Response.write("Internal error");
+                } else {
+                    ctx.Response.write(result);
+                }
+            } finally {
+                future.complete(null);
+            }
         });
 });
 ```
