@@ -84,7 +84,7 @@ Feat Cloud 多个入口曾提示“需先成为赞助者获取授权”，包括
 - `initial-sql` 在每次应用启动时执行；文档中的 `DROP TABLE` 仅适用于本地演示，不应作为生产环境的启动脚本。
 - 修正事务示例中引用了未在前文声明的 Mapper 方法，并为 `@Autowired` 字段补上推荐的 setter。
 
-另发现一项实现问题：`MybatisSerializer` 生成的初始化脚本代码直接使用 `sessionFactory.openSession().getConnection()`，且没有关闭 `Reader`。已在后续修复中改为由 `try-with-resources` 同时管理 `SqlSession` 与 `Reader`，并通过 `SqlSession` 提供的连接执行脚本。MyBatis 3.5.11 的 `ScriptRunner.runScript` 会在执行结束时处理提交 / 回滚，但不会替调用方关闭连接；因此连接仍应由 `SqlSession.close()` 统一释放。
+另发现一项实现问题：`MybatisSerializer` 生成的初始化脚本代码直接使用 `sessionFactory.openSession().getConnection()`，且没有关闭 `Reader`。本次修复改为由 `try-with-resources` 同时管理 `SqlSession` 与 `Reader`，并通过 `SqlSession` 提供的连接执行脚本。MyBatis 3.5.11 的 `ScriptRunner.runScript` 会在执行结束时处理提交 / 回滚，但不会替调用方关闭连接；因此连接仍应由 `SqlSession.close()` 统一释放。
 
 ### H1：响应序列化文档与 JsonSerializer 实际路径不完全一致
 
