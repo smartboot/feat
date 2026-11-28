@@ -13,6 +13,9 @@ Feat Core Router 通过 `Context#session()` 获取当前请求关联的 Session�
 ## 创建和读取 Session
 
 ```java
+import tech.smartboot.feat.core.server.Session;
+import tech.smartboot.feat.router.session.LocalSessionManager;
+
 router.route("/login", context -> {
     Session session = context.session();
     session.put("user", "alice");
@@ -81,6 +84,9 @@ router.setSessionManager(sessionManager);
 自定义管理器需要实现两个方法：
 
 ```java
+import tech.smartboot.feat.core.server.Session;
+import tech.smartboot.feat.router.session.SessionManager;
+
 public class CustomSessionManager extends SessionManager {
     @Override
     protected Session getSession(String sessionId) {
