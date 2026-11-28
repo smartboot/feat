@@ -1,6 +1,6 @@
 ---
-title: MCP 能力暴露
-description: 用 Feat Cloud 的注解式方式暴露 Tool、Prompt 和 Resource，并决定是否需要独立 MCP 端点
+title: MCP 服务
+description: 将 Feat Cloud 中的业务方法暴露为 MCP Tool、Prompt 和 Resource
 sidebar:
     order: 8
 ---
@@ -9,45 +9,62 @@ import SponsorAside from '../../../components/SponsorAside.astro';
 
 <SponsorAside />
 
+MCP 为 AI 客户端提供了一种调用应用能力的标准方式。客户端可以发现工具、读取提示模板和资源，再按协议调用它们。
 
-前面的章节一直在讲 HTTP：Controller 接收请求，调用业务代码，再返回文本或 JSON。MCP 让同一类业务能力多了一个入口：模型客户端可以发现它、理解它的参数，并把它当成工具、提示模板或资源来调用。
+在 Feat Cloud 中，MCP 能力通过注解声明。AOT 编译阶段会生成注册代码，应用启动时将这些能力注册到 `McpServer`，不需要运行时扫描注解。
 
-Feat Cloud 的优势仍然来自编译期生成。你在 Controller 上声明 `@Tool`、`@Prompt`、`@Resource` 或 `@McpEndpoint`，编译期会把这些声明转成 MCP Server 的注册代码。运行时要做的事情很少：加载生成类，把能力挂到对应端点上。
-![模型客户端通过 MCP 调用 Feat Cloud 中 Tool、Prompt、Resource 能力的示意图](./img/mcp_1.png)
-## 先把一个方法变成工具
+## 先从 Tool 开始
 
-如果只是把少量业务方法开放给 MCP 客户端，不需要一开始就设计完整端点。给方法加 `@Tool`，给参数补上 `@Param` 元信息，就能先跑通最小链路：
+Tool 是最常见的 MCP 能力：把一个业务方法交给模型调用。
 
-```java title="DefaultMcpController.java"
+```java title="GreetingController.java"
 import tech.smartboot.feat.cloud.annotation.Controller;
-import tech.smartboot.feat.cloud.annotation.mcp.Tool;
 import tech.smartboot.feat.cloud.annotation.mcp.Param;
+import tech.smartboot.feat.cloud.annotation.mcp.Tool;
 
 @Controller
-public class DefaultMcpController {
+public class GreetingController {
 
-    @Tool(description = "简单的问候工具")
-    public String greeting(@Param(required = true, description = "用户姓名") String name) {
+    @Tool(name = "greeting", description = "根据姓名生成问候语")
+    public String greeting(
+            @Param(required = true, description = "用户姓名") String name) {
         return "你好，" + name + "！";
     }
 }
 ```
 
-这里的 `@Param` 不是 HTTP 查询参数，而是 MCP 参数描述。它告诉客户端这个工具需要什么输入、参数是否必填、参数含义是什么。对模型客户端来说，这些描述会直接影响工具能不能被正确选择和调用。
+这里有两个关键点：
 
-## 设计 MCP 端点
+- `@Tool` 声明一个可调用工具，`name` 是客户端调用时使用的名称。
+- `@Param` 描述参数名称、是否必填和用途。这些信息会成为工具的输入 Schema，帮助模型判断何时以及如何调用。
 
-Feat Cloud 提供两种 MCP 暴露方式：默认 MCP 服务和显式 `@McpEndpoint`。
+**注意：** MCP 的 `@Param` 与 HTTP Controller 的请求参数绑定不是一回事。
 
-### 默认服务还是独立端点
+## 默认服务与显式端点
 
-默认 MCP 服务适合早期接入：项目里出现 `@Tool`、`@Prompt`、`@Resource` 后，Feat Cloud 会生成默认 MCP Server，把这些能力挂进去。它的价值是低成本验证：先确认客户端能发现工具、能发起调用、能拿到结果。
+Feat Cloud 提供两种组织方式。
 
-当 MCP 已经成为应用边界的一部分，就应该使用 `@McpEndpoint` 显式定义端点。它让服务名和 Streamable HTTP 路径都写在代码里，部署、网关和客户端配置也更容易保持稳定。
+### 默认 MCP 服务
 
-```java title="McpDemoController.java"
+如果 Controller 没有标注 `@McpEndpoint`，但其中声明了 MCP 注解方法，且默认服务未被关闭，Feat Cloud 会生成默认 MCP Server。默认 HTTP 端点是 `/mcp`。当前默认服务只启用 Tool；需要暴露 Prompt 或 Resource 时，请使用显式 `@McpEndpoint`。
+
+默认服务默认启用。可以通过 `feat.yml` 关闭：
+
+```yaml title="feat.yml"
+server:
+  mcp:
+    server:
+      enable: false
+```
+
+默认服务适合快速验证少量 Tool。如果项目需要 Prompt、Resource，或需要划分多个独立的 MCP 服务边界，请使用显式端点。
+
+### 显式 MCP 端点
+
+在 Controller 上添加 `@McpEndpoint`，即可定义独立的 MCP 服务名称、版本和访问路径：
+
+```java title="UserMcpController.java"
 import tech.smartboot.feat.ai.mcp.enums.PromptType;
-import tech.smartboot.feat.ai.mcp.model.ToolResult;
 import tech.smartboot.feat.cloud.annotation.Controller;
 import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
 import tech.smartboot.feat.cloud.annotation.mcp.Param;
@@ -55,92 +72,100 @@ import tech.smartboot.feat.cloud.annotation.mcp.Prompt;
 import tech.smartboot.feat.cloud.annotation.mcp.Resource;
 import tech.smartboot.feat.cloud.annotation.mcp.Tool;
 
-import java.util.HashMap;
-import java.util.Map;
-
 @Controller
 @McpEndpoint(
-    name = "demo-mcp-service",
-    title = "Demo MCP Service",
-    streamableEndpoint = "/mcp/demo/stream"
+        name = "user-service",
+        title = "User Service",
+        streamableEndpoint = "/mcp/user"
 )
-public class McpDemoController {
+public class UserMcpController {
 
-    @Tool(name = "getUserInfo", description = "根据用户ID获取用户信息")
-    public Map<String, Object> getUserInfo(
-        @Param(required = true, description = "用户ID") Long userId,
-        @Param(required = false, description = "是否包含详细信息") Boolean detailed
-    ) {
-        Map<String, Object> user = new HashMap<>();
-        user.put("id", userId);
-        user.put("name", "User " + userId);
-        user.put("email", userId + "@example.com");
-        user.put("detailed", Boolean.TRUE.equals(detailed));
-        return user;
+    @Tool(name = "findUser", description = "根据用户 ID 查询用户")
+    public String findUser(
+            @Param(required = true, description = "用户 ID") Long userId) {
+        return "用户编号：" + userId;
     }
 
-    @Prompt(
-        name = "codeReviewPrompt",
-        description = "代码审查提示词",
-        type = PromptType.TEXT
-    )
-    public String codeReviewPrompt(
-        @Param(required = true, description = "编程语言") String language,
-        @Param(required = true, description = "代码片段") String codeSnippet
-    ) {
-        return String.format("请审查以下%s代码并提供改进建议：%s", language, codeSnippet);
+    @Prompt(name = "userSummary", description = "生成用户摘要",
+            type = PromptType.TEXT)
+    public String userSummary(
+            @Param(required = true, description = "用户资料") String profile) {
+        return "请根据以下资料生成简洁的用户摘要：" + profile;
     }
 
     @Resource(
-        uri = "/resources/coding-standards.md",
-        name = "编码规范",
-        description = "团队编码规范文档",
-        mimeType = "text/markdown",
-        isText = true
+            uri = "docs://user/fields",
+            name = "用户字段说明",
+            description = "用户资料字段定义",
+            mimeType = "text/plain",
+            isText = true
     )
-    public String codingStandards() {
-        return "# 编码规范";
-    }
-
-    @Tool(description = "获取文本信息")
-    public ToolResult.TextContent getTextInfo() {
-        return ToolResult.ofText("这是文本内容");
+    public String userFields() {
+        return "id: 用户编号\nname: 用户姓名";
     }
 }
 ```
 
-这段代码里有三类能力：
+这个 Controller 暴露一个独立服务，客户端通过 `/mcp/user` 访问。不同的 MCP 能力域可以放在不同 Controller 中，各自使用不同的 `@McpEndpoint`。
 
-- `@Tool` 暴露可调用能力
-- `@Prompt` 暴露提示模板
-- `@Resource` 暴露文本或二进制资源
+`@McpEndpoint` 的能力开关默认开启：Tool、Prompt、Resource 和 Logging。端点路径由必填的 `streamableEndpoint` 指定。
 
-`@McpEndpoint` 则负责把这组能力放进一个明确的 MCP 服务边界里。到了这个阶段，你应该像设计 HTTP API 一样设计 MCP 端点：路径要稳定，名称要能表达服务意图，参数描述要足够让调用方理解。
+## 三种能力怎么选
 
-### Tool、Prompt、Resource 的分工
+| 注解 | 用途 | 典型场景 |
+|---|---|---|
+| `@Tool` | 执行业务操作或查询 | 查订单、计算价格、创建任务 |
+| `@Prompt` | 提供可复用的提示模板 | 代码审查模板、报告生成模板 |
+| `@Resource` | 提供可读取的内容 | 规范文档、产品资料、静态说明 |
 
-`@Tool` 适合执行动作或查询数据。如果你的目标是“让模型调用这段业务逻辑”，从 Tool 开始最自然，例如查用户、算价格、生成报表摘要。
+不要为了使用不同注解而拆分服务。应该先按客户端要完成的任务划分服务边界，再决定一个服务需要哪些能力。
 
-`@Prompt` 适合暴露提示模板。它不是普通 Controller 里直接返回一段文本，而是把一套可复用的提示结构交给 MCP 客户端，让客户端在合适时填入参数并使用。
+## 参数与返回值限制
 
-`@Resource` 适合暴露稳定材料，例如团队规范、产品说明、接口文档、图片或二进制资源。资源一般不表达“做一件事”，而是让客户端读取一份内容。
+注解处理器会在编译期生成参数转换和结果封装代码，因此方法签名需要符合当前生成器支持的类型。
 
-### 不要把 MCP Controller 写成大杂烩
+| 能力 | 参数类型 | 返回类型 |
+|---|---|---|
+| Tool | `String`、基本类型、`Long`、`Boolean` | `String`、基本类型、`ToolResult` 子类，或自定义 Java 类型 |
+| Prompt | `String`、`int`、`boolean` | `String` 或 `PromptMessage` |
+| Resource | 不接收参数 | `String` |
 
-MCP 能力应该围绕调用方的任务组织，而不是围绕注解类型堆叠。一个面向代码审查的 MCP 服务，可以包含代码审查 Prompt、读取编码规范的 Resource、查询项目元数据的 Tool；另一个面向运维的 MCP 服务，则应该独立成另一组 Controller 和端点。
+Tool 返回自定义 Java 类型时，Feat 会将结果序列化为结构化内容。不要直接返回其他 `java.*` 类型（例如 `Map`）；当前生成器不支持这类返回值。异步 Tool 可以返回 `AsyncResponse` 或 `CompletableFuture`。
 
-如果你是第一次接入 MCP，比较稳的顺序是：
+Prompt 的参数类型比 Tool 更受限；Resource 方法当前只支持无参并返回 `String`。二进制 Resource 也通过 `String` 返回内容，需按注解声明的类型提供对应编码数据。
 
-1. 先暴露一个最小 Tool，确认客户端能调用
-2. 再补充必要的参数描述，观察模型是否能正确选择工具
-3. 需要复用提示结构时再加入 Prompt
-4. 需要稳定材料时再加入 Resource
-5. 服务边界稳定后，再迁移到显式 `@McpEndpoint`
+如果方法签名不符合生成器支持的类型，错误会在编译期暴露，而不是等客户端调用时才发现。
 
-## 什么时候直接操作 `McpServer`
+## 什么时候直接使用 McpServer
 
-注解方式适合大多数静态能力：工具、提示和资源在编译期就能确定，Feat Cloud 可以直接生成注册代码。
+注解适合编译期就能确定的能力。如果工具列表需要在运行时动态变化，例如来自数据库或插件系统，可以在显式 MCP Controller 中注入 `McpServer`，再使用它的注册 API。
 
-如果你的工具集合需要在运行时动态变化，例如从数据库、插件系统或外部配置加载工具，就可以注入 `McpServer` 并在代码里管理。这个方式更灵活，也意味着你要自己维护更多边界：何时注册、何时下线、如何避免重复、如何处理并发变化。
+```java
+import tech.smartboot.feat.ai.mcp.server.McpServer;
+import tech.smartboot.feat.cloud.annotation.Autowired;
+import tech.smartboot.feat.cloud.annotation.Controller;
+import tech.smartboot.feat.cloud.annotation.PostConstruct;
+import tech.smartboot.feat.cloud.annotation.mcp.McpEndpoint;
 
-所以默认选择很简单：能用注解清楚表达的能力，优先交给编译期生成；只有当能力本身就是动态的，再直接操作 `McpServer`。
+@Controller
+@McpEndpoint(streamableEndpoint = "/mcp/dynamic")
+public class DynamicMcpController {
+    @Autowired
+    private McpServer mcpServer;
+
+    @PostConstruct
+    public void init() {
+        // 动态注册时，显式设置端点、服务信息和能力开关
+        mcpServer.getOptions().setMcpEndpoint("/mcp/dynamic").toolEnable();
+        mcpServer.getOptions().getImplementation()
+                .setName("dynamic-tools")
+                .setTitle("Dynamic Tools")
+                .setVersion("1.0.0");
+        // mcpServer.addTool(...) 注册动态工具
+    }
+}
+```
+
+动态注册时需要在初始化阶段显式设置端点路径和服务信息，并启用对应能力（`toolEnable()`、`promptsEnable()` 或 `resourceEnable()`），再调用 `addTool`、`addPrompt` 或 `addResource`。注册时机、重复名称处理和动态更新策略由应用负责。
+
+默认情况下，优先使用注解；只有能力集合确实需要运行时变化时，再直接管理 `McpServer`。
