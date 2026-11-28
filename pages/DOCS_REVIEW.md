@@ -172,3 +172,14 @@ Feat Core 与 Feat AI 采用 Apache 2.0；Feat Cloud 则采用赞助授权模式
 - 旧的《Feat 官网文档设计》上传稿记录的是 2.1.1 时期架构，并把 Feat AI 描述为仅增强 HTTP Client 的层次；该描述与当前已经确认的 Core → AI → Cloud 依赖关系不一致，不能作为当前架构文案依据。
 
 本阶段优先处理阅读路径与重复内容，再继续按主题核对示例、API、链接和 PDF 阅读体验。
+
+
+### 第二阶段本轮处理记录
+
+- 将 `cloud/mybatis.mdx` 从独立的 User CRUD 教程改为前一篇任务管理应用的持久化扩展：沿用 `Task`、`TaskController` 和现有 HTTP 接口，只新增 MyBatis 配置、Mapper，并替换 Service 的存储实现。
+- 修正 MyBatis 示例中的 shell 路径占位符，避免将尖括号占位符放进可直接复制执行的命令。
+- 将 AI Quick Start 的两个示例统一为 `chat(...).get()`，让命令行程序等待完整响应；把流式 API 的版本差异留在对话模型章节，避免 Quick Start 依赖 v2.5.0 才提供的 `chatStream` Future 返回值。
+- 将侧边栏“理解 Feat”统一为“认识 Feat”，并修正 `DOCS_GAPS.md` 中错误的 Cloud 授权描述。
+- 对 52 篇 MDX 页面中的 Markdown 形式站内 `/feat/...` 链接做了路径存在性检查，未发现失效目标。该检查不覆盖 JSX `href`、图片导入、锚点、代码示例编译和 Astro 构建。
+
+**仍未验证：**本轮未执行 `npm ci`、`npm run build`，也未逐段编译全部代码示例。MyBatis 文档中的配置与 API 说明已结合当前文档记录和仓库 Demo 交叉核对，但仍需 CI 和真实示例项目验证。
