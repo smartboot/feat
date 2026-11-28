@@ -13,8 +13,18 @@ on:
     branches: [ "master" ]
     tags:
       - v**
+    paths-ignore:
+      - 'pages/**'
+      - '*.md'
+      - '**/*.md'
+      - 'llms.txt'
   pull_request:
     branches: [ "master" ]
+    paths-ignore:
+      - 'pages/**'
+      - '*.md'
+      - '**/*.md'
+      - 'llms.txt'
 
 jobs:
   build:
