@@ -63,7 +63,7 @@ public class HelloFeatAI {
             public void onStreamResponse(String content) {
                 System.out.print(content);
             }
-        });
+        }).join();
     }
 }
 ```
@@ -112,7 +112,7 @@ Feat 是一个轻量级、高性能的 Java Web 服务开发框架。
 - 不是空字符串
 
 <Aside type="tip">
-如果程序运行完立刻退出、没看到输出：`chatStream` 是异步的，如果 `main` 方法直接结束，程序可能在回调触发前就退出了。在 quickstart 阶段可以简单加一行 `Thread.sleep(30000)` 观察效果，生产代码应使用更成熟的异步等待机制。
+当前 `chatStream(...)` 返回 `CompletableFuture<ChatResponse>`。示例在末尾调用 `join()`，是为了让命令行程序等待流式响应结束；在服务端或已有异步流程中，通常应继续组合这个 Future，而不是阻塞业务线程。
 </Aside>
 
 ## 两种调用方式的区别
