@@ -88,7 +88,7 @@ public class AsyncDemo {
 
 ### 简化写法
 
-如果不需要复杂的线程池管理，可以按同样的模式组织异步处理器：
+如果不需要复杂的线程池管理，可以按同样的模式组织异步处理器： 这里省略了 Executor 参数，因此任务会使用 `ForkJoinPool.commonPool()`；这适合演示，不代表所有业务都应该共用默认线程池。
 
 ```java
 Feat.httpServer()
@@ -98,7 +98,7 @@ Feat.httpServer()
             CompletableFuture.supplyAsync(() -> {
                 // 耗时操作
                 return fetchDataFromDatabase();
-            }, executor).whenComplete((result, error) -> {
+            }).whenComplete((result, error) -> {
                 try {
                     if (error != null) {
                         request.getResponse().setHttpStatus(500);
