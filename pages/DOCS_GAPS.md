@@ -34,6 +34,8 @@
 | 18 | 配置占位符特殊边界 | 文档泛称 `server.*` 都支持 `${}`，并容易把 `@Value` 的 YAML 路径与外部环境变量解析混为一谈 | `CloudOptionsSerializer` 对 `autoSSL`、Session 特殊键单独读取；`RedisunSerializer` 对 `address` 直接写入；`serializerValueSetter` 先按 YAML 路径取值，再由类型 Serializer 解析值 | `cloud/options.mdx`、`cloud/bean.mdx` | 已回写（2026-11-28；见 DOCS_REVIEW H1） |
 | 19 | Controller 请求绑定边界 | 文档只把 `@Param` 描述为查询参数，未说明 JSON / 表单来源；未说明路径参数支持类型和默认转换值 | `ControllerSerializer` 根据 Content-Type 选择 JSON 或 request parameters；`@PathParam` 仅支持 String、int/Integer、long/Long，数值转换默认 0 | `cloud/controller.mdx` | 已回写（2026-11-28；见 DOCS_REVIEW H1） |
 | 20 | Controller 方法限制与 Gzip | 文档未说明 `RequestMapping.method` 默认不限制 HTTP 方法，也未说明全局 Gzip 配置 | `RequestMapping.method()` 默认空数组；`ControllerSerializer` 读取 `server.gzip` / `server.gzipThreshold` 覆盖控制器配置 | `cloud/controller.mdx`、`cloud/options.mdx` | 已回写（2026-11-28；见 DOCS_REVIEW H1） |
+| 21 | MyBatis 数据源与配置重建 | 文档未说明 AOT 只支持 POOLED DataSource，且 XML 中自定义配置不一定完整保留 | `MybatisSerializer` 仅对 `PooledDataSource` 生成重建代码，并显式复制有限的 Configuration 属性 | `cloud/mybatis.mdx` | 已回写（2026-11-28；见 DOCS_REVIEW H1） |
+| 22 | MyBatis 初始化脚本连接生命周期 | `initial-sql` 生成代码通过 `sessionFactory.openSession().getConnection()` 获取连接，但没有关闭对应 `SqlSession` | `MybatisSerializer.serializeLoadBean` 生成的 `ScriptRunner` 初始化代码 | `feat-cloud-aot/.../MybatisSerializer.java` | 待修复（实现问题，需单独验证提交与关闭行为） |
 
 ## 已确认「不补」的
 
