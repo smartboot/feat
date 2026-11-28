@@ -259,3 +259,20 @@ Feat Core 与 Feat AI 采用 Apache 2.0；Feat Cloud 则采用赞助授权模式
 本轮只修改文档与评审台账，没有修改 Feat AI 运行时代码。
 
 **验证状态：**已对照当前 master 源码；未执行 AI 示例 Maven 编译、`npm ci` 或 `npm run build`。向量记忆示例在上述运行时问题修复前不应被当作已验证的生产配置。
+
+
+## 2026-11-28：安全与静态资源示例复核
+
+本轮对照 `HttpHandler`、`HttpRequest`、`Context`、`WafOptions`、`WAF`、`HttpRequestProtocol`、`BasicAuthServerHandler` 和 `HttpStaticResourceHandler`，修正：
+
+- WAF 示例的 `HttpHandler` lambda 参数是 `HttpRequest`，应通过 `request.getResponse()` 写响应，不能使用 `Context.Response` 字段。
+- BasicAuth 示例中的 Router 回调参数是 `Context`，当前 `Context` 没有 `write(...)` 便捷方法，应使用 `ctx.Response.write(...)`。
+- WAF URI 检查对根路径 `/` 有显式放行分支；文档补充该边界，避免把白名单描述成对所有路径一视同仁。
+- `HttpStaticResourceHandler` 会先 URL 解码，再检查 `../` / `..\\`，编码后的穿越片段也会被检查；文档补充这一执行顺序。
+- `HttpStaticResourceHandler.handle(HttpRequest)` 同步入口直接抛出 `UnsupportedOperationException`，实际静态资源处理由异步入口完成；文档增加自定义包装时必须转发异步入口的提醒。
+
+未发现 WAF 在报文解析阶段校验、BasicAuth 转发异步 Handler、静态资源 404 / Last-Modified 处理等表述与当前源码存在冲突。
+
+本轮只修改文档示例与说明，没有修改运行时代码。
+
+**验证状态：**已对照当前 master 源码；未执行安全集成测试、静态资源测试、`npm ci` 或 `npm run build`。
