@@ -90,6 +90,47 @@ router.route("/users/:userId/orders/:orderId", ctx -> {
 
 Core Router 使用 `:paramName` 语法，不使用花括号形式 `{paramName}`。注意这里讨论的是 Feat Core Router；Feat Cloud Controller 的路径声明语法另见 [Controller 路由](/feat/cloud/controller/)。
 
+## 异步路由处理器
+
+普通的单参数 Lambda 使用的是同步处理方式。如果希望 Router 处理器自己控制异步完成时机，需要实现 `RouterHandler`，并重写带有 `CompletableFuture` 参数的重载方法：
+
+```java
+ExecutorService executor = Executors.newFixedThreadPool(8);
+
+router.route("/report", new RouterHandler() {
+    @Override
+    public void handle(Context context) {
+        // Router 会调用下面的异步重载；这里是接口要求实现的同步方法。
+    }
+
+    @Override
+    public void handle(Context context, CompletableFuture<Void> future) {
+        try {
+            executor.execute(() -> {
+                try {
+                    String report = loadReport();
+                    context.Response.write(report);
+                } catch (Exception e) {
+                    context.Response.setHttpStatus(500);
+                    context.Response.write("Internal error");
+                } finally {
+                    // 无论业务成功还是失败，都要通知 Feat 请求处理已完成
+                    future.complete(null);
+                }
+            });
+        } catch (RejectedExecutionException e) {
+            context.Response.setHttpStatus(503);
+            context.Response.write("Service unavailable");
+            future.complete(null);
+        }
+    }
+});
+```
+
+这段代码需要导入 `CompletableFuture`、`ExecutorService`、`Executors`、`RejectedExecutionException`，以及 `RouterHandler` 和 `Context`。线程池应由应用统一管理，并在应用关闭时释放。
+
+异步处理器与同步 Lambda 的关键差别，不在于是否使用了 `CompletableFuture`，而在于谁负责完成请求：同步默认实现会在处理方法返回后自动完成 Future；重写异步重载后，则由业务代码在响应准备完成时调用 `future.complete(null)`。更多线程池和异步生命周期说明见[异步处理](/feat/server/async/)。
+
 ## 路径是精确匹配的
 
 Router 不会自动把末尾斜杠视为同一个路径：
